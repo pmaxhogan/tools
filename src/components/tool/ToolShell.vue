@@ -45,6 +45,12 @@ const acceptAttr = computed(() => {
   return 'text/*,.json,.csv,.txt';
 });
 
+/**
+ * A tool that rejects an empty input is not reporting a failure on first load,
+ * it is waiting. Those messages render as a neutral hint, not a red error.
+ */
+const isHint = computed(() => hasInput && !input.value && !fileBytes.value);
+
 const placeholder = computed(() =>
   isBinary.value
     ? 'Drop or pick a file, or paste text here…'
@@ -223,7 +229,7 @@ function onPickFile(e: Event) {
       <Textarea
         v-model="input"
         :placeholder="placeholder"
-        class="min-h-28 border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0 dark:bg-transparent"
+        class="max-h-80 min-h-28 overflow-y-auto border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0 dark:bg-transparent"
         @paste="onPaste"
       />
     </div>
@@ -250,10 +256,11 @@ function onPickFile(e: Event) {
 
     <div
       v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
+      :role="isHint ? 'status' : 'alert'"
+      class="rounded-lg border px-3 py-2 text-sm"
+      :class="isHint ? 'bg-secondary/60' : 'border-destructive/50 bg-destructive/5'"
     >
-      <p class="font-medium text-destructive">
+      <p :class="isHint ? 'font-medium text-muted-foreground' : 'font-medium text-destructive'">
         {{ error.message }}
       </p>
       <p

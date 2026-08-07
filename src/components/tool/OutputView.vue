@@ -18,6 +18,15 @@ const all = computed(() =>
     ? props.output
     : entries.value.map(([k, v]) => `${k}: ${v}`).join('\n')
 );
+
+/**
+ * Every value wraps so none of them is unreadable, which leaves short ones
+ * looking exactly as compact as before. Long or multi-line values also get a
+ * height cap and scroll in place, and their copy button pins to the top.
+ */
+function isLong(value: string): boolean {
+  return value.length > 120 || value.includes('\n');
+}
 </script>
 
 <template>
@@ -37,13 +46,17 @@ const all = computed(() =>
       <div
         v-for="[k, v] in entries"
         :key="k"
-        class="flex items-center justify-between gap-3 px-3 py-2"
+        class="flex justify-between gap-3 px-3 py-2"
+        :class="isLong(v) ? 'items-start' : 'items-center'"
       >
         <div class="min-w-0">
           <div class="text-xs text-muted-foreground">
             {{ k }}
           </div>
-          <div class="truncate font-mono text-sm">
+          <div
+            class="font-mono text-sm break-words whitespace-pre-wrap"
+            :class="isLong(v) ? 'max-h-40 overflow-y-auto' : undefined"
+          >
             {{ v }}
           </div>
         </div>

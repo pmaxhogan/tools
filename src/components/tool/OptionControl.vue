@@ -35,7 +35,8 @@ function set(v: unknown) {
       <SelectTrigger
         :id="spec.id"
         size="sm"
-        class="w-full"
+        class="w-full min-w-0 *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate"
+        :title="spec.choices?.find((c) => String(c.value) === String(modelValue))?.label"
       >
         <SelectValue />
       </SelectTrigger>

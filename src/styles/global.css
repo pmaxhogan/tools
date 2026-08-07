@@ -73,6 +73,8 @@
 
 :root {
   /* DESIGN.md "Soft Depth": warm paper light theme, single violet accent. */
+  /* Native UI (scrollbars, form controls, spellcheck) follows the theme. */
+  color-scheme: light;
   --radius: 0.625rem;
   --background: #f6f4f1;
   --foreground: #1b1917;
@@ -116,6 +118,7 @@
 
 .dark {
   /* Warm charcoal; elevation via surface-lightness steps, not shadows. */
+  color-scheme: dark;
   --background: #141311;
   --foreground: #f4f1ec;
   --card: #1d1b18;
