@@ -24,6 +24,7 @@ import { meta as discordTimestamp } from './discord-timestamp/meta';
 import { meta as dmarcReportViewer } from './dmarc-report-viewer/meta';
 import { meta as discordVideoCompressor } from './discord-video-compressor/meta';
 import { meta as durationCalculator } from './duration-calculator/meta';
+import { meta as emailHeaderAnalyzer } from './email-header-analyzer/meta';
 import { meta as epochConverter } from './epoch-converter/meta';
 import { meta as escapeUnescape } from './escape-unescape/meta';
 import { meta as fakeDataGenerator } from './fake-data-generator/meta';
@@ -75,6 +76,7 @@ export const tools: ToolMeta[] = [
   discordVideoCompressor,
   dmarcReportViewer,
   durationCalculator,
+  emailHeaderAnalyzer,
   epochConverter,
   escapeUnescape,
   fakeDataGenerator,
@@ -129,6 +131,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
     import('./discord-video-compressor/index').then((m) => m.default),
   'dmarc-report-viewer': () => import('./dmarc-report-viewer/index').then((m) => m.default),
   'duration-calculator': () => import('./duration-calculator/index').then((m) => m.default),
+  'email-header-analyzer': () => import('./email-header-analyzer/index').then((m) => m.default),
   'epoch-converter': () => import('./epoch-converter/index').then((m) => m.default),
   'escape-unescape': () => import('./escape-unescape/index').then((m) => m.default),
   'fake-data-generator': () => import('./fake-data-generator/index').then((m) => m.default),

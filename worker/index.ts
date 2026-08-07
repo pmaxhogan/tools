@@ -28,6 +28,8 @@ import { meta as discordTimestampMeta } from '../src/tools/discord-timestamp/met
 import { run as discordTimestampRun } from '../src/tools/discord-timestamp/index';
 import { meta as durationCalculatorMeta } from '../src/tools/duration-calculator/meta';
 import { run as durationCalculatorRun } from '../src/tools/duration-calculator/index';
+import { meta as emailHeaderAnalyzerMeta } from '../src/tools/email-header-analyzer/meta';
+import { run as emailHeaderAnalyzerRun } from '../src/tools/email-header-analyzer/index';
 import { meta as epochConverterMeta } from '../src/tools/epoch-converter/meta';
 import { run as epochConverterRun } from '../src/tools/epoch-converter/index';
 import { meta as escapeUnescapeMeta } from '../src/tools/escape-unescape/meta';
@@ -131,6 +133,11 @@ const ALL: Endpoint[] = [
   }),
   expose(discordTimestampMeta, discordTimestampRun, { sample: '2026-08-06T21:00:00Z' }),
   expose(durationCalculatorMeta, durationCalculatorRun, { sample: '1h 30m + 45m' }),
+  expose(emailHeaderAnalyzerMeta, emailHeaderAnalyzerRun, {
+    sampleQuery: 'section=hops',
+    sampleCommand: (base) =>
+      `curl -X POST --data-binary @headers.txt "${base}/api/email-header-analyzer?section=all"`,
+  }),
   expose(epochConverterMeta, epochConverterRun, {
     sample: '1754521200',
     sampleQuery: 'tz=America/Chicago',
