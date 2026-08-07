@@ -1,0 +1,188 @@
+---
+import { tools } from '@/tools/registry';
+
+/**
+ * Sitewide tool navigation: every tool grouped by category.
+ *
+ * Static markup only. Visibility is pure CSS: a real flex column at xl and
+ * up (hidden when <html> carries `sb-closed`), an off-canvas drawer below xl
+ * (shown when <html> carries `sb-drawer-open`). Both classes are set before
+ * paint by BaseLayout, so there is no layout shift on load. The toggle script
+ * lives in BaseLayout, after every element it touches has been parsed.
+ */
+
+const path = Astro.url.pathname;
+const currentSlug = path.replace(/^\/+/, '').replace(/\/+$/, '');
+
+const byCategory = new Map<string, typeof tools>();
+for (const tool of tools) {
+  const list = byCategory.get(tool.category) ?? [];
+  list.push(tool);
+  byCategory.set(tool.category, list);
+}
+
+const groups = [...byCategory.entries()]
+  .sort((a, b) => a[0].localeCompare(b[0]))
+  .map(([category, items]) => ({
+    category,
+    items: [...items].sort((a, b) => a.name.localeCompare(b.name)),
+  }));
+---
+
+<div
+  id="sidebar-scrim"
+  class="sidebar-scrim"
+  aria-hidden="true"
+>
+</div>
+
+<aside
+  id="site-sidebar"
+  class="site-sidebar border-r bg-card"
+  aria-label="All tools"
+  tabindex="-1"
+>
+  <div
+    class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-card px-4 py-3"
+  >
+    <h2 class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+      All tools
+    </h2>
+    <button
+      id="sidebar-close"
+      type="button"
+      aria-label="Close tool list"
+      class="-mr-1 rounded-md p-1.5 text-muted-foreground transition-colors duration-[120ms] hover:bg-accent hover:text-foreground xl:hidden"
+    >
+      <svg
+        class="size-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      >
+        <path d="M6 6l12 12M18 6L6 18"></path>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="px-2 pt-4 pb-8">
+    {
+      groups.map((group) => (
+        <div class="mt-5 first:mt-0">
+          <h3 class="px-2 text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            {group.category}
+          </h3>
+          <ul class="mt-1">
+            {group.items.map((tool) => (
+              <li>
+                <a
+                  href={`/${tool.slug}`}
+                  aria-current={tool.slug === currentSlug ? 'page' : undefined}
+                  class="sidebar-link block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors duration-[120ms] hover:bg-accent hover:text-foreground"
+                >
+                  {tool.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </nav>
+</aside>
+
+<script is:inline>
+  // Bring the current tool (and its category heading, when both fit) into
+  // view. Sets scrollTop on the sidebar only, so the page never moves.
+  (() => {
+    const aside = document.getElementById('site-sidebar');
+    const active = aside && aside.querySelector('[aria-current="page"]');
+    if (!aside || !active) return;
+    const heading = active.closest('div').querySelector('h3');
+    let top = active.offsetTop - 96;
+    if (heading && active.offsetTop - heading.offsetTop < aside.clientHeight - 120) {
+      top = heading.offsetTop - 56;
+    }
+    aside.scrollTop = Math.max(0, top);
+  })();
+</script>
+
+<style>
+  .site-sidebar {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .sidebar-link[aria-current='page'] {
+    background: var(--accent-soft);
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  /* Below xl: off-canvas drawer. Kept in the DOM (fixed, so it never takes
+     flow space) and hidden with `visibility` so it stays out of the tab
+     order and the accessibility tree while closed. */
+  @media (max-width: 1279.98px) {
+    .site-sidebar {
+      position: fixed;
+      inset-block: 0;
+      left: 0;
+      z-index: 50;
+      width: 18rem;
+      max-width: 85vw;
+      visibility: hidden;
+      transform: translateX(-100%);
+      /* Visibility flips instantly on open and only after the slide-out
+         finishes on close, so the panel is focusable the moment it opens. */
+      transition:
+        transform 160ms cubic-bezier(0.2, 0.7, 0.3, 1),
+        visibility 0s linear 160ms;
+    }
+
+    :global(html.sb-drawer-open) .site-sidebar {
+      visibility: visible;
+      transform: translateX(0);
+      box-shadow: var(--sh-lg);
+      transition:
+        transform 160ms cubic-bezier(0.2, 0.7, 0.3, 1),
+        visibility 0s;
+    }
+
+    .sidebar-scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      background: rgba(10, 9, 8, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease-out;
+    }
+
+    :global(html.sb-drawer-open) .sidebar-scrim {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  /* xl and up: a real column that pushes the page, sticky and self-scrolling. */
+  @media (min-width: 1280px) {
+    .site-sidebar {
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      flex: none;
+      width: 17rem;
+      height: 100dvh;
+    }
+
+    :global(html.sb-closed) .site-sidebar {
+      display: none;
+    }
+
+    .sidebar-scrim {
+      display: none;
+    }
+  }
+</style>

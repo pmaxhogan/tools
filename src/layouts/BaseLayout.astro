@@ -1,6 +1,7 @@
 ---
 import '@/styles/global.css';
 import CommandPalette from '@/components/CommandPalette.vue';
+import Sidebar from '@/components/Sidebar.astro';
 import { tools } from '@/tools/registry';
 
 const paletteTools = tools.map((t) => ({
@@ -66,10 +67,76 @@ const og = ogImage ? new URL(ogImage, site).href : undefined;
       const stored = localStorage.getItem('theme');
       const dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
       document.documentElement.classList.toggle('dark', dark);
+
+      // Sidebar: open by default at xl and up, closed below. A stored
+      // preference (preferences only, rule 7) overrides that on wide screens.
+      // Applied here, before paint, so neither state causes a layout shift.
+      const sidebarPref = localStorage.getItem('sidebar');
+      if (sidebarPref === 'closed') document.documentElement.classList.add('sb-closed');
+      else if (sidebarPref === 'open') document.documentElement.classList.add('sb-open');
     </script>
   </head>
   <body class="min-h-dvh bg-background font-sans text-foreground antialiased">
-    <slot />
+    <div class="flex">
+      <Sidebar />
+      <div class="min-w-0 flex-1">
+        <slot />
+      </div>
+    </div>
+    <script is:inline>
+      // Sidebar toggle. Placed after the sidebar and the header so every
+      // element it touches exists. Wide screens toggle the persisted
+      // `sb-closed` class; narrow screens toggle the transient drawer.
+      (() => {
+        const html = document.documentElement;
+        const button = document.getElementById('sidebar-toggle');
+        const aside = document.getElementById('site-sidebar');
+        if (!button || !aside) return;
+
+        const wide = matchMedia('(min-width: 1280px)');
+        const isOpen = () =>
+          wide.matches ? !html.classList.contains('sb-closed') : html.classList.contains('sb-drawer-open');
+        const sync = () => button.setAttribute('aria-expanded', isOpen() ? 'true' : 'false');
+
+        function closeDrawer(returnFocus) {
+          if (!html.classList.contains('sb-drawer-open')) return;
+          html.classList.remove('sb-drawer-open');
+          document.body.style.overflow = '';
+          sync();
+          if (returnFocus) button.focus();
+        }
+
+        button.addEventListener('click', () => {
+          if (wide.matches) {
+            const closed = html.classList.toggle('sb-closed');
+            html.classList.toggle('sb-open', !closed);
+            localStorage.setItem('sidebar', closed ? 'closed' : 'open');
+            sync();
+          } else if (html.classList.contains('sb-drawer-open')) {
+            closeDrawer(true);
+          } else {
+            html.classList.add('sb-drawer-open');
+            document.body.style.overflow = 'hidden';
+            sync();
+            // Wait a frame: the panel is not visible (so not focusable) until
+            // the class has been applied and styles recomputed.
+            requestAnimationFrame(() => aside.focus());
+          }
+        });
+
+        document.getElementById('sidebar-close')?.addEventListener('click', () => closeDrawer(true));
+        document.getElementById('sidebar-scrim')?.addEventListener('click', () => closeDrawer(true));
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') closeDrawer(true);
+        });
+        // Crossing the breakpoint must never leave the page scroll locked.
+        wide.addEventListener('change', () => {
+          closeDrawer(false);
+          sync();
+        });
+        sync();
+      })();
+    </script>
     <CommandPalette client:idle tools={paletteTools} />
     <script>
       if (import.meta.env.PROD && 'serviceWorker' in navigator) {
