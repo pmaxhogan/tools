@@ -343,7 +343,7 @@ function ataFindings(report: SmartReport): Finding[] {
         `${fmtInt(reallocRaw)} ${plural(reallocRaw, 'sector has', 'sectors have')} been remapped to spares.${
           many
             ? ' At this scale the surface is failing rather than settling, and counts like this normally keep climbing.'
-            : ' A small count that never moves is survivable. Re-run this check in a week and compare, because growth is the danger sign, not the number itself.'
+            : ' Re-run this check in a week and compare the two counts.'
         }`,
       ),
     });

@@ -526,14 +526,31 @@ export function run(input: Uint8Array | string, opts: DmarcOpts): string {
       .slice(0, 5)
       .map((g) => g.sourceIp)
       .join(', ');
-    hints.push(
-      `${percent(bothFailMessages, totalMessages)} of this volume failed both SPF and DKIM alignment. Check whether those IPs (${suspects}) are one of your own senders that is not set up yet before you tighten the policy. Moving to p=quarantine while a real sender is failing would send your own mail to spam.`,
-    );
+    const lead = `${percent(bothFailMessages, totalMessages)} of this volume failed both SPF and DKIM alignment.`;
+    if (first.p === 'reject') {
+      hints.push(
+        `${lead} The published policy is already p=reject, so these sources are being rejected. Confirm that none of them (${suspects}) are legitimate senders of yours before you treat the volume as spoofing.`,
+      );
+    } else if (first.p === 'quarantine') {
+      hints.push(
+        `${lead} Check whether those IPs (${suspects}) are one of your own senders that is not set up yet before you tighten the policy further. Moving to p=reject while a real sender is failing would get your own mail refused outright.`,
+      );
+    } else {
+      hints.push(
+        `${lead} Check whether those IPs (${suspects}) are one of your own senders that is not set up yet before you tighten the policy. Moving to p=quarantine while a real sender is failing would send your own mail to spam.`,
+      );
+    }
   }
-  if (first.p === 'none' && passShare > 0.98) {
-    hints.push(
-      `${percent(passMessages, totalMessages)} of this volume is fully aligned and the policy is still p=none, so nothing is being enforced. If later reports look the same, this domain is a reasonable candidate for p=quarantine.`,
-    );
+  if (passShare > 0.98) {
+    if (first.p === 'none') {
+      hints.push(
+        `${percent(passMessages, totalMessages)} of this volume is fully aligned and the policy is still p=none, so nothing is being enforced. If later reports look the same, this domain is a reasonable candidate for p=quarantine.`,
+      );
+    } else if (first.p === 'quarantine') {
+      hints.push(
+        `${percent(passMessages, totalMessages)} of this volume is fully aligned and the policy is already p=quarantine. If later reports look the same, this domain is a reasonable candidate for p=reject.`,
+      );
+    }
   }
   if (forwarderMessages > 0) {
     hints.push(

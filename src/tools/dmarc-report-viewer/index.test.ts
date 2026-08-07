@@ -221,6 +221,36 @@ const SPF_ONLY_REPORT = `<?xml version="1.0" encoding="UTF-8"?>
   </record>
 </feedback>`;
 
+/**
+ * Builds a report for policy.example under an arbitrary published policy, with
+ * `aligned` fully passing messages and `failing` messages that fail both checks.
+ */
+function reportAt(p: string, aligned: number, failing: number): string {
+  const record = (ip: string, count: number, result: string): string => `
+  <record>
+    <row>
+      <source_ip>${ip}</source_ip>
+      <count>${count}</count>
+      <policy_evaluated><disposition>none</disposition><dkim>${result}</dkim><spf>${result}</spf></policy_evaluated>
+    </row>
+    <identifiers><header_from>policy.example</header_from></identifiers>
+    <auth_results>
+      <dkim><domain>policy.example</domain><result>${result}</result></dkim>
+      <spf><domain>policy.example</domain><result>${result}</result></spf>
+    </auth_results>
+  </record>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<feedback>
+  <report_metadata>
+    <org_name>google.com</org_name>
+    <date_range><begin>1785542400</begin><end>1785628800</end></date_range>
+  </report_metadata>
+  <policy_published><domain>policy.example</domain><p>${p}</p></policy_published>${
+    aligned > 0 ? record('203.0.113.10', aligned, 'pass') : ''
+  }${failing > 0 ? record('192.0.2.55', failing, 'fail') : ''}
+</feedback>`;
+}
+
 function verdictFor(report: string, ip: string): string {
   const line = report.split('\n').find((l) => l.startsWith(ip));
   if (!line) throw new Error(`no table row for ${ip}`);
@@ -397,5 +427,61 @@ describe('dmarc-report-viewer', () => {
   it('uses no em dashes or en dashes in the report prose', () => {
     const out = run(THREE_SOURCE_REPORT, { view: 'full' });
     expect(out).not.toMatch(/[–—]/);
+  });
+});
+
+describe('dmarc-report-viewer advice is aware of the published policy', () => {
+  it('warns about quarantine as the next step when the policy is p=none', () => {
+    const out = run(reportAt('none', 60, 40), {});
+    expect(out).toContain('40.0% of this volume failed both SPF and DKIM alignment');
+    expect(out).toContain(
+      'Moving to p=quarantine while a real sender is failing would send your own mail to spam.',
+    );
+    expect(out).not.toContain('Moving to p=reject');
+  });
+
+  it('warns about reject as the next step when the policy is already p=quarantine', () => {
+    const out = run(reportAt('quarantine', 60, 40), {});
+    expect(out).toContain('before you tighten the policy further');
+    expect(out).toContain(
+      'Moving to p=reject while a real sender is failing would get your own mail refused outright.',
+    );
+    expect(out).not.toContain('Moving to p=quarantine');
+    expect(out).not.toContain('would send your own mail to spam');
+  });
+
+  it('drops all tightening advice when the policy is p=reject', () => {
+    const out = run(reportAt('reject', 60, 40), {});
+    expect(out).toContain('The published policy is already p=reject, so these sources are being');
+    expect(out).toContain('192.0.2.55');
+    expect(out).toContain('are legitimate senders of yours before you treat the volume as spoofing');
+    expect(out).not.toContain('Moving to p=');
+    expect(out).not.toContain('tighten the policy');
+    expect(out).not.toContain('reasonable candidate for');
+  });
+
+  it('calls a clean p=none domain a candidate for quarantine', () => {
+    const out = run(reportAt('none', 100, 0), {});
+    expect(out).toContain('the policy is still p=none, so nothing is being enforced');
+    expect(out).toContain('reasonable candidate for p=quarantine');
+  });
+
+  it('calls a clean p=quarantine domain a candidate for reject', () => {
+    const out = run(reportAt('quarantine', 100, 0), {});
+    expect(out).toContain('the policy is already p=quarantine');
+    expect(out).toContain('reasonable candidate for p=reject');
+    expect(out).not.toContain('reasonable candidate for p=quarantine');
+  });
+
+  it('suggests no further tightening for a clean p=reject domain', () => {
+    const out = run(reportAt('reject', 100, 0), {});
+    expect(out).not.toContain('reasonable candidate for');
+    expect(out).toContain('Nothing here needs urgent action');
+  });
+
+  it('uses no em dashes or en dashes in the policy aware advice', () => {
+    for (const p of ['none', 'quarantine', 'reject']) {
+      expect(run(reportAt(p, 60, 40), {})).not.toMatch(/[–—]/);
+    }
   });
 });

@@ -168,9 +168,15 @@ describe('email-header-analyzer hop waterfall', () => {
     expect(out).toContain('5 Received headers, oldest first');
 
     const rows = out.split('\n').filter((l) => /^\s*\d+ {2}\S/.test(l));
+    // The oldest Received here is a local "by" submission with no from clause,
+    // so there is no originating host to put in a hop 0 row.
     expect(rows).toHaveLength(5);
     expect(rows[0]).toContain('mail.origin.example');
-    expect(rows[0]).toContain('origin');
+    // The first receiving relay is never labelled as the origin itself: the
+    // delay column carries a dash, not the old "origin" marker.
+    expect(rows[0]).toMatch(/\s-$/);
+    expect(rows[0]).not.toMatch(/origin$/);
+    expect(out).not.toContain('Hop 0 is the originating host');
     expect(rows[1]).toContain('smtp.middle.example');
     expect(rows[1]).toContain('2s');
     expect(rows[2]).toContain('mx.dest.example');
@@ -212,13 +218,15 @@ describe('email-header-analyzer hop waterfall', () => {
       'From: a@example.com',
     ].join('\n');
     const out = go(input, { section: 'hops' });
+    // Row 0 is the origin row, so the three Received rows start at index 1.
     const rows = out.split('\n').filter((l) => /^\s*\d+ {2}\S/.test(l));
-    expect(rows).toHaveLength(3);
-    expect(rows[1]).toContain('?');
-    expect(rows[1]).toContain('no timestamp could be parsed');
+    expect(rows).toHaveLength(4);
+    expect(rows[0]).toContain('origin.example');
+    expect(rows[2]).toContain('?');
+    expect(rows[2]).toContain('no timestamp could be parsed');
     expect(out).toContain('raw: from broken.example by middle.example with ESMTP id NOPE');
     // The chain continues from the last known timestamp.
-    expect(rows[2]).toContain('30s');
+    expect(rows[3]).toContain('30s');
     expect(out).toContain('Total transit time: 30s');
   });
 
@@ -231,6 +239,41 @@ describe('email-header-analyzer hop waterfall', () => {
     expect(out).toContain('1 Received header, oldest first');
     expect(out).toContain('Only one Received header, so there is no hop to hop delay to measure.');
     expect(out).not.toContain('slowest hop');
+  });
+
+  it('opens the waterfall with an origin row naming the from-host and its IP', () => {
+    const input = [
+      'Received: from relay.two.example by mbox.dest.example; Tue, 5 Aug 2025 12:00:10 +0000',
+      'Received: from sender.origin.example (sender.origin.example [203.0.113.44])',
+      '\tby relay.two.example (Postfix) with ESMTPS id 7A7A7A; Tue, 5 Aug 2025 12:00:00 +0000',
+      'From: a@example.com',
+    ].join('\n');
+    const rows = go(input, { section: 'hops' })
+      .split('\n')
+      .filter((l) => /^\s*\d+ {2}\S/.test(l));
+
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toMatch(/^\s*0\s/);
+    expect(rows[0]).toContain('sender.origin.example');
+    expect(rows[0]).toContain('origin');
+    expect(rows[0]).toContain('IP 203.0.113.44');
+    // Hop 1 is the first receiving relay, not the origin.
+    expect(rows[1]).toContain('relay.two.example');
+    expect(rows[1]).not.toContain('origin');
+    expect(rows[2]).toContain('mbox.dest.example');
+    expect(rows[2]).toContain('10s');
+  });
+
+  it('omits the origin row when the oldest Received names no from-host', () => {
+    const input = [
+      'Received: by local.example (Postfix, from userid 1000); Tue, 5 Aug 2025 12:00:00 +0000',
+      'From: a@example.com',
+    ].join('\n');
+    const out = go(input, { section: 'hops' });
+    const rows = out.split('\n').filter((l) => /^\s*\d+ {2}\S/.test(l));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatch(/^\s*1\s/);
+    expect(out).not.toContain('Hop 0 is the originating host');
   });
 
   it('says so when there is no Received header at all', () => {

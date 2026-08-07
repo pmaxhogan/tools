@@ -606,17 +606,30 @@ function renderHops(headers: Header[]): string[] {
   const maxDelay = measured.length ? Math.max(...measured) : 0;
   const slowest = maxDelay > 0 ? delays.indexOf(maxDelay) : -1;
 
+  const originHost = hops[0]?.from;
+  const originIp = hops[0]?.fromComment?.match(/\[([0-9A-Fa-f.:]+)\]/)?.[1];
+
   out.push(
     `${hops.length} Received header${hops.length === 1 ? '' : 's'}, oldest first. Delay is the gap between this hop and the one before it.`,
   );
+  if (originHost)
+    out.push(
+      'Hop 0 is the originating host named by the oldest Received header. It writes no timestamp of its own, so it carries no delay.',
+    );
   out.push('');
+
+  if (originHost) {
+    out.push(
+      `${padLeft('0', 2)}  ${padRight(truncate(originHost, HOST_WIDTH), HOST_WIDTH)}  ${padLeft('origin', DELAY_WIDTH)}  ${originIp ? `IP ${originIp}` : ''}`.trimEnd(),
+    );
+  }
 
   hops.forEach((hop, i) => {
     const host = truncate(hop.by || hop.from || '(host not recorded)', HOST_WIDTH);
     const delay = delays[i];
     let text: string;
     if (!hop.date) text = '?';
-    else if (delay === undefined) text = 'origin';
+    else if (delay === undefined) text = '-';
     else text = formatDelay(delay);
 
     const bar =
