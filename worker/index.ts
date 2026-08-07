@@ -54,6 +54,8 @@ import { meta as snowflakeDecoderMeta } from '../src/tools/snowflake-decoder/met
 import { run as snowflakeDecoderRun } from '../src/tools/snowflake-decoder/index';
 import { meta as sqlFormatterMeta } from '../src/tools/sql-formatter/meta';
 import { run as sqlFormatterRun } from '../src/tools/sql-formatter/index';
+import { meta as subtitleEditorMeta } from '../src/tools/subtitle-editor/meta';
+import { run as subtitleEditorRun } from '../src/tools/subtitle-editor/index';
 import { meta as unicodePickerMeta } from '../src/tools/unicode-picker/meta';
 import { run as unicodePickerRun } from '../src/tools/unicode-picker/index';
 import { meta as urlParserMeta } from '../src/tools/url-parser/meta';
@@ -172,6 +174,11 @@ const ALL: Endpoint[] = [
     sampleQuery: 'dialect=postgresql&keywordCase=upper',
     sampleCommand: (base) =>
       `printf 'select id,name from users where id=1' | curl -X POST --data-binary @- "${base}/api/sql-formatter?dialect=postgresql"`,
+  }),
+  expose(subtitleEditorMeta, subtitleEditorRun, {
+    sampleQuery: 'operation=shift&offset=%2B2.5',
+    sampleCommand: (base) =>
+      `printf '1\\n00:00:01,000 --> 00:00:02,000\\nHello\\n' | curl -X POST --data-binary @- "${base}/api/subtitle-editor?operation=shift&offset=%2B2.5"`,
   }),
   expose(unicodePickerMeta, unicodePickerRun, { sample: 'arrow', sampleQuery: 'category=arrows' }),
   expose(urlParserMeta, urlParserRun, { sample: 'https://example.com/a/b?x=1&y=2#frag' }),
