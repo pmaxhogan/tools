@@ -39,16 +39,14 @@ export type Capability =
  *
  * `synonyms` are extra search aliases that the shared searchable-select filters
  * on in addition to the visible `label` (for example ["hex", "base16"] on a
- * "Hexadecimal" option). They are never rendered. They are optional FOR NOW so
- * the codebase stays green while consumers migrate; the orchestrator flips them
- * to REQUIRED once every meta.ts select and every bespoke `<Select>` carries
- * them.
+ * "Hexadecimal" option). They are never rendered. Every option must carry them,
+ * even on a select too small to show the search field today.
  */
 export interface SelectOption {
   value: string;
   label: string;
-  /** Search aliases. Optional during migration, will become required. */
-  synonyms?: string[];
+  /** Search aliases (required). Never rendered; only the searchable-select reads them. */
+  synonyms: string[];
 }
 
 /**
@@ -59,36 +57,33 @@ export interface SelectOption {
  */
 export interface SelectGroup {
   label: string;
-  /** Search aliases for the category. Optional during migration. */
-  synonyms?: string[];
+  /** Search aliases for the category (required). */
+  synonyms: string[];
   options?: SelectOption[];
   groups?: SelectGroup[];
 }
 
 /**
- * The dropdown option. Three ways to supply the choices, checked in this order
- * by `flattenSelectOptions`:
+ * The dropdown option. Two ways to supply the options, checked in this order by
+ * `flattenSelectOptions`:
  *
  * - `groups` — hierarchical categories (the preferred model for larger selects).
  * - `options` — a flat list of {value,label,synonyms} (the preferred model for
  *   small selects with no useful grouping).
- * - `choices` — the legacy flat {value,label} list, kept working only so
- *   unmigrated tools still compile. Do not add new `choices`; use `options`.
  *
- * The shared searchable-select shows a search field automatically once the flat
- * leaf-option count is greater than 6, and filters on option labels, option
- * synonyms, group labels, and group synonyms.
+ * Every option and group carries search `synonyms`. The shared searchable-select
+ * shows a search field automatically once the flat leaf-option count is greater
+ * than 6, and filters on option labels, option synonyms, group labels, and group
+ * synonyms.
  */
 export interface SelectOptionSpec {
   kind: "select";
   id: string;
   label: string;
   default: string;
-  /** Legacy flat list. Backward compat during migration only; prefer `options`. */
-  choices?: { value: string; label: string }[];
-  /** Flat option list (new model). Every option carries search synonyms. */
+  /** Flat option list. Every option carries search synonyms. */
   options?: SelectOption[];
-  /** Hierarchical category groups (new model), recursively nestable. */
+  /** Hierarchical category groups, recursively nestable. */
   groups?: SelectGroup[];
 }
 

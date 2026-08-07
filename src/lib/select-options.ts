@@ -23,9 +23,9 @@ function collectGroup(group: SelectGroup, out: SelectOption[]): void {
 }
 
 /**
- * The flat list of every leaf option a select offers, regardless of which of
- * the three shapes (`groups`, `options`, `choices`) it uses. Order is the
- * natural reading order: grouped options come out in tree order.
+ * The flat list of every leaf option a select offers, whether it uses `groups`
+ * or a flat `options` list. Order is the natural reading order: grouped options
+ * come out in tree order.
  *
  * Consumers use this to count options (for the search threshold and the curl
  * API index), to resolve a value back to its label (the trigger display), and
@@ -37,7 +37,6 @@ export function flattenSelectOptions(spec: SelectOptionSpec): SelectOption[] {
     for (const group of spec.groups) collectGroup(group, out);
   }
   for (const option of spec.options ?? []) out.push(option);
-  for (const choice of spec.choices ?? []) out.push({ value: choice.value, label: choice.label });
   return out;
 }
 
@@ -142,8 +141,8 @@ function surfaceAll(group: SelectGroup): FilteredGroup {
  * The result of filtering a select's whole option tree by a query.
  *
  * `groups` are the surviving hierarchical categories; `options` are the
- * surviving ungrouped leaf options (from a flat `options`/`choices` list, or
- * left at the top level alongside groups). `count` is the total number of
+ * surviving ungrouped leaf options (from a flat `options` list, or left at the
+ * top level alongside groups). `count` is the total number of
  * surviving leaf options, so a consumer can render a "no matches" state when it
  * is zero.
  */
@@ -167,10 +166,7 @@ function countGroup(group: FilteredGroup): number {
  */
 export function filterSelectTree(spec: SelectOptionSpec, query: string): FilteredSelect {
   const tokens = tokenize(query);
-  const flatOptions: SelectOption[] = [
-    ...(spec.options ?? []),
-    ...(spec.choices ?? []).map((c) => ({ value: c.value, label: c.label })),
-  ];
+  const flatOptions: SelectOption[] = [...(spec.options ?? [])];
 
   if (tokens.length === 0) {
     const groups = (spec.groups ?? []).map((g) => surfaceAll(g));

@@ -7,17 +7,6 @@ import {
   shouldShowSearch,
 } from "./select-options";
 
-const legacy: SelectOptionSpec = {
-  kind: "select",
-  id: "x",
-  label: "X",
-  default: "a",
-  choices: [
-    { value: "a", label: "Apple" },
-    { value: "b", label: "Banana" },
-  ],
-};
-
 const flat: SelectOptionSpec = {
   kind: "select",
   id: "dir",
@@ -61,10 +50,6 @@ const grouped: SelectOptionSpec = {
 };
 
 describe("flattenSelectOptions", () => {
-  it("flattens legacy choices", () => {
-    expect(flattenSelectOptions(legacy).map((o) => o.value)).toEqual(["a", "b"]);
-  });
-
   it("flattens a flat options list", () => {
     expect(flattenSelectOptions(flat).map((o) => o.value)).toEqual(["escape", "unescape"]);
   });
@@ -78,7 +63,7 @@ describe("flattenSelectOptions", () => {
     ]);
   });
 
-  it("returns an empty list for a select with no choices at all", () => {
+  it("returns an empty list for a select with no options at all", () => {
     const empty: SelectOptionSpec = { kind: "select", id: "e", label: "E", default: "" };
     expect(flattenSelectOptions(empty)).toEqual([]);
   });
@@ -96,7 +81,11 @@ describe("shouldShowSearch", () => {
       id: "b",
       label: "B",
       default: "0",
-      options: Array.from({ length: 7 }, (_, i) => ({ value: String(i), label: `Opt ${i}` })),
+      options: Array.from({ length: 7 }, (_, i) => ({
+        value: String(i),
+        label: `Opt ${i}`,
+        synonyms: [],
+      })),
     };
     expect(shouldShowSearch(big)).toBe(true);
   });
@@ -155,8 +144,8 @@ describe("filterSelectTree", () => {
     expect(r.options).toEqual([]);
   });
 
-  it("filters flat options and legacy choices too", () => {
+  it("filters a flat options list by label and synonym", () => {
     expect(filterSelectTree(flat, "decode").options.map((o) => o.value)).toEqual(["unescape"]);
-    expect(filterSelectTree(legacy, "ban").options.map((o) => o.value)).toEqual(["b"]);
+    expect(filterSelectTree(flat, "Unescape").options.map((o) => o.value)).toEqual(["unescape"]);
   });
 });
