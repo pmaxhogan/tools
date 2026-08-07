@@ -22,7 +22,7 @@ function validateHexColor(value: string, fieldLabel: string): string {
     throw new ToolError(
       'invalid-color',
       `"${value}" is not a valid hex color for ${fieldLabel}.`,
-      'Use a hex color like #e2e8f0 (6-digit) or #fff (3-digit).'
+      'Use a hex color like #e2e8f0 (6-digit) or #fff (3-digit).',
     );
   return v;
 }
@@ -34,7 +34,7 @@ function validateSize(value: number, fieldLabel: string): number {
     throw new ToolError(
       'invalid-size',
       `${fieldLabel} must be a whole number between ${MIN_SIZE} and ${MAX_SIZE}, got ${value}.`,
-      `Choose a ${fieldLabel.toLowerCase()} between ${MIN_SIZE} and ${MAX_SIZE}.`
+      `Choose a ${fieldLabel.toLowerCase()} between ${MIN_SIZE} and ${MAX_SIZE}.`,
     );
   return n;
 }
@@ -50,7 +50,13 @@ function escapeXml(s: string): string {
 }
 
 /** Build the SVG markup for the placeholder image. */
-function buildSvg(width: number, height: number, background: string, foreground: string, label: string): string {
+function buildSvg(
+  width: number,
+  height: number,
+  background: string,
+  foreground: string,
+  label: string,
+): string {
   const fontSize = Math.max(12, Math.round(Math.min(width, height) * 0.1));
   const safeLabel = escapeXml(label);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${safeLabel}">
@@ -75,10 +81,7 @@ export function encodeSvgForDataUri(svg: string): string {
     .replace(/ /g, '%20');
 }
 
-export const run: ToolLogic<undefined, PlaceholderResult, PlaceholderOpts>['run'] = (
-  _input,
-  opts
-) => {
+export function run(_input: undefined, opts: PlaceholderOpts): PlaceholderResult {
   const width = validateSize(opts.width ?? 600, 'Width');
   const height = validateSize(opts.height ?? 400, 'Height');
   const background = validateHexColor(opts.background || '#e2e8f0', 'background');
@@ -96,6 +99,6 @@ export const run: ToolLogic<undefined, PlaceholderResult, PlaceholderOpts>['run'
     'HTML img tag': htmlImg,
     'CSS background': cssBackground,
   };
-};
+}
 
 export default { run } satisfies ToolLogic<undefined, PlaceholderResult, PlaceholderOpts>;

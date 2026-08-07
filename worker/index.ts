@@ -212,6 +212,16 @@ function sampleCommand(e: Endpoint, base: string): string {
   return `curl "${url}"`;
 }
 
+/**
+ * Base URL for the examples we print. Production is always https, so an http
+ * request still gets copy-pasteable https commands. Local dev keeps its own
+ * scheme and port.
+ */
+function baseUrl(url: URL): string {
+  const isLocal = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(url.host);
+  return isLocal ? url.origin : `https://${url.host}`;
+}
+
 /** The discoverability surface: `curl https://tools.maxhogan.dev/api`. */
 function indexBody(base: string): string {
   const lines: string[] = [
@@ -307,7 +317,7 @@ function cacheFor(meta: ToolMeta): string {
 async function handleTool(request: Request, url: URL, slug: string): Promise<Response> {
   const endpoint = BY_SLUG.get(slug);
   if (!endpoint || !endpoint.meta.http) {
-    return text(notFoundBody(slug, url.origin), 404);
+    return text(notFoundBody(slug, baseUrl(url)), 404);
   }
 
   const expected = endpoint.meta.http.method;
@@ -317,8 +327,8 @@ async function handleTool(request: Request, url: URL, slug: string): Promise<Res
       `/api/${slug} accepts ${expected}, not ${request.method}.`,
       '',
       expected === 'GET'
-        ? `Try: curl "${url.origin}/api/${slug}?input=..."`
-        : `Try: curl -X POST --data-binary @file "${url.origin}/api/${slug}"`,
+        ? `Try: curl "${baseUrl(url)}/api/${slug}?input=..."`
+        : `Try: curl -X POST --data-binary @file "${baseUrl(url)}/api/${slug}"`,
       '',
     ].join('\n');
     return new Response(body, {
@@ -352,7 +362,7 @@ async function handleTool(request: Request, url: URL, slug: string): Promise<Res
         error: {
           code: 'internal-error',
           message: 'This tool failed to run on that input.',
-          fix: `Check the input and options against ${url.origin}/api, then try again.`,
+          fix: `Check the input and options against ${baseUrl(url)}/api, then try again.`,
         },
       },
       500,
@@ -372,7 +382,7 @@ export default {
     }
 
     if (path === '/api' || path === '/api/') {
-      return text(indexBody(url.origin), 200, 'public, max-age=3600');
+      return text(indexBody(baseUrl(url)), 200, 'public, max-age=3600');
     }
 
     let slug = path.slice('/api/'.length).replace(/\/+$/, '');
@@ -382,7 +392,7 @@ export default {
       // A malformed escape sequence just means no such tool.
     }
 
-    if (slug.includes('/')) return text(notFoundBody(slug, url.origin), 404);
+    if (slug.includes('/')) return text(notFoundBody(slug, baseUrl(url)), 404);
 
     if (request.method !== 'GET' && request.method !== 'HEAD' && request.method !== 'POST') {
       return text(`/api/${slug} accepts GET, POST and OPTIONS only.`, 405);

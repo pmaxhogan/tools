@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const props = defineProps<{ spec: OptionSpec; modelValue: unknown }>();
+defineProps<{ spec: OptionSpec; modelValue: unknown }>();
 const emit = defineEmits<{ 'update:modelValue': [value: unknown] }>();
 
 function set(v: unknown) {
@@ -21,18 +21,29 @@ function set(v: unknown) {
 
 <template>
   <div class="flex min-w-0 flex-col gap-1.5">
-    <Label :for="spec.id" class="text-xs text-muted-foreground">{{ spec.label }}</Label>
+    <Label
+      :for="spec.id"
+      class="text-xs text-muted-foreground"
+    >{{ spec.label }}</Label>
 
     <Select
       v-if="spec.kind === 'select'"
       :model-value="String(modelValue)"
       @update:model-value="set($event)"
     >
-      <SelectTrigger :id="spec.id" size="sm" class="w-full">
+      <SelectTrigger
+        :id="spec.id"
+        size="sm"
+        class="w-full"
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="c in spec.choices" :key="c.value" :value="c.value">
+        <SelectItem
+          v-for="c in spec.choices"
+          :key="c.value"
+          :value="c.value"
+        >
           {{ c.label }}
         </SelectItem>
       </SelectContent>

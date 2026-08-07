@@ -133,7 +133,7 @@ describe('json-formatter: jwt-decode', () => {
     const out = decodeJwt(`${b64url({ alg: 'none' })}.${b64url({ sub: 'x' })}.`);
     expect(out['Expires (exp)']).toBeUndefined();
     expect(out.Type).toBe('(not specified)');
-    expect(out.Signature).toBe('(none — unsecured token)');
+    expect(out.Signature).toBe('(none: unsecured token)');
   });
 
   it('names the part that failed: wrong number of segments', () => {

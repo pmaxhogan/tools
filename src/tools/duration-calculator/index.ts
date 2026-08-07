@@ -112,7 +112,7 @@ function evaluateExpression(expr: string): number {
       throw new ToolError(
         'unparseable-token',
         `Could not parse duration "${text}" at position ${position}.`,
-        FIX_EXAMPLE
+        FIX_EXAMPLE,
       );
     }
     total += sign * ms;
@@ -178,13 +178,14 @@ function humanizeDuration(ms: number): string {
   return sign + parts.join(' ');
 }
 
-export const run: ToolLogic<string, DurationResult, Record<string, unknown>>['run'] = (input) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function run(input: string, _opts: Record<string, unknown>): DurationResult {
   const raw = input ?? '';
   if (!raw.trim()) {
     throw new ToolError(
       'empty-input',
       'Enter a duration expression to calculate.',
-      'e.g. "1:30:00 + 45m" or "90m"'
+      'e.g. "1:30:00 + 45m" or "90m"',
     );
   }
 
@@ -197,6 +198,6 @@ export const run: ToolLogic<string, DurationResult, Record<string, unknown>>['ru
     'Total minutes': (totalMs / 60_000).toFixed(2),
     'Total hours': (totalMs / 3_600_000).toFixed(3),
   };
-};
+}
 
 export default { run } satisfies ToolLogic<string, DurationResult, Record<string, unknown>>;

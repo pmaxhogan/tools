@@ -75,12 +75,12 @@ function address(f: Faker): string {
   return parts.join(', ');
 }
 
-/** "Acme Corp — Engineering — synergize scalable metrics" */
+/** "Acme Corp · Engineering · synergize scalable metrics" */
 function company(f: Faker): string {
-  return `${f.company.name()} — ${f.commerce.department()} — ${f.company.buzzPhrase()}`;
+  return `${f.company.name()} · ${f.commerce.department()} · ${f.company.buzzPhrase()}`;
 }
 
-/** "visa · 4352-4363-4749-1740 · CVV 465" — issuer and number always agree. */
+/** "visa · 4352-4363-4749-1740 · CVV 465": issuer and number always agree. */
 function creditCard(f: Faker): string {
   const issuer = f.finance.creditCardIssuer();
   const number = f.finance.creditCardNumber({ issuer });
@@ -124,7 +124,7 @@ const LINE_GENERATORS: Record<string, (f: Faker) => string> = {
   'credit-cards': creditCard,
 };
 
-export const run: ToolLogic<undefined, string, FakeDataOpts>['run'] = (_input, opts) => {
+export function run(_input: undefined, opts: FakeDataOpts): string {
   const type = opts.type || 'people';
   if (!(DATA_TYPES as readonly string[]).includes(type))
     throw new ToolError(
@@ -138,7 +138,7 @@ export const run: ToolLogic<undefined, string, FakeDataOpts>['run'] = (_input, o
     throw new ToolError(
       'bad-count',
       'Count must be between 1 and 100.',
-      'Lower the count — 100 records per run is the cap.',
+      'Lower the count: 100 records per run is the cap.',
     );
 
   const f = makeFaker(typeof opts.seed === 'string' ? opts.seed.trim() : '');
@@ -155,6 +155,6 @@ export const run: ToolLogic<undefined, string, FakeDataOpts>['run'] = (_input, o
 
   const gen = LINE_GENERATORS[type]!;
   return Array.from({ length: count }, () => gen(f)).join('\n');
-};
+}
 
 export default { run } satisfies ToolLogic<undefined, string, FakeDataOpts>;

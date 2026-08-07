@@ -42,11 +42,19 @@ function go(slug: string) {
 </script>
 
 <template>
-  <CommandDialog v-model:open="open" title="Search tools" description="Jump to any tool">
+  <CommandDialog
+    v-model:open="open"
+    title="Search tools"
+    description="Jump to any tool"
+  >
     <CommandInput placeholder="Type a tool name…" />
     <CommandList>
       <CommandEmpty>No matching tools.</CommandEmpty>
-      <CommandGroup v-for="g in grouped" :key="g.category" :heading="g.category">
+      <CommandGroup
+        v-for="g in grouped"
+        :key="g.category"
+        :heading="g.category"
+      >
         <CommandItem
           v-for="t in g.items"
           :key="t.slug"

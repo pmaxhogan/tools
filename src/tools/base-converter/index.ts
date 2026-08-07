@@ -49,8 +49,8 @@ function parse(raw: string, inputBaseOpt: string): Parsed {
   if (s.includes('.'))
     throw new ToolError(
       'non-integer',
-      `"${trimmed}" has a decimal point — only integers are supported.`,
-      'Remove the fractional part or round to the nearest integer first.'
+      `"${trimmed}" has a decimal point: only integers are supported.`,
+      'Remove the fractional part or round to the nearest integer first.',
     );
 
   let base: number;
@@ -80,7 +80,7 @@ function parse(raw: string, inputBaseOpt: string): Parsed {
   if (!digits.length)
     throw new ToolError(
       'empty-input',
-      `Enter digits after the "${trimmed.slice(offset, offset + prefixLen)}" prefix.`
+      `Enter digits after the "${trimmed.slice(offset, offset + prefixLen)}" prefix.`,
     );
 
   let value = 0n;
@@ -93,7 +93,7 @@ function parse(raw: string, inputBaseOpt: string): Parsed {
       throw new ToolError(
         'invalid-digit',
         `Character '${ch}' at position ${position} is not valid for base ${base}.`,
-        `Use only digits ${maxDigitDescription(base)} for base ${base}.`
+        `Use only digits ${maxDigitDescription(base)} for base ${base}.`,
       );
     }
     value = value * bigBase + BigInt(v);
@@ -120,10 +120,7 @@ function toBytesHex(abs: bigint): string {
   return pairs.join(' ');
 }
 
-export const run: ToolLogic<string, BaseConverterResult, BaseConverterOpts>['run'] = (
-  input,
-  opts
-) => {
+export function run(input: string, opts: BaseConverterOpts): BaseConverterResult {
   const { value } = parse(input ?? '', opts.inputBase);
   const negative = value < 0n;
   const abs = negative ? -value : value;
@@ -147,6 +144,6 @@ export const run: ToolLogic<string, BaseConverterResult, BaseConverterOpts>['run
   }
 
   return result;
-};
+}
 
 export default { run } satisfies ToolLogic<string, BaseConverterResult, BaseConverterOpts>;

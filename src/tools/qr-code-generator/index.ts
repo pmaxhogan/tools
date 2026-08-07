@@ -154,7 +154,7 @@ function normaliseMargin(margin: number): number {
   return Math.floor(m);
 }
 
-export const run: ToolLogic<string, string, QrOpts>['run'] = async (input, opts) => {
+export async function run(input: string, opts: QrOpts): Promise<string> {
   const payload = buildPayload(input, opts?.preset ?? 'text');
   const errorCorrectionLevel = normaliseEcc(opts?.ecc ?? 'M');
   const margin = normaliseMargin(opts?.margin ?? 4);
@@ -169,9 +169,9 @@ export const run: ToolLogic<string, string, QrOpts>['run'] = async (input, opts)
     throw new ToolError(
       'encode-failed',
       `Could not encode this input as a QR code: ${(e as Error).message}`,
-      'QR codes top out near 3 KB of data — shorten the input or lower the error correction level.',
+      'QR codes top out near 3 KB of data: shorten the input or lower the error correction level.',
     );
   }
-};
+}
 
 export default { run } satisfies ToolLogic<string, string, QrOpts>;

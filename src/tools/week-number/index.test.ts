@@ -11,7 +11,7 @@ describe('week-number', () => {
     expect(out['Day of week']).toBe('Thursday (4)');
     expect(out.Quarter).toBe('Q3');
     expect(out['Days remaining in year']).toBe('147');
-    expect(out['Week range']).toBe('2026-08-03 – 2026-08-09');
+    expect(out['Week range']).toBe('2026-08-03 - 2026-08-09');
   });
 
   it('handles 2026-01-01: ISO week W01 of 2026 (Jan 1 is a Thursday)', () => {
@@ -19,7 +19,7 @@ describe('week-number', () => {
     expect(out['ISO week']).toBe('W01');
     expect(out['ISO week-year']).toBe('2026');
     expect(out['Day of year']).toBe('1');
-    expect(out['Week range']).toBe('2025-12-29 – 2026-01-04');
+    expect(out['Week range']).toBe('2025-12-29 - 2026-01-04');
   });
 
   it('handles 2027-01-01: it belongs to W53 of 2026, not W01 of 2027', () => {

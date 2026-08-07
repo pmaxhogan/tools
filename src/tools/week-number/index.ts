@@ -118,12 +118,13 @@ function format(d: Date): WeekNumberResult {
     'Day of week': `${DAY_NAMES[d.getUTCDay()]} (${isoDayNumber(d)})`,
     Quarter: `Q${quarter}`,
     'Days remaining in year': String(remaining),
-    'Week range': `${isoDateStr(monday)} – ${isoDateStr(sunday)}`,
+    'Week range': `${isoDateStr(monday)} - ${isoDateStr(sunday)}`,
   };
 }
 
-export const run: ToolLogic<string, WeekNumberResult, WeekNumberOpts>['run'] = (input) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function run(input: string, _opts: WeekNumberOpts): WeekNumberResult {
   return format(parseDate(input));
-};
+}
 
 export default { run } satisfies ToolLogic<string, WeekNumberResult, WeekNumberOpts>;

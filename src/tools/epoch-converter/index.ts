@@ -30,7 +30,7 @@ function parse(raw: string): Date {
     throw new ToolError(
       'unparseable-date',
       `Could not parse "${s}" as a date.`,
-      'Use a unix timestamp (seconds or milliseconds) or an ISO 8601 date like 2026-08-06T21:00:00Z.'
+      'Use a unix timestamp (seconds or milliseconds) or an ISO 8601 date like 2026-08-06T21:00:00Z.',
     );
   return d;
 }
@@ -50,7 +50,7 @@ function fmt(d: Date, tz: string): EpochResult {
     throw new ToolError(
       'bad-timezone',
       `Unknown time zone "${tz}".`,
-      'Use an IANA name like America/Chicago, Europe/Berlin, or UTC.'
+      'Use an IANA name like America/Chicago, Europe/Berlin, or UTC.',
     );
   }
 
@@ -78,15 +78,14 @@ function relative(d: Date): string {
   ];
   const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
   for (const [unit, secs] of units) {
-    if (abs >= secs || unit === 'second')
-      return rtf.format(Math.trunc(deltaSec / secs), unit);
+    if (abs >= secs || unit === 'second') return rtf.format(Math.trunc(deltaSec / secs), unit);
   }
   return 'now';
 }
 
-export const run: ToolLogic<string, EpochResult, EpochOpts>['run'] = (input, opts) => {
+export function run(input: string, opts: EpochOpts): EpochResult {
   const raw = (input ?? '').trim() || String(Math.floor(Date.now() / 1000));
   return fmt(parse(raw), opts.tz || 'UTC');
-};
+}
 
 export default { run } satisfies ToolLogic<string, EpochResult, EpochOpts>;

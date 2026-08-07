@@ -48,7 +48,7 @@ export interface FigletOpts {
   [key: string]: unknown;
 }
 
-export const run: ToolLogic<string, string, FigletOpts>['run'] = (input, opts) => {
+export function run(input: string, opts: FigletOpts): string {
   const text = input ?? '';
 
   if (!text.trim())
@@ -62,7 +62,7 @@ export const run: ToolLogic<string, string, FigletOpts>['run'] = (input, opts) =
     throw new ToolError(
       'input-too-long',
       `Input is ${text.length} characters; the limit is ${MAX_LENGTH}.`,
-      'Banner fonts are several characters tall — shorten the text to a headline-length phrase.',
+      'Banner fonts are several characters tall: shorten the text to a headline-length phrase.',
     );
 
   const font = opts?.font || 'Standard';
@@ -86,6 +86,6 @@ export const run: ToolLogic<string, string, FigletOpts>['run'] = (input, opts) =
     font,
     horizontalLayout: requested as Layout,
   });
-};
+}
 
 export default { run } satisfies ToolLogic<string, string, FigletOpts>;

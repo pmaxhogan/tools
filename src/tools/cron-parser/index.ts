@@ -44,7 +44,7 @@ function invalid(expr: string, err: unknown, seconds: boolean): ToolError {
   return new ToolError(
     'invalid-cron',
     `Could not parse "${expr}" as a cron expression: ${why}`,
-    `Use ${shape} — for example ${example(seconds)}.${hint}`,
+    `Use ${shape}, for example ${example(seconds)}.${hint}`,
   );
 }
 
@@ -113,7 +113,7 @@ export function nextRuns(
   }
 }
 
-export const run: ToolLogic<string, CronResult, CronOpts>['run'] = (input, opts) => {
+export function run(input: string, opts: CronOpts): CronResult {
   const expr = (input ?? '').trim().replace(/\s+/g, ' ');
   const seconds = !!opts?.seconds;
   if (!expr)
@@ -138,6 +138,6 @@ export const run: ToolLogic<string, CronResult, CronOpts>['run'] = (input, opts)
     out[`Next run ${i + 1}`] = isoInZone(d, tz);
   });
   return out;
-};
+}
 
 export default { run } satisfies ToolLogic<string, CronResult, CronOpts>;

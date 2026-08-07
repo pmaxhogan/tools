@@ -6,7 +6,7 @@ describe('discord-timestamp', () => {
   it('converts unix seconds', () => {
     const out = run('1754521200', {});
     expect(out['Unix seconds']).toBe('1754521200');
-    expect(out['<t:1754521200:F> — long date/time']).toBe('<t:1754521200:F>');
+    expect(out['<t:1754521200:F> (long date/time)']).toBe('<t:1754521200:F>');
   });
 
   it('parses ISO 8601 input', () => {

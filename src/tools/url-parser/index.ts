@@ -42,7 +42,7 @@ function parse(raw: string): { url: URL; note?: string } {
   if (!raw.includes('://')) {
     try {
       const url = new URL(`https://${raw}`);
-      return { url, note: `No scheme in input — assumed "https://".` };
+      return { url, note: `No scheme in input: assumed "https://".` };
     } catch {
       // fall through to error
     }
@@ -51,7 +51,7 @@ function parse(raw: string): { url: URL; note?: string } {
   throw new ToolError(
     'unparseable-url',
     `Could not parse "${raw}" as a URL.`,
-    'Check for typos, stray spaces, or unbalanced brackets, and include a scheme like https://.'
+    'Check for typos, stray spaces, or unbalanced brackets, and include a scheme like https://.',
   );
 }
 
@@ -64,7 +64,8 @@ function safeDecode(s: string): string {
   }
 }
 
-export const run: ToolLogic<string, UrlParserResult, UrlParserOpts>['run'] = (input) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function run(input: string, _opts: UrlParserOpts): UrlParserResult {
   const raw = (input ?? '').trim();
   if (!raw) throw new ToolError('empty-input', 'Enter a URL to parse.');
 
@@ -78,7 +79,7 @@ export const run: ToolLogic<string, UrlParserResult, UrlParserOpts>['run'] = (in
 
   if (url.username || url.password) {
     out['Warning'] =
-      `Contains embedded credentials ("user:pass@host" pattern) before the host — ` +
+      `Contains embedded credentials ("user:pass@host" pattern) before the host: ` +
       `a common phishing trick to disguise the real destination. ` +
       `The actual host is "${url.hostname}", not the text before the "@".`;
   }
@@ -105,6 +106,6 @@ export const run: ToolLogic<string, UrlParserResult, UrlParserOpts>['run'] = (in
   out['Decoded URL'] = safeDecode(url.href);
 
   return out;
-};
+}
 
 export default { run } satisfies ToolLogic<string, UrlParserResult, UrlParserOpts>;

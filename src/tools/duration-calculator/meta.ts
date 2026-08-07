@@ -20,9 +20,9 @@ export const meta: ToolMeta = {
   output: 'application/json',
   http: { method: 'GET', contentType: 'application/json' },
   copy: {
-    what: "Adds and subtracts clock times and durations in a single expression. Mix hh:mm:ss clock times, unit shorthand like 90m, 1.5h, or 2h 30m, and plain numbers (read as minutes), joined with + and - — or paste one duration per line to sum them all. Returns the total as hh:mm:ss, a humanized 'X days Y hours Z minutes' string, and totals in seconds, minutes, and hours.",
+    what: "Adds and subtracts clock times and durations in a single expression. Mix hh:mm:ss clock times, unit shorthand like 90m, 1.5h, or 2h 30m, and plain numbers (read as minutes), joined with + and -, or paste one duration per line to sum them all. Returns the total as hh:mm:ss, a humanized 'X days Y hours Z minutes' string, and totals in seconds, minutes, and hours.",
     how: 'Type an expression like "1:30:00 + 45min - 20s" or paste a list of durations, one per line, like "90m", "1.5h", "45s". The tool parses every term, evaluates left to right, and shows the running total in five formats at once. Negative totals are shown with a leading minus sign across every field.',
-    why: 'Most time-calculator sites make you pick start and end times from dropdowns or fight a stopwatch-style UI. This one just reads what you type — mixed formats, decimals, and line lists all work — and never sends your durations to a server.',
+    why: 'Most time-calculator sites make you pick start and end times from dropdowns or fight a stopwatch-style UI. This one just reads what you type (mixed formats, decimals, and line lists all work) and never sends your durations to a server.',
     faq: [
       {
         q: 'What duration formats are supported?',
@@ -30,11 +30,11 @@ export const meta: ToolMeta = {
       },
       {
         q: 'Can I paste a list of times instead of writing an expression?',
-        a: 'Yes — put one duration per line with no + or - operators and every line is summed together into the total.',
+        a: 'Yes, put one duration per line with no + or - operators and every line is summed together into the total.',
       },
       {
         q: 'How are negative totals shown?',
-        a: 'If subtraction produces a negative total, every field reflects it — for example Total (hh:mm:ss) reads as -01:15:00 instead of wrapping around to a positive value.',
+        a: 'If subtraction produces a negative total, every field reflects it: for example Total (hh:mm:ss) reads as -01:15:00 instead of wrapping around to a positive value.',
       },
     ],
   },

@@ -82,7 +82,7 @@ function parseId(raw: string): bigint {
     throw new ToolError(
       'not-numeric',
       `"${s}" is not a valid snowflake ID.`,
-      'Snowflake IDs are positive whole numbers, e.g. 175928847299117063.'
+      'Snowflake IDs are positive whole numbers, e.g. 175928847299117063.',
     );
 
   return BigInt(cleaned);
@@ -106,7 +106,7 @@ function humanizeAge(ms: number): string {
   return 'now';
 }
 
-export const run: ToolLogic<string, SnowflakeResult, SnowflakeOpts>['run'] = (input, opts) => {
+export function run(input: string, opts: SnowflakeOpts): SnowflakeResult {
   const id = parseId(input ?? '');
 
   const platformKey = opts.platform in PLATFORMS ? opts.platform : 'discord';
@@ -119,7 +119,7 @@ export const run: ToolLogic<string, SnowflakeResult, SnowflakeOpts>['run'] = (in
     throw new ToolError(
       'out-of-range',
       `The decoded timestamp is outside the representable date range.`,
-      'Double-check the ID and the selected platform.'
+      'Double-check the ID and the selected platform.',
     );
 
   const result: SnowflakeResult = {
@@ -131,10 +131,10 @@ export const run: ToolLogic<string, SnowflakeResult, SnowflakeOpts>['run'] = (in
 
   if (timestampMs < spec.epochMs || msNumber > YEAR_2100_MS) {
     result['Warning'] =
-      `This timestamp looks implausible for ${spec.label} — double-check that "${spec.label}" is the right platform for this ID.`;
+      `This timestamp looks implausible for ${spec.label}: double-check that "${spec.label}" is the right platform for this ID.`;
   }
 
   return result;
-};
+}
 
 export default { run } satisfies ToolLogic<string, SnowflakeResult, SnowflakeOpts>;

@@ -53,16 +53,26 @@ const grouped = computed(() => {
       <kbd class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">Ctrl K</kbd>
     </div>
 
-    <p v-if="filtered.length === 0" class="mt-10 text-center text-muted-foreground">
+    <p
+      v-if="filtered.length === 0"
+      class="mt-10 text-center text-muted-foreground"
+    >
       No tools match "{{ query }}" yet. Try a different word, or check the full list on GitHub.
     </p>
 
-    <section v-for="[category, items] in grouped" :key="category" class="mt-10">
+    <section
+      v-for="[category, items] in grouped"
+      :key="category"
+      class="mt-10"
+    >
       <h2 class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
         {{ category }}
       </h2>
       <ul class="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <li v-for="t in items" :key="t.slug">
+        <li
+          v-for="t in items"
+          :key="t.slug"
+        >
           <a
             :href="`/${t.slug}`"
             class="block h-full rounded-[14px] border bg-card p-5 shadow-[var(--sh-sm)] transition-[transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:shadow-[var(--sh-md)]"

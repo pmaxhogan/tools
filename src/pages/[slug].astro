@@ -1,6 +1,6 @@
 ---
 import ToolPage from '@/layouts/ToolPage.astro';
-import ToolShell from '@/components/tool/ToolShell.vue';
+import PanelHost from '@/components/tool/PanelHost.vue';
 import { tools } from '@/tools/registry';
 import type { ToolMeta } from '@/tools/types';
 
@@ -16,5 +16,5 @@ const { meta } = Astro.props;
 ---
 
 <ToolPage meta={meta}>
-  <ToolShell client:load meta={meta} />
+  <PanelHost client:load meta={meta} />
 </ToolPage>

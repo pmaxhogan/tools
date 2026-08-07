@@ -27,7 +27,7 @@ function jsonUnescape(str: string): string {
     throw new ToolError(
       'invalid-json-escape',
       `"${str}" is not valid JSON string-escaped text.`,
-      'Check for unescaped quotes, raw control characters, or invalid \\ escape sequences.'
+      'Check for unescaped quotes, raw control characters, or invalid \\ escape sequences.',
     );
   }
 }
@@ -156,7 +156,7 @@ function urlUnescape(str: string): string {
     throw new ToolError(
       'invalid-url-escape',
       `"${str}" contains a malformed percent-encoding sequence.`,
-      'Make sure every % is followed by two hex digits and the encoded bytes form valid UTF-8.'
+      'Make sure every % is followed by two hex digits and the encoded bytes form valid UTF-8.',
     );
   }
 }
@@ -194,15 +194,16 @@ function shellUnescape(str: string): string {
 
 // ---------------------------------------------------------------------------
 
-const FORMATS: Record<string, { escape: (s: string) => string; unescape: (s: string) => string }> = {
-  json: { escape: jsonEscape, unescape: jsonUnescape },
-  html: { escape: htmlEscape, unescape: htmlUnescape },
-  url: { escape: urlEscape, unescape: urlUnescape },
-  regex: { escape: regexEscape, unescape: regexUnescape },
-  shell: { escape: shellEscape, unescape: shellUnescape },
-};
+const FORMATS: Record<string, { escape: (s: string) => string; unescape: (s: string) => string }> =
+  {
+    json: { escape: jsonEscape, unescape: jsonUnescape },
+    html: { escape: htmlEscape, unescape: htmlUnescape },
+    url: { escape: urlEscape, unescape: urlUnescape },
+    regex: { escape: regexEscape, unescape: regexUnescape },
+    shell: { escape: shellEscape, unescape: shellUnescape },
+  };
 
-export const run: ToolLogic<string, string, EscapeOpts>['run'] = (input, opts) => {
+export function run(input: string, opts: EscapeOpts): string {
   const text = input ?? '';
   // Empty input is a no-op in both directions for every format — there is
   // nothing to escape or decode, and this keeps behavior consistent across
@@ -214,7 +215,7 @@ export const run: ToolLogic<string, string, EscapeOpts>['run'] = (input, opts) =
     throw new ToolError(
       'bad-format',
       `Unknown format "${opts.format}".`,
-      'Use one of: json, html, url, regex, shell.'
+      'Use one of: json, html, url, regex, shell.',
     );
 
   if (opts.direction === 'unescape') return format.unescape(text);
@@ -222,8 +223,8 @@ export const run: ToolLogic<string, string, EscapeOpts>['run'] = (input, opts) =
   throw new ToolError(
     'bad-direction',
     `Unknown direction "${opts.direction}".`,
-    'Use "escape" or "unescape".'
+    'Use "escape" or "unescape".',
   );
-};
+}
 
 export default { run } satisfies ToolLogic<string, string, EscapeOpts>;

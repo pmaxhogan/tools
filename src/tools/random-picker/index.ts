@@ -208,7 +208,7 @@ export function splitTeams(names: string[], teamCount: number, next: () => numbe
 // run
 // ---------------------------------------------------------------------------
 
-export const run: ToolLogic<string, string, RandomPickerOpts>['run'] = (input, opts) => {
+export function run(input: string, opts: RandomPickerOpts): string {
   const next = getRng(opts.seed ?? '');
 
   switch (opts.mode) {
@@ -237,6 +237,6 @@ export const run: ToolLogic<string, string, RandomPickerOpts>['run'] = (input, o
         'Use one of: dice, coin, pick, teams.',
       );
   }
-};
+}
 
 export default { run } satisfies ToolLogic<string, string, RandomPickerOpts>;

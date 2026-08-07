@@ -68,13 +68,14 @@ function summaryKeyLabel(key: unknown): string {
   return key.length === 1 ? key.toUpperCase() : key;
 }
 
-export const run: ToolLogic<string, KeycodeResult, Record<string, unknown>>['run'] = (input) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function run(input: string, _opts: Record<string, unknown>): KeycodeResult {
   const raw = (input ?? '').trim();
   if (!raw)
     throw new ToolError(
       'empty-input',
       'Enter a keyboard event as JSON.',
-      `Provide a JSON object with key/code/modifier fields, e.g. ${SAMPLE}`
+      `Provide a JSON object with key/code/modifier fields, e.g. ${SAMPLE}`,
     );
 
   let parsed: unknown;
@@ -84,7 +85,7 @@ export const run: ToolLogic<string, KeycodeResult, Record<string, unknown>>['run
     throw new ToolError(
       'invalid-json',
       'Could not parse input as JSON.',
-      `Provide a valid JSON keyboard event, e.g. ${SAMPLE}`
+      `Provide a valid JSON keyboard event, e.g. ${SAMPLE}`,
     );
   }
 
@@ -92,7 +93,7 @@ export const run: ToolLogic<string, KeycodeResult, Record<string, unknown>>['run
     throw new ToolError(
       'invalid-json',
       'Expected a JSON object describing a keyboard event.',
-      `Provide a valid JSON keyboard event, e.g. ${SAMPLE}`
+      `Provide a valid JSON keyboard event, e.g. ${SAMPLE}`,
     );
   }
 
@@ -110,6 +111,6 @@ export const run: ToolLogic<string, KeycodeResult, Record<string, unknown>>['run
     Repeat: ev.repeat === true ? 'yes' : 'no',
     'Event summary': summary,
   };
-};
+}
 
 export default { run } satisfies ToolLogic<string, KeycodeResult, Record<string, unknown>>;

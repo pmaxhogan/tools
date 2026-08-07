@@ -23,21 +23,29 @@ const all = computed(() =>
 <template>
   <div class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
     <div class="flex items-center justify-between px-3 pt-2">
-      <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
-        >Output</span
-      >
-      <CopyButton :text="all" label="Copy" />
+      <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">Output</span>
+      <CopyButton
+        :text="all"
+        label="Copy"
+      />
     </div>
 
-    <div v-if="isRecord" class="divide-y divide-border/60">
+    <div
+      v-if="isRecord"
+      class="divide-y divide-border/60"
+    >
       <div
         v-for="[k, v] in entries"
         :key="k"
         class="flex items-center justify-between gap-3 px-3 py-2"
       >
         <div class="min-w-0">
-          <div class="text-xs text-muted-foreground">{{ k }}</div>
-          <div class="truncate font-mono text-sm">{{ v }}</div>
+          <div class="text-xs text-muted-foreground">
+            {{ k }}
+          </div>
+          <div class="truncate font-mono text-sm">
+            {{ v }}
+          </div>
         </div>
         <CopyButton :text="v" />
       </div>
@@ -46,7 +54,6 @@ const all = computed(() =>
     <pre
       v-else
       class="max-h-96 overflow-auto px-3 py-2 font-mono text-sm whitespace-pre-wrap break-all"
-      >{{ output }}</pre
-    >
+    >{{ output }}</pre>
   </div>
 </template>

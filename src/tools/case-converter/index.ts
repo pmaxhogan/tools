@@ -63,7 +63,7 @@ function slugify(tokens: string[]): string {
     .map((t) =>
       foldDiacritics(t)
         .toLowerCase()
-        .replace(/[^a-z0-9]/g, '')
+        .replace(/[^a-z0-9]/g, ''),
     )
     .filter(Boolean)
     .join('-');
@@ -125,13 +125,14 @@ function convertLine(line: string): Record<Label, string> {
   };
 }
 
-export const run: ToolLogic<string, CaseResult, CaseOpts>['run'] = (input) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function run(input: string, _opts: CaseOpts): CaseResult {
   const raw = input ?? '';
   if (!raw.trim())
     throw new ToolError(
       'empty-input',
       'Enter some text to convert.',
-      'Type or paste text like "hello world" or "parseHTMLDocument".'
+      'Type or paste text like "hello world" or "parseHTMLDocument".',
     );
 
   const lines = raw.split(/\r?\n/);
@@ -142,6 +143,6 @@ export const run: ToolLogic<string, CaseResult, CaseOpts>['run'] = (input) => {
     result[label] = perLine.map((f) => f[label]).join('\n');
   }
   return result;
-};
+}
 
 export default { run } satisfies ToolLogic<string, CaseResult, CaseOpts>;

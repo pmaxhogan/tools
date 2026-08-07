@@ -69,12 +69,12 @@ function shuffleLines(lines: string[], seed: string): string[] {
   return out;
 }
 
-export const run: ToolLogic<string, string, LineSorterOpts>['run'] = (input, opts) => {
+export function run(input: string, opts: LineSorterOpts): string {
   if (!input || input.trim() === '')
     throw new ToolError(
       'empty-input',
       'Enter some lines of text to process.',
-      'Paste multiple lines into the input, one per line.'
+      'Paste multiple lines into the input, one per line.',
     );
 
   let lines = input.split(/\r?\n/);
@@ -107,11 +107,11 @@ export const run: ToolLogic<string, string, LineSorterOpts>['run'] = (input, opt
       throw new ToolError(
         'unknown-operation',
         `Unknown operation "${opts.operation}".`,
-        'Choose one of sort-az, sort-za, sort-natural, sort-length, dedupe, reverse, shuffle.'
+        'Choose one of sort-az, sort-za, sort-natural, sort-length, dedupe, reverse, shuffle.',
       );
   }
 
   return lines.join('\n');
-};
+}
 
 export default { run } satisfies ToolLogic<string, string, LineSorterOpts>;

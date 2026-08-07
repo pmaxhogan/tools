@@ -28,7 +28,7 @@ function parse(raw: string): Date {
     throw new ToolError(
       'unparseable-date',
       `Could not parse "${s}" as a date.`,
-      'Use a unix timestamp in seconds (1754521200), milliseconds (1754521200000), or an ISO 8601 date like 2026-08-06T21:00:00Z. Leave blank for now.'
+      'Use a unix timestamp in seconds (1754521200), milliseconds (1754521200000), or an ISO 8601 date like 2026-08-06T21:00:00Z. Leave blank for now.',
     );
   return d;
 }
@@ -52,15 +52,14 @@ function fmt(d: Date): DiscordTimestampResult {
   const seconds = Math.floor(d.getTime() / 1000);
   const out: DiscordTimestampResult = { 'Unix seconds': String(seconds) };
   for (const { code, label } of STYLES) {
-    out[`${tag(seconds, code)} — ${label}`] = tag(seconds, code);
+    out[`${tag(seconds, code)} (${label})`] = tag(seconds, code);
   }
   return out;
 }
 
-export const run: ToolLogic<string, DiscordTimestampResult, Record<string, unknown>>['run'] = (
-  input
-) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function run(input: string, _opts: Record<string, unknown>): DiscordTimestampResult {
   return fmt(parse(input ?? ''));
-};
+}
 
 export default { run } satisfies ToolLogic<string, DiscordTimestampResult, Record<string, unknown>>;

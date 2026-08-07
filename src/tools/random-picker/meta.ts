@@ -25,7 +25,7 @@ export const meta: ToolMeta = {
       label: 'Mode',
       default: 'dice',
       choices: [
-        { value: 'dice', label: 'Dice — roll notation like 3d6+2' },
+        { value: 'dice', label: 'Dice: roll notation like 3d6+2' },
         { value: 'coin', label: 'Coin flip' },
         { value: 'pick', label: 'Pick from list' },
         { value: 'teams', label: 'Split into teams' },
@@ -49,12 +49,12 @@ export const meta: ToolMeta = {
   ],
   copy: {
     what: 'Rolls dice from standard notation (3d6+2, d20), flips one or more coins, picks distinct random items from a list, or splits a list of names into randomized, evenly-sized teams. One tool for the "I need something random for tabletop/game night/team standup" moment.',
-    how: 'Pick a mode. For dice, type notation like "2d6+3" into the input. For pick or teams, paste one item or name per line and set the count (items to pick, or number of teams). For coin, the input is ignored — just set how many times to flip. Leave the seed blank for true randomness, or set it to get the exact same result every time you run it.',
+    how: 'Pick a mode. For dice, type notation like "2d6+3" into the input. For pick or teams, paste one item or name per line and set the count (items to pick, or number of teams). For coin, the input is ignored: just set how many times to flip. Leave the seed blank for true randomness, or set it to get the exact same result every time you run it.',
     why: 'Dice-roller and team-randomizer sites are typically cluttered with ads and force a page reload per roll. This one runs instantly in your browser, supports a reproducible seed for when you need to prove a roll or replay a draft, and never sends your list of names anywhere.',
     faq: [
       {
         q: 'What dice notation is supported?',
-        a: 'Standard NdM(+/-K) notation: an optional dice count, "d", the number of sides, and an optional modifier — e.g. "d20", "3d6", or "2d6+3".',
+        a: 'Standard NdM(+/-K) notation: an optional dice count, "d", the number of sides, and an optional modifier, e.g. "d20", "3d6", or "2d6+3".',
       },
       {
         q: 'How does the seed work?',
@@ -62,7 +62,7 @@ export const meta: ToolMeta = {
       },
       {
         q: 'How are teams split?',
-        a: 'Names are shuffled, then dealt round-robin into the requested number of teams, so sizes differ by at most one — 7 names into 3 teams gives 3/2/2.',
+        a: 'Names are shuffled, then dealt round-robin into the requested number of teams, so sizes differ by at most one: 7 names into 3 teams gives 3/2/2.',
       },
     ],
   },

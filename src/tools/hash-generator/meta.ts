@@ -29,7 +29,7 @@ export const meta: ToolMeta = {
   http: { method: 'POST', contentType: 'application/json' },
   copy: {
     what: 'Hashes text with MD5, SHA-1, SHA-256, SHA-384, and SHA-512 simultaneously, all computed locally. Paste a known-good hash into the verify field and it tells you which algorithm (if any) matches, so you can confirm a download or message checksum without guessing the algorithm.',
-    how: 'Type or paste text into the input and every digest updates immediately. To verify a checksum, paste the value you were given into the verify field — matching is case-insensitive, so it works whether the source used upper or lower case hex.',
+    how: 'Type or paste text into the input and every digest updates immediately. To verify a checksum, paste the value you were given into the verify field: matching is case-insensitive, so it works whether the source used upper or lower case hex.',
     why: 'Most online hash tools run one algorithm at a time and force you to pick it first. This one computes all five at once, never uploads your text anywhere, and works offline once the page has loaded.',
     faq: [
       {
@@ -38,11 +38,11 @@ export const meta: ToolMeta = {
       },
       {
         q: 'Can I hash a file instead of text?',
-        a: 'Not yet on this page — it currently hashes pasted or typed text. File hashing (via a drag-and-drop panel) is planned as a follow-up.',
+        a: 'Not yet on this page: it currently hashes pasted or typed text. File hashing (via a drag-and-drop panel) is planned as a follow-up.',
       },
       {
         q: 'Is MD5 or SHA-1 safe to use?',
-        a: 'No — both are cryptographically broken and should never be used for security (password storage, signatures). They are included here only for legacy checksum verification, such as confirming an old download.',
+        a: 'No, both are cryptographically broken and should never be used for security (password storage, signatures). They are included here only for legacy checksum verification, such as confirming an old download.',
       },
     ],
   },

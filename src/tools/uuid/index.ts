@@ -46,7 +46,7 @@ export function v7(now = Date.now()): string {
   return format(b);
 }
 
-export const run: ToolLogic<undefined, string, UuidOpts>['run'] = (_input, opts) => {
+export function run(_input: undefined, opts: UuidOpts): string {
   const count = Math.floor(opts.count);
   if (!Number.isFinite(count) || count < 1 || count > 1000)
     throw new ToolError('bad-count', 'Count must be between 1 and 1000.');
@@ -54,6 +54,6 @@ export const run: ToolLogic<undefined, string, UuidOpts>['run'] = (_input, opts)
   const gen = opts.version === 'v7' ? v7 : v4;
   const out = Array.from({ length: count }, () => gen());
   return (opts.uppercase ? out.map((u) => u.toUpperCase()) : out).join('\n');
-};
+}
 
 export default { run } satisfies ToolLogic<undefined, string, UuidOpts>;

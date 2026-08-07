@@ -48,12 +48,12 @@ export const meta: ToolMeta = {
   http: { method: 'POST', contentType: 'text/plain' },
   copy: {
     what: 'Sorts, deduplicates, reverses, or shuffles the lines of any text. Sorting supports plain A-Z/Z-A order, natural order (so item2 comes before item10), and sort-by-length. Deduplication keeps the first occurrence of each line and preserves original order and casing.',
-    how: 'Paste your text, pick an operation, and toggle case-insensitive, trim, or remove-empty-lines as needed. For shuffle, optionally set a seed to get the same shuffled order every time — leave it blank for a fresh random order on each run.',
+    how: 'Paste your text, pick an operation, and toggle case-insensitive, trim, or remove-empty-lines as needed. For shuffle, optionally set a seed to get the same shuffled order every time: leave it blank for a fresh random order on each run.',
     why: 'Most line-sorting sites bury this behind ads or only offer plain alphabetical sort. This one runs entirely in your browser, adds natural sort and seeded shuffling that other tools skip, and never sends your text anywhere.',
     faq: [
       {
         q: 'What is natural sort and why does it matter?',
-        a: 'Natural sort treats embedded numbers as numbers, not characters, so "item2" sorts before "item10" instead of after it — the opposite of what plain alphabetical sort produces.',
+        a: 'Natural sort treats embedded numbers as numbers, not characters, so "item2" sorts before "item10" instead of after it, the opposite of what plain alphabetical sort produces.',
       },
       {
         q: 'Does deduplicate care about uppercase and lowercase?',
@@ -61,7 +61,7 @@ export const meta: ToolMeta = {
       },
       {
         q: 'Can I get the same shuffle result twice?',
-        a: 'Yes — enter a seed value and the shuffle becomes deterministic for that seed. The same text and seed always produce the same order; different seeds produce different orders.',
+        a: 'Yes, enter a seed value and the shuffle becomes deterministic for that seed. The same text and seed always produce the same order; different seeds produce different orders.',
       },
     ],
   },

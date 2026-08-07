@@ -28,6 +28,7 @@ import { meta as placeholderImage } from './placeholder-image/meta';
 import { meta as qrCodeGenerator } from './qr-code-generator/meta';
 import { meta as randomPicker } from './random-picker/meta';
 import { meta as snowflakeDecoder } from './snowflake-decoder/meta';
+import { meta as unicodePicker } from './unicode-picker/meta';
 import { meta as urlParser } from './url-parser/meta';
 import { meta as userAgentParser } from './user-agent-parser/meta';
 import { meta as uuid } from './uuid/meta';
@@ -52,6 +53,7 @@ export const tools: ToolMeta[] = [
   qrCodeGenerator,
   randomPicker,
   snowflakeDecoder,
+  unicodePicker,
   urlParser,
   userAgentParser,
   uuid,
@@ -78,6 +80,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'qr-code-generator': () => import('./qr-code-generator/index').then((m) => m.default),
   'random-picker': () => import('./random-picker/index').then((m) => m.default),
   'snowflake-decoder': () => import('./snowflake-decoder/index').then((m) => m.default),
+  'unicode-picker': () => import('./unicode-picker/index').then((m) => m.default),
   'url-parser': () => import('./url-parser/index').then((m) => m.default),
   'user-agent-parser': () => import('./user-agent-parser/index').then((m) => m.default),
   'uuid-generator': () => import('./uuid/index').then((m) => m.default),

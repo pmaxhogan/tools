@@ -25,15 +25,14 @@ function deviceLabel(device: { vendor?: string; model?: string; type?: string })
   return type ? `${parts || 'Unknown'} (${type})` : parts || 'Unknown';
 }
 
-export const run: ToolLogic<string, UserAgentParserResult, Record<string, unknown>>['run'] = (
-  input
-) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function run(input: string, _opts: Record<string, unknown>): UserAgentParserResult {
   const ua = (input ?? '').trim();
   if (!ua)
     throw new ToolError(
       'empty-input',
       'Enter a User-Agent string to decode.',
-      'Paste a User-Agent string — find yours by searching "what is my user agent".'
+      'Paste a User-Agent string: find yours by searching "what is my user agent".',
     );
 
   const result = new UAParser(ua).getResult();
@@ -50,10 +49,10 @@ export const run: ToolLogic<string, UserAgentParserResult, Record<string, unknow
   }
 
   if (isBot(ua) || BOT_HINTS.test(ua)) {
-    out['Bot?'] = 'Yes — this looks like a known crawler/bot, not a browser.';
+    out['Bot?'] = 'Yes, this looks like a known crawler/bot, not a browser.';
   }
 
   return out;
-};
+}
 
 export default { run } satisfies ToolLogic<string, UserAgentParserResult, Record<string, unknown>>;

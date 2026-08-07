@@ -14,9 +14,20 @@ async function copy() {
 </script>
 
 <template>
-  <Button variant="ghost" size="sm" :aria-label="label ?? 'Copy to clipboard'" @click="copy">
-    <Check v-if="copied" class="size-4" />
-    <Copy v-else class="size-4" />
+  <Button
+    variant="ghost"
+    size="sm"
+    :aria-label="label ?? 'Copy to clipboard'"
+    @click="copy"
+  >
+    <Check
+      v-if="copied"
+      class="size-4"
+    />
+    <Copy
+      v-else
+      class="size-4"
+    />
     <span v-if="label">{{ copied ? 'Copied' : label }}</span>
   </Button>
 </template>

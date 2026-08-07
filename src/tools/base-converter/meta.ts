@@ -35,13 +35,13 @@ export const meta: ToolMeta = {
   ],
   http: { method: 'GET', contentType: 'application/json' },
   copy: {
-    what: 'Converts integers between binary, octal, decimal, hexadecimal and base 36, using arbitrary-precision arithmetic so numbers of any size — not just 32 or 64 bit — round-trip exactly. Recognizes 0x, 0b and 0o prefixes automatically, or you can force a specific input base. Every result also shows a nibble-grouped bit pattern, the bit length, and the raw hex bytes for values that fit in 64 bits.',
-    how: 'Type or paste a number — with or without a base prefix like 0xFF, 0b1010 or 0o17 — and every base updates at once. Pick an input base from the dropdown if your number is unprefixed and not decimal. Negative numbers are supported; each output row has its own copy button.',
+    what: 'Converts integers between binary, octal, decimal, hexadecimal and base 36, using arbitrary-precision arithmetic so numbers of any size (not just 32 or 64 bit) round-trip exactly. Recognizes 0x, 0b and 0o prefixes automatically, or you can force a specific input base. Every result also shows a nibble-grouped bit pattern, the bit length, and the raw hex bytes for values that fit in 64 bits.',
+    how: 'Type or paste a number (with or without a base prefix like 0xFF, 0b1010 or 0o17) and every base updates at once. Pick an input base from the dropdown if your number is unprefixed and not decimal. Negative numbers are supported; each output row has its own copy button.',
     why: 'Most base converters cap out at 32-bit integers and silently overflow on anything larger. This one uses BigInt throughout, so a 128-bit or 256-bit value converts exactly, with no ads and nothing sent off your device.',
     faq: [
       {
         q: 'Does it handle numbers bigger than 64 bits?',
-        a: 'Yes — conversion uses BigInt, so values of arbitrary size (128-bit, 256-bit, or larger) convert exactly. The "Bytes" row only appears for values that fit in 64 bits, since it exists for quick byte-level inspection.',
+        a: 'Yes, conversion uses BigInt, so values of arbitrary size (128-bit, 256-bit, or larger) convert exactly. The "Bytes" row only appears for values that fit in 64 bits, since it exists for quick byte-level inspection.',
       },
       {
         q: 'How are negative numbers represented?',

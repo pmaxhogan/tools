@@ -20,9 +20,9 @@ export const meta: ToolMeta = {
   output: 'application/json',
   http: { method: 'GET', contentType: 'application/json' },
   copy: {
-    what: 'Converts text into every common naming case at once: camelCase, PascalCase, snake_case, SCREAMING_SNAKE_CASE, kebab-case, Title Case, Sentence case, lowercase, UPPERCASE, and a URL-safe slug. It tokenizes robustly — splitting on spaces, underscores, hyphens, and camelCase boundaries, including acronym runs like "parseHTMLDocument" or "XMLHttpRequest" — so mixed-format input still converts cleanly.',
-    how: 'Paste or type any text, identifier, or phrase. Multi-line input is supported — each line converts independently and the results stay lined up. Every result row has its own copy button, so you can grab exactly the case you need.',
-    why: 'Most case converters online handle one format at a time, mangle acronyms, or leave diacritics in your slugs. This one produces all ten formats in a single pass, folds accented characters (é → e) for clean URL slugs, and applies real Title Case small-word rules — all client-side, with no ads or usage limits.',
+    what: 'Converts text into every common naming case at once: camelCase, PascalCase, snake_case, SCREAMING_SNAKE_CASE, kebab-case, Title Case, Sentence case, lowercase, UPPERCASE, and a URL-safe slug. It tokenizes robustly, splitting on spaces, underscores, hyphens, and camelCase boundaries, including acronym runs like "parseHTMLDocument" or "XMLHttpRequest", so mixed-format input still converts cleanly.',
+    how: 'Paste or type any text, identifier, or phrase. Multi-line input is supported: each line converts independently and the results stay lined up. Every result row has its own copy button, so you can grab exactly the case you need.',
+    why: 'Most case converters online handle one format at a time, mangle acronyms, or leave diacritics in your slugs. This one produces all ten formats in a single pass, folds accented characters (é → e) for clean URL slugs, and applies real Title Case small-word rules, all client-side, with no ads or usage limits.',
     faq: [
       {
         q: 'How does it handle acronyms like HTML or XML in camelCase input?',

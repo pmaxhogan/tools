@@ -54,11 +54,11 @@ export const meta: ToolMeta = {
       },
       {
         q: 'What happens if I unescape invalid JSON or URL text?',
-        a: 'You get a clear error explaining what is wrong — for example an unescaped quote in JSON or a stray % without two hex digits in a URL — instead of a mangled result.',
+        a: 'You get a clear error explaining what is wrong (for example an unescaped quote in JSON or a stray % without two hex digits in a URL) instead of a mangled result.',
       },
       {
         q: 'How does shell escaping work?',
-        a: 'It wraps your text in single quotes and replaces any single quote inside it with the standard POSIX \'\\\'\' sequence, so the result is safe to paste into a shell command as one literal argument.',
+        a: "It wraps your text in single quotes and replaces any single quote inside it with the standard POSIX '\\'' sequence, so the result is safe to paste into a shell command as one literal argument.",
       },
     ],
   },

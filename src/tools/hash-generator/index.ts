@@ -22,7 +22,7 @@ const MD5_SHIFTS = [
 
 // K[i] = floor(abs(sin(i + 1)) * 2^32), precomputed as int32.
 const MD5_K = Int32Array.from({ length: 64 }, (_, i) =>
-  Math.floor(Math.abs(Math.sin(i + 1)) * 2 ** 32)
+  Math.floor(Math.abs(Math.sin(i + 1)) * 2 ** 32),
 );
 
 function leftRotate(x: number, c: number): number {
@@ -120,12 +120,15 @@ function bufToHex(buf: ArrayBuffer): string {
 }
 
 /** SHA-* digest via WebCrypto (Node 20+ and all browsers), lowercase hex. */
-async function subtleHex(algorithm: 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512', data: Uint8Array): Promise<string> {
-  const buf = await globalThis.crypto.subtle.digest(algorithm, data);
+async function subtleHex(
+  algorithm: 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512',
+  data: Uint8Array,
+): Promise<string> {
+  const buf = await globalThis.crypto.subtle.digest(algorithm, data as BufferSource);
   return bufToHex(buf);
 }
 
-export const run: ToolLogic<string, HashResult, HashOpts>['run'] = async (input, opts) => {
+export async function run(input: string, opts: HashOpts): Promise<HashResult> {
   // The empty string is a valid, well-known input (hashes of "" are
   // documented, common test vectors) — never rejected.
   const text = input ?? '';
@@ -154,6 +157,6 @@ export const run: ToolLogic<string, HashResult, HashOpts>['run'] = async (input,
   }
 
   return result;
-};
+}
 
 export default { run } satisfies ToolLogic<string, HashResult, HashOpts>;

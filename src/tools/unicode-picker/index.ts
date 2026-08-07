@@ -56,15 +56,12 @@ export function search(query: string, category: string): UnicodeEntry[] {
     .map((x) => x.e);
 }
 
-/** "rightwards arrow — U+2192 — &rarr;" */
+/** "rightwards arrow · U+2192 · &rarr;" */
 export function describe(e: UnicodeEntry): string {
-  return `${e.name} — ${e.codepoint} — ${e.htmlEntity}`;
+  return `${e.name} · ${e.codepoint} · ${e.htmlEntity}`;
 }
 
-export const run: ToolLogic<string, UnicodePickerResult, UnicodePickerOpts>['run'] = (
-  input,
-  opts,
-) => {
+export function run(input: string, opts: UnicodePickerOpts): UnicodePickerResult {
   const category = String(opts?.category ?? 'all').trim() || 'all';
   if (category !== 'all' && !LABELS.has(category))
     throw new ToolError(
@@ -79,7 +76,7 @@ export const run: ToolLogic<string, UnicodePickerResult, UnicodePickerOpts>['run
   if (!hits.length) {
     const where = category === 'all' ? 'any category' : `the ${LABELS.get(category)} category`;
     return {
-      'No matches': `Nothing in ${where} matches "${query}". Try a shorter query like "arrow", "dash", "greek" or "space" — or paste the character itself.`,
+      'No matches': `Nothing in ${where} matches "${query}". Try a shorter query like "arrow", "dash", "greek" or "space", or paste the character itself.`,
     };
   }
 
@@ -92,6 +89,6 @@ export const run: ToolLogic<string, UnicodePickerResult, UnicodePickerOpts>['run
       'Narrow the search or pick a category to see the rest of the matches.';
 
   return out;
-};
+}
 
 export default { run } satisfies ToolLogic<string, UnicodePickerResult, UnicodePickerOpts>;

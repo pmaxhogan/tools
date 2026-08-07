@@ -167,7 +167,7 @@ function entropyBits(poolSize: number, count: number): number {
   return Math.log2(poolSize) * count;
 }
 
-export const run: ToolLogic<undefined, PasswordResult, PasswordOpts>['run'] = (_input, opts) => {
+export function run(_input: undefined, opts: PasswordOpts): PasswordResult {
   const mode = opts.mode === 'passphrase' ? 'passphrase' : 'password';
 
   if (mode === 'passphrase') {
@@ -196,6 +196,6 @@ export const run: ToolLogic<undefined, PasswordResult, PasswordOpts>['run'] = (_
     Entropy: `${bits.toFixed(1)} bits`,
     'Crack time @ 10¹⁰/s': humanizeCrackTime(crackSeconds),
   };
-};
+}
 
 export default { run } satisfies ToolLogic<undefined, PasswordResult, PasswordOpts>;

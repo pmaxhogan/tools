@@ -12,7 +12,7 @@ describe('unicode-picker', () => {
   it('finds arrows by keyword', () => {
     const out = run('arrow', opts());
     expect(Object.keys(out)).toContain('→');
-    expect(out['→']).toBe('rightwards arrow — U+2192 — &rarr;');
+    expect(out['→']).toBe('rightwards arrow · U+2192 · &rarr;');
   });
 
   it('matches every word of a multi-word query', () => {
@@ -24,7 +24,7 @@ describe('unicode-picker', () => {
   it('matches the character itself and ranks it first', () => {
     const out = run('—', opts());
     expect(Object.keys(out)[0]).toBe('—');
-    expect(out['—']).toBe('em dash — U+2014 — &mdash;');
+    expect(out['—']).toBe('em dash · U+2014 · &mdash;');
   });
 
   it('filters by category', () => {
@@ -66,7 +66,7 @@ describe('unicode-picker', () => {
 
   it('finds invisible characters by name', () => {
     const out = run('zero width space', opts('invisible'));
-    expect(out[ZWSP]).toBe('zero width space — U+200B — &#x200B;');
+    expect(out[ZWSP]).toBe('zero width space · U+200B · &#x200B;');
     expect(run('no-break space', opts())[NBSP]).toContain('&nbsp;');
   });
 

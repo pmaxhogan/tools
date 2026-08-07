@@ -74,11 +74,11 @@ export const meta: ToolMeta = {
       },
       {
         q: 'What is a diceware passphrase and why use one?',
-        a: 'Diceware picks whole words at random from a large, fixed wordlist (here, the EFF large list of 7,776 words) instead of random characters. Six random words give about 77.5 bits of entropy — comparable to a long random password — while being far easier to memorize and type.',
+        a: 'Diceware picks whole words at random from a large, fixed wordlist (here, the EFF large list of 7,776 words) instead of random characters. Six random words give about 77.5 bits of entropy (comparable to a long random password) while being far easier to memorize and type.',
       },
       {
         q: 'What does the crack-time estimate mean?',
-        a: 'It divides the total possible combinations (2 raised to the entropy in bits) by 10 billion guesses per second, a realistic ceiling for offline GPU cracking of a well-hashed password. It is an order-of-magnitude estimate, not a guarantee — always pair strong passwords with unique use per site and, ideally, a password manager.',
+        a: 'It divides the total possible combinations (2 raised to the entropy in bits) by 10 billion guesses per second, a realistic ceiling for offline GPU cracking of a well-hashed password. It is an order-of-magnitude estimate, not a guarantee: always pair strong passwords with unique use per site and, ideally, a password manager.',
       },
     ],
   },

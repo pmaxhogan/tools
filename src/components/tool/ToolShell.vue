@@ -112,18 +112,22 @@ function onPickFile(e: Event) {
       @drop.prevent="onDrop"
     >
       <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
-          >Input</span
-        >
+        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">Input</span>
         <div class="flex items-center gap-1">
-          <Button variant="ghost" size="sm" @click="fileInput?.click()">Open file…</Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            @click="fileInput?.click()"
+          >
+            Open file…
+          </Button>
           <input
             ref="fileInput"
             type="file"
             class="hidden"
             :accept="acceptsFiles ? undefined : 'text/*,.json,.csv,.txt'"
             @change="onPickFile"
-          />
+          >
         </div>
       </div>
       <Textarea
@@ -134,7 +138,10 @@ function onPickFile(e: Event) {
       />
     </div>
 
-    <div v-if="meta.options?.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    <div
+      v-if="meta.options?.length"
+      class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+    >
       <OptionControl
         v-for="spec in meta.options"
         :key="spec.id"
@@ -143,17 +150,33 @@ function onPickFile(e: Event) {
       />
     </div>
 
-    <Button v-if="!hasInput" class="self-start" @click="run">Generate</Button>
+    <Button
+      v-if="!hasInput"
+      class="self-start"
+      @click="run"
+    >
+      Generate
+    </Button>
 
     <div
       v-if="error"
       role="alert"
       class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
     >
-      <p class="font-medium text-destructive">{{ error.message }}</p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">{{ error.fix }}</p>
+      <p class="font-medium text-destructive">
+        {{ error.message }}
+      </p>
+      <p
+        v-if="error.fix"
+        class="mt-1 text-muted-foreground"
+      >
+        {{ error.fix }}
+      </p>
     </div>
 
-    <OutputView v-if="output !== null && !error" :output="output" />
+    <OutputView
+      v-if="output !== null && !error"
+      :output="output"
+    />
   </div>
 </template>

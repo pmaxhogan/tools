@@ -4,7 +4,7 @@ export const meta: ToolMeta = {
   slug: 'discord-timestamp',
   matrixSlug: 'discord-time',
   name: 'Discord Timestamps',
-  description: 'Generate tags that render in every reader\'s own timezone.',
+  description: "Generate tags that render in every reader's own timezone.",
   category: 'Time',
   keywords: [
     'discord timestamp',
@@ -18,13 +18,13 @@ export const meta: ToolMeta = {
   output: 'application/json',
   http: { method: 'GET', contentType: 'application/json' },
   copy: {
-    what: 'Generates Discord\'s <t:UNIX:style> timestamp tags from a date or unix timestamp. Paste a time and get all seven display styles at once — short/long time, short/long date, short/long date-time, and relative ("in 2 hours") — each rendered in whatever timezone the reader viewing the message is in.',
-    how: 'Paste a unix timestamp (seconds or milliseconds), an ISO 8601 date, or leave the input blank to use the current time. Copy whichever tag style you want — short time, long date, relative, etc. — and paste it directly into a Discord message; Discord renders it locally for each reader.',
+    what: 'Generates Discord\'s <t:UNIX:style> timestamp tags from a date or unix timestamp. Paste a time and get all seven display styles at once: short/long time, short/long date, short/long date-time, and relative ("in 2 hours"), each rendered in whatever timezone the reader viewing the message is in.',
+    how: 'Paste a unix timestamp (seconds or milliseconds), an ISO 8601 date, or leave the input blank to use the current time. Copy whichever tag style you want (short time, long date, relative, etc.) and paste it directly into a Discord message; Discord renders it locally for each reader.',
     why: 'Other Discord timestamp generators require picking a date from a calendar widget and run behind ads. This one also accepts a raw unix or ISO timestamp directly, runs entirely in your browser, and never sends your input anywhere.',
     faq: [
       {
         q: 'Why does the timestamp look the same for everyone but display differently?',
-        a: 'The tag <t:UNIX:F> encodes a single unix timestamp; Discord\'s client renders it into each reader\'s local timezone and locale at display time, so no timezone math is needed in the message itself.',
+        a: "The tag <t:UNIX:F> encodes a single unix timestamp; Discord's client renders it into each reader's local timezone and locale at display time, so no timezone math is needed in the message itself.",
       },
       {
         q: 'What timestamp format should I paste in?',
@@ -32,7 +32,7 @@ export const meta: ToolMeta = {
       },
       {
         q: 'Which style should I use for a relative countdown?',
-        a: 'Use the R style — it renders as "in 2 hours" or "3 days ago" and updates live as readers view the message.',
+        a: 'Use the R style: it renders as "in 2 hours" or "3 days ago" and updates live as readers view the message.',
       },
     ],
   },

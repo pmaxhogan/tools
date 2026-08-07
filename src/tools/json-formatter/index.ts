@@ -136,7 +136,7 @@ function bytesToText(bytes: Uint8Array, label: string): string {
     throw new ToolError(
       'invalid-utf8',
       `The ${label} decodes to bytes that are not valid UTF-8 text.`,
-      'This looks like binary data (an image or archive) rather than text — decode it with a file tool instead.',
+      'This looks like binary data (an image or archive) rather than text: decode it with a file tool instead.',
     );
   }
 }
@@ -233,8 +233,8 @@ export function decodeJwt(token: string): Record<string, string> {
     out[label] = iso ?? `(unreadable: ${JSON.stringify(payload[claim])})`;
   }
 
-  out.Signature = rawSignature || '(none — unsecured token)';
-  out['Signature verified'] = 'no — this tool decodes only, it does not check the signature';
+  out.Signature = rawSignature || '(none: unsecured token)';
+  out['Signature verified'] = 'no: this tool decodes only, it does not check the signature';
   return out;
 }
 
@@ -284,7 +284,7 @@ export function validateJson(source: string): Record<string, string> {
  * run
  * ------------------------------------------------------------------ */
 
-export const run: ToolLogic<string, JsonToolsResult, JsonToolsOpts>['run'] = (input, opts) => {
+export function run(input: string, opts: JsonToolsOpts): JsonToolsResult {
   const mode = (opts?.mode || 'format') as JsonToolsMode;
   const raw = input ?? '';
 
@@ -330,6 +330,6 @@ export const run: ToolLogic<string, JsonToolsResult, JsonToolsOpts>['run'] = (in
         'Pick one of: format, minify, validate, jwt-decode, base64-encode, base64-decode, url-encode, url-decode.',
       );
   }
-};
+}
 
 export default { run } satisfies ToolLogic<string, JsonToolsResult, JsonToolsOpts>;

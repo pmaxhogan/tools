@@ -1,0 +1,26 @@
+{
+  // Static Astro build served from ./dist, with a small stateless worker in
+  // front of it for the curl API. Only /api and /api/* reach the worker;
+  // every other request is served straight off the asset store.
+  //
+  // Deploy: npm run build && npx wrangler deploy
+  "name": "tools",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-08-06",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api", "/api/*"]
+  },
+  "routes": [
+    {
+      "pattern": "tools.maxhogan.dev",
+      "custom_domain": true
+    }
+  ],
+  // No user content is ever logged (PROJECT.md rule 2), and there is nothing
+  // stateful to observe.
+  "observability": {
+    "enabled": false
+  }
+}
