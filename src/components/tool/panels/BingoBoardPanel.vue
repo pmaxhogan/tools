@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import FitText from "@/components/tool/FitText.vue";
 
 const props = defineProps<{ meta: ToolMeta }>();
 
@@ -402,14 +403,14 @@ async function exportCardPng(index: number) {
             <div
               v-for="(cell, i) in grid.flat()"
               :key="i"
-              class="flex aspect-square items-center justify-center rounded-[8px] border border-border bg-card p-1.5 text-center text-[11px] break-words hyphens-auto sm:text-xs"
+              class="flex aspect-square items-center justify-center rounded-[8px] border border-border bg-card p-1.5"
               :class="
                 hasFreeSpace && i === centerIndex
                   ? 'border-[color:var(--brand-hairline)] bg-[var(--accent-soft)] font-semibold'
                   : ''
               "
             >
-              {{ cell }}
+              <FitText :text="cell" :min="7" :max="20" />
             </div>
           </div>
         </div>
