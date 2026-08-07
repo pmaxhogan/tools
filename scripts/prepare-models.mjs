@@ -179,6 +179,19 @@ const ENTRIES = [
     from: 'onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm',
     to: 'models/ort/ort-wasm-simd-threaded.asyncify.wasm',
   },
+  // The .mjs glue loaders next to the wasm binaries. onnxruntime-web
+  // dynamically imports these siblings at runtime; without them the engine
+  // dies with "no available backend found" before inference ever starts.
+  {
+    source: 'node_modules',
+    from: 'onnxruntime-web/dist/ort-wasm-simd-threaded.mjs',
+    to: 'models/ort/ort-wasm-simd-threaded.mjs',
+  },
+  {
+    source: 'node_modules',
+    from: 'onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.mjs',
+    to: 'models/ort/ort-wasm-simd-threaded.asyncify.mjs',
+  },
 
   // Tesseract OCR. See the corePath note in the header comment.
   {
