@@ -1,0 +1,64 @@
+---
+import '@/styles/global.css';
+
+export interface Props {
+  title: string;
+  description: string;
+  /** Path for canonical URL, e.g. "/epoch-converter". Defaults to current. */
+  path?: string;
+  /** JSON-LD object serialized into the page head. */
+  jsonLd?: Record<string, unknown>;
+  ogImage?: string;
+}
+
+const { title, description, path, jsonLd, ogImage } = Astro.props;
+const site = Astro.site ?? new URL('https://tools.maxhogan.dev');
+const canonical = new URL(path ?? Astro.url.pathname, site).href;
+const og = ogImage ? new URL(ogImage, site).href : undefined;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="generator" content={Astro.generator} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {og && <meta property="og:image" content={og} />}
+    <meta name="twitter:card" content={og ? 'summary_large_image' : 'summary'} />
+    <link
+      rel="preload"
+      href="/fonts/Geist-Variable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/GeistMono-Variable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    <script is:inline>
+      // Theme: respect prefers-color-scheme, allow manual override in
+      // localStorage (preferences only — rule 7). Runs before paint.
+      const stored = localStorage.getItem('theme');
+      const dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', dark);
+    </script>
+  </head>
+  <body class="min-h-dvh bg-background font-sans text-foreground antialiased">
+    <slot />
+  </body>
+</html>

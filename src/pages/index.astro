@@ -1,26 +1,30 @@
 ---
-import '../styles/global.css';
-// Component Imports
-import Button from '../components/Button.astro';
-
-// Full Astro Component Syntax:
-// https://docs.astro.build/basics/astro-components/
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { tools } from '@/tools/registry';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro + TailwindCSS</title>
-	</head>
-
-	<body>
-		<div class="grid place-items-center h-screen content-center">
-			<Button>Tailwind Button in Astro!</Button>
-			<a href="/markdown-page" class="p-4 underline">Markdown is also supported...</a>
-		</div>
-	</body>
-</html>
+<BaseLayout
+  title="tools.maxhogan.dev — fast, private developer tools"
+  description="Developer and power-user tools that run entirely in your browser. No ads, no accounts, no limits — your files and inputs never leave your device."
+  path="/"
+>
+  <main class="mx-auto max-w-5xl px-4 py-12">
+    <h1 class="text-2xl font-semibold">tools.maxhogan.dev</h1>
+    <p class="mt-2 text-muted-foreground">
+      {tools.length} tools. No ads, no accounts, no limits. Your files and inputs never leave your
+      device.
+    </p>
+    <ul class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        tools.map((t) => (
+          <li>
+            <a href={`/${t.slug}`} class="block rounded-lg border p-4 hover:bg-muted">
+              <span class="font-medium">{t.name}</span>
+              <span class="mt-1 block text-sm text-muted-foreground">{t.description}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+</BaseLayout>
