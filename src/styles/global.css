@@ -97,6 +97,19 @@
   --accent-soft: #efebfe;
   --positive: #2f7d5b;
   --positive-soft: #e4f2eb;
+  /* Bolder brand: violet earns a broader presence. Hover/active steps for the
+     primary, a two-stop violet gradient, and soft washes for heroes and bands.
+     Washes stay low-opacity so foreground text keeps AA contrast in both themes. */
+  --primary-hover: #4c3ecb;
+  --primary-active: #4133b8;
+  --brand-2: #7b5bf0;
+  --brand-accent: #8b5cf6;
+  --grad-brand: linear-gradient(135deg, #5b4bd6 0%, #7b5bf0 100%);
+  --grad-brand-strong: linear-gradient(135deg, #4c3ecb 0%, #7b5bf0 100%);
+  --grad-brand-soft: linear-gradient(135deg, #efeafe 0%, #f5f0fe 100%);
+  --brand-glow: radial-gradient(62% 82% at 50% -8%, rgba(123, 91, 240, 0.2), rgba(123, 91, 240, 0) 70%);
+  --brand-band: linear-gradient(180deg, rgba(123, 91, 240, 0.1) 0%, rgba(123, 91, 240, 0) 100%);
+  --brand-hairline: rgba(91, 75, 214, 0.28);
   --sh-sm: 0 1px 2px rgba(28, 26, 23, 0.05), 0 3px 8px -2px rgba(28, 26, 23, 0.06);
   --sh-md: 0 1px 2px rgba(28, 26, 23, 0.05), 0 8px 20px -6px rgba(28, 26, 23, 0.1);
   --sh-lg: 0 2px 4px rgba(28, 26, 23, 0.05), 0 18px 40px -12px rgba(28, 26, 23, 0.16);
@@ -140,6 +153,18 @@
   --accent-soft: #241f3c;
   --positive: #63c79b;
   --positive-soft: #16281f;
+  /* Bolder brand in dark: lifted violets, gradients keyed to the lighter
+     dark-mode primary so dark foreground text on solids still clears AA. */
+  --primary-hover: #9a8bf7;
+  --primary-active: #a695f8;
+  --brand-2: #a78bfa;
+  --brand-accent: #a78bfa;
+  --grad-brand: linear-gradient(135deg, #8a79f5 0%, #a78bfa 100%);
+  --grad-brand-strong: linear-gradient(135deg, #9a8bf7 0%, #b49bfb 100%);
+  --grad-brand-soft: linear-gradient(135deg, #241f3c 0%, #2c2449 100%);
+  --brand-glow: radial-gradient(62% 82% at 50% -8%, rgba(138, 121, 245, 0.24), rgba(138, 121, 245, 0) 70%);
+  --brand-band: linear-gradient(180deg, rgba(138, 121, 245, 0.16) 0%, rgba(138, 121, 245, 0) 100%);
+  --brand-hairline: rgba(138, 121, 245, 0.32);
   --sh-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --sh-md: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
   --sh-lg: 0 20px 48px -16px rgba(0, 0, 0, 0.7);
@@ -196,5 +221,17 @@
       transition: none !important;
       animation: none !important;
     }
+  }
+}
+
+/* Astro view transitions (ClientRouter). The browser default root cross-fade
+   is 0.25s, which overshoots the 200ms budget, so pin it faster. Astro's own
+   viewtransitions.css already zeroes these pseudo-elements under
+   prefers-reduced-motion; the guard below keeps the speed-up scoped to motion. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 160ms;
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
   }
 }

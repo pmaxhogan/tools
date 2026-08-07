@@ -6,8 +6,11 @@
  * only has to describe its options and turn them into an ffmpeg command:
  *
  *   - input: drop zone, file picker, file chips with sizes
- *   - the media engine: a one time ~31 MB download that never starts on page
- *     load. The visitor presses "Load media engine" and watches a byte counter.
+ *   - the media engine: a one time ~31 MB download. On an unmetered connection
+ *     it starts automatically on first visit and shows a byte counter; on a
+ *     metered or Save-Data connection it waits for a one-tap start that names
+ *     the size. Once the browser has cached it, later visits load it instantly
+ *     and never download it again.
  *   - the run: progress from ffmpeg, a collapsible log tail, and a cancel that
  *     terminates the worker and restarts it from the browser cache
  *   - output: produced files with sizes, download buttons, and a preview for
@@ -73,6 +76,7 @@ import {
   type MediaBuildArgs,
   type MediaFile,
 } from '@/lib/ffmpeg';
+import { shouldAutoDownload, isMetered, onConnectionChange } from '@/lib/connection';
 import { Button } from '@/components/ui/button';
 
 const props = withDefaults(
@@ -117,6 +121,16 @@ const engineState = ref<EngineState>('idle');
 const engineDownloaded = ref(false);
 const downloadedBytes = ref(0);
 const downloadTotal = ref(0);
+
+/** True when a metered or Save-Data connection is holding the auto-start back. */
+const metered = ref(false);
+/**
+ * Set on mount when metered blocked the automatic start. The connection
+ * listener consumes it exactly once if the link later turns unmetered, which is
+ * the only case that promotes a held-back panel into an auto-download.
+ */
+let pendingAutoStart = false;
+let stopConnectionWatch: () => void = () => {};
 
 interface PickedFile {
   file: File;
@@ -180,9 +194,10 @@ const downloadPercent = computed(() =>
   downloadTotal.value ? Math.min(100, (downloadedBytes.value / downloadTotal.value) * 100) : 0
 );
 
-const engineButtonLabel = computed(() =>
-  engineDownloaded.value ? 'Restart media engine' : 'Load media engine'
-);
+const engineButtonLabel = computed(() => {
+  if (engineDownloaded.value) return 'Restart media engine';
+  return metered.value ? 'Load media engine (about 31 MB)' : 'Load media engine';
+});
 
 const canRun = computed(
   () =>
@@ -311,6 +326,8 @@ function onDownload(loaded: number, total: number) {
 
 async function loadEngine() {
   if (engineState.value === 'loading') return;
+  // A manual press means the visitor chose to start it, so drop any hold.
+  pendingAutoStart = false;
   engineState.value = 'loading';
   error.value = null;
   try {
@@ -320,6 +337,21 @@ async function loadEngine() {
   } catch (e) {
     engineState.value = 'idle';
     setError(e);
+  }
+}
+
+/**
+ * Starts the engine download without a click on first visit, unless the
+ * connection is metered or Save-Data. When it is, the panel keeps a one-tap
+ * start and remembers to auto-start later if the link turns unmetered.
+ */
+function autoStartEngine() {
+  if (engineState.value !== 'idle') return;
+  if (shouldAutoDownload()) {
+    void loadEngine();
+  } else {
+    metered.value = true;
+    pendingAutoStart = true;
   }
 }
 
@@ -449,10 +481,24 @@ onMounted(() => {
   if (isEngineReady()) {
     engineState.value = 'ready';
     engineDownloaded.value = true;
+    return;
   }
+  if (!supported.value) return;
+  metered.value = isMetered();
+  autoStartEngine();
+  stopConnectionWatch = onConnectionChange(() => {
+    metered.value = isMetered();
+    if (pendingAutoStart && shouldAutoDownload()) {
+      pendingAutoStart = false;
+      void loadEngine();
+    }
+  });
 });
 
-onUnmounted(clearOutputs);
+onUnmounted(() => {
+  stopConnectionWatch();
+  clearOutputs();
+});
 </script>
 
 <template>
@@ -551,6 +597,13 @@ onUnmounted(clearOutputs);
           31 MB, and your browser keeps it afterwards, so later visits start it straight from the
           cache and work offline. Nothing is uploaded: your files and inputs never leave your
           device.
+        </p>
+
+        <p
+          v-if="metered && engineState === 'idle'"
+          class="text-xs text-muted-foreground"
+        >
+          Your connection looks metered, so the engine waits for you to start it.
         </p>
 
         <div

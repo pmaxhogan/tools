@@ -1,33 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Input } from '@/components/ui/input';
+import { highlightHtml, searchTools, type SearchTool } from '@/lib/search';
 
 /**
  * Homepage tool grid: search + category-grouped cards. Server-rendered at
  * build (full list in the HTML for SEO), hydrates for filtering.
  */
-export interface GridTool {
-  slug: string;
-  name: string;
-  description: string;
-  category: string;
-  keywords: string[];
-}
+export type GridTool = SearchTool;
 
 const props = defineProps<{ tools: GridTool[] }>();
 const query = ref('');
 
-const filtered = computed(() => {
-  const q = query.value.trim().toLowerCase();
-  if (!q) return props.tools;
-  return props.tools.filter(
-    (t) =>
-      t.name.toLowerCase().includes(q) ||
-      t.description.toLowerCase().includes(q) ||
-      t.category.toLowerCase().includes(q) ||
-      t.keywords.some((k) => k.includes(q))
-  );
-});
+const filtered = computed(() => searchTools(props.tools, query.value).map((r) => r.tool));
 
 const grouped = computed(() => {
   const map = new Map<string, GridTool[]>();
@@ -38,6 +23,8 @@ const grouped = computed(() => {
   }
   return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 });
+
+const initial = (name: string) => name.trim().charAt(0).toUpperCase();
 </script>
 
 <template>
@@ -75,13 +62,62 @@ const grouped = computed(() => {
         >
           <a
             :href="`/${t.slug}`"
-            class="block h-full rounded-[14px] border bg-card p-5 shadow-[var(--sh-sm)] transition-[transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:shadow-[var(--sh-md)]"
+            class="tool-card flex h-full gap-3 rounded-[14px] border bg-card p-5 shadow-[var(--sh-sm)]"
           >
-            <span class="font-semibold">{{ t.name }}</span>
-            <span class="mt-1 block text-sm text-muted-foreground">{{ t.description }}</span>
+            <span
+              class="tool-tile grid size-9 shrink-0 place-items-center rounded-[10px] text-sm font-semibold"
+              aria-hidden="true"
+            >{{ initial(t.name) }}</span>
+            <span class="min-w-0">
+              <!-- eslint-disable-next-line vue/no-v-html, vue/max-attributes-per-line -- highlightHtml escapes its input -->
+              <span class="block font-semibold" v-html="highlightHtml(t.name, query)" />
+              <!-- eslint-disable-next-line vue/no-v-html, vue/max-attributes-per-line -- highlightHtml escapes its input -->
+              <span class="mt-1 block text-sm text-muted-foreground" v-html="highlightHtml(t.description, query)" />
+            </span>
           </a>
         </li>
       </ul>
     </section>
   </div>
 </template>
+
+<style scoped>
+.tool-card {
+  transition:
+    transform 160ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 160ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    border-color 120ms ease-out;
+}
+
+.tool-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sh-md);
+  border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+}
+
+.tool-tile {
+  background: var(--accent-soft);
+  color: var(--primary);
+  transition: background-color 120ms ease-out;
+}
+
+.tool-card:hover .tool-tile {
+  background: color-mix(in oklab, var(--primary) 20%, var(--accent-soft));
+}
+
+.tool-card :deep(mark) {
+  background: transparent;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tool-card {
+    transition: border-color 120ms ease-out;
+  }
+
+  .tool-card:hover {
+    transform: none;
+  }
+}
+</style>

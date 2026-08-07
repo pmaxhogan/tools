@@ -47,7 +47,21 @@ interface Region {
   mode: RedactMode;
   color: 'black' | 'white';
   blockSize: number;
+  /** Pixelate randomness strength, 0 to 100. Unused for solid regions. */
+  randomness: number;
+  /** Seed for the pixelate perturbation PRNG, captured once per region so redraws stay stable. */
+  seed: number;
   rect: Rect;
+}
+
+/**
+ * A fresh 32 bit seed for one pixelate region. Math.random is fine here: this
+ * is the Vue panel, not the pure logic module, and the seed only needs to be
+ * unpredictable, not itself reproducible. Once captured on a region it is
+ * reused for every redraw so the preview and the export stay stable.
+ */
+function randomSeed(): number {
+  return Math.floor(Math.random() * 0xffffffff);
 }
 
 /* ---------------------------------------------------------------- */
@@ -74,12 +88,20 @@ let nextId = 1;
 const mode = ref<RedactMode>('solid');
 const color = ref<'black' | 'white'>('black');
 const blockSize = ref(12);
+/** Pixelate randomness strength, 0 to 100. Matches meta.ts's default. */
+const randomness = ref(35);
 const format = ref<'png' | 'jpeg'>('png');
 
 /** The rectangle currently being dragged, in image pixel space. */
 const pending = ref<Rect | null>(null);
 const dragStart = ref<{ x: number; y: number } | null>(null);
 const drawing = ref(false);
+/**
+ * Seed for the region currently being dragged. Drawn fresh on pointerdown so
+ * the live preview and the finalized region use the same seed, then replaced
+ * before the next drag so no two regions share one.
+ */
+const dragSeed = ref(randomSeed());
 
 const exportedName = ref('');
 const exportedSize = ref<number | null>(null);
@@ -109,7 +131,7 @@ function regionLabel(region: Region): string {
   const size = `${region.rect.w} x ${region.rect.h} px`;
   return region.mode === 'solid'
     ? `Solid ${region.color}, ${size}`
-    : `Pixelate ${region.blockSize} px, ${size}`;
+    : `Pixelate ${region.blockSize} px, ${region.randomness}% random, ${size}`;
 }
 
 /* ---------------------------------------------------------------- */
@@ -218,7 +240,10 @@ function composite(extra?: Region | null): ImageData | null {
     if (region.mode === 'solid') {
       applySolidRect(data, source.width, source.height, region.rect, SOLID_COLORS[region.color]);
     } else {
-      applyPixelateRect(data, source.width, source.height, region.rect, region.blockSize);
+      applyPixelateRect(data, source.width, source.height, region.rect, region.blockSize, {
+        seed: region.seed,
+        strength: region.randomness / 100,
+      });
     }
   }
   return new ImageData(data, source.width, source.height);
@@ -227,7 +252,15 @@ function composite(extra?: Region | null): ImageData | null {
 function pendingRegion(): Region | null {
   const rect = pending.value;
   if (!rect || rect.w < 1 || rect.h < 1) return null;
-  return { id: 0, mode: mode.value, color: color.value, blockSize: blockSize.value, rect };
+  return {
+    id: 0,
+    mode: mode.value,
+    color: color.value,
+    blockSize: blockSize.value,
+    randomness: randomness.value,
+    seed: dragSeed.value,
+    rect,
+  };
 }
 
 /**
@@ -290,6 +323,9 @@ function onPointerDown(e: PointerEvent) {
   const p = pointIn(e, el);
   dragStart.value = p;
   drawing.value = true;
+  // Fresh seed per drag so this region's perturbation never repeats another
+  // region's, while staying stable across the drag's own redraws.
+  dragSeed.value = randomSeed();
   pending.value = normalizeRect(
     { x1: p.x, y1: p.y, x2: p.x, y2: p.y },
     imgWidth.value,
@@ -327,7 +363,15 @@ function onPointerUp(e: PointerEvent) {
   }
   regions.value = [
     ...regions.value,
-    { id: nextId++, mode: mode.value, color: color.value, blockSize: blockSize.value, rect },
+    {
+      id: nextId++,
+      mode: mode.value,
+      color: color.value,
+      blockSize: blockSize.value,
+      randomness: randomness.value,
+      seed: dragSeed.value,
+      rect,
+    },
   ];
   exportedName.value = '';
   exportedSize.value = null;
@@ -616,17 +660,50 @@ async function downloadExport() {
               @update:model-value="(v) => (blockSize = v?.[0] ?? blockSize)"
             />
           </div>
+
+          <div
+            v-if="mode === 'pixelate'"
+            class="flex min-w-48 flex-1 flex-col gap-1.5"
+          >
+            <span class="text-xs text-muted-foreground tabular-nums">
+              Randomness: {{ randomness }}%
+            </span>
+            <Slider
+              aria-label="Pixelate randomness strength"
+              :model-value="[randomness]"
+              :min="0"
+              :max="100"
+              :step="5"
+              class="py-2"
+              @update:model-value="(v) => (randomness = v?.[0] ?? randomness)"
+            />
+          </div>
         </div>
 
         <p
-          v-if="pixelateChosen"
+          v-if="mode === 'pixelate' && randomness === 0"
           role="note"
           class="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-muted-foreground"
         >
-          <span class="font-medium text-destructive">Pixelate is the weaker choice.</span>
-          Each block keeps the average of the pixels it replaced, and pixelated text has been
-          reconstructed by rendering candidate words through the same block grid until they match.
-          Use solid fill for anything you truly need gone.
+          <span class="font-medium text-destructive">Randomness is off: this is a plain block
+            average.</span>
+          Every block is replaced with the flat average of the pixels it covers, and that average is
+          a fixed function of the source image, the exact case researchers have reconstructed by
+          rendering candidate words through the same block grid until the output matches. Raise the
+          randomness slider above 0% or switch to solid fill for anything you truly need gone.
+        </p>
+        <p
+          v-else-if="pixelateChosen"
+          role="note"
+          class="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-muted-foreground"
+        >
+          <span class="font-medium text-destructive">Pixelate is still the weaker choice.</span>
+          When randomness is above 0%, each block mixes seeded random noise into its average,
+          generated fresh per region, so the output is no longer a fixed function of the source image
+          and the classic attack of rendering candidate words through the same block grid no longer
+          lands the same way. That makes reconstruction much harder, not impossible: a rough trace of
+          the original brightness still survives the average. Use solid fill for anything you truly
+          need gone.
         </p>
         <p
           v-else

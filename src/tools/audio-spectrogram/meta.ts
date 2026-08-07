@@ -4,7 +4,7 @@ export const meta: ToolMeta = {
   slug: 'audio-spectrogram',
   matrixSlug: 'spectrogram',
   name: 'Spectrogram Viewer',
-  description: 'Waveform and frequency spectrogram for any audio file.',
+  description: 'Waveform and frequency spectrogram for any audio or video file.',
   category: 'Media',
   keywords: [
     'spectrogram viewer',
@@ -15,6 +15,9 @@ export const meta: ToolMeta = {
     'visualize sound frequencies',
     'audio frequency spectrum tool',
     'mp3 spectrogram',
+    'video spectrogram',
+    'extract audio from video',
+    'spectrogram from mp4 video',
   ],
   input: 'audio/*',
   output: 'application/json',
@@ -59,8 +62,8 @@ export const meta: ToolMeta = {
     },
   ],
   copy: {
-    what: 'Draws a spectrogram of any audio file your browser can decode: WAV, MP3, FLAC, OGG, M4A, and more. Time runs left to right, frequency runs bottom to top, and color is loudness in decibels with 0 dB as full scale. A waveform strip sits above it so you can line up what you hear with what you see. The frequency axis switches between linear and logarithmic, the FFT size trades time detail against frequency detail, and the whole picture exports as a PNG.',
-    how: 'Drop an audio file onto the panel or pick one with the file button, then wait for the analysis bar to finish. Hover anywhere on the spectrogram to read the exact time, frequency, and level under the pointer, and click to play from that moment with a playhead tracking along. Change the FFT size, colors, or frequency axis at any time and the picture redraws from the samples already in memory. Files longer than ten minutes are analyzed up to the ten minute mark and the panel says so on screen.',
+    what: 'Draws a spectrogram of any audio file your browser can decode: WAV, MP3, FLAC, OGG, M4A, and more. Drop in a video such as MP4, MOV, WebM, or MKV and its audio track is extracted locally first, then charted the same way. Time runs left to right, frequency runs bottom to top, and color is loudness in decibels with 0 dB as full scale. A waveform strip sits above it so you can line up what you hear with what you see. The frequency axis switches between linear and logarithmic, the FFT size trades time detail against frequency detail, and the whole picture exports as a PNG.',
+    how: 'Drop an audio or video file onto the panel or pick one with the file button, then wait for the progress bar to finish. A video first has its audio pulled out with an ffmpeg engine that runs inside this tab, so the first video you load triggers a one time engine download of about 31 MB that your browser then keeps. Hover anywhere on the spectrogram to read the exact time, frequency, and level under the pointer, and click to play from that moment with a playhead tracking along. Change the FFT size, colors, or frequency axis at any time and the picture redraws from the samples already in memory. Files longer than ten minutes are analyzed up to the ten minute mark and the panel says so on screen.',
     why: 'Most spectrogram sites make you upload the audio first, then cap the length, watermark the image, or hide the export behind an account. This one decodes and analyzes the file in your browser with a hand written FFT, so your files and inputs never leave your device. The levels are real decibels against full scale rather than an arbitrary brightness ramp, the logarithmic frequency view matches how pitch actually works, and the PNG export is the same picture you are looking at, axes included.',
     faq: [
       {
@@ -70,6 +73,10 @@ export const meta: ToolMeta = {
       {
         q: 'Why would I switch the frequency axis to logarithmic?',
         a: 'Hearing is roughly logarithmic in pitch: every octave doubles the frequency, so the jump from 100 Hz to 200 Hz sounds like the same distance as 5 kHz to 10 kHz. A linear axis gives half the picture to the top octave alone and squashes every bass and midrange detail into a thin band at the bottom. The logarithmic view spreads the octaves evenly from 20 Hz up to the Nyquist limit, which is what you want for music, voice, and anything where the interesting structure lives below 2 kHz. Keep the linear axis when you care about high frequency content specifically, such as spotting a codec cutoff or ultrasonic noise.',
+      },
+      {
+        q: 'Can I load a video instead of an audio file?',
+        a: 'Yes. Drop in an MP4, MOV, WebM, MKV, or most other video containers and the tool pulls out the audio track for you before charting it. The extraction runs on an ffmpeg engine that loads inside this tab, so your files and inputs never leave your device. That engine is a one time download of about 31 MB, which is why it only starts once you actually load a video rather than on page visit, and your browser keeps it afterwards so later videos start straight from the cache and work offline. On a connection the browser reports as metered, the download waits for a single tap instead of starting on its own. If a video has no audio track, the tool says so rather than drawing an empty picture.',
       },
       {
         q: 'Is my audio uploaded anywhere?',

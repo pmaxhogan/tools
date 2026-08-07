@@ -16,7 +16,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['scripts/**', 'worker/**'],
+    files: ['scripts/**', 'worker/**', '*.config.{js,mjs,ts}'],
     languageOptions: {
       globals: { ...globals.node, ...globals.serviceworker },
     },
@@ -37,6 +37,21 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ['dist/', '.astro/', 'node_modules/', 'src/components/ui/'],
+    // Source and worker only. The rest are generated or vendored bundles
+    // (build output, wrangler temp, and the self-hosted engine chunks the
+    // prepare-*.mjs scripts stage under public/), never hand-authored, so
+    // linting them is noise. They are gitignored; CI never sees them.
+    ignores: [
+      'dist/',
+      'dist-worker-check/',
+      '.astro/',
+      '.wrangler/',
+      'node_modules/',
+      'src/components/ui/',
+      'public/ffmpeg/',
+      'public/models/',
+      'public/pyodide/',
+      'public/tesseract/',
+    ],
   }
 );

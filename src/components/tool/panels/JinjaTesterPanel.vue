@@ -8,6 +8,7 @@ import {
   parseStatesInput,
   type TemplateError,
 } from '@/tools/jinja-template-tester/index';
+import { shouldAutoDownload, isMetered, onConnectionChange } from '@/lib/connection';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,10 +18,12 @@ import CopyButton from '../CopyButton.vue';
  * Bespoke panel for the Jinja Template Tester.
  *
  * The generic ToolShell cannot host this one: rendering needs real Python
- * jinja2, which only exists in the browser through Pyodide, an opt-in
- * WebAssembly download of about 13 MB. Everything around the engine that can be
- * pure lives in src/tools/jinja-template-tester/ and is tested in Node; this
- * file owns the two editors, the engine download, and the render loop.
+ * jinja2, which only exists in the browser through Pyodide, a WebAssembly
+ * download of about 13 MB. It starts automatically on an unmetered connection
+ * and waits for a one-tap start on a metered one. Everything around the engine
+ * that can be pure lives in src/tools/jinja-template-tester/ and is tested in
+ * Node; this file owns the two editors, the engine download, and the render
+ * loop.
  *
  * Self-hosting: scripts/prepare-pyodide.mjs stages the runtime and the jinja2
  * and MarkupSafe wheels into /pyodide/. The loader is imported from that path
@@ -95,6 +98,12 @@ const engineError = ref<{ message: string; fix?: string } | null>(null);
 const downloadedBytes = ref(0);
 const totalBytes = ref(0);
 
+/** True when a metered or Save-Data connection is holding the auto-start back. */
+const metered = ref(false);
+/** Consumed once by the connection listener if a metered link turns unmetered. */
+let pendingAutoStart = false;
+let stopConnectionWatch: () => void = () => {};
+
 const output = ref('');
 const renderError = ref<TemplateError | null>(null);
 const stateError = ref<{ message: string; fix?: string } | null>(null);
@@ -122,9 +131,12 @@ const downloadPercent = computed(() => {
   return Math.min(100, Math.round((downloadedBytes.value / totalBytes.value) * 100));
 });
 
-const engineButtonLabel = computed(() =>
-  engineState.value === 'error' ? 'Try loading the engine again' : 'Load the template engine',
-);
+const engineButtonLabel = computed(() => {
+  if (engineState.value === 'error') return 'Try loading the engine again';
+  return metered.value
+    ? `Load the template engine (about ${approxMb.value} MB)`
+    : 'Load the template engine';
+});
 
 const ready = computed(() => engineState.value === 'ready');
 
@@ -256,6 +268,8 @@ function loadEngine(): void {
   if (!supported.value || engineState.value === 'loading' || engineState.value === 'starting') {
     return;
   }
+  // A press (or the automatic start) commits to the download, so drop any hold.
+  pendingAutoStart = false;
   loadPromise ??= startEngine()
     .then(() => {
       scheduleRender(0);
@@ -329,12 +343,38 @@ watch([templateText, stateText], () => scheduleRender());
 /* lifecycle                                                        */
 /* ---------------------------------------------------------------- */
 
+/**
+ * Starts the engine download without a click on first visit, unless the
+ * connection is metered or Save-Data. When it is, the panel keeps a one-tap
+ * start and remembers to auto-start later if the link turns unmetered.
+ */
+function autoStartEngine(): void {
+  if (engineState.value !== 'idle') return;
+  if (shouldAutoDownload()) {
+    loadEngine();
+  } else {
+    metered.value = true;
+    pendingAutoStart = true;
+  }
+}
+
 onMounted(() => {
   supported.value =
     typeof WebAssembly !== 'undefined' && typeof URL !== 'undefined' && typeof fetch !== 'undefined';
+  if (!supported.value) return;
+  metered.value = isMetered();
+  autoStartEngine();
+  stopConnectionWatch = onConnectionChange(() => {
+    metered.value = isMetered();
+    if (pendingAutoStart && shouldAutoDownload()) {
+      pendingAutoStart = false;
+      autoStartEngine();
+    }
+  });
 });
 
 onUnmounted(() => {
+  stopConnectionWatch();
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = null;
   // Pyodide holds a large wasm heap; drop the reference so the tab can reclaim
@@ -454,6 +494,13 @@ const stubbedFunctions = [
           />
         </div>
       </div>
+
+      <p
+        v-if="metered && engineState === 'idle'"
+        class="text-xs text-muted-foreground"
+      >
+        Your connection looks metered, so the engine waits for you to start it.
+      </p>
 
       <p
         v-if="!supported"

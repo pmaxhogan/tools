@@ -4,6 +4,7 @@ import {
   applyPixelateRect,
   applySolidRect,
   clampRect,
+  mulberry32,
   normalizeRect,
   run,
   sniffImageFormat,
@@ -274,6 +275,114 @@ describe('applyPixelateRect', () => {
 
     expect(applyPixelateRect(data, W, H, { x: 100, y: 0, w: 4, h: 4 }, 4)).toBeNull();
     expect(Array.from(data)).toEqual(Array.from(pristine));
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* applyPixelateRect randomness                                        */
+/* ------------------------------------------------------------------ */
+
+describe('applyPixelateRect seeded randomness', () => {
+  const rect = { x: 0, y: 0, w: 6, h: 6 };
+
+  it('is byte identical to a plain block average at strength 0', () => {
+    const plain = checkerboard(W, H);
+    const perturbed = new Uint8ClampedArray(plain);
+
+    applyPixelateRect(plain, W, H, rect, 2);
+    applyPixelateRect(perturbed, W, H, rect, 2, { seed: 12345, strength: 0 });
+
+    expect(Array.from(perturbed)).toEqual(Array.from(plain));
+  });
+
+  it('is byte identical to a plain block average when no perturbation options are passed', () => {
+    const plain = checkerboard(W, H);
+    const bare = new Uint8ClampedArray(plain);
+
+    applyPixelateRect(plain, W, H, rect, 2);
+    applyPixelateRect(bare, W, H, rect, 2);
+
+    expect(Array.from(bare)).toEqual(Array.from(plain));
+  });
+
+  it('produces the same output every time for the same seed and strength', () => {
+    const a = checkerboard(W, H);
+    const b = checkerboard(W, H);
+
+    applyPixelateRect(a, W, H, rect, 2, { seed: 42, strength: 0.6 });
+    applyPixelateRect(b, W, H, rect, 2, { seed: 42, strength: 0.6 });
+
+    expect(Array.from(a)).toEqual(Array.from(b));
+  });
+
+  it('diverges from the plain average once strength is above 0', () => {
+    const plain = checkerboard(W, H);
+    const perturbed = new Uint8ClampedArray(plain);
+
+    applyPixelateRect(plain, W, H, rect, 2);
+    applyPixelateRect(perturbed, W, H, rect, 2, { seed: 7, strength: 0.6 });
+
+    expect(Array.from(perturbed)).not.toEqual(Array.from(plain));
+  });
+
+  it('produces different output for different seeds at the same strength', () => {
+    const a = checkerboard(W, H);
+    const b = checkerboard(W, H);
+
+    applyPixelateRect(a, W, H, rect, 2, { seed: 1, strength: 0.6 });
+    applyPixelateRect(b, W, H, rect, 2, { seed: 2, strength: 0.6 });
+
+    expect(Array.from(a)).not.toEqual(Array.from(b));
+  });
+
+  it('keeps every channel within the 0 to 255 byte range even at strength 1', () => {
+    const data = checkerboard(W, H);
+    applyPixelateRect(data, W, H, { x: 0, y: 0, w: 8, h: 8 }, 2, { seed: 99, strength: 1 });
+    for (const v of Array.from(data)) {
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(255);
+    }
+  });
+
+  it('leaves pixels outside the rectangle untouched with perturbation on', () => {
+    const pristine = checkerboard(W, H);
+    const data = new Uint8ClampedArray(pristine);
+    const innerRect = { x: 1, y: 1, w: 3, h: 3 };
+
+    applyPixelateRect(data, W, H, innerRect, 2, { seed: 9, strength: 0.8 });
+
+    expectOutsideUntouched(data, pristine, W, H, innerRect);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* mulberry32                                                          */
+/* ------------------------------------------------------------------ */
+
+describe('mulberry32', () => {
+  it('produces the same sequence for the same seed', () => {
+    const a = mulberry32(1234);
+    const b = mulberry32(1234);
+    const seqA = Array.from({ length: 5 }, () => a());
+    const seqB = Array.from({ length: 5 }, () => b());
+    expect(seqA).toEqual(seqB);
+  });
+
+  it('produces a different sequence for a different seed', () => {
+    const a = mulberry32(1234);
+    const b = mulberry32(5678);
+    const seqA = Array.from({ length: 5 }, () => a());
+    const seqB = Array.from({ length: 5 }, () => b());
+    expect(seqA).not.toEqual(seqB);
+  });
+
+  it('stays within the unit interval', () => {
+    const next = mulberry32(0);
+    for (let i = 0; i < 50; i++) {
+      const v = next();
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThan(1);
+    }
   });
 });
 

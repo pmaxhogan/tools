@@ -10,6 +10,7 @@ const gridTools = tools.map((t) => ({
   description: t.description,
   category: t.category,
   keywords: t.keywords,
+  searchTerms: t.searchTerms,
 }));
 
 const jsonLd = {
@@ -29,10 +30,18 @@ const jsonLd = {
   ogImage="/og/site.png"
 >
   <SiteHeader />
-  <main class="mx-auto max-w-[1140px] px-4 py-10">
-    <section class="mx-auto max-w-2xl text-center">
-      <h1 class="text-3xl font-semibold tracking-tight">Tools that respect you</h1>
-      <p class="mt-3 text-muted-foreground">
+  <main class="mx-auto max-w-[1140px] px-4 pb-10">
+    <section class="relative isolate mx-auto max-w-2xl px-4 pt-16 pb-10 text-center sm:pt-20">
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[image:var(--brand-glow)]"
+      >
+      </div>
+      <p class="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+        Local-first developer tools
+      </p>
+      <h1 class="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">Tools that respect you</h1>
+      <p class="mx-auto mt-4 max-w-xl text-muted-foreground">
         {tools.length} developer and power-user tools that run entirely in your browser. No ads, no
         accounts, no limits. Your files and inputs never leave your device.
       </p>

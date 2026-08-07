@@ -1,5 +1,6 @@
 ---
 import '@/styles/global.css';
+import { ClientRouter } from 'astro:transitions';
 import CommandPalette from '@/components/CommandPalette.vue';
 import Sidebar from '@/components/Sidebar.astro';
 import { tools } from '@/tools/registry';
@@ -10,6 +11,7 @@ const paletteTools = tools.map((t) => ({
   description: t.description,
   category: t.category,
   keywords: t.keywords,
+  searchTerms: t.searchTerms,
 }));
 
 export interface Props {
@@ -40,6 +42,7 @@ const og = ogImage ? new URL(ogImage, site).href : undefined;
     <link rel="icon" href="/favicon.ico" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="generator" content={Astro.generator} />
+    <ClientRouter />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -62,18 +65,28 @@ const og = ogImage ? new URL(ogImage, site).href : undefined;
     />
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
     <script is:inline>
-      // Theme: respect prefers-color-scheme, allow manual override in
-      // localStorage (preferences only — rule 7). Runs before paint.
-      const stored = localStorage.getItem('theme');
-      const dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.classList.toggle('dark', dark);
+      // Theme + sidebar classes live on <html>, which the view-transition swap
+      // (ClientRouter) replaces with the incoming document's bare <html>. So the
+      // state is derived in one function, applied before paint on first load,
+      // and re-applied on astro:after-swap (fires after the DOM swap, before
+      // paint) so navigating never flashes the wrong theme. localStorage holds
+      // preferences only — rule 7.
+      function applyHtmlState() {
+        const html = document.documentElement;
+        const stored = localStorage.getItem('theme');
+        const dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+        html.classList.toggle('dark', dark);
 
-      // Sidebar: open by default at xl and up, closed below. A stored
-      // preference (preferences only, rule 7) overrides that on wide screens.
-      // Applied here, before paint, so neither state causes a layout shift.
-      const sidebarPref = localStorage.getItem('sidebar');
-      if (sidebarPref === 'closed') document.documentElement.classList.add('sb-closed');
-      else if (sidebarPref === 'open') document.documentElement.classList.add('sb-open');
+        // Sidebar: open by default at xl and up, closed below. A stored
+        // preference overrides that on wide screens.
+        const sidebarPref = localStorage.getItem('sidebar');
+        html.classList.toggle('sb-closed', sidebarPref === 'closed');
+        html.classList.toggle('sb-open', sidebarPref === 'open');
+      }
+      applyHtmlState();
+      // document persists across swaps and this inline script is deduped by the
+      // router, so this listener binds exactly once.
+      document.addEventListener('astro:after-swap', applyHtmlState);
     </script>
   </head>
   <body class="min-h-dvh bg-background font-sans text-foreground antialiased">
@@ -84,48 +97,55 @@ const og = ogImage ? new URL(ogImage, site).href : undefined;
       </div>
     </div>
     <script is:inline>
-      // Sidebar toggle. Placed after the sidebar and the header so every
-      // element it touches exists. Wide screens toggle the persisted
-      // `sb-closed` class; narrow screens toggle the transient drawer.
+      // Sidebar toggle. The header button is swapped by ClientRouter on every
+      // navigation, so binding a listener to it directly would be lost after the
+      // first nav. Instead all wiring is delegated to persistent targets
+      // (document, matchMedia) and bound exactly once; element lookups happen at
+      // event time. Wide screens toggle the persisted `sb-closed` class; narrow
+      // screens toggle the transient drawer.
       (() => {
         const html = document.documentElement;
-        const button = document.getElementById('sidebar-toggle');
-        const aside = document.getElementById('site-sidebar');
-        if (!button || !aside) return;
-
         const wide = matchMedia('(min-width: 1280px)');
+        const button = () => document.getElementById('sidebar-toggle');
+        const aside = () => document.getElementById('site-sidebar');
         const isOpen = () =>
           wide.matches ? !html.classList.contains('sb-closed') : html.classList.contains('sb-drawer-open');
-        const sync = () => button.setAttribute('aria-expanded', isOpen() ? 'true' : 'false');
+        const sync = () => button()?.setAttribute('aria-expanded', isOpen() ? 'true' : 'false');
 
         function closeDrawer(returnFocus) {
           if (!html.classList.contains('sb-drawer-open')) return;
           html.classList.remove('sb-drawer-open');
           document.body.style.overflow = '';
           sync();
-          if (returnFocus) button.focus();
+          if (returnFocus) button()?.focus();
         }
 
-        button.addEventListener('click', () => {
-          if (wide.matches) {
-            const closed = html.classList.toggle('sb-closed');
-            html.classList.toggle('sb-open', !closed);
-            localStorage.setItem('sidebar', closed ? 'closed' : 'open');
-            sync();
-          } else if (html.classList.contains('sb-drawer-open')) {
+        document.addEventListener('click', (e) => {
+          const target = e.target;
+          if (target.closest && target.closest('#sidebar-toggle')) {
+            if (wide.matches) {
+              const closed = html.classList.toggle('sb-closed');
+              html.classList.toggle('sb-open', !closed);
+              localStorage.setItem('sidebar', closed ? 'closed' : 'open');
+              sync();
+            } else if (html.classList.contains('sb-drawer-open')) {
+              closeDrawer(true);
+            } else {
+              html.classList.add('sb-drawer-open');
+              document.body.style.overflow = 'hidden';
+              sync();
+              // Wait a frame: the panel is not visible (so not focusable) until
+              // the class has been applied and styles recomputed.
+              requestAnimationFrame(() => aside()?.focus());
+            }
+          } else if (
+            target.closest &&
+            (target.closest('#sidebar-close') || target.closest('#sidebar-scrim'))
+          ) {
             closeDrawer(true);
-          } else {
-            html.classList.add('sb-drawer-open');
-            document.body.style.overflow = 'hidden';
-            sync();
-            // Wait a frame: the panel is not visible (so not focusable) until
-            // the class has been applied and styles recomputed.
-            requestAnimationFrame(() => aside.focus());
           }
         });
 
-        document.getElementById('sidebar-close')?.addEventListener('click', () => closeDrawer(true));
-        document.getElementById('sidebar-scrim')?.addEventListener('click', () => closeDrawer(true));
         document.addEventListener('keydown', (e) => {
           if (e.key === 'Escape') closeDrawer(true);
         });
@@ -134,6 +154,8 @@ const og = ogImage ? new URL(ogImage, site).href : undefined;
           closeDrawer(false);
           sync();
         });
+        // The button is fresh after every swap; re-sync its aria-expanded.
+        document.addEventListener('astro:page-load', sync);
         sync();
       })();
     </script>

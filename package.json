@@ -51,6 +51,7 @@
     "figlet": "^1.11.4",
     "file-type": "^22.0.1",
     "gpt-tokenizer": "^3.4.0",
+    "jsqr": "^1.4.0",
     "lucide-vue-next": "^1.0.0",
     "papaparse": "^5.5.4",
     "pdf-lib": "^1.17.1",

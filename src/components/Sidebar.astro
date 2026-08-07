@@ -1,32 +1,29 @@
 ---
 import { tools } from '@/tools/registry';
+import SidebarNav from '@/components/SidebarNav.vue';
 
 /**
- * Sitewide tool navigation: every tool grouped by category.
+ * Sitewide tool navigation: every tool grouped by category, with live search.
  *
- * Static markup only. Visibility is pure CSS: a real flex column at xl and
- * up (hidden when <html> carries `sb-closed`), an off-canvas drawer below xl
- * (shown when <html> carries `sb-drawer-open`). Both classes are set before
- * paint by BaseLayout, so there is no layout shift on load. The toggle script
- * lives in BaseLayout, after every element it touches has been parsed.
+ * The aside shell and its drawer visibility stay pure CSS (a real flex column
+ * at xl and up when <html> lacks `sb-closed`, an off-canvas drawer below xl
+ * when <html> carries `sb-drawer-open`), both set before paint by BaseLayout.
+ * The searchable list itself is a Vue island (SidebarNav) so it can filter,
+ * arrow-navigate, and track the active route. It is `transition:persist`ed so
+ * its open/closed drawer context and in-progress search survive navigations.
  */
 
 const path = Astro.url.pathname;
 const currentSlug = path.replace(/^\/+/, '').replace(/\/+$/, '');
 
-const byCategory = new Map<string, typeof tools>();
-for (const tool of tools) {
-  const list = byCategory.get(tool.category) ?? [];
-  list.push(tool);
-  byCategory.set(tool.category, list);
-}
-
-const groups = [...byCategory.entries()]
-  .sort((a, b) => a[0].localeCompare(b[0]))
-  .map(([category, items]) => ({
-    category,
-    items: [...items].sort((a, b) => a.name.localeCompare(b.name)),
-  }));
+const navTools = tools.map((t) => ({
+  slug: t.slug,
+  name: t.name,
+  description: t.description,
+  category: t.category,
+  keywords: t.keywords,
+  searchTerms: t.searchTerms,
+}));
 ---
 
 <div
@@ -67,58 +64,18 @@ const groups = [...byCategory.entries()]
     </button>
   </div>
 
-  <nav class="px-2 pt-4 pb-8">
-    {
-      groups.map((group) => (
-        <div class="mt-5 first:mt-0">
-          <h3 class="px-2 text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            {group.category}
-          </h3>
-          <ul class="mt-1">
-            {group.items.map((tool) => (
-              <li>
-                <a
-                  href={`/${tool.slug}`}
-                  aria-current={tool.slug === currentSlug ? 'page' : undefined}
-                  class="sidebar-link block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors duration-[120ms] hover:bg-accent hover:text-foreground"
-                >
-                  {tool.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))
-    }
-  </nav>
+  <SidebarNav
+    client:load
+    transition:persist="sidebar"
+    tools={navTools}
+    currentSlug={currentSlug}
+  />
 </aside>
-
-<script is:inline>
-  // Bring the current tool (and its category heading, when both fit) into
-  // view. Sets scrollTop on the sidebar only, so the page never moves.
-  (() => {
-    const aside = document.getElementById('site-sidebar');
-    const active = aside && aside.querySelector('[aria-current="page"]');
-    if (!aside || !active) return;
-    const heading = active.closest('div').querySelector('h3');
-    let top = active.offsetTop - 96;
-    if (heading && active.offsetTop - heading.offsetTop < aside.clientHeight - 120) {
-      top = heading.offsetTop - 56;
-    }
-    aside.scrollTop = Math.max(0, top);
-  })();
-</script>
 
 <style>
   .site-sidebar {
     overflow-y: auto;
     overscroll-behavior: contain;
-  }
-
-  .sidebar-link[aria-current='page'] {
-    background: var(--accent-soft);
-    color: var(--primary);
-    font-weight: 500;
   }
 
   /* Below xl: off-canvas drawer. Kept in the DOM (fixed, so it never takes

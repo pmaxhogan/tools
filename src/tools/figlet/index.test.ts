@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FONTS, LAYOUTS, MAX_LENGTH, run } from './index';
+import { FONTS, LAYOUTS, MAX_LENGTH, MAX_WIDTH_UNLIMITED, run } from './index';
 import { ToolError } from '../types';
 
 // Captured from figlet.textSync('Hi', { font: 'Standard', horizontalLayout: 'default' }).
@@ -82,5 +82,56 @@ describe('figlet', () => {
     } catch (e) {
       expect((e as ToolError).code).toBe('unknown-layout');
     }
+  });
+
+  describe('maximum width', () => {
+    it('never wraps at the unlimited sentinel, however long the input', () => {
+      // A one-character banner is never wrapped by anything: its line count
+      // is exactly the font's row height, the baseline every other case is
+      // measured against.
+      const height = run('H', { font: 'Standard', layout: 'default', maxWidth: MAX_WIDTH_UNLIMITED })
+        .split('\n').length;
+
+      const long = 'a'.repeat(MAX_LENGTH);
+      const out = run(long, { font: 'Standard', layout: 'default', maxWidth: MAX_WIDTH_UNLIMITED });
+      // Still exactly one banner block: unlimited width means no wrap ever
+      // happens, so the row count cannot grow past the font's own height,
+      // however many characters were rendered onto each of those rows.
+      expect(out.split('\n').length).toBe(height);
+    });
+
+    it('treats a missing maxWidth the same as the unlimited sentinel', () => {
+      const height = run('H', { font: 'Standard', layout: 'default' }).split('\n').length;
+      const long = 'a'.repeat(MAX_LENGTH);
+      expect(run(long, { font: 'Standard', layout: 'default' }).split('\n').length).toBe(height);
+    });
+
+    it('wraps at a set width into more than one banner block, every row within budget', () => {
+      const height = run('H', { font: 'Standard', layout: 'default', maxWidth: MAX_WIDTH_UNLIMITED })
+        .split('\n').length;
+
+      const width = 20;
+      const narrow = run('HiHiHiHiHiHiHiHi', { font: 'Standard', layout: 'default', maxWidth: width });
+      const rows = narrow.split('\n');
+
+      // A width tight enough to force a wrap produces more than one stacked
+      // banner block (figlet's own wrapper only ever flushes the block it has
+      // accumulated so far and starts a new one with the next character, so a
+      // character is appended to a block whole or not at all: it is never cut
+      // through the middle of its own rendered columns).
+      expect(rows.length).toBeGreaterThan(height);
+      for (const row of rows) expect(row.length).toBeLessThanOrEqual(width);
+    });
+
+    it('rejects a negative maximum width', () => {
+      expect(() => run('Hi', { font: 'Standard', layout: 'default', maxWidth: -1 })).toThrowError(
+        ToolError,
+      );
+      try {
+        run('Hi', { font: 'Standard', layout: 'default', maxWidth: -1 });
+      } catch (e) {
+        expect((e as ToolError).code).toBe('invalid-max-width');
+      }
+    });
   });
 });

@@ -42,16 +42,22 @@ const jsonLd = {
   ogImage={`/og/${meta.slug}.png`}
 >
   <SiteHeader />
+  <div class="border-b border-[color:var(--brand-hairline)] bg-[image:var(--brand-band)]">
+    <div class="mx-auto max-w-3xl px-4 pt-7 pb-8">
+      <nav
+        aria-label="Breadcrumb"
+        class="text-[11px] font-semibold tracking-[0.12em] text-primary uppercase"
+      >
+        <a href="/" class="text-primary/80 hover:text-primary">Tools</a>
+        <span aria-hidden="true"> / </span>
+        <span>{meta.category}</span>
+      </nav>
+      <h1 class="mt-2 text-3xl font-semibold tracking-tight">{meta.name}</h1>
+      <p class="mt-2 max-w-[68ch] text-muted-foreground">{meta.description}</p>
+    </div>
+  </div>
   <main class="mx-auto max-w-3xl px-4 py-8">
-    <nav aria-label="Breadcrumb" class="text-xs text-muted-foreground">
-      <a href="/" class="hover:text-foreground">Tools</a>
-      <span aria-hidden="true"> / </span>
-      <span>{meta.category}</span>
-    </nav>
-    <h1 class="mt-2 text-2xl font-semibold tracking-tight">{meta.name}</h1>
-    <p class="mt-1 text-muted-foreground">{meta.description}</p>
-
-    <div class="mt-6">
+    <div>
       <slot />
     </div>
 

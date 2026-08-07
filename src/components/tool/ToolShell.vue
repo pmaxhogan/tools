@@ -18,6 +18,17 @@ import OutputView from './OutputView.vue';
  */
 const props = defineProps<{ meta: ToolMeta }>();
 
+/**
+ * Tools whose string output is wide "ASCII art" rows rather than prose: each
+ * row is meaningful as a whole line, so the generic word-wrapping the shell
+ * gives every other string output would slice a row (and the glyph it draws)
+ * in half. These scroll horizontally instead of wrapping. Keyed off the slug
+ * rather than a new meta field so every other string-output tool is
+ * untouched by this change.
+ */
+const HORIZONTAL_SCROLL_TOOLS = new Set(['figlet']);
+const scrollsHorizontally = HORIZONTAL_SCROLL_TOOLS.has(props.meta.slug);
+
 const hasInput = props.meta.input !== 'none';
 const acceptsFiles = props.meta.input === 'File' || props.meta.input.startsWith('image/');
 
@@ -271,9 +282,26 @@ function onPickFile(e: Event) {
       </p>
     </div>
 
-    <OutputView
-      v-if="output !== null && !error"
-      :output="output"
-    />
+    <div :class="scrollsHorizontally ? 'output-scrolls-horizontally' : undefined">
+      <OutputView
+        v-if="output !== null && !error"
+        :output="output"
+      />
+    </div>
   </div>
 </template>
+
+<style scoped>
+/*
+ * Overrides OutputView's default `white-space: pre-wrap; word-break: break-all`
+ * (tuned for prose-like string output) for tools registered in
+ * HORIZONTAL_SCROLL_TOOLS above, where each output row must stay one line.
+ * Higher selector specificity than OutputView's single utility classes wins
+ * without touching that component.
+ */
+.output-scrolls-horizontally :deep(pre) {
+  white-space: pre;
+  word-break: normal;
+  overflow-x: auto;
+}
+</style>

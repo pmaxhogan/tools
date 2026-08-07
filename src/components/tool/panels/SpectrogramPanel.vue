@@ -2,6 +2,8 @@
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { X } from 'lucide-vue-next';
 import { ToolError, type ToolMeta } from '@/tools/types';
+import { isEngineReady, isMediaSupported, runJob } from '@/lib/ffmpeg';
+import { isMetered, shouldAutoDownload } from '@/lib/connection';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -89,8 +91,26 @@ const columns = shallowRef<Float32Array[]>([]);
 const freqBins = ref(1024);
 const peaks = shallowRef<{ min: Float32Array; max: Float32Array } | null>(null);
 
-const stage = ref<'idle' | 'decoding' | 'analyzing' | 'ready'>('idle');
+const stage = ref<
+  'idle' | 'engine-prompt' | 'loading-engine' | 'extracting' | 'decoding' | 'analyzing' | 'ready'
+>('idle');
 const progress = ref(0);
+
+/**
+ * Video support. A video file is routed through ffmpeg.wasm, which extracts its
+ * audio track to WAV before the existing decode and FFT path takes over. The
+ * engine is a one time download, so it never loads until a video actually
+ * arrives, and on a metered connection it waits for a tap.
+ */
+const isVideo = ref(false);
+/** A video held back on a metered connection until the visitor starts the load. */
+const pendingVideo = shallowRef<File | null>(null);
+const downloadBytes = ref(0);
+const downloadTotal = ref(0);
+/** ffmpeg extraction progress, or null while it cannot be estimated. */
+const extractRatio = ref<number | null>(null);
+/** The video's true duration, read from the ffmpeg log, before any analysis cap. */
+const videoDuration = ref<number | null>(null);
 
 const fftSize = ref('2048');
 const colors = ref('viridis');
@@ -198,6 +218,58 @@ function sniffAudioFormat(bytes: Uint8Array): string {
 }
 
 /* ---------------------------------------------------------------- */
+/* video detection and naming                                        */
+/* ---------------------------------------------------------------- */
+
+/** How much of a long file is analyzed, and how long the extracted audio runs. */
+const EXTRACT_SECONDS = MAX_ANALYSIS_SECONDS;
+
+/**
+ * Containers that carry video. The MIME type is the first signal, but Windows
+ * often hands drag and drop files an empty type for .mkv and .ts, so the
+ * extension is the fallback that keeps those on the video path.
+ */
+const VIDEO_EXTENSIONS = [
+  'mp4', 'm4v', 'mov', 'webm', 'mkv', 'avi', 'ogv', 'ts', 'm2ts', 'mts',
+  'flv', 'wmv', 'mpg', 'mpeg', '3gp', '3g2',
+];
+
+function extensionOf(name: string): string {
+  const dot = name.lastIndexOf('.');
+  return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
+}
+
+function fileIsVideo(file: File): boolean {
+  if (file.type.startsWith('video/')) return true;
+  if (file.type.startsWith('audio/')) return false;
+  return VIDEO_EXTENSIONS.includes(extensionOf(file.name));
+}
+
+/**
+ * Collapse a file name to a safe ASCII name for the ffmpeg filesystem while
+ * keeping the extension, which is how ffmpeg chooses the demuxer. Spaces and
+ * unicode are legal there but make the log unreadable on a failure.
+ */
+function safeName(file: File): string {
+  const ext = extensionOf(file.name);
+  const stem =
+    file.name
+      .slice(0, ext ? file.name.length - ext.length - 1 : undefined)
+      .replace(/[^A-Za-z0-9._-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40) || 'input';
+  return ext ? `${stem}.${ext.replace(/[^A-Za-z0-9]/g, '')}` : 'input.bin';
+}
+
+/** Pull the source duration in seconds out of an ffmpeg "Duration:" log line. */
+function parseFfmpegDuration(line: string): number | null {
+  const match = /Duration:\s*(\d+):(\d\d):(\d\d(?:\.\d+)?)/.exec(line);
+  if (!match) return null;
+  const seconds = Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
+  return Number.isFinite(seconds) ? seconds : null;
+}
+
+/* ---------------------------------------------------------------- */
 /* audio context and playback                                        */
 /* ---------------------------------------------------------------- */
 
@@ -291,6 +363,12 @@ function resetAudio() {
   channelCount.value = 0;
   progress.value = 0;
   stage.value = 'idle';
+  isVideo.value = false;
+  pendingVideo.value = null;
+  downloadBytes.value = 0;
+  downloadTotal.value = 0;
+  extractRatio.value = null;
+  videoDuration.value = null;
 }
 
 /** Average every channel into one track: a spectrogram has a single Y axis. */
@@ -342,30 +420,72 @@ async function decodeAudio(bytes: Uint8Array, rate: number | null): Promise<Audi
 
 async function readFile(file: File) {
   analysisToken += 1;
+  const token = analysisToken;
   resetAudio();
   error.value = null;
   fileName.value = file.name;
   fileSize.value = file.size;
-  stage.value = 'decoding';
+  isVideo.value = fileIsVideo(file);
 
+  if (isVideo.value) {
+    if (!isMediaSupported()) {
+      stage.value = 'idle';
+      error.value = {
+        message: 'This browser cannot extract audio from a video file.',
+        fix: 'Reading a video track needs WebAssembly. Use a current version of Chrome, Edge, Firefox, or Safari, or convert the video to an audio file first.',
+      };
+      return;
+    }
+    // The engine is already in memory, or the connection is not metered: start
+    // now. On a metered connection the video waits for a tap instead, so a page
+    // visit never quietly pulls the ~31 MB engine over mobile data.
+    if (isEngineReady() || shouldAutoDownload()) {
+      await processVideo(file, token);
+    } else {
+      pendingVideo.value = file;
+      stage.value = 'engine-prompt';
+    }
+    return;
+  }
+
+  stage.value = 'decoding';
   let bytes: Uint8Array;
   try {
     bytes = new Uint8Array(await file.arrayBuffer());
   } catch (e) {
+    if (token !== analysisToken) return;
     stage.value = 'idle';
     error.value = toToolError(e);
     return;
   }
+  if (token !== analysisToken) return;
+  await decodeAndAnalyze(bytes, token);
+}
 
+/**
+ * Decode a block of audio bytes and drive the FFT. The bytes are either the
+ * file itself, or the WAV that ffmpeg extracted from a video: from here down
+ * the two inputs are identical, so the whole DSP path is shared.
+ */
+async function decodeAndAnalyze(bytes: Uint8Array, token: number) {
+  stage.value = 'decoding';
   try {
     logic.value ??= await loadLogic();
+    if (token !== analysisToken) return;
     // The container header is the only honest source of the original rate.
     const sniffed = logic.value.sniffSampleRate(bytes);
     sourceRate.value = sniffed;
     const buffer = await decodeAudio(bytes, sniffed);
+    if (token !== analysisToken) return;
     audioBuffer.value = buffer;
     sampleRate.value = buffer.sampleRate;
     fullDuration.value = buffer.duration;
+    // A long video is extracted only up to the analysis cap, so the decoded
+    // buffer is shorter than the film. Report the real length so the truncation
+    // note is honest rather than pretending the movie is ten minutes long.
+    if (videoDuration.value !== null && videoDuration.value > fullDuration.value) {
+      fullDuration.value = videoDuration.value;
+    }
     channelCount.value = buffer.numberOfChannels;
     const cap = Math.floor(MAX_ANALYSIS_SECONDS * buffer.sampleRate);
     const samples = toMono(buffer, cap);
@@ -373,6 +493,7 @@ async function readFile(file: File) {
     analyzedDuration.value = samples.length / buffer.sampleRate;
     await analyze();
   } catch (e) {
+    if (token !== analysisToken) return;
     stage.value = 'idle';
     const format = sniffAudioFormat(bytes);
     if (e instanceof ToolError) {
@@ -384,10 +505,92 @@ async function readFile(file: File) {
           : 'This browser could not decode this file as audio, and its first bytes do not match any audio container this tool recognizes.',
         fix: format
           ? 'The container is recognized but the codec inside it is not supported here. Convert it to WAV or MP3 and try again.'
-          : 'Try a WAV, MP3, FLAC, OGG, or M4A file. Video containers work only when the browser can decode their audio track.',
+          : 'Try a WAV, MP3, FLAC, OGG, or M4A file, or a video with an audio track.',
       };
     }
   }
+}
+
+/**
+ * Extract a video's audio track to WAV with ffmpeg, then hand the bytes to the
+ * shared decode path. The engine downloads on first use, which is why this only
+ * runs once a video is actually here. Extraction is capped to the analysis
+ * window so a two hour film never expands into a gigabyte of PCM.
+ */
+async function processVideo(file: File, token: number) {
+  stage.value = isEngineReady() ? 'extracting' : 'loading-engine';
+  downloadBytes.value = 0;
+  downloadTotal.value = 0;
+  extractRatio.value = null;
+
+  let data: Uint8Array;
+  try {
+    data = new Uint8Array(await file.arrayBuffer());
+  } catch (e) {
+    if (token !== analysisToken) return;
+    stage.value = 'idle';
+    error.value = toToolError(e);
+    return;
+  }
+  if (token !== analysisToken) return;
+
+  const inputName = safeName(file);
+  const outputName = 'spectrogram-audio.wav';
+
+  try {
+    const produced = await runJob({
+      inputs: [{ name: inputName, data }],
+      // -vn drops the video, -t caps the length, pcm_s16le keeps a WAV whose
+      // RIFF header states the true sample rate so the decode path reads it.
+      args: ['-i', inputName, '-vn', '-t', String(EXTRACT_SECONDS), '-c:a', 'pcm_s16le', outputName],
+      outputs: [outputName],
+      onDownload: (loaded, total) => {
+        if (token !== analysisToken) return;
+        downloadBytes.value = loaded;
+        downloadTotal.value = total;
+        if (total > 0 && loaded < total) stage.value = 'loading-engine';
+      },
+      onProgress: (p) => {
+        if (token !== analysisToken) return;
+        // Any progress tick means the download is done and ffmpeg is running.
+        stage.value = 'extracting';
+        extractRatio.value = p.ratio;
+        if (p.logLine && videoDuration.value === null) {
+          const parsed = parseFfmpegDuration(p.logLine);
+          if (parsed !== null) videoDuration.value = parsed;
+        }
+      },
+    });
+    if (token !== analysisToken) return;
+    const wav = produced[0]?.data;
+    if (!wav || wav.byteLength === 0) {
+      stage.value = 'idle';
+      error.value = {
+        message: 'No audio track was found in this video.',
+        fix: 'This file carries video but no sound to analyze. Try a different file.',
+      };
+      return;
+    }
+    await decodeAndAnalyze(wav, token);
+  } catch (e) {
+    if (token !== analysisToken) return;
+    stage.value = 'idle';
+    const base = toToolError(e);
+    error.value = {
+      message: base.message || 'The audio could not be extracted from this video.',
+      fix:
+        base.fix ??
+        'The video may have no audio track, or its audio codec is not supported here. Try another file.',
+    };
+  }
+}
+
+/** Start a video that was held back on a metered connection. */
+async function startPendingVideo() {
+  const file = pendingVideo.value;
+  if (!file) return;
+  pendingVideo.value = null;
+  await processVideo(file, analysisToken);
 }
 
 async function analyze() {
@@ -675,7 +878,7 @@ function drawAll(ctx: CanvasRenderingContext2D, theme: Theme, overlays: boolean)
     ctx.textAlign = 'center';
     ctx.font = '13px "Geist", ui-sans-serif, system-ui, sans-serif';
     ctx.fillText(
-      'Drop an audio file to see its waveform and spectrogram',
+      'Drop an audio or video file to see its waveform and spectrogram',
       GUTTER_LEFT + plotW / 2,
       TOP_H + (height - TOP_H - AXIS_H) / 2,
     );
@@ -1027,6 +1230,78 @@ const summary = computed(() => {
   return `${length}, ${rateSummary.value}, ${channels}`;
 });
 
+/* ---------------------------------------------------------------- */
+/* progress and prompt display                                       */
+/* ---------------------------------------------------------------- */
+
+function mb(bytes: number): string {
+  return (bytes / (1024 * 1024)).toFixed(1);
+}
+
+const busy = computed(
+  () =>
+    stage.value === 'loading-engine' ||
+    stage.value === 'extracting' ||
+    stage.value === 'decoding' ||
+    stage.value === 'analyzing',
+);
+
+const downloadPercent = computed(() =>
+  downloadTotal.value > 0 ? Math.min(100, (downloadBytes.value / downloadTotal.value) * 100) : 0,
+);
+
+const stageLabel = computed(() => {
+  switch (stage.value) {
+    case 'loading-engine':
+      return downloadTotal.value > 0
+        ? `Downloading the audio extractor (${mb(downloadBytes.value)} of ${mb(downloadTotal.value)} MB)…`
+        : 'Downloading the audio extractor…';
+    case 'extracting':
+      return 'Extracting the audio track from the video…';
+    case 'decoding':
+      return 'Decoding audio…';
+    case 'analyzing':
+      return 'Running the FFT…';
+    default:
+      return '';
+  }
+});
+
+const stagePercentText = computed(() => {
+  if (stage.value === 'analyzing') return `${progress.value}%`;
+  if (stage.value === 'loading-engine' && downloadTotal.value > 0) {
+    return `${Math.round(downloadPercent.value)}%`;
+  }
+  if (stage.value === 'extracting' && extractRatio.value !== null) {
+    return `${Math.round(extractRatio.value * 100)}%`;
+  }
+  return '';
+});
+
+/** The known progress percentage for aria, or undefined for indeterminate stages. */
+const stageValueNow = computed<number | undefined>(() => {
+  if (stage.value === 'analyzing') return progress.value;
+  if (stage.value === 'loading-engine') {
+    return downloadTotal.value > 0 ? Math.round(downloadPercent.value) : undefined;
+  }
+  if (stage.value === 'extracting') {
+    return extractRatio.value !== null ? Math.round(extractRatio.value * 100) : undefined;
+  }
+  return undefined;
+});
+
+const stageBarWidth = computed(() => {
+  if (stage.value === 'analyzing') return `${progress.value}%`;
+  if (stage.value === 'loading-engine') return `${Math.max(4, downloadPercent.value)}%`;
+  if (stage.value === 'extracting') {
+    return extractRatio.value !== null ? `${Math.round(extractRatio.value * 100)}%` : '30%';
+  }
+  return '15%';
+});
+
+/** True when this connection looks metered, for the one tap prompt copy. */
+const connectionMetered = computed(() => isMetered());
+
 const hoverChipStyle = computed(() => {
   const point = hover.value;
   if (!point) return {};
@@ -1051,7 +1326,7 @@ const hoverChipStyle = computed(() => {
     >
       <div class="flex items-center justify-between px-3 pt-2">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Audio
+          Audio or video
         </span>
         <Button
           variant="ghost"
@@ -1064,7 +1339,7 @@ const hoverChipStyle = computed(() => {
           ref="fileInput"
           type="file"
           class="hidden"
-          accept="audio/*"
+          accept="audio/*,video/*,.mkv,.ts,.m2ts,.avi,.flv,.wmv"
           @change="onPickFile"
         >
       </div>
@@ -1097,9 +1372,9 @@ const hoverChipStyle = computed(() => {
         v-else
         class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
       >
-        Drop an audio file here to see its waveform and its frequency spectrogram. WAV, MP3, FLAC,
-        OGG, and M4A all work. Everything runs in this tab:
-        your files and inputs never leave your device.
+        Drop an audio or video file here to see its waveform and its frequency spectrogram. WAV,
+        MP3, FLAC, OGG, and M4A all work, and a video's audio track is extracted locally first.
+        Everything runs in this tab: your files and inputs never leave your device.
       </p>
     </div>
 
@@ -1118,6 +1393,29 @@ const hoverChipStyle = computed(() => {
       >
         {{ error.fix }}
       </p>
+    </div>
+
+    <!-- Metered engine prompt -->
+    <div
+      v-if="stage === 'engine-prompt'"
+      class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
+    >
+      <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+        Audio extractor
+      </span>
+      <p class="text-sm text-muted-foreground">
+        Reading a video's audio needs a one time download of about 31 MB, an ffmpeg engine that
+        runs inside this tab. {{ connectionMetered ? 'Your connection looks metered, so it' : 'It' }}
+        will not start until you ask. Your browser keeps the engine afterwards, so later videos
+        start straight from the cache. Your files and inputs never leave your device.
+      </p>
+      <Button
+        class="self-start"
+        size="sm"
+        @click="startPendingVideo"
+      >
+        Extract audio (about 31 MB)
+      </Button>
     </div>
 
     <!-- Options -->
@@ -1245,17 +1543,24 @@ const hoverChipStyle = computed(() => {
 
     <!-- Progress -->
     <div
-      v-if="stage === 'decoding' || stage === 'analyzing'"
+      v-if="busy"
       class="flex flex-col gap-2 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
     >
       <div class="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{{ stage === 'decoding' ? 'Decoding audio…' : 'Running the FFT…' }}</span>
-        <span class="tabular-nums">{{ stage === 'analyzing' ? `${progress}%` : '' }}</span>
+        <span>{{ stageLabel }}</span>
+        <span class="tabular-nums">{{ stagePercentText }}</span>
       </div>
-      <div class="h-1.5 overflow-hidden rounded-full bg-card">
+      <div
+        class="h-1.5 overflow-hidden rounded-full bg-card"
+        role="progressbar"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-valuenow="stageValueNow"
+        :aria-label="stageLabel"
+      >
         <div
           class="h-full rounded-full bg-primary transition-[width] duration-150"
-          :style="{ width: stage === 'analyzing' ? `${progress}%` : '15%' }"
+          :style="{ width: stageBarWidth }"
         />
       </div>
     </div>
@@ -1294,8 +1599,9 @@ const hoverChipStyle = computed(() => {
         play from that moment, and click again to stop.
       </p>
       <p v-if="truncated && logic">
-        This file is {{ logic.secondsToLabel(fullDuration) }} long. Only the first
-        {{ logic.secondsToLabel(analyzedDuration) }} are analyzed and drawn, because a longer
+        This {{ isVideo ? 'video' : 'file' }} is {{ logic.secondsToLabel(fullDuration) }} long. Only
+        the first {{ logic.secondsToLabel(analyzedDuration) }} are
+        {{ isVideo ? 'extracted, analyzed, and drawn' : 'analyzed and drawn' }}, because a longer
         analysis would not fit in browser memory on most machines.
       </p>
       <p v-if="ready">

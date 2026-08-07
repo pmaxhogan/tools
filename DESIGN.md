@@ -8,9 +8,20 @@ CSS variables.
 ## Design language
 
 Warm-neutral surfaces (paper, not paper-white; warm charcoal, not blue-black),
-generous 10-14px radii, layered elevation, airy vertical rhythm, and a single
-confident violet accent reserved for primary actions, focus, and active state.
-Friendly but professional: Raycast, Arc, modern macOS app.
+generous 10-14px radii, layered elevation, airy vertical rhythm, and a confident
+violet brand that carries across the whole site. Friendly but professional:
+Raycast, Arc, modern macOS app.
+
+**Bolder brand (supersedes the earlier "violet only for primary/focus/active"
+rule).** Violet is now a broader brand presence, not a single reserved accent.
+It appears as soft gradient washes behind heroes and tool-page bands, as a
+gradient fill on the primary button and on active toggles, as the logo mark, and
+as tasteful hairline accents on hover. Two guardrails keep this tasteful: the
+warm neutrals still own the vast majority of every screen (violet is the accent,
+never the field), and every wash stays low-opacity so foreground text keeps AA
+contrast in both themes. Saturated violet fills carry text only at the token
+anchors that are known to pass AA (light: `#5B4BD6` on white; dark: `#8A79F5`
+with the dark foreground).
 
 **Core rule: elevation is expressed differently per theme.**
 - Light: shadow does the lifting. Borders are hairline, nearly invisible.
@@ -37,7 +48,29 @@ shadcn variable set:
 | `--positive` | `#2F7D5B` | `#63C79B` | copied / success states |
 
 Never pure `#fff` as a page background; white is reserved for raised surfaces
-so cards read as lifted. The violet is the only saturated color on screen.
+so cards read as lifted. Violet is the brand color and the only saturated hue in
+the palette (the chart tokens aside); it now carries broader than before, per the
+bolder-brand direction above, but the warm neutrals still own the field.
+
+### Brand tokens (added for the bolder-brand direction)
+
+Defined on `:root` and `.dark` in `global.css`, safe for any panel or island to
+consume:
+
+| Token | Purpose |
+|---|---|
+| `--primary-hover` / `--primary-active` | solid-violet hover and pressed steps |
+| `--brand-2` | the second, lighter violet stop for gradients |
+| `--brand-accent` | a brighter violet reserved for glows |
+| `--grad-brand` | the standard two-stop violet gradient (buttons, active toggles, slider fill, logo mark) |
+| `--grad-brand-strong` | a slightly deeper variant for hover on gradient surfaces |
+| `--grad-brand-soft` | a low-saturation violet gradient for soft fills |
+| `--brand-glow` | radial glow for hero backgrounds (`bg-[image:var(--brand-glow)]`) |
+| `--brand-band` | vertical wash for tool-page header bands |
+| `--brand-hairline` | translucent violet for hover borders, rings, and slider outline |
+
+Usage in Tailwind is via arbitrary values, e.g. `bg-[image:var(--grad-brand)]`,
+`ring-[color:var(--brand-hairline)]`; none are mapped as `--color-*` utilities.
 
 ## Typography
 
@@ -77,6 +110,10 @@ Prose measure capped at 68ch. Anything numeric that updates live gets
 - Motion: 120ms ease-out for color, 160ms `cubic-bezier(.2,.7,.3,1)` for
   transform/shadow. Card hover lift is translateY(-2px) plus one shadow step.
   Nothing exceeds 200ms. Everything honors `prefers-reduced-motion`.
+- Page navigation uses Astro view transitions (`ClientRouter` in
+  `BaseLayout.astro`). The root cross-fade is pinned to 160ms (the browser
+  default 0.25s overshoots the budget); Astro's own stylesheet zeroes the
+  view-transition pseudo-elements under `prefers-reduced-motion`.
 
 ## Theming
 

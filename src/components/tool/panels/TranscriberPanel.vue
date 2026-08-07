@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { Check, X } from 'lucide-vue-next';
 import { ToolError, type ToolMeta } from '@/tools/types';
+import { shouldAutoDownload, isMetered, onConnectionChange } from '@/lib/connection';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -17,8 +18,9 @@ import {
  * Bespoke panel for Transcriber.
  *
  * The generic ToolShell cannot render this tool. Whisper needs a model
- * download that must be opt in, a 16 kHz mono decode of the dropped file,
- * live partial text while it works, and four different export formats. What
+ * download (automatic on an unmetered connection, one-tap on a metered one), a
+ * 16 kHz mono decode of the dropped file, live partial text while it works, and
+ * four different export formats. What
  * the shell would show is a single text box, which is the wrong shape for all
  * four of those. The formatters still live in the pure logic layer; this file
  * only decodes audio, drives the pipeline, and paints the result.
@@ -166,6 +168,12 @@ type EngineStage = 'idle' | 'downloading' | 'starting' | 'ready';
 const engineStage = ref<EngineStage>('idle');
 const downloadedBytes = ref(0);
 const downloadTotal = ref(0);
+
+/** True when a metered or Save-Data connection is holding the auto-start back. */
+const metered = ref(false);
+/** Consumed once by the connection listener if a metered link turns unmetered. */
+let pendingAutoStart = false;
+let stopConnectionWatch: () => void = () => {};
 
 const fileName = ref('');
 const fileSize = ref(0);
@@ -320,6 +328,8 @@ async function disposePipeline() {
 
 async function loadModel() {
   if (engineStage.value === 'downloading' || engineStage.value === 'starting') return;
+  // A manual press means the visitor chose to start it, so drop any hold.
+  pendingAutoStart = false;
   const wanted = model.value;
   error.value = null;
   engineStage.value = 'downloading';
@@ -389,6 +399,21 @@ async function loadModel() {
       message: 'The speech model could not be loaded.',
       fix: 'Check your connection and press the button again. The model is a one time download of tens of megabytes, so a flaky link can interrupt it.',
     });
+  }
+}
+
+/**
+ * Starts the default model download without a click on first visit, unless the
+ * connection is metered or Save-Data. When it is, the panel keeps a one-tap
+ * start and remembers to auto-start later if the link turns unmetered.
+ */
+function autoStartModel() {
+  if (engineStage.value !== 'idle') return;
+  if (shouldAutoDownload()) {
+    void loadModel();
+  } else {
+    metered.value = true;
+    pendingAutoStart = true;
   }
 }
 
@@ -660,7 +685,21 @@ function downloadTranscript() {
 /* lifecycle                                                         */
 /* ---------------------------------------------------------------- */
 
+onMounted(() => {
+  if (!supported.value) return;
+  metered.value = isMetered();
+  autoStartModel();
+  stopConnectionWatch = onConnectionChange(() => {
+    metered.value = isMetered();
+    if (pendingAutoStart && shouldAutoDownload()) {
+      pendingAutoStart = false;
+      autoStartModel();
+    }
+  });
+});
+
 onUnmounted(() => {
+  stopConnectionWatch();
   window.clearInterval(elapsedTimer);
   window.clearTimeout(copiedTimer);
   void disposePipeline();
@@ -773,8 +812,15 @@ onUnmounted(() => {
         <p class="text-sm text-muted-foreground">
           The model is downloaded once, {{ currentModel.size }} for the
           {{ model === 'whisper-tiny' ? 'tiny' : 'base' }} version, and your browser keeps it
-          afterwards, so later visits start it from the cache and work offline. Nothing starts
-          until you press the button.
+          afterwards, so later visits start it from the cache and work offline. It downloads
+          automatically the first time, except on a metered connection.
+        </p>
+
+        <p
+          v-if="metered && engineStage === 'idle'"
+          class="text-xs text-muted-foreground"
+        >
+          Your connection looks metered, so the model waits for you to start it.
         </p>
 
         <div

@@ -29,6 +29,7 @@ import { meta as diffChecker } from './diff-checker/meta';
 import { meta as discordTimestamp } from './discord-timestamp/meta';
 import { meta as dmarcReportViewer } from './dmarc-report-viewer/meta';
 import { meta as discordVideoCompressor } from './discord-video-compressor/meta';
+import { meta as displayInfo } from './display-info/meta';
 import { meta as duplicateFinder } from './duplicate-finder/meta';
 import { meta as durationCalculator } from './duration-calculator/meta';
 import { meta as emailHeaderAnalyzer } from './email-header-analyzer/meta';
@@ -58,6 +59,8 @@ import { meta as jsonToTypescript } from './json-to-typescript/meta';
 import { meta as jinjaTemplateTester } from './jinja-template-tester/meta';
 import { meta as keycode } from './keycode/meta';
 import { meta as lineSorter } from './line-sorter/meta';
+import { meta as midiInspector } from './midi-inspector/meta';
+import { meta as mobileSensors } from './mobile-sensors/meta';
 import { meta as mojibakeFixer } from './mojibake-fixer/meta';
 import { meta as oauthScopeDecoder } from './oauth-scope-decoder/meta';
 import { meta as oryxLayoutDiff } from './oryx-layout-diff/meta';
@@ -66,6 +69,7 @@ import { meta as pdfToolbox } from './pdf-toolbox/meta';
 import { meta as pipelines } from './pipelines/meta';
 import { meta as placeholderImage } from './placeholder-image/meta';
 import { meta as qrCodeGenerator } from './qr-code-generator/meta';
+import { meta as qrCodeScanner } from './qr-code-scanner/meta';
 import { meta as randomPicker } from './random-picker/meta';
 import { meta as serialTerminal } from './serial-terminal/meta';
 import { meta as smartctlAnalyzer } from './smartctl-analyzer/meta';
@@ -104,6 +108,7 @@ export const tools: ToolMeta[] = [
   diffChecker,
   discordTimestamp,
   discordVideoCompressor,
+  displayInfo,
   dmarcReportViewer,
   duplicateFinder,
   durationCalculator,
@@ -134,6 +139,8 @@ export const tools: ToolMeta[] = [
   jsonToTypescript,
   keycode,
   lineSorter,
+  midiInspector,
+  mobileSensors,
   mojibakeFixer,
   oauthScopeDecoder,
   oryxLayoutDiff,
@@ -142,6 +149,7 @@ export const tools: ToolMeta[] = [
   pipelines,
   placeholderImage,
   qrCodeGenerator,
+  qrCodeScanner,
   randomPicker,
   serialTerminal,
   smartctlAnalyzer,
@@ -183,6 +191,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'discord-timestamp': () => import('./discord-timestamp/index').then((m) => m.default),
   'discord-video-compressor': () =>
     import('./discord-video-compressor/index').then((m) => m.default),
+  'display-info': () => import('./display-info/index').then((m) => m.default),
   'dmarc-report-viewer': () => import('./dmarc-report-viewer/index').then((m) => m.default),
   'duplicate-finder': () => import('./duplicate-finder/index').then((m) => m.default),
   'duration-calculator': () => import('./duration-calculator/index').then((m) => m.default),
@@ -215,6 +224,8 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'json-to-typescript': () => import('./json-to-typescript/index').then((m) => m.default),
   keycode: () => import('./keycode/index').then((m) => m.default),
   'line-sorter': () => import('./line-sorter/index').then((m) => m.default),
+  'midi-inspector': () => import('./midi-inspector/index').then((m) => m.default),
+  'mobile-sensors': () => import('./mobile-sensors/index').then((m) => m.default),
   'mojibake-fixer': () => import('./mojibake-fixer/index').then((m) => m.default),
   'oauth-scope-decoder': () => import('./oauth-scope-decoder/index').then((m) => m.default),
   'oryx-layout-diff': () => import('./oryx-layout-diff/index').then((m) => m.default),
@@ -223,6 +234,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   pipelines: () => import('./pipelines/index').then((m) => m.default),
   'placeholder-image': () => import('./placeholder-image/index').then((m) => m.default),
   'qr-code-generator': () => import('./qr-code-generator/index').then((m) => m.default),
+  'qr-code-scanner': () => import('./qr-code-scanner/index').then((m) => m.default),
   'random-picker': () => import('./random-picker/index').then((m) => m.default),
   'serial-terminal': () => import('./serial-terminal/index').then((m) => m.default),
   'smartctl-analyzer': () => import('./smartctl-analyzer/index').then((m) => m.default),

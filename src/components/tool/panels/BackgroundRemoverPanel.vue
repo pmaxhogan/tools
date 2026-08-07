@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue';
 import { Check, X } from 'lucide-vue-next';
 import { ToolError, type ToolMeta } from '@/tools/types';
+import { shouldAutoDownload, isMetered, onConnectionChange } from '@/lib/connection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,8 +19,9 @@ import {
  * Bespoke panel for the background remover.
  *
  * The generic ToolShell cannot host this tool: it needs a canvas to decode and
- * rescale the photo, an opt in download of neural network weights, and a
- * before and after view. The logic layer stays pure and owns every pixel
+ * rescale the photo, a download of neural network weights (automatic on an
+ * unmetered connection, one-tap on a metered one), and a before and after
+ * view. The logic layer stays pure and owns every pixel
  * operation (matte to alpha, feathering, compositing); this file owns the
  * canvas, the model session, and the UI around them.
  *
@@ -102,6 +104,12 @@ const fileInput = ref<HTMLInputElement>();
 const engineState = ref<'idle' | 'loading' | 'ready'>('idle');
 const downloadedBytes = ref(0);
 const downloadTotal = ref(0);
+
+/** True when a metered or Save-Data connection is holding the auto-start back. */
+const metered = ref(false);
+/** Consumed once by the connection listener if a metered link turns unmetered. */
+let pendingAutoStart = false;
+let stopConnectionWatch: () => void = () => {};
 
 const outputMode = ref('transparent');
 const bgColor = ref('#ffffff');
@@ -252,11 +260,28 @@ async function ensureEngine(): Promise<Engine> {
 }
 
 async function loadModel() {
+  // A manual press means the visitor chose to start it, so drop any hold.
+  pendingAutoStart = false;
   error.value = null;
   try {
     await ensureEngine();
   } catch (e) {
     error.value = toToolError(e);
+  }
+}
+
+/**
+ * Starts the model download without a click on first visit, unless the
+ * connection is metered or Save-Data. When it is, the panel keeps a one-tap
+ * start and remembers to auto-start later if the link turns unmetered.
+ */
+function autoStartModel() {
+  if (engineState.value !== 'idle') return;
+  if (shouldAutoDownload()) {
+    void loadModel();
+  } else {
+    metered.value = true;
+    pendingAutoStart = true;
   }
 }
 
@@ -566,9 +591,20 @@ function downloadResult() {
 
 onMounted(() => {
   supported.value = typeof WebAssembly !== 'undefined';
+  if (!supported.value) return;
+  metered.value = isMetered();
+  autoStartModel();
+  stopConnectionWatch = onConnectionChange(() => {
+    metered.value = isMetered();
+    if (pendingAutoStart && shouldAutoDownload()) {
+      pendingAutoStart = false;
+      autoStartModel();
+    }
+  });
 });
 
 onUnmounted(() => {
+  stopConnectionWatch();
   revoke(originalUrl.value);
   revoke(resultUrl.value);
 });
@@ -682,6 +718,13 @@ onUnmounted(() => {
           are a one time download of about 6.3 MB from this site, and your browser keeps them
           afterwards, so later visits start straight from the cache and work offline. Nothing is
           uploaded: your files and inputs never leave your device.
+        </p>
+
+        <p
+          v-if="metered && engineState === 'idle'"
+          class="text-xs text-muted-foreground"
+        >
+          Your connection looks metered, so the model waits for you to start it.
         </p>
 
         <div

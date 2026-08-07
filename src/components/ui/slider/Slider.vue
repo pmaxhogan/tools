@@ -24,17 +24,21 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     )"
     v-bind="forwarded"
   >
+    <!-- The full track is drawn as a carved, brand-tinted well with a violet
+         hairline ring so the maximum possible extent is obvious end to end.
+         The filled portion is a solid violet gradient; the rounded end caps and
+         the ring make the start and the max unmistakable. -->
     <SliderTrack
       data-slot="slider-track"
       :data-horizontal="props.orientation !== 'vertical' ? '' : undefined"
       :data-vertical="props.orientation === 'vertical' ? '' : undefined"
-      class="bg-muted rounded-full data-horizontal:h-1.5 data-vertical:w-1.5 relative grow overflow-hidden data-horizontal:w-full data-vertical:h-full"
+      class="bg-[var(--accent-soft)] shadow-[var(--sh-inset)] ring-1 ring-[color:var(--brand-hairline)] rounded-full data-horizontal:h-2 data-vertical:w-2 relative grow overflow-hidden data-horizontal:w-full data-vertical:h-full"
     >
       <SliderRange
         data-slot="slider-range"
         :data-horizontal="props.orientation !== 'vertical' ? '' : undefined"
         :data-vertical="props.orientation === 'vertical' ? '' : undefined"
-        class="bg-primary absolute select-none data-horizontal:h-full data-vertical:w-full"
+        class="bg-primary bg-[image:var(--grad-brand)] absolute select-none data-horizontal:h-full data-vertical:w-full"
       />
     </SliderTrack>
 
@@ -43,7 +47,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
       :key="key"
       data-slot="slider-thumb"
       :data-vertical="props.orientation === 'vertical' ? '' : undefined"
-      class="border-primary ring-ring/50 size-4 rounded-full border bg-white shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden block shrink-0 select-none disabled:pointer-events-none disabled:opacity-50"
+      class="border-primary ring-ring/50 size-4 rounded-full border bg-background shadow-[var(--sh-sm)] transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden block shrink-0 select-none disabled:pointer-events-none disabled:opacity-50"
     />
   </SliderRoot>
 </template>

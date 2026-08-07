@@ -48,6 +48,15 @@ export const meta: ToolMeta = {
       step: 1,
     },
     {
+      kind: 'number',
+      id: 'randomness',
+      label: 'Pixelate randomness strength (%)',
+      default: 35,
+      min: 0,
+      max: 100,
+      step: 5,
+    },
+    {
       kind: 'select',
       id: 'format',
       label: 'Export format',
@@ -59,13 +68,13 @@ export const meta: ToolMeta = {
     },
   ],
   copy: {
-    what: 'Redacts a screenshot by overwriting the pixels underneath your selection, so the covered content is gone from the image data rather than parked behind a shape. Drag as many rectangles as you need; each one is applied in order and can be undone. Solid black or white fill is the default and the safest option, and a pixelate mode is available with a clear warning about its limits. There is no blur mode, because blurred text keeps enough of the original signal to be recovered.',
+    what: 'Redacts a screenshot by overwriting the pixels underneath your selection, so the covered content is gone from the image data rather than parked behind a shape. Drag as many rectangles as you need; each one is applied in order and can be undone. Solid black or white fill is the default and the safest option, and a pixelate mode is available with a clear warning about its limits. Pixelate mixes in seeded random noise on top of each block average, generated fresh per region, so its output is no longer a fixed function of the source image, which raises the bar for reconstruction without making it a guaranteed-safe choice. There is no blur mode, because blurred text keeps enough of the original signal to be recovered.',
     how: 'Drop a screenshot onto the canvas, pick solid or pixelate, then drag a rectangle over each thing you want gone. The preview shows the real redacted pixels, not an overlay, and the sidebar lists every region with a remove button. Press Escape to cancel a drag in progress or Delete to drop the last region. Export as PNG or JPEG and the file downloads with a "-redacted" name.',
     why: 'Drawing a black box in a normal image editor can leave the text recoverable: the shape may stay on its own layer, compression artifacts around it can hint at what was there, and one forgotten flatten step ships the original. Uploading to a redaction site is worse, since sending the sensitive screenshot to a stranger is exactly the thing you were trying to avoid. This tool overwrites the pixels in your browser and re-encodes the result, so the redacted areas hold one flat color and your files and inputs never leave your device.',
     faq: [
       {
         q: 'Why is solid fill safer than pixelate or blur?',
-        a: 'A solid fill replaces every sample in the region with one color, so there is no residual signal left to analyze. Pixelate keeps the average of each block, and blur keeps a low pass version of the whole area: both are deterministic functions of the original pixels, and researchers have reconstructed pixelated and blurred text by rendering candidate strings through the same transform until the output matches. That is why solid is the default here and why blur is not offered at all.',
+        a: 'A solid fill replaces every sample in the region with one color, so there is no residual signal left to analyze. Pixelate keeps the average of each block, and blur keeps a low pass version of the whole area: both were, in their plain form, a deterministic function of the original pixels, and researchers have reconstructed pixelated and blurred text by rendering candidate strings through the same transform until the output matches. This tool now mixes seeded random noise into each pixelate block on top of the average, so the same source image no longer produces the same output twice and that specific attack no longer works the same way. That makes reconstruction much harder, not impossible: a rough trace of the original brightness still survives the average. Solid fill remains the only option here with nothing left to analyze, which is why it is the default and why blur is not offered at all.',
       },
       {
         q: 'Does the exported file still contain the original metadata?',

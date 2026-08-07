@@ -1,0 +1,53 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SiteHeader from '@/components/SiteHeader.astro';
+import ShareReceiver from '@/components/ShareReceiver.vue';
+import { tools } from '@/tools/registry';
+
+/**
+ * Landing page for the PWA share target. The manifest points its share action
+ * here; the service worker parks the shared payload and redirects to this
+ * page, where the ShareReceiver island reads it and offers matching tools.
+ *
+ * Only the slugs the receiver can route to are handed to the island, so its
+ * bundle stays small. Names and descriptions come from each tool's meta.
+ */
+const routable = new Set([
+  'image-redactor',
+  'image-toolbox',
+  'image-to-text',
+  'audio-spectrogram',
+  'audio-trimmer',
+  'video-converter',
+  'video-to-gif',
+  'json-formatter',
+  'data-format-converter',
+  'case-converter',
+  'url-parser',
+  'file-type-identifier',
+]);
+
+const catalog = tools
+  .filter((t) => routable.has(t.slug))
+  .map((t) => ({ slug: t.slug, name: t.name, description: t.description }));
+---
+
+<BaseLayout
+  title="Open shared content: tools.maxhogan.dev"
+  description="Content you shared to tools.maxhogan.dev opens here. Pick a tool to edit an image, format text, trim audio, or convert video. Your files and inputs never leave your device."
+  path="/share"
+>
+  <SiteHeader />
+  <main class="mx-auto max-w-[1140px] px-4 py-10">
+    <section class="mx-auto max-w-[720px]">
+      <h1 class="text-2xl font-semibold tracking-tight">Shared with tools.maxhogan.dev</h1>
+      <p class="mt-2 text-sm text-muted-foreground">
+        Pick a tool below to open what you shared. Everything runs in your browser.
+      </p>
+    </section>
+
+    <div class="mt-8">
+      <ShareReceiver client:load catalog={catalog} />
+    </div>
+  </main>
+</BaseLayout>

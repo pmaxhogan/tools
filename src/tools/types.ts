@@ -84,6 +84,12 @@ export interface ToolMeta {
   description: string;
   category: string;
   keywords: string[];
+  /**
+   * Hidden synonyms and aliases for in-app search only. Never rendered and not
+   * part of SEO; exists so a search for "regex", "colour", "gif to mp4", etc.
+   * finds the right tool even when those words are not in the name or copy.
+   */
+  searchTerms?: string[];
   input: TypeSpec;
   output: TypeSpec;
   options?: OptionSpec[];

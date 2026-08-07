@@ -47,11 +47,20 @@ export const meta: ToolMeta = {
         { value: 'fitted', label: 'Fitted: letters pushed together' },
       ],
     },
+    {
+      kind: 'slider',
+      id: 'maxWidth',
+      label: 'Maximum width (0 = unlimited, scrolls instead of wrapping)',
+      default: 0,
+      min: 0,
+      max: 300,
+      step: 10,
+    },
   ],
   http: { method: 'GET', contentType: 'text/plain' },
   copy: {
     what: "Turns a word or short phrase into a large ASCII-art banner using the FIGlet font format. Ten classic fonts are included (Standard, Slant, Small, Big, Banner, Block, Shadow, Doom, Ghost and Mini) covering everything from compact one-liners to heavy 3D-style lettering. A letter-spacing control switches between the font's own kerning, fully separated letters, and tightly fitted ones.",
-    how: 'Type your text into the input, pick a font, and the banner renders as you type. Adjust letter spacing if the letters look too cramped or too loose, then copy the result straight into a README, a CLI splash screen, a terminal MOTD, or a code comment. Keep it under 100 characters: banner fonts are several lines tall, so anything longer stops being readable.',
+    how: 'Type your text into the input, pick a font, and the banner renders as you type. Adjust letter spacing if the letters look too cramped or too loose, then copy the result straight into a README, a CLI splash screen, a terminal MOTD, or a code comment. Maximum width stays at 0 (unlimited) by default, so a long banner renders as one continuous strip that scrolls sideways instead of breaking; set a width in columns to have it wrap onto a new banner block, always between whole letters. Keep the text itself under 100 characters: banner fonts are several lines tall, so anything longer stops being readable.',
     why: 'Most ASCII-art generators wrap a handful of fonts in ad banners, newsletter popups and a "download as image" upsell. This one renders locally in your browser, so your text never leaves your device, there are no rate limits, and the output is plain monospaced text you can copy in one click.',
     faq: [
       {

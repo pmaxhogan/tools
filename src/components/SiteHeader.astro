@@ -1,7 +1,9 @@
 ---
 ---
 
-<header class="border-b">
+<header
+  class="sticky top-0 z-30 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70"
+>
   <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
     <div class="flex min-w-0 items-center gap-2">
       <button
@@ -23,9 +25,17 @@
           <path d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
       </button>
-      <a href="/" class="truncate font-mono text-sm font-semibold tracking-tight"
-        >tools.maxhogan.dev</a
+      <a
+        href="/"
+        class="group flex min-w-0 items-center gap-2 truncate font-mono text-sm font-semibold tracking-tight focus-visible:outline-none"
       >
+        <span
+          aria-hidden="true"
+          class="grid size-5 shrink-0 place-content-center rounded-md bg-[image:var(--grad-brand)] text-[11px] leading-none font-bold text-primary-foreground shadow-[var(--sh-sm)] transition-transform duration-[160ms] group-hover:-translate-y-px"
+          >t</span
+        >
+        <span class="truncate"><span class="text-primary">tools</span>.maxhogan.dev</span>
+      </a>
     </div>
     <div class="flex items-center gap-2">
       <button
@@ -74,7 +84,10 @@
 </header>
 
 <script is:inline>
-  document.getElementById('theme-toggle')?.addEventListener('click', () => {
+  // Delegated on document (which persists across ClientRouter swaps) so the
+  // toggle keeps working after client-side navigation replaces the button.
+  document.addEventListener('click', (e) => {
+    if (!(e.target instanceof Element) || !e.target.closest('#theme-toggle')) return;
     const dark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('theme', dark ? 'dark' : 'light');
   });

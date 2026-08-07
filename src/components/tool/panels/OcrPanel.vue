@@ -11,6 +11,7 @@ import {
   formatResult,
   type OcrPage,
 } from '@/tools/image-to-text/index';
+import { shouldAutoDownload, isMetered, onConnectionChange } from '@/lib/connection';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -79,6 +80,12 @@ const engineState = ref<EngineState>('idle');
 const engineFetched = ref(false);
 const running = ref(false);
 
+/** True when a metered or Save-Data connection is holding the auto-start back. */
+const metered = ref(false);
+/** Consumed once by the connection listener if a metered link turns unmetered. */
+let pendingAutoStart = false;
+let stopConnectionWatch: () => void = () => {};
+
 /** Latest logger tick: tesseract reports a status string and 0 to 1 progress. */
 const status = ref('');
 const progress = ref(0);
@@ -106,9 +113,13 @@ let modulePromise: Promise<TesseractModule> | null = null;
 const languageName = computed(() => LANGUAGES[language.value]?.name ?? language.value);
 const languageMb = computed(() => LANGUAGES[language.value]?.megabytes ?? 0);
 
-const engineButtonLabel = computed(() =>
-  engineFetched.value ? 'Reload OCR engine' : 'Load OCR engine',
-);
+/** Engine core plus the selected language pack, rounded for the button copy. */
+const engineTotalMb = computed(() => Math.round(CORE_MB + languageMb.value));
+
+const engineButtonLabel = computed(() => {
+  if (engineFetched.value) return 'Reload OCR engine';
+  return metered.value ? `Load OCR engine (about ${engineTotalMb.value} MB)` : 'Load OCR engine';
+});
 
 const hasImage = computed(() => file.value !== null);
 const canRun = computed(
@@ -200,7 +211,24 @@ async function destroyWorker() {
 /* engine                                                            */
 /* ---------------------------------------------------------------- */
 
+/**
+ * Starts the engine download without a click on first visit, unless the
+ * connection is metered or Save-Data. When it is, the panel keeps a one-tap
+ * start and remembers to auto-start later if the link turns unmetered.
+ */
+function autoStartEngine() {
+  if (engineState.value !== 'idle') return;
+  if (shouldAutoDownload()) {
+    void loadEngine();
+  } else {
+    metered.value = true;
+    pendingAutoStart = true;
+  }
+}
+
 async function loadEngine() {
+  // A press (or the automatic start) commits to the download, so drop any hold.
+  pendingAutoStart = false;
   // Deliberately re-entrant: switching language mid load has to win. The
   // generation bump inside destroyWorker invalidates the load already in
   // flight, and its worker is terminated the moment it resolves.
@@ -449,9 +477,20 @@ watch([showBoxes, result], () => {
 onMounted(() => {
   supported.value = typeof WebAssembly !== 'undefined' && typeof Worker !== 'undefined';
   window.addEventListener('paste', onPaste);
+  if (!supported.value) return;
+  metered.value = isMetered();
+  autoStartEngine();
+  stopConnectionWatch = onConnectionChange(() => {
+    metered.value = isMetered();
+    if (pendingAutoStart && shouldAutoDownload()) {
+      pendingAutoStart = false;
+      autoStartEngine();
+    }
+  });
 });
 
 onUnmounted(() => {
+  stopConnectionWatch();
   window.removeEventListener('paste', onPaste);
   revoke();
   destroyWorker();
@@ -568,8 +607,15 @@ onUnmounted(() => {
           This tool runs Tesseract inside your browser. Loading it downloads about
           {{ CORE_MB }} MB of engine plus the {{ languageName }} language pack, roughly
           {{ languageMb }} MB, and your browser keeps both afterwards so later visits start from
-          the cache. Nothing downloads until you press the button, and nothing is uploaded: your
-          files and inputs never leave your device.
+          the cache. It downloads automatically the first time, except on a metered connection, and
+          nothing is uploaded: your files and inputs never leave your device.
+        </p>
+
+        <p
+          v-if="metered && engineState === 'idle'"
+          class="text-xs text-muted-foreground"
+        >
+          Your connection looks metered, so the engine waits for you to start it.
         </p>
 
         <div

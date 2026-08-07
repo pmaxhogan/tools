@@ -42,6 +42,13 @@ export interface RedactorOpts {
   color?: 'black' | 'white';
   /** Pixelate block edge in pixels. Larger blocks discard more detail. */
   blockSize?: number;
+  /**
+   * Pixelate randomness strength, 0 to 100. Moderate by default so pixelate
+   * is never a plain, fully deterministic block average.
+   */
+  randomness?: number;
+  /** Seed for the pixelate perturbation PRNG. The panel generates a fresh one per region. */
+  seed?: number;
   /** Export container. Both re-encode from the canvas, so neither keeps metadata. */
   format?: 'png' | 'jpeg';
   [key: string]: unknown;
@@ -151,14 +158,53 @@ export function applySolidRect(
 }
 
 /**
- * Replace the rectangle with the average color of each block. Blocks are
- * anchored at the rectangle's top left corner and clipped to it, so an edge
- * block never averages pixels the user did not select.
+ * Deterministic PRNG seeded from a single 32 bit integer (mulberry32). This is
+ * the only source of randomness allowed in this module: it never touches
+ * `Math.random` or any other non-deterministic source, so the same seed
+ * always produces the same sequence and a test can assert exact output. A
+ * different seed diverges from the first call.
+ */
+export function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return function next(): number {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function clampByte(value: number): number {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+export interface PixelatePerturbation {
+  /** Seed for the perturbation PRNG. The same seed and inputs always produce the same output. */
+  seed?: number;
+  /**
+   * How hard to perturb each block's averaged color, from 0 (off, identical to
+   * a plain block average) to 1 (heaviest). Values outside 0..1 are clamped.
+   */
+  strength?: number;
+}
+
+/**
+ * Replace the rectangle with the average color of each block, then perturb
+ * that average with seeded random noise. Blocks are anchored at the
+ * rectangle's top left corner and clipped to it, so an edge block never
+ * averages pixels the user did not select.
  *
- * This is offered because people expect it, not because it is safe. Pixelated
- * text is a lossy but deterministic function of the original glyphs, and with
- * a known font and block grid it can sometimes be reconstructed. Solid fill
- * has no such weakness.
+ * The plain block average is a deterministic function of the source pixels:
+ * researchers defeat it by rendering candidate text through the same block
+ * grid until the averaged output matches. Mixing in noise from a seeded PRNG
+ * breaks that, since the output now also depends on a seed that never left
+ * this device rather than on the source pixels alone. At strength 0, or with
+ * no perturbation passed at all, this is byte identical to a plain average.
+ *
+ * This is offered because people expect pixelation, not because it is safe.
+ * The perturbed average still carries a rough trace of the original
+ * brightness, so solid fill remains the only option that leaves nothing to
+ * analyze.
  */
 export function applyPixelateRect(
   data: Uint8ClampedArray,
@@ -166,10 +212,21 @@ export function applyPixelateRect(
   height: number,
   rect: Rect,
   blockSize: number,
+  perturbation: PixelatePerturbation = {},
 ): Rect | null {
   const box = clampRect(rect, width, height);
   if (!box) return null;
   const size = Math.max(1, Math.round(Number.isFinite(blockSize) ? blockSize : 1));
+  const strength = Math.max(
+    0,
+    Math.min(1, Number.isFinite(perturbation.strength) ? (perturbation.strength as number) : 0),
+  );
+  const seed = Number.isFinite(perturbation.seed) ? Math.trunc(perturbation.seed as number) : 0;
+  const rand = strength > 0 ? mulberry32(seed) : null;
+  // Largest per channel offset at strength 1. Tuned so the perturbation is
+  // large enough to change which candidate string a block matching attack
+  // would settle on, without needing to touch alpha or block boundaries.
+  const MAX_DELTA = 90;
 
   for (let by = box.y; by < box.y + box.h; by += size) {
     const bh = Math.min(size, box.y + box.h - by);
@@ -192,10 +249,17 @@ export function applyPixelateRect(
       }
 
       const count = bw * bh;
-      const ar = Math.round(sr / count);
-      const ag = Math.round(sg / count);
-      const ab = Math.round(sb / count);
+      let ar = Math.round(sr / count);
+      let ag = Math.round(sg / count);
+      let ab = Math.round(sb / count);
       const aa = Math.round(sa / count);
+
+      if (rand) {
+        const delta = strength * MAX_DELTA;
+        ar = clampByte(ar + (rand() * 2 - 1) * delta);
+        ag = clampByte(ag + (rand() * 2 - 1) * delta);
+        ab = clampByte(ab + (rand() * 2 - 1) * delta);
+      }
 
       for (let y = by; y < by + bh; y++) {
         let i = (y * width + bx) * 4;
@@ -282,7 +346,7 @@ const USAGE =
   'Drop a screenshot on the panel above, then drag a rectangle over anything sensitive. Each rectangle overwrites those pixels immediately. Download when the preview looks right.';
 
 const SAFETY =
-  'Solid fill is the default because it replaces the pixels with one flat color and leaves nothing to recover. Pixelate is available but averaged blocks still carry a trace of the original, and pixelated text has been reconstructed before.';
+  'Solid fill is the default because it replaces the pixels with one flat color and leaves nothing to recover. Pixelate now mixes seeded random noise into each block average, which stops the simplest attack of rendering candidate text through the same grid until it matches. That makes reconstruction much harder, not impossible: the perturbed average still carries a rough trace of the original, so solid fill remains the only option that leaves nothing to analyze.';
 
 const EXPORT_NOTE =
   'The download is re-encoded from the canvas, so it carries none of the original EXIF, XMP, or IPTC metadata and none of the original compressed data.';
@@ -296,6 +360,7 @@ export function run(input: Uint8Array | string, opts: RedactorOpts = {}): Redact
   const mode: RedactMode = opts.mode === 'pixelate' ? 'pixelate' : 'solid';
   const color = opts.color === 'white' ? 'white' : 'black';
   const blockSize = Math.max(2, Math.round(Number(opts.blockSize ?? 12) || 12));
+  const randomness = Math.max(0, Math.min(100, Math.round(Number(opts.randomness ?? 35) || 0)));
   const format = opts.format === 'jpeg' ? 'jpeg' : 'png';
 
   const rows: RedactorResult = {};
@@ -324,7 +389,7 @@ export function run(input: Uint8Array | string, opts: RedactorOpts = {}): Redact
   rows.Mode =
     mode === 'solid'
       ? `Solid fill, ${color}. Every pixel under the rectangle is replaced.`
-      : `Pixelate, ${blockSize} px blocks. Averaged, not destroyed: solid fill is the safer choice.`;
+      : `Pixelate, ${blockSize} px blocks with ${randomness}% seeded randomness. Averaged and perturbed, not destroyed: solid fill is the safer choice.`;
   rows['Why solid'] = SAFETY;
   rows.Export = `${EXPORT_NOTE} Suggested filename: ${suggestExportName(`screenshot.${kind === 'JPEG' ? 'jpg' : 'png'}`, format)}.`;
   rows.Privacy = 'Redaction runs in this tab: your files and inputs never leave your device.';
