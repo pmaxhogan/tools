@@ -34,6 +34,7 @@ import { meta as figlet } from './figlet/meta';
 import { meta as fileTypeIdentifier } from './file-type-identifier/meta';
 import { meta as gifEditor } from './gif-editor/meta';
 import { meta as gzipCompressionTest } from './gzip-compression-test/meta';
+import { meta as harViewer } from './har-viewer/meta';
 import { meta as hashGenerator } from './hash-generator/meta';
 import { meta as htmlToMarkdown } from './html-to-markdown/meta';
 import { meta as imageToolbox } from './image-toolbox/meta';
@@ -90,6 +91,7 @@ export const tools: ToolMeta[] = [
   fileTypeIdentifier,
   gifEditor,
   gzipCompressionTest,
+  harViewer,
   hashGenerator,
   htmlToMarkdown,
   imageToolbox,
@@ -149,6 +151,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'file-type-identifier': () => import('./file-type-identifier/index').then((m) => m.default),
   'gif-editor': () => import('./gif-editor/index').then((m) => m.default),
   'gzip-compression-test': () => import('./gzip-compression-test/index').then((m) => m.default),
+  'har-viewer': () => import('./har-viewer/index').then((m) => m.default),
   'hash-generator': () => import('./hash-generator/index').then((m) => m.default),
   'html-to-markdown': () => import('./html-to-markdown/index').then((m) => m.default),
   'image-toolbox': () => import('./image-toolbox/index').then((m) => m.default),

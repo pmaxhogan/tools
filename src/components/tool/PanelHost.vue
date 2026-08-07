@@ -22,6 +22,7 @@ const panels: Record<string, Component> = {
   ),
   'favicon-generator': defineAsyncComponent(() => import('./panels/FaviconPanel.vue')),
   'gif-editor': defineAsyncComponent(() => import('./panels/GifEditorPanel.vue')),
+  'har-viewer': defineAsyncComponent(() => import('./panels/HarViewerPanel.vue')),
   'image-toolbox': defineAsyncComponent(() => import('./panels/ImageToolboxPanel.vue')),
   keycode: defineAsyncComponent(() => import('./panels/KeycodePanel.vue')),
   'qr-code-generator': defineAsyncComponent(() => import('./panels/QrPanel.vue')),
