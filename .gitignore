@@ -27,3 +27,6 @@ pnpm-debug.log*
 # wrangler
 .wrangler/
 .wrangler-dist/
+
+# ffmpeg core chunks, generated from node_modules by scripts/prepare-ffmpeg.mjs
+public/ffmpeg/

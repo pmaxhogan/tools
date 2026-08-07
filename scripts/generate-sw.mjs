@@ -20,7 +20,13 @@ function walk(dir) {
   });
 }
 
+// Anything above this size is fetched on demand, never precached. The
+// ffmpeg core chunks alone are ~30 MB; precaching them would force every
+// first-time visitor to download the media engine from the homepage.
+const PRECACHE_MAX_BYTES = 2 * 1024 * 1024;
+
 const files = walk(dist)
+  .filter((f) => statSync(f).size <= PRECACHE_MAX_BYTES)
   .map((f) => '/' + relative(dist, f).split(sep).join('/'))
   .filter((f) => !f.startsWith('/og/')) // OG images are for crawlers, not offline use
   .map((f) => f.replace(/\/index\.html$/, '/').replace(/^\/index\.html$/, '/'));

@@ -24,6 +24,7 @@ export type TypeSpec =
 
 export type Capability =
   | 'webgpu'
+  | 'webcodecs'
   | 'serial'
   | 'hid'
   | 'bluetooth'

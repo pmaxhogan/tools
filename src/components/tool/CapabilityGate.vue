@@ -64,6 +64,12 @@ const CHECKS: Partial<Record<Capability, CapabilityInfo>> = {
     detail:
       'This tool needs WebGPU. It is available in recent Chrome, Edge and Safari, and in Firefox on Windows. If your browser is current, check that hardware acceleration is switched on.',
   },
+  webcodecs: {
+    supported: () => 'VideoDecoder' in globalThis && 'VideoEncoder' in globalThis,
+    label: 'WebCodecs video access',
+    detail:
+      'This tool needs the WebCodecs API for frame-accurate video work. It is available in Chrome, Edge and recent Safari. Firefox ships partial support, so results there may vary.',
+  },
   chromium: {
     supported: isChromium,
     label: 'a Chromium browser',
