@@ -156,6 +156,18 @@ function packBands(): { packed: PackedBand[]; totalLanes: number } {
   let laneCursor = 0;
   for (const depth of [...byDepth.keys()].sort((a, b) => a - b)) {
     const bands = byDepth.get(depth)!.slice().sort((a, b) => a.fLow - b.fLow);
+
+    // Depth 0 (Gamma, X-rays, Ultraviolet, Visible, Infrared, Microwave, Radio)
+    // is conceptually a partition, so it always occupies a single lane. The tiny
+    // UV / Visible overlap (the 380 to 400 nm sliver) double-draws an
+    // imperceptible region rather than bumping Ultraviolet onto a second lane and
+    // leaving a gap in the top row. Sub-lane packing applies only at depth >= 1.
+    if (depth === 0) {
+      for (const band of bands) packed.push({ band, depth, lane: laneCursor });
+      laneCursor += 1;
+      continue;
+    }
+
     // The highest fHigh placed so far in each sub-lane at this depth.
     const laneEnds: number[] = [];
     for (const band of bands) {
