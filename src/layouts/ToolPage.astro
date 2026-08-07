@@ -46,7 +46,7 @@ const jsonLd = {
 >
   <SiteHeader />
   <div class="border-b border-[color:var(--brand-hairline)] bg-[image:var(--brand-band)]">
-    <div class="mx-auto max-w-3xl px-4 pt-7 pb-8">
+    <div class="mx-auto max-w-3xl px-4 pt-7 pb-8 lg:max-w-5xl xl:max-w-6xl">
       <nav
         aria-label="Breadcrumb"
         class="text-[11px] font-semibold tracking-[0.12em] text-primary uppercase"
@@ -67,12 +67,12 @@ const jsonLd = {
       <p class="mt-2 max-w-[68ch] text-muted-foreground">{meta.description}</p>
     </div>
   </div>
-  <main class="mx-auto max-w-3xl px-4 py-8">
+  <main class="mx-auto max-w-3xl px-4 py-8 lg:max-w-5xl xl:max-w-6xl">
     <div>
       <slot />
     </div>
 
-    <section class="mt-12 space-y-3 border-t pt-6 text-sm">
+    <section class="mt-12 max-w-[72ch] space-y-3 border-t pt-6 text-sm">
       <details>
         <summary class="cursor-pointer font-medium">What it does</summary>
         <p class="mt-2 text-muted-foreground">{meta.copy.what}</p>
@@ -100,7 +100,7 @@ const jsonLd = {
       </details>
     </section>
 
-    <footer class="mt-12 border-t pt-6 text-xs text-muted-foreground">
+    <footer class="mt-12 max-w-[72ch] border-t pt-6 text-xs text-muted-foreground">
       <p>
         No ads, no accounts, no limits. Your files and inputs never leave your device.{" "}
         <a href="https://github.com/pmaxhogan/tools" class="underline hover:text-foreground"

@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, watch, type Component } from "vue";
 import type { ToolMeta } from "@/tools/types";
-import { ToolError } from "@/tools/types";
 import { readFragment, writeFragment } from "@/lib/fragment";
 import {
   AXIS_DECADES,
@@ -15,29 +14,106 @@ import {
   formatKelvin,
   formatWavelength,
   frequencyToPosition,
+  interpretQuery,
   maxDepth,
-  parseJump,
   positionToFrequency,
   rgbToHex,
   wavelengthNmToRgb,
+  type Interpretation,
   type Readout,
 } from "@/tools/electromagnetic-spectrum/index";
 import { Button } from "@/components/ui/button";
 import CopyButton from "../CopyButton.vue";
-import { Download, Link as LinkIcon, Check, Search, Maximize2, Minimize2 } from "lucide-vue-next";
+import FitText from "../FitText.vue";
+import {
+  Download,
+  Link as LinkIcon,
+  Check,
+  Search,
+  Maximize2,
+  Minimize2,
+  RotateCw,
+  X,
+  // Band icons: exactly the names in ICON_NAMES from the data module, so the
+  // bundle only pulls the glyphs the tree actually references.
+  Anchor,
+  Antenna,
+  Atom,
+  Bluetooth,
+  Clock,
+  CloudRain,
+  Eye,
+  Microwave,
+  Plane,
+  Radar,
+  Radiation,
+  RadioReceiver,
+  RadioTower,
+  Router,
+  Satellite,
+  SatelliteDish,
+  ScanLine,
+  Ship,
+  SignalHigh,
+  Smartphone,
+  Sun,
+  Thermometer,
+  Tv,
+  Wifi,
+} from "lucide-vue-next";
 
 /**
  * Bespoke panel for the Electromagnetic Spectrum explorer.
  *
- * All physics, the log10 position mapping, the band lookup and the jump parser
- * live in the pure logic layer. This panel owns only presentation: the canvas
- * renderer, pointer and keyboard interaction (zoom, pan, scrub), the floating
- * readout tooltip, PNG and SVG export, and the shareable URL fragment.
+ * All physics, the log10 position mapping, the band lookup and the search brain
+ * (interpretQuery) live in the pure logic layer. This panel owns only
+ * presentation: the canvas renderer, the DOM band-label overlay (auto-fit via
+ * FitText), pointer and keyboard interaction (drag-select to zoom, scroll pan,
+ * ctrl and scroll zoom, touch scrub and pinch), the lockable readout tooltip,
+ * the combined number and search bar, PNG and SVG export, and the shareable URL
+ * fragment.
  *
  * Fragment schema: f = center frequency in hertz, d = decades visible,
- * q = optional pinned/scrubbed frequency in hertz.
+ * q = optional locked frequency in hertz, o = manual orientation override
+ * ("h" or "v", absent means auto).
  */
 defineProps<{ meta: ToolMeta }>();
+
+/* ------------------------------------------------------------------ */
+/* Icon name to component map (only the names ICON_NAMES declares)     */
+/* ------------------------------------------------------------------ */
+
+const ICON_MAP: Record<string, Component> = {
+  Anchor,
+  Antenna,
+  Atom,
+  Bluetooth,
+  Clock,
+  CloudRain,
+  Eye,
+  Microwave,
+  Plane,
+  Radar,
+  Radiation,
+  RadioReceiver,
+  RadioTower,
+  Router,
+  Satellite,
+  SatelliteDish,
+  ScanLine,
+  Ship,
+  SignalHigh,
+  Smartphone,
+  Sun,
+  Thermometer,
+  Tv,
+  Wifi,
+};
+
+/** Resolve a band or interpretation icon name to a component, or null. */
+function iconFor(name?: string): Component | null {
+  return name && name in ICON_MAP ? ICON_MAP[name]! : null;
+}
 
 /* ------------------------------------------------------------------ */
 /* Constants and refs                                                  */
@@ -47,6 +123,11 @@ const ROWS = maxDepth(BANDS) + 1;
 const FLAT = flattenBands(BANDS);
 /** Narrowest allowed view span, normalized. ~0.036 decade, below FM width. */
 const MIN_SPAN = 0.0015;
+/** Mouse move past this many CSS px turns a press into a drag-select zoom. */
+const DRAG_THRESHOLD = 5;
+/** Minimum drawn extents (CSS px) before a band label is shown at all. */
+const MIN_LABEL_ALONG = 30;
+const MIN_LABEL_CROSS = 12;
 
 const containerRef = ref<HTMLDivElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -54,7 +135,14 @@ const readoutCardRef = ref<HTMLDivElement | null>(null);
 
 const isFullscreen = ref(false);
 
-const orientation = ref<"horizontal" | "vertical">("horizontal");
+// Orientation: an auto choice from the viewport, plus an optional manual
+// override that a shared link can carry. The effective orientation is derived.
+const autoOrientation = ref<"horizontal" | "vertical">("horizontal");
+const orientationOverride = ref<"horizontal" | "vertical" | null>(null);
+const orientation = computed<"horizontal" | "vertical">(
+  () => orientationOverride.value ?? autoOrientation.value,
+);
+
 const cssW = ref(800);
 const cssH = ref(320);
 
@@ -64,12 +152,13 @@ const span = ref(1);
 
 const hoverFreq = ref<number | null>(null);
 const pinnedFreq = ref<number | null>(null);
+/** True once a click locks the tooltip so hover no longer moves it. */
+const locked = ref(false);
 const pointerPx = ref<{ x: number; y: number } | null>(null);
+/** Which breadcrumb segment is hovered, so it can bold. */
+const hoveredSegment = ref<number | null>(null);
 
-const jumpText = ref("");
-const jumpError = ref("");
 const linkCopied = ref(false);
-
 const reducedMotion = ref(false);
 
 /* ------------------------------------------------------------------ */
@@ -156,6 +245,10 @@ function eventAxisPx(e: PointerEvent): number {
   return orientation.value === "horizontal" ? e.clientX - rect.left : e.clientY - rect.top;
 }
 
+function clampPx(px: number): number {
+  return Math.max(0, Math.min(axisLength(), px));
+}
+
 /* ------------------------------------------------------------------ */
 /* Scene building (shared by canvas, PNG and SVG)                      */
 /* ------------------------------------------------------------------ */
@@ -191,7 +284,10 @@ interface SceneLine {
 interface Scene {
   rects: SceneRect[];
   lines: SceneLine[];
+  /** Tick labels, always painted on the live canvas. */
   texts: SceneText[];
+  /** Band labels, painted on canvas only for export (live uses a DOM overlay). */
+  bandTexts: SceneText[];
   w: number;
   h: number;
 }
@@ -217,6 +313,7 @@ function buildScene(w: number, h: number): Scene {
 
   const rects: SceneRect[] = [];
   const texts: SceneText[] = [];
+  const bandTexts: SceneText[] = [];
   const lines: SceneLine[] = [];
 
   // Lane origin along the cross axis. Ticks sit after the lanes.
@@ -256,7 +353,7 @@ function buildScene(w: number, h: number): Scene {
     }
     rects.push(rect);
 
-    // Label, centered, skipped when it cannot fit.
+    // Band label for export only: centered, skipped when it cannot fit.
     const size = depth === 0 ? 13 : 11;
     const maxPx = horizontal ? wpx : laneSize;
     const label = fitLabel(band.name, maxPx, size);
@@ -265,7 +362,7 @@ function buildScene(w: number, h: number): Scene {
       const cy = ry + rh / 2;
       const needPlate = isVisible || colored;
       const textW = label.length * size * 0.58;
-      texts.push({
+      bandTexts.push({
         x: cx,
         y: cy,
         text: label,
@@ -333,7 +430,7 @@ function buildScene(w: number, h: number): Scene {
     }
   }
 
-  // Pinned marker (dashed) and the live cursor (solid).
+  // Locked marker (dashed) and the live cursor (solid).
   const marker = (freq: number, color: string, dash: boolean) => {
     const apx = posToAxisPx(frequencyToPosition(freq));
     if (apx < -1 || apx > L + 1) return;
@@ -342,10 +439,74 @@ function buildScene(w: number, h: number): Scene {
   };
   if (pinnedFreq.value != null) marker(pinnedFreq.value, colors.positive, true);
   const cur = activeFreq.value;
-  if (cur != null) marker(cur, colors.primary, false);
+  if (cur != null && cur !== pinnedFreq.value) marker(cur, colors.primary, false);
 
-  return { rects, lines, texts, w, h };
+  return { rects, lines, texts, bandTexts, w, h };
 }
+
+/* ------------------------------------------------------------------ */
+/* DOM band-label overlay (auto-fit via FitText)                       */
+/* ------------------------------------------------------------------ */
+
+interface BandLabel {
+  key: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  name: string;
+  icon?: string;
+  showIcon: boolean;
+  plate: boolean;
+  max: number;
+}
+
+/**
+ * The band labels to overlay on the canvas, positioned in CSS px. Reactive on
+ * the view and orientation, so labels reflow as the user pans and zooms. A band
+ * whose drawn extent is below the legibility threshold is dropped entirely
+ * (never shrunk to an unreadable size); FitText scales the rest to fill.
+ */
+const bandLabels = computed<BandLabel[]>(() => {
+  const horizontal = orientation.value === "horizontal";
+  const w = cssW.value;
+  const h = cssH.value;
+  const L = horizontal ? w : h;
+  const tickMargin = horizontal ? TICK_MARGIN_H : TICK_MARGIN_V;
+  const lanesExtent = (horizontal ? h : w) - tickMargin;
+  const laneSize = lanesExtent / ROWS;
+  const laneBase = horizontal ? 0 : tickMargin;
+  if (laneSize < MIN_LABEL_CROSS) return [];
+
+  const out: BandLabel[] = [];
+  for (const { band, depth } of FLAT) {
+    const a0 = posToAxisPx(frequencyToPosition(band.fHigh));
+    const a1 = posToAxisPx(frequencyToPosition(band.fLow));
+    if (a1 < 0 || a0 > L) continue;
+    // Clip to the visible portion so a half-scrolled band centers its label in
+    // what is on screen, matching how the canvas draws the rect.
+    const s0 = Math.max(0, a0);
+    const s1 = Math.min(L, a1);
+    const wpx = s1 - s0;
+    if (wpx < MIN_LABEL_ALONG) continue;
+
+    const laneOff = laneBase + depth * laneSize;
+    const along = wpx;
+    out.push({
+      key: band.id,
+      x: horizontal ? s0 : laneOff,
+      y: horizontal ? laneOff : s0,
+      w: horizontal ? along : laneSize,
+      h: horizontal ? laneSize : along,
+      name: band.name,
+      icon: band.icon,
+      showIcon: !!band.icon && along > 64 && laneSize > 16,
+      plate: !!band.color || band.id === "visible",
+      max: depth === 0 ? 15 : 12,
+    });
+  }
+  return out;
+});
 
 /* ------------------------------------------------------------------ */
 /* Canvas painting                                                     */
@@ -365,7 +526,12 @@ function spectralGradient(
   return grad;
 }
 
-function paintCanvas(ctx: CanvasRenderingContext2D, scene: Scene, scale: number) {
+function paintCanvas(
+  ctx: CanvasRenderingContext2D,
+  scene: Scene,
+  scale: number,
+  includeBandLabels = false,
+) {
   ctx.save();
   ctx.scale(scale, scale);
   ctx.clearRect(0, 0, scene.w, scene.h);
@@ -393,7 +559,8 @@ function paintCanvas(ctx: CanvasRenderingContext2D, scene: Scene, scale: number)
   }
   ctx.setLineDash([]);
 
-  for (const t of scene.texts) {
+  const allTexts = includeBandLabels ? [...scene.texts, ...scene.bandTexts] : scene.texts;
+  for (const t of allTexts) {
     if (t.plate) {
       ctx.fillStyle = withAlpha(colors.card, 0.72);
       ctx.fillRect(t.plate.x, t.plate.y, t.plate.w, t.plate.h);
@@ -430,7 +597,7 @@ function draw() {
     canvas.height = Math.round(h * dpr);
   }
   const scene = buildScene(w, h);
-  paintCanvas(ctx, scene, dpr);
+  paintCanvas(ctx, scene, dpr, false);
 }
 
 /* ------------------------------------------------------------------ */
@@ -462,6 +629,9 @@ const readoutRows = computed<Row[]>(() => {
   return rows;
 });
 
+/** The value rows shown in the card body: the band path is drawn as chips. */
+const valueRows = computed<Row[]>(() => readoutRows.value.filter((r) => r.label !== "Band"));
+
 const copyableText = computed(() => {
   const lines = readoutRows.value.map((r) => `${r.label}: ${r.value}`);
   const uses = activeReadout.value?.uses ?? [];
@@ -469,9 +639,25 @@ const copyableText = computed(() => {
   return lines.join("\n");
 });
 
+/**
+ * The tooltip anchor. When there is a pinned frequency and no live hover (a
+ * locked tooltip, or a touch scrub), derive the pixel from the frequency so the
+ * tooltip tracks the marker through pans, zooms and orientation flips. In hover
+ * mode it follows the raw pointer pixel.
+ */
+const tooltipAnchor = computed<{ x: number; y: number } | null>(() => {
+  if (hoverFreq.value == null && pinnedFreq.value != null) {
+    const apx = freqToAxisPx(pinnedFreq.value);
+    return orientation.value === "horizontal"
+      ? { x: apx, y: cssH.value * 0.4 }
+      : { x: cssW.value * 0.5, y: apx };
+  }
+  return pointerPx.value;
+});
+
 /** Tooltip position, flipped away from the near edges. */
 const tooltipStyle = computed(() => {
-  const p = pointerPx.value;
+  const p = tooltipAnchor.value;
   if (!p) return { display: "none" };
   const flipX = p.x > cssW.value * 0.62;
   const flipY = p.y > cssH.value * 0.6;
@@ -484,17 +670,100 @@ const tooltipStyle = computed(() => {
 });
 
 /* ------------------------------------------------------------------ */
+/* Combined number and search bar (interpretQuery)                     */
+/* ------------------------------------------------------------------ */
+
+const jumpText = ref("");
+const results = computed<Interpretation[]>(() => interpretQuery(jumpText.value));
+const activeIndex = ref(0);
+const searchOpen = ref(false);
+const searchField = ref<"main" | "fullscreen">("main");
+
+/** The dropdown is open, focused, and has query text to interpret. */
+function dropdownVisible(field: "main" | "fullscreen"): boolean {
+  return searchOpen.value && searchField.value === field && jumpText.value.trim().length > 0;
+}
+
+watch(jumpText, () => {
+  activeIndex.value = 0;
+  searchOpen.value = true;
+});
+
+function onSearchFocus(field: "main" | "fullscreen") {
+  searchField.value = field;
+  searchOpen.value = true;
+}
+
+function onSearchBlur() {
+  // A short delay lets a row's pointerdown pick fire before the list hides.
+  setTimeout(() => (searchOpen.value = false), 120);
+}
+
+function moveActive(delta: number) {
+  const n = results.value.length;
+  if (!n) return;
+  searchOpen.value = true;
+  activeIndex.value = Math.max(0, Math.min(n - 1, activeIndex.value + delta));
+}
+
+function confirmActive() {
+  const r = results.value;
+  if (!r.length) return;
+  pickInterpretation(r[Math.min(activeIndex.value, r.length - 1)]!);
+}
+
+/** Navigate the view to a chosen interpretation and lock the readout there. */
+function pickInterpretation(it: Interpretation) {
+  pinnedFreq.value = it.frequencyHz;
+  hoverFreq.value = null;
+  locked.value = true;
+  searchOpen.value = false;
+  if (it.rangeHz) {
+    // Zoom to fit the band or channel span with a little padding.
+    const pLow = frequencyToPosition(it.rangeHz[0]);
+    const pHigh = frequencyToPosition(it.rangeHz[1]);
+    const lo = Math.min(pLow, pHigh);
+    const hi = Math.max(pLow, pHigh);
+    animateTo((lo + hi) / 2, (hi - lo) * 1.35 || MIN_SPAN);
+  } else {
+    // Center the point at a comfortable window (about four decades).
+    const rawSpan = Math.max(MIN_SPAN, Math.min(span.value, 4 / AXIS_DECADES));
+    animateTo(frequencyToPosition(it.frequencyHz), rawSpan);
+  }
+  scheduleFragmentWrite();
+}
+
+/* ------------------------------------------------------------------ */
 /* Pointer interaction                                                 */
 /* ------------------------------------------------------------------ */
 
 const activePointers = new Map<number, { x: number; y: number }>();
-let dragging = false;
-let dragMoved = false;
-let dragStartAxis = 0;
-let dragStartCenter = 0;
+
+// Mouse press bookkeeping: a small move keeps it a click (tooltip lock), a
+// larger move becomes a drag-select zoom.
+let mouseDown = false;
+let downAxisPx = 0;
+let downMoved = false;
+let lastClickAt = 0;
+
+// The live drag-select rectangle, in axis px (reactive so the overlay redraws).
+const selecting = ref(false);
+const selStart = ref(0);
+const selEnd = ref(0);
+
+// Pinch (touch) bookkeeping.
 let pinchStartDist = 0;
 let pinchStartSpan = 1;
 let pinchAnchorPos = 0;
+
+const selectionStyle = computed(() => {
+  if (!selecting.value) return { display: "none" } as Record<string, string>;
+  const a = Math.min(selStart.value, selEnd.value);
+  const b = Math.max(selStart.value, selEnd.value);
+  return orientation.value === "horizontal"
+    ? { left: `${a}px`, top: "0px", width: `${b - a}px`, height: "100%" }
+    : { top: `${a}px`, left: "0px", height: `${b - a}px`, width: "100%" };
+});
 
 function setPointerPxFromClient(clientX: number, clientY: number) {
   const rect = canvasRef.value!.getBoundingClientRect();
@@ -502,8 +771,7 @@ function setPointerPxFromClient(clientX: number, clientY: number) {
 }
 
 function readAt(e: PointerEvent, pin: boolean) {
-  const apx = eventAxisPx(e);
-  const freq = axisPxToFreq(Math.max(0, Math.min(axisLength(), apx)));
+  const freq = axisPxToFreq(clampPx(eventAxisPx(e)));
   if (pin) pinnedFreq.value = freq;
   else hoverFreq.value = freq;
   setPointerPxFromClient(e.clientX, e.clientY);
@@ -526,18 +794,19 @@ function onPointerDown(e: PointerEvent) {
         ? (pts[0]!.x + pts[1]!.x) / 2 - rect.left
         : (pts[0]!.y + pts[1]!.y) / 2 - rect.top;
     pinchAnchorPos = v0() + (midClient / axisLength()) * span.value;
-    dragging = false;
+    mouseDown = false;
+    selecting.value = false;
     return;
   }
 
   if (e.pointerType === "mouse") {
-    // Mouse drags to pan; a click without movement pins.
-    dragging = true;
-    dragMoved = false;
-    dragStartAxis = eventAxisPx(e);
-    dragStartCenter = center.value;
+    // Mouse: press starts a potential drag-select; a click (tiny move) toggles
+    // the tooltip lock on release.
+    mouseDown = true;
+    downMoved = false;
+    downAxisPx = eventAxisPx(e);
   } else {
-    // Touch and pen scrub the readout directly.
+    // Touch and pen scrub the readout directly (unchanged behavior).
     readAt(e, true);
   }
 }
@@ -567,42 +836,98 @@ function onPointerMove(e: PointerEvent) {
     return;
   }
 
-  if (dragging && e.pointerType === "mouse") {
+  if (mouseDown && e.pointerType === "mouse") {
     const apx = eventAxisPx(e);
-    const delta = apx - dragStartAxis;
-    if (Math.abs(delta) > 3) dragMoved = true;
-    center.value = dragStartCenter - (delta / axisLength()) * span.value;
-    clampView();
-    setPointerPxFromClient(e.clientX, e.clientY);
-    scheduleDraw();
-    scheduleFragmentWrite();
+    if (!downMoved && Math.abs(apx - downAxisPx) > DRAG_THRESHOLD) {
+      downMoved = true;
+      selecting.value = true;
+      selStart.value = downAxisPx;
+    }
+    if (downMoved) selEnd.value = apx;
     return;
   }
 
   if (e.pointerType === "mouse") {
-    readAt(e, false);
+    // A locked tooltip does not move on hover.
+    if (!locked.value) readAt(e, false);
   } else if (activePointers.has(e.pointerId)) {
     readAt(e, true);
   }
 }
 
 function onPointerUp(e: PointerEvent) {
-  if (dragging && e.pointerType === "mouse" && !dragMoved) {
-    // A click that did not pan pins the readout.
-    readAt(e, true);
+  if (mouseDown && e.pointerType === "mouse") {
+    if (downMoved && selecting.value) {
+      zoomToAxisPx(selStart.value, selEnd.value);
+    } else {
+      toggleLockAt(downAxisPx, e);
+    }
+    mouseDown = false;
+    selecting.value = false;
   }
-  dragging = false;
   activePointers.delete(e.pointerId);
   if (activePointers.size < 2) pinchStartDist = 0;
   canvasRef.value?.releasePointerCapture?.(e.pointerId);
 }
 
 function onPointerLeave(e: PointerEvent) {
-  if (e.pointerType === "mouse" && !dragging) {
+  if (e.pointerType === "mouse" && !mouseDown) {
     hoverFreq.value = null;
     if (pinnedFreq.value == null) pointerPx.value = null;
     scheduleDraw();
   }
+}
+
+/** Zoom the view so it fits the axis-pixel span the user swept. */
+function zoomToAxisPx(a: number, b: number) {
+  const posA = v0() + (clampPx(a) / axisLength()) * span.value;
+  const posB = v0() + (clampPx(b) / axisLength()) * span.value;
+  const lo = Math.min(posA, posB);
+  const hi = Math.max(posA, posB);
+  animateTo((lo + hi) / 2, hi - lo);
+  scheduleFragmentWrite();
+}
+
+/** A click (not a drag) toggles the readout lock at that point. */
+function toggleLockAt(apx: number, e: PointerEvent) {
+  const now = performance.now();
+  const isDouble = now - lastClickAt < 280;
+  lastClickAt = now;
+  if (isDouble) return; // the dblclick handler resets the view instead
+
+  const freq = axisPxToFreq(clampPx(apx));
+  if (locked.value) {
+    // Unlock and return to hover-follow from this point.
+    locked.value = false;
+    hoverFreq.value = freq;
+    setPointerPxFromClient(e.clientX, e.clientY);
+  } else {
+    locked.value = true;
+    pinnedFreq.value = freq;
+    hoverFreq.value = null;
+  }
+  scheduleDraw();
+  scheduleFragmentWrite();
+}
+
+/** The X button, or a click off the tooltip: unlock and clear the readout. */
+function unlock() {
+  locked.value = false;
+  pinnedFreq.value = null;
+  hoverFreq.value = null;
+  pointerPx.value = null;
+  scheduleDraw();
+  scheduleFragmentWrite();
+}
+
+/** Double-click resets the zoom to the full modeled axis and clears the pin. */
+function resetView() {
+  locked.value = false;
+  pinnedFreq.value = null;
+  hoverFreq.value = null;
+  pointerPx.value = null;
+  animateTo(0.5, 1);
+  scheduleFragmentWrite();
 }
 
 function onWheel(e: WheelEvent) {
@@ -661,7 +986,17 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Jump                                                                */
+/* Orientation toggle                                                  */
+/* ------------------------------------------------------------------ */
+
+function toggleOrientation() {
+  orientationOverride.value = orientation.value === "horizontal" ? "vertical" : "horizontal";
+  requestAnimationFrame(measure);
+  scheduleFragmentWrite();
+}
+
+/* ------------------------------------------------------------------ */
+/* Animation                                                           */
 /* ------------------------------------------------------------------ */
 
 function animateTo(rawCenter: number, rawSpan: number) {
@@ -693,34 +1028,6 @@ function animateTo(rawCenter: number, rawSpan: number) {
   requestAnimationFrame(step);
 }
 
-function doJump() {
-  jumpError.value = "";
-  try {
-    const freq = parseJump(jumpText.value);
-    pinnedFreq.value = freq;
-    hoverFreq.value = null;
-    // Center the target and zoom to a comfortable window around it.
-    const rawSpan = Math.max(MIN_SPAN, Math.min(span.value, 4 / AXIS_DECADES));
-    // Mirror animateTo's clamping so we can anchor the tooltip at the true
-    // final position without waiting for the animation to finish.
-    const finalSpan = Math.min(1, Math.max(MIN_SPAN, rawSpan));
-    const half = finalSpan / 2;
-    const finalCenter = Math.min(1 - half, Math.max(half, frequencyToPosition(freq)));
-    animateTo(frequencyToPosition(freq), rawSpan);
-    const finalAxisPx =
-      ((frequencyToPosition(freq) - (finalCenter - finalSpan / 2)) / finalSpan) * axisLength();
-    pointerPx.value =
-      orientation.value === "horizontal"
-        ? { x: finalAxisPx, y: cssH.value * 0.4 }
-        : { x: cssW.value * 0.5, y: finalAxisPx };
-  } catch (err) {
-    jumpError.value =
-      err instanceof ToolError
-        ? `${err.message}${err.fix ? " " + err.fix : ""}`
-        : "Could not read that value.";
-  }
-}
-
 /* ------------------------------------------------------------------ */
 /* Fragment persistence                                                */
 /* ------------------------------------------------------------------ */
@@ -737,6 +1044,7 @@ function writeFragmentNow() {
     d: (span.value * AXIS_DECADES).toFixed(3),
   };
   if (pinnedFreq.value != null) opts.q = pinnedFreq.value.toExponential(4);
+  if (orientationOverride.value) opts.o = orientationOverride.value === "horizontal" ? "h" : "v";
   writeFragment({ opts });
 }
 
@@ -747,14 +1055,13 @@ function restoreFromFragment() {
   if (Number.isFinite(f) && f > 0) center.value = frequencyToPosition(f);
   if (Number.isFinite(d) && d > 0) span.value = Math.min(1, Math.max(MIN_SPAN, d / AXIS_DECADES));
   clampView();
+  if (opts.o === "h") orientationOverride.value = "horizontal";
+  else if (opts.o === "v") orientationOverride.value = "vertical";
   const q = Number(opts.q);
   if (Number.isFinite(q) && q > 0) {
+    // A shared link lands in the locked, selectable state.
     pinnedFreq.value = q;
-    const apx = freqToAxisPx(q);
-    pointerPx.value =
-      orientation.value === "horizontal"
-        ? { x: apx, y: cssH.value * 0.4 }
-        : { x: cssW.value * 0.5, y: apx };
+    locked.value = true;
   }
 }
 
@@ -805,13 +1112,14 @@ function onFullscreenChange() {
   requestAnimationFrame(measure);
 }
 
-/** Clicking or tapping outside the spectrum and its readout clears the pin. */
+/** Clicking or tapping outside the spectrum and its readout clears the lock. */
 function onDocumentPointerDown(e: PointerEvent) {
-  if (pinnedFreq.value == null) return;
+  if (pinnedFreq.value == null && !locked.value) return;
   const target = e.target as Node | null;
   if (!target) return;
   if (containerRef.value?.contains(target)) return;
   if (readoutCardRef.value?.contains(target)) return;
+  locked.value = false;
   pinnedFreq.value = null;
   if (hoverFreq.value == null) pointerPx.value = null;
   scheduleFragmentWrite();
@@ -838,7 +1146,8 @@ function exportPng() {
   canvas.height = cssH.value * scale;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
-  paintCanvas(ctx, buildScene(cssW.value, cssH.value), scale);
+  // Bake the band labels into the exported raster (FitText cannot run here).
+  paintCanvas(ctx, buildScene(cssW.value, cssH.value), scale, true);
   canvas.toBlob((blob) => {
     if (!blob) return;
     const url = URL.createObjectURL(blob);
@@ -891,7 +1200,7 @@ function exportSvg() {
     );
   }
 
-  for (const t of scene.texts) {
+  for (const t of [...scene.texts, ...scene.bandTexts]) {
     if (t.plate) {
       parts.push(
         `<rect x="${t.plate.x.toFixed(1)}" y="${t.plate.y.toFixed(1)}" width="${t.plate.w.toFixed(1)}" height="${t.plate.h.toFixed(1)}" fill="${withAlpha(colors.card, 0.72)}"/>`,
@@ -925,17 +1234,9 @@ function measure() {
   const rect = el.getBoundingClientRect();
   cssW.value = Math.max(160, Math.round(rect.width));
   cssH.value = Math.max(160, Math.round(rect.height));
-  // Orientation follows the viewport (landscape to horizontal, portrait to
-  // vertical), not the container box, per the brief.
-  orientation.value = window.innerWidth >= window.innerHeight ? "horizontal" : "vertical";
-  // Keep a pinned readout's tooltip anchored after a resize or orientation flip.
-  if (pinnedFreq.value != null && hoverFreq.value == null) {
-    const apx = freqToAxisPx(pinnedFreq.value);
-    pointerPx.value =
-      orientation.value === "horizontal"
-        ? { x: apx, y: cssH.value * 0.4 }
-        : { x: cssW.value * 0.5, y: apx };
-  }
+  // Auto orientation follows the viewport (landscape to horizontal, portrait to
+  // vertical); a manual override, when set, wins via the `orientation` computed.
+  autoOrientation.value = window.innerWidth >= window.innerHeight ? "horizontal" : "vertical";
   scheduleDraw();
 }
 
@@ -983,24 +1284,84 @@ onUnmounted(() => {
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-4 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Toolbar -->
     <div class="flex flex-wrap items-center gap-2">
-      <div class="flex min-w-[220px] flex-1 items-center gap-2">
-        <div class="relative flex-1">
-          <Search
-            class="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-          />
+      <div class="relative min-w-[220px] flex-1">
+        <div
+          class="flex items-center rounded-[10px] border bg-secondary shadow-[var(--sh-inset)] focus-within:ring-2 focus-within:ring-[color:var(--ring)]"
+        >
+          <Search class="ml-2.5 size-4 shrink-0 text-muted-foreground" />
           <input
             v-model="jumpText"
             type="text"
             inputmode="text"
-            placeholder="Jump to 2.45 GHz, 550 nm, 10 keV"
-            aria-label="Jump to a frequency, wavelength, or energy"
-            class="h-9 w-full rounded-[10px] border bg-secondary pr-3 pl-8 font-mono text-sm shadow-[var(--sh-inset)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
-            @keydown.enter="doJump"
+            role="combobox"
+            aria-autocomplete="list"
+            :aria-expanded="dropdownVisible('main')"
+            placeholder="Search: 2.45 GHz, 550 nm, 10 keV, VHF, wifi channel 6"
+            aria-label="Search by frequency, wavelength, energy, band name, or Wi-Fi channel"
+            class="h-9 w-full bg-transparent px-2 font-mono text-sm outline-none"
+            @focus="onSearchFocus('main')"
+            @blur="onSearchBlur"
+            @keydown.down.prevent="moveActive(1)"
+            @keydown.up.prevent="moveActive(-1)"
+            @keydown.enter.prevent="confirmActive"
+            @keydown.esc="searchOpen = false"
           />
         </div>
-        <Button size="sm" @click="doJump"> Jump </Button>
+
+        <!-- Suggestions dropdown -->
+        <ul
+          v-if="dropdownVisible('main')"
+          role="listbox"
+          aria-label="Search results"
+          class="absolute top-[calc(100%+4px)] right-0 left-0 z-30 max-h-72 overflow-auto rounded-[12px] border bg-popover p-1 shadow-[var(--sh-lg)]"
+        >
+          <li
+            v-if="!results.length"
+            class="px-2.5 py-2 text-sm text-muted-foreground"
+          >
+            No matches. Try 2.45 GHz, 550 nm, 10 keV, VHF, or wifi channel 6.
+          </li>
+          <li
+            v-for="(it, i) in results"
+            :key="it.id"
+            role="option"
+            :aria-selected="i === activeIndex"
+            class="flex cursor-pointer items-center gap-2 rounded-[8px] px-2.5 py-1.5"
+            :class="
+              i === activeIndex
+                ? 'bg-[color:var(--accent-soft)] text-[color:var(--primary)]'
+                : 'hover:bg-secondary'
+            "
+            @mousedown.prevent="pickInterpretation(it)"
+            @mouseenter="activeIndex = i"
+          >
+            <component :is="iconFor(it.icon) || Search" class="size-4 shrink-0 opacity-80" />
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-sm font-medium">{{ it.label }}</span>
+              <span v-if="it.detail" class="block truncate text-xs text-muted-foreground">{{
+                it.detail
+              }}</span>
+            </span>
+            <span
+              class="shrink-0 rounded-[5px] bg-secondary px-1.5 py-0.5 text-[10px] font-medium tracking-[0.04em] text-muted-foreground uppercase"
+              >{{ it.kind }}</span
+            >
+          </li>
+        </ul>
       </div>
+
       <div class="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          :aria-label="
+            orientation === 'horizontal' ? 'Switch to vertical layout' : 'Switch to horizontal layout'
+          "
+          @click="toggleOrientation"
+        >
+          <RotateCw class="size-4" />
+          <span class="hidden sm:inline">Rotate</span>
+        </Button>
         <Button variant="outline" size="sm" aria-label="Export as PNG" @click="exportPng">
           <Download class="size-4" />
           PNG
@@ -1028,14 +1389,6 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <p
-      v-if="jumpError"
-      class="rounded-[10px] border border-[color:var(--border)] bg-secondary px-3 py-2 text-sm text-muted-foreground"
-      role="alert"
-    >
-      {{ jumpError }}
-    </p>
-
     <!-- Spectrum canvas -->
     <div
       ref="containerRef"
@@ -1045,15 +1398,42 @@ onUnmounted(() => {
         ref="canvasRef"
         tabindex="0"
         role="img"
-        :aria-label="`Electromagnetic spectrum, log frequency axis, ${(span * AXIS_DECADES).toFixed(1)} decades in view. Arrow keys pan, plus and minus zoom.`"
+        :aria-label="`Electromagnetic spectrum, log frequency axis, ${(span * AXIS_DECADES).toFixed(1)} decades in view. Arrow keys pan, plus and minus zoom, drag across to zoom to a range, double click to reset.`"
         class="block h-full w-full cursor-crosshair touch-none outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
         @pointerup="onPointerUp"
         @pointercancel="onPointerUp"
         @pointerleave="onPointerLeave"
+        @dblclick="resetView"
         @keydown="onKeydown"
       />
+
+      <!-- Band-label overlay: FitText scales each label to its band box -->
+      <div class="pointer-events-none absolute inset-0 z-[5] select-none">
+        <div
+          v-for="l in bandLabels"
+          :key="l.key"
+          class="absolute flex items-center justify-center gap-1 px-1"
+          :style="{ left: `${l.x}px`, top: `${l.y}px`, width: `${l.w}px`, height: `${l.h}px` }"
+        >
+          <div v-if="l.plate" class="absolute inset-0.5 rounded-[4px] bg-card/70"></div>
+          <component
+            :is="iconFor(l.icon)"
+            v-if="l.showIcon && iconFor(l.icon)"
+            class="relative z-[1] size-3.5 shrink-0 text-foreground/75"
+          />
+          <div class="relative z-[1] h-full min-w-0 flex-1">
+            <FitText :text="l.name" :min="7" :max="l.max" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Drag-select zoom rectangle -->
+      <div
+        class="pointer-events-none absolute z-[6] rounded-[3px] border border-[color:var(--primary)] bg-[color:var(--brand-hairline)]"
+        :style="selectionStyle"
+      ></div>
 
       <!-- Minimal controls shown only in fullscreen (toolbar is hidden there) -->
       <div
@@ -1061,20 +1441,72 @@ onUnmounted(() => {
         class="absolute top-2 right-2 left-2 z-20 flex flex-wrap items-center gap-2"
       >
         <div class="relative min-w-[180px] flex-1">
-          <Search
-            class="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            v-model="jumpText"
-            type="text"
-            inputmode="text"
-            placeholder="Jump to 2.45 GHz, 550 nm, 10 keV"
-            aria-label="Jump to a frequency, wavelength, or energy"
-            class="h-9 w-full rounded-[10px] border bg-popover pr-3 pl-8 font-mono text-sm shadow-[var(--sh-md)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
-            @keydown.enter="doJump"
-          />
+          <div
+            class="flex items-center rounded-[10px] border bg-popover shadow-[var(--sh-md)] focus-within:ring-2 focus-within:ring-[color:var(--ring)]"
+          >
+            <Search class="ml-2.5 size-4 shrink-0 text-muted-foreground" />
+            <input
+              v-model="jumpText"
+              type="text"
+              inputmode="text"
+              role="combobox"
+              aria-autocomplete="list"
+              :aria-expanded="dropdownVisible('fullscreen')"
+              placeholder="Search: 2.45 GHz, 550 nm, VHF, wifi channel 6"
+              aria-label="Search by frequency, wavelength, energy, band name, or Wi-Fi channel"
+              class="h-9 w-full bg-transparent px-2 font-mono text-sm outline-none"
+              @focus="onSearchFocus('fullscreen')"
+              @blur="onSearchBlur"
+              @keydown.down.prevent="moveActive(1)"
+              @keydown.up.prevent="moveActive(-1)"
+              @keydown.enter.prevent="confirmActive"
+              @keydown.esc="searchOpen = false"
+            />
+          </div>
+          <ul
+            v-if="dropdownVisible('fullscreen')"
+            role="listbox"
+            aria-label="Search results"
+            class="absolute top-[calc(100%+4px)] right-0 left-0 z-30 max-h-72 overflow-auto rounded-[12px] border bg-popover p-1 shadow-[var(--sh-lg)]"
+          >
+            <li v-if="!results.length" class="px-2.5 py-2 text-sm text-muted-foreground">
+              No matches. Try 2.45 GHz, 550 nm, 10 keV, VHF, or wifi channel 6.
+            </li>
+            <li
+              v-for="(it, i) in results"
+              :key="it.id"
+              role="option"
+              :aria-selected="i === activeIndex"
+              class="flex cursor-pointer items-center gap-2 rounded-[8px] px-2.5 py-1.5"
+              :class="
+                i === activeIndex
+                  ? 'bg-[color:var(--accent-soft)] text-[color:var(--primary)]'
+                  : 'hover:bg-secondary'
+              "
+              @mousedown.prevent="pickInterpretation(it)"
+              @mouseenter="activeIndex = i"
+            >
+              <component :is="iconFor(it.icon) || Search" class="size-4 shrink-0 opacity-80" />
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-medium">{{ it.label }}</span>
+                <span v-if="it.detail" class="block truncate text-xs text-muted-foreground">{{
+                  it.detail
+                }}</span>
+              </span>
+            </li>
+          </ul>
         </div>
-        <Button size="sm" @click="doJump"> Jump </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          :aria-label="
+            orientation === 'horizontal' ? 'Switch to vertical layout' : 'Switch to horizontal layout'
+          "
+          class="bg-popover"
+          @click="toggleOrientation"
+        >
+          <RotateCw class="size-4" />
+        </Button>
         <Button
           variant="outline"
           size="sm"
@@ -1091,37 +1523,75 @@ onUnmounted(() => {
       <!-- Floating readout tooltip -->
       <div
         v-if="activeReadout"
-        class="pointer-events-none absolute top-0 left-0 z-10 w-[236px] max-w-[80%] rounded-[12px] border bg-popover p-3 text-sm shadow-[var(--sh-lg)]"
+        class="absolute top-0 left-0 z-10 w-max max-w-[min(300px,82%)] rounded-[12px] border bg-popover p-3 text-sm shadow-[var(--sh-lg)]"
+        :class="locked ? 'pointer-events-auto select-text' : 'pointer-events-none select-none'"
         :style="tooltipStyle"
-        aria-hidden="true"
+        :aria-hidden="!locked"
       >
-        <div class="mb-1.5 flex items-center gap-2">
-          <span
-            v-if="activeReadout.colorHex"
-            class="inline-block size-4 shrink-0 rounded-[4px] border"
-            :style="{ background: activeReadout.colorHex }"
-          />
-          <span class="truncate font-semibold">{{ activeReadout.pathLabel }}</span>
+        <button
+          v-if="locked"
+          type="button"
+          class="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-[6px] text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] focus-visible:outline-none"
+          aria-label="Close readout"
+          @click="unlock"
+        >
+          <X class="size-3.5" />
+        </button>
+
+        <!-- Breadcrumb chips: one per path segment, bold on hover -->
+        <div class="mb-2 flex flex-wrap items-center gap-1" :class="locked ? 'pr-6' : ''">
+          <template v-for="(seg, i) in activeReadout.path" :key="seg.id">
+            <span
+              class="inline-flex items-center gap-1 rounded-[6px] border bg-secondary px-1.5 py-0.5 text-xs transition-colors"
+              :class="hoveredSegment === i ? 'font-semibold text-foreground' : ''"
+              @mouseenter="hoveredSegment = i"
+              @mouseleave="hoveredSegment = null"
+            >
+              <component
+                :is="iconFor(seg.icon)"
+                v-if="iconFor(seg.icon)"
+                class="size-3.5 shrink-0 text-[color:var(--primary)]"
+              />
+              {{ seg.name }}
+            </span>
+            <span
+              v-if="i < activeReadout.path.length - 1"
+              class="text-muted-foreground/70"
+              aria-hidden="true"
+              >&rsaquo;</span
+            >
+          </template>
         </div>
+
         <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-mono text-xs tabular-nums">
           <dt class="text-muted-foreground">Frequency</dt>
-          <dd class="text-right">
+          <dd class="text-right whitespace-nowrap">
             {{ formatFrequency(activeReadout.frequencyHz) }}
           </dd>
           <dt class="text-muted-foreground">Wavelength</dt>
-          <dd class="text-right">
+          <dd class="text-right whitespace-nowrap">
             {{ formatWavelength(activeReadout.wavelengthM) }}
           </dd>
           <dt class="text-muted-foreground">Energy</dt>
-          <dd class="text-right">
+          <dd class="text-right whitespace-nowrap">
             {{ formatEnergyEv(activeReadout.energyEv) }}
           </dd>
           <dt class="text-muted-foreground">Black-body</dt>
-          <dd class="text-right">
+          <dd class="text-right whitespace-nowrap">
             {{ formatKelvin(activeReadout.blackbodyKelvin) }}
           </dd>
         </dl>
-        <div class="mt-1.5 flex items-center gap-1.5 text-xs">
+        <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+          <span
+            v-if="activeReadout.colorHex"
+            class="inline-flex items-center gap-1 rounded-[6px] border px-1.5 py-0.5 font-mono"
+          >
+            <span
+              class="inline-block size-3 shrink-0 rounded-[3px] border"
+              :style="{ background: activeReadout.colorHex }"
+            />
+            {{ activeReadout.colorHex }}
+          </span>
           <span
             class="rounded-[6px] px-1.5 py-0.5 font-medium"
             :class="
@@ -1134,7 +1604,7 @@ onUnmounted(() => {
         </div>
         <p
           v-if="activeReadout.uses.length"
-          class="mt-1.5 line-clamp-3 text-xs text-muted-foreground"
+          class="mt-2 text-xs leading-relaxed text-muted-foreground"
         >
           {{ activeReadout.uses.join(", ") }}
         </p>
@@ -1143,12 +1613,13 @@ onUnmounted(() => {
       <!-- Empty-state hint -->
       <div
         v-if="!activeReadout"
-        class="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center"
+        class="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center px-3"
       >
         <span
-          class="rounded-full bg-popover/90 px-3 py-1 text-xs text-muted-foreground shadow-[var(--sh-sm)]"
+          class="rounded-full bg-popover/90 px-3 py-1 text-center text-xs text-muted-foreground shadow-[var(--sh-sm)]"
         >
-          Hover or tap the spectrum to read values. Ctrl and scroll or pinch to zoom.
+          Hover to read values, click to lock the readout. Drag across to zoom in, double click to
+          reset.
         </span>
       </div>
     </div>
@@ -1157,17 +1628,50 @@ onUnmounted(() => {
     <div
       v-if="activeReadout"
       ref="readoutCardRef"
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
+      class="overflow-hidden rounded-[14px] border bg-card shadow-[var(--sh-sm)]"
     >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Readout at {{ formatFrequency(activeReadout.frequencyHz) }}
-        </span>
+      <div
+        class="flex items-center justify-between gap-3 border-b bg-[image:var(--grad-brand-soft)] px-4 py-2.5"
+      >
+        <div class="min-w-0">
+          <div class="text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase">
+            Readout
+          </div>
+          <div class="truncate font-mono text-sm">
+            {{ formatFrequency(activeReadout.frequencyHz) }}
+          </div>
+        </div>
         <CopyButton :text="copyableText" label="Copy all" />
       </div>
-      <div class="divide-y divide-border/60">
+
+      <!-- Breadcrumb chips -->
+      <div v-if="activeReadout.path.length" class="flex flex-wrap items-center gap-1 px-4 pt-3">
+        <template v-for="(seg, i) in activeReadout.path" :key="seg.id">
+          <span
+            class="inline-flex items-center gap-1 rounded-[6px] border bg-secondary px-2 py-0.5 text-xs transition-colors"
+            :class="hoveredSegment === i ? 'font-semibold text-foreground' : ''"
+            @mouseenter="hoveredSegment = i"
+            @mouseleave="hoveredSegment = null"
+          >
+            <component
+              :is="iconFor(seg.icon)"
+              v-if="iconFor(seg.icon)"
+              class="size-3.5 shrink-0 text-[color:var(--primary)]"
+            />
+            {{ seg.name }}
+          </span>
+          <span
+            v-if="i < activeReadout.path.length - 1"
+            class="text-muted-foreground/70"
+            aria-hidden="true"
+            >&rsaquo;</span
+          >
+        </template>
+      </div>
+
+      <div class="divide-y divide-border/60 px-1 pt-2 pb-1">
         <div
-          v-for="row in readoutRows"
+          v-for="row in valueRows"
           :key="row.label"
           class="flex items-center justify-between gap-3 px-3 py-1.5"
         >
@@ -1193,7 +1697,7 @@ onUnmounted(() => {
             <span
               v-for="use in activeReadout.uses"
               :key="use"
-              class="rounded-[6px] bg-card px-2 py-0.5 text-xs shadow-[var(--sh-sm)]"
+              class="rounded-[6px] bg-secondary px-2 py-0.5 text-xs shadow-[var(--sh-sm)]"
             >
               {{ use }}
             </span>

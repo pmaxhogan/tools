@@ -12,7 +12,17 @@ export interface ScreenSummary {
   top: number;
   isPrimary?: boolean;
   isInternal?: boolean;
+  isCurrent?: boolean;
   label?: string;
+  availLeft?: number;
+  availTop?: number;
+  availWidth?: number;
+  availHeight?: number;
+  devicePixelRatio?: number;
+  colorDepth?: number;
+  pixelDepth?: number;
+  orientationType?: string | null;
+  orientationAngle?: number | null;
 }
 
 export interface DisplayMediaFeatures {
@@ -338,6 +348,129 @@ export function describeMultiMonitor(screens: ScreenSummary[] | null | undefined
     return `#${i + 1} ${s.width} x ${s.height} at (${s.left}, ${s.top})${primary}`;
   });
   return `${screens.length} displays detected: ${parts.join("; ")}`;
+}
+
+/* ------------------------------------------------------------------ *
+ * layout math for the to-scale diagram (pure, so it is unit tested and
+ * kept out of the panel per architecture rule 27)
+ * ------------------------------------------------------------------ */
+
+/** Falls back to a stable "Display N" name when the OS label is empty. */
+export function displayName(screen: Pick<ScreenSummary, "label">, index: number): string {
+  const label = screen.label?.trim();
+  return label && label.length > 0 ? label : `Display ${index + 1}`;
+}
+
+/** One display mapped into diagram pixel space, ready to draw as a rectangle. */
+export interface DisplayRect {
+  index: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  isPrimary: boolean;
+  isCurrent: boolean;
+  label: string;
+  resolution: string;
+}
+
+export interface DisplayLayout {
+  /** Diagram width in pixels (equals the requested target width). */
+  width: number;
+  /** Diagram height in pixels, derived from the bounding box and the scale. */
+  height: number;
+  /** Single uniform scale factor: diagram pixels per virtual desktop pixel. */
+  scale: number;
+  rects: DisplayRect[];
+}
+
+/**
+ * Maps every connected display from the virtual desktop coordinate space into a
+ * single diagram box of the given target width. Computes the bounding box of
+ * all screens, derives one uniform scale factor from the width, then translates
+ * each rectangle so the top-left of the bounding box sits at (padding, padding).
+ * Negative left/top values (a monitor placed left of or above the primary, the
+ * common real world arrangement) are handled by the translation. The height is
+ * left for the caller to honor so the diagram stays exactly to scale.
+ */
+export function computeDisplayLayout(
+  screens: ScreenSummary[] | null | undefined,
+  targetWidth: number,
+  padding = 0,
+): DisplayLayout {
+  const list = screens ?? [];
+  const pad = isFiniteNumber(padding) && padding > 0 ? padding : 0;
+  if (list.length === 0 || !isFiniteNumber(targetWidth) || targetWidth <= 0) {
+    return {
+      width: isFiniteNumber(targetWidth) && targetWidth > 0 ? targetWidth : 0,
+      height: 0,
+      scale: 1,
+      rects: [],
+    };
+  }
+
+  let minLeft = Infinity;
+  let minTop = Infinity;
+  let maxRight = -Infinity;
+  let maxBottom = -Infinity;
+  for (const s of list) {
+    minLeft = Math.min(minLeft, s.left);
+    minTop = Math.min(minTop, s.top);
+    maxRight = Math.max(maxRight, s.left + s.width);
+    maxBottom = Math.max(maxBottom, s.top + s.height);
+  }
+
+  const contentW = maxRight - minLeft;
+  const contentH = maxBottom - minTop;
+  const innerW = Math.max(1, targetWidth - pad * 2);
+  const scale = contentW > 0 ? innerW / contentW : 1;
+  const height = contentH > 0 ? contentH * scale + pad * 2 : pad * 2;
+
+  const rects: DisplayRect[] = list.map((s, index) => ({
+    index,
+    x: pad + (s.left - minLeft) * scale,
+    y: pad + (s.top - minTop) * scale,
+    width: s.width * scale,
+    height: s.height * scale,
+    isPrimary: Boolean(s.isPrimary),
+    isCurrent: Boolean(s.isCurrent),
+    label: displayName(s, index),
+    resolution: `${s.width} x ${s.height}`,
+  }));
+
+  return { width: targetWidth, height, scale, rects };
+}
+
+/**
+ * Full per-display readout for the detail card, as labeled rows so the panel
+ * can render it through the shared OutputView (copy buttons for free) instead
+ * of hand interpolating a dozen fields.
+ */
+export function describeScreenDetail(screen: ScreenSummary, index = 0): Record<string, string> {
+  const out: Record<string, string> = {};
+  out["Label"] = displayName(screen, index);
+  out["Resolution"] = `${screen.width} x ${screen.height} px`;
+  if (isFiniteNumber(screen.availWidth) && isFiniteNumber(screen.availHeight)) {
+    out["Available work area"] = `${screen.availWidth} x ${screen.availHeight} px`;
+  }
+  out["Position (left, top)"] = `(${screen.left}, ${screen.top})`;
+  if (isFiniteNumber(screen.availLeft) && isFiniteNumber(screen.availTop)) {
+    out["Work area offset"] = `(${screen.availLeft}, ${screen.availTop})`;
+  }
+  if (isFiniteNumber(screen.devicePixelRatio)) {
+    out["Device pixel ratio"] = classifyPixelDensity(screen.devicePixelRatio);
+  }
+  if (isFiniteNumber(screen.colorDepth)) out["Color depth"] = `${screen.colorDepth}-bit`;
+  if (isFiniteNumber(screen.pixelDepth)) out["Pixel depth"] = `${screen.pixelDepth}-bit`;
+  if (screen.orientationType) {
+    out["Orientation"] = describeOrientation(screen.orientationType, screen.orientationAngle);
+  }
+  out["Primary display"] = screen.isPrimary ? "Yes" : "No";
+  if (typeof screen.isInternal === "boolean") {
+    out["Internal display"] = screen.isInternal ? "Yes (built in)" : "No (external)";
+  }
+  out["Current window is here"] = screen.isCurrent ? "Yes" : "No";
+  return out;
 }
 
 /* ------------------------------------------------------------------ *

@@ -3,12 +3,16 @@ import { ToolError } from "../types";
 import {
   AXIS_MAX_HZ,
   AXIS_MIN_HZ,
+  BANDS,
+  ICON_NAMES,
+  WIFI_CHANNELS,
   aggregatedUses,
   bandPathAt,
   bandPathLabel,
   bandsCoveringAt,
   describeFrequency,
   energyEvToFrequency,
+  findWifiChannels,
   flattenBands,
   formatEnergyEv,
   formatFrequency,
@@ -18,6 +22,7 @@ import {
   frequencyToEnergyEv,
   frequencyToPosition,
   frequencyToWavelength,
+  interpretQuery,
   isIonizing,
   parseJump,
   positionToFrequency,
@@ -25,6 +30,7 @@ import {
   usesAt,
   wavelengthNmToRgb,
   wavelengthToFrequency,
+  type Band,
 } from "./index";
 
 /** Relative closeness helper for physics anchors. */
@@ -362,5 +368,217 @@ describe("describeFrequency and run", () => {
 
   it("run() throws a ToolError on a bad query", () => {
     expect(() => run(undefined, { query: "5 bananas" })).toThrow(ToolError);
+  });
+});
+
+/** Walk every band in the tree, parents then children. */
+function eachBand(fn: (b: Band) => void, bands: Band[] = BANDS): void {
+  for (const b of bands) {
+    fn(b);
+    if (b.children) eachBand(fn, b.children);
+  }
+}
+
+describe("band icon and alias metadata", () => {
+  it("uses exactly the icon names listed in ICON_NAMES (both directions)", () => {
+    const used = new Set<string>();
+    eachBand((b) => {
+      if (b.icon) used.add(b.icon);
+    });
+    // Every icon on a band is declared, and every declared name is actually used.
+    expect([...used].sort()).toEqual([...ICON_NAMES].sort());
+  });
+
+  it("keeps every alias lowercase for case-insensitive matching", () => {
+    eachBand((b) => {
+      for (const a of b.aliases ?? []) expect(a).toBe(a.toLowerCase());
+    });
+  });
+
+  it("has no em or en dashes in names, aliases or uses", () => {
+    eachBand((b) => {
+      const strings = [b.name, ...(b.aliases ?? []), ...b.uses];
+      for (const s of strings) {
+        expect(s).not.toMatch(/[—–]/);
+      }
+    });
+  });
+});
+
+describe("Wi-Fi channel dataset", () => {
+  it("places the 2.4 GHz 20 MHz channels at 2407 + 5 * ch MHz", () => {
+    for (let ch = 1; ch <= 11; ch++) {
+      const [c] = findWifiChannels({ band: "2.4", channel: ch, width: 20 });
+      expect(c!.centerHz).toBe((2407 + 5 * ch) * 1e6);
+    }
+    expect(findWifiChannels({ band: "2.4", channel: 1, width: 20 })[0]!.centerHz).toBe(2412e6);
+    expect(findWifiChannels({ band: "2.4", channel: 11, width: 20 })[0]!.centerHz).toBe(2462e6);
+  });
+
+  it("models US 2.4 GHz 40 MHz composite channels 3 through 9 only", () => {
+    const centers = WIFI_CHANNELS.filter((c) => c.band === "2.4" && c.width === 40).map(
+      (c) => c.channel,
+    );
+    expect(centers).toEqual([3, 4, 5, 6, 7, 8, 9]);
+    // Channel 3 as a 40 MHz channel is centered at 2422 MHz, spanning 2402 to 2442.
+    const [c40] = findWifiChannels({ band: "2.4", channel: 3, width: 40 });
+    expect(c40!.centerHz).toBe(2422e6);
+    expect(c40!.lowerHz).toBe(2402e6);
+    expect(c40!.upperHz).toBe(2442e6);
+  });
+
+  it("places 5 GHz channels at 5000 + 5 * ch MHz with correct bonded centers", () => {
+    expect(findWifiChannels({ band: "5", channel: 36, width: 20 })[0]!.centerHz).toBe(5180e6);
+    expect(findWifiChannels({ band: "5", channel: 165, width: 20 })[0]!.centerHz).toBe(5825e6);
+    expect(findWifiChannels({ band: "5", channel: 149, width: 20 })[0]!.centerHz).toBe(5745e6);
+    // Channel 42 is the 80 MHz channel bonding 36/40/44/48, center 5210 MHz.
+    expect(findWifiChannels({ band: "5", channel: 42, width: 80 })[0]!.centerHz).toBe(5210e6);
+    // Channel 50 is the 160 MHz channel bonding 36..64, center 5250 MHz.
+    expect(findWifiChannels({ band: "5", channel: 50, width: 160 })[0]!.centerHz).toBe(5250e6);
+    // Channel 38 is a 40 MHz channel, center 5190 MHz.
+    expect(findWifiChannels({ band: "5", channel: 38, width: 40 })[0]!.centerHz).toBe(5190e6);
+  });
+
+  it("generates 6 GHz channels at 5950 + 5 * ch MHz to the standard maxima", () => {
+    expect(findWifiChannels({ band: "6", channel: 1, width: 20 })[0]!.centerHz).toBe(5955e6);
+    expect(findWifiChannels({ band: "6", channel: 37, width: 20 })[0]!.centerHz).toBe(6135e6);
+    // 20 MHz tops out at channel 233 (center 7115 MHz), 237 does not fit.
+    expect(findWifiChannels({ band: "6", channel: 233, width: 20 })[0]!.centerHz).toBe(7115e6);
+    expect(findWifiChannels({ band: "6", channel: 237, width: 20 })).toHaveLength(0);
+    // Bonded maxima: 40 -> 227, 80 -> 215, 160 -> 207.
+    expect(findWifiChannels({ band: "6", channel: 227, width: 40 })).toHaveLength(1);
+    expect(findWifiChannels({ band: "6", channel: 215, width: 80 })).toHaveLength(1);
+    expect(findWifiChannels({ band: "6", channel: 207, width: 160 })).toHaveLength(1);
+    expect(findWifiChannels({ band: "6", channel: 239, width: 160 })).toHaveLength(0);
+  });
+
+  it("computes channel edges as center plus and minus half the width", () => {
+    const [c] = findWifiChannels({ band: "5", channel: 36, width: 20 });
+    expect(c!.lowerHz).toBe(5170e6);
+    expect(c!.upperHz).toBe(5190e6);
+    const [c80] = findWifiChannels({ band: "5", channel: 42, width: 80 });
+    expect(c80!.lowerHz).toBe(5170e6);
+    expect(c80!.upperHz).toBe(5250e6);
+  });
+
+  it("disambiguates a channel number shared across bands", () => {
+    const bands = findWifiChannels({ channel: 1, width: 20 }).map((c) => c.band);
+    expect(bands).toContain("2.4");
+    expect(bands).toContain("6");
+  });
+});
+
+describe("interpretQuery: numeric readings", () => {
+  it("returns an empty list for empty input and never throws on garbage", () => {
+    expect(interpretQuery("")).toEqual([]);
+    expect(interpretQuery("   ")).toEqual([]);
+    expect(() => interpretQuery("5 bananas")).not.toThrow();
+    expect(interpretQuery("5 bananas")).toEqual([]);
+    expect(() => interpretQuery("GHz")).not.toThrow();
+  });
+
+  it("reads a bare number as hertz: 1234567 is about 1.235 MHz", () => {
+    const top = interpretQuery("1234567")[0]!;
+    expect(top.kind).toBe("frequency");
+    expect(top.frequencyHz).toBe(1234567);
+    expect(top.label).toBe("1.235 MHz");
+  });
+
+  it("reads an SI frequency, a wavelength and an energy", () => {
+    const freq = interpretQuery("2.45 GHz")[0]!;
+    expect(freq.kind).toBe("frequency");
+    closeRel(freq.frequencyHz, 2.45e9);
+
+    const wl = interpretQuery("550 nm")[0]!;
+    expect(wl.kind).toBe("wavelength");
+    closeRel(wl.frequencyHz, wavelengthToFrequency(550e-9));
+
+    const energy = interpretQuery("10 keV")[0]!;
+    expect(energy.kind).toBe("energy");
+    closeRel(energy.frequencyHz, energyEvToFrequency(10e3));
+  });
+});
+
+describe("interpretQuery: Wi-Fi channels", () => {
+  it("resolves 'wifi channel 42' to the 80 MHz center at exactly 5.210 GHz", () => {
+    const top = interpretQuery("wifi channel 42")[0]!;
+    expect(top.kind).toBe("wifi");
+    expect(top.frequencyHz).toBe(5.21e9);
+    expect(top.rangeHz).toEqual([5170e6, 5250e6]);
+  });
+
+  it("resolves '2.4ghz channel 3' to the 20 MHz center at exactly 2.422 GHz", () => {
+    const cands = interpretQuery("2.4ghz channel 3");
+    expect(cands[0]!.kind).toBe("wifi");
+    expect(cands[0]!.frequencyHz).toBe(2.422e9);
+    // The 40 MHz interpretation sharing that channel number is also offered.
+    const widths = cands.filter((c) => c.kind === "wifi").map((c) => c.rangeHz![1] - c.rangeHz![0]);
+    expect(widths).toContain(20e6);
+    expect(widths).toContain(40e6);
+  });
+
+  it("resolves '5ghz channel 36' to exactly 5.180 GHz", () => {
+    expect(interpretQuery("5ghz channel 36")[0]!.frequencyHz).toBe(5.18e9);
+  });
+
+  it("resolves '6ghz channel 37' to exactly 6.135 GHz", () => {
+    expect(interpretQuery("6ghz channel 37")[0]!.frequencyHz).toBe(6.135e9);
+  });
+
+  it("resolves 'channel 149' by uniqueness to exactly 5.745 GHz", () => {
+    expect(interpretQuery("channel 149")[0]!.frequencyHz).toBe(5.745e9);
+  });
+
+  it("resolves 'wifi ch 6' to exactly 2.437 GHz", () => {
+    expect(interpretQuery("wifi ch 6")[0]!.frequencyHz).toBe(2.437e9);
+  });
+
+  it("offers one candidate per band when a channel number is ambiguous", () => {
+    const wifi = interpretQuery("channel 1").filter((c) => c.kind === "wifi");
+    const freqs = wifi.map((c) => c.frequencyHz);
+    expect(freqs).toContain(2412e6); // 2.4 GHz channel 1
+    expect(freqs).toContain(5955e6); // 6 GHz channel 1
+  });
+});
+
+describe("interpretQuery: band and abbreviation search", () => {
+  it("resolves an abbreviation to a band centered on the geometric mean", () => {
+    const top = interpretQuery("VHF")[0]!;
+    expect(top.kind).toBe("band");
+    expect(top.label).toBe("VHF");
+    expect(top.rangeHz).toEqual([30e6, 300e6]);
+    closeRel(top.frequencyHz, Math.sqrt(30e6 * 300e6));
+    expect(top.frequencyHz).toBeGreaterThan(30e6);
+    expect(top.frequencyHz).toBeLessThan(300e6);
+  });
+
+  it("matches aliases like EUV, airband, GPS and the hydrogen line", () => {
+    expect(interpretQuery("EUV").some((c) => c.label === "Extreme UV (EUV)")).toBe(true);
+    expect(interpretQuery("airband").some((c) => c.label === "Airband")).toBe(true);
+    expect(interpretQuery("GPS").some((c) => c.label === "GPS and GNSS")).toBe(true);
+
+    const hline = interpretQuery("hydrogen line").find((c) => c.kind === "band")!;
+    expect(hline).toBeDefined();
+    closeRel(hline.frequencyHz, 1.4204e9, 1e-3);
+    expect(hline.rangeHz![0]).toBeLessThan(hline.frequencyHz);
+    expect(hline.rangeHz![1]).toBeGreaterThan(hline.frequencyHz);
+  });
+
+  it("handles every band-search example the spec enumerates", () => {
+    expect(interpretQuery("UVC").some((c) => c.label === "UVC")).toBe(true);
+    expect(interpretQuery("UNII").some((c) => c.kind === "band")).toBe(true);
+    expect(interpretQuery("ISM").some((c) => c.label === "2.4 GHz ISM band")).toBe(true);
+    expect(interpretQuery("FM").some((c) => c.label === "FM broadcast")).toBe(true);
+    expect(interpretQuery("2 meter").some((c) => c.label === "Amateur 2 meter")).toBe(true);
+  });
+
+  it("ranks a numeric parse above fuzzy band matches", () => {
+    // '550 nm' both parses numerically and could brush band names; the numeric
+    // reading must lead.
+    expect(interpretQuery("550 nm")[0]!.kind).toBe("wavelength");
+  });
+
+  it("caps the candidate list", () => {
+    expect(interpretQuery("wifi").length).toBeLessThanOrEqual(8);
   });
 });

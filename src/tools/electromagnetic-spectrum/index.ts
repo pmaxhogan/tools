@@ -6,9 +6,13 @@ import {
   C,
   E_CHARGE,
   H,
+  ICON_NAMES,
   IONIZING_EV,
   WIEN_B,
+  WIFI_CHANNELS,
   type Band,
+  type WifiBand,
+  type WifiChannel,
 } from "./data";
 
 /**
@@ -22,8 +26,19 @@ import {
  * from a frequency, and the axis is a log10 map of frequency.
  */
 
-export { AXIS_MAX_HZ, AXIS_MIN_HZ, BANDS, C, E_CHARGE, H, IONIZING_EV, WIEN_B };
-export type { Band };
+export {
+  AXIS_MAX_HZ,
+  AXIS_MIN_HZ,
+  BANDS,
+  C,
+  E_CHARGE,
+  H,
+  ICON_NAMES,
+  IONIZING_EV,
+  WIEN_B,
+  WIFI_CHANNELS,
+};
+export type { Band, WifiBand, WifiChannel };
 
 /* ------------------------------------------------------------------ */
 /* Core conversions                                                    */
@@ -582,6 +597,276 @@ export function parseJump(input: string): number {
   }
 
   return freqHz;
+}
+
+/* ------------------------------------------------------------------ */
+/* Wi-Fi channel lookup                                                */
+/* ------------------------------------------------------------------ */
+
+/** Sort key so the three Wi-Fi bands order 2.4, then 5, then 6. */
+function wifiBandOrder(band: WifiBand): number {
+  return band === "2.4" ? 0 : band === "5" ? 1 : 2;
+}
+
+/**
+ * Every US / North American Wi-Fi channel matching a query. `channel` is
+ * required; `band` and `width` narrow the result when given. Results are ordered
+ * narrowest width first (so the plain 20 MHz reading leads), then by band. When
+ * a channel number is ambiguous across bands (channel 1 exists at 2.4 GHz and 6
+ * GHz), every matching band is returned.
+ */
+export function findWifiChannels(query: {
+  band?: WifiBand;
+  channel: number;
+  width?: number;
+}): WifiChannel[] {
+  return WIFI_CHANNELS.filter(
+    (c) =>
+      c.channel === query.channel &&
+      (query.band === undefined || c.band === query.band) &&
+      (query.width === undefined || c.width === query.width),
+  ).sort((a, b) => a.width - b.width || wifiBandOrder(a.band) - wifiBandOrder(b.band));
+}
+
+/* ------------------------------------------------------------------ */
+/* The "jump to" search brain: interpretQuery                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One candidate reading of a search box query. The panel renders these as a
+ * dropdown and Enter picks the first. `frequencyHz` is always the jump target;
+ * `rangeHz` (when present) lets the panel zoom to fit a band or channel.
+ */
+export interface Interpretation {
+  /** Stable key for v-for. */
+  id: string;
+  /** What kind of reading produced this candidate. */
+  kind: "frequency" | "wavelength" | "energy" | "band" | "wifi";
+  /** Primary label, for example "2.462 GHz" or "VHF". */
+  label: string;
+  /** Secondary line, for example a band path or the channel width. */
+  detail?: string;
+  /** The jump target in hertz. */
+  frequencyHz: number;
+  /** Low and high edges in hertz, so the panel can zoom to fit. */
+  rangeHz?: [number, number];
+  /** Optional lucide-vue-next icon name. */
+  icon?: string;
+}
+
+/** How many candidates the dropdown holds before the list is cut. */
+export const MAX_INTERPRETATIONS = 8;
+
+/*
+ * Ranking, best first:
+ *   1. An exact numeric-plus-unit parse (a frequency, wavelength or energy).
+ *      This is the most literal reading of what the user typed, so it leads.
+ *   2. Exact Wi-Fi channel matches, narrowest width first, then by band.
+ *   3. Fuzzy band-name and abbreviation matches, by match strength (an exact
+ *      name or alias above a whole-word substring), then narrowest band first.
+ * Duplicates (by id) are dropped keeping the earliest, and the list is capped at
+ * MAX_INTERPRETATIONS for the dropdown.
+ */
+
+/** Turn a resolved numeric quantity into a candidate, or null if it will not parse. */
+function interpretNumeric(text: string): Interpretation | null {
+  const split = splitNumberUnit(text);
+  if (!split) return null;
+  const resolved = resolveUnit(split.unit);
+  if (!resolved) return null;
+
+  let freqHz: number;
+  try {
+    freqHz = parseJump(text);
+  } catch {
+    return null;
+  }
+
+  const wl = frequencyToWavelength(freqHz);
+  const ev = frequencyToEnergyEv(freqHz);
+  const freqLabel = formatFrequency(freqHz);
+
+  if (resolved.quantity === "frequency") {
+    return {
+      id: `num-frequency-${freqHz}`,
+      kind: "frequency",
+      label: freqLabel,
+      detail: `${formatWavelength(wl)}, ${formatEnergyEv(ev)}`,
+      frequencyHz: freqHz,
+    };
+  }
+  if (resolved.quantity === "wavelength") {
+    return {
+      id: `num-wavelength-${freqHz}`,
+      kind: "wavelength",
+      label: formatWavelength(wl),
+      detail: `${freqLabel}, ${formatEnergyEv(ev)}`,
+      frequencyHz: freqHz,
+    };
+  }
+  // energyEv or energyJoule both present as a photon energy.
+  return {
+    id: `num-energy-${freqHz}`,
+    kind: "energy",
+    label: formatEnergyEv(ev),
+    detail: `${freqLabel}, ${formatWavelength(wl)}`,
+    frequencyHz: freqHz,
+  };
+}
+
+/**
+ * Pull a US / NA Wi-Fi band hint and channel number out of a free text query.
+ * Returns null when the text is not a Wi-Fi channel query or the channel does
+ * not exist in any band. Understands band hints ("2.4", "2.4ghz", "5ghz", "6ghz",
+ * "6e"), the words "wifi", "channel", "ch" and "ch.", and the channel number.
+ */
+function parseWifiQuery(raw: string): { band?: WifiBand; channel: number } | null {
+  const lower = raw.toLowerCase();
+
+  let band: WifiBand | undefined;
+  if (/\b6e\b/.test(lower) || /\b6\s*ghz\b/.test(lower)) band = "6";
+  else if (/\b5\s*ghz\b/.test(lower)) band = "5";
+  else if (/2\.4\s*ghz/.test(lower) || /\b2\.4\b/.test(lower)) band = "2.4";
+
+  // Strip band hints so the channel number is the only number left to read.
+  const work = lower
+    .replace(/2\.4\s*ghz/g, " ")
+    .replace(/2\.4/g, " ")
+    .replace(/\b[56]\s*ghz/g, " ")
+    .replace(/\b6e\b/g, " ")
+    .replace(/ghz/g, " ");
+
+  let channel: number | undefined;
+  const chMatch = /\bch(?:annel|\.)?\s*(\d{1,3})\b/.exec(work);
+  if (chMatch) channel = Number(chMatch[1]);
+
+  const hasWifi = /\bwi[\s-]?fi\b/.test(lower);
+  if (channel === undefined && hasWifi) {
+    const nums = work.match(/\d{1,3}/g);
+    if (nums && nums.length) channel = Number(nums[nums.length - 1]);
+  }
+
+  if (channel === undefined || !Number.isFinite(channel)) return null;
+  if (findWifiChannels({ band, channel }).length === 0) return null;
+  return { band, channel };
+}
+
+/** Present one Wi-Fi channel as a search candidate. */
+function wifiInterpretation(c: WifiChannel): Interpretation {
+  return {
+    id: `wifi-${c.band}-${c.channel}-${c.width}`,
+    kind: "wifi",
+    label: `Wi-Fi channel ${c.channel}, ${c.width} MHz (${c.band} GHz), center ${formatFrequency(
+      c.centerHz,
+    )}`,
+    detail: `${c.band} GHz Wi-Fi band, ${c.width} MHz wide`,
+    frequencyHz: c.centerHz,
+    rangeHz: [c.lowerHz, c.upperHz],
+    icon: "Wifi",
+  };
+}
+
+/** Escape a string for safe use inside a regular expression. */
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** True when `needle` appears in `haystack` bounded by non alphanumeric edges. */
+function wholeWordMatch(haystack: string, needle: string): boolean {
+  if (!needle) return false;
+  const re = new RegExp(`(?<![a-z0-9])${escapeRegExp(needle)}(?![a-z0-9])`);
+  return re.test(haystack);
+}
+
+/** Match strength of a band against a query: 3 exact, 2 whole word, 0 none. */
+function scoreBand(band: Band, query: string): number {
+  const terms = [band.name.toLowerCase(), ...(band.aliases ?? [])];
+  let best = 0;
+  for (const term of terms) {
+    if (term === query) best = Math.max(best, 3);
+    else if (wholeWordMatch(term, query) || wholeWordMatch(query, term)) best = Math.max(best, 2);
+  }
+  return best;
+}
+
+interface BandMatch {
+  band: Band;
+  path: Band[];
+  score: number;
+}
+
+/** Every band whose name or aliases match the query, with its ancestry path. */
+function searchBands(query: string): BandMatch[] {
+  const out: BandMatch[] = [];
+  const walk = (bands: Band[], ancestors: Band[]) => {
+    for (const band of bands) {
+      const path = [...ancestors, band];
+      const score = scoreBand(band, query);
+      if (score > 0) out.push({ band, path, score });
+      if (band.children) walk(band.children, path);
+    }
+  };
+  walk(BANDS, []);
+  return out;
+}
+
+/** Present one band as a search candidate, centered on the geometric mean. */
+function bandInterpretation(band: Band, path: Band[]): Interpretation {
+  return {
+    id: `band-${band.id}`,
+    kind: "band",
+    label: band.name,
+    detail: bandPathLabel(path),
+    // The axis is log10, so the visual center of a band is the geometric mean.
+    frequencyHz: Math.sqrt(band.fLow * band.fHigh),
+    rangeHz: [band.fLow, band.fHigh],
+    icon: band.icon,
+  };
+}
+
+/**
+ * Interpret a free text search query into a ranked list of jump candidates. The
+ * panel shows these in a dropdown and Enter picks the first. Returns an empty
+ * array when nothing sensible parses. Never throws (a bad numeric parse is
+ * simply dropped from the candidate list).
+ */
+export function interpretQuery(input: string): Interpretation[] {
+  const text = String(input ?? "").trim();
+  if (!text) return [];
+
+  const candidates: Interpretation[] = [];
+
+  // 1. Numeric plus unit (frequency, wavelength or energy).
+  const numeric = interpretNumeric(text);
+  if (numeric) candidates.push(numeric);
+
+  // 2. Wi-Fi channel matches.
+  const wifi = parseWifiQuery(text);
+  if (wifi) {
+    for (const c of findWifiChannels({ band: wifi.band, channel: wifi.channel })) {
+      candidates.push(wifiInterpretation(c));
+    }
+  }
+
+  // 3. Fuzzy band and abbreviation search.
+  const query = text.toLowerCase();
+  if (query.length >= 2) {
+    const matches = searchBands(query).sort(
+      (a, b) => b.score - a.score || bandLogWidth(a.band) - bandLogWidth(b.band),
+    );
+    for (const m of matches) candidates.push(bandInterpretation(m.band, m.path));
+  }
+
+  // Deduplicate by id (keeping the earliest, best ranked) and cap the list.
+  const seen = new Set<string>();
+  const ranked: Interpretation[] = [];
+  for (const it of candidates) {
+    if (seen.has(it.id)) continue;
+    seen.add(it.id);
+    ranked.push(it);
+    if (ranked.length >= MAX_INTERPRETATIONS) break;
+  }
+  return ranked;
 }
 
 /* ------------------------------------------------------------------ */

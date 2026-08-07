@@ -49,9 +49,59 @@ export interface Band {
   uses: string[];
   /** Approximate display color for a swatch (visible sub-bands only). */
   color?: string;
+  /**
+   * Optional lucide-vue-next icon NAME (a string, never an imported component,
+   * so this data module stays pure). The panel maps the name to a component.
+   * The full set of names used across the tree is listed in ICON_NAMES below.
+   */
+  icon?: string;
+  /**
+   * Optional search aliases and abbreviations for the "jump to" search brain,
+   * lowercased by convention. These are extra terms a user might type that are
+   * not already in `name` (for example "gnss" for GPS, "hi line" for the
+   * hydrogen line). interpretQuery matches against these in addition to `name`.
+   */
+  aliases?: string[];
   /** Nested sub-bands, if any. A parent always encloses its children. */
   children?: Band[];
 }
+
+/**
+ * Every lucide-vue-next icon NAME referenced by a band's `icon` field. The panel
+ * agent should import exactly this set from "lucide-vue-next". Each name was
+ * verified to exist as an export in node_modules/lucide-vue-next.
+ *
+ *   Anchor, Antenna, Atom, Bluetooth, Clock, CloudRain, Eye, Microwave,
+ *   Plane, Radar, Radiation, RadioReceiver, RadioTower, Router, Satellite,
+ *   SatelliteDish, ScanLine, Ship, SignalHigh, Smartphone, Sun, Thermometer,
+ *   Tv, Wifi
+ */
+export const ICON_NAMES = [
+  "Anchor",
+  "Antenna",
+  "Atom",
+  "Bluetooth",
+  "Clock",
+  "CloudRain",
+  "Eye",
+  "Microwave",
+  "Plane",
+  "Radar",
+  "Radiation",
+  "RadioReceiver",
+  "RadioTower",
+  "Router",
+  "Satellite",
+  "SatelliteDish",
+  "ScanLine",
+  "Ship",
+  "SignalHigh",
+  "Smartphone",
+  "Sun",
+  "Thermometer",
+  "Tv",
+  "Wifi",
+] as const;
 
 /* ------------------------------------------------------------------ */
 /* Wavelength helpers, used only to author the table accurately.       */
@@ -95,6 +145,8 @@ export const BANDS: Band[] = [
   {
     id: "gamma",
     name: "Gamma rays",
+    icon: "Radiation",
+    aliases: ["gamma", "gamma ray", "y ray"],
     fLow: nm(0.01), // 10 pm, meets the hard X-ray edge exactly
     fHigh: AXIS_MAX_HZ,
     uses: [
@@ -107,6 +159,8 @@ export const BANDS: Band[] = [
   {
     id: "xray",
     name: "X-rays",
+    icon: "ScanLine",
+    aliases: ["x ray", "xray", "x rays", "roentgen"],
     fLow: nm(10),
     fHigh: nm(0.01),
     uses: ["Medical imaging", "Security scanning", "Crystallography", "X-ray astronomy"],
@@ -138,6 +192,8 @@ export const BANDS: Band[] = [
   {
     id: "uv",
     name: "Ultraviolet",
+    icon: "Sun",
+    aliases: ["uv", "ultra violet", "ultraviolet light"],
     fLow: nm(400),
     fHigh: nm(10),
     uses: ["Sterilization", "Fluorescence", "Curing inks and resins", "Chip lithography"],
@@ -145,6 +201,7 @@ export const BANDS: Band[] = [
       {
         id: "uv-euv",
         name: "Extreme UV (EUV)",
+        aliases: ["euv", "extreme uv", "extreme ultraviolet"],
         fLow: nm(100),
         fHigh: nm(10),
         uses: ["EUV lithography for advanced chips", "Solar physics", "Plasma research"],
@@ -152,6 +209,7 @@ export const BANDS: Band[] = [
       {
         id: "uv-uvc",
         name: "UVC",
+        aliases: ["uvc", "uv c", "germicidal uv"],
         fLow: nm(280),
         fHigh: nm(100),
         uses: ["Germicidal lamps", "Drinking water disinfection", "Air purification"],
@@ -159,6 +217,7 @@ export const BANDS: Band[] = [
       {
         id: "uv-uvb",
         name: "UVB",
+        aliases: ["uvb", "uv b"],
         fLow: nm(315),
         fHigh: nm(280),
         uses: ["Vitamin D synthesis in skin", "Cause of sunburn", "Skin condition phototherapy"],
@@ -166,6 +225,7 @@ export const BANDS: Band[] = [
       {
         id: "uv-uva",
         name: "UVA",
+        aliases: ["uva", "uv a", "black light"],
         fLow: nm(400),
         fHigh: nm(315),
         uses: ["Black lights", "Tanning beds", "Curing gel nail polish and adhesives"],
@@ -175,6 +235,8 @@ export const BANDS: Band[] = [
   {
     id: "visible",
     name: "Visible light",
+    icon: "Eye",
+    aliases: ["visible", "light", "optical", "visible light"],
     fLow: nm(750),
     fHigh: nm(380),
     uses: ["Human vision", "Photography and displays", "Optical fiber test signals", "Lighting"],
@@ -240,6 +302,8 @@ export const BANDS: Band[] = [
   {
     id: "ir",
     name: "Infrared",
+    icon: "Thermometer",
+    aliases: ["ir", "infra red", "thermal", "infrared light"],
     fLow: 300e9,
     fHigh: nm(750),
     uses: ["Thermal imaging", "Remote controls", "Fiber optic communication", "Heating"],
@@ -247,6 +311,7 @@ export const BANDS: Band[] = [
       {
         id: "ir-near",
         name: "Near infrared (NIR)",
+        aliases: ["nir", "near ir", "near infrared"],
         fLow: um(3),
         fHigh: um(0.78),
         uses: [
@@ -258,6 +323,7 @@ export const BANDS: Band[] = [
       {
         id: "ir-mid",
         name: "Mid infrared (MIR)",
+        aliases: ["mir", "mid ir", "mid infrared"],
         fLow: um(50),
         fHigh: um(3),
         uses: ["Thermal cameras", "Gas leak detection", "Molecular spectroscopy"],
@@ -265,6 +331,7 @@ export const BANDS: Band[] = [
       {
         id: "ir-far",
         name: "Far infrared (FIR)",
+        aliases: ["fir", "far ir", "far infrared", "terahertz", "thz"],
         fLow: 300e9,
         fHigh: um(50),
         uses: ["Terahertz body scanners", "Radio astronomy of cold dust", "Radiant heaters"],
@@ -274,6 +341,8 @@ export const BANDS: Band[] = [
   {
     id: "microwave",
     name: "Microwave",
+    icon: "Router",
+    aliases: ["microwave", "micro wave"],
     fLow: 300e6,
     fHigh: 300e9,
     uses: ["Wi-Fi and Bluetooth", "Mobile phones", "Radar", "Satellite links", "Cooking"],
@@ -304,6 +373,8 @@ export const BANDS: Band[] = [
           {
             id: "uhf-tv",
             name: "UHF television",
+            icon: "Tv",
+            aliases: ["uhf tv", "broadcast tv", "over the air tv", "digital tv"],
             fLow: 470e6,
             fHigh: 698e6,
             uses: ["Over the air broadcast television in the United States"],
@@ -311,6 +382,8 @@ export const BANDS: Band[] = [
           {
             id: "uhf-cellular",
             name: "Cellular (4G and 5G)",
+            icon: "Smartphone",
+            aliases: ["cellular", "cell", "lte", "4g", "5g", "mobile", "phone"],
             fLow: 698e6,
             fHigh: 2.7e9,
             uses: ["LTE and 5G phone service across many licensed bands"],
@@ -325,6 +398,8 @@ export const BANDS: Band[] = [
           {
             id: "uhf-gps",
             name: "GPS and GNSS",
+            icon: "Satellite",
+            aliases: ["gps", "gnss", "glonass", "galileo", "navigation", "sat nav"],
             fLow: 1.164e9,
             fHigh: 1.61e9,
             uses: ["Satellite navigation"],
@@ -355,6 +430,8 @@ export const BANDS: Band[] = [
           {
             id: "uhf-hline",
             name: "21 cm hydrogen line",
+            icon: "Atom",
+            aliases: ["hydrogen line", "h line", "hi line", "21 cm", "21cm", "1420 mhz"],
             fLow: 1.42035e9,
             fHigh: 1.42046e9,
             uses: ["The 1420.405 MHz hydrogen emission line used in radio astronomy"],
@@ -362,6 +439,8 @@ export const BANDS: Band[] = [
           {
             id: "uhf-ism24",
             name: "2.4 GHz ISM band",
+            icon: "Wifi",
+            aliases: ["ism", "2.4 ghz", "2.4ghz", "wifi", "wi fi"],
             fLow: 2.4e9,
             fHigh: 2.4835e9,
             uses: ["License free 2.4 GHz band shared by many devices"],
@@ -369,6 +448,8 @@ export const BANDS: Band[] = [
               {
                 id: "ism24-bt",
                 name: "Bluetooth",
+                icon: "Bluetooth",
+                aliases: ["bluetooth", "ble", "bt"],
                 fLow: 2.4e9,
                 fHigh: 2.4835e9,
                 uses: ["Bluetooth and Bluetooth Low Energy", "Wireless earbuds and keyboards"],
@@ -404,6 +485,8 @@ export const BANDS: Band[] = [
               {
                 id: "ism24-oven",
                 name: "Microwave ovens",
+                icon: "Microwave",
+                aliases: ["microwave oven", "oven"],
                 fLow: 2.45e9,
                 fHigh: 2.46e9,
                 uses: ["Microwave ovens heat food at about 2.45 GHz"],
@@ -422,6 +505,8 @@ export const BANDS: Band[] = [
           {
             id: "shf-cband",
             name: "C band satellite",
+            icon: "SatelliteDish",
+            aliases: ["c band", "cband"],
             fLow: 3.7e9,
             fHigh: 4.2e9,
             uses: ["Satellite television and data downlinks"],
@@ -429,6 +514,8 @@ export const BANDS: Band[] = [
           {
             id: "shf-wifi",
             name: "Wi-Fi 5, 6 and 6E",
+            icon: "Wifi",
+            aliases: ["wifi", "wi fi", "unii", "5 ghz", "5ghz", "6 ghz", "6ghz", "6e"],
             fLow: 5.15e9,
             fHigh: 7.125e9,
             uses: ["The 5 GHz and 6 GHz Wi-Fi bands"],
@@ -436,6 +523,8 @@ export const BANDS: Band[] = [
               {
                 id: "wifi-unii1",
                 name: "UNII-1 (5.2 GHz)",
+                icon: "Wifi",
+                aliases: ["unii 1", "unii1", "u nii 1"],
                 fLow: 5.15e9,
                 fHigh: 5.25e9,
                 uses: ["Indoor 5 GHz Wi-Fi channels 36 to 48"],
@@ -457,6 +546,8 @@ export const BANDS: Band[] = [
               {
                 id: "wifi-6e",
                 name: "6 GHz (Wi-Fi 6E and 7)",
+                icon: "Wifi",
+                aliases: ["6e", "wifi 6e", "wifi 7", "unii 5", "6 ghz", "6ghz"],
                 fLow: 5.925e9,
                 fHigh: 7.125e9,
                 uses: ["The newest wide Wi-Fi band with many clean channels"],
@@ -466,6 +557,8 @@ export const BANDS: Band[] = [
           {
             id: "shf-xband",
             name: "X band radar",
+            icon: "Radar",
+            aliases: ["x band", "xband", "radar"],
             fLow: 8e9,
             fHigh: 12e9,
             uses: ["Weather and air traffic radar", "Marine radar"],
@@ -473,6 +566,8 @@ export const BANDS: Band[] = [
           {
             id: "shf-kuband",
             name: "Ku band satellite",
+            icon: "SatelliteDish",
+            aliases: ["ku band", "kuband"],
             fLow: 12e9,
             fHigh: 18e9,
             uses: ["Satellite television and VSAT data"],
@@ -480,6 +575,8 @@ export const BANDS: Band[] = [
           {
             id: "shf-5g",
             name: "5G mmWave (26 and 28 GHz)",
+            icon: "SignalHigh",
+            aliases: ["5g mmwave", "millimeter wave", "mmwave", "n257", "n258", "n261"],
             fLow: 24.25e9,
             fHigh: 29.5e9,
             uses: ["High capacity 5G in the n257, n258 and n261 bands"],
@@ -510,6 +607,8 @@ export const BANDS: Band[] = [
           {
             id: "ehf-autoradar",
             name: "Automotive radar",
+            icon: "Radar",
+            aliases: ["automotive radar", "car radar", "collision avoidance"],
             fLow: 76e9,
             fHigh: 81e9,
             uses: ["Adaptive cruise control and collision avoidance"],
@@ -528,6 +627,8 @@ export const BANDS: Band[] = [
   {
     id: "radio",
     name: "Radio",
+    icon: "RadioTower",
+    aliases: ["radio", "radio waves", "rf"],
     fLow: AXIS_MIN_HZ,
     fHigh: 300e6,
     uses: ["Broadcast radio and television", "Navigation", "Two way radio", "Time signals"],
@@ -570,6 +671,8 @@ export const BANDS: Band[] = [
           {
             id: "lf-wwvb",
             name: "WWVB 60 kHz time signal",
+            icon: "Clock",
+            aliases: ["wwvb", "time signal", "atomic clock", "radio clock"],
             fLow: 59.5e3,
             fHigh: 60.5e3,
             uses: ["The 60 kHz signal that sets radio controlled atomic clocks"],
@@ -600,6 +703,8 @@ export const BANDS: Band[] = [
           {
             id: "mf-am",
             name: "AM broadcast",
+            icon: "RadioReceiver",
+            aliases: ["am", "am radio", "mediumwave", "medium wave"],
             fLow: 530e3,
             fHigh: 1700e3,
             uses: ["Mediumwave AM radio stations in the United States"],
@@ -616,6 +721,7 @@ export const BANDS: Band[] = [
       {
         id: "radio-hf",
         name: "HF (shortwave)",
+        aliases: ["hf", "shortwave", "short wave"],
         fLow: 3e6,
         fHigh: 30e6,
         uses: ["Shortwave and amateur radio", "Long distance aviation and marine radio", "RFID"],
@@ -695,6 +801,8 @@ export const BANDS: Band[] = [
           {
             id: "hf-cb",
             name: "CB radio",
+            icon: "Antenna",
+            aliases: ["cb", "cb radio", "citizens band"],
             fLow: 26.965e6,
             fHigh: 27.405e6,
             uses: ["License free Citizens Band radio, 40 channels"],
@@ -755,6 +863,8 @@ export const BANDS: Band[] = [
           {
             id: "vhf-tv",
             name: "VHF television",
+            icon: "Tv",
+            aliases: ["vhf tv", "broadcast television"],
             fLow: 54e6,
             fHigh: 88e6,
             uses: ["Low channel broadcast television in the United States"],
@@ -762,6 +872,8 @@ export const BANDS: Band[] = [
           {
             id: "vhf-fm",
             name: "FM broadcast",
+            icon: "RadioReceiver",
+            aliases: ["fm", "fm radio", "broadcast fm"],
             fLow: 88e6,
             fHigh: 108e6,
             uses: ["FM radio stations in the United States"],
@@ -769,6 +881,8 @@ export const BANDS: Band[] = [
           {
             id: "vhf-air",
             name: "Airband",
+            icon: "Plane",
+            aliases: ["airband", "air band", "aviation", "aircraft", "atc"],
             fLow: 108e6,
             fHigh: 137e6,
             uses: ["Aircraft to ground voice communication"],
@@ -799,6 +913,8 @@ export const BANDS: Band[] = [
           {
             id: "vhf-amateur",
             name: "Amateur 2 meter",
+            icon: "Antenna",
+            aliases: ["2m", "2 meter", "two meter", "amateur", "ham", "ham radio"],
             fLow: 144e6,
             fHigh: 148e6,
             uses: ["Amateur radio handhelds and repeaters"],
@@ -815,6 +931,8 @@ export const BANDS: Band[] = [
           {
             id: "vhf-marine",
             name: "Marine VHF",
+            icon: "Ship",
+            aliases: ["marine", "maritime", "boat", "ship", "vhf marine"],
             fLow: 156e6,
             fHigh: 162e6,
             uses: ["Ship to ship and ship to shore radio", "Weather broadcasts"],
@@ -829,6 +947,8 @@ export const BANDS: Band[] = [
               {
                 id: "marine-ch16",
                 name: "Marine Channel 16 distress",
+                icon: "Anchor",
+                aliases: ["channel 16", "ch 16", "marine distress"],
                 fLow: 156.75e6,
                 fHigh: 156.85e6,
                 uses: ["The 156.8 MHz international hailing and distress channel"],
@@ -838,6 +958,8 @@ export const BANDS: Band[] = [
           {
             id: "vhf-noaa",
             name: "NOAA weather radio",
+            icon: "CloudRain",
+            aliases: ["noaa", "weather radio", "weather", "wx"],
             fLow: 162.4e6,
             fHigh: 162.55e6,
             uses: ["Continuous weather broadcasts and emergency alerts"],
@@ -861,3 +983,130 @@ export const BANDS: Band[] = [
     ],
   },
 ];
+
+/* ================================================================== */
+/* United States / North American Wi-Fi channel dataset               */
+/* ================================================================== */
+
+/**
+ * Which of the three unlicensed Wi-Fi bands a channel lives in. The string is
+ * the nominal band name in gigahertz ("2.4", "5" or "6"), which also lets the
+ * search brain disambiguate the same channel NUMBER in different bands (channel
+ * 1 exists in both the 2.4 GHz and 6 GHz bands, for example).
+ */
+export type WifiBand = "2.4" | "5" | "6";
+
+/** One US / North American Wi-Fi channel at a given width. */
+export interface WifiChannel {
+  /** The band in gigahertz: "2.4", "5" or "6". */
+  band: WifiBand;
+  /** The center-channel number (for bonded widths, the composite number). */
+  channel: number;
+  /** Channel width in megahertz: 20, 40, 80 or 160. */
+  width: number;
+  /** Center frequency in hertz. */
+  centerHz: number;
+  /** Lower band edge in hertz (center minus half the width). */
+  lowerHz: number;
+  /** Upper band edge in hertz (center plus half the width). */
+  upperHz: number;
+}
+
+const MHZ = 1e6;
+
+/**
+ * Build a WifiChannel from a band, center-channel number, width and the center
+ * frequency expressed in megahertz. Edges are the center plus and minus half of
+ * the channel width, so a 20 MHz channel spans center plus or minus 10 MHz.
+ */
+function wifiChannel(
+  band: WifiBand,
+  channel: number,
+  width: number,
+  centerMHz: number,
+): WifiChannel {
+  const centerHz = centerMHz * MHZ;
+  const halfHz = (width / 2) * MHZ;
+  return {
+    band,
+    channel,
+    width,
+    centerHz,
+    lowerHz: centerHz - halfHz,
+    upperHz: centerHz + halfHz,
+  };
+}
+
+/*
+ * 2.4 GHz (US / North America). The 20 MHz channels are 1 through 11 with
+ * center = 2407 + 5 * channel MHz (so channel 1 is 2412 MHz, channel 11 is 2462
+ * MHz). A 40 MHz channel bonds two adjacent 20 MHz channels four apart; in the
+ * US, where usable channels are 1 through 11, the composite center numbers are 3
+ * through 9 (bonding 1+5 up to 7+11). We keep the same center = 2407 + 5 * ch
+ * formula for the composite number so, for example, the 40 MHz channel 3 is
+ * centered at 2422 MHz spanning 2402 to 2442 MHz.
+ */
+const WIFI_24: WifiChannel[] = [];
+for (let ch = 1; ch <= 11; ch++) {
+  WIFI_24.push(wifiChannel("2.4", ch, 20, 2407 + 5 * ch));
+}
+for (let ch = 3; ch <= 9; ch++) {
+  WIFI_24.push(wifiChannel("2.4", ch, 40, 2407 + 5 * ch));
+}
+
+/*
+ * 5 GHz (US / FCC UNII-1, UNII-2A, UNII-2C and UNII-3). Every center frequency
+ * is 5000 + 5 * (center-channel number) MHz. The 20 MHz channels are the usable
+ * non contiguous set; the 40, 80 and 160 MHz lists are the standard composite
+ * center-channel numbers (each composite number appears at exactly one width).
+ * For example channel 42 is the 80 MHz channel bonding 36, 40, 44 and 48 with a
+ * 5210 MHz center, and channel 50 is the 160 MHz channel bonding 36 through 64
+ * with a 5250 MHz center.
+ */
+const G5_20 = [
+  36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149,
+  153, 157, 161, 165,
+];
+const G5_40 = [38, 46, 54, 62, 102, 110, 118, 126, 134, 142, 151, 159];
+const G5_80 = [42, 58, 106, 122, 138, 155];
+const G5_160 = [50, 114, 163];
+
+const WIFI_5: WifiChannel[] = [
+  ...G5_20.map((ch) => wifiChannel("5", ch, 20, 5000 + 5 * ch)),
+  ...G5_40.map((ch) => wifiChannel("5", ch, 40, 5000 + 5 * ch)),
+  ...G5_80.map((ch) => wifiChannel("5", ch, 80, 5000 + 5 * ch)),
+  ...G5_160.map((ch) => wifiChannel("5", ch, 160, 5000 + 5 * ch)),
+];
+
+/*
+ * 6 GHz (US / FCC UNII-5 through UNII-8, Wi-Fi 6E and 7). Center frequency is
+ * 5950 + 5 * (center-channel number) MHz. Channels are generated arithmetically:
+ * 20 MHz start at channel 1 step 4, 40 MHz start at 3 step 8, 80 MHz start at 7
+ * step 16, and 160 MHz start at 15 step 32. We keep a channel only when its full
+ * width fits inside the 5925 to 7125 MHz band, which yields the standard maxima
+ * (20 MHz up to 233, 40 MHz to 227, 80 MHz to 215, 160 MHz to 207).
+ */
+const SIX_LOW_MHZ = 5925;
+const SIX_HIGH_MHZ = 7125;
+
+function generate6(startCh: number, step: number, width: number): WifiChannel[] {
+  const out: WifiChannel[] = [];
+  for (let ch = startCh; ; ch += step) {
+    const centerMHz = 5950 + 5 * ch;
+    const lower = centerMHz - width / 2;
+    const upper = centerMHz + width / 2;
+    if (upper > SIX_HIGH_MHZ) break;
+    if (lower >= SIX_LOW_MHZ) out.push(wifiChannel("6", ch, width, centerMHz));
+  }
+  return out;
+}
+
+const WIFI_6: WifiChannel[] = [
+  ...generate6(1, 4, 20),
+  ...generate6(3, 8, 40),
+  ...generate6(7, 16, 80),
+  ...generate6(15, 32, 160),
+];
+
+/** Every modeled US / North American Wi-Fi channel across all three bands. */
+export const WIFI_CHANNELS: WifiChannel[] = [...WIFI_24, ...WIFI_5, ...WIFI_6];

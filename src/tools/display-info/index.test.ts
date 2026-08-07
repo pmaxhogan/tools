@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   classifyPixelDensity,
   computeAspectRatio,
+  computeDisplayLayout,
+  describeScreenDetail,
+  displayName,
   describeColorGamut,
   describeColorScheme,
   describeConnectionType,
@@ -221,6 +224,136 @@ describe("describeMultiMonitor", () => {
     ]);
     expect(out).toMatch(/2 displays detected/);
     expect(out).toMatch(/primary/);
+  });
+});
+
+describe("displayName", () => {
+  it("uses the OS label when present, else a stable fallback", () => {
+    expect(displayName({ label: "Built-in Retina Display" }, 0)).toBe("Built-in Retina Display");
+    expect(displayName({ label: "" }, 0)).toBe("Display 1");
+    expect(displayName({ label: "   " }, 2)).toBe("Display 3");
+    expect(displayName({}, 1)).toBe("Display 2");
+  });
+});
+
+describe("computeDisplayLayout", () => {
+  it("returns an empty layout for no screens", () => {
+    const layout = computeDisplayLayout([], 1000);
+    expect(layout.rects).toEqual([]);
+    expect(layout.height).toBe(0);
+  });
+
+  it("returns an empty layout for a non-positive target width", () => {
+    expect(computeDisplayLayout([{ width: 1920, height: 1080, left: 0, top: 0 }], 0).rects).toEqual(
+      [],
+    );
+    expect(
+      computeDisplayLayout([{ width: 1920, height: 1080, left: 0, top: 0 }], NaN).rects,
+    ).toEqual([]);
+  });
+
+  it("scales a single display to the target width and preserves aspect ratio", () => {
+    const layout = computeDisplayLayout([{ width: 1920, height: 1080, left: 0, top: 0 }], 960);
+    expect(layout.width).toBe(960);
+    expect(layout.scale).toBeCloseTo(0.5, 5);
+    expect(layout.height).toBeCloseTo(540, 5);
+    const [rect] = layout.rects;
+    expect(rect).toMatchObject({ x: 0, y: 0, width: 960, height: 540, index: 0 });
+    expect(rect.resolution).toBe("1920 x 1080");
+  });
+
+  it("uses one uniform scale factor for x and y", () => {
+    const layout = computeDisplayLayout(
+      [
+        { width: 1000, height: 500, left: 0, top: 0 },
+        { width: 500, height: 1000, left: 1000, top: 0 },
+      ],
+      1500,
+    );
+    // content is 1500 wide, target 1500, so scale is 1: rects map 1:1.
+    expect(layout.scale).toBeCloseTo(1, 5);
+    expect(layout.rects[1]).toMatchObject({ x: 1000, y: 0, width: 500, height: 1000 });
+  });
+
+  it("translates negative left/top (monitor above or left of primary) into the box", () => {
+    const layout = computeDisplayLayout(
+      [
+        { width: 1920, height: 1080, left: 0, top: 0, isPrimary: true },
+        { width: 1920, height: 1080, left: -1920, top: -200 },
+      ],
+      1920,
+    );
+    // bounding box is 3840 wide, target 1920 => scale 0.5.
+    expect(layout.scale).toBeCloseTo(0.5, 5);
+    // the secondary is at the origin of the translated box.
+    expect(layout.rects[1]).toMatchObject({ x: 0, y: 0 });
+    // the primary is shifted right by 1920*0.5 and down by 200*0.5.
+    expect(layout.rects[0].x).toBeCloseTo(960, 5);
+    expect(layout.rects[0].y).toBeCloseTo(100, 5);
+    expect(layout.height).toBeCloseTo(1280 * 0.5, 5);
+  });
+
+  it("applies padding on all sides", () => {
+    const layout = computeDisplayLayout([{ width: 100, height: 100, left: 0, top: 0 }], 120, 10);
+    // inner width 100, content 100 => scale 1.
+    expect(layout.scale).toBeCloseTo(1, 5);
+    expect(layout.rects[0]).toMatchObject({ x: 10, y: 10, width: 100, height: 100 });
+    expect(layout.height).toBeCloseTo(120, 5);
+  });
+
+  it("carries primary, current, and label flags through", () => {
+    const layout = computeDisplayLayout(
+      [{ width: 1920, height: 1080, left: 0, top: 0, isPrimary: true, isCurrent: true, label: "" }],
+      100,
+    );
+    expect(layout.rects[0]).toMatchObject({ isPrimary: true, isCurrent: true, label: "Display 1" });
+  });
+});
+
+describe("describeScreenDetail", () => {
+  it("renders the full set of rows when every field is present", () => {
+    const rows = describeScreenDetail(
+      {
+        width: 2560,
+        height: 1440,
+        left: -2560,
+        top: 0,
+        availLeft: -2560,
+        availTop: 0,
+        availWidth: 2560,
+        availHeight: 1400,
+        devicePixelRatio: 2,
+        colorDepth: 30,
+        pixelDepth: 30,
+        orientationType: "landscape-primary",
+        orientationAngle: 0,
+        isPrimary: false,
+        isInternal: false,
+        isCurrent: true,
+        label: "DELL U2723QE",
+      },
+      1,
+    );
+    expect(rows["Label"]).toBe("DELL U2723QE");
+    expect(rows["Resolution"]).toBe("2560 x 1440 px");
+    expect(rows["Available work area"]).toBe("2560 x 1400 px");
+    expect(rows["Position (left, top)"]).toBe("(-2560, 0)");
+    expect(rows["Device pixel ratio"]).toMatch(/Retina/);
+    expect(rows["Color depth"]).toBe("30-bit");
+    expect(rows["Orientation"]).toMatch(/Landscape/);
+    expect(rows["Primary display"]).toBe("No");
+    expect(rows["Internal display"]).toMatch(/external/);
+    expect(rows["Current window is here"]).toBe("Yes");
+  });
+
+  it("omits optional rows when the fields are absent and names by index", () => {
+    const rows = describeScreenDetail({ width: 1920, height: 1080, left: 0, top: 0 }, 0);
+    expect(rows["Label"]).toBe("Display 1");
+    expect(rows["Available work area"]).toBeUndefined();
+    expect(rows["Device pixel ratio"]).toBeUndefined();
+    expect(rows["Internal display"]).toBeUndefined();
+    expect(rows["Primary display"]).toBe("No");
+    expect(rows["Current window is here"]).toBe("No");
   });
 });
 
