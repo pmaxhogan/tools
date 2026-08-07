@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue';
+import { computed, onUnmounted, reactive, ref } from 'vue';
 import type { ToolMeta } from '@/tools/types';
 import type { MediaBuildContext, MediaBuildResult } from '@/lib/ffmpeg';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -48,6 +49,42 @@ const opts = reactive({
 const TIME_FIX = 'Use seconds ("12.5"), mm:ss ("1:20"), or hh:mm:ss ("0:01:20.500").';
 
 /* ---------------------------------------------------------------- */
+/* preview: object URL + probed duration for the selected file       */
+/* ---------------------------------------------------------------- */
+
+const previewUrl = ref<string | null>(null);
+const videoEl = ref<HTMLVideoElement>();
+const duration = ref<number | null>(null);
+
+function revokePreview() {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
+  previewUrl.value = null;
+  duration.value = null;
+}
+
+/** MediaShell reports selection changes here; an empty list means removed. */
+function onFilesChanged(files: { name: string; size: number; file: File }[]) {
+  revokePreview();
+  const file = files[0]?.file;
+  if (file) previewUrl.value = URL.createObjectURL(file);
+}
+
+function onPreviewLoadedMetadata() {
+  const d = videoEl.value?.duration;
+  duration.value = Number.isFinite(d) && (d as number) > 0 ? (d as number) : null;
+}
+
+function useCurrentTime(target: 'start' | 'end') {
+  const el = videoEl.value;
+  if (!el) return;
+  const t = el.currentTime.toFixed(1);
+  if (target === 'start') opts.start = t;
+  else opts.end = t;
+}
+
+onUnmounted(revokePreview);
+
+/* ---------------------------------------------------------------- */
 /* live readouts                                                     */
 /* ---------------------------------------------------------------- */
 
@@ -73,7 +110,12 @@ const windowBackwards = computed(
 const frames = computed(() =>
   startInvalid.value || endInvalid.value
     ? null
-    : estimateFrames({ fps: Number(opts.fps), startSec: startSec.value, endSec: endSec.value })
+    : estimateFrames({
+        fps: Number(opts.fps),
+        startSec: startSec.value,
+        endSec: endSec.value,
+        durationSec: duration.value,
+      })
 );
 
 const frameWarning = computed(
@@ -149,9 +191,28 @@ function setNumber(key: 'fps' | 'width', value: unknown) {
     run-label="Convert to GIF"
     input-label="Video"
     hint="Drop a video here or pick one, then trim it and choose a palette. Everything runs in this tab: your files and inputs never leave your device."
+    @files="onFilesChanged"
   >
     <template #options>
       <div class="flex flex-col gap-4">
+        <!-- Preview -->
+        <div
+          v-if="previewUrl"
+          class="flex flex-col gap-2 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
+        >
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Preview
+          </span>
+          <video
+            ref="videoEl"
+            :src="previewUrl"
+            controls
+            playsinline
+            class="max-h-[240px] w-full rounded-[8px] bg-background"
+            @loadedmetadata="onPreviewLoadedMetadata"
+          />
+        </div>
+
         <!-- Trim -->
         <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
@@ -172,6 +233,16 @@ function setNumber(key: 'fps' | 'width', value: unknown) {
                 :aria-invalid="startInvalid"
               />
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              :disabled="!previewUrl"
+              @click="useCurrentTime('start')"
+            >
+              Use current time
+            </Button>
+          </div>
+          <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-32 flex-col gap-1.5">
               <Label
                 for="gif-end"
@@ -186,6 +257,14 @@ function setNumber(key: 'fps' | 'width', value: unknown) {
                 :aria-invalid="endInvalid"
               />
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              :disabled="!previewUrl"
+              @click="useCurrentTime('end')"
+            >
+              Use current time
+            </Button>
           </div>
           <p class="text-xs text-muted-foreground">
             Seconds ("12.5"), mm:ss ("1:20"), or hh:mm:ss ("0:01:20.500"). Leave a box empty to
