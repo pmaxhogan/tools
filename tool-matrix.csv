@@ -1,0 +1,169 @@
+name,slug,description,category,client_side_only,effort,utility,alternatives,reach,priority_balanced
+Pop-out Windows,popout,Float any tool in an always-on-top Document PiP window,Platform,Yes,B+,A-,A+,B+,3.74
+DMARC Report Viewer,dmarc,Drop the zipped XML report and see who is sending as your domain,Network,Yes,B,A-,A+,A,3.73
+Command Palette,palette,Ctrl+K fuzzy search across every tool on the site,Platform,Yes,B+,A+,B+,A,3.72
+Terminal QR,qr-terminal,curl endpoint that prints a scannable code as unicode blocks,QR,Worker,A,B+,A-,A,3.66
+curl API,api,Stateless HTTP endpoints for the simple generators,Platform,Worker,B+,A-,A-,A,3.63
+Redaction Tool,redact,Destroys the underlying pixels instead of drawing a box over them,Capture,Yes,B+,A-,A-,A-,3.6
+Discord Compressor,discord-compressor,Two-pass encode that lands exactly under the 10/50/500MB upload caps,Media,Yes,B,A,A-,B+,3.59
+Invisible Characters,invisibles,"Reveal zero-width chars, BOMs, nbsp and stray line endings",Text,Yes,A-,B+,A-,A,3.59
+OAuth Scope Decoder,oauth-scopes,Turn a scope list into plain-English access and a risk read,Crypto,Yes,A-,B+,A-,A,3.59
+Decode Anything,decode,"Recursively unwrap base64, gzip, JSON, JWTs, snowflakes and more",Dev,Yes,C+,A+,A-,A,3.59
+Mojibake Fixer,mojibake,Repair double-encoded UTF-8 text back to what it should say,Text,Yes,B+,B+,A,A,3.58
+Email Header Analyzer,email-headers,"SPF, DKIM and DMARC verdicts plus a hop-by-hop delay waterfall",Network,Yes,B,A-,A-,A,3.56
+Epoch Converter,epoch,Unix timestamps to and from human dates in any zone,Time,Yes,A+,A,C+,A,3.56
+Clipboard Pipelines,clip-pipes,"Saved chains of text transforms, applied on paste",Files,Yes,B+,B+,A,A-,3.55
+Clipboard Inspector,clipboard,Every MIME type currently sitting on your clipboard,Files,Yes,A-,B,A,A-,3.54
+A/V Converter,av-converter,Convert between video and audio formats locally via ffmpeg.wasm,Media,Yes,B+,A,B+,B,3.51
+Character Counter,count,"Grapheme-accurate character, word and LLM token counts",Text,Yes,B+,A-,B+,A,3.51
+Unit Calculator,calc,Numbat-powered maths that understands units and currencies,Dev,Yes,B+,A-,B+,A,3.51
+WASM Inspector,wasm,"Sections, imports, exports and which post-MVP features a module needs",Dev,Yes,B,B+,A,A,3.5
+Hash & Checksum,hash,Hash text or files and verify against a known-good value,Crypto,Yes,A,A,C+,A,3.49
+SMART Decoder,smart,"Paste smartctl output, get a plain-English drive health verdict",Homelab,Yes,B+,B+,A-,A,3.49
+Composable Pipelines,pipelines,Chain tools together and share the whole chain as a URL,Platform,Yes,D+,A+,A+,A-,3.49
+Battery Life Estimator,battery-life,"Model runtime from capacity, sleep draw and active draw",Hardware,Yes,A-,B,A-,A,3.48
+Screen Recorder,screen-recorder,"Record screen or window locally — no account, no watermark",Capture,Yes,B,A,B+,B+,3.47
+TOTP Generator,totp,"Live 2FA codes from a secret, for testing and recovery",Crypto,Yes,A-,B+,B+,A,3.47
+SQLite Browser,sqlite,Drop a .db file and query it locally with sql.js,Data,Yes,C+,A,A-,A-,3.46
+URLPattern Tester,urlpattern,Test route patterns against URLs and inspect match groups,Dev,Yes,A-,B,A-,A-,3.46
+Transcriber,transcribe,"Whisper speech-to-text with timestamps, nothing uploaded",Local AI,Yes,C+,A+,A-,C+,3.42
+QR Decoder,qr-decode,"Decode from image or camera, with payload type detection",QR,Yes,A,B+,B,A-,3.42
+Data Format Converter,data-convert,"CSV, JSON, YAML and TOML in any direction",Data,Yes,A-,A,C+,A,3.42
+Temporal Playground,temporal,Date maths and DST edge cases using the Temporal API,Time,Yes,B+,B+,A-,B+,3.42
+GPU Inspector,gpu,"WebGPU adapter, limits and supported features",Dev,Yes,A-,B,A-,B+,3.42
+Android Share Target,share-target,Receive Android shares straight into the right tool,Platform,Yes,A-,B+,A-,C+,3.42
+Snowflake Decoder,snowflake,Pull timestamps and worker IDs out of snowflake IDs,Dev,Yes,A+,B-,B+,A,3.41
+Serial Terminal,serial,"Talk to ESP32, Pico and other serial devices from the browser",Hardware,Yes,B,A-,A-,C+,3.39
+Subtitle Editor,subtitles,"Convert, resync, shift and merge SRT and VTT files",Media,Yes,B,B+,A-,A-,3.38
+Password Generator,password,Random passwords and diceware passphrases with real entropy maths,Crypto,Yes,A,A-,C+,A,3.38
+JWT Vulnerability Check,jwt-vuln,"Test for alg=none and weak signing secrets, entirely locally",Crypto,Yes,B+,B,A-,A,3.38
+Cron Builder,cron,"Build expressions, read them in English, preview the next ten runs",Time,Yes,A,A-,C+,A,3.38
+GAM Command Builder,gam,Form-driven builder for Google Workspace GAM syntax,Homelab,Yes,B,B-,A+,A,3.38
+DNS Propagation,dns-propagation,"Compare answers from Cloudflare, Google and Quad9 side by side",Network,Yes,B+,B+,B+,A,3.37
+ICS Inspector,ics,Inspect calendar files and build add-to-calendar links,Time,Yes,B+,B+,B+,A,3.37
+WireGuard Config,wireguard,"Generate keys and configs, with QR export for phones",Homelab,Yes,B+,B+,B+,A,3.37
+systemd Unit Builder,systemd,Build service units with sane restart and dependency flags,Homelab,Yes,B+,B+,B+,A,3.37
+Hash Identifier,hash-id,Work out which algorithm produced an unknown hash,Crypto,Yes,A-,B,B+,A,3.36
+RAIDZ Calculator,raidz,"Usable capacity, parity overhead and layout tradeoffs",Homelab,Yes,A-,B,B+,A,3.36
+File Identifier,file-id,"Work out what a file actually is, ignoring its extension",Files,Yes,A-,B,B+,A,3.36
+Compression Lab,compress,"gzip, deflate and brotli round-trips with ratio analysis",Files,Yes,A-,B,B+,A,3.36
+Colour Blindness Sim,colorblind,Preview images and palettes under colour vision deficiencies,Dev,Yes,A-,B,B+,A,3.36
+EXIF Time Shifter,exif-shift,Fix a wrong camera clock across a whole shoot,Docs,Yes,B+,B,A-,A-,3.35
+Image Toolbox,image-tools,"Resize, crop, convert, compress, and view or strip EXIF",Images,Yes,B,A+,C+,A,3.34
+Passkey Tester,webauthn,"Register and authenticate passkeys, decode the attestation",Crypto,Yes,B,B+,A-,B+,3.34
+Bookmarklet Shelf,bookmarklets,"Run the ruler, picker and audits on somebody else's page",Platform,Yes,B+,B+,B+,A-,3.34
+Local File Drop,drop,"Peer-to-peer file transfer over WebRTC, LAN-first",Network,Signaling,C+,A,B+,A-,3.33
+Line Tools,lines,"Sort, deduplicate, reverse and shuffle lines of text",Text,Yes,A+,B+,C+,A,3.32
+ID Generator,uuid,"Bulk UUID v4 and v7, ULID and nanoid",Crypto,Yes,A+,B+,C+,A,3.32
+Discord Timestamps,discord-time,Generate tags that render in every reader's own timezone,Time,Yes,A+,B+,C+,A,3.32
+Keycode Info,keycode,"Live key, code, keyCode and modifier readout",Testers,Yes,A+,B+,C+,A,3.32
+Background Remover,remove-bg,"Local subject cutout — no credits, no per-image fee",Local AI,Yes,C+,A,A-,C+,3.31
+DNS Lookup,dns,Query records over DNS-over-HTTPS with no server of your own,Network,Yes,A-,A-,C+,A,3.31
+Subnet Calculator,cidr,"CIDR maths, ranges, splitting and supernetting",Network,Yes,A-,A-,C+,A,3.31
+Timezone Planner,timezones,Find overlapping working hours across cities,Time,Yes,B+,A,C+,A,3.31
+Binary Format Decoder,binary-decode,"Protobuf, CBOR and msgpack decoded to readable JSON",Files,Yes,B,B,A-,A,3.31
+PDF Toolbox,pdf,"Merge, split, rotate, compress, watermark, fill and sign",Docs,Yes,C,A+,B,A,3.3
+MCP Inspector,mcp,"Browse an MCP server's tools and schemas, fire test calls",Dev,Worker,C+,B+,A,A-,3.3
+QR Generator,qr-generator,"SVG and PNG codes with wifi, vCard and URL presets",QR,Yes,A,A+,D+,A,3.29
+Certificate Decoder,cert,"Decode PEM certs — expiry, SANs, issuer and chain",Crypto,Yes,B+,B+,B,A,3.28
+Browser Privacy Check,privacy-check,"What this browser leaks: fingerprint surface, APIs, exposure",Network,Yes,B+,B+,B,A,3.28
+WebRTC Debugger,webrtc-debug,Inspect ICE candidates and test STUN reachability,Network,Yes,B,B,A-,A-,3.28
+Compose Converter,docker-convert,Move between compose YAML and docker run commands,Homelab,Yes,B+,B+,B,A,3.28
+LogQL & PromQL,logql,Format and explain Loki and Prometheus queries,Homelab,Yes,B+,B-,A-,A,3.28
+OCR,ocr,Pull text out of images with tesseract.wasm,Local AI,Yes,B,A-,B,B+,3.27
+Frame Extractor,frame-extract,Scrub a video and export exact frames as PNG,Media,Yes,A-,B,B+,B,3.26
+Bulk Rename,rename,Regex rename across a real folder with live preview,Files,Yes,B,A-,B+,C+,3.26
+Duplicate Finder,dupes,Hash a folder tree and group identical files,Files,Yes,B,A-,B+,C+,3.26
+Speculation Rules,speculation,Build and validate prerender and prefetch rule sets,Dev,Yes,B+,B-,A-,A-,3.25
+Frame-Accurate Trimmer,frame-trim,"Cut and join video without re-encoding, using WebCodecs",Media,Yes,B-,B+,A-,B,3.24
+Fake Data Generator,fake-data,"Bulk names, emails, addresses, IDs and JSON fixtures",Data,Yes,A,B+,C+,A,3.24
+Escape / Unescape,escape,"JSON, HTML entity, regex, shell and URL escaping",Text,Yes,A,B+,C+,A,3.24
+URL Parser,url,Break a URL apart and edit query params as a table,Network,Yes,A,B+,C+,A,3.24
+Duration Calculator,duration,Add and subtract clock times and durations,Time,Yes,A,B+,C+,A,3.24
+Ohm's Law & LED,ohms-law,"Voltage, current, resistance, LED resistors and dividers",Hardware,Yes,A,B+,C+,A,3.24
+Colour Suite,color,"Picker, palettes, contrast checking, hex/rgb/hsl/oklch",Dev,Yes,B,A,C+,A,3.24
+Blueprint Surgeon,factorio,"Decode, repair and re-encode Factorio blueprint strings",Dev,Yes,B,C+,A+,A,3.24
+Perceptual Image Diff,image-diff,Pixel and SSIM comparison that highlights what actually changed,Capture,Yes,B+,B,B+,A-,3.23
+Case Converter,case,"camelCase, snake_case, kebab-case, Title Case and URL slugs",Text,Yes,A+,B+,C,A,3.23
+Bcrypt & Argon2,bcrypt,Hash and verify passwords with bcrypt and argon2,Crypto,Yes,B+,B,B+,A-,3.23
+HID Report Explorer,hid,Inspect raw HID reports coming off any device,Hardware,Yes,B,B,A,C+,3.23
+JSON / JWT / Base64,json-tools,"Format, minify, decode tokens, and handle base64 and URL encoding",Data,Yes,A-,A+,D+,A,3.22
+Diff Tool,diff,Side-by-side text diff plus semantic JSON and YAML comparison,Data,Yes,B+,A,C,A,3.22
+Rich Text to Markdown,to-markdown,Clean Google Docs and Word paste into tidy Markdown,Text,Yes,B+,A-,C+,A,3.21
+Oryx Layout Differ,oryx-diff,Diff two ZSA Moonlander layouts key by key,Testers,Yes,B,C+,A+,A-,3.21
+Batch Processor,batch,Transform many files and write the results back to disk,Files,Yes,C+,A-,A-,C+,3.21
+Sensor Scope,sensors,"Live accelerometer, gyroscope, magnetometer and light charts",Mobile,Yes,B+,B,A-,C+,3.21
+Sun & Golden Hour,sun,"Sunrise, sunset, golden hour and shadow angles for any spot",Geo,Yes,B+,A-,C+,A,3.21
+Echo Endpoint,echo,curl-able reflection of your request and IP,Platform,Worker,A+,B,C+,A,3.21
+UF2 Inspector,uf2,"Decode UF2 blocks, family IDs and memory ranges",Hardware,Yes,B+,C+,A,A-,3.2
+Proxy Config Generator,proxy-config,nginx and Caddy reverse proxy configs with TLS and headers,Homelab,Yes,B,B+,B,A,3.2
+WASM Feature Check,wasm-support,Which WebAssembly features this browser actually supports,Dev,Yes,A,C+,B+,A,3.19
+Audio Trimmer,audio-trim,"Cut, fade and loudness-normalise audio files",Media,Yes,A-,B,B,B,3.17
+Favicon Generator,favicon,"Full icon set, web manifest and link tags from one source image",Images,Yes,A-,B+,C+,A,3.17
+SVG Optimiser,svg-optimize,"SVGO in the browser, plus SVG to PNG rasterising",Images,Yes,A-,B+,C+,A,3.17
+SQL Formatter,sql-format,Prettify and normalise SQL across dialects,Data,Yes,A-,B+,C+,A,3.17
+Unicode Picker,unicode,"Search and copy symbols, arrows, maths and HTML entities",Text,Yes,A-,B+,C+,A,3.17
+Webcam & Mic Test,av-test,"Check camera, microphone and levels before a call",Testers,Yes,A-,B+,C+,A,3.17
+Photography Calculators,photo-calc,"Depth of field, hyperfocal, exposure, ND filters and field of view",Geo,Yes,A-,B+,C+,A,3.17
+Signal Generator,tone,"Sine, square and sweep tones for speaker and subwoofer testing",Audio,Yes,A-,B+,C+,A,3.17
+Document Scanner,scan,"Phone camera to a deskewed, cropped, multi-page PDF",Docs,Yes,C+,A-,B+,B,3.16
+Element Recorder,element-recorder,Record a single element or region instead of the whole tab,Capture,Yes,B-,B,A,C+,3.15
+Anchor Position Builder,anchor,Visually build CSS anchor-positioned tooltips and menus,Dev,Yes,C+,B,A,B+,3.15
+Base Converter,base-convert,"Binary, octal, decimal and hex with a bitwise visualiser",Text,Yes,A,B,C+,A,3.14
+Header Inspector,headers,See exactly what headers your browser is sending,Network,Worker,A,B,C+,A,3.14
+User-Agent Parser,ua,"Decode a UA string into browser, engine, OS and device",Network,Yes,A,B,C+,A,3.14
+Resistor Colour Code,resistor,"Decode and encode 4, 5 and 6 band resistors",Hardware,Yes,A,B,C+,A,3.14
+Chart Maker,chart,"Paste CSV, get a clean SVG or PNG chart with no watermark",Data,Yes,B,A-,C+,A,3.13
+JSON to Types,json-to-types,"Generate TypeScript, Zod or Kotlin types from sample JSON",Data,Yes,B+,A-,C,A,3.12
+HAR Viewer,har,Waterfall view and search across a network capture,Data,Yes,C+,B+,B+,A,3.12
+Folder Diff,folder-diff,Compare two local directories and see what changed,Files,Yes,B,B+,B+,C+,3.12
+Image Upscaler,upscale,Real-ESRGAN super-resolution running on WebGPU,Local AI,Yes,C,A-,A-,C,3.11
+Media Key Tester,media-keys,Verify Media Session handlers and hardware media keys,Testers,Yes,A-,C,A-,A-,3.11
+Screenshot Annotator,annotate,"Arrows, boxes, blur and callouts on any screenshot",Capture,Yes,B,A-,C+,A-,3.1
+Parquet Viewer,parquet,Inspect Parquet and Arrow columnar files in the browser,Data,Yes,C+,B,A-,A-,3.1
+Layout Heatmap,heatmap,"Key and finger load for any text, across keyboard layouts",Testers,Yes,C+,B,A-,A-,3.1
+Jinja Template Tester,jinja,Sandbox for Home Assistant template expressions,Homelab,Yes,C+,B-,A,A-,3.09
+Font Subsetter,subset,Strip a font to the glyphs you use and output woff2,Docs,Yes,C+,B+,B+,A-,3.09
+Track Viewer,tracks,"Map GPX, KML and GeoJSON with elevation profiles and trimming",Geo,Yes,C+,B+,B+,A-,3.09
+Video to GIF,video-to-gif,Trim a clip and export an optimised GIF with palette control,Media,Yes,A-,B+,C+,B,3.07
+GIF Toolbox,gif-tools,"Make, resize, crop, optimise, reverse, caption and split GIFs",Media,Yes,C+,A-,B,B,3.07
+JSON Schema Validator,json-schema,Validate documents against a schema with readable errors,Data,Yes,B+,B+,C+,A,3.07
+Barcode Generator,barcode,"Code128, EAN and UPC with a print-ready sheet layout",QR,Yes,A-,B,C+,A,3.06
+CSV Viewer,csv,"Open, sort, filter and edit CSV and TSV without uploading",Data,Yes,C+,A,C+,A,3.06
+Coordinate Converter,coords,"Decimal degrees, DMS, UTM and MGRS in any direction",Geo,Yes,A-,B,C+,A,3.06
+Bed Mesh Visualiser,bed-mesh,Turn bed levelling output into a 3D surface plot,Hardware,Yes,C+,B-,A,B+,3.05
+Screen Ruler,ruler,Measure pixels and pick colours anywhere on screen,Platform,Yes,C+,B+,B+,B+,3.05
+Rollover Tester,rollover,Check N-key rollover and ghosting visually,Testers,Yes,A-,B,C+,A-,3.04
+Monitor Test Suite,monitor,"Dead pixels, backlight bleed, ghosting and gradient banding",Testers,Yes,B+,B+,C+,A-,3.04
+Document Converter,doc-convert,"DOCX, Markdown and HTML to PDF, and text back out again",Docs,Yes,D+,A,B+,B+,3.04
+Tuner & Metronome,tuner,Pitch detection and a sample-accurate click,Audio,Yes,B+,B+,C+,A-,3.04
+Steganography,stego,Hide and recover data inside image pixels,Images,Yes,B+,C,A-,A,3.03
+Wire Gauge Reference,wire-gauge,"AWG sizing, ampacity and voltage drop over distance",Hardware,Yes,A,B-,C+,A,3.03
+Placeholder Images,placeholder,Generate sized placeholder images and inline data URIs,Images,Yes,A+,B-,C,A,3.02
+Dithering Playground,dither,Retro and e-ink dithering algorithms with live preview,Images,Yes,B+,C+,B+,A,3.02
+Spectrogram Viewer,spectrogram,Waveform and frequency spectrogram for any audio file,Media,Yes,B,B-,B+,B+,3.01
+NFC Tag Writer,nfc,Read and write NFC tags from Android Chrome,Hardware,Yes,B+,B-,A-,D+,3.01
+Hex Viewer,hex,Inspect binary files with reusable struct templates,Files,Yes,C+,B,B+,A,3.01
+Markdown Table Editor,md-table,"Visual editing, paste from Excel, aligned output",Data,Yes,B,B+,C+,A,2.99
+Screenshot Beautifier,beautify,Frame code and screenshots with padding and backgrounds,Docs,Yes,B,B+,C+,A,2.99
+Week & Day Numbers,iso-week,"ISO week, day-of-year and quarter lookups",Time,Yes,A+,C+,C+,A,2.97
+Handwriting Pad,handwriting,Write with a stylus and convert the ink to text,Dev,Yes,B+,C+,A-,C+,2.97
+BLE Sensor Dashboard,ble,"Connect Bluetooth sensors, chart live, export CSV",Hardware,Yes,C+,B,A-,C+,2.96
+Gamepad & Drift,gamepad,"Test buttons and axes, and quantify analogue stick drift",Testers,Yes,B,B+,C+,A-,2.96
+Distance & Bearing,geo-calc,"Great circle distance, bearing and magnetic declination",Geo,Yes,A-,B-,C+,A,2.96
+Firmware Flasher,flash,Flash ESP32 and Pico boards without installing a toolchain,Hardware,Yes,C+,B+,B+,C+,2.95
+Countdown & Stopwatch,timer,Shareable-URL countdowns and stopwatches,Time,Yes,A,B+,D+,A,2.94
+Mouse Rate & DPI,mouse,Measure real polling rate and actual counts per inch,Testers,Yes,B+,B,C+,A-,2.93
+BPM & Key Detector,bpm,Tap tempo and detect the musical key of a track,Audio,Yes,B+,B,C+,A-,2.93
+Light Meter,light-meter,Camera-based lux and colour temperature estimates,Mobile,Yes,B,B-,B+,C+,2.91
+Print Cost Calculator,print-cost,Filament and electricity cost for a single print,Hardware,Yes,A,C+,C+,A,2.9
+Animated QR Transfer,qr-transfer,Move a file between airgapped devices via a stream of QR codes,QR,Yes,D+,B-,A+,B,2.86
+"Morse, DTMF & Audio Data",audio-data,"Encode and decode tones, including transfer over speakers",Audio,Yes,C+,C+,A-,A-,2.86
+USB & MIDI Explorer,usb-midi,Enumerate USB and MIDI devices and watch their messages,Hardware,Yes,B+,C+,B+,C+,2.85
+Image to ASCII,ascii-art,Convert images into ASCII or ANSI art,Images,Yes,A-,C+,C+,A,2.82
+Dice & Random Picker,random,"Dice, coin flips, list pickers and team splitters",Platform,Yes,A+,B-,D+,A,2.81
+Figlet,figlet,Render text as ASCII banner art,Text,Yes,A,C,C+,A,2.79
+Multitouch Tester,touch,Visualise simultaneous touch points,Testers,Yes,A,C,C+,A-,2.76
+Pomodoro,pomodoro,Work and break cycles in a pop-out always-on-top window,Time,Yes,A-,B,D+,A-,2.73
+G-code Viewer,gcode,Visualise toolpaths layer by layer,Hardware,Yes,D+,B,B+,B+,2.69
+Sprite Sheet Packer,sprite-packer,Pack loose images into an atlas plus JSON coordinates,Media,Yes,B,C+,C,A-,2.52

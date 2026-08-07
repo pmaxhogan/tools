@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tools.maxhogan.dev — build matrix</title>
+<style>
+  :root{
+    --paper:#F3F5ED;
+    --bar:#DBE7D3;
+    --ink:#1B261E;
+    --ink-soft:#5E6C61;
+    --rule:#AEBEA8;
+    --pen:#B0342A;
+    --pen-soft:#D9A9A3;
+    --blue:#2B4C7E;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: ui-sans-serif, system-ui, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--mono);
+    font-size:13px;
+    line-height:1.45;
+    -webkit-text-size-adjust:100%;
+  }
+
+  /* tractor feed margins — desktop only, decorative */
+  .feed{
+    position:fixed;top:0;bottom:0;width:26px;
+    background-image:radial-gradient(circle at 13px 12px, transparent 4.5px, var(--rule) 4.6px, var(--rule) 5.4px, transparent 5.5px);
+    background-size:26px 24px;
+    opacity:.55;pointer-events:none;z-index:2;
+  }
+  .feed.l{left:0;border-right:1px dashed var(--rule)}
+  .feed.r{right:0;border-left:1px dashed var(--rule)}
+  @media (max-width:900px){ .feed{display:none} }
+
+  .wrap{max-width:1500px;margin:0 auto;padding:0 14px 80px}
+  @media (min-width:901px){ .wrap{padding:0 44px 80px} }
+
+  header{padding:26px 0 14px;border-bottom:2px solid var(--ink)}
+  .eyebrow{
+    font-family:var(--sans);font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--ink-soft);margin:0 0 6px
+  }
+  h1{
+    font-family:var(--sans);font-size:22px;letter-spacing:-.01em;margin:0 0 6px;font-weight:650;
+  }
+  @media (min-width:901px){ h1{font-size:28px} }
+  .sub{margin:0;color:var(--ink-soft);max-width:70ch}
+  .legend{margin:10px 0 0;color:var(--ink-soft);font-size:11.5px}
+  .legend b{color:var(--pen);font-weight:600}
+
+  /* controls */
+  .controls{
+    position:sticky;top:0;z-index:3;background:var(--paper);
+    padding:12px 0 10px;border-bottom:1px solid var(--rule);
+  }
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .row + .row{margin-top:8px}
+  input[type=search]{
+    font-family:var(--mono);font-size:13px;padding:7px 10px;
+    border:1px solid var(--rule);background:#fff;color:var(--ink);
+    border-radius:2px;flex:1 1 200px;min-width:0;
+  }
+  input[type=search]:focus,button:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+  select{
+    font-family:var(--mono);font-size:12px;padding:6px 8px;border:1px solid var(--rule);
+    background:#fff;color:var(--ink);border-radius:2px;
+  }
+  .chip{
+    font-family:var(--mono);font-size:11.5px;padding:4px 9px;cursor:pointer;
+    border:1px solid var(--rule);background:transparent;color:var(--ink-soft);border-radius:2px;
+  }
+  .chip[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .count{font-size:11.5px;color:var(--ink-soft);margin-left:auto;white-space:nowrap}
+
+  /* table */
+  table{border-collapse:collapse;width:100%;margin-top:2px}
+  thead th{
+    position:sticky;top:96px;background:var(--paper);z-index:1;
+    font-family:var(--sans);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    text-align:left;font-weight:600;color:var(--ink-soft);
+    padding:9px 8px;border-bottom:1.5px solid var(--ink);cursor:pointer;white-space:nowrap;
+  }
+  thead th:hover{color:var(--ink)}
+  thead th .dir{color:var(--pen)}
+  tbody tr:nth-child(even){background:var(--bar)}
+  tbody td{padding:7px 8px;vertical-align:top;border-bottom:1px solid rgba(174,190,168,.5)}
+  .nm{font-weight:600;white-space:nowrap}
+  .slug{color:var(--blue);font-size:11.5px;white-space:nowrap}
+  .desc{color:var(--ink-soft);min-width:240px}
+  .cat{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);white-space:nowrap}
+  .cs{white-space:nowrap;font-size:11.5px}
+  .cs.no{color:var(--pen)}
+
+  /* red-pen grades */
+  .g{
+    color:var(--pen);font-weight:700;font-size:13.5px;
+    display:inline-block;min-width:2.2em;text-align:center;
+    transform:rotate(-1.5deg);
+  }
+  .g.lo{color:var(--pen-soft)}
+  .pri{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+
+  th.num,td.num{text-align:center}
+
+  /* mobile cards */
+  .cards{display:none}
+  @media (max-width:860px){
+    table{display:none}
+    .cards{display:block}
+    thead th{position:static}
+    .card{border-bottom:1px solid var(--rule);padding:11px 2px}
+    .card:nth-child(even){background:var(--bar)}
+    .card .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+    .card .nm{font-size:14px;white-space:normal}
+    .card .desc{margin:4px 0 7px;min-width:0}
+    .card .grades{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--ink-soft)}
+    .card .grades span b{font-family:var(--sans);font-size:9px;letter-spacing:.12em;text-transform:uppercase;display:block;font-weight:600}
+  }
+  footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);color:var(--ink-soft);font-size:11.5px}
+  @media (prefers-reduced-motion:no-preference){ .g{transition:none} }
+</style>
+</head>
+<body>
+<div class="feed l" aria-hidden="true"></div>
+<div class="feed r" aria-hidden="true"></div>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">tools.maxhogan.dev &middot; build matrix &middot; rev 1</p>
+  <h1>165 tools, graded</h1>
+  <p class="sub">Every tool banked so far. Sort by any column, or use a preset to reorder for what you actually want next.</p>
+  <p class="legend">
+    <b>A+ is always best.</b> Effort A+ = cheapest to build (marginal, assuming shared cores already exist).
+    Utility A+ = most useful &times; largest audience. Alternatives A+ = nothing decent exists today.
+    Reach A+ = runs in every browser including mobile; low grades mean Chrome-only, desktop-only, or hardware-gated.
+  </p>
+</header>
+
+<div class="controls">
+  <div class="row">
+    <input type="search" id="q" placeholder="Search name, slug, description…" aria-label="Search tools">
+    <select id="preset" aria-label="Sort preset">
+      <option value="priority">Preset: balanced priority</option>
+      <option value="quickwin">Preset: quick wins</option>
+      <option value="moat">Preset: nobody else has it</option>
+      <option value="seo">Preset: public SEO candidates</option>
+    </select>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="row" id="cats"></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th data-k="name">Name</th>
+      <th data-k="slug">Slug</th>
+      <th data-k="desc">Description</th>
+      <th data-k="cat">Category</th>
+      <th data-k="cs">Client only</th>
+      <th class="num" data-k="effort">Effort</th>
+      <th class="num" data-k="utility">Utility</th>
+      <th class="num" data-k="alt">Alternatives</th>
+      <th class="num" data-k="reach">Reach</th>
+      <th class="num" data-k="pri">Score</th>
+    </tr>
+  </thead>
+  <tbody id="tb"></tbody>
+</table>
+<div class="cards" id="cards"></div>
+
+<footer>
+  Grades are judgement calls, not measurements. Effort assumes shared infrastructure (ffmpeg core, shell, pipeline contract) already exists — the first tool in each family costs far more than its grade suggests.
+</footer>
+</div>
+
+<script>
+const G={"A+":4.3,"A":4,"A-":3.7,"B+":3.3,"B":3,"B-":2.7,"C+":2.3,"C":2,"C-":1.7,"D+":1.3,"D":1,"F":0};
+// name, slug, desc, clientOnly, effort, utility, alternatives, reach, category
+const D=[
+["Discord Compressor","discord-compressor","Two-pass encode that lands exactly under the 10/50/500MB upload caps","Yes","B","A","A-","B+","Media"],
+["A/V Converter","av-converter","Convert between video and audio formats locally via ffmpeg.wasm","Yes","B+","A","B+","B","Media"],
+["Video to GIF","video-to-gif","Trim a clip and export an optimised GIF with palette control","Yes","A-","B+","C+","B","Media"],
+["Audio Trimmer","audio-trim","Cut, fade and loudness-normalise audio files","Yes","A-","B","B","B","Media"],
+["Spectrogram Viewer","spectrogram","Waveform and frequency spectrogram for any audio file","Yes","B","B-","B+","B+","Media"],
+["Sprite Sheet Packer","sprite-packer","Pack loose images into an atlas plus JSON coordinates","Yes","B","C+","C","A-","Media"],
+["Frame-Accurate Trimmer","frame-trim","Cut and join video without re-encoding, using WebCodecs","Yes","B-","B+","A-","B","Media"],
+["Frame Extractor","frame-extract","Scrub a video and export exact frames as PNG","Yes","A-","B","B+","B","Media"],
+["GIF Toolbox","gif-tools","Make, resize, crop, optimise, reverse, caption and split GIFs","Yes","C+","A-","B","B","Media"],
+["Subtitle Editor","subtitles","Convert, resync, shift and merge SRT and VTT files","Yes","B","B+","A-","A-","Media"],
+["Screen Recorder","screen-recorder","Record screen or window locally — no account, no watermark","Yes","B","A","B+","B+","Capture"],
+["Element Recorder","element-recorder","Record a single element or region instead of the whole tab","Yes","B-","B","A","C+","Capture"],
+["Screenshot Annotator","annotate","Arrows, boxes, blur and callouts on any screenshot","Yes","B","A-","C+","A-","Capture"],
+["Redaction Tool","redact","Destroys the underlying pixels instead of drawing a box over them","Yes","B+","A-","A-","A-","Capture"],
+["Perceptual Image Diff","image-diff","Pixel and SSIM comparison that highlights what actually changed","Yes","B+","B","B+","A-","Capture"],
+["Image Toolbox","image-tools","Resize, crop, convert, compress, and view or strip EXIF","Yes","B","A+","C+","A","Images"],
+["Favicon Generator","favicon","Full icon set, web manifest and link tags from one source image","Yes","A-","B+","C+","A","Images"],
+["SVG Optimiser","svg-optimize","SVGO in the browser, plus SVG to PNG rasterising","Yes","A-","B+","C+","A","Images"],
+["Placeholder Images","placeholder","Generate sized placeholder images and inline data URIs","Yes","A+","B-","C","A","Images"],
+["Image to ASCII","ascii-art","Convert images into ASCII or ANSI art","Yes","A-","C+","C+","A","Images"],
+["Steganography","stego","Hide and recover data inside image pixels","Yes","B+","C","A-","A","Images"],
+["Dithering Playground","dither","Retro and e-ink dithering algorithms with live preview","Yes","B+","C+","B+","A","Images"],
+["Background Remover","remove-bg","Local subject cutout — no credits, no per-image fee","Yes","C+","A","A-","C+","Local AI"],
+["Image Upscaler","upscale","Real-ESRGAN super-resolution running on WebGPU","Yes","C","A-","A-","C","Local AI"],
+["OCR","ocr","Pull text out of images with tesseract.wasm","Yes","B","A-","B","B+","Local AI"],
+["Transcriber","transcribe","Whisper speech-to-text with timestamps, nothing uploaded","Yes","C+","A+","A-","C+","Local AI"],
+["QR Generator","qr-generator","SVG and PNG codes with wifi, vCard and URL presets","Yes","A","A+","D+","A","QR"],
+["QR Decoder","qr-decode","Decode from image or camera, with payload type detection","Yes","A","B+","B","A-","QR"],
+["Barcode Generator","barcode","Code128, EAN and UPC with a print-ready sheet layout","Yes","A-","B","C+","A","QR"],
+["Animated QR Transfer","qr-transfer","Move a file between airgapped devices via a stream of QR codes","Yes","D+","B-","A+","B","QR"],
+["Terminal QR","qr-terminal","curl endpoint that prints a scannable code as unicode blocks","Worker","A","B+","A-","A","QR"],
+["CSV Viewer","csv","Open, sort, filter and edit CSV and TSV without uploading","Yes","C+","A","C+","A","Data"],
+["Data Format Converter","data-convert","CSV, JSON, YAML and TOML in any direction","Yes","A-","A","C+","A","Data"],
+["SQL Formatter","sql-format","Prettify and normalise SQL across dialects","Yes","A-","B+","C+","A","Data"],
+["JSON / JWT / Base64","json-tools","Format, minify, decode tokens, and handle base64 and URL encoding","Yes","A-","A+","D+","A","Data"],
+["JSON Schema Validator","json-schema","Validate documents against a schema with readable errors","Yes","B+","B+","C+","A","Data"],
+["JSON to Types","json-to-types","Generate TypeScript, Zod or Kotlin types from sample JSON","Yes","B+","A-","C","A","Data"],
+["Diff Tool","diff","Side-by-side text diff plus semantic JSON and YAML comparison","Yes","B+","A","C","A","Data"],
+["Chart Maker","chart","Paste CSV, get a clean SVG or PNG chart with no watermark","Yes","B","A-","C+","A","Data"],
+["Markdown Table Editor","md-table","Visual editing, paste from Excel, aligned output","Yes","B","B+","C+","A","Data"],
+["SQLite Browser","sqlite","Drop a .db file and query it locally with sql.js","Yes","C+","A","A-","A-","Data"],
+["Parquet Viewer","parquet","Inspect Parquet and Arrow columnar files in the browser","Yes","C+","B","A-","A-","Data"],
+["HAR Viewer","har","Waterfall view and search across a network capture","Yes","C+","B+","B+","A","Data"],
+["Fake Data Generator","fake-data","Bulk names, emails, addresses, IDs and JSON fixtures","Yes","A","B+","C+","A","Data"],
+["Case Converter","case","camelCase, snake_case, kebab-case, Title Case and URL slugs","Yes","A+","B+","C","A","Text"],
+["Escape / Unescape","escape","JSON, HTML entity, regex, shell and URL escaping","Yes","A","B+","C+","A","Text"],
+["Base Converter","base-convert","Binary, octal, decimal and hex with a bitwise visualiser","Yes","A","B","C+","A","Text"],
+["Line Tools","lines","Sort, deduplicate, reverse and shuffle lines of text","Yes","A+","B+","C+","A","Text"],
+["Character Counter","count","Grapheme-accurate character, word and LLM token counts","Yes","B+","A-","B+","A","Text"],
+["Mojibake Fixer","mojibake","Repair double-encoded UTF-8 text back to what it should say","Yes","B+","B+","A","A","Text"],
+["Invisible Characters","invisibles","Reveal zero-width chars, BOMs, nbsp and stray line endings","Yes","A-","B+","A-","A","Text"],
+["Rich Text to Markdown","to-markdown","Clean Google Docs and Word paste into tidy Markdown","Yes","B+","A-","C+","A","Text"],
+["Figlet","figlet","Render text as ASCII banner art","Yes","A","C","C+","A","Text"],
+["Unicode Picker","unicode","Search and copy symbols, arrows, maths and HTML entities","Yes","A-","B+","C+","A","Text"],
+["ID Generator","uuid","Bulk UUID v4 and v7, ULID and nanoid","Yes","A+","B+","C+","A","Crypto"],
+["Password Generator","password","Random passwords and diceware passphrases with real entropy maths","Yes","A","A-","C+","A","Crypto"],
+["Hash & Checksum","hash","Hash text or files and verify against a known-good value","Yes","A","A","C+","A","Crypto"],
+["Hash Identifier","hash-id","Work out which algorithm produced an unknown hash","Yes","A-","B","B+","A","Crypto"],
+["TOTP Generator","totp","Live 2FA codes from a secret, for testing and recovery","Yes","A-","B+","B+","A","Crypto"],
+["Certificate Decoder","cert","Decode PEM certs — expiry, SANs, issuer and chain","Yes","B+","B+","B","A","Crypto"],
+["Bcrypt & Argon2","bcrypt","Hash and verify passwords with bcrypt and argon2","Yes","B+","B","B+","A-","Crypto"],
+["Passkey Tester","webauthn","Register and authenticate passkeys, decode the attestation","Yes","B","B+","A-","B+","Crypto"],
+["JWT Vulnerability Check","jwt-vuln","Test for alg=none and weak signing secrets, entirely locally","Yes","B+","B","A-","A","Crypto"],
+["OAuth Scope Decoder","oauth-scopes","Turn a scope list into plain-English access and a risk read","Yes","A-","B+","A-","A","Crypto"],
+["DNS Lookup","dns","Query records over DNS-over-HTTPS with no server of your own","Yes","A-","A-","C+","A","Network"],
+["DNS Propagation","dns-propagation","Compare answers from Cloudflare, Google and Quad9 side by side","Yes","B+","B+","B+","A","Network"],
+["Subnet Calculator","cidr","CIDR maths, ranges, splitting and supernetting","Yes","A-","A-","C+","A","Network"],
+["URL Parser","url","Break a URL apart and edit query params as a table","Yes","A","B+","C+","A","Network"],
+["Header Inspector","headers","See exactly what headers your browser is sending","Worker","A","B","C+","A","Network"],
+["User-Agent Parser","ua","Decode a UA string into browser, engine, OS and device","Yes","A","B","C+","A","Network"],
+["Browser Privacy Check","privacy-check","What this browser leaks: fingerprint surface, APIs, exposure","Yes","B+","B+","B","A","Network"],
+["WebRTC Debugger","webrtc-debug","Inspect ICE candidates and test STUN reachability","Yes","B","B","A-","A-","Network"],
+["Email Header Analyzer","email-headers","SPF, DKIM and DMARC verdicts plus a hop-by-hop delay waterfall","Yes","B","A-","A-","A","Network"],
+["DMARC Report Viewer","dmarc","Drop the zipped XML report and see who is sending as your domain","Yes","B","A-","A+","A","Network"],
+["Local File Drop","drop","Peer-to-peer file transfer over WebRTC, LAN-first","Signaling","C+","A","B+","A-","Network"],
+["Epoch Converter","epoch","Unix timestamps to and from human dates in any zone","Yes","A+","A","C+","A","Time"],
+["Cron Builder","cron","Build expressions, read them in English, preview the next ten runs","Yes","A","A-","C+","A","Time"],
+["Timezone Planner","timezones","Find overlapping working hours across cities","Yes","B+","A","C+","A","Time"],
+["Duration Calculator","duration","Add and subtract clock times and durations","Yes","A","B+","C+","A","Time"],
+["Countdown & Stopwatch","timer","Shareable-URL countdowns and stopwatches","Yes","A","B+","D+","A","Time"],
+["Pomodoro","pomodoro","Work and break cycles in a pop-out always-on-top window","Yes","A-","B","D+","A-","Time"],
+["Week & Day Numbers","iso-week","ISO week, day-of-year and quarter lookups","Yes","A+","C+","C+","A","Time"],
+["Temporal Playground","temporal","Date maths and DST edge cases using the Temporal API","Yes","B+","B+","A-","B+","Time"],
+["ICS Inspector","ics","Inspect calendar files and build add-to-calendar links","Yes","B+","B+","B+","A","Time"],
+["Discord Timestamps","discord-time","Generate tags that render in every reader's own timezone","Yes","A+","B+","C+","A","Time"],
+["Resistor Colour Code","resistor","Decode and encode 4, 5 and 6 band resistors","Yes","A","B","C+","A","Hardware"],
+["Ohm's Law & LED","ohms-law","Voltage, current, resistance, LED resistors and dividers","Yes","A","B+","C+","A","Hardware"],
+["Battery Life Estimator","battery-life","Model runtime from capacity, sleep draw and active draw","Yes","A-","B","A-","A","Hardware"],
+["Wire Gauge Reference","wire-gauge","AWG sizing, ampacity and voltage drop over distance","Yes","A","B-","C+","A","Hardware"],
+["Print Cost Calculator","print-cost","Filament and electricity cost for a single print","Yes","A","C+","C+","A","Hardware"],
+["G-code Viewer","gcode","Visualise toolpaths layer by layer","Yes","D+","B","B+","B+","Hardware"],
+["Bed Mesh Visualiser","bed-mesh","Turn bed levelling output into a 3D surface plot","Yes","C+","B-","A","B+","Hardware"],
+["Serial Terminal","serial","Talk to ESP32, Pico and other serial devices from the browser","Yes","B","A-","A-","C+","Hardware"],
+["Firmware Flasher","flash","Flash ESP32 and Pico boards without installing a toolchain","Yes","C+","B+","B+","C+","Hardware"],
+["UF2 Inspector","uf2","Decode UF2 blocks, family IDs and memory ranges","Yes","B+","C+","A","A-","Hardware"],
+["BLE Sensor Dashboard","ble","Connect Bluetooth sensors, chart live, export CSV","Yes","C+","B","A-","C+","Hardware"],
+["USB & MIDI Explorer","usb-midi","Enumerate USB and MIDI devices and watch their messages","Yes","B+","C+","B+","C+","Hardware"],
+["HID Report Explorer","hid","Inspect raw HID reports coming off any device","Yes","B","B","A","C+","Hardware"],
+["NFC Tag Writer","nfc","Read and write NFC tags from Android Chrome","Yes","B+","B-","A-","D+","Hardware"],
+["Keycode Info","keycode","Live key, code, keyCode and modifier readout","Yes","A+","B+","C+","A","Testers"],
+["Rollover Tester","rollover","Check N-key rollover and ghosting visually","Yes","A-","B","C+","A-","Testers"],
+["Layout Heatmap","heatmap","Key and finger load for any text, across keyboard layouts","Yes","C+","B","A-","A-","Testers"],
+["Oryx Layout Differ","oryx-diff","Diff two ZSA Moonlander layouts key by key","Yes","B","C+","A+","A-","Testers"],
+["Mouse Rate & DPI","mouse","Measure real polling rate and actual counts per inch","Yes","B+","B","C+","A-","Testers"],
+["Gamepad & Drift","gamepad","Test buttons and axes, and quantify analogue stick drift","Yes","B","B+","C+","A-","Testers"],
+["Monitor Test Suite","monitor","Dead pixels, backlight bleed, ghosting and gradient banding","Yes","B+","B+","C+","A-","Testers"],
+["Webcam & Mic Test","av-test","Check camera, microphone and levels before a call","Yes","A-","B+","C+","A","Testers"],
+["Multitouch Tester","touch","Visualise simultaneous touch points","Yes","A","C","C+","A-","Testers"],
+["Media Key Tester","media-keys","Verify Media Session handlers and hardware media keys","Yes","A-","C","A-","A-","Testers"],
+["SMART Decoder","smart","Paste smartctl output, get a plain-English drive health verdict","Yes","B+","B+","A-","A","Homelab"],
+["RAIDZ Calculator","raidz","Usable capacity, parity overhead and layout tradeoffs","Yes","A-","B","B+","A","Homelab"],
+["WireGuard Config","wireguard","Generate keys and configs, with QR export for phones","Yes","B+","B+","B+","A","Homelab"],
+["Compose Converter","docker-convert","Move between compose YAML and docker run commands","Yes","B+","B+","B","A","Homelab"],
+["systemd Unit Builder","systemd","Build service units with sane restart and dependency flags","Yes","B+","B+","B+","A","Homelab"],
+["Proxy Config Generator","proxy-config","nginx and Caddy reverse proxy configs with TLS and headers","Yes","B","B+","B","A","Homelab"],
+["GAM Command Builder","gam","Form-driven builder for Google Workspace GAM syntax","Yes","B","B-","A+","A","Homelab"],
+["LogQL & PromQL","logql","Format and explain Loki and Prometheus queries","Yes","B+","B-","A-","A","Homelab"],
+["Jinja Template Tester","jinja","Sandbox for Home Assistant template expressions","Yes","C+","B-","A","A-","Homelab"],
+["Bulk Rename","rename","Regex rename across a real folder with live preview","Yes","B","A-","B+","C+","Files"],
+["Duplicate Finder","dupes","Hash a folder tree and group identical files","Yes","B","A-","B+","C+","Files"],
+["Folder Diff","folder-diff","Compare two local directories and see what changed","Yes","B","B+","B+","C+","Files"],
+["Batch Processor","batch","Transform many files and write the results back to disk","Yes","C+","A-","A-","C+","Files"],
+["File Identifier","file-id","Work out what a file actually is, ignoring its extension","Yes","A-","B","B+","A","Files"],
+["Hex Viewer","hex","Inspect binary files with reusable struct templates","Yes","C+","B","B+","A","Files"],
+["Binary Format Decoder","binary-decode","Protobuf, CBOR and msgpack decoded to readable JSON","Yes","B","B","A-","A","Files"],
+["Compression Lab","compress","gzip, deflate and brotli round-trips with ratio analysis","Yes","A-","B","B+","A","Files"],
+["Clipboard Inspector","clipboard","Every MIME type currently sitting on your clipboard","Yes","A-","B","A","A-","Files"],
+["Clipboard Pipelines","clip-pipes","Saved chains of text transforms, applied on paste","Yes","B+","B+","A","A-","Files"],
+["PDF Toolbox","pdf","Merge, split, rotate, compress, watermark, fill and sign","Yes","C","A+","B","A","Docs"],
+["Document Converter","doc-convert","DOCX, Markdown and HTML to PDF, and text back out again","Yes","D+","A","B+","B+","Docs"],
+["Document Scanner","scan","Phone camera to a deskewed, cropped, multi-page PDF","Yes","C+","A-","B+","B","Docs"],
+["EXIF Time Shifter","exif-shift","Fix a wrong camera clock across a whole shoot","Yes","B+","B","A-","A-","Docs"],
+["Font Subsetter","subset","Strip a font to the glyphs you use and output woff2","Yes","C+","B+","B+","A-","Docs"],
+["Screenshot Beautifier","beautify","Frame code and screenshots with padding and backgrounds","Yes","B","B+","C+","A","Docs"],
+["URLPattern Tester","urlpattern","Test route patterns against URLs and inspect match groups","Yes","A-","B","A-","A-","Dev"],
+["Anchor Position Builder","anchor","Visually build CSS anchor-positioned tooltips and menus","Yes","C+","B","A","B+","Dev"],
+["Speculation Rules","speculation","Build and validate prerender and prefetch rule sets","Yes","B+","B-","A-","A-","Dev"],
+["WASM Inspector","wasm","Sections, imports, exports and which post-MVP features a module needs","Yes","B","B+","A","A","Dev"],
+["WASM Feature Check","wasm-support","Which WebAssembly features this browser actually supports","Yes","A","C+","B+","A","Dev"],
+["GPU Inspector","gpu","WebGPU adapter, limits and supported features","Yes","A-","B","A-","B+","Dev"],
+["MCP Inspector","mcp","Browse an MCP server's tools and schemas, fire test calls","Worker","C+","B+","A","A-","Dev"],
+["Decode Anything","decode","Recursively unwrap base64, gzip, JSON, JWTs, snowflakes and more","Yes","C+","A+","A-","A","Dev"],
+["Unit Calculator","calc","Numbat-powered maths that understands units and currencies","Yes","B+","A-","B+","A","Dev"],
+["Colour Suite","color","Picker, palettes, contrast checking, hex/rgb/hsl/oklch","Yes","B","A","C+","A","Dev"],
+["Colour Blindness Sim","colorblind","Preview images and palettes under colour vision deficiencies","Yes","A-","B","B+","A","Dev"],
+["Handwriting Pad","handwriting","Write with a stylus and convert the ink to text","Yes","B+","C+","A-","C+","Dev"],
+["Snowflake Decoder","snowflake","Pull timestamps and worker IDs out of snowflake IDs","Yes","A+","B-","B+","A","Dev"],
+["Blueprint Surgeon","factorio","Decode, repair and re-encode Factorio blueprint strings","Yes","B","C+","A+","A","Dev"],
+["Sensor Scope","sensors","Live accelerometer, gyroscope, magnetometer and light charts","Yes","B+","B","A-","C+","Mobile"],
+["Light Meter","light-meter","Camera-based lux and colour temperature estimates","Yes","B","B-","B+","C+","Mobile"],
+["Sun & Golden Hour","sun","Sunrise, sunset, golden hour and shadow angles for any spot","Yes","B+","A-","C+","A","Geo"],
+["Coordinate Converter","coords","Decimal degrees, DMS, UTM and MGRS in any direction","Yes","A-","B","C+","A","Geo"],
+["Distance & Bearing","geo-calc","Great circle distance, bearing and magnetic declination","Yes","A-","B-","C+","A","Geo"],
+["Track Viewer","tracks","Map GPX, KML and GeoJSON with elevation profiles and trimming","Yes","C+","B+","B+","A-","Geo"],
+["Photography Calculators","photo-calc","Depth of field, hyperfocal, exposure, ND filters and field of view","Yes","A-","B+","C+","A","Geo"],
+["Signal Generator","tone","Sine, square and sweep tones for speaker and subwoofer testing","Yes","A-","B+","C+","A","Audio"],
+["Tuner & Metronome","tuner","Pitch detection and a sample-accurate click","Yes","B+","B+","C+","A-","Audio"],
+["Morse, DTMF & Audio Data","audio-data","Encode and decode tones, including transfer over speakers","Yes","C+","C+","A-","A-","Audio"],
+["BPM & Key Detector","bpm","Tap tempo and detect the musical key of a track","Yes","B+","B","C+","A-","Audio"],
+["Screen Ruler","ruler","Measure pixels and pick colours anywhere on screen","Yes","C+","B+","B+","B+","Platform"],
+["Echo Endpoint","echo","curl-able reflection of your request and IP","Worker","A+","B","C+","A","Platform"],
+["Composable Pipelines","pipelines","Chain tools together and share the whole chain as a URL","Yes","D+","A+","A+","A-","Platform"],
+["Command Palette","palette","Ctrl+K fuzzy search across every tool on the site","Yes","B+","A+","B+","A","Platform"],
+["curl API","api","Stateless HTTP endpoints for the simple generators","Worker","B+","A-","A-","A","Platform"],
+["Pop-out Windows","popout","Float any tool in an always-on-top Document PiP window","Yes","B+","A-","A+","B+","Platform"],
+["Bookmarklet Shelf","bookmarklets","Run the ruler, picker and audits on somebody else's page","Yes","B+","B+","B+","A-","Platform"],
+["Android Share Target","share-target","Receive Android shares straight into the right tool","Yes","A-","B+","A-","C+","Platform"],
+["Dice & Random Picker","random","Dice, coin flips, list pickers and team splitters","Yes","A+","B-","D+","A","Platform"]
+];
+
+const W={
+  priority:{effort:.25,utility:.35,alt:.30,reach:.10},
+  quickwin:{effort:.55,utility:.25,alt:.12,reach:.08},
+  moat:{effort:.10,utility:.30,alt:.55,reach:.05},
+  seo:{effort:.15,utility:.30,alt:.20,reach:.35}
+};
+
+const rows=D.map(r=>({
+  name:r[0],slug:r[1],desc:r[2],cs:r[3],
+  effort:r[4],utility:r[5],alt:r[6],reach:r[7],cat:r[8]
+}));
+
+let preset='priority', sortKey='pri', sortDir=-1, activeCats=new Set(), query='';
+
+function score(r){
+  const w=W[preset];
+  return G[r.effort]*w.effort + G[r.utility]*w.utility + G[r.alt]*w.alt + G[r.reach]*w.reach;
+}
+function gradeCls(g){ return G[g]<2.4 ? 'g lo' : 'g'; }
+
+const cats=[...new Set(rows.map(r=>r.cat))].sort();
+const catBox=document.getElementById('cats');
+cats.forEach(c=>{
+  const b=document.createElement('button');
+  b.className='chip'; b.textContent=c; b.setAttribute('aria-pressed','false');
+  b.onclick=()=>{
+    if(activeCats.has(c)){activeCats.delete(c);b.setAttribute('aria-pressed','false');}
+    else{activeCats.add(c);b.setAttribute('aria-pressed','true');}
+    render();
+  };
+  catBox.appendChild(b);
+});
+const clr=document.createElement('button');
+clr.className='chip'; clr.textContent='clear'; clr.style.borderStyle='dashed';
+clr.onclick=()=>{activeCats.clear();[...catBox.querySelectorAll('.chip')].forEach(c=>c.setAttribute('aria-pressed','false'));render();};
+catBox.appendChild(clr);
+
+document.getElementById('q').addEventListener('input',e=>{query=e.target.value.toLowerCase();render();});
+document.getElementById('preset').addEventListener('change',e=>{preset=e.target.value;sortKey='pri';sortDir=-1;render();});
+document.querySelectorAll('thead th').forEach(th=>{
+  th.onclick=()=>{
+    const k=th.dataset.k;
+    if(sortKey===k) sortDir*=-1;
+    else {sortKey=k; sortDir = (k==='name'||k==='slug'||k==='desc'||k==='cat'||k==='cs') ? 1 : -1;}
+    render();
+  };
+});
+
+function render(){
+  let list=rows.filter(r=>{
+    if(activeCats.size && !activeCats.has(r.cat)) return false;
+    if(query && !(r.name+' '+r.slug+' '+r.desc+' '+r.cat).toLowerCase().includes(query)) return false;
+    return true;
+  });
+  list.forEach(r=>r.pri=score(r));
+  const txt=['name','slug','desc','cat','cs'].includes(sortKey);
+  list.sort((a,b)=>{
+    let av,bv;
+    if(sortKey==='pri'){av=a.pri;bv=b.pri;}
+    else if(txt){av=a[sortKey];bv=b[sortKey];}
+    else {av=G[a[sortKey]];bv=G[b[sortKey]];}
+    if(av<bv) return -1*sortDir;
+    if(av>bv) return 1*sortDir;
+    return a.name.localeCompare(b.name);
+  });
+
+  document.querySelectorAll('thead th').forEach(th=>{
+    const base=th.textContent.replace(/[▲▼]\s*$/,'').trim();
+    th.innerHTML = th.dataset.k===sortKey
+      ? base+' <span class="dir">'+(sortDir===1?'▲':'▼')+'</span>'
+      : base;
+  });
+
+  const tb=document.getElementById('tb');
+  tb.innerHTML = list.map(r=>`<tr>
+    <td class="nm">${esc(r.name)}</td>
+    <td class="slug">/${esc(r.slug)}</td>
+    <td class="desc">${esc(r.desc)}</td>
+    <td class="cat">${esc(r.cat)}</td>
+    <td class="cs ${r.cs==='Yes'?'':'no'}">${esc(r.cs)}</td>
+    <td class="num"><span class="${gradeCls(r.effort)}">${r.effort}</span></td>
+    <td class="num"><span class="${gradeCls(r.utility)}">${r.utility}</span></td>
+    <td class="num"><span class="${gradeCls(r.alt)}">${r.alt}</span></td>
+    <td class="num"><span class="${gradeCls(r.reach)}">${r.reach}</span></td>
+    <td class="pri">${r.pri.toFixed(2)}</td>
+  </tr>`).join('');
+
+  document.getElementById('cards').innerHTML = list.map(r=>`<div class="card">
+    <div class="top"><span class="nm">${esc(r.name)}</span><span class="pri">${r.pri.toFixed(2)}</span></div>
+    <div class="slug">/${esc(r.slug)} &middot; <span class="cat">${esc(r.cat)}</span>${r.cs!=='Yes'?' &middot; <span class="cs no">'+esc(r.cs)+'</span>':''}</div>
+    <div class="desc">${esc(r.desc)}</div>
+    <div class="grades">
+      <span><b>Effort</b><span class="${gradeCls(r.effort)}">${r.effort}</span></span>
+      <span><b>Utility</b><span class="${gradeCls(r.utility)}">${r.utility}</span></span>
+      <span><b>Alts</b><span class="${gradeCls(r.alt)}">${r.alt}</span></span>
+      <span><b>Reach</b><span class="${gradeCls(r.reach)}">${r.reach}</span></span>
+    </div>
+  </div>`).join('');
+
+  const cs=list.filter(r=>r.cs==='Yes').length;
+  document.getElementById('count').textContent=`${list.length} shown · ${cs} client-only`;
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+render();
+</script>
+</body>
+</html>
