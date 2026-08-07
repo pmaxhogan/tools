@@ -30,6 +30,7 @@ import { meta as durationCalculator } from './duration-calculator/meta';
 import { meta as emailHeaderAnalyzer } from './email-header-analyzer/meta';
 import { meta as epochConverter } from './epoch-converter/meta';
 import { meta as escapeUnescape } from './escape-unescape/meta';
+import { meta as factorioBlueprintDecoder } from './factorio-blueprint-decoder/meta';
 import { meta as fakeDataGenerator } from './fake-data-generator/meta';
 import { meta as faviconGenerator } from './favicon-generator/meta';
 import { meta as figlet } from './figlet/meta';
@@ -93,6 +94,7 @@ export const tools: ToolMeta[] = [
   emailHeaderAnalyzer,
   epochConverter,
   escapeUnescape,
+  factorioBlueprintDecoder,
   fakeDataGenerator,
   faviconGenerator,
   figlet,
@@ -159,6 +161,8 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'email-header-analyzer': () => import('./email-header-analyzer/index').then((m) => m.default),
   'epoch-converter': () => import('./epoch-converter/index').then((m) => m.default),
   'escape-unescape': () => import('./escape-unescape/index').then((m) => m.default),
+  'factorio-blueprint-decoder': () =>
+    import('./factorio-blueprint-decoder/index').then((m) => m.default),
   'fake-data-generator': () => import('./fake-data-generator/index').then((m) => m.default),
   'favicon-generator': () => import('./favicon-generator/index').then((m) => m.default),
   figlet: () => import('./figlet/index').then((m) => m.default),

@@ -38,6 +38,8 @@ import { meta as epochConverterMeta } from '../src/tools/epoch-converter/meta';
 import { run as epochConverterRun } from '../src/tools/epoch-converter/index';
 import { meta as escapeUnescapeMeta } from '../src/tools/escape-unescape/meta';
 import { run as escapeUnescapeRun } from '../src/tools/escape-unescape/index';
+import { meta as factorioBlueprintDecoderMeta } from '../src/tools/factorio-blueprint-decoder/meta';
+import { run as factorioBlueprintDecoderRun } from '../src/tools/factorio-blueprint-decoder/index';
 import { meta as figletMeta } from '../src/tools/figlet/meta';
 import { run as figletRun } from '../src/tools/figlet/index';
 import { meta as hashGeneratorMeta } from '../src/tools/hash-generator/meta';
@@ -157,6 +159,11 @@ const ALL: Endpoint[] = [
   expose(escapeUnescapeMeta, escapeUnescapeRun, {
     sample: 'He said "hi"',
     sampleQuery: 'format=json&direction=escape',
+  }),
+  expose(factorioBlueprintDecoderMeta, factorioBlueprintDecoderRun, {
+    sampleQuery: 'operation=inspect',
+    sampleCommand: (base) =>
+      `printf '0eNqrVkrKKU0tKMrMK1GyqlbKTC...' | curl -X POST --data-binary @- "${base}/api/factorio-blueprint-decoder?operation=inspect"`,
   }),
   expose(figletMeta, figletRun, { sample: 'hello', sampleQuery: 'font=Standard' }),
   expose(hashGeneratorMeta, hashGeneratorRun, { sample: 'hello world' }),
