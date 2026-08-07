@@ -11,6 +11,7 @@
  */
 import type { ToolMeta } from './types';
 import { meta as audioSpectrogram } from './audio-spectrogram/meta';
+import { meta as audioTranscriber } from './audio-transcriber/meta';
 import { meta as audioTrimmer } from './audio-trimmer/meta';
 import { meta as baseConverter } from './base-converter/meta';
 import { meta as caseConverter } from './case-converter/meta';
@@ -72,6 +73,7 @@ import { meta as wireguardConfigGenerator } from './wireguard-config-generator/m
 
 export const tools: ToolMeta[] = [
   audioSpectrogram,
+  audioTranscriber,
   audioTrimmer,
   baseConverter,
   caseConverter,
@@ -135,6 +137,7 @@ export const tools: ToolMeta[] = [
 /** Lazy loaders for tool logic, keyed by URL slug. */
 export const loaders: Record<string, () => Promise<unknown>> = {
   'audio-spectrogram': () => import('./audio-spectrogram/index').then((m) => m.default),
+  'audio-transcriber': () => import('./audio-transcriber/index').then((m) => m.default),
   'audio-trimmer': () => import('./audio-trimmer/index').then((m) => m.default),
   'base-converter': () => import('./base-converter/index').then((m) => m.default),
   'case-converter': () => import('./case-converter/index').then((m) => m.default),

@@ -15,6 +15,7 @@ import PopoutButton from './PopoutButton.vue';
  */
 const panels: Record<string, Component> = {
   'audio-spectrogram': defineAsyncComponent(() => import('./panels/SpectrogramPanel.vue')),
+  'audio-transcriber': defineAsyncComponent(() => import('./panels/TranscriberPanel.vue')),
   'audio-trimmer': defineAsyncComponent(() => import('./panels/AudioTrimmerPanel.vue')),
   'clipboard-inspector': defineAsyncComponent(() => import('./panels/ClipboardPanel.vue')),
   'discord-video-compressor': defineAsyncComponent(
