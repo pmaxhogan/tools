@@ -7,8 +7,10 @@
  * `run()` the web page calls, so the third surface is free rather than a
  * reimplementation (rule 27).
  *
- * Routing: only /api and /api/* reach this worker. Everything else is served
- * straight from the static Astro build by the assets binding.
+ * Routing: /api and /api/* are handled here. Everything else is served
+ * straight from the static Astro build by the assets binding, with one
+ * exception: /models/* files that were split at build time to fit under the
+ * 25 MiB per asset cap are stitched back together here (see reassemble).
  */
 import { ToolError, type OptionSpec, type ToolMeta } from '../src/tools/types';
 
@@ -454,12 +456,126 @@ async function handleTool(request: Request, url: URL, slug: string): Promise<Res
   }
 }
 
+/**
+ * Model weights, reassembled.
+ *
+ * scripts/prepare-models.mjs splits any model file over Cloudflare's 25 MiB
+ * per asset limit into `<name>.part0..N` plus a `<name>.chunks.json` manifest,
+ * and deletes the oversized original. The two large Whisper decoders are the
+ * only files this affects today.
+ *
+ * transformers.js issues plain GETs against `/models/<id>/<file>` and cannot
+ * be handed preassembled bytes, so the stitching has to happen on this side of
+ * the wire. Parts are fetched one at a time and piped straight through, so a
+ * 51 MiB decoder never sits in worker memory.
+ */
+
+/**
+ * Two Workers runtime globals. Declared locally rather than pulling in
+ * @cloudflare/workers-types, which this project does not otherwise need.
+ */
+declare class FixedLengthStream extends TransformStream<Uint8Array, Uint8Array> {
+  constructor(expectedLength: number | bigint);
+}
+interface ExecutionContext {
+  waitUntil(promise: Promise<unknown>): void;
+  passThroughOnException(): void;
+}
+
+interface ChunkManifest {
+  totalBytes: number;
+  parts: { name: string; bytes: number }[];
+}
+
+/** Part names come from a build artifact, but treat them as untrusted anyway. */
+const SAFE_PART_NAME = /^[A-Za-z0-9._-]+$/;
+
+function modelHeaders(totalBytes: number): Record<string, string> {
+  return {
+    ...CORS,
+    'Content-Type': 'application/octet-stream',
+    'Content-Length': String(totalBytes),
+    'Cache-Control': 'public, max-age=31536000, immutable',
+    'X-Content-Type-Options': 'nosniff',
+  };
+}
+
+/**
+ * Serves one /models/* path. Small files exist as real assets and are passed
+ * through untouched; a 404 means the file may have been chunked, so look for
+ * its manifest and stream the parts back as one body.
+ *
+ * Range is deliberately not supported: transformers.js never sends one, and
+ * answering a Range request with the full 200 body is allowed.
+ */
+async function handleModelAsset(
+  request: Request,
+  url: URL,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> {
+  const direct = await env.ASSETS.fetch(request);
+  if (direct.status !== 404) return direct;
+
+  const manifestUrl = new URL(`${url.pathname}.chunks.json`, url.origin);
+  const manifestRes = await env.ASSETS.fetch(new Request(manifestUrl.toString()));
+  if (!manifestRes.ok) return direct;
+
+  let manifest: ChunkManifest;
+  try {
+    manifest = (await manifestRes.json()) as ChunkManifest;
+  } catch {
+    return direct;
+  }
+
+  const parts = manifest.parts ?? [];
+  if (!parts.length || !parts.every((p) => SAFE_PART_NAME.test(p.name))) return direct;
+
+  const dir = url.pathname.slice(0, url.pathname.lastIndexOf('/') + 1);
+  const partUrls = parts.map((p) => new URL(dir + p.name, url.origin).toString());
+  const headers = modelHeaders(manifest.totalBytes);
+
+  if (request.method === 'HEAD') return new Response(null, { status: 200, headers });
+
+  // FixedLengthStream is what keeps Content-Length on a streamed body, and it
+  // errors if the parts do not add up to totalBytes, which is a free check
+  // that the build staged a complete set.
+  const { readable, writable } = new FixedLengthStream(manifest.totalBytes);
+
+  const pump = (async () => {
+    try {
+      for (const partUrl of partUrls) {
+        const res = await env.ASSETS.fetch(new Request(partUrl));
+        if (!res.ok || !res.body) throw new Error(`missing part ${partUrl}`);
+        await res.body.pipeTo(writable, { preventClose: true });
+      }
+      await writable.close();
+    } catch {
+      // Aborting leaves the client with a truncated body it can detect from
+      // the declared Content-Length, which is the honest failure mode here.
+      await writable.abort().catch(() => {});
+    }
+  })();
+  ctx.waitUntil(pump);
+
+  return new Response(readable, { status: 200, headers });
+}
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
     const isApi = path === '/api' || path === '/api/' || path.startsWith('/api/');
-    if (!isApi) return env.ASSETS.fetch(request);
+    if (!isApi) {
+      if (
+        path.startsWith('/models/') &&
+        (request.method === 'GET' || request.method === 'HEAD') &&
+        !path.includes('..')
+      ) {
+        return handleModelAsset(request, url, env, ctx);
+      }
+      return env.ASSETS.fetch(request);
+    }
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: { ...CORS, 'Cache-Control': 'no-store' } });

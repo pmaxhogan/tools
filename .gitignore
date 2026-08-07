@@ -30,3 +30,9 @@ pnpm-debug.log*
 
 # ffmpeg core chunks, generated from node_modules by scripts/prepare-ffmpeg.mjs
 public/ffmpeg/
+
+# model weights and OCR engine, staged by scripts/prepare-models.mjs
+public/models/
+public/tesseract/
+# raw downloads that back the staging step, so rebuilds refetch nothing
+.model-cache/
