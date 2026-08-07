@@ -41,6 +41,12 @@
  *   runLabel   string         run button text (default "Run")
  *   inputLabel string         label above the drop zone (default "File")
  *   hint       string         replaces the default drop zone helper text
+ *   runDisabled boolean       forces the run button off regardless of input state
+ *                             (default false). For an option combination that can
+ *                             never produce a runnable command, such as a feature
+ *                             the build does not support, disabling the button here
+ *                             is the source of truth: buildArgs never runs, so its
+ *                             own "unavailable" error never has to fire.
  *
  * Slots
  *   options    controls rendered above the run button
@@ -79,6 +85,7 @@ const props = withDefaults(
     runLabel?: string;
     inputLabel?: string;
     hint?: string;
+    runDisabled?: boolean;
   }>(),
   {
     opts: () => ({}),
@@ -86,6 +93,7 @@ const props = withDefaults(
     runLabel: 'Run',
     inputLabel: 'File',
     hint: undefined,
+    runDisabled: false,
   }
 );
 
@@ -177,7 +185,12 @@ const engineButtonLabel = computed(() =>
 );
 
 const canRun = computed(
-  () => supported.value && picked.value.length > 0 && !running.value && !cancelling.value
+  () =>
+    supported.value &&
+    picked.value.length > 0 &&
+    !running.value &&
+    !cancelling.value &&
+    !props.runDisabled
 );
 
 const visibleLog = computed(() => logLines.value.slice(-30));
@@ -566,6 +579,7 @@ onUnmounted(clearOutputs);
           v-else
           class="self-start"
           size="sm"
+          :disabled="engineState === 'loading'"
           @click="loadEngine"
         >
           {{ engineButtonLabel }}

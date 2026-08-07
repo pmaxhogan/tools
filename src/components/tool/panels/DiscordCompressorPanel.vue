@@ -31,6 +31,8 @@ import {
 } from '@/lib/ffmpeg';
 import {
   MAX_CAP_MB,
+  OVERHEAD_FLOOR_BYTES,
+  OVERHEAD_FRACTION,
   buildPassArgs,
   formatClock,
   formatMegabytes,
@@ -182,6 +184,25 @@ const plan = computed<CompressionPlan | null>(() => {
     hasAudio: keepAudio.value,
   });
 });
+
+/**
+ * The same usable budget `planCompression` divides between the streams: the
+ * cap minus the container overhead it has to reserve. A source already at or
+ * under that budget does not need a re-encode to clear the cap, so the plan
+ * card says so and the primary action turns into an opt in "anyway" rather
+ * than silently spending two passes on a file that already fits.
+ */
+const usableBytes = computed(() => {
+  if (capState.value.mb === null) return null;
+  const bytes = targetBytes.value * (1 - OVERHEAD_FRACTION) - OVERHEAD_FLOOR_BYTES;
+  return bytes > 0 ? bytes : null;
+});
+
+const alreadyUnderCap = computed(
+  () => file.value !== null && usableBytes.value !== null && file.value.size <= usableBytes.value
+);
+
+const compressButtonLabel = computed(() => (alreadyUnderCap.value ? 'Compress anyway' : 'Compress'));
 
 const heightCap = computed(() => resolveMaxHeight({ maxHeight: maxHeight.value }));
 const fpsCap = computed(() => resolveFps({ keepFps: keepFps.value }));
@@ -650,6 +671,7 @@ onUnmounted(clearResult);
           v-else
           class="self-start"
           size="sm"
+          :disabled="engineState === 'loading'"
           @click="loadEngine"
         >
           {{ engineButtonLabel }}
@@ -841,6 +863,14 @@ onUnmounted(clearResult);
           </div>
         </dl>
         <p
+          v-if="alreadyUnderCap"
+          class="flex items-center gap-1.5 border-t border-border/60 px-3 py-2 text-sm text-muted-foreground"
+        >
+          <Check class="size-3.5 shrink-0 text-[var(--positive)]" />
+          Already {{ formatMegabytes(targetBytes - file!.size) }} under the
+          {{ formatMegabytes(targetBytes) }} cap. No compression needed.
+        </p>
+        <p
           v-if="!plan.feasible"
           role="alert"
           class="border-t border-border/60 px-3 py-2 text-sm text-destructive"
@@ -862,7 +892,7 @@ onUnmounted(clearResult);
           :disabled="!canRun"
           @click="compress"
         >
-          {{ running ? `Pass ${activePass} of 2…` : 'Compress' }}
+          {{ running ? `Pass ${activePass} of 2…` : compressButtonLabel }}
         </Button>
         <Button
           v-if="running"

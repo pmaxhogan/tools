@@ -97,6 +97,13 @@ const RUN_LABELS: Record<GifOperation, string> = {
 
 const operation = computed<GifOperation>(() => opts.operation ?? 'resize');
 const runLabel = computed(() => RUN_LABELS[operation.value] ?? 'Run');
+/**
+ * Captioning is off pending a font (see the module doc). The run button is the
+ * single source of truth for that: it goes disabled the moment caption mode is
+ * picked, so buildArgs (and buildCaption's own refusal) never runs and never
+ * gets a chance to complain about the disabled text field instead.
+ */
+const captionUnavailable = computed(() => operation.value === 'caption');
 
 /** Number inputs hand back strings, and an empty field should not become NaN. */
 function setNumber(key: keyof GifOptions, value: unknown, fallback: number) {
@@ -185,6 +192,7 @@ function onFiles() {
     :opts="opts"
     :build-args="buildArgs"
     :run-label="runLabel"
+    :run-disabled="captionUnavailable"
     input-label="GIF"
     hint="Drop a .gif here or pick one to get started. Everything runs in this tab: your files and inputs never leave your device."
     @complete="onComplete"
@@ -417,11 +425,12 @@ function onFiles() {
             </div>
           </div>
           <p class="text-xs text-muted-foreground">
-            Captioning is turned off, and the run button will explain why rather than fail
-            halfway. Burning text into frames needs the drawtext filter, which wants a TrueType
-            or OpenType font file loaded into the media engine and a build of ffmpeg compiled
-            with FreeType. This site ships web fonts in woff2 only, which drawtext cannot read.
-            Add the text in an image editor first, then resize or optimise the result here.
+            Captioning is turned off, and the run button above is disabled while this operation is
+            selected, rather than failing after you press it. Burning text into frames needs the
+            drawtext filter, which wants a TrueType or OpenType font file loaded into the media
+            engine and a build of ffmpeg compiled with FreeType. This site ships web fonts in
+            woff2 only, which drawtext cannot read. Add the text in an image editor first, then
+            resize or optimise the result here.
           </p>
         </div>
 
