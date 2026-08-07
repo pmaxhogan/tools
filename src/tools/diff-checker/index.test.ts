@@ -16,6 +16,20 @@ function doc(a: string, b: string): string {
   return `${a}\n${SEPARATOR}\n${b}`;
 }
 
+/**
+ * Every +/- line the diff emitted must be accounted for by the summary line,
+ * and vice versa. Guards against hunks that print more edits than they count.
+ */
+function expectCountsMatchOutput(out: string): void {
+  const lines = out.split('\n');
+  const emittedAdds = lines.filter((line) => line.startsWith('+ ')).length;
+  const emittedRemoves = lines.filter((line) => line.startsWith('- ')).length;
+  const match = /(\d+) additions?, (\d+) removals?\./.exec(out);
+  expect(match, `no summary line in:\n${out}`).not.toBeNull();
+  expect(Number(match![1])).toBe(emittedAdds);
+  expect(Number(match![2])).toBe(emittedRemoves);
+}
+
 describe('diff-checker', () => {
   it('lines mode: reports additions and removals with correct prefixes and a summary', () => {
     const a = 'keep\nold';
@@ -27,6 +41,62 @@ describe('diff-checker', () => {
     expect(out).toContain('+ new1');
     expect(out).toContain('+ new2');
     expect(out.trim().endsWith('2 additions, 1 removal.')).toBe(true);
+  });
+
+  it('lines mode: keeps a trailing insertion minimal when the new side is longer', () => {
+    const out = run(doc('A\nB\nC', 'A\nX\nC\nD'), opts());
+
+    expect(out).toBe(['  A', '- B', '+ X', '  C', '+ D', '', '2 additions, 1 removal.'].join('\n'));
+    expectCountsMatchOutput(out);
+  });
+
+  it('lines mode: keeps a trailing deletion minimal when the old side is longer', () => {
+    const out = run(doc('A\nB\nC\nD', 'A\nX\nC'), opts());
+
+    expect(out).toBe(['  A', '- B', '+ X', '  C', '- D', '', '1 addition, 2 removals.'].join('\n'));
+    expectCountsMatchOutput(out);
+  });
+
+  it('lines mode: reports a change on the very last line once', () => {
+    const out = run(doc('A\nB', 'A\nC'), opts());
+
+    expect(out).toBe(['  A', '- B', '+ C', '', '1 addition, 1 removal.'].join('\n'));
+    expectCountsMatchOutput(out);
+  });
+
+  it('lines mode: gives the same diff with or without trailing newlines', () => {
+    const expected = ['  A', '- B', '+ X', '  C', '+ D', '', '2 additions, 1 removal.'].join('\n');
+
+    expect(run(doc('A\nB\nC', 'A\nX\nC\nD'), opts())).toBe(expected);
+    expect(run(doc('A\nB\nC\n', 'A\nX\nC\nD\n'), opts())).toBe(expected);
+    expect(run(doc('A\nB\nC\n', 'A\nX\nC\nD'), opts())).toBe(expected);
+    expect(run(doc('A\nB\nC', 'A\nX\nC\nD\n'), opts())).toBe(expected);
+  });
+
+  it('lines mode: a trailing newline alone is not a difference', () => {
+    expect(run(doc('A', 'A\n'), opts())).toBe('No differences.');
+    expect(run(doc('A\nB\n', 'A\nB'), opts())).toBe('No differences.');
+  });
+
+  it('lines mode: a blank line added at the end is still reported', () => {
+    const out = run(doc('A\nB', 'A\nB\n\n'), opts());
+
+    expect(out).toBe(['  A', '  B', '+ ', '', '1 addition, 0 removals.'].join('\n'));
+    expectCountsMatchOutput(out);
+  });
+
+  it('lines mode: handles single-line inputs', () => {
+    const changed = run(doc('only', 'only changed'), opts());
+    expect(changed).toBe(['- only', '+ only changed', '', '1 addition, 1 removal.'].join('\n'));
+    expectCountsMatchOutput(changed);
+
+    const added = run(doc('', 'first line'), opts());
+    expect(added).toBe(['+ first line', '', '1 addition, 0 removals.'].join('\n'));
+    expectCountsMatchOutput(added);
+
+    const removed = run(doc('gone', ''), opts());
+    expect(removed).toBe(['- gone', '', '0 additions, 1 removal.'].join('\n'));
+    expectCountsMatchOutput(removed);
   });
 
   it('lines mode: collapses a long run of unchanged lines into a marker, keeping context', () => {

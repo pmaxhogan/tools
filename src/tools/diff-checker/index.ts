@@ -71,9 +71,17 @@ function summary(additions: number, removals: number): string {
 }
 
 function formatLinesDiff(a: string, b: string, opts: DiffOpts): string {
-  const lineOptions: { ignoreWhitespace?: boolean; ignoreCase?: boolean } = {
+  const lineOptions: {
+    ignoreWhitespace?: boolean;
+    ignoreCase?: boolean;
+    ignoreNewlineAtEof?: boolean;
+  } = {
     ignoreWhitespace: opts.ignoreWhitespace,
     ignoreCase: opts.ignoreCase,
+    // Line tokens keep their newline, so the last line of a document that does
+    // not end in one ("C") never matches the same line elsewhere ("C\n"). That
+    // splits an otherwise minimal diff into a whole-block delete plus insert.
+    ignoreNewlineAtEof: true,
   };
   const entries = toLineEntries(diffLines(a, b, lineOptions));
 
