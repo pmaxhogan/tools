@@ -15,7 +15,7 @@ export const meta: ToolMeta = {
     'png to ico',
     'site.webmanifest',
   ],
-  input: 'image/png',
+  input: 'image/*',
   output: 'application/json',
   options: [
     {
@@ -41,8 +41,8 @@ export const meta: ToolMeta = {
     },
   ],
   copy: {
-    what: 'Turns one PNG into the three things a site actually needs: a favicon.ico you can drop at the root, a site.webmanifest with 192 and 512 pixel icon entries, and the head snippet that wires them together. It reads the PNG header to report the real pixel dimensions and warns you when the source is too small or not square. The ICO is handed back as a data URL you can save straight to disk.',
-    how: 'Drop a PNG onto the input or pick one with the file button. Set the app name, theme color, and background color, which feed the manifest and the theme-color meta tag. Copy each output row: save the ICO as favicon.ico, save the manifest as site.webmanifest, and paste the link tags into your head.',
+    what: 'Turns one source image into the full icon set a site actually needs: a favicon.ico packed from real 16, 32 and 48 pixel renders, a 180 pixel apple-touch-icon, 192 and 512 pixel manifest PNGs, a site.webmanifest, and the head snippet that wires them together. It warns you when the source is small or not square and can center-crop to square for you.',
+    how: 'Drop any image onto the input or pick one with the file button. Set the app name, theme color, and background color, which feed the manifest and the theme-color meta tag. Download each file, or use Download all, then paste the link tags into your head.',
     why: 'Most favicon sites ask you to upload your logo, then watermark the result, paywall the larger sizes, or email you a zip. This one packs the ICO in the page you are already looking at, hands you the exact tags to paste, and your files and inputs never leave your device.',
     faq: [
       {
