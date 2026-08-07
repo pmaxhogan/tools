@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'video-to-gif',
+  icon: 'Clapperboard',
   matrixSlug: 'video-to-gif',
   name: 'Video to GIF',
   description: 'Trim a clip and export an optimised GIF with palette control, all in your browser.',

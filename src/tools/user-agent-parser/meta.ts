@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'user-agent-parser',
+  icon: 'MonitorSmartphone',
   matrixSlug: 'ua',
   name: 'User-Agent Parser',
   description: 'Decode a UA string into browser, engine, OS and device.',

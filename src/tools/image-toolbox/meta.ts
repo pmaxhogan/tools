@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'image-toolbox',
+  icon: 'Images',
   matrixSlug: 'image-tools',
   name: 'Image Toolbox',
   description:

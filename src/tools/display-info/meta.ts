@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'display-info',
+  icon: 'Monitor',
   name: 'Display Info',
   description: 'Live readout of your screen resolution, pixel density, refresh rate, color capabilities, and input features.',
   category: 'Network',

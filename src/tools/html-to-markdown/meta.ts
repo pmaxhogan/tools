@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'html-to-markdown',
+  icon: 'FileCode',
   matrixSlug: 'to-markdown',
   name: 'HTML to Markdown',
   description: 'Turn HTML and rich text pasted from Google Docs or Word into tidy Markdown.',

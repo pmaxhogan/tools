@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'ble-sensor-dashboard',
+  icon: 'Bluetooth',
   matrixSlug: 'ble',
   name: 'BLE Sensor Dashboard',
   description: 'Connect Bluetooth sensors, chart their readings live, and export CSV.',

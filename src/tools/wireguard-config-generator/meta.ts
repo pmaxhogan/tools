@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'wireguard-config-generator',
+  icon: 'Shield',
   matrixSlug: 'wireguard',
   name: 'WireGuard Config',
   description: 'Generate WireGuard key pairs and ready-to-use configs with QR export for phones.',

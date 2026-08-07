@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'invisible-character-detector',
+  icon: 'Ghost',
   matrixSlug: 'invisibles',
   name: 'Invisible Characters',
   description:

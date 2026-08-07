@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'case-converter',
+  icon: 'CaseSensitive',
   matrixSlug: 'case',
   name: 'Case Converter',
   description: 'camelCase, snake_case, kebab-case, Title Case and URL slugs.',

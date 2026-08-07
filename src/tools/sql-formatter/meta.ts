@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'sql-formatter',
+  icon: 'Database',
   matrixSlug: 'sql-format',
   name: 'SQL Formatter',
   description:

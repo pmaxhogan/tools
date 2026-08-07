@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'fake-data-generator',
+  icon: 'Dices',
   matrixSlug: 'fake-data',
   name: 'Fake Data Generator',
   description:

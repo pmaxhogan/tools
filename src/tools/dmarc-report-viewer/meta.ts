@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'dmarc-report-viewer',
+  icon: 'ShieldCheck',
   matrixSlug: 'dmarc',
   name: 'DMARC Report Viewer',
   description: 'Drop a DMARC aggregate report and see who is sending as your domain.',

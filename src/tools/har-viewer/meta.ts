@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'har-viewer',
+  icon: 'Network',
   matrixSlug: 'har',
   name: 'HAR Viewer',
   description:

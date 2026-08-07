@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'mojibake-fixer',
+  icon: 'WandSparkles',
   matrixSlug: 'mojibake',
   name: 'Mojibake Fixer',
   description: 'Repair garbled text like Ã© and â€™ back to the UTF-8 it was meant to be.',

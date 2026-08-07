@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'video-converter',
+  icon: 'Video',
   matrixSlug: 'av-converter',
   name: 'A/V Converter',
   description: 'Convert video and audio between formats locally with ffmpeg.',

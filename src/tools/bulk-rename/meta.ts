@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'bulk-rename',
+  icon: 'FilePen',
   matrixSlug: 'rename',
   name: 'Bulk Rename',
   description: 'Rename many files at once with regex or patterns, previewed before anything is written.',

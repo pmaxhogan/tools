@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'password-generator',
+  icon: 'KeyRound',
   matrixSlug: 'password',
   name: 'Password Generator',
   description: 'Random passwords and diceware passphrases with real entropy maths.',

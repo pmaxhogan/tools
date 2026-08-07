@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'week-number',
+  icon: 'CalendarDays',
   matrixSlug: 'iso-week',
   name: 'Week & Day Numbers',
   description: 'ISO week, day-of-year and quarter lookups.',

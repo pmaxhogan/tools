@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'discord-timestamp',
+  icon: 'Watch',
   matrixSlug: 'discord-time',
   name: 'Discord Timestamps',
   description: "Generate tags that render in every reader's own timezone.",

@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'clipboard-inspector',
+  icon: 'Clipboard',
   matrixSlug: 'clipboard',
   name: 'Clipboard Inspector',
   description: 'See every MIME type sitting on your clipboard with sizes and previews.',

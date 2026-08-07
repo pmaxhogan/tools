@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'snowflake-decoder',
+  icon: 'Snowflake',
   matrixSlug: 'snowflake',
   name: 'Snowflake Decoder',
   description: 'Pull timestamps and worker IDs out of snowflake IDs, Discord links, or a whole batch of them at once.',

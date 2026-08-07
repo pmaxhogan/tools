@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'pdf-toolbox',
+  icon: 'FileText',
   matrixSlug: 'pdf',
   name: 'PDF Toolbox',
   description: 'Merge, split, rotate, reorder, watermark and fill PDFs in your browser.',

@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'gzip-compression-test',
+  icon: 'FileArchive',
   matrixSlug: 'compress',
   name: 'Compression Lab',
   description:

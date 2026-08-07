@@ -90,6 +90,12 @@ export interface ToolMeta {
    * finds the right tool even when those words are not in the name or copy.
    */
   searchTerms?: string[];
+  /**
+   * Name of the lucide-vue-next icon for this tool (e.g. "QrCode", "Clock").
+   * Rendered on tool cards, the sidebar, and the tool page header. Resolved
+   * through the curated map in src/lib/tool-icons.ts so only used icons ship.
+   */
+  icon?: string;
   input: TypeSpec;
   output: TypeSpec;
   options?: OptionSpec[];

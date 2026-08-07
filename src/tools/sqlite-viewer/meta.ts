@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'sqlite-viewer',
+  icon: 'TableProperties',
   matrixSlug: 'sqlite',
   name: 'SQLite Browser',
   description: 'Drop a .db file and browse tables or run SQL, all in your browser.',

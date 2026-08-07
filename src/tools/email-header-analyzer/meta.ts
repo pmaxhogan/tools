@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'email-header-analyzer',
+  icon: 'MailSearch',
   matrixSlug: 'email-headers',
   name: 'Email Header Analyzer',
   description:

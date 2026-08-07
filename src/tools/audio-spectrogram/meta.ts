@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'audio-spectrogram',
+  icon: 'AudioWaveform',
   matrixSlug: 'spectrogram',
   name: 'Spectrogram Viewer',
   description: 'Waveform and frequency spectrogram for any audio or video file.',

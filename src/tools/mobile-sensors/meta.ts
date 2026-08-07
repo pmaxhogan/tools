@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'mobile-sensors',
+  icon: 'Smartphone',
   matrixSlug: 'sensors',
   name: 'Mobile Sensors Explorer',
   description:

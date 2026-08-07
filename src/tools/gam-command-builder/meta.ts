@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'gam-command-builder',
+  icon: 'Terminal',
   matrixSlug: 'gam',
   name: 'GAM Command Builder',
   description:

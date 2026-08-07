@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'jinja-template-tester',
+  icon: 'Code',
   matrixSlug: 'jinja',
   name: 'Jinja Template Tester',
   description: 'Test Home Assistant Jinja templates locally against sample entity state.',

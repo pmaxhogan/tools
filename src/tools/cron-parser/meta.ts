@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'cron-parser',
+  icon: 'CalendarClock',
   matrixSlug: 'cron',
   name: 'Cron Parser',
   description: 'Build expressions, read them in English, preview the next ten runs.',

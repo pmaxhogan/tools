@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'firmware-flasher',
+  icon: 'Cpu',
   matrixSlug: 'flash',
   name: 'Firmware Flasher',
   description: 'Flash ESP32 and ESP8266 boards from the browser, no toolchain to install.',

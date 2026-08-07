@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'favicon-generator',
+  icon: 'AppWindow',
   matrixSlug: 'favicon',
   name: 'Favicon Generator',
   description: 'Build favicon.ico, a web manifest and the right link tags from one source image.',

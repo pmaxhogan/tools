@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import SiteHeader from '@/components/SiteHeader.astro';
+import { iconFor } from '@/lib/tool-icons';
 import type { ToolMeta } from '@/tools/types';
 
 export interface Props {
@@ -9,6 +10,8 @@ export interface Props {
 
 const { meta } = Astro.props;
 const title = `${meta.name}: free, private, in your browser`;
+// Server-rendered to static SVG (no client directive, no hydration).
+const Icon = iconFor(meta.icon);
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -52,7 +55,15 @@ const jsonLd = {
         <span aria-hidden="true"> / </span>
         <span>{meta.category}</span>
       </nav>
-      <h1 class="mt-2 text-3xl font-semibold tracking-tight">{meta.name}</h1>
+      <div class="mt-2 flex items-center gap-3">
+        <span
+          class="grid size-11 shrink-0 place-items-center rounded-[12px] bg-[color:var(--accent-soft)] text-[color:var(--primary)]"
+          aria-hidden="true"
+        >
+          <Icon class="size-6" stroke-width={2} />
+        </span>
+        <h1 class="text-3xl font-semibold tracking-tight">{meta.name}</h1>
+      </div>
       <p class="mt-2 max-w-[68ch] text-muted-foreground">{meta.description}</p>
     </div>
   </div>

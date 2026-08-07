@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'subtitle-editor',
+  icon: 'Captions',
   matrixSlug: 'subtitles',
   name: 'Subtitle Editor',
   description: 'Convert, resync, shift and clean SRT and VTT subtitle files.',

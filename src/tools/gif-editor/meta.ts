@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'gif-editor',
+  icon: 'Film',
   matrixSlug: 'gif-tools',
   name: 'GIF Toolbox',
   description: 'Resize, crop, optimize, reverse, slow down, speed up or split GIFs.',

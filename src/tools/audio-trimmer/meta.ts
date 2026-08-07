@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'audio-trimmer',
+  icon: 'Scissors',
   matrixSlug: 'audio-trim',
   name: 'Audio Trimmer',
   description: 'Cut, fade and loudness-normalise audio in your browser.',

@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'serial-terminal',
+  icon: 'SquareTerminal',
   matrixSlug: 'serial',
   name: 'Serial Terminal',
   description: 'Talk to ESP32, Pico and other serial devices straight from the browser.',

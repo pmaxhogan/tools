@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'keycode',
+  icon: 'Keyboard',
   name: 'Keycode Info',
   description: 'Live key, code, keyCode and modifier readout.',
   category: 'Testers',

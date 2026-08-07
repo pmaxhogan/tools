@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'line-sorter',
+  icon: 'ArrowDownAZ',
   matrixSlug: 'lines',
   name: 'Line Tools',
   description: 'Sort, deduplicate, reverse and shuffle lines of text.',

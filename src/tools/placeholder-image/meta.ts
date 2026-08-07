@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'placeholder-image',
+  icon: 'Image',
   matrixSlug: 'placeholder',
   name: 'Placeholder Images',
   description: 'Generate sized placeholder images and inline data URIs.',

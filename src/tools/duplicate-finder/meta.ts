@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'duplicate-finder',
+  icon: 'CopyCheck',
   matrixSlug: 'dupes',
   name: 'Duplicate Finder',
   description: 'Find identical files in a folder tree by content, then reclaim the space.',

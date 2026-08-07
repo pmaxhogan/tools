@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'svg-optimizer',
+  icon: 'Feather',
   matrixSlug: 'svg-optimize',
   name: 'SVG Optimizer',
   description:

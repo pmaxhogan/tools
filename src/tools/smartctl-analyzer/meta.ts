@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'smartctl-analyzer',
+  icon: 'HardDrive',
   matrixSlug: 'smart',
   name: 'SMART Decoder',
   description: 'Paste smartctl output and get a plain-English drive health verdict.',

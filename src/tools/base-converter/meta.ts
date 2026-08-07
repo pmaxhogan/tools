@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'base-converter',
+  icon: 'Binary',
   matrixSlug: 'base-convert',
   name: 'Base Converter',
   description: 'Binary, octal, decimal and hex with a bitwise visualiser.',

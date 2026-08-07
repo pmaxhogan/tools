@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'csv-viewer',
+  icon: 'Table2',
   matrixSlug: 'csv',
   name: 'CSV Viewer',
   description: 'Open, sort, filter and convert CSV and TSV right in your browser.',

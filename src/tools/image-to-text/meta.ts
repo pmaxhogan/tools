@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'image-to-text',
+  icon: 'ScanText',
   matrixSlug: 'ocr',
   name: 'OCR',
   description: 'Pull text out of images with tesseract, running in your browser.',

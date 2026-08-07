@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'url-parser',
+  icon: 'Link',
   matrixSlug: 'url',
   name: 'URL Parser',
   description: 'Break a URL apart and edit query params as a table.',

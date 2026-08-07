@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'batch-processor',
+  icon: 'Layers',
   matrixSlug: 'batch',
   name: 'Batch Processor',
   description: 'Run a text transform over many files and write the results back, safely.',

@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'folder-diff',
+  icon: 'FolderSync',
   name: 'Folder Diff',
   description: 'Compare two local folders and see exactly what changed.',
   category: 'Files',

@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'data-format-converter',
+  icon: 'ArrowRightLeft',
   matrixSlug: 'data-convert',
   name: 'Data Format Converter',
   description: 'Convert between CSV, JSON, YAML and TOML in any direction.',

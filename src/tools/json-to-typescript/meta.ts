@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'json-to-typescript',
+  icon: 'FileType',
   matrixSlug: 'json-to-types',
   name: 'JSON to Types',
   description:

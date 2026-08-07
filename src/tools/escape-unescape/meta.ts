@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'escape-unescape',
+  icon: 'Quote',
   matrixSlug: 'escape',
   name: 'Escape / Unescape',
   description:

@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'file-type-identifier',
+  icon: 'FileQuestionMark',
   matrixSlug: 'file-id',
   name: 'File Identifier',
   description: 'Work out what a file actually is from its bytes, ignoring the extension.',

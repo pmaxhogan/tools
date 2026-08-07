@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'image-redactor',
+  icon: 'EyeOff',
   matrixSlug: 'redact',
   name: 'Redaction Tool',
   description: 'Black out parts of a screenshot by destroying the pixels, not hiding them.',

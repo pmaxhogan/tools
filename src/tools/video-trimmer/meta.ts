@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'video-trimmer',
+  icon: 'SquareScissors',
   matrixSlug: 'frame-trim',
   name: 'Video Trimmer',
   description: 'Cut video precisely in the browser using WebCodecs, re-encoding only what it must.',

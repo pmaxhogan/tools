@@ -3,6 +3,7 @@ import type { ToolMeta } from '../types';
 export const meta: ToolMeta = {
   slug: 'uuid-generator',
   matrixSlug: 'uuid',
+  icon: 'FingerprintPattern',
   name: 'UUID Generator',
   description: 'Generate v4 (random) or v7 (time-ordered) UUIDs, one or a thousand at a time.',
   category: 'Generators',

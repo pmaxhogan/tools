@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'hash-generator',
+  icon: 'Hash',
   matrixSlug: 'hash',
   name: 'Hash & Checksum',
   description: 'Hash text or files and verify against a known-good value.',

@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'decode-anything',
+  icon: 'ScanSearch',
   matrixSlug: 'decode',
   name: 'Decode Anything',
   description:

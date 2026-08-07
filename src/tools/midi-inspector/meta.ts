@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'midi-inspector',
+  icon: 'Piano',
   name: 'MIDI Inspector',
   description: 'Read a .mid file event by event, or watch a live MIDI device, all in your browser.',
   category: 'Dev',

@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'unicode-picker',
+  icon: 'Sigma',
   matrixSlug: 'unicode',
   name: 'Unicode Picker',
   description: 'Search and copy symbols, arrows, maths and HTML entities.',

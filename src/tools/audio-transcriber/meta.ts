@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'audio-transcriber',
+  icon: 'Mic',
   matrixSlug: 'transcribe',
   name: 'Transcriber',
   description: 'Whisper speech to text with timestamps, running entirely in your browser.',

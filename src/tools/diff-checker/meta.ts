@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'diff-checker',
+  icon: 'GitCompare',
   matrixSlug: 'diff',
   name: 'Diff Checker',
   description: 'Compare two texts line by line, word by word, or as semantic JSON and YAML.',

@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'factorio-blueprint-decoder',
+  icon: 'Factory',
   matrixSlug: 'factorio',
   name: 'Blueprint Surgeon',
   description: 'Decode, inspect, repair and re-encode Factorio blueprint strings.',

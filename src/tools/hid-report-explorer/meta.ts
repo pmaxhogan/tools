@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'hid-report-explorer',
+  icon: 'Usb',
   matrixSlug: 'hid',
   name: 'HID Report Explorer',
   description: 'Inspect the raw HID reports coming off any USB device.',

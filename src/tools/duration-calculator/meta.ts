@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'duration-calculator',
+  icon: 'Hourglass',
   matrixSlug: 'duration',
   name: 'Duration Calculator',
   description: 'Add and subtract clock times and durations.',

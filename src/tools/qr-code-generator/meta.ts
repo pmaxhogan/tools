@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'qr-code-generator',
+  icon: 'QrCode',
   matrixSlug: 'qr-generator',
   name: 'QR Code Generator',
   description:

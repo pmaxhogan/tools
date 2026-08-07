@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'background-remover',
+  icon: 'Eraser',
   matrixSlug: 'remove-bg',
   name: 'Background Remover',
   description: 'Cut people out of photos locally, with no credits and no uploads.',

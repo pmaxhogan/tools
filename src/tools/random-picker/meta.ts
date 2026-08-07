@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'random-picker',
+  icon: 'Shuffle',
   matrixSlug: 'random',
   name: 'Dice & Random Picker',
   description: 'Dice, coin flips, list pickers and team splitters.',

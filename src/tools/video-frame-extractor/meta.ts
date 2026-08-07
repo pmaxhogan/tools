@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'video-frame-extractor',
+  icon: 'Frame',
   matrixSlug: 'frame-extract',
   name: 'Frame Extractor',
   description: 'Scrub a video and save exact frames as PNG.',

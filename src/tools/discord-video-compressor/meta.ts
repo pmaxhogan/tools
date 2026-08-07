@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'discord-video-compressor',
+  icon: 'Shrink',
   matrixSlug: 'discord-compressor',
   name: 'Discord Compressor',
   description:

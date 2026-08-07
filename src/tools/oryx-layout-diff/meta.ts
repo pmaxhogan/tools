@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'oryx-layout-diff',
+  icon: 'LayoutGrid',
   matrixSlug: 'oryx-diff',
   name: 'Oryx Layout Differ',
   description: 'Diff two ZSA Moonlander layouts key by key from their keymap.c files.',

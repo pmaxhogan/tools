@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { highlightHtml, searchTools, type SearchTool } from '@/lib/search';
+import { iconFor } from '@/lib/tool-icons';
 
 /**
  * Interactive island for the sidebar: live search over the tool list with
@@ -8,7 +9,7 @@ import { highlightHtml, searchTools, type SearchTool } from '@/lib/search';
  * Persisted across Astro view transitions, so it tracks the active route from
  * `astro:after-swap` rather than trusting the build-time `currentSlug`.
  */
-export type SidebarTool = SearchTool;
+export type SidebarTool = SearchTool & { icon?: string };
 
 const props = defineProps<{ tools: SidebarTool[]; currentSlug: string }>();
 
@@ -144,11 +145,17 @@ onUnmounted(() => {
               :href="`/${entry.tool.slug}`"
               :aria-current="entry.tool.slug === currentPath ? 'page' : undefined"
               :data-active="entry.index === activeIndex ? 'true' : undefined"
-              class="sidebar-link block rounded-md px-2 py-1.5 text-sm"
+              class="sidebar-link flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
               @mousemove="activeIndex = entry.index"
             >
+              <component
+                :is="iconFor(entry.tool.icon)"
+                class="size-4 shrink-0 opacity-70"
+                :stroke-width="2"
+                aria-hidden="true"
+              />
               <!-- eslint-disable-next-line vue/no-v-html, vue/max-attributes-per-line -- highlightHtml escapes its input -->
-              <span v-html="highlightHtml(entry.tool.name, query)" />
+              <span class="min-w-0 truncate" v-html="highlightHtml(entry.tool.name, query)" />
             </a>
           </li>
         </ul>

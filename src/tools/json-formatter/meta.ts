@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'json-formatter',
+  icon: 'Braces',
   matrixSlug: 'json-tools',
   name: 'JSON / JWT / Base64',
   description: 'Format, minify, decode tokens, and handle base64 and URL encoding.',

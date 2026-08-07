@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'epoch-converter',
+  icon: 'Clock',
   matrixSlug: 'epoch',
   name: 'Epoch Converter',
   description: 'Convert unix timestamps to and from human-readable dates in any time zone.',

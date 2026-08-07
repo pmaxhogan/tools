@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'pipelines',
+  icon: 'Workflow',
   name: 'Composable Pipelines',
   description: 'Chain tools together and share the whole chain as a URL.',
   category: 'Platform',

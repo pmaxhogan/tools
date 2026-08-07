@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'figlet',
+  icon: 'Type',
   matrixSlug: 'figlet',
   name: 'Figlet ASCII Banner',
   description: 'Render text as ASCII banner art in a choice of classic FIGlet fonts.',

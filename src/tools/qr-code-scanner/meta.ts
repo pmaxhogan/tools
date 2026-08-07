@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'qr-code-scanner',
+  icon: 'ScanQrCode',
   name: 'QR Code Scanner',
   description:
     'Scan a QR code with your camera or from an image, then read the decoded link, Wi-Fi login, contact, or location without leaving the page.',

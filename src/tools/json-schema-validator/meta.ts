@@ -2,6 +2,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'json-schema-validator',
+  icon: 'FileCheck',
   matrixSlug: 'json-schema',
   name: 'JSON Schema Validator',
   description:

@@ -2,12 +2,13 @@
 import { computed, ref } from 'vue';
 import { Input } from '@/components/ui/input';
 import { highlightHtml, searchTools, type SearchTool } from '@/lib/search';
+import { iconFor } from '@/lib/tool-icons';
 
 /**
  * Homepage tool grid: search + category-grouped cards. Server-rendered at
  * build (full list in the HTML for SEO), hydrates for filtering.
  */
-export type GridTool = SearchTool;
+export type GridTool = SearchTool & { icon?: string };
 
 const props = defineProps<{ tools: GridTool[] }>();
 const query = ref('');
@@ -23,8 +24,6 @@ const grouped = computed(() => {
   }
   return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 });
-
-const initial = (name: string) => name.trim().charAt(0).toUpperCase();
 </script>
 
 <template>
@@ -65,9 +64,15 @@ const initial = (name: string) => name.trim().charAt(0).toUpperCase();
             class="tool-card flex h-full gap-3 rounded-[14px] border bg-card p-5 shadow-[var(--sh-sm)]"
           >
             <span
-              class="tool-tile grid size-9 shrink-0 place-items-center rounded-[10px] text-sm font-semibold"
+              class="tool-tile grid size-9 shrink-0 place-items-center rounded-[10px]"
               aria-hidden="true"
-            >{{ initial(t.name) }}</span>
+            >
+              <component
+                :is="iconFor(t.icon)"
+                class="size-[18px]"
+                :stroke-width="2"
+              />
+            </span>
             <span class="min-w-0">
               <!-- eslint-disable-next-line vue/no-v-html, vue/max-attributes-per-line -- highlightHtml escapes its input -->
               <span class="block font-semibold" v-html="highlightHtml(t.name, query)" />
