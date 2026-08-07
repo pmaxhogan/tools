@@ -5,6 +5,7 @@ import {
   AXIS_MIN_HZ,
   BANDS,
   ICON_NAMES,
+  NAMED_CHANNELS,
   WIFI_CHANNELS,
   aggregatedUses,
   bandPathAt,
@@ -12,6 +13,7 @@ import {
   bandsCoveringAt,
   describeFrequency,
   energyEvToFrequency,
+  findNamedChannels,
   findWifiChannels,
   flattenBands,
   formatEnergyEv,
@@ -351,8 +353,9 @@ describe("describeFrequency and run", () => {
     expect(r.pathLabel).toBe("Microwave > UHF > 2.4 GHz ISM band > Microwave ovens");
     expect(r.ionizing).toBe(false);
     expect(r.colorHex).toBeNull();
-    // The aggregated readout lists more than the single narrowest use.
-    expect(r.uses.length).toBeGreaterThan(1);
+    // The readout now shows ONLY the most specific band's uses (the oven leaf),
+    // not the aggregated pile from every band covering 2.45 GHz.
+    expect(r.uses).toEqual(["Microwave ovens heat food at about 2.45 GHz"]);
   });
 
   it("run() reads the query option", () => {
@@ -580,5 +583,160 @@ describe("interpretQuery: band and abbreviation search", () => {
 
   it("caps the candidate list", () => {
     expect(interpretQuery("wifi").length).toBeLessThanOrEqual(8);
+  });
+});
+
+describe("named channel dataset (findNamedChannels)", () => {
+  it("resolves marine channels to exact frequencies", () => {
+    expect(findNamedChannels({ service: "marine", channel: 16 })[0]!.centerHz).toBe(156.8e6);
+    expect(findNamedChannels({ service: "marine", channel: 13 })[0]!.centerHz).toBe(156.65e6);
+    expect(findNamedChannels({ service: "marine", channel: 70 })[0]!.centerHz).toBe(156.525e6);
+    // 22A is the US simplex variant on the ship transmit frequency of channel 22.
+    const ch22a = findNamedChannels({ service: "marine", channel: "22A" })[0]!;
+    expect(ch22a.centerHz).toBe(157.1e6);
+    expect(ch22a.channel).toBe("22A");
+    expect(ch22a.simplex).toBe(true);
+    // A bare "marine 22" resolves the same channel the user knows as 22A.
+    expect(findNamedChannels({ service: "marine", channel: 22 })[0]!.channel).toBe("22A");
+  });
+
+  it("keeps duplex marine coast frequencies 4.6 MHz above the ship frequency", () => {
+    const ch20 = findNamedChannels({ service: "marine", channel: 20 })[0]!;
+    expect(ch20.simplex).toBe(false);
+    expect(ch20.shipHz).toBe(157.0e6);
+    expect(ch20.coastHz).toBe(161.6e6);
+  });
+
+  it("resolves the international-only marine channels the US does not assign", () => {
+    expect(findNamedChannels({ service: "marine", channel: 3 })[0]!.centerHz).toBe(156.15e6);
+  });
+
+  it("resolves CB channels including the out-of-order 23, 24, 25", () => {
+    expect(findNamedChannels({ service: "cb", channel: 19 })[0]!.centerHz).toBe(27.185e6);
+    expect(findNamedChannels({ service: "cb", channel: 9 })[0]!.centerHz).toBe(27.065e6);
+    // 23 sits ABOVE 24 and 25 in frequency, the well known CB irregularity.
+    expect(findNamedChannels({ service: "cb", channel: 23 })[0]!.centerHz).toBe(27.255e6);
+    expect(findNamedChannels({ service: "cb", channel: 24 })[0]!.centerHz).toBe(27.235e6);
+    expect(findNamedChannels({ service: "cb", channel: 25 })[0]!.centerHz).toBe(27.245e6);
+    expect(findNamedChannels({ service: "cb", channel: 1 })[0]!.centerHz).toBe(26.965e6);
+    expect(findNamedChannels({ service: "cb", channel: 40 })[0]!.centerHz).toBe(27.405e6);
+  });
+
+  it("resolves NOAA weather channels with WX1 as the highest frequency", () => {
+    expect(findNamedChannels({ service: "noaa", channel: 1 })[0]!.centerHz).toBe(162.55e6);
+    expect(findNamedChannels({ service: "noaa", channel: 2 })[0]!.centerHz).toBe(162.4e6);
+    expect(findNamedChannels({ service: "noaa", channel: 3 })[0]!.centerHz).toBe(162.475e6);
+    expect(findNamedChannels({ service: "noaa", channel: 7 })[0]!.centerHz).toBe(162.525e6);
+    expect(findNamedChannels({ service: "noaa", channel: "WX1" })[0]!.channel).toBe("WX1");
+  });
+
+  it("resolves FM channels with center = 87.9 + 0.2 (ch - 200) MHz", () => {
+    expect(findNamedChannels({ service: "fm", channel: 201 })[0]!.centerHz).toBe(88.1e6);
+    expect(findNamedChannels({ service: "fm", channel: 300 })[0]!.centerHz).toBe(107.9e6);
+    const ch201 = findNamedChannels({ service: "fm", channel: 201 })[0]!;
+    expect(ch201.lowerHz).toBe(88.0e6);
+    expect(ch201.upperHz).toBe(88.2e6);
+  });
+
+  it("resolves US TV channels to their 6 MHz slots and centers", () => {
+    const ch7 = findNamedChannels({ service: "tv", channel: 7 })[0]!;
+    expect(ch7.centerHz).toBe(177e6);
+    expect(ch7.lowerHz).toBe(174e6);
+    expect(ch7.upperHz).toBe(180e6);
+    // UHF channel 14 starts at 470 MHz; the post-repack top is channel 36.
+    expect(findNamedChannels({ service: "tv", channel: 14 })[0]!.lowerHz).toBe(470e6);
+    expect(findNamedChannels({ service: "tv", channel: 36 })[0]!.upperHz).toBe(608e6);
+    expect(findNamedChannels({ service: "tv", channel: 37 })).toHaveLength(0);
+  });
+
+  it("has no em or en dashes in any named channel string", () => {
+    for (const c of NAMED_CHANNELS) {
+      const strings = [c.channel, c.name ?? "", c.notes ?? "", ...(c.uses ?? [])];
+      for (const s of strings) expect(s).not.toMatch(/[—–]/);
+    }
+  });
+
+  it("keeps every channel edge on the correct side of its center", () => {
+    for (const c of NAMED_CHANNELS) {
+      expect(c.lowerHz).toBeLessThan(c.centerHz);
+      expect(c.upperHz).toBeGreaterThan(c.centerHz);
+    }
+  });
+});
+
+describe("interpretQuery: named channels", () => {
+  it("resolves marine, CB, NOAA, FM and TV channel queries to exact centers", () => {
+    const marine = interpretQuery("marine channel 16")[0]!;
+    expect(marine.kind).toBe("channel");
+    expect(marine.frequencyHz).toBe(156.8e6);
+    expect(marine.rangeHz).toEqual([156.8e6 - 12500, 156.8e6 + 12500]);
+
+    expect(interpretQuery("cb channel 19")[0]!.frequencyHz).toBe(27.185e6);
+    expect(interpretQuery("cb 19")[0]!.frequencyHz).toBe(27.185e6);
+    expect(interpretQuery("noaa weather channel 3")[0]!.frequencyHz).toBe(162.475e6);
+    expect(interpretQuery("wx1")[0]!.frequencyHz).toBe(162.55e6);
+    expect(interpretQuery("fm channel 201")[0]!.frequencyHz).toBe(88.1e6);
+    expect(interpretQuery("fm 201")[0]!.frequencyHz).toBe(88.1e6);
+    expect(interpretQuery("tv channel 7")[0]!.frequencyHz).toBe(177e6);
+  });
+
+  it("accepts the bare 'marine 16' and 'marine 22a' forms", () => {
+    expect(interpretQuery("marine 16")[0]!.frequencyHz).toBe(156.8e6);
+    const ch22a = interpretQuery("marine 22a")[0]!;
+    expect(ch22a.kind).toBe("channel");
+    expect(ch22a.frequencyHz).toBe(157.1e6);
+  });
+
+  it("ranks the exact channel above fuzzy band-name matches", () => {
+    // "cb 19" also brushes the CB radio band by alias, but the channel leads.
+    const cands = interpretQuery("cb 19");
+    expect(cands[0]!.kind).toBe("channel");
+    expect(cands[0]!.frequencyHz).toBe(27.185e6);
+    expect(cands.some((c) => c.kind === "band")).toBe(true);
+  });
+
+  it("does not let a Wi-Fi channel steal a named service query", () => {
+    // 6 GHz Wi-Fi has a channel 201 and 2.4 GHz has a channel 7, but the named
+    // service must win: no Wi-Fi candidate should appear for these.
+    expect(interpretQuery("fm channel 201").every((c) => c.kind !== "wifi")).toBe(true);
+    expect(interpretQuery("tv channel 7").every((c) => c.kind !== "wifi")).toBe(true);
+  });
+
+  it("still resolves bare and 'wifi' flavored channel queries to Wi-Fi", () => {
+    expect(interpretQuery("channel 149")[0]!.kind).toBe("wifi");
+    expect(interpretQuery("wifi ch 6")[0]!.frequencyHz).toBe(2.437e9);
+    expect(interpretQuery("5ghz channel 36")[0]!.frequencyHz).toBe(5.18e9);
+  });
+
+  it("never throws on a channel-shaped garbage query", () => {
+    expect(() => interpretQuery("marine channel banana")).not.toThrow();
+    expect(() => interpretQuery("tv")).not.toThrow();
+  });
+});
+
+describe("describeFrequency shows the most specific uses (deliverable 3)", () => {
+  it("returns only the deepest band's uses at a 2.4 GHz Wi-Fi channel point", () => {
+    // 2.437 GHz is the center of Wi-Fi channel 6; the readout must show just that
+    // leaf's short list, not the aggregated pile of every 2.4 GHz occupant.
+    const r = describeFrequency(2.437e9);
+    expect(r.pathLabel).toBe("Microwave > UHF > 2.4 GHz ISM band > Wi-Fi channel 6");
+    expect(r.uses).toEqual(["2.4 GHz Wi-Fi centered on 2437 MHz"]);
+    // The aggregated view (kept exported) still lists more than one use there.
+    expect(aggregatedUses(2.437e9).length).toBeGreaterThan(1);
+  });
+
+  it("matches usesAt, the most-specific selector, at several points", () => {
+    for (const f of [100e6, 2.437e9, 2.45e9, 1575.42e6, 27.185e6]) {
+      expect(describeFrequency(f).uses).toEqual(usesAt(f));
+    }
+  });
+
+  it("resolves the new NOAA WX leaves in the visible tree", () => {
+    expect(bandPathLabel(bandPathAt(162.55e6))).toBe(
+      "Radio > VHF > NOAA weather radio > Weather channel WX1",
+    );
+    expect(bandPathLabel(bandPathAt(162.4e6))).toBe(
+      "Radio > VHF > NOAA weather radio > Weather channel WX2",
+    );
   });
 });

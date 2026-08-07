@@ -746,6 +746,22 @@ export const BANDS: Band[] = [
             fLow: 7.0e6,
             fHigh: 7.3e6,
             uses: ["A reliable amateur band day and night"],
+            children: [
+              {
+                id: "hf-40m-cw",
+                name: "40 m CW and data",
+                fLow: 7.0e6,
+                fHigh: 7.125e6,
+                uses: ["Morse code and digital modes"],
+              },
+              {
+                id: "hf-40m-ssb",
+                name: "40 m SSB voice",
+                fLow: 7.125e6,
+                fHigh: 7.3e6,
+                uses: ["Single sideband voice, busy in the evenings"],
+              },
+            ],
           },
           {
             id: "hf-31m",
@@ -945,6 +961,14 @@ export const BANDS: Band[] = [
                 uses: ["Digital Selective Calling for automated distress alerts"],
               },
               {
+                id: "marine-ch13",
+                name: "Marine Channel 13 bridge to bridge",
+                aliases: ["channel 13", "ch 13", "bridge to bridge"],
+                fLow: 156.6375e6,
+                fHigh: 156.6625e6,
+                uses: ["The 156.65 MHz intership navigation safety channel"],
+              },
+              {
                 id: "marine-ch16",
                 name: "Marine Channel 16 distress",
                 icon: "Anchor",
@@ -953,6 +977,14 @@ export const BANDS: Band[] = [
                 fHigh: 156.85e6,
                 uses: ["The 156.8 MHz international hailing and distress channel"],
               },
+              {
+                id: "marine-ch22a",
+                name: "Marine Channel 22A Coast Guard",
+                aliases: ["channel 22a", "22a", "coast guard liaison"],
+                fLow: 157.0875e6,
+                fHigh: 157.1125e6,
+                uses: ["The 157.1 MHz US Coast Guard liaison and safety broadcast channel"],
+              },
             ],
           },
           {
@@ -960,9 +992,63 @@ export const BANDS: Band[] = [
             name: "NOAA weather radio",
             icon: "CloudRain",
             aliases: ["noaa", "weather radio", "weather", "wx"],
-            fLow: 162.4e6,
-            fHigh: 162.55e6,
+            // Widened to the outer edges of the seven 25 kHz channels (162.3875 to
+            // 162.5625 MHz) so the WX leaves tile the parent as a clean partition.
+            fLow: 162.3875e6,
+            fHigh: 162.5625e6,
             uses: ["Continuous weather broadcasts and emergency alerts"],
+            // The seven channels are not in frequency order: WX1 is the highest.
+            children: [
+              {
+                id: "noaa-wx2",
+                name: "Weather channel WX2",
+                fLow: 162.3875e6,
+                fHigh: 162.4125e6,
+                uses: ["The 162.400 MHz NOAA weather transmitter"],
+              },
+              {
+                id: "noaa-wx4",
+                name: "Weather channel WX4",
+                fLow: 162.4125e6,
+                fHigh: 162.4375e6,
+                uses: ["The 162.425 MHz NOAA weather transmitter"],
+              },
+              {
+                id: "noaa-wx5",
+                name: "Weather channel WX5",
+                fLow: 162.4375e6,
+                fHigh: 162.4625e6,
+                uses: ["The 162.450 MHz NOAA weather transmitter"],
+              },
+              {
+                id: "noaa-wx3",
+                name: "Weather channel WX3",
+                fLow: 162.4625e6,
+                fHigh: 162.4875e6,
+                uses: ["The 162.475 MHz NOAA weather transmitter"],
+              },
+              {
+                id: "noaa-wx6",
+                name: "Weather channel WX6",
+                fLow: 162.4875e6,
+                fHigh: 162.5125e6,
+                uses: ["The 162.500 MHz NOAA weather transmitter"],
+              },
+              {
+                id: "noaa-wx7",
+                name: "Weather channel WX7",
+                fLow: 162.5125e6,
+                fHigh: 162.5375e6,
+                uses: ["The 162.525 MHz NOAA weather transmitter"],
+              },
+              {
+                id: "noaa-wx1",
+                name: "Weather channel WX1",
+                fLow: 162.5375e6,
+                fHigh: 162.5625e6,
+                uses: ["The 162.550 MHz NOAA weather transmitter, the most common channel"],
+              },
+            ],
           },
           {
             id: "vhf-1p25m",
@@ -1110,3 +1196,417 @@ const WIFI_6: WifiChannel[] = [
 
 /** Every modeled US / North American Wi-Fi channel across all three bands. */
 export const WIFI_CHANNELS: WifiChannel[] = [...WIFI_24, ...WIFI_5, ...WIFI_6];
+
+/* ================================================================== */
+/* Numbered and named channel systems (US / North America)            */
+/* ================================================================== */
+
+/**
+ * The named channel services the search brain resolves. Each is a family of
+ * numbered or named channels with fixed frequencies, so "marine channel 16" or
+ * "cb 19" jumps to an exact spot on the axis.
+ */
+export type ChannelService = "marine" | "cb" | "noaa" | "fm" | "tv";
+
+/**
+ * One numbered or named channel in a fixed-frequency service. Frequencies are in
+ * hertz. `centerHz` is the representative (transmit) frequency the search jumps
+ * to; `lowerHz` and `upperHz` are the channel edges so the panel can zoom to fit.
+ * For duplex marine channels `shipHz` and `coastHz` carry the two paired
+ * frequencies (ship transmit and coast transmit); on simplex channels they are
+ * equal. `number` is the plain numeric part so a bare "marine 22" resolves the
+ * same channel a user knows as 22A.
+ */
+export interface NamedChannel {
+  service: ChannelService;
+  /** Canonical channel id, for example "16", "22A", "WX1", "201" or "7". */
+  channel: string;
+  /** Numeric part of the id, for bare "cb 19" or "marine 22" style lookups. */
+  number: number;
+  /** Human name, for example "Channel 16" or "FM channel 201". */
+  name?: string;
+  /** Short extra note (band, region, restriction). */
+  notes?: string;
+  /** True when the channel transmits and receives on one frequency. */
+  simplex?: boolean;
+  /** Marine ship transmit frequency in hertz. */
+  shipHz?: number;
+  /** Marine coast transmit (ship receive) frequency in hertz. */
+  coastHz?: number;
+  /** Representative (transmit) frequency in hertz, the jump target. */
+  centerHz: number;
+  /** Channel low edge in hertz. */
+  lowerHz: number;
+  /** Channel high edge in hertz. */
+  upperHz: number;
+  /** Common real world uses, plain sentences with no dashes. */
+  uses?: string[];
+}
+
+const KHZ = 1e3;
+
+/*
+ * All frequencies below are built from integer kilohertz or integer megahertz
+ * and scaled to hertz exactly once, so the results are exact doubles (for
+ * example 156800 * 1e3 is precisely 156800000, whereas 156.0 + 0.05 * 16 is
+ * 156.80000000000001). This keeps the search resolutions equal to their clean
+ * literal values.
+ */
+
+/* ---- Marine VHF (US channel plan) --------------------------------- */
+
+/*
+ * Ship transmit frequency, in kHz, for an ITU marine VHF channel number. The two
+ * interleaved grids are channels 1 to 28 (base 156.000 MHz, 50 kHz steps) and 60
+ * to 88 (base 156.025 MHz, 50 kHz steps). A duplex channel's coast transmit
+ * frequency sits exactly 4.600 MHz above the ship frequency. Verified against the
+ * US Coast Guard Navigation Center US VHF channel table (navcen.uscg.gov) and
+ * https://en.wikipedia.org/wiki/Marine_VHF_radio: 16 = 156.800, 13 = 156.650,
+ * 70 = 156.525 (DSC), 22A = 157.100. US "A" channels are simplex on the ship
+ * transmit frequency of the matching international duplex channel.
+ */
+function marineShipKHz(n: number): number {
+  return n <= 28 ? 156000 + 50 * n : 156025 + 50 * (n - 60);
+}
+const MARINE_COAST_OFFSET_KHZ = 4600;
+const MARINE_HALF_HZ = 12_500; // 25 kHz channel spacing, half width
+
+interface MarineSpec {
+  n: number;
+  /** US simplex "A" variant on the ship frequency. */
+  a?: boolean;
+  /** Duplex: ship transmits low, coast transmits 4.6 MHz higher. */
+  duplex?: boolean;
+  /** False when the international channel is not used in the US channel plan. */
+  usUnassigned?: boolean;
+  use: string;
+}
+
+// The full US channel plan (channels 1 to 28 and 60 to 88). Channels marked
+// usUnassigned are the international duplex channels the US does not assign; they
+// are kept so "marine channel 3" still resolves to a real frequency.
+const MARINE_SPEC: MarineSpec[] = [
+  {
+    n: 1,
+    a: true,
+    use: "Port operations and commercial, VTS in the New Orleans and Lower Mississippi areas",
+  },
+  {
+    n: 2,
+    duplex: true,
+    usUnassigned: true,
+    use: "International duplex channel, not assigned in the US channel plan",
+  },
+  {
+    n: 3,
+    duplex: true,
+    usUnassigned: true,
+    use: "International duplex channel, not assigned in the US channel plan",
+  },
+  {
+    n: 4,
+    duplex: true,
+    usUnassigned: true,
+    use: "International duplex channel, not assigned in the US channel plan",
+  },
+  { n: 5, a: true, use: "Port operations or VTS in the Houston, New Orleans and Seattle areas" },
+  { n: 6, use: "Intership safety" },
+  { n: 7, a: true, use: "Commercial" },
+  { n: 8, use: "Commercial, intership only" },
+  { n: 9, use: "Boater calling, commercial and noncommercial" },
+  { n: 10, use: "Commercial" },
+  { n: 11, use: "Commercial and VTS in selected areas" },
+  { n: 12, use: "Port operations and VTS in selected areas" },
+  { n: 13, use: "Intership navigation safety, bridge to bridge" },
+  { n: 14, use: "Port operations and VTS in selected areas" },
+  { n: 15, use: "Environmental and Class C EPIRBs, receive only" },
+  { n: 16, use: "International distress, safety and calling" },
+  { n: 17, use: "State and local government maritime control" },
+  { n: 18, a: true, use: "Commercial" },
+  { n: 19, a: true, use: "Commercial" },
+  { n: 20, duplex: true, use: "Port operations" },
+  { n: 21, a: true, use: "US Coast Guard only" },
+  { n: 22, a: true, use: "Coast Guard liaison and maritime safety information broadcasts" },
+  { n: 23, a: true, use: "US Coast Guard only" },
+  { n: 24, duplex: true, use: "Public correspondence, marine operator" },
+  { n: 25, duplex: true, use: "Public correspondence, marine operator" },
+  { n: 26, duplex: true, use: "Public correspondence, marine operator" },
+  { n: 27, duplex: true, use: "Public correspondence, marine operator" },
+  { n: 28, duplex: true, use: "Public correspondence, marine operator" },
+  {
+    n: 60,
+    duplex: true,
+    usUnassigned: true,
+    use: "International duplex channel, not assigned in the US channel plan",
+  },
+  {
+    n: 61,
+    duplex: true,
+    usUnassigned: true,
+    use: "International duplex channel, not assigned in the US channel plan",
+  },
+  {
+    n: 62,
+    duplex: true,
+    usUnassigned: true,
+    use: "International duplex channel, not assigned in the US channel plan",
+  },
+  {
+    n: 63,
+    a: true,
+    use: "Port operations and commercial, VTS in the New Orleans and Lower Mississippi areas",
+  },
+  {
+    n: 64,
+    duplex: true,
+    usUnassigned: true,
+    use: "International duplex channel, not assigned in the US channel plan",
+  },
+  { n: 65, a: true, use: "Port operations" },
+  { n: 66, a: true, use: "Port operations" },
+  { n: 67, use: "Commercial and bridge to bridge on the Lower Mississippi River" },
+  { n: 68, use: "Noncommercial, recreational" },
+  { n: 69, use: "Noncommercial, recreational" },
+  { n: 70, use: "Digital Selective Calling for distress, safety and calling, voice not allowed" },
+  { n: 71, use: "Noncommercial, recreational" },
+  { n: 72, use: "Noncommercial, intership only" },
+  { n: 73, use: "Port operations" },
+  { n: 74, use: "Port operations" },
+  { n: 75, use: "Port operations, intership only, guard band near channel 16" },
+  { n: 76, use: "Port operations, intership only, guard band near channel 16" },
+  { n: 77, use: "Port operations, intership only" },
+  { n: 78, a: true, use: "Noncommercial" },
+  { n: 79, a: true, use: "Commercial, and noncommercial on the Great Lakes" },
+  { n: 80, a: true, use: "Commercial" },
+  { n: 81, a: true, use: "US government only, environmental protection operations" },
+  { n: 82, a: true, use: "US government only" },
+  { n: 83, a: true, use: "US Coast Guard only" },
+  { n: 84, duplex: true, use: "Public correspondence, marine operator" },
+  { n: 85, duplex: true, use: "Public correspondence, marine operator" },
+  { n: 86, duplex: true, use: "Public correspondence, marine operator" },
+  { n: 87, use: "Port operations" },
+  { n: 88, use: "Commercial, intership only near the Canadian border" },
+];
+
+const MARINE_CHANNELS: NamedChannel[] = MARINE_SPEC.map((s) => {
+  const shipKHz = marineShipKHz(s.n);
+  const coastKHz = s.duplex ? shipKHz + MARINE_COAST_OFFSET_KHZ : shipKHz;
+  const centerHz = shipKHz * KHZ;
+  const channel = s.a ? `${s.n}A` : `${s.n}`;
+  return {
+    service: "marine" as const,
+    channel,
+    number: s.n,
+    name: `Channel ${channel}`,
+    notes: s.usUnassigned
+      ? "International duplex, not in the US plan"
+      : s.duplex
+        ? "Duplex, US channel plan"
+        : "Simplex, US channel plan",
+    simplex: !s.duplex,
+    shipHz: shipKHz * KHZ,
+    coastHz: coastKHz * KHZ,
+    centerHz,
+    lowerHz: centerHz - MARINE_HALF_HZ,
+    upperHz: centerHz + MARINE_HALF_HZ,
+    uses: [s.use],
+  };
+});
+
+/* ---- CB radio (US 40 channel plan) -------------------------------- */
+
+/*
+ * The 40 US CB channels in kHz. This is hand tabled, not arithmetic, because the
+ * plan has real irregularities: channels 23, 24 and 25 run out of numerical order
+ * (23 sits above 25), and the gaps at 27.045, 27.095 and 27.145 MHz are the
+ * radio control frequencies that split the grid. Verified against
+ * https://en.wikipedia.org/wiki/Citizens_band_radio (26.965 to 27.405 MHz).
+ */
+const CB_KHZ: Record<number, number> = {
+  1: 26965,
+  2: 26975,
+  3: 26985,
+  4: 27005,
+  5: 27015,
+  6: 27025,
+  7: 27035,
+  8: 27055,
+  9: 27065,
+  10: 27075,
+  11: 27085,
+  12: 27105,
+  13: 27115,
+  14: 27125,
+  15: 27135,
+  16: 27155,
+  17: 27165,
+  18: 27175,
+  19: 27185,
+  20: 27205,
+  21: 27215,
+  22: 27225,
+  23: 27255,
+  24: 27235,
+  25: 27245,
+  26: 27265,
+  27: 27275,
+  28: 27285,
+  29: 27295,
+  30: 27305,
+  31: 27315,
+  32: 27325,
+  33: 27335,
+  34: 27345,
+  35: 27355,
+  36: 27365,
+  37: 27375,
+  38: 27385,
+  39: 27395,
+  40: 27405,
+};
+const CB_USE: Record<number, string> = {
+  9: "Emergency and roadside assistance channel",
+  19: "Highway and trucker channel",
+};
+const CB_HALF_HZ = 5_000; // 10 kHz channel spacing, half width
+
+const CB_CHANNELS: NamedChannel[] = Object.keys(CB_KHZ)
+  .map(Number)
+  .sort((a, b) => a - b)
+  .map((n) => {
+    const centerHz = CB_KHZ[n]! * KHZ;
+    return {
+      service: "cb" as const,
+      channel: `${n}`,
+      number: n,
+      name: `Channel ${n}`,
+      simplex: true,
+      centerHz,
+      lowerHz: centerHz - CB_HALF_HZ,
+      upperHz: centerHz + CB_HALF_HZ,
+      uses: [CB_USE[n] ?? "License free Citizens Band voice"],
+    };
+  });
+
+/* ---- NOAA Weather Radio (WX1 to WX7) ------------------------------ */
+
+/*
+ * The seven NOAA Weather Radio channels in kHz. The channel numbers are NOT in
+ * frequency order: WX1 is the highest at 162.550 MHz. Verified against the
+ * National Weather Service (weather.gov/nwr) and the RadioReference wiki.
+ */
+const WX_KHZ: Record<number, number> = {
+  1: 162550,
+  2: 162400,
+  3: 162475,
+  4: 162425,
+  5: 162450,
+  6: 162500,
+  7: 162525,
+};
+const WX_HALF_HZ = 12_500; // 25 kHz channels
+
+const NOAA_CHANNELS: NamedChannel[] = Object.keys(WX_KHZ)
+  .map(Number)
+  .sort((a, b) => a - b)
+  .map((n) => {
+    const centerHz = WX_KHZ[n]! * KHZ;
+    return {
+      service: "noaa" as const,
+      channel: `WX${n}`,
+      number: n,
+      name: `Weather channel WX${n}`,
+      simplex: true,
+      centerHz,
+      lowerHz: centerHz - WX_HALF_HZ,
+      upperHz: centerHz + WX_HALF_HZ,
+      uses: ["Continuous NOAA weather broadcasts and emergency alerts"],
+    };
+  });
+
+/* ---- FM broadcast channels (US, 201 to 300) ----------------------- */
+
+/*
+ * US FM channels 201 through 300. Center frequency = 87.9 + 0.2 * (channel - 200)
+ * MHz, so channel 201 is 88.1 MHz and channel 300 is 107.9 MHz. Each channel is
+ * 200 kHz wide. Built in integer units of 100 kHz so the centers are exact
+ * (channel 201 = 881 * 1e5 Hz = 88.1 MHz). Channels 201 to 220 (88.1 to 91.9 MHz)
+ * are the reserved noncommercial educational band.
+ * https://en.wikipedia.org/wiki/FM_broadcast_band
+ */
+const FM_HALF_HZ = 100_000; // 200 kHz channels
+
+const FM_CHANNELS: NamedChannel[] = [];
+for (let ch = 201; ch <= 300; ch++) {
+  const centerHz = (879 + 2 * (ch - 200)) * 1e5;
+  FM_CHANNELS.push({
+    service: "fm",
+    channel: `${ch}`,
+    number: ch,
+    name: `FM channel ${ch}`,
+    notes: ch <= 220 ? "Reserved noncommercial educational band" : "Commercial FM band",
+    simplex: true,
+    centerHz,
+    lowerHz: centerHz - FM_HALF_HZ,
+    upperHz: centerHz + FM_HALF_HZ,
+    uses: [
+      ch <= 220 ? "Noncommercial and educational FM radio" : "Commercial FM radio broadcasting",
+    ],
+  });
+}
+
+/* ---- US television channels (VHF 2 to 13, UHF 14 to 36) ----------- */
+
+/*
+ * US broadcast TV channels. Each occupies a 6 MHz slot. The VHF low, mid and high
+ * band edges are irregular (gaps at 72 to 76 MHz and 88 to 174 MHz), so the lower
+ * edges are hand tabled; UHF is a clean 6 MHz grid from channel 14 (470 MHz). The
+ * post repack UHF top is channel 36 (602 to 608 MHz); channel 37 is reserved for
+ * radio astronomy and 38 and up were auctioned as the 600 MHz mobile band.
+ * https://en.wikipedia.org/wiki/North_American_television_frequencies
+ */
+const TV_LOWER_MHZ: Record<number, number> = {
+  2: 54,
+  3: 60,
+  4: 66,
+  5: 76,
+  6: 82,
+  7: 174,
+  8: 180,
+  9: 186,
+  10: 192,
+  11: 198,
+  12: 204,
+  13: 210,
+};
+for (let n = 14; n <= 36; n++) TV_LOWER_MHZ[n] = 470 + 6 * (n - 14);
+
+const TV_CHANNELS: NamedChannel[] = Object.keys(TV_LOWER_MHZ)
+  .map(Number)
+  .sort((a, b) => a - b)
+  .map((n) => {
+    const lowerHz = TV_LOWER_MHZ[n]! * MHZ;
+    const upperHz = (TV_LOWER_MHZ[n]! + 6) * MHZ;
+    const band = n <= 13 ? "VHF" : "UHF";
+    return {
+      service: "tv" as const,
+      channel: `${n}`,
+      number: n,
+      name: `TV channel ${n}`,
+      notes: `${band} broadcast television`,
+      simplex: true,
+      centerHz: (TV_LOWER_MHZ[n]! + 3) * MHZ,
+      lowerHz,
+      upperHz,
+      uses: ["Over the air broadcast television in the United States"],
+    };
+  });
+
+/** Every modeled US / North American numbered or named channel. */
+export const NAMED_CHANNELS: NamedChannel[] = [
+  ...MARINE_CHANNELS,
+  ...CB_CHANNELS,
+  ...NOAA_CHANNELS,
+  ...FM_CHANNELS,
+  ...TV_CHANNELS,
+];

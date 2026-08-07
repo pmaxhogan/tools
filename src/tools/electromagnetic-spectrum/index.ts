@@ -8,9 +8,12 @@ import {
   H,
   ICON_NAMES,
   IONIZING_EV,
+  NAMED_CHANNELS,
   WIEN_B,
   WIFI_CHANNELS,
   type Band,
+  type ChannelService,
+  type NamedChannel,
   type WifiBand,
   type WifiChannel,
 } from "./data";
@@ -35,10 +38,11 @@ export {
   H,
   ICON_NAMES,
   IONIZING_EV,
+  NAMED_CHANNELS,
   WIEN_B,
   WIFI_CHANNELS,
 };
-export type { Band, WifiBand, WifiChannel };
+export type { Band, ChannelService, NamedChannel, WifiBand, WifiChannel };
 
 /* ------------------------------------------------------------------ */
 /* Core conversions                                                    */
@@ -629,6 +633,42 @@ export function findWifiChannels(query: {
 }
 
 /* ------------------------------------------------------------------ */
+/* Named / numbered channel lookup (marine, CB, NOAA, FM, TV)          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Normalize a channel identifier for comparison: uppercase, strip whitespace and
+ * drop leading zeros on the numeric part ("05a" and "5A" both become "5A", "016"
+ * becomes "16"). Keeps the "WX" prefix and any trailing "A" variant letter.
+ */
+function normChannelId(id: string): string {
+  return String(id)
+    .toUpperCase()
+    .replace(/\s+/g, "")
+    .replace(/^0+(?=\d)/, "");
+}
+
+/**
+ * Every named or numbered channel matching a query. `channel` may be a canonical
+ * id ("22A", "WX1", "201") or a bare number; a bare number matches by the
+ * channel's numeric part, so "marine 22" finds the channel a user knows as 22A.
+ * `service` narrows the result when given. Results are ordered by service then by
+ * channel number.
+ */
+export function findNamedChannels(query: {
+  service?: ChannelService;
+  channel: string | number;
+}): NamedChannel[] {
+  const q = normChannelId(String(query.channel));
+  const qNum = /^\d+$/.test(q) ? Number(q) : null;
+  return NAMED_CHANNELS.filter((c) => {
+    if (query.service !== undefined && c.service !== query.service) return false;
+    if (normChannelId(c.channel) === q) return true;
+    return qNum !== null && c.number === qNum;
+  }).sort((a, b) => a.service.localeCompare(b.service) || a.number - b.number);
+}
+
+/* ------------------------------------------------------------------ */
 /* The "jump to" search brain: interpretQuery                          */
 /* ------------------------------------------------------------------ */
 
@@ -641,7 +681,7 @@ export interface Interpretation {
   /** Stable key for v-for. */
   id: string;
   /** What kind of reading produced this candidate. */
-  kind: "frequency" | "wavelength" | "energy" | "band" | "wifi";
+  kind: "frequency" | "wavelength" | "energy" | "band" | "wifi" | "channel";
   /** Primary label, for example "2.462 GHz" or "VHF". */
   label: string;
   /** Secondary line, for example a band path or the channel width. */
@@ -661,7 +701,9 @@ export const MAX_INTERPRETATIONS = 8;
  * Ranking, best first:
  *   1. An exact numeric-plus-unit parse (a frequency, wavelength or energy).
  *      This is the most literal reading of what the user typed, so it leads.
- *   2. Exact Wi-Fi channel matches, narrowest width first, then by band.
+ *   2. Exact channel matches. A named service query (marine, CB, NOAA, FM, TV)
+ *      resolves to that service's channel; otherwise a Wi-Fi channel query
+ *      resolves to the Wi-Fi channel, narrowest width first then by band.
  *   3. Fuzzy band-name and abbreviation matches, by match strength (an exact
  *      name or alias above a whole-word substring), then narrowest band first.
  * Duplicates (by id) are dropped keeping the earliest, and the list is capped at
@@ -766,6 +808,76 @@ function wifiInterpretation(c: WifiChannel): Interpretation {
   };
 }
 
+/* Named / numbered channel queries (marine, CB, NOAA, FM, TV). */
+
+/** Human label and jump icon for each channel service. */
+const SERVICE_META: Record<ChannelService, { label: string; icon: string }> = {
+  marine: { label: "Marine", icon: "Ship" },
+  cb: { label: "CB", icon: "Antenna" },
+  noaa: { label: "NOAA weather", icon: "CloudRain" },
+  fm: { label: "FM", icon: "RadioReceiver" },
+  tv: { label: "TV", icon: "Tv" },
+};
+
+/**
+ * Detect which channel service a free text query names, or null. Marine accepts
+ * "marine" and "maritime"; CB accepts "cb" and "citizens band"; NOAA accepts
+ * "noaa", "weather" and the fused "wx" form; FM accepts "fm"; TV accepts "tv" and
+ * "television". The fused "wx3" form is handled in parseNamedChannel.
+ */
+function detectService(lower: string): ChannelService | null {
+  if (/\bmarine\b|\bmaritime\b/.test(lower)) return "marine";
+  if (/\bcb\b|\bcitizens?\s+band\b/.test(lower)) return "cb";
+  if (/\bnoaa\b|\bweather\b|\bwx\d|\bwx\b/.test(lower)) return "noaa";
+  if (/\bfm\b/.test(lower)) return "fm";
+  if (/\btv\b|\btelevision\b/.test(lower)) return "tv";
+  return null;
+}
+
+/**
+ * Pull a named channel service and channel id out of a free text query. Handles
+ * "<service> channel <n>", "<service> ch <n>", a bare "<service> <n>", the marine
+ * "A" simplex suffix ("marine 22a"), and the fused NOAA weather form ("wx3").
+ * Returns null when no service is named or no channel number is present.
+ */
+function parseNamedChannel(raw: string): { service: ChannelService; channel: string } | null {
+  const lower = raw.toLowerCase();
+  const service = detectService(lower);
+  if (service === null) return null;
+
+  // NOAA fused form: "wx3" or "wx 3".
+  if (service === "noaa") {
+    const wx = /\bwx\s*(\d{1,2})\b/.exec(lower);
+    if (wx) return { service, channel: wx[1]! };
+  }
+
+  // "channel 22a" or "ch 22a" or "ch. 22".
+  const keyed = /\bch(?:annel|\.)?\s*(\d{1,3})\s*(a)?\b/.exec(lower);
+  if (keyed) return { service, channel: keyed[1]! + (keyed[2] ? "A" : "") };
+
+  // A bare trailing number, optionally with the marine "A" suffix.
+  const bare = /\b(\d{1,3})\s*(a)?\b/.exec(lower);
+  if (bare) return { service, channel: bare[1]! + (bare[2] ? "A" : "") };
+
+  return null;
+}
+
+/** Present one named channel as a search candidate. */
+function namedChannelInterpretation(c: NamedChannel): Interpretation {
+  const meta = SERVICE_META[c.service];
+  const detailBits = [formatFrequency(c.centerHz)];
+  if (c.uses && c.uses.length) detailBits.push(c.uses[0]!);
+  return {
+    id: `chan-${c.service}-${c.channel}`,
+    kind: "channel",
+    label: `${meta.label} channel ${c.channel}`,
+    detail: detailBits.join(", "),
+    frequencyHz: c.centerHz,
+    rangeHz: [c.lowerHz, c.upperHz],
+    icon: meta.icon,
+  };
+}
+
 /** Escape a string for safe use inside a regular expression. */
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -840,11 +952,20 @@ export function interpretQuery(input: string): Interpretation[] {
   const numeric = interpretNumeric(text);
   if (numeric) candidates.push(numeric);
 
-  // 2. Wi-Fi channel matches.
-  const wifi = parseWifiQuery(text);
-  if (wifi) {
-    for (const c of findWifiChannels({ band: wifi.band, channel: wifi.channel })) {
-      candidates.push(wifiInterpretation(c));
+  // 2. Named / numbered channel matches (marine, CB, NOAA, FM, TV). When the
+  // query names a service the Wi-Fi step is skipped: colliding channel numbers
+  // exist in the Wi-Fi dataset (a 6 GHz channel 201, a 2.4 GHz channel 7), so
+  // "fm channel 201" or "tv channel 7" must resolve to the named service, not
+  // Wi-Fi. Wi-Fi still handles the bare and "wifi" flavored channel queries.
+  const named = parseNamedChannel(text);
+  if (named) {
+    for (const c of findNamedChannels(named)) candidates.push(namedChannelInterpretation(c));
+  } else {
+    const wifi = parseWifiQuery(text);
+    if (wifi) {
+      for (const c of findWifiChannels({ band: wifi.band, channel: wifi.channel })) {
+        candidates.push(wifiInterpretation(c));
+      }
     }
   }
 
@@ -900,7 +1021,10 @@ export function describeFrequency(freqHz: number): Readout {
     colorHex: frequencyToColorHex(freqHz),
     path,
     pathLabel: bandPathLabel(path) || "Outside the modeled bands",
-    uses: aggregatedUses(freqHz),
+    // Show only the most specific selected band's uses (the deepest band on the
+    // path that lists any), not the aggregated pile from every covering band.
+    // aggregatedUses stays exported for callers that want the full set.
+    uses: usesAt(freqHz),
   };
 }
 

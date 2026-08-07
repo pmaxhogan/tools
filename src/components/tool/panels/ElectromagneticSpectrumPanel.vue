@@ -15,10 +15,10 @@ import {
   formatWavelength,
   frequencyToPosition,
   interpretQuery,
-  maxDepth,
   positionToFrequency,
   rgbToHex,
   wavelengthNmToRgb,
+  type Band,
   type Interpretation,
   type Readout,
 } from "@/tools/electromagnetic-spectrum/index";
@@ -119,15 +119,91 @@ function iconFor(name?: string): Component | null {
 /* Constants and refs                                                  */
 /* ------------------------------------------------------------------ */
 
-const ROWS = maxDepth(BANDS) + 1;
-const FLAT = flattenBands(BANDS);
+/**
+ * A band placed into a specific stacked sub-lane. Lanes are grouped by tree
+ * depth (all depth 0 lanes first, then depth 1, and so on), so a child always
+ * sits below its parent and nests visually under it.
+ */
+interface PackedBand {
+  band: Band;
+  depth: number;
+  lane: number;
+}
+
+/**
+ * Greedy interval packing per depth level. Within a depth, bands are sorted by
+ * their low frequency edge and each is placed in the first sub-lane whose last
+ * placed band ends at or before this band starts; otherwise a new sub-lane
+ * opens. Sibling bands that overlap in frequency (the 2.4 GHz ISM band, whose
+ * Wi-Fi, Bluetooth, Zigbee and oven children all overlap) land in separate
+ * stacked rows instead of colliding. Bands that only touch at an exact shared
+ * edge (a clean partition, for example the color bands) still share one lane.
+ *
+ * The packing depends only on the static band ranges, never on the view, so it
+ * is computed once at module load. The result drives both the total lane count
+ * (which grows automatically as the data gains depth) and each band's row.
+ */
+function packBands(): { packed: PackedBand[]; totalLanes: number } {
+  const flat = flattenBands(BANDS);
+  const byDepth = new Map<number, Band[]>();
+  for (const { band, depth } of flat) {
+    const arr = byDepth.get(depth);
+    if (arr) arr.push(band);
+    else byDepth.set(depth, [band]);
+  }
+
+  const packed: PackedBand[] = [];
+  let laneCursor = 0;
+  for (const depth of [...byDepth.keys()].sort((a, b) => a - b)) {
+    const bands = byDepth.get(depth)!.slice().sort((a, b) => a.fLow - b.fLow);
+    // The highest fHigh placed so far in each sub-lane at this depth.
+    const laneEnds: number[] = [];
+    for (const band of bands) {
+      // A tiny relative slack so a band that starts exactly where another ends
+      // (a shared partition edge) still counts as non overlapping.
+      const startSlack = band.fLow * (1 + 1e-9);
+      let slot = laneEnds.findIndex((end) => end <= startSlack);
+      if (slot === -1) {
+        slot = laneEnds.length;
+        laneEnds.push(band.fHigh);
+      } else {
+        laneEnds[slot] = band.fHigh;
+      }
+      packed.push({ band, depth, lane: laneCursor + slot });
+    }
+    laneCursor += laneEnds.length;
+  }
+  return { packed, totalLanes: laneCursor };
+}
+
+const { packed: PACKED, totalLanes: TOTAL_LANES } = packBands();
+
+/** Target lane thickness (CSS px) along the cross axis, for readable labels. */
+const LANE_TARGET_PX = 38;
+/** Hard cap on the horizontal map height so a deep tree cannot overrun a page. */
+const MAP_HEIGHT_CAP = 660;
+/**
+ * The horizontal map height: tall enough to give every packed lane its target
+ * thickness (plus the tick strip), floored and capped for sane page layout. A
+ * static value, since the lane count is static. In fullscreen the browser's own
+ * `:fullscreen` rule overrides the height to fill the screen.
+ */
+const HORIZONTAL_MAP_PX = Math.min(
+  MAP_HEIGHT_CAP,
+  Math.max(300, TOTAL_LANES * LANE_TARGET_PX + 26),
+);
+
 /** Narrowest allowed view span, normalized. ~0.036 decade, below FM width. */
 const MIN_SPAN = 0.0015;
 /** Mouse move past this many CSS px turns a press into a drag-select zoom. */
 const DRAG_THRESHOLD = 5;
-/** Minimum drawn extents (CSS px) before a band label is shown at all. */
+/** Minimum drawn extents (CSS px) before a band's full label is shown. */
 const MIN_LABEL_ALONG = 30;
 const MIN_LABEL_CROSS = 12;
+/** Narrower than a full label but wide enough for the icon glyph plus its
+ * padding (14px glyph plus the cell's 8px horizontal padding), so a lone icon
+ * never bleeds past its box into a neighboring cell. */
+const ICON_ONLY_ALONG = 22;
 
 const containerRef = ref<HTMLDivElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -142,6 +218,20 @@ const orientationOverride = ref<"horizontal" | "vertical" | null>(null);
 const orientation = computed<"horizontal" | "vertical">(
   () => orientationOverride.value ?? autoOrientation.value,
 );
+
+/**
+ * The map container size. Horizontal height is driven by the packed lane count
+ * (so a deeper tree grows the map taller instead of crushing rows); vertical
+ * keeps a tall, viewport-relative window for the frequency axis. In fullscreen
+ * the browser's `:fullscreen` rule fills the screen and overrides this.
+ */
+const containerStyle = computed<Record<string, string>>(() => {
+  // In fullscreen the element fills the screen; leave the height to the browser.
+  if (isFullscreen.value) return {};
+  return orientation.value === "vertical"
+    ? { height: "clamp(360px, 74vh, 820px)" }
+    : { height: `${HORIZONTAL_MAP_PX}px` };
+});
 
 const cssW = ref(800);
 const cssH = ref(320);
@@ -304,12 +394,24 @@ function fitLabel(text: string, maxPx: number, size: number): string | null {
   return text.slice(0, maxChars - 1) + "…";
 }
 
+/**
+ * The background fill for a band cell. Visible sub-bands keep their real color
+ * swatch; every other cell gets a low-opacity violet-brand tint that deepens
+ * with depth, so each cell (including the top-level row) reads as a discrete box
+ * against the card surface, and label text keeps AA contrast in both themes.
+ */
+function laneFill(depth: number, band: Band): string {
+  if (band.color) return band.color;
+  const alpha = depth === 0 ? 0.1 : depth === 1 ? 0.16 : depth === 2 ? 0.22 : 0.28;
+  return withAlpha(colors.primary, alpha);
+}
+
 function buildScene(w: number, h: number): Scene {
   const horizontal = orientation.value === "horizontal";
   const L = horizontal ? w : h;
   const tickMargin = horizontal ? TICK_MARGIN_H : TICK_MARGIN_V;
   const lanesExtent = (horizontal ? h : w) - tickMargin;
-  const laneSize = lanesExtent / ROWS;
+  const laneSize = lanesExtent / TOTAL_LANES;
 
   const rects: SceneRect[] = [];
   const texts: SceneText[] = [];
@@ -319,7 +421,7 @@ function buildScene(w: number, h: number): Scene {
   // Lane origin along the cross axis. Ticks sit after the lanes.
   const laneBase = horizontal ? 0 : tickMargin;
 
-  for (const { band, depth } of FLAT) {
+  for (const { band, depth, lane } of PACKED) {
     const a0 = posToAxisPx(frequencyToPosition(band.fHigh)); // start (high freq)
     const a1 = posToAxisPx(frequencyToPosition(band.fLow)); // end (low freq)
     if (a1 < 0 || a0 > L) continue;
@@ -328,21 +430,15 @@ function buildScene(w: number, h: number): Scene {
     const wpx = s1 - s0;
     if (wpx < 0.5) continue;
 
-    const laneOff = laneBase + depth * laneSize;
+    const laneOff = laneBase + lane * laneSize;
     const rx = horizontal ? s0 : laneOff;
     const ry = horizontal ? laneOff : s0;
     const rw = horizontal ? wpx : laneSize;
     const rh = horizontal ? laneSize : wpx;
 
     const isVisible = band.id === "visible";
-    let fill: string;
-    let colored = false;
-    if (band.color) {
-      fill = band.color;
-      colored = true;
-    } else if (depth === 0) fill = colors.card;
-    else if (depth === 1) fill = colors.surface;
-    else fill = colors.accentSoft;
+    const colored = !!band.color;
+    const fill = laneFill(depth, band);
 
     const rect: SceneRect = { x: rx, y: ry, w: rw, h: rh, fill, stroke: colors.border };
     if (isVisible) {
@@ -457,6 +553,8 @@ interface BandLabel {
   name: string;
   icon?: string;
   showIcon: boolean;
+  /** The box is too narrow for a label, so only the icon is drawn. */
+  iconOnly: boolean;
   plate: boolean;
   max: number;
 }
@@ -474,12 +572,12 @@ const bandLabels = computed<BandLabel[]>(() => {
   const L = horizontal ? w : h;
   const tickMargin = horizontal ? TICK_MARGIN_H : TICK_MARGIN_V;
   const lanesExtent = (horizontal ? h : w) - tickMargin;
-  const laneSize = lanesExtent / ROWS;
+  const laneSize = lanesExtent / TOTAL_LANES;
   const laneBase = horizontal ? 0 : tickMargin;
   if (laneSize < MIN_LABEL_CROSS) return [];
 
   const out: BandLabel[] = [];
-  for (const { band, depth } of FLAT) {
+  for (const { band, depth, lane } of PACKED) {
     const a0 = posToAxisPx(frequencyToPosition(band.fHigh));
     const a1 = posToAxisPx(frequencyToPosition(band.fLow));
     if (a1 < 0 || a0 > L) continue;
@@ -488,9 +586,17 @@ const bandLabels = computed<BandLabel[]>(() => {
     const s0 = Math.max(0, a0);
     const s1 = Math.min(L, a1);
     const wpx = s1 - s0;
-    if (wpx < MIN_LABEL_ALONG) continue;
 
-    const laneOff = laneBase + depth * laneSize;
+    // Full label when wide enough; otherwise the icon alone when there is one
+    // and the lane is tall enough; otherwise nothing. Packing already guarantees
+    // no two boxes in a lane overlap, so labels confined to their own box never
+    // collide with a neighbor.
+    const hasIcon = !!band.icon;
+    const fullLabel = wpx >= MIN_LABEL_ALONG;
+    const iconOnly = !fullLabel && hasIcon && wpx >= ICON_ONLY_ALONG && laneSize > 16;
+    if (!fullLabel && !iconOnly) continue;
+
+    const laneOff = laneBase + lane * laneSize;
     const along = wpx;
     out.push({
       key: band.id,
@@ -500,7 +606,8 @@ const bandLabels = computed<BandLabel[]>(() => {
       h: horizontal ? laneSize : along,
       name: band.name,
       icon: band.icon,
-      showIcon: !!band.icon && along > 64 && laneSize > 16,
+      showIcon: hasIcon && (iconOnly || (along > 64 && laneSize > 16)),
+      iconOnly,
       plate: !!band.color || band.id === "visible",
       max: depth === 0 ? 15 : 12,
     });
@@ -1392,7 +1499,8 @@ onUnmounted(() => {
     <!-- Spectrum canvas -->
     <div
       ref="containerRef"
-      class="relative h-[clamp(280px,52vh,560px)] w-full touch-none overflow-hidden rounded-[14px] border bg-card shadow-[var(--sh-inset)]"
+      class="relative w-full touch-none overflow-hidden rounded-[14px] border bg-card shadow-[var(--sh-inset)]"
+      :style="containerStyle"
     >
       <canvas
         ref="canvasRef"
@@ -1421,9 +1529,9 @@ onUnmounted(() => {
           <component
             :is="iconFor(l.icon)"
             v-if="l.showIcon && iconFor(l.icon)"
-            class="relative z-[1] size-3.5 shrink-0 text-foreground/75"
+            class="relative z-[1] size-3.5 shrink-0 text-foreground/80"
           />
-          <div class="relative z-[1] h-full min-w-0 flex-1">
+          <div v-if="!l.iconOnly" class="relative z-[1] h-full min-w-0 flex-1">
             <FitText :text="l.name" :min="7" :max="l.max" />
           </div>
         </div>
