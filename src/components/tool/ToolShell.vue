@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, shallowRef, watch } from 'vue';
 import type { ToolMeta } from '@/tools/types';
 import { ToolError, type ToolLogic } from '@/tools/types';
 import { loaders } from '@/tools/registry';
 import { readFragment, writeFragment } from '@/lib/fragment';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { X } from 'lucide-vue-next';
 import OptionControl from './OptionControl.vue';
 import OutputView from './OutputView.vue';
 
@@ -20,7 +21,15 @@ const props = defineProps<{ meta: ToolMeta }>();
 const hasInput = props.meta.input !== 'none';
 const acceptsFiles = props.meta.input === 'File' || props.meta.input.startsWith('image/');
 
+/** Types whose `run()` takes raw bytes; everything else stays a string. */
+const BINARY_INPUTS: string[] = ['File', 'image/*', 'image/png', 'application/octet-stream'];
+const isBinary = computed(() => BINARY_INPUTS.includes(props.meta.input));
+
 const input = ref('');
+/** Bytes of the loaded file, for binary tools only. Never hits the fragment. */
+const fileBytes = shallowRef<Uint8Array | null>(null);
+const fileName = ref('');
+const fileSize = ref(0);
 const opts = ref<Record<string, unknown>>(
   Object.fromEntries((props.meta.options ?? []).map((o) => [o.id, o.default]))
 );
@@ -29,13 +38,39 @@ const error = ref<{ message: string; fix?: string } | null>(null);
 const dragging = ref(false);
 const fileInput = ref<HTMLInputElement>();
 
+/** Narrows the picker for known types; leaves it open for File and raw bytes. */
+const acceptAttr = computed(() => {
+  if (props.meta.input === 'image/*' || props.meta.input === 'image/png') return props.meta.input;
+  if (acceptsFiles || isBinary.value) return undefined;
+  return 'text/*,.json,.csv,.txt';
+});
+
+const placeholder = computed(() =>
+  isBinary.value
+    ? 'Drop or pick a file, or paste text here…'
+    : `Paste or drop ${props.meta.input === 'text/plain' ? 'text' : props.meta.input} here…`
+);
+
+function humanSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
+}
+
 let logic: ToolLogic | null = null;
 let debounce: ReturnType<typeof setTimeout> | undefined;
 
 async function run() {
   if (!logic) return;
   try {
-    const result = await logic.run(hasInput ? input.value : undefined, opts.value);
+    const value = fileBytes.value ?? input.value;
+    const result = await logic.run(hasInput ? value : undefined, opts.value);
     output.value = result as string | Record<string, string>;
     error.value = null;
   } catch (e) {
@@ -52,13 +87,19 @@ function scheduleRun() {
   debounce = setTimeout(() => {
     run();
     writeFragment({
-      input: hasInput ? input.value : undefined,
+      // File bytes are never shareable state, so they are simply not persisted.
+      input: hasInput && !fileBytes.value ? input.value : undefined,
       opts: Object.fromEntries(Object.entries(opts.value).map(([k, v]) => [k, String(v)])),
     });
   }, 150);
 }
 
-watch(input, scheduleRun);
+watch(input, (value) => {
+  // Whichever input was set last wins: real typing drops a loaded file, but
+  // the empty string we write when a file loads must leave the file alone.
+  if (value && fileBytes.value) clearFileState();
+  scheduleRun();
+});
 watch(opts, scheduleRun, { deep: true });
 
 onMounted(async () => {
@@ -77,7 +118,30 @@ onMounted(async () => {
   run();
 });
 
+function clearFileState() {
+  fileBytes.value = null;
+  fileName.value = '';
+  fileSize.value = 0;
+  if (fileInput.value) fileInput.value.value = '';
+}
+
+/** The x on the file chip: drop the bytes and re-run on the empty string. */
+function clearFile() {
+  clearFileState();
+  scheduleRun();
+}
+
 async function readFile(file: File) {
+  if (isBinary.value) {
+    fileBytes.value = new Uint8Array(await file.arrayBuffer());
+    fileName.value = file.name;
+    fileSize.value = file.size;
+    // Clearing the textarea leaves the bytes intact (see the input watcher).
+    input.value = '';
+    scheduleRun();
+    return;
+  }
+  clearFileState();
   input.value = await file.text();
 }
 
@@ -96,8 +160,13 @@ function onPaste(e: ClipboardEvent) {
 }
 
 function onPickFile(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (file) readFile(file);
+  const picker = e.target as HTMLInputElement;
+  const file = picker.files?.[0];
+  if (!file) return;
+  readFile(file).then(() => {
+    // Reset so picking the same file again still fires a change event.
+    picker.value = '';
+  });
 }
 </script>
 
@@ -125,14 +194,35 @@ function onPickFile(e: Event) {
             ref="fileInput"
             type="file"
             class="hidden"
-            :accept="acceptsFiles ? undefined : 'text/*,.json,.csv,.txt'"
+            :accept="acceptAttr"
             @change="onPickFile"
           >
         </div>
       </div>
+
+      <div
+        v-if="fileBytes"
+        class="px-3 pt-2"
+      >
+        <span
+          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
+        >
+          <span class="truncate font-medium">{{ fileName }}</span>
+          <span class="shrink-0 text-muted-foreground">{{ humanSize(fileSize) }}</span>
+          <button
+            type="button"
+            aria-label="Remove file"
+            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+            @click="clearFile"
+          >
+            <X class="size-3.5" />
+          </button>
+        </span>
+      </div>
+
       <Textarea
         v-model="input"
-        :placeholder="`Paste or drop ${meta.input === 'text/plain' ? 'text' : meta.input} here…`"
+        :placeholder="placeholder"
         class="min-h-28 border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0 dark:bg-transparent"
         @paste="onPaste"
       />

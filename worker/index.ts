@@ -18,6 +18,12 @@ import { meta as caseConverterMeta } from '../src/tools/case-converter/meta';
 import { run as caseConverterRun } from '../src/tools/case-converter/index';
 import { meta as cronParserMeta } from '../src/tools/cron-parser/meta';
 import { run as cronParserRun } from '../src/tools/cron-parser/index';
+import { meta as csvViewerMeta } from '../src/tools/csv-viewer/meta';
+import { run as csvViewerRun } from '../src/tools/csv-viewer/index';
+import { meta as dataFormatConverterMeta } from '../src/tools/data-format-converter/meta';
+import { run as dataFormatConverterRun } from '../src/tools/data-format-converter/index';
+import { meta as diffCheckerMeta } from '../src/tools/diff-checker/meta';
+import { run as diffCheckerRun } from '../src/tools/diff-checker/index';
 import { meta as discordTimestampMeta } from '../src/tools/discord-timestamp/meta';
 import { run as discordTimestampRun } from '../src/tools/discord-timestamp/index';
 import { meta as durationCalculatorMeta } from '../src/tools/duration-calculator/meta';
@@ -30,14 +36,24 @@ import { meta as figletMeta } from '../src/tools/figlet/meta';
 import { run as figletRun } from '../src/tools/figlet/index';
 import { meta as hashGeneratorMeta } from '../src/tools/hash-generator/meta';
 import { run as hashGeneratorRun } from '../src/tools/hash-generator/index';
+import { meta as invisibleCharacterDetectorMeta } from '../src/tools/invisible-character-detector/meta';
+import { run as invisibleCharacterDetectorRun } from '../src/tools/invisible-character-detector/index';
 import { meta as jsonFormatterMeta } from '../src/tools/json-formatter/meta';
 import { run as jsonFormatterRun } from '../src/tools/json-formatter/index';
+import { meta as jsonSchemaValidatorMeta } from '../src/tools/json-schema-validator/meta';
+import { run as jsonSchemaValidatorRun } from '../src/tools/json-schema-validator/index';
+import { meta as jsonToTypescriptMeta } from '../src/tools/json-to-typescript/meta';
+import { run as jsonToTypescriptRun } from '../src/tools/json-to-typescript/index';
 import { meta as lineSorterMeta } from '../src/tools/line-sorter/meta';
 import { run as lineSorterRun } from '../src/tools/line-sorter/index';
+import { meta as mojibakeFixerMeta } from '../src/tools/mojibake-fixer/meta';
+import { run as mojibakeFixerRun } from '../src/tools/mojibake-fixer/index';
 import { meta as placeholderImageMeta } from '../src/tools/placeholder-image/meta';
 import { run as placeholderImageRun } from '../src/tools/placeholder-image/index';
 import { meta as snowflakeDecoderMeta } from '../src/tools/snowflake-decoder/meta';
 import { run as snowflakeDecoderRun } from '../src/tools/snowflake-decoder/index';
+import { meta as sqlFormatterMeta } from '../src/tools/sql-formatter/meta';
+import { run as sqlFormatterRun } from '../src/tools/sql-formatter/index';
 import { meta as unicodePickerMeta } from '../src/tools/unicode-picker/meta';
 import { run as unicodePickerRun } from '../src/tools/unicode-picker/index';
 import { meta as urlParserMeta } from '../src/tools/url-parser/meta';
@@ -96,6 +112,21 @@ const ALL: Endpoint[] = [
   expose(baseConverterMeta, baseConverterRun, { sample: '255', sampleQuery: 'inputBase=auto' }),
   expose(caseConverterMeta, caseConverterRun, { sample: 'parseHTMLDocument' }),
   expose(cronParserMeta, cronParserRun, { sample: '0 9 * * 1-5', sampleQuery: 'tz=UTC' }),
+  expose(csvViewerMeta, csvViewerRun, {
+    sampleQuery: 'view=stats',
+    sampleCommand: (base) =>
+      `printf 'name,price\\nwidget,9.50\\ngadget,120\\n' | curl -X POST --data-binary @- "${base}/api/csv-viewer?view=stats"`,
+  }),
+  expose(dataFormatConverterMeta, dataFormatConverterRun, {
+    sampleQuery: 'from=auto&to=yaml',
+    sampleCommand: (base) =>
+      `printf '{"name":"Ada","tags":["a","b"]}' | curl -X POST --data-binary @- "${base}/api/data-format-converter?to=yaml"`,
+  }),
+  expose(diffCheckerMeta, diffCheckerRun, {
+    sampleQuery: 'mode=lines',
+    sampleCommand: (base) =>
+      `printf 'a\\nb\\n=====\\na\\nc\\n' | curl -X POST --data-binary @- "${base}/api/diff-checker?mode=lines"`,
+  }),
   expose(discordTimestampMeta, discordTimestampRun, { sample: '2026-08-06T21:00:00Z' }),
   expose(durationCalculatorMeta, durationCalculatorRun, { sample: '1h 30m + 45m' }),
   expose(epochConverterMeta, epochConverterRun, {
@@ -108,19 +139,39 @@ const ALL: Endpoint[] = [
   }),
   expose(figletMeta, figletRun, { sample: 'hello', sampleQuery: 'font=Standard' }),
   expose(hashGeneratorMeta, hashGeneratorRun, { sample: 'hello world' }),
+  expose(invisibleCharacterDetectorMeta, invisibleCharacterDetectorRun, {
+    sample: 'hello​world',
+    sampleQuery: 'mode=report',
+  }),
   expose(jsonFormatterMeta, jsonFormatterRun, {
     sample: '{"b":1,"a":2}',
     sampleQuery: 'mode=format&indent=2',
+  }),
+  expose(jsonSchemaValidatorMeta, jsonSchemaValidatorRun, {
+    sampleQuery: 'draft=2020-12',
+    sampleCommand: (base) =>
+      `printf '{"schema":{"type":"object","required":["name"]},"data":{"age":3}}' | curl -X POST --data-binary @- "${base}/api/json-schema-validator"`,
+  }),
+  expose(jsonToTypescriptMeta, jsonToTypescriptRun, {
+    sampleQuery: 'target=typescript&rootName=User',
+    sampleCommand: (base) =>
+      `printf '{"name":"Ada","langs":["ts"]}' | curl -X POST --data-binary @- "${base}/api/json-to-typescript?target=typescript&rootName=User"`,
   }),
   expose(lineSorterMeta, lineSorterRun, {
     sampleQuery: 'operation=sort-az',
     sampleCommand: (base) =>
       `printf 'banana\\napple\\ncherry\\n' | curl -X POST --data-binary @- "${base}/api/line-sorter?operation=sort-az"`,
   }),
+  expose(mojibakeFixerMeta, mojibakeFixerRun, { sample: 'donâ€™t', sampleQuery: 'chain=auto' }),
   expose(placeholderImageMeta, placeholderImageRun, { sampleQuery: 'width=600&height=400' }),
   expose(snowflakeDecoderMeta, snowflakeDecoderRun, {
     sample: '175928847299117063',
     sampleQuery: 'platform=discord',
+  }),
+  expose(sqlFormatterMeta, sqlFormatterRun, {
+    sampleQuery: 'dialect=postgresql&keywordCase=upper',
+    sampleCommand: (base) =>
+      `printf 'select id,name from users where id=1' | curl -X POST --data-binary @- "${base}/api/sql-formatter?dialect=postgresql"`,
   }),
   expose(unicodePickerMeta, unicodePickerRun, { sample: 'arrow', sampleQuery: 'category=arrows' }),
   expose(urlParserMeta, urlParserRun, { sample: 'https://example.com/a/b?x=1&y=2#frag' }),

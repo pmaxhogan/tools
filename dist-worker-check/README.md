@@ -1,0 +1,1 @@
+This folder contains the built output assets for the worker "tools" generated at 2026-08-07T05:04:05.575Z.

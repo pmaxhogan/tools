@@ -74,9 +74,22 @@ Export `export const meta: ToolMeta = {...}` matching `src/tools/types.ts`:
 ## Heavy dependencies (rule 14)
 
 Preinstalled and allowed: `qrcode`, `figlet`, `@faker-js/faker`, `ua-parser-js`,
-`cronstrue`, `croner`. Import them normally — the registry lazy-loads your whole
-module per page, so the dependency never touches the shell bundle. Everything
-else: standard library only.
+`cronstrue`, `croner`, `svgo` (import from `svgo/browser`), `papaparse`, `yaml`,
+`smol-toml`, `diff`, `sql-formatter`, `@cfworker/json-schema`, `turndown`,
+`gpt-tokenizer`, `file-type` (main entry is portable), `exifr`. Import them
+normally — the registry lazy-loads your whole module per page, so the dependency
+never touches the shell bundle. Everything else: standard library only.
+
+## Binary input tools
+
+Tools whose `meta.input` is `'File'`, `'image/*'`, or `'application/octet-stream'`
+receive `Uint8Array | string` as their `run()` input: `Uint8Array` when the user
+drops or picks a file, `string` when they typed or pasted text (UTF-8 encode it
+yourself if the logic needs bytes). Never assume a filename exists. The generic
+shell handles the file reading; the logic layer stays pure bytes-in, text-out.
+Output stays `string` or `Record<string, string>`; if the natural output is a
+binary file (an image, an ico), return the best text representation (base64 data
+URL in a labeled record row is acceptable) and flag "needs custom panel".
 
 ## Definition of done for this task
 
