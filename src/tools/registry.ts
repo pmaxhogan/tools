@@ -52,11 +52,13 @@ import { meta as keycode } from './keycode/meta';
 import { meta as lineSorter } from './line-sorter/meta';
 import { meta as mojibakeFixer } from './mojibake-fixer/meta';
 import { meta as oauthScopeDecoder } from './oauth-scope-decoder/meta';
+import { meta as oryxLayoutDiff } from './oryx-layout-diff/meta';
 import { meta as passwordGenerator } from './password-generator/meta';
 import { meta as pdfToolbox } from './pdf-toolbox/meta';
 import { meta as placeholderImage } from './placeholder-image/meta';
 import { meta as qrCodeGenerator } from './qr-code-generator/meta';
 import { meta as randomPicker } from './random-picker/meta';
+import { meta as serialTerminal } from './serial-terminal/meta';
 import { meta as smartctlAnalyzer } from './smartctl-analyzer/meta';
 import { meta as snowflakeDecoder } from './snowflake-decoder/meta';
 import { meta as sqlFormatter } from './sql-formatter/meta';
@@ -117,11 +119,13 @@ export const tools: ToolMeta[] = [
   lineSorter,
   mojibakeFixer,
   oauthScopeDecoder,
+  oryxLayoutDiff,
   passwordGenerator,
   pdfToolbox,
   placeholderImage,
   qrCodeGenerator,
   randomPicker,
+  serialTerminal,
   smartctlAnalyzer,
   snowflakeDecoder,
   sqlFormatter,
@@ -187,11 +191,13 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'line-sorter': () => import('./line-sorter/index').then((m) => m.default),
   'mojibake-fixer': () => import('./mojibake-fixer/index').then((m) => m.default),
   'oauth-scope-decoder': () => import('./oauth-scope-decoder/index').then((m) => m.default),
+  'oryx-layout-diff': () => import('./oryx-layout-diff/index').then((m) => m.default),
   'password-generator': () => import('./password-generator/index').then((m) => m.default),
   'pdf-toolbox': () => import('./pdf-toolbox/index').then((m) => m.default),
   'placeholder-image': () => import('./placeholder-image/index').then((m) => m.default),
   'qr-code-generator': () => import('./qr-code-generator/index').then((m) => m.default),
   'random-picker': () => import('./random-picker/index').then((m) => m.default),
+  'serial-terminal': () => import('./serial-terminal/index').then((m) => m.default),
   'smartctl-analyzer': () => import('./smartctl-analyzer/index').then((m) => m.default),
   'snowflake-decoder': () => import('./snowflake-decoder/index').then((m) => m.default),
   'sql-formatter': () => import('./sql-formatter/index').then((m) => m.default),
