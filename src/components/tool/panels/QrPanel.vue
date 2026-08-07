@@ -217,6 +217,11 @@ const logoInput = ref<HTMLInputElement | null>(null);
 const hasLogo = computed(() => logoDataUrl.value.length > 0);
 const logoSize = computed(() => logoPercent.value / 100);
 
+// The select must show what actually happens, not the stored preference: a
+// logo forces H regardless of what the visitor last picked. The underlying
+// `ecc` ref is left untouched so removing the logo restores their choice.
+const eccDisplayValue = computed(() => (hasLogo.value ? 'H' : ecc.value));
+
 function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1008,10 +1013,35 @@ async function downloadPng() {
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-          <OptionControl
-            v-model="ecc"
-            :spec="eccSpec"
-          />
+          <div class="flex min-w-0 flex-col gap-1.5">
+            <Label
+              for="qr-ecc"
+              class="text-xs text-muted-foreground"
+            >{{ eccSpec.label }}</Label>
+            <Select
+              :model-value="eccDisplayValue"
+              :disabled="hasLogo"
+              @update:model-value="(v) => (ecc = String(v))"
+            >
+              <SelectTrigger
+                id="qr-ecc"
+                size="sm"
+                class="w-full"
+                :aria-disabled="hasLogo || undefined"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="c in eccSpec.choices ?? []"
+                  :key="c.value"
+                  :value="c.value"
+                >
+                  {{ c.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <OptionControl
             v-model="margin"
             :spec="marginSpec"
