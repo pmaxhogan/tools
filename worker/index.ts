@@ -22,6 +22,8 @@ import { meta as csvViewerMeta } from '../src/tools/csv-viewer/meta';
 import { run as csvViewerRun } from '../src/tools/csv-viewer/index';
 import { meta as dataFormatConverterMeta } from '../src/tools/data-format-converter/meta';
 import { run as dataFormatConverterRun } from '../src/tools/data-format-converter/index';
+import { meta as decodeAnythingMeta } from '../src/tools/decode-anything/meta';
+import { run as decodeAnythingRun } from '../src/tools/decode-anything/index';
 import { meta as diffCheckerMeta } from '../src/tools/diff-checker/meta';
 import { run as diffCheckerRun } from '../src/tools/diff-checker/index';
 import { meta as discordTimestampMeta } from '../src/tools/discord-timestamp/meta';
@@ -50,10 +52,14 @@ import { meta as lineSorterMeta } from '../src/tools/line-sorter/meta';
 import { run as lineSorterRun } from '../src/tools/line-sorter/index';
 import { meta as mojibakeFixerMeta } from '../src/tools/mojibake-fixer/meta';
 import { run as mojibakeFixerRun } from '../src/tools/mojibake-fixer/index';
+import { meta as oauthScopeDecoderMeta } from '../src/tools/oauth-scope-decoder/meta';
+import { run as oauthScopeDecoderRun } from '../src/tools/oauth-scope-decoder/index';
 import { meta as placeholderImageMeta } from '../src/tools/placeholder-image/meta';
 import { run as placeholderImageRun } from '../src/tools/placeholder-image/index';
 import { meta as snowflakeDecoderMeta } from '../src/tools/snowflake-decoder/meta';
 import { run as snowflakeDecoderRun } from '../src/tools/snowflake-decoder/index';
+import { meta as smartctlAnalyzerMeta } from '../src/tools/smartctl-analyzer/meta';
+import { run as smartctlAnalyzerRun } from '../src/tools/smartctl-analyzer/index';
 import { meta as sqlFormatterMeta } from '../src/tools/sql-formatter/meta';
 import { run as sqlFormatterRun } from '../src/tools/sql-formatter/index';
 import { meta as subtitleEditorMeta } from '../src/tools/subtitle-editor/meta';
@@ -126,6 +132,10 @@ const ALL: Endpoint[] = [
     sampleCommand: (base) =>
       `printf '{"name":"Ada","tags":["a","b"]}' | curl -X POST --data-binary @- "${base}/api/data-format-converter?to=yaml"`,
   }),
+  expose(decodeAnythingMeta, decodeAnythingRun, {
+    sample: 'eyJoZWxsbyI6IndvcmxkIn0=',
+    sampleQuery: 'maxDepth=10',
+  }),
   expose(diffCheckerMeta, diffCheckerRun, {
     sampleQuery: 'mode=lines',
     sampleCommand: (base) =>
@@ -172,10 +182,19 @@ const ALL: Endpoint[] = [
       `printf 'banana\\napple\\ncherry\\n' | curl -X POST --data-binary @- "${base}/api/line-sorter?operation=sort-az"`,
   }),
   expose(mojibakeFixerMeta, mojibakeFixerRun, { sample: 'donâ€™t', sampleQuery: 'chain=auto' }),
+  expose(oauthScopeDecoderMeta, oauthScopeDecoderRun, {
+    sample: 'repo delete_repo read:user',
+    sampleQuery: 'sort=risk',
+  }),
   expose(placeholderImageMeta, placeholderImageRun, { sampleQuery: 'width=600&height=400' }),
   expose(snowflakeDecoderMeta, snowflakeDecoderRun, {
     sample: '175928847299117063',
     sampleQuery: 'platform=discord',
+  }),
+  expose(smartctlAnalyzerMeta, smartctlAnalyzerRun, {
+    sampleQuery: 'detail=verdict',
+    sampleCommand: (base) =>
+      `smartctl -a /dev/sda | curl -X POST --data-binary @- "${base}/api/smartctl-analyzer"`,
   }),
   expose(sqlFormatterMeta, sqlFormatterRun, {
     sampleQuery: 'dialect=postgresql&keywordCase=upper',

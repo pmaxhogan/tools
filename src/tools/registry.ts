@@ -19,6 +19,7 @@ import { meta as clipboardInspector } from './clipboard-inspector/meta';
 import { meta as cronParser } from './cron-parser/meta';
 import { meta as csvViewer } from './csv-viewer/meta';
 import { meta as dataFormatConverter } from './data-format-converter/meta';
+import { meta as decodeAnything } from './decode-anything/meta';
 import { meta as diffChecker } from './diff-checker/meta';
 import { meta as discordTimestamp } from './discord-timestamp/meta';
 import { meta as dmarcReportViewer } from './dmarc-report-viewer/meta';
@@ -43,10 +44,12 @@ import { meta as jsonToTypescript } from './json-to-typescript/meta';
 import { meta as keycode } from './keycode/meta';
 import { meta as lineSorter } from './line-sorter/meta';
 import { meta as mojibakeFixer } from './mojibake-fixer/meta';
+import { meta as oauthScopeDecoder } from './oauth-scope-decoder/meta';
 import { meta as passwordGenerator } from './password-generator/meta';
 import { meta as placeholderImage } from './placeholder-image/meta';
 import { meta as qrCodeGenerator } from './qr-code-generator/meta';
 import { meta as randomPicker } from './random-picker/meta';
+import { meta as smartctlAnalyzer } from './smartctl-analyzer/meta';
 import { meta as snowflakeDecoder } from './snowflake-decoder/meta';
 import { meta as sqlFormatter } from './sql-formatter/meta';
 import { meta as subtitleEditor } from './subtitle-editor/meta';
@@ -72,6 +75,7 @@ export const tools: ToolMeta[] = [
   cronParser,
   csvViewer,
   dataFormatConverter,
+  decodeAnything,
   diffChecker,
   discordTimestamp,
   discordVideoCompressor,
@@ -96,10 +100,12 @@ export const tools: ToolMeta[] = [
   keycode,
   lineSorter,
   mojibakeFixer,
+  oauthScopeDecoder,
   passwordGenerator,
   placeholderImage,
   qrCodeGenerator,
   randomPicker,
+  smartctlAnalyzer,
   snowflakeDecoder,
   sqlFormatter,
   subtitleEditor,
@@ -127,6 +133,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'cron-parser': () => import('./cron-parser/index').then((m) => m.default),
   'csv-viewer': () => import('./csv-viewer/index').then((m) => m.default),
   'data-format-converter': () => import('./data-format-converter/index').then((m) => m.default),
+  'decode-anything': () => import('./decode-anything/index').then((m) => m.default),
   'diff-checker': () => import('./diff-checker/index').then((m) => m.default),
   'discord-timestamp': () => import('./discord-timestamp/index').then((m) => m.default),
   'discord-video-compressor': () =>
@@ -153,10 +160,12 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   keycode: () => import('./keycode/index').then((m) => m.default),
   'line-sorter': () => import('./line-sorter/index').then((m) => m.default),
   'mojibake-fixer': () => import('./mojibake-fixer/index').then((m) => m.default),
+  'oauth-scope-decoder': () => import('./oauth-scope-decoder/index').then((m) => m.default),
   'password-generator': () => import('./password-generator/index').then((m) => m.default),
   'placeholder-image': () => import('./placeholder-image/index').then((m) => m.default),
   'qr-code-generator': () => import('./qr-code-generator/index').then((m) => m.default),
   'random-picker': () => import('./random-picker/index').then((m) => m.default),
+  'smartctl-analyzer': () => import('./smartctl-analyzer/index').then((m) => m.default),
   'snowflake-decoder': () => import('./snowflake-decoder/index').then((m) => m.default),
   'sql-formatter': () => import('./sql-formatter/index').then((m) => m.default),
   'subtitle-editor': () => import('./subtitle-editor/index').then((m) => m.default),
