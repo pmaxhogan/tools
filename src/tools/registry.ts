@@ -39,6 +39,7 @@ import { meta as gifEditor } from './gif-editor/meta';
 import { meta as gzipCompressionTest } from './gzip-compression-test/meta';
 import { meta as harViewer } from './har-viewer/meta';
 import { meta as hashGenerator } from './hash-generator/meta';
+import { meta as hidReportExplorer } from './hid-report-explorer/meta';
 import { meta as htmlToMarkdown } from './html-to-markdown/meta';
 import { meta as imageRedactor } from './image-redactor/meta';
 import { meta as imageToText } from './image-to-text/meta';
@@ -103,6 +104,7 @@ export const tools: ToolMeta[] = [
   gzipCompressionTest,
   harViewer,
   hashGenerator,
+  hidReportExplorer,
   htmlToMarkdown,
   imageRedactor,
   imageToText,
@@ -171,6 +173,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'gzip-compression-test': () => import('./gzip-compression-test/index').then((m) => m.default),
   'har-viewer': () => import('./har-viewer/index').then((m) => m.default),
   'hash-generator': () => import('./hash-generator/index').then((m) => m.default),
+  'hid-report-explorer': () => import('./hid-report-explorer/index').then((m) => m.default),
   'html-to-markdown': () => import('./html-to-markdown/index').then((m) => m.default),
   'image-redactor': () => import('./image-redactor/index').then((m) => m.default),
   'image-to-text': () => import('./image-to-text/index').then((m) => m.default),

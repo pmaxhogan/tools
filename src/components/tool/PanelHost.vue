@@ -27,6 +27,7 @@ const panels: Record<string, Component> = {
   'favicon-generator': defineAsyncComponent(() => import('./panels/FaviconPanel.vue')),
   'gif-editor': defineAsyncComponent(() => import('./panels/GifEditorPanel.vue')),
   'har-viewer': defineAsyncComponent(() => import('./panels/HarViewerPanel.vue')),
+  'hid-report-explorer': defineAsyncComponent(() => import('./panels/HidExplorerPanel.vue')),
   'image-redactor': defineAsyncComponent(() => import('./panels/RedactorPanel.vue')),
   'image-to-text': defineAsyncComponent(() => import('./panels/OcrPanel.vue')),
   'image-toolbox': defineAsyncComponent(() => import('./panels/ImageToolboxPanel.vue')),
