@@ -16,8 +16,8 @@ export const meta: ToolMeta = {
       label: 'Version',
       default: 'v4',
       choices: [
-        { value: 'v4', label: 'v4 — random' },
-        { value: 'v7', label: 'v7 — time-ordered' },
+        { value: 'v4', label: 'v4 (random)' },
+        { value: 'v7', label: 'v7 (time-ordered)' },
       ],
     },
     { kind: 'number', id: 'count', label: 'Count', default: 1, min: 1, max: 1000 },
@@ -25,17 +25,17 @@ export const meta: ToolMeta = {
   ],
   http: { method: 'GET', contentType: 'text/plain' },
   copy: {
-    what: 'Generates RFC 9562 UUIDs in your browser using the cryptographically secure random source. Supports v4 (fully random) and v7 (time-ordered — sortable by creation time, ideal for database keys).',
+    what: 'Generates RFC 9562 UUIDs in your browser using the cryptographically secure random source. Supports v4 (fully random) and v7 (time-ordered: sortable by creation time, ideal for database keys).',
     how: 'Pick a version and a count, hit Generate, and copy the result. Generate up to 1000 at once. The options are stored in the URL so you can bookmark your preferred setup.',
-    why: 'No ads, no artificial caps on how many you can generate, and nothing is requested from a server — the IDs are generated locally and never logged anywhere.',
+    why: 'No ads, no artificial caps on how many you can generate, and nothing is requested from a server. The IDs are generated locally and never logged anywhere.',
     faq: [
       {
         q: 'Are these UUIDs cryptographically random?',
-        a: 'Yes — randomness comes from crypto.getRandomValues, the same secure source used for key generation.',
+        a: 'Yes. Randomness comes from crypto.getRandomValues, the same secure source used for key generation.',
       },
       {
         q: 'When should I use v7 instead of v4?',
-        a: 'Use v7 when IDs will be database keys or need to sort by creation time — the timestamp prefix keeps indexes efficient. Use v4 when you want no information leakage at all.',
+        a: 'Use v7 when IDs will be database keys or need to sort by creation time, since the timestamp prefix keeps indexes efficient. Use v4 when you want no information leakage at all.',
       },
       {
         q: 'Can anyone else see the generated IDs?',

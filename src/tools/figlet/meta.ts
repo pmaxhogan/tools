@@ -1,0 +1,71 @@
+import type { ToolMeta } from '../types';
+
+export const meta: ToolMeta = {
+  slug: 'figlet',
+  matrixSlug: 'figlet',
+  name: 'Figlet ASCII Banner',
+  description: 'Render text as ASCII banner art in a choice of classic FIGlet fonts.',
+  category: 'Text',
+  keywords: [
+    'figlet',
+    'ascii art generator',
+    'ascii banner',
+    'text to ascii art',
+    'ascii text generator',
+    'banner text',
+    'ascii art font',
+  ],
+  input: 'text/plain',
+  output: 'text/plain',
+  options: [
+    {
+      kind: 'select',
+      id: 'font',
+      label: 'Font',
+      default: 'Standard',
+      choices: [
+        { value: 'Standard', label: 'Standard' },
+        { value: 'Slant', label: 'Slant' },
+        { value: 'Small', label: 'Small' },
+        { value: 'Big', label: 'Big' },
+        { value: 'Banner', label: 'Banner' },
+        { value: 'Block', label: 'Block' },
+        { value: 'Shadow', label: 'Shadow' },
+        { value: 'Doom', label: 'Doom' },
+        { value: 'Ghost', label: 'Ghost' },
+        { value: 'Mini', label: 'Mini' },
+      ],
+    },
+    {
+      kind: 'select',
+      id: 'layout',
+      label: 'Letter spacing',
+      default: 'default',
+      choices: [
+        { value: 'default', label: "Default — the font's own kerning" },
+        { value: 'full', label: 'Full — no letters touching' },
+        { value: 'fitted', label: 'Fitted — letters pushed together' },
+      ],
+    },
+  ],
+  http: { method: 'GET', contentType: 'text/plain' },
+  copy: {
+    what: "Turns a word or short phrase into a large ASCII-art banner using the FIGlet font format. Ten classic fonts are included — Standard, Slant, Small, Big, Banner, Block, Shadow, Doom, Ghost and Mini — covering everything from compact one-liners to heavy 3D-style lettering. A letter-spacing control switches between the font's own kerning, fully separated letters, and tightly fitted ones.",
+    how: 'Type your text into the input, pick a font, and the banner renders as you type. Adjust letter spacing if the letters look too cramped or too loose, then copy the result straight into a README, a CLI splash screen, a terminal MOTD, or a code comment. Keep it under 100 characters — banner fonts are several lines tall, so anything longer stops being readable.',
+    why: 'Most ASCII-art generators wrap a handful of fonts in ad banners, newsletter popups and a "download as image" upsell. This one renders locally in your browser, so your text never leaves your device, there are no rate limits, and the output is plain monospaced text you can copy in one click.',
+    faq: [
+      {
+        q: 'What is FIGlet?',
+        a: 'FIGlet is a long-standing Unix program that draws text in large letters made of ordinary characters. Its .flf font format is what this tool renders, so the output matches what the figlet command-line tool would print.',
+      },
+      {
+        q: 'Why does my banner look broken when I paste it somewhere?',
+        a: 'ASCII banners only line up in a monospaced font. Paste into a code block, a terminal, or a fenced README block rather than a proportional-font document.',
+      },
+      {
+        q: 'Can I use the banners commercially?',
+        a: 'Yes. The output is plain text you generated, and the FIGlet fonts included here ship under permissive terms — they are commonly used in open-source README files and CLI tools.',
+      },
+    ],
+  },
+};
