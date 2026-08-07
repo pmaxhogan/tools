@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { Check, X } from "lucide-vue-next";
-import { ToolError, type ToolMeta } from "@/tools/types";
+import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 /**
  * Bespoke panel for Transcriber.
@@ -163,6 +157,72 @@ const model = ref("whisper-tiny");
 const format = ref("text");
 const language = ref("auto");
 const timestamps = ref(true);
+
+/* ---------------------------------------------------------------- */
+/* select specs                                                     */
+/* ---------------------------------------------------------------- */
+
+const MODEL_SYNONYMS: Record<string, string[]> = {
+  "whisper-tiny": ["tiny", "fast", "fastest", "small", "43 mb"],
+  "whisper-base": ["base", "accurate", "more accurate", "78 mb"],
+};
+
+const modelSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "asr-model",
+  label: "Model",
+  default: "whisper-tiny",
+  options: MODELS.map((m) => ({
+    value: m.id,
+    label: m.label,
+    synonyms: MODEL_SYNONYMS[m.id] ?? [],
+  })),
+};
+
+/** Native names plus ISO codes, so a search in the user's own language lands. */
+const LANGUAGE_SYNONYMS: Record<string, string[]> = {
+  auto: ["automatic", "detect", "any language"],
+  en: ["en"],
+  es: ["español", "es"],
+  fr: ["français", "fr"],
+  de: ["deutsch", "de"],
+  it: ["italiano", "it"],
+  pt: ["português", "pt"],
+  nl: ["nederlands", "nl"],
+  ja: ["日本語", "ja", "nihongo"],
+  ko: ["한국어", "ko", "hangugeo"],
+  zh: ["中文", "zh", "mandarin"],
+  ru: ["русский", "ru"],
+  pl: ["polski", "pl"],
+  tr: ["türkçe", "tr"],
+  ar: ["العربية", "ar"],
+  hi: ["हिन्दी", "hi"],
+};
+
+const languageSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "asr-language",
+  label: "Language",
+  default: "auto",
+  options: LANGUAGES.map((l) => ({
+    value: l.value,
+    label: l.label,
+    synonyms: LANGUAGE_SYNONYMS[l.value] ?? [],
+  })),
+};
+
+const formatSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "asr-format",
+  label: "Output format",
+  default: "text",
+  options: [
+    { value: "text", label: "Plain text", synonyms: ["txt", "plain"] },
+    { value: "srt", label: "SRT subtitles", synonyms: ["subrip", "subtitles"] },
+    { value: "vtt", label: "WebVTT subtitles", synonyms: ["webvtt", "captions"] },
+    { value: "json", label: "JSON with timings", synonyms: ["timestamps", "structured"] },
+  ],
+};
 
 type EngineStage = "idle" | "downloading" | "starting" | "ready";
 const engineStage = ref<EngineStage>("idle");
@@ -836,45 +896,36 @@ onUnmounted(() => {
       >
         <div class="flex w-52 flex-col gap-1.5">
           <Label for="asr-model" class="text-xs text-muted-foreground">Model</Label>
-          <Select :model-value="model" @update:model-value="(v) => (model = String(v))">
-            <SelectTrigger id="asr-model" size="sm" class="w-full bg-card" :disabled="running">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="item in MODELS" :key="item.id" :value="item.id">
-                {{ item.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <fieldset :disabled="running" class="m-0 min-w-0 border-0 p-0">
+            <SearchableSelect
+              id="asr-model"
+              :spec="modelSpec"
+              :model-value="model"
+              @update:model-value="(v) => (model = String(v))"
+            />
+          </fieldset>
         </div>
 
         <div class="flex w-44 flex-col gap-1.5">
           <Label for="asr-language" class="text-xs text-muted-foreground">Language</Label>
-          <Select :model-value="language" @update:model-value="(v) => (language = String(v))">
-            <SelectTrigger id="asr-language" size="sm" class="w-full bg-card" :disabled="running">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="item in LANGUAGES" :key="item.value" :value="item.value">
-                {{ item.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <fieldset :disabled="running" class="m-0 min-w-0 border-0 p-0">
+            <SearchableSelect
+              id="asr-language"
+              :spec="languageSpec"
+              :model-value="language"
+              @update:model-value="(v) => (language = String(v))"
+            />
+          </fieldset>
         </div>
 
         <div class="flex w-40 flex-col gap-1.5">
           <Label for="asr-format" class="text-xs text-muted-foreground">Output format</Label>
-          <Select :model-value="format" @update:model-value="(v) => (format = String(v))">
-            <SelectTrigger id="asr-format" size="sm" class="w-full bg-card">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="text"> Plain text </SelectItem>
-              <SelectItem value="srt"> SRT subtitles </SelectItem>
-              <SelectItem value="vtt"> WebVTT subtitles </SelectItem>
-              <SelectItem value="json"> JSON with timings </SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            id="asr-format"
+            :spec="formatSpec"
+            :model-value="format"
+            @update:model-value="(v) => (format = String(v))"
+          />
         </div>
 
         <div class="flex items-center gap-2 pb-2">

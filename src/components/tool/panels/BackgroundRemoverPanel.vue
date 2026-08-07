@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { Check, X } from "lucide-vue-next";
-import { ToolError, type ToolMeta } from "@/tools/types";
+import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 /**
  * Bespoke panel for the background remover.
@@ -114,6 +108,26 @@ let stopConnectionWatch: () => void = () => {};
 const outputMode = ref("transparent");
 const bgColor = ref("#ffffff");
 const featherEdges = ref(true);
+
+const outputSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "bg-output",
+  label: "Background",
+  default: "transparent",
+  options: [
+    {
+      value: "transparent",
+      label: "Transparent PNG",
+      synonyms: ["transparent", "no background", "alpha", "png", "cutout"],
+    },
+    { value: "white", label: "White", synonyms: ["white background", "solid white"] },
+    {
+      value: "color",
+      label: "Custom color",
+      synonyms: ["custom colour", "solid color", "fill", "background color"],
+    },
+  ],
+};
 
 const running = ref(false);
 const resultUrl = ref<string | null>(null);
@@ -738,16 +752,12 @@ onUnmounted(() => {
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-44 flex-col gap-1.5">
             <Label for="bg-output" class="text-xs text-muted-foreground">Background</Label>
-            <Select :model-value="outputMode" @update:model-value="(v) => (outputMode = String(v))">
-              <SelectTrigger id="bg-output" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="transparent"> Transparent PNG </SelectItem>
-                <SelectItem value="white"> White </SelectItem>
-                <SelectItem value="color"> Custom color </SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="bg-output"
+              :spec="outputSpec"
+              :model-value="outputMode"
+              @update:model-value="(v) => (outputMode = String(v))"
+            />
           </div>
 
           <div v-if="outputMode === 'color'" class="flex w-32 flex-col gap-1.5">

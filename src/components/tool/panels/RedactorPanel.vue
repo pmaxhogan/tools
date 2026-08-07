@@ -1,16 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { Check, Trash2, Undo2, X } from "lucide-vue-next";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Slider } from "@/components/ui/slider";
 import {
   applyPixelateRect,
@@ -150,6 +144,81 @@ type TesseractWorker = Awaited<ReturnType<TesseractModule["createWorker"]>>;
 
 const interaction = ref<"rectangle" | "smart">("rectangle");
 const tapTarget = ref<TapTarget>("word");
+
+/* ---------------------------------------------------------------- */
+/* select specs                                                     */
+/* ---------------------------------------------------------------- */
+
+const interactionSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "redact-interaction",
+  label: "Mode",
+  default: "rectangle",
+  options: [
+    {
+      value: "rectangle",
+      label: "Rectangle (drag)",
+      synonyms: ["drag", "marquee", "draw box", "manual"],
+    },
+    {
+      value: "smart",
+      label: "Smart tap (click)",
+      synonyms: ["click", "tap", "ocr", "auto select", "text detect"],
+    },
+  ],
+};
+
+const tapTargetSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "redact-tap-target",
+  label: "Tap selects",
+  default: "word",
+  options: [
+    { value: "word", label: "The tapped word", synonyms: ["single word", "one word"] },
+    { value: "line", label: "The whole line", synonyms: ["full line", "entire line", "row"] },
+  ],
+};
+
+const modeSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "redact-mode",
+  label: "Style",
+  default: "solid",
+  options: [
+    {
+      value: "solid",
+      label: "Solid fill (safest)",
+      synonyms: ["block", "flat color", "safest", "opaque"],
+    },
+    {
+      value: "pixelate",
+      label: "Pixelate (weaker)",
+      synonyms: ["blur", "mosaic", "pixelize", "weaker"],
+    },
+  ],
+};
+
+const colorSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "redact-color",
+  label: "Color",
+  default: "black",
+  options: [
+    { value: "black", label: "Black", synonyms: ["dark"] },
+    { value: "white", label: "White", synonyms: ["light"] },
+  ],
+};
+
+const formatSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "redact-format",
+  label: "Format",
+  default: "png",
+  options: [
+    { value: "png", label: "PNG (lossless)", synonyms: ["lossless", "portable network graphics"] },
+    { value: "jpeg", label: "JPEG (quality 90)", synonyms: ["jpg", "lossy", "photo"] },
+  ],
+};
 
 /** False until mounted, which keeps the WebAssembly check off the server. */
 const supported = ref(false);
@@ -926,34 +995,22 @@ async function downloadExport() {
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-44 flex-col gap-1.5">
             <Label for="redact-interaction" class="text-xs text-muted-foreground">Mode</Label>
-            <Select
+            <SearchableSelect
+              id="redact-interaction"
+              :spec="interactionSpec"
               :model-value="interaction"
               @update:model-value="(v) => (interaction = v === 'smart' ? 'smart' : 'rectangle')"
-            >
-              <SelectTrigger id="redact-interaction" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="rectangle"> Rectangle (drag) </SelectItem>
-                <SelectItem value="smart"> Smart tap (click) </SelectItem>
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           <div v-if="interaction === 'smart'" class="flex w-40 flex-col gap-1.5">
             <Label for="redact-tap-target" class="text-xs text-muted-foreground">Tap selects</Label>
-            <Select
+            <SearchableSelect
+              id="redact-tap-target"
+              :spec="tapTargetSpec"
               :model-value="tapTarget"
               @update:model-value="(v) => (tapTarget = v === 'line' ? 'line' : 'word')"
-            >
-              <SelectTrigger id="redact-tap-target" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="word"> The tapped word </SelectItem>
-                <SelectItem value="line"> The whole line </SelectItem>
-              </SelectContent>
-            </Select>
+            />
           </div>
         </div>
         <p class="text-xs text-muted-foreground">
@@ -1079,34 +1136,22 @@ async function downloadExport() {
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-40 flex-col gap-1.5">
             <Label for="redact-mode" class="text-xs text-muted-foreground">Style</Label>
-            <Select
+            <SearchableSelect
+              id="redact-mode"
+              :spec="modeSpec"
               :model-value="mode"
               @update:model-value="(v) => (mode = v === 'pixelate' ? 'pixelate' : 'solid')"
-            >
-              <SelectTrigger id="redact-mode" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="solid"> Solid fill (safest) </SelectItem>
-                <SelectItem value="pixelate"> Pixelate (weaker) </SelectItem>
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           <div v-if="mode === 'solid'" class="flex w-32 flex-col gap-1.5">
             <Label for="redact-color" class="text-xs text-muted-foreground">Color</Label>
-            <Select
+            <SearchableSelect
+              id="redact-color"
+              :spec="colorSpec"
               :model-value="color"
               @update:model-value="(v) => (color = v === 'white' ? 'white' : 'black')"
-            >
-              <SelectTrigger id="redact-color" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="black"> Black </SelectItem>
-                <SelectItem value="white"> White </SelectItem>
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           <div v-else class="flex min-w-48 flex-1 flex-col gap-1.5">
@@ -1228,18 +1273,12 @@ async function downloadExport() {
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-40 flex-col gap-1.5">
             <Label for="redact-format" class="text-xs text-muted-foreground">Format</Label>
-            <Select
+            <SearchableSelect
+              id="redact-format"
+              :spec="formatSpec"
               :model-value="format"
               @update:model-value="(v) => (format = v === 'jpeg' ? 'jpeg' : 'png')"
-            >
-              <SelectTrigger id="redact-format" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="png"> PNG (lossless) </SelectItem>
-                <SelectItem value="jpeg"> JPEG (quality 90) </SelectItem>
-              </SelectContent>
-            </Select>
+            />
           </div>
           <Button size="sm" :disabled="busy" class="mb-0.5" @click="downloadExport">
             Download redacted image

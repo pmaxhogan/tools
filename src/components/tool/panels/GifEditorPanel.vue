@@ -23,17 +23,11 @@
  *    rather than sending a command that would fail in the worker.
  */
 import { computed, reactive, ref } from "vue";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { getLogTail, type MediaBuildContext, type MediaBuildResult } from "@/lib/ffmpeg";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import MediaShell from "../MediaShell.vue";
 import {
   buildCaption,
@@ -75,15 +69,45 @@ const opts = reactive<GifOptions>({
 /** What the last successful run reported about the file it read. */
 const sourceInfo = ref<string | null>(null);
 
-const OPERATIONS: { value: GifOperation; label: string }[] = [
-  { value: "resize", label: "Resize" },
-  { value: "crop", label: "Crop" },
-  { value: "optimize", label: "Optimize" },
-  { value: "reverse", label: "Reverse" },
-  { value: "speed", label: "Change speed" },
-  { value: "caption", label: "Caption" },
-  { value: "split", label: "Split into frames" },
-];
+const operationSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "gif-operation",
+  label: "Operation",
+  default: "resize",
+  options: [
+    {
+      value: "resize",
+      label: "Resize",
+      synonyms: ["shrink", "scale", "dimensions", "width", "make smaller"],
+    },
+    { value: "crop", label: "Crop", synonyms: ["trim", "cut", "rectangle", "clip", "cut edges"] },
+    {
+      value: "optimize",
+      label: "Optimize",
+      synonyms: ["compress", "smaller", "reduce size", "optimise", "shrink file"],
+    },
+    {
+      value: "reverse",
+      label: "Reverse",
+      synonyms: ["backwards", "play backwards", "flip time", "rewind"],
+    },
+    {
+      value: "speed",
+      label: "Change speed",
+      synonyms: ["faster", "slower", "playback rate", "timing", "speed up", "slow down"],
+    },
+    {
+      value: "caption",
+      label: "Caption",
+      synonyms: ["text", "label", "add text", "subtitle", "meme text"],
+    },
+    {
+      value: "split",
+      label: "Split into frames",
+      synonyms: ["frames", "extract", "export frames", "png frames", "individual frames"],
+    },
+  ],
+};
 
 const RUN_LABELS: Record<GifOperation, string> = {
   resize: "Resize GIF",
@@ -202,19 +226,12 @@ function onFiles() {
       <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
         <div class="flex w-56 max-w-full flex-col gap-1.5">
           <Label for="gif-operation" class="text-xs text-muted-foreground">Operation</Label>
-          <Select
+          <SearchableSelect
+            id="gif-operation"
+            :spec="operationSpec"
             :model-value="operation"
             @update:model-value="(v) => (opts.operation = String(v) as GifOperation)"
-          >
-            <SelectTrigger id="gif-operation" size="sm" class="w-full bg-card">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="item in OPERATIONS" :key="item.value" :value="item.value">
-                {{ item.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          />
         </div>
 
         <!-- Resize -->

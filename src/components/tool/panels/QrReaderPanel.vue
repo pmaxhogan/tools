@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, shallowRef } from "vue";
 import { Check, X } from "lucide-vue-next";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import { decodeQr, type DecodeResult } from "@/tools/qr-code-scanner/index";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import CopyButton from "../CopyButton.vue";
 
 /**
@@ -32,6 +26,30 @@ defineProps<{ meta: ToolMeta }>();
 type Mode = "camera" | "upload";
 const mode = ref<Mode>("camera");
 const inversionStill = ref<"attemptBoth" | "dontInvert" | "onlyInvert">("attemptBoth");
+
+const inversionSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "qr-inversion",
+  label: "Color handling",
+  default: "attemptBoth",
+  options: [
+    {
+      value: "attemptBoth",
+      label: "Standard and inverted",
+      synonyms: ["both", "auto", "either", "try both"],
+    },
+    {
+      value: "dontInvert",
+      label: "Standard only (dark on light)",
+      synonyms: ["normal", "dark on light", "no invert"],
+    },
+    {
+      value: "onlyInvert",
+      label: "Inverted only (light on dark)",
+      synonyms: ["invert", "light on dark", "reversed"],
+    },
+  ],
+};
 
 const result = shallowRef<DecodeResult | null>(null);
 const error = ref<{ message: string; fix?: string } | null>(null);
@@ -408,19 +426,13 @@ onUnmounted(() => {
 
       <div class="flex w-56 flex-col gap-1.5">
         <Label for="qr-inversion" class="text-xs text-muted-foreground">Color handling</Label>
-        <Select
+        <SearchableSelect
+          id="qr-inversion"
+          :spec="inversionSpec"
           :model-value="inversionStill"
+          class="w-full bg-card"
           @update:model-value="(v) => (inversionStill = v as typeof inversionStill.value)"
-        >
-          <SelectTrigger id="qr-inversion" size="sm" class="w-full bg-card">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="attemptBoth"> Standard and inverted </SelectItem>
-            <SelectItem value="dontInvert"> Standard only (dark on light) </SelectItem>
-            <SelectItem value="onlyInvert"> Inverted only (light on dark) </SelectItem>
-          </SelectContent>
-        </Select>
+        />
       </div>
     </div>
 

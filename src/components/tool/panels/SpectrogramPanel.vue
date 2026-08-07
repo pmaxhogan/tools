@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { X } from "lucide-vue-next";
-import { ToolError, type ToolMeta } from "@/tools/types";
+import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { isEngineReady, isMediaSupported, runJob } from "@/lib/ffmpeg";
 import { isMetered, shouldAutoDownload } from "@/lib/connection";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 /**
  * Bespoke panel for the Spectrogram Viewer.
@@ -116,6 +110,57 @@ const fftSize = ref("2048");
 const colors = ref("viridis");
 const axisScale = ref("linear");
 const showWaveform = ref(true);
+
+const fftSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "spec-fft",
+  label: "FFT size",
+  default: "2048",
+  options: [
+    {
+      value: "1024",
+      label: "1024 (sharper in time)",
+      synonyms: ["small window", "time resolution", "sharper in time"],
+    },
+    {
+      value: "2048",
+      label: "2048 (balanced)",
+      synonyms: ["default", "balanced", "medium window"],
+    },
+    {
+      value: "4096",
+      label: "4096 (sharper in frequency)",
+      synonyms: ["large window", "frequency resolution", "sharper in frequency"],
+    },
+  ],
+};
+
+const colorSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "spec-colors",
+  label: "Colors",
+  default: "viridis",
+  options: [
+    {
+      value: "viridis",
+      label: "Viridis",
+      synonyms: ["green blue", "perceptual", "default colormap"],
+    },
+    { value: "magma", label: "Magma", synonyms: ["black purple", "warm", "inferno like"] },
+    { value: "gray", label: "Grayscale", synonyms: ["greyscale", "black and white", "monochrome"] },
+  ],
+};
+
+const axisSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "spec-scale",
+  label: "Frequency axis",
+  default: "linear",
+  options: [
+    { value: "linear", label: "Linear", synonyms: ["even spacing", "hertz linear"] },
+    { value: "log", label: "Logarithmic", synonyms: ["log scale", "octaves", "musical"] },
+  ],
+};
 
 /**
  * `x` and `y` are canvas coordinates (what the crosshair is drawn in);
@@ -1437,43 +1482,32 @@ const hoverChipStyle = computed(() => {
     >
       <div class="flex w-40 flex-col gap-1.5">
         <Label for="spec-fft" class="text-xs text-muted-foreground">FFT size</Label>
-        <Select :model-value="fftSize" @update:model-value="(v) => (fftSize = String(v))">
-          <SelectTrigger id="spec-fft" size="sm" class="w-full bg-card">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1024"> 1024 (sharper in time) </SelectItem>
-            <SelectItem value="2048"> 2048 (balanced) </SelectItem>
-            <SelectItem value="4096"> 4096 (sharper in frequency) </SelectItem>
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          id="spec-fft"
+          :spec="fftSpec"
+          :model-value="fftSize"
+          @update:model-value="(v) => (fftSize = String(v))"
+        />
       </div>
 
       <div class="flex w-32 flex-col gap-1.5">
         <Label for="spec-colors" class="text-xs text-muted-foreground">Colors</Label>
-        <Select :model-value="colors" @update:model-value="(v) => (colors = String(v))">
-          <SelectTrigger id="spec-colors" size="sm" class="w-full bg-card">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="viridis"> Viridis </SelectItem>
-            <SelectItem value="magma"> Magma </SelectItem>
-            <SelectItem value="gray"> Grayscale </SelectItem>
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          id="spec-colors"
+          :spec="colorSpec"
+          :model-value="colors"
+          @update:model-value="(v) => (colors = String(v))"
+        />
       </div>
 
       <div class="flex w-36 flex-col gap-1.5">
         <Label for="spec-scale" class="text-xs text-muted-foreground">Frequency axis</Label>
-        <Select :model-value="axisScale" @update:model-value="(v) => (axisScale = String(v))">
-          <SelectTrigger id="spec-scale" size="sm" class="w-full bg-card">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="linear"> Linear </SelectItem>
-            <SelectItem value="log"> Logarithmic </SelectItem>
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          id="spec-scale"
+          :spec="axisSpec"
+          :model-value="axisScale"
+          @update:model-value="(v) => (axisScale = String(v))"
+        />
       </div>
 
       <div class="flex items-center gap-2 pb-2">

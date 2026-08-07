@@ -22,7 +22,7 @@
 import { computed, ref, watch } from "vue";
 import { Download, Eye, Play, TriangleAlert } from "lucide-vue-next";
 import { diffLines } from "diff";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import {
   bytesToBase64,
@@ -50,13 +50,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -140,6 +134,162 @@ const operationOpts = computed<BatchOperationOpts>(() => ({
 }));
 
 const currentSpec = computed(() => BATCH_OPERATIONS[operation.value]);
+
+/* ---------------------------------------------------------------- */
+/* searchable-select specs                                           */
+/* ---------------------------------------------------------------- */
+
+const filterModeSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "batch-filter-mode",
+  label: "Filter type",
+  default: "glob",
+  options: [
+    {
+      value: "glob",
+      label: "Glob",
+      synonyms: ["wildcard", "star pattern", "glob pattern", "*.md"],
+    },
+    { value: "regex", label: "Regex", synonyms: ["regular expression", "pattern", "regexp"] },
+  ],
+};
+
+const OPERATION_SYNONYMS: Record<BatchOperationId, string[]> = {
+  "find-replace": ["search replace", "substitute", "regex replace", "swap text"],
+  case: ["uppercase", "lowercase", "title case", "capitalization", "capitalisation"],
+  "trim-whitespace": ["strip spaces", "trailing whitespace", "clean whitespace", "trim"],
+  "line-endings": ["crlf", "lf", "eol", "dos to unix", "unix to dos", "newlines"],
+  "encoding-normalize": ["bom", "byte order mark", "utf-8", "encoding"],
+  "prefix-suffix": ["header", "footer", "prepend", "append", "banner"],
+  "sort-lines": ["order lines", "alphabetize", "alphabetise", "sort"],
+  "dedupe-lines": ["deduplicate", "unique lines", "remove duplicates", "distinct"],
+  "json-format": ["prettify json", "minify json", "beautify", "format"],
+  "template-wrap": ["frontmatter", "wrap", "template", "boilerplate"],
+};
+
+/** Built from the static BATCH_OPERATION_LIST, so the order and labels match the
+ *  old picker exactly. */
+const operationSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "batch-operation",
+  label: "Operation",
+  default: "find-replace",
+  options: BATCH_OPERATION_LIST.map((s) => ({
+    value: s.id,
+    label: s.label,
+    synonyms: OPERATION_SYNONYMS[s.id],
+  })),
+};
+
+const caseModeSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "batch-case-mode",
+  label: "Casing",
+  default: "lower",
+  options: [
+    { value: "upper", label: "UPPERCASE", synonyms: ["all caps", "capitals", "uppercase"] },
+    { value: "lower", label: "lowercase", synonyms: ["small letters", "lowercase"] },
+    { value: "title", label: "Title Case", synonyms: ["capitalize each word", "headline"] },
+    {
+      value: "sentence",
+      label: "Sentence case",
+      synonyms: ["capitalize first letter", "sentence"],
+    },
+  ],
+};
+
+const finalNewlineSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "batch-final-newline",
+  label: "Final newline",
+  default: "ensure",
+  options: [
+    {
+      value: "ensure",
+      label: "End with exactly one newline",
+      synonyms: ["add newline", "trailing newline", "one newline"],
+    },
+    {
+      value: "strip",
+      label: "No newline at the end",
+      synonyms: ["remove newline", "no trailing newline"],
+    },
+    {
+      value: "keep",
+      label: "Leave the end alone",
+      synonyms: ["unchanged", "do nothing", "leave as is"],
+    },
+  ],
+};
+
+const eolSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "batch-eol",
+  label: "Line ending",
+  default: "lf",
+  options: [
+    {
+      value: "lf",
+      label: "LF, the Linux and macOS ending",
+      synonyms: ["unix", "linux", "macos", "line feed", "newline"],
+    },
+    {
+      value: "crlf",
+      label: "CRLF, the Windows ending",
+      synonyms: ["windows", "dos", "carriage return", "carriage return line feed"],
+    },
+  ],
+};
+
+const sortDirectionSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "batch-sort-direction",
+  label: "Direction",
+  default: "asc",
+  options: [
+    { value: "asc", label: "A to Z", synonyms: ["ascending", "alphabetical", "a-z", "up"] },
+    { value: "desc", label: "Z to A", synonyms: ["descending", "reverse", "z-a", "down"] },
+  ],
+};
+
+const jsonModeSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "batch-json-mode",
+  label: "Style",
+  default: "pretty",
+  options: [
+    {
+      value: "pretty",
+      label: "Pretty print",
+      synonyms: ["prettify", "beautify", "indent", "format", "expand"],
+    },
+    { value: "minify", label: "Minify", synonyms: ["compact", "compress", "one line", "shrink"] },
+  ],
+};
+
+const outputSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "batch-output",
+  label: "Where results go",
+  default: "subfolder",
+  options: [
+    {
+      value: "subfolder",
+      label: "Into a subfolder, originals untouched",
+      synonyms: ["new folder", "separate folder", "safe", "copy"],
+    },
+    {
+      value: "suffix",
+      label: "Alongside, as name.processed.ext",
+      synonyms: ["suffix", "beside", "same folder", "renamed"],
+    },
+    {
+      value: "in-place",
+      label: "In place, overwriting the originals",
+      synonyms: ["overwrite", "replace", "in-place", "modify originals"],
+    },
+  ],
+};
 
 /* ---------------------------------------------------------------- */
 /* run state                                                         */
@@ -666,15 +816,11 @@ function onScan(next: FsScan) {
               <Label for="batch-filter-mode" class="text-xs text-muted-foreground"
                 >Filter type</Label
               >
-              <Select v-model="filterMode">
-                <SelectTrigger id="batch-filter-mode" size="sm" class="w-full min-w-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="glob"> Glob </SelectItem>
-                  <SelectItem value="regex"> Regex </SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                id="batch-filter-mode"
+                v-model="filterMode"
+                :spec="filterModeSpec"
+              />
             </div>
           </div>
           <p role="status" class="font-mono text-xs text-muted-foreground tabular-nums">
@@ -698,16 +844,7 @@ function onScan(next: FsScan) {
         <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
           <div class="flex min-w-0 flex-col gap-1.5">
             <Label for="batch-operation" class="text-xs text-muted-foreground">Operation</Label>
-            <Select v-model="operation">
-              <SelectTrigger id="batch-operation" size="sm" class="w-full min-w-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="spec in BATCH_OPERATION_LIST" :key="spec.id" :value="spec.id">
-                  {{ spec.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect id="batch-operation" v-model="operation" :spec="operationSpec" />
             <p class="text-xs text-muted-foreground">
               {{ currentSpec.description }}
             </p>
@@ -761,17 +898,7 @@ function onScan(next: FsScan) {
           <!-- case -->
           <div v-else-if="operation === 'case'" class="flex min-w-0 flex-col gap-1.5 sm:max-w-xs">
             <Label for="batch-case-mode" class="text-xs text-muted-foreground">Casing</Label>
-            <Select v-model="caseMode">
-              <SelectTrigger id="batch-case-mode" size="sm" class="w-full min-w-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="upper"> UPPERCASE </SelectItem>
-                <SelectItem value="lower"> lowercase </SelectItem>
-                <SelectItem value="title"> Title Case </SelectItem>
-                <SelectItem value="sentence"> Sentence case </SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect id="batch-case-mode" v-model="caseMode" :spec="caseModeSpec" />
           </div>
 
           <!-- trim whitespace -->
@@ -780,16 +907,11 @@ function onScan(next: FsScan) {
               <Label for="batch-final-newline" class="text-xs text-muted-foreground"
                 >Final newline</Label
               >
-              <Select v-model="finalNewline">
-                <SelectTrigger id="batch-final-newline" size="sm" class="w-full min-w-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ensure"> End with exactly one newline </SelectItem>
-                  <SelectItem value="strip"> No newline at the end </SelectItem>
-                  <SelectItem value="keep"> Leave the end alone </SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                id="batch-final-newline"
+                v-model="finalNewline"
+                :spec="finalNewlineSpec"
+              />
             </div>
             <div class="flex flex-wrap items-center gap-4">
               <div class="flex items-center gap-2">
@@ -817,15 +939,7 @@ function onScan(next: FsScan) {
             class="flex min-w-0 flex-col gap-1.5 sm:max-w-xs"
           >
             <Label for="batch-eol" class="text-xs text-muted-foreground">Line ending</Label>
-            <Select v-model="eol">
-              <SelectTrigger id="batch-eol" size="sm" class="w-full min-w-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lf"> LF, the Linux and macOS ending </SelectItem>
-                <SelectItem value="crlf"> CRLF, the Windows ending </SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect id="batch-eol" v-model="eol" :spec="eolSpec" />
           </div>
 
           <!-- encoding -->
@@ -870,15 +984,11 @@ function onScan(next: FsScan) {
               <Label for="batch-sort-direction" class="text-xs text-muted-foreground"
                 >Direction</Label
               >
-              <Select v-model="sortDirection">
-                <SelectTrigger id="batch-sort-direction" size="sm" class="w-full min-w-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="asc"> A to Z </SelectItem>
-                  <SelectItem value="desc"> Z to A </SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                id="batch-sort-direction"
+                v-model="sortDirection"
+                :spec="sortDirectionSpec"
+              />
             </div>
             <div class="flex flex-wrap items-center gap-4">
               <div class="flex items-center gap-2">
@@ -922,15 +1032,7 @@ function onScan(next: FsScan) {
           <div v-else-if="operation === 'json-format'" class="grid gap-3 sm:grid-cols-2">
             <div class="flex min-w-0 flex-col gap-1.5">
               <Label for="batch-json-mode" class="text-xs text-muted-foreground">Style</Label>
-              <Select v-model="jsonMode">
-                <SelectTrigger id="batch-json-mode" size="sm" class="w-full min-w-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pretty"> Pretty print </SelectItem>
-                  <SelectItem value="minify"> Minify </SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect id="batch-json-mode" v-model="jsonMode" :spec="jsonModeSpec" />
             </div>
             <div v-if="jsonMode === 'pretty'" class="flex min-w-0 flex-col gap-1.5">
               <Label for="batch-json-indent" class="text-xs text-muted-foreground">Indent</Label>
@@ -961,16 +1063,7 @@ function onScan(next: FsScan) {
               <Label for="batch-output" class="text-xs text-muted-foreground"
                 >Where results go</Label
               >
-              <Select v-model="output">
-                <SelectTrigger id="batch-output" size="sm" class="w-full min-w-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="subfolder"> Into a subfolder, originals untouched </SelectItem>
-                  <SelectItem value="suffix"> Alongside, as name.processed.ext </SelectItem>
-                  <SelectItem value="in-place"> In place, overwriting the originals </SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect id="batch-output" v-model="output" :spec="outputSpec" />
             </div>
             <div v-if="output === 'subfolder'" class="flex min-w-0 flex-col gap-1.5">
               <Label for="batch-subfolder" class="text-xs text-muted-foreground"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { Download, FolderOpen, RotateCw } from "lucide-vue-next";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import {
   hashFile,
@@ -29,13 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 /**
  * Bespoke panel for Folder Diff.
@@ -102,6 +96,27 @@ const textNote = ref<string | null>(null);
 const textBusy = ref(false);
 
 const format = ref("tree");
+
+const formatSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "folder-diff-format",
+  label: "Report format",
+  default: "tree",
+  options: [
+    {
+      value: "tree",
+      label: "Tree",
+      synonyms: ["tree view", "nested", "hierarchy", "indented", "folder tree"],
+    },
+    {
+      value: "flat",
+      label: "Flat list",
+      synonyms: ["flat", "list", "one per line", "plain paths"],
+    },
+    { value: "csv", label: "CSV", synonyms: ["comma separated values", "spreadsheet", "excel"] },
+  ],
+};
+
 const error = ref<{ message: string; fix?: string } | null>(null);
 
 let ignoreTimer: ReturnType<typeof setTimeout> | null = null;
@@ -674,21 +689,15 @@ onUnmounted(() => {
           Rescan both
         </Button>
         <div class="ml-auto flex items-center gap-2">
-          <Select :model-value="format" @update:model-value="(v) => (format = String(v))">
-            <SelectTrigger
+          <Label for="folder-diff-format" class="sr-only">Report format</Label>
+          <div class="w-[130px]">
+            <SearchableSelect
               id="folder-diff-format"
-              size="sm"
-              class="w-[130px] bg-card"
-              aria-label="Report format"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="tree"> Tree </SelectItem>
-              <SelectItem value="flat"> Flat list </SelectItem>
-              <SelectItem value="csv"> CSV </SelectItem>
-            </SelectContent>
-          </Select>
+              :spec="formatSpec"
+              :model-value="format"
+              @update:model-value="(v) => (format = String(v))"
+            />
+          </div>
           <Button variant="ghost" size="sm" @click="downloadReport">
             <Download class="size-3.5" />
             Download report

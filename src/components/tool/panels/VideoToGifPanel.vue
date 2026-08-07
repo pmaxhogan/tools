@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import { computed, onUnmounted, reactive, ref } from "vue";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import type { MediaBuildContext, MediaBuildResult } from "@/lib/ffmpeg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import MediaShell from "../MediaShell.vue";
 import {
   FRAME_WARNING_THRESHOLD,
@@ -181,6 +175,53 @@ function setNumber(key: "fps" | "width", value: unknown) {
   // instead of the panel silently substituting a value nobody chose.
   opts[key] = Number.isFinite(n) ? n : Number.NaN;
 }
+
+/* ---------------------------------------------------------------- */
+/* select specs                                                      */
+/* ---------------------------------------------------------------- */
+
+const paletteSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "gif-palette",
+  label: "Palette",
+  default: "global",
+  options: [
+    {
+      value: "global",
+      label: "One palette for the whole clip",
+      synonyms: ["single palette", "shared palette", "one palette", "whole clip"],
+    },
+    {
+      value: "perframe",
+      label: "A new palette on every frame",
+      synonyms: ["per frame", "per-frame", "new palette each frame", "scene changes"],
+    },
+  ],
+};
+
+const ditherSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "gif-dither",
+  label: "Dithering",
+  default: "sierra2_4a",
+  options: [
+    {
+      value: "sierra2_4a",
+      label: "Sierra2 4a (smooth gradients)",
+      synonyms: ["sierra", "smooth gradients", "error diffusion"],
+    },
+    {
+      value: "bayer",
+      label: "Bayer (patterned, smaller file)",
+      synonyms: ["ordered", "patterned", "smaller file"],
+    },
+    {
+      value: "none",
+      label: "None (flat bands, sharpest text)",
+      synonyms: ["no dithering", "flat bands", "sharpest text"],
+    },
+  ],
+};
 </script>
 
 <template>
@@ -330,34 +371,21 @@ function setNumber(key: "fps" | "width", value: unknown) {
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-56 flex-col gap-1.5">
               <Label for="gif-palette" class="text-xs text-muted-foreground">Palette</Label>
-              <Select
+              <SearchableSelect
+                id="gif-palette"
+                :spec="paletteSpec"
                 :model-value="opts.palette"
                 @update:model-value="(v) => (opts.palette = String(v) as GifPaletteMode)"
-              >
-                <SelectTrigger id="gif-palette" size="sm" class="w-full bg-card">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="global"> One palette for the whole clip </SelectItem>
-                  <SelectItem value="perframe"> A new palette on every frame </SelectItem>
-                </SelectContent>
-              </Select>
+              />
             </div>
             <div class="flex w-56 flex-col gap-1.5">
               <Label for="gif-dither" class="text-xs text-muted-foreground">Dithering</Label>
-              <Select
+              <SearchableSelect
+                id="gif-dither"
+                :spec="ditherSpec"
                 :model-value="opts.dither"
                 @update:model-value="(v) => (opts.dither = String(v) as GifDither)"
-              >
-                <SelectTrigger id="gif-dither" size="sm" class="w-full bg-card">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sierra2_4a"> Sierra2 4a (smooth gradients) </SelectItem>
-                  <SelectItem value="bayer"> Bayer (patterned, smaller file) </SelectItem>
-                  <SelectItem value="none"> None (flat bands, sharpest text) </SelectItem>
-                </SelectContent>
-              </Select>
+              />
             </div>
           </div>
         </div>

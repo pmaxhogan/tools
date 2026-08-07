@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { Check, X } from "lucide-vue-next";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import {
   FORMATS,
   LANGUAGES,
@@ -15,13 +15,7 @@ import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connect
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import CopyButton from "../CopyButton.vue";
 
 /**
@@ -97,6 +91,39 @@ const language = ref("eng");
 const format = ref("text");
 const preserveLayout = ref(false);
 const showBoxes = ref(false);
+
+// The language and format dropdowns are built from the tool's own constant
+// tables, so each option carries the download size (language) and real search
+// synonyms for the shared searchable-select.
+const languageSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "ocr-language",
+  label: "Language",
+  default: "eng",
+  options: Object.entries(LANGUAGES).map(([code, pack]) => ({
+    value: code,
+    label: `${pack.name} (${pack.megabytes} MB)`,
+    synonyms: [pack.name.toLowerCase(), code],
+  })),
+};
+
+const FORMAT_SYNONYMS: Record<string, string[]> = {
+  text: ["plain", "txt", "raw"],
+  blocks: ["confidence", "layout", "structured"],
+  tsv: ["tab separated", "positions", "coordinates", "spreadsheet"],
+};
+
+const formatSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "ocr-format",
+  label: "Output format",
+  default: "text",
+  options: Object.entries(FORMATS).map(([value, label]) => ({
+    value,
+    label,
+    synonyms: FORMAT_SYNONYMS[value] ?? [label.toLowerCase()],
+  })),
+};
 
 /** The worker is not reactive: Vue must never proxy a postMessage bridge. */
 let worker: TesseractWorker | null = null;
@@ -631,30 +658,24 @@ onUnmounted(() => {
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-44 flex-col gap-1.5">
             <Label for="ocr-language" class="text-xs text-muted-foreground">Language</Label>
-            <Select :model-value="language" @update:model-value="(v) => (language = String(v))">
-              <SelectTrigger id="ocr-language" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="(pack, code) in LANGUAGES" :key="code" :value="code">
-                  {{ pack.name }} ({{ pack.megabytes }} MB)
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="ocr-language"
+              :spec="languageSpec"
+              :model-value="language"
+              class="w-full bg-card"
+              @update:model-value="(v) => (language = String(v))"
+            />
           </div>
 
           <div class="flex w-52 flex-col gap-1.5">
             <Label for="ocr-format" class="text-xs text-muted-foreground">Output format</Label>
-            <Select :model-value="format" @update:model-value="(v) => (format = String(v))">
-              <SelectTrigger id="ocr-format" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="(label, value) in FORMATS" :key="value" :value="value">
-                  {{ label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="ocr-format"
+              :spec="formatSpec"
+              :model-value="format"
+              class="w-full bg-card"
+              @update:model-value="(v) => (format = String(v))"
+            />
           </div>
 
           <div class="flex items-center gap-2 pb-2.5">

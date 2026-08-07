@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { Download, Plug, Send, Trash2, Usb } from "lucide-vue-next";
-import { ToolError, type ToolMeta } from "@/tools/types";
+import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   LineAssembler,
   autoDetectBaudHint,
@@ -101,6 +95,108 @@ const stopBits = ref("1");
 const parity = ref("none");
 const dtr = ref(true);
 const rts = ref(false);
+
+/* ---------------------------------------------------------------- */
+/* select specs                                                     */
+/* ---------------------------------------------------------------- */
+
+/** Board and common aliases so a search for "esp32" or "arduino" lands. */
+const BAUD_SYNONYMS: Record<number, string[]> = {
+  9600: ["arduino default", "arduino", "standard"],
+  19200: ["19.2k"],
+  38400: ["38.4k"],
+  57600: ["57.6k"],
+  74880: ["esp8266 boot", "esp8266"],
+  115200: ["esp32", "most common", "default baud"],
+  230400: ["230.4k"],
+  460800: ["460.8k"],
+  921600: ["fastest", "high speed"],
+};
+
+const baudSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "serial-baud",
+  label: "Baud rate",
+  default: "115200",
+  options: BAUD_RATES.map((rate) => ({
+    value: String(rate),
+    label: String(rate),
+    synonyms: BAUD_SYNONYMS[rate] ?? [],
+  })),
+};
+
+const dataBitsSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "serial-databits",
+  label: "Data bits",
+  default: "8",
+  options: [
+    { value: "7", label: "7", synonyms: ["seven", "7 bit"] },
+    { value: "8", label: "8", synonyms: ["eight", "8 bit", "standard"] },
+  ],
+};
+
+const stopBitsSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "serial-stopbits",
+  label: "Stop bits",
+  default: "1",
+  options: [
+    { value: "1", label: "1", synonyms: ["one stop bit", "standard"] },
+    { value: "2", label: "2", synonyms: ["two stop bits"] },
+  ],
+};
+
+const paritySpec: SelectOptionSpec = {
+  kind: "select",
+  id: "serial-parity",
+  label: "Parity",
+  default: "none",
+  options: [
+    { value: "none", label: "None", synonyms: ["no parity", "8n1"] },
+    { value: "even", label: "Even", synonyms: ["even parity", "8e1"] },
+    { value: "odd", label: "Odd", synonyms: ["odd parity", "8o1"] },
+  ],
+};
+
+const viewSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "serial-view",
+  label: "View",
+  default: "text",
+  options: [
+    { value: "text", label: "Text", synonyms: ["ascii", "plain text"] },
+    { value: "hex", label: "Hex", synonyms: ["hexadecimal", "bytes", "raw"] },
+  ],
+};
+
+const sendModeSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "serial-mode",
+  label: "Mode",
+  default: "text",
+  options: [
+    { value: "text", label: "Text", synonyms: ["ascii", "string"] },
+    { value: "hex", label: "Hex", synonyms: ["hexadecimal", "bytes", "raw"] },
+  ],
+};
+
+const lineEndingSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "serial-ending",
+  label: "Line ending",
+  default: "lf",
+  options: [
+    { value: "none", label: "None", synonyms: ["no line ending", "nothing"] },
+    { value: "lf", label: "Newline (LF)", synonyms: ["line feed", "\\n", "unix"] },
+    {
+      value: "crlf",
+      label: "CR and LF",
+      synonyms: ["carriage return line feed", "\\r\\n", "windows"],
+    },
+    { value: "cr", label: "Carriage return", synonyms: ["\\r", "mac classic"] },
+  ],
+};
 
 /* ---------------------------------------------------------------- */
 /* connection state                                                  */
@@ -648,16 +744,9 @@ onUnmounted(() => {
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div class="flex min-w-0 flex-col gap-1.5">
           <Label for="serial-baud" class="text-xs text-muted-foreground">Baud rate</Label>
-          <Select v-model="baudRate" :disabled="connected">
-            <SelectTrigger id="serial-baud" size="sm" class="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="rate in BAUD_RATES" :key="rate" :value="String(rate)">
-                {{ rate }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <fieldset :disabled="connected" class="m-0 min-w-0 border-0 p-0">
+            <SearchableSelect id="serial-baud" v-model="baudRate" :spec="baudSpec" />
+          </fieldset>
         </div>
 
         <div class="flex min-w-0 flex-col gap-1.5">
@@ -682,42 +771,23 @@ onUnmounted(() => {
         <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div class="flex min-w-0 flex-col gap-1.5">
             <Label for="serial-databits" class="text-xs text-muted-foreground">Data bits</Label>
-            <Select v-model="dataBits" :disabled="connected">
-              <SelectTrigger id="serial-databits" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7"> 7 </SelectItem>
-                <SelectItem value="8"> 8 </SelectItem>
-              </SelectContent>
-            </Select>
+            <fieldset :disabled="connected" class="m-0 min-w-0 border-0 p-0">
+              <SearchableSelect id="serial-databits" v-model="dataBits" :spec="dataBitsSpec" />
+            </fieldset>
           </div>
 
           <div class="flex min-w-0 flex-col gap-1.5">
             <Label for="serial-stopbits" class="text-xs text-muted-foreground">Stop bits</Label>
-            <Select v-model="stopBits" :disabled="connected">
-              <SelectTrigger id="serial-stopbits" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1"> 1 </SelectItem>
-                <SelectItem value="2"> 2 </SelectItem>
-              </SelectContent>
-            </Select>
+            <fieldset :disabled="connected" class="m-0 min-w-0 border-0 p-0">
+              <SearchableSelect id="serial-stopbits" v-model="stopBits" :spec="stopBitsSpec" />
+            </fieldset>
           </div>
 
           <div class="flex min-w-0 flex-col gap-1.5">
             <Label for="serial-parity" class="text-xs text-muted-foreground">Parity</Label>
-            <Select v-model="parity" :disabled="connected">
-              <SelectTrigger id="serial-parity" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none"> None </SelectItem>
-                <SelectItem value="even"> Even </SelectItem>
-                <SelectItem value="odd"> Odd </SelectItem>
-              </SelectContent>
-            </Select>
+            <fieldset :disabled="connected" class="m-0 min-w-0 border-0 p-0">
+              <SearchableSelect id="serial-parity" v-model="parity" :spec="paritySpec" />
+            </fieldset>
           </div>
         </div>
         <p class="mt-3 text-xs text-muted-foreground">
@@ -752,15 +822,13 @@ onUnmounted(() => {
       <div class="flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2">
           <Label for="serial-view" class="text-xs text-muted-foreground">View</Label>
-          <Select v-model="view">
-            <SelectTrigger id="serial-view" size="sm" class="w-28">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="text"> Text </SelectItem>
-              <SelectItem value="hex"> Hex </SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            id="serial-view"
+            class="w-28"
+            :spec="viewSpec"
+            :model-value="view"
+            @update:model-value="(v) => (view = v === 'hex' ? 'hex' : 'text')"
+          />
         </div>
 
         <div class="flex items-center gap-2">
@@ -860,30 +928,24 @@ onUnmounted(() => {
 
         <div class="flex min-w-0 flex-col gap-1.5">
           <Label for="serial-mode" class="text-xs text-muted-foreground">Mode</Label>
-          <Select v-model="sendMode">
-            <SelectTrigger id="serial-mode" size="sm" class="w-24">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="text"> Text </SelectItem>
-              <SelectItem value="hex"> Hex </SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            id="serial-mode"
+            class="w-24"
+            :spec="sendModeSpec"
+            :model-value="sendMode"
+            @update:model-value="(v) => (sendMode = v as SendMode)"
+          />
         </div>
 
         <div class="flex min-w-0 flex-col gap-1.5">
           <Label for="serial-ending" class="text-xs text-muted-foreground">Line ending</Label>
-          <Select v-model="lineEnding">
-            <SelectTrigger id="serial-ending" size="sm" class="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none"> None </SelectItem>
-              <SelectItem value="lf"> Newline (LF) </SelectItem>
-              <SelectItem value="crlf"> CR and LF </SelectItem>
-              <SelectItem value="cr"> Carriage return </SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            id="serial-ending"
+            class="w-32"
+            :spec="lineEndingSpec"
+            :model-value="lineEnding"
+            @update:model-value="(v) => (lineEnding = v as LineEnding)"
+          />
         </div>
 
         <Button :disabled="!connected" @click="send">

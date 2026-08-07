@@ -22,7 +22,7 @@
  */
 import { computed, onBeforeUnmount, ref, shallowRef } from "vue";
 import { Search, Trash2, TriangleAlert } from "lucide-vue-next";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import FsShell from "../FsShell.vue";
 import {
@@ -37,13 +37,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -105,13 +99,39 @@ const GROUP_CAP = 60;
 const reclaimed = ref<{ files: number; bytes: number; failed: number } | null>(null);
 const error = ref<{ message: string; fix?: string } | null>(null);
 
-const KEEP_CHOICES: { value: KeepStrategy; label: string }[] = [
-  { value: "shallowest", label: "Closest to the top folder" },
-  { value: "first-alpha", label: "First by path (A to Z)" },
-  { value: "shortest-path", label: "Shortest path" },
-  { value: "newest", label: "Newest file" },
-  { value: "oldest", label: "Oldest file" },
-];
+const keepSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "dupe-keep",
+  label: "Keep which copy",
+  default: "shallowest",
+  options: [
+    {
+      value: "shallowest",
+      label: "Closest to the top folder",
+      synonyms: ["nearest root", "top level", "least nested", "closest to root", "highest up"],
+    },
+    {
+      value: "first-alpha",
+      label: "First by path (A to Z)",
+      synonyms: ["alphabetical", "a to z", "first alphabetically", "name order", "sorted by name"],
+    },
+    {
+      value: "shortest-path",
+      label: "Shortest path",
+      synonyms: ["shortest", "fewest characters", "short name", "least depth"],
+    },
+    {
+      value: "newest",
+      label: "Newest file",
+      synonyms: ["most recent", "latest", "newest modified", "recently changed"],
+    },
+    {
+      value: "oldest",
+      label: "Oldest file",
+      synonyms: ["earliest", "least recent", "oldest modified", "first created"],
+    },
+  ],
+};
 
 /* ---------------------------------------------------------------- */
 /* formatting                                                        */
@@ -558,20 +578,12 @@ onBeforeUnmount(() => {
         >
           <div class="flex w-56 flex-col gap-1.5">
             <Label for="dupe-keep" class="text-xs text-muted-foreground">Keep which copy</Label>
-            <Select :model-value="keepStrategy" @update:model-value="onStrategyChange">
-              <SelectTrigger id="dupe-keep" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="choice in KEEP_CHOICES"
-                  :key="choice.value"
-                  :value="choice.value"
-                >
-                  {{ choice.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="dupe-keep"
+              :spec="keepSpec"
+              :model-value="keepStrategy"
+              @update:model-value="onStrategyChange"
+            />
           </div>
           <div class="flex flex-wrap items-center gap-2 pb-0.5">
             <Button variant="outline" size="sm" @click="chooseAll"> Tick every set </Button>

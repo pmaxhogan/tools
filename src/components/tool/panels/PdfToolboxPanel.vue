@@ -1,20 +1,14 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, shallowRef, watch } from "vue";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, X } from "lucide-vue-next";
-import { ToolError, type ToolMeta } from "@/tools/types";
+import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 /**
  * Bespoke panel for the PDF toolbox.
@@ -134,6 +128,42 @@ const markAngle = ref(45);
 const markColor = ref("#ff0000");
 const markColorText = ref("#ff0000");
 const markPosition = ref("diagonal");
+
+const rotateAngleSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "pdf-rotate-angle",
+  label: "Turn by",
+  default: "90",
+  options: [
+    {
+      value: "90",
+      label: "90 degrees clockwise",
+      synonyms: ["quarter turn", "right", "clockwise", "cw"],
+    },
+    { value: "180", label: "180 degrees", synonyms: ["half turn", "upside down", "flip"] },
+    {
+      value: "270",
+      label: "270 degrees clockwise",
+      synonyms: ["counterclockwise", "left", "ccw", "three quarter turn"],
+    },
+  ],
+};
+
+const markPositionSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "pdf-mark-position",
+  label: "Placement",
+  default: "diagonal",
+  options: [
+    {
+      value: "diagonal",
+      label: "Diagonal across the page",
+      synonyms: ["angled", "corner to corner", "slanted"],
+    },
+    { value: "center", label: "Centered", synonyms: ["middle", "centre"] },
+    { value: "bottom", label: "Along the bottom", synonyms: ["footer", "bottom edge", "below"] },
+  ],
+};
 // Form fill
 const formFields = ref<FieldInfo[]>([]);
 const formValues = ref<Record<string, string>>({});
@@ -145,6 +175,27 @@ const formLoaded = ref(false);
 /* ---------------------------------------------------------------- */
 
 const readyFiles = computed(() => files.value.filter((f) => f.error === null));
+
+/**
+ * One searchable-select spec per dropdown/radio form field, keyed by field name
+ * and rebuilt when the active document's fields change. The choices come from
+ * the user's own PDF, so there are no authored synonyms to add.
+ */
+const formFieldSpecs = computed<Record<string, SelectOptionSpec>>(() => {
+  const specs: Record<string, SelectOptionSpec> = {};
+  for (const field of formFields.value) {
+    if (field.options && field.options.length) {
+      specs[field.name] = {
+        kind: "select",
+        id: `pdf-field-${field.name}`,
+        label: field.name,
+        default: field.value ?? "",
+        options: field.options.map((choice) => ({ value: choice, label: choice, synonyms: [] })),
+      };
+    }
+  }
+  return specs;
+});
 
 const activeFile = computed(() => files.value.find((f) => f.id === activeId.value) ?? null);
 
@@ -875,19 +926,13 @@ onUnmounted(() => {
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-36 flex-col gap-1.5">
               <Label for="pdf-rotate-angle" class="text-xs text-muted-foreground">Turn by</Label>
-              <Select
+              <SearchableSelect
+                id="pdf-rotate-angle"
+                :spec="rotateAngleSpec"
                 :model-value="rotateAngle"
+                class="w-full bg-card"
                 @update:model-value="(v) => (rotateAngle = String(v))"
-              >
-                <SelectTrigger id="pdf-rotate-angle" size="sm" class="w-full bg-card">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="90"> 90 degrees clockwise </SelectItem>
-                  <SelectItem value="180"> 180 degrees </SelectItem>
-                  <SelectItem value="270"> 270 degrees clockwise </SelectItem>
-                </SelectContent>
-              </Select>
+              />
             </div>
             <div class="flex items-center gap-2 pb-2">
               <Switch
@@ -1026,19 +1071,13 @@ onUnmounted(() => {
 
             <div class="flex min-w-0 flex-col gap-1.5">
               <Label for="pdf-mark-position" class="text-xs text-muted-foreground">Placement</Label>
-              <Select
+              <SearchableSelect
+                id="pdf-mark-position"
+                :spec="markPositionSpec"
                 :model-value="markPosition"
+                class="w-full bg-card"
                 @update:model-value="(v) => (markPosition = String(v))"
-              >
-                <SelectTrigger id="pdf-mark-position" size="sm" class="w-full bg-card">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="diagonal"> Diagonal across the page </SelectItem>
-                  <SelectItem value="center"> Centered </SelectItem>
-                  <SelectItem value="bottom"> Along the bottom </SelectItem>
-                </SelectContent>
-              </Select>
+              />
             </div>
 
             <div class="flex min-w-0 flex-col gap-1.5">
@@ -1155,20 +1194,14 @@ onUnmounted(() => {
                   />
                 </div>
 
-                <Select
+                <SearchableSelect
                   v-else-if="field.options && field.options.length"
+                  :id="`pdf-field-${field.name}`"
+                  :spec="formFieldSpecs[field.name]"
                   :model-value="formValues[field.name] ?? ''"
+                  class="w-full bg-card"
                   @update:model-value="(v) => (formValues[field.name] = String(v))"
-                >
-                  <SelectTrigger :id="`pdf-field-${field.name}`" size="sm" class="w-full bg-card">
-                    <SelectValue placeholder="Choose one" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem v-for="choice in field.options" :key="choice" :value="choice">
-                      {{ choice }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                />
 
                 <Input
                   v-else

@@ -20,7 +20,7 @@
  */
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { Check, X } from "lucide-vue-next";
-import { ToolError, type ToolMeta } from "@/tools/types";
+import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   MediaJobError,
   getFFmpeg,
@@ -49,13 +49,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -81,6 +75,35 @@ const customMB = ref("");
 const maxHeight = ref("0");
 const keepFps = ref(true);
 const keepAudio = ref(true);
+
+const capSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "dc-cap",
+  label: "Size cap",
+  default: "10",
+  options: [
+    { value: "10", label: "10 MB (free tier)", synonyms: ["free", "default", "no nitro"] },
+    { value: "50", label: "50 MB (Nitro Basic)", synonyms: ["nitro basic", "basic"] },
+    { value: "500", label: "500 MB (Nitro)", synonyms: ["nitro", "full nitro"] },
+  ],
+};
+
+const heightSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "dc-height",
+  label: "Resolution",
+  default: "0",
+  options: [
+    {
+      value: "0",
+      label: "Keep the source height",
+      synonyms: ["original", "no change", "native", "source resolution", "full"],
+    },
+    { value: "1080", label: "Cap at 1080p", synonyms: ["full hd", "fhd", "1920x1080"] },
+    { value: "720", label: "Cap at 720p", synonyms: ["hd", "1280x720"] },
+    { value: "480", label: "Cap at 480p", synonyms: ["sd", "standard definition", "854x480"] },
+  ],
+};
 
 type EngineState = "idle" | "loading" | "ready";
 const engineState = ref<EngineState>("idle");
@@ -669,16 +692,12 @@ onUnmounted(clearResult);
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-48 flex-col gap-1.5">
             <Label for="dc-cap" class="text-xs text-muted-foreground">Size cap</Label>
-            <Select :model-value="cap" @update:model-value="(v) => (cap = String(v))">
-              <SelectTrigger id="dc-cap" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10"> 10 MB (free tier) </SelectItem>
-                <SelectItem value="50"> 50 MB (Nitro Basic) </SelectItem>
-                <SelectItem value="500"> 500 MB (Nitro) </SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="dc-cap"
+              :spec="capSpec"
+              :model-value="cap"
+              @update:model-value="(v) => (cap = String(v))"
+            />
           </div>
 
           <div class="flex w-40 flex-col gap-1.5">
@@ -695,17 +714,12 @@ onUnmounted(clearResult);
 
           <div class="flex w-40 flex-col gap-1.5">
             <Label for="dc-height" class="text-xs text-muted-foreground">Resolution</Label>
-            <Select :model-value="maxHeight" @update:model-value="(v) => (maxHeight = String(v))">
-              <SelectTrigger id="dc-height" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0"> Keep the source height </SelectItem>
-                <SelectItem value="1080"> Cap at 1080p </SelectItem>
-                <SelectItem value="720"> Cap at 720p </SelectItem>
-                <SelectItem value="480"> Cap at 480p </SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="dc-height"
+              :spec="heightSpec"
+              :model-value="maxHeight"
+              @update:model-value="(v) => (maxHeight = String(v))"
+            />
           </div>
         </div>
 

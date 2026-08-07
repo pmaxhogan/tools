@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, shallowRef } from "vue";
 import { X } from "lucide-vue-next";
-import { ToolError, type ToolMeta } from "@/tools/types";
+import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import CopyButton from "../CopyButton.vue";
 
 /**
@@ -80,6 +74,22 @@ const cropDragging = ref(false);
 
 const format = ref("image/png");
 const quality = ref(85);
+
+const formatSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "img-format",
+  label: "Format",
+  default: "image/png",
+  options: [
+    {
+      value: "image/png",
+      label: "PNG",
+      synonyms: ["lossless", "transparent", "portable network graphics"],
+    },
+    { value: "image/jpeg", label: "JPEG", synonyms: ["jpg", "lossy", "photo"] },
+    { value: "image/webp", label: "WebP", synonyms: ["web p", "modern", "google"] },
+  ],
+};
 const exportedSize = ref<number | null>(null);
 const exportedName = ref("");
 
@@ -789,16 +799,13 @@ onUnmounted(() => {
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-32 flex-col gap-1.5">
               <Label for="img-format" class="text-xs text-muted-foreground">Format</Label>
-              <Select :model-value="format" @update:model-value="(v) => (format = String(v))">
-                <SelectTrigger id="img-format" size="sm" class="w-full bg-card">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="image/png"> PNG </SelectItem>
-                  <SelectItem value="image/jpeg"> JPEG </SelectItem>
-                  <SelectItem value="image/webp"> WebP </SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                id="img-format"
+                :spec="formatSpec"
+                :model-value="format"
+                class="w-full bg-card"
+                @update:model-value="(v) => (format = String(v))"
+              />
             </div>
             <div class="flex min-w-48 flex-1 flex-col gap-1.5">
               <!-- The slider's focusable element is its thumb, not the root,

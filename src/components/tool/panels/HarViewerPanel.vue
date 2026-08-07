@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef } from "vue";
 import { ArrowDown, ArrowUp, Eye, EyeOff, TriangleAlert, X } from "lucide-vue-next";
-import { ToolError, type ToolMeta } from "@/tools/types";
+import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 /**
  * Bespoke panel for the HAR viewer. The generic ToolShell can print the ASCII
@@ -61,6 +55,28 @@ const fileInput = ref<HTMLInputElement>();
 const search = ref("");
 const statusFilter = ref("all");
 const minMs = ref(0);
+
+const statusSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "har-status",
+  label: "Status",
+  default: "all",
+  options: [
+    { value: "all", label: "All", synonyms: ["everything", "any", "no filter", "all statuses"] },
+    { value: "2xx", label: "2xx success", synonyms: ["200", "ok", "success", "successful"] },
+    { value: "3xx", label: "3xx redirect", synonyms: ["301", "302", "redirect", "moved"] },
+    {
+      value: "4xx",
+      label: "4xx client error",
+      synonyms: ["404", "403", "400", "client error", "not found", "forbidden"],
+    },
+    {
+      value: "5xx",
+      label: "5xx server error",
+      synonyms: ["500", "502", "503", "server error", "internal error"],
+    },
+  ],
+};
 
 const sortKey = ref<"start" | "duration" | "size">("start");
 const sortDir = ref<"asc" | "desc">("asc");
@@ -568,21 +584,12 @@ function downloadSanitized() {
         </div>
         <div class="flex w-40 flex-col gap-1.5">
           <Label for="har-status" class="text-xs text-muted-foreground">Status</Label>
-          <Select
+          <SearchableSelect
+            id="har-status"
+            :spec="statusSpec"
             :model-value="statusFilter"
             @update:model-value="(v) => (statusFilter = String(v))"
-          >
-            <SelectTrigger id="har-status" size="sm" class="w-full bg-card">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all"> All </SelectItem>
-              <SelectItem value="2xx"> 2xx success </SelectItem>
-              <SelectItem value="3xx"> 3xx redirect </SelectItem>
-              <SelectItem value="4xx"> 4xx client error </SelectItem>
-              <SelectItem value="5xx"> 5xx server error </SelectItem>
-            </SelectContent>
-          </Select>
+          />
         </div>
         <div class="flex w-36 flex-col gap-1.5">
           <Label for="har-min" class="text-xs text-muted-foreground">Slower than (ms)</Label>

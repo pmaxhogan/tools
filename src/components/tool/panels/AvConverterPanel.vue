@@ -7,18 +7,10 @@
  * the format table and the quality tiers are defined and tested.
  */
 import { computed, reactive, ref } from "vue";
-import { ToolError, type ToolMeta } from "@/tools/types";
+import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import MediaShell from "../MediaShell.vue";
 import type { MediaBuildContext, MediaBuildResult } from "@/lib/ffmpeg";
 import {
@@ -53,6 +45,69 @@ const QUALITY_LABELS: Record<QualityId, string> = {
 
 const videoTargets = TARGET_IDS.filter((id) => FORMATS[id].kind === "video");
 const audioTargets = TARGET_IDS.filter((id) => FORMATS[id].kind === "audio");
+
+/* ---------------------------------------------------------------- */
+/* searchable-select specs                                           */
+/* ---------------------------------------------------------------- */
+
+const TARGET_SYNONYMS: Record<TargetId, string[]> = {
+  mp4: ["h264", "h.264", "mpeg-4", "mpeg4", "aac"],
+  webm: ["vp8", "vp9", "vorbis", "web video"],
+  mkv: ["matroska", "remux", "rewrap", "no re-encode", "container"],
+  gif: ["animated gif", "animation", "graphics interchange"],
+  mp3: ["mpeg audio", "lame", "mp3 audio"],
+  m4a: ["aac", "mp4 audio", "apple audio"],
+  wav: ["wave", "pcm", "uncompressed"],
+  ogg: ["vorbis", "ogg vorbis"],
+  flac: ["lossless", "free lossless audio codec"],
+};
+
+/** Built from the static FORMATS table, so the Video and Audio groups match the
+ *  old grouped picker exactly. */
+const targetSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "av-target",
+  label: "Convert to",
+  default: "mp4",
+  groups: [
+    {
+      label: "Video",
+      synonyms: ["movie", "video formats", "picture"],
+      options: videoTargets.map((id) => ({
+        value: id,
+        label: FORMATS[id].label,
+        synonyms: TARGET_SYNONYMS[id],
+      })),
+    },
+    {
+      label: "Audio",
+      synonyms: ["sound", "music", "audio formats", "soundtrack"],
+      options: audioTargets.map((id) => ({
+        value: id,
+        label: FORMATS[id].label,
+        synonyms: TARGET_SYNONYMS[id],
+      })),
+    },
+  ],
+};
+
+const QUALITY_SYNONYMS: Record<QualityId, string[]> = {
+  high: ["best", "maximum", "top quality", "high quality"],
+  balanced: ["default", "medium", "standard", "recommended"],
+  small: ["smallest", "compact", "low", "tiny", "smallest file"],
+};
+
+const qualitySpec: SelectOptionSpec = {
+  kind: "select",
+  id: "av-quality",
+  label: "Quality",
+  default: "balanced",
+  options: QUALITY_IDS.map((id) => ({
+    value: id,
+    label: QUALITY_LABELS[id],
+    synonyms: QUALITY_SYNONYMS[id],
+  })),
+};
 
 const spec = computed(() => FORMATS[opts.target]);
 /** GIF has no audio track to begin with, and audio targets are all audio. */
@@ -168,39 +223,22 @@ function onFiles(files: { name: string; size: number }[]) {
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex min-w-52 flex-1 flex-col gap-1.5">
             <Label for="av-target" class="text-xs text-muted-foreground"> Convert to </Label>
-            <Select :model-value="opts.target" @update:model-value="setTarget">
-              <SelectTrigger id="av-target" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Video</SelectLabel>
-                  <SelectItem v-for="id in videoTargets" :key="id" :value="id">
-                    {{ FORMATS[id].label }}
-                  </SelectItem>
-                </SelectGroup>
-                <SelectGroup>
-                  <SelectLabel>Audio</SelectLabel>
-                  <SelectItem v-for="id in audioTargets" :key="id" :value="id">
-                    {{ FORMATS[id].label }}
-                  </SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="av-target"
+              :spec="targetSpec"
+              :model-value="opts.target"
+              @update:model-value="setTarget"
+            />
           </div>
 
           <div class="flex min-w-52 flex-1 flex-col gap-1.5">
             <Label for="av-quality" class="text-xs text-muted-foreground"> Quality </Label>
-            <Select :model-value="opts.quality" @update:model-value="setQuality">
-              <SelectTrigger id="av-quality" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="id in QUALITY_IDS" :key="id" :value="id">
-                  {{ QUALITY_LABELS[id] }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="av-quality"
+              :spec="qualitySpec"
+              :model-value="opts.quality"
+              @update:model-value="setQuality"
+            />
           </div>
 
           <div v-if="canStripAudio" class="flex items-center gap-2 pb-2">

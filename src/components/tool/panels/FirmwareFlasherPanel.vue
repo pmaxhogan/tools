@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle2, Eraser, Loader2, Usb, X, Zap } from "lucid
 // that Node cannot resolve during the SSR build, so the runtime values are
 // pulled in with a dynamic import inside the connect handler instead.
 import type { ESPLoader, Transport } from "esptool-js";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import {
   CHIP_LABELS,
@@ -21,13 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 /**
  * Bespoke panel for the firmware flasher. The pure layer in
@@ -65,7 +59,23 @@ type TransportDevice = ConstructorParameters<typeof Transport>[0];
 /* ---------------------------------------------------------------- */
 
 const HANDSHAKE_BAUD = 115200;
-const FLASH_BAUDS = ["115200", "230400", "460800", "921600"];
+
+const baudSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "ff-baud",
+  label: "Flash baud",
+  default: "460800",
+  options: [
+    {
+      value: "115200",
+      label: "115200",
+      synonyms: ["baud", "bps", "slowest", "safest", "handshake speed"],
+    },
+    { value: "230400", label: "230400", synonyms: ["baud", "bps"] },
+    { value: "460800", label: "460800", synonyms: ["baud", "bps", "default speed"] },
+    { value: "921600", label: "921600", synonyms: ["baud", "bps", "fastest", "high speed"] },
+  ],
+};
 
 const baud = ref("460800");
 const eraseAll = ref(false);
@@ -76,6 +86,31 @@ const eraseAll = ref(false);
 
 type Mode = "single" | "advanced";
 const mode = ref<Mode>("single");
+
+const modeSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "ff-mode",
+  label: "Mode",
+  default: "single",
+  options: [
+    {
+      value: "single",
+      label: "Single file",
+      synonyms: ["one file", "single binary", "app only", "one build"],
+    },
+    {
+      value: "advanced",
+      label: "Offset table",
+      synonyms: [
+        "advanced",
+        "multiple files",
+        "bootloader partition app",
+        "layout",
+        "custom offsets",
+      ],
+    },
+  ],
+};
 
 /**
  * A chosen firmware file. `offset` is the hex text shown in the advanced
@@ -529,15 +564,14 @@ onUnmounted(() => {
         <Label class="text-sm font-medium">Firmware files</Label>
         <div class="ml-auto flex items-center gap-2">
           <Label for="ff-mode" class="text-xs text-muted-foreground">Mode</Label>
-          <Select v-model="mode" :disabled="busy">
-            <SelectTrigger id="ff-mode" size="sm" class="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="single"> Single file </SelectItem>
-              <SelectItem value="advanced"> Offset table </SelectItem>
-            </SelectContent>
-          </Select>
+          <fieldset :disabled="busy" class="m-0 w-40 min-w-0 border-0 p-0">
+            <SearchableSelect
+              id="ff-mode"
+              :spec="modeSpec"
+              :model-value="mode"
+              @update:model-value="(v) => (mode = v as Mode)"
+            />
+          </fieldset>
         </div>
       </div>
 
@@ -613,16 +647,9 @@ onUnmounted(() => {
       <div class="flex flex-wrap items-end gap-4">
         <div class="flex min-w-0 flex-col gap-1.5">
           <Label for="ff-baud" class="text-xs text-muted-foreground">Flash baud</Label>
-          <Select v-model="baud" :disabled="busy">
-            <SelectTrigger id="ff-baud" size="sm" class="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="rate in FLASH_BAUDS" :key="rate" :value="rate">
-                {{ rate }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <fieldset :disabled="busy" class="m-0 w-32 min-w-0 border-0 p-0">
+            <SearchableSelect id="ff-baud" v-model="baud" :spec="baudSpec" />
+          </fieldset>
         </div>
 
         <div class="flex items-center gap-2 pb-1.5">

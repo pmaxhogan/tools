@@ -1,17 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { Pause, Play, Plug, Trash2, Usb } from "lucide-vue-next";
-import { ToolError, type ToolMeta } from "@/tools/types";
+import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import OutputView from "../OutputView.vue";
 import {
   decodeInputReport,
@@ -154,6 +148,23 @@ const visibleLog = computed(() =>
     ? log.value
     : log.value.filter((e) => String(e.reportId) === reportFilter.value),
 );
+
+/** The report-ID filter choices, rebuilt as the device's report layouts change. */
+const reportFilterSpec = computed<SelectOptionSpec>(() => ({
+  kind: "select",
+  id: "hid-report-filter",
+  label: "Report ID",
+  default: "all",
+  options: [
+    { value: "all", label: "All", synonyms: ["every", "any", "everything"] },
+    ...inputReportIds.value.map((id) => ({
+      value: String(id),
+      label: id === 0 ? "No ID" : `ID ${id}`,
+      synonyms:
+        id === 0 ? ["no id", "unnumbered", "zero"] : [`id ${id}`, `report ${id}`, String(id)],
+    })),
+  ],
+}));
 
 /* ---------------------------------------------------------------- */
 /* connect / disconnect                                              */
@@ -453,17 +464,12 @@ onUnmounted(() => {
 
         <div v-if="inputReportIds.length > 1" class="flex items-center gap-2">
           <Label for="hid-report-filter" class="text-xs text-muted-foreground">Report ID</Label>
-          <Select v-model="reportFilter">
-            <SelectTrigger id="hid-report-filter" size="sm" class="w-32 bg-card">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all"> All </SelectItem>
-              <SelectItem v-for="id in inputReportIds" :key="id" :value="String(id)">
-                {{ id === 0 ? "No ID" : `ID ${id}` }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            id="hid-report-filter"
+            v-model="reportFilter"
+            :spec="reportFilterSpec"
+            class="w-32 bg-card"
+          />
         </div>
 
         <span class="text-xs text-muted-foreground">

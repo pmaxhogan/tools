@@ -9,7 +9,7 @@
  * URL straight from that event instead of owning any file selection UI.
  */
 import { computed, onUnmounted, ref } from "vue";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import type { MediaBuildArgs } from "@/lib/ffmpeg";
 import { buildTrimArgs, parseTimeSpec, type AudioFormat } from "@/tools/audio-trimmer/index";
 import MediaShell from "../MediaShell.vue";
@@ -17,13 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -38,13 +32,23 @@ const fadeOut = ref(0);
 const normalize = ref(false);
 const format = ref<AudioFormat>("same");
 
-const FORMAT_CHOICES: { value: AudioFormat; label: string }[] = [
-  { value: "same", label: "Same as source" },
-  { value: "mp3", label: "MP3" },
-  { value: "m4a", label: "M4A (AAC)" },
-  { value: "wav", label: "WAV" },
-  { value: "ogg", label: "OGG (Vorbis)" },
-];
+const formatSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "output-format",
+  label: "Format",
+  default: "same",
+  options: [
+    {
+      value: "same",
+      label: "Same as source",
+      synonyms: ["keep format", "no conversion", "original", "unchanged"],
+    },
+    { value: "mp3", label: "MP3", synonyms: ["mpeg audio", "lame", "mp3 audio"] },
+    { value: "m4a", label: "M4A (AAC)", synonyms: ["aac", "mp4 audio", "apple audio"] },
+    { value: "wav", label: "WAV", synonyms: ["wave", "pcm", "uncompressed"] },
+    { value: "ogg", label: "OGG (Vorbis)", synonyms: ["vorbis", "ogg vorbis"] },
+  ],
+};
 
 /* ---------------------------------------------------------------- */
 /* preview: object URL + probed duration for the selected file       */
@@ -298,23 +302,12 @@ onUnmounted(revokePreview);
             </div>
             <div class="flex w-44 flex-col gap-1.5">
               <Label for="output-format" class="text-xs text-muted-foreground">Format</Label>
-              <Select
+              <SearchableSelect
+                id="output-format"
+                :spec="formatSpec"
                 :model-value="format"
                 @update:model-value="(v) => (format = v as AudioFormat)"
-              >
-                <SelectTrigger id="output-format" size="sm" class="w-full bg-card">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    v-for="choice in FORMAT_CHOICES"
-                    :key="choice.value"
-                    :value="choice.value"
-                  >
-                    {{ choice.label }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              />
             </div>
           </div>
         </div>

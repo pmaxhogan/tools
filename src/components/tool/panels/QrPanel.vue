@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { ToolError, type ToolMeta } from "@/tools/types";
+import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   LOGO_MAX,
   LOGO_MIN,
@@ -17,13 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import OptionControl from "../OptionControl.vue";
 import CopyButton from "../CopyButton.vue";
 
@@ -41,6 +35,37 @@ const props = defineProps<{ meta: ToolMeta }>();
 const presetSpec = computed(() => props.meta.options?.find((o) => o.id === "preset"));
 const eccSpec = computed(() => props.meta.options!.find((o) => o.id === "ecc")!);
 const marginSpec = computed(() => props.meta.options!.find((o) => o.id === "margin")!);
+
+// The preset and error-correction dropdowns reuse the tool's own migrated meta
+// specs (groups/options with synonyms), narrowed to a select spec for the
+// shared searchable-select.
+const presetSelectSpec = computed<SelectOptionSpec | undefined>(() =>
+  presetSpec.value?.kind === "select" ? presetSpec.value : undefined,
+);
+const eccSelectSpec = computed<SelectOptionSpec | undefined>(() =>
+  eccSpec.value.kind === "select" ? eccSpec.value : undefined,
+);
+
+// The Wi-Fi security choices are local to this panel, not in meta.
+const wifiSecuritySpec: SelectOptionSpec = {
+  kind: "select",
+  id: "qr-wifi-security",
+  label: "Security",
+  default: "WPA",
+  options: [
+    { value: "WPA", label: "WPA", synonyms: ["wpa2", "wpa3", "protected", "password"] },
+    {
+      value: "WEP",
+      label: "WEP",
+      synonyms: ["legacy", "wired equivalent privacy", "old"],
+    },
+    {
+      value: "nopass",
+      label: "None",
+      synonyms: ["open", "no password", "unsecured", "public"],
+    },
+  ],
+};
 
 const preset = ref<string>((presetSpec.value?.default as string) ?? "text");
 const ecc = ref<string>((eccSpec.value.default as string) ?? "M");
@@ -475,16 +500,14 @@ async function downloadPng() {
           <Label for="qr-preset" class="text-xs text-muted-foreground">
             {{ presetSpec?.label ?? "Content type" }}
           </Label>
-          <Select :model-value="preset" @update:model-value="(v) => (preset = String(v))">
-            <SelectTrigger id="qr-preset" size="sm" class="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="c in presetSpec?.choices ?? []" :key="c.value" :value="c.value">
-                {{ c.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            v-if="presetSelectSpec"
+            id="qr-preset"
+            :spec="presetSelectSpec"
+            :model-value="preset"
+            class="w-full"
+            @update:model-value="(v) => (preset = String(v))"
+          />
         </div>
 
         <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
@@ -525,19 +548,13 @@ async function downloadPng() {
             </div>
             <div class="flex flex-col gap-1.5">
               <Label for="qr-wifi-security" class="text-xs text-muted-foreground">Security</Label>
-              <Select
+              <SearchableSelect
+                id="qr-wifi-security"
+                :spec="wifiSecuritySpec"
                 :model-value="wifiSecurity"
+                class="w-full bg-card"
                 @update:model-value="(v) => (wifiSecurity = String(v))"
-              >
-                <SelectTrigger id="qr-wifi-security" size="sm" class="w-full bg-card">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="WPA"> WPA </SelectItem>
-                  <SelectItem value="WEP"> WEP </SelectItem>
-                  <SelectItem value="nopass"> None </SelectItem>
-                </SelectContent>
-              </Select>
+              />
             </div>
             <div class="flex items-center gap-2">
               <Switch
@@ -862,25 +879,20 @@ async function downloadPng() {
         <div class="grid grid-cols-2 gap-3">
           <div class="flex min-w-0 flex-col gap-1.5">
             <Label for="qr-ecc" class="text-xs text-muted-foreground">{{ eccSpec.label }}</Label>
-            <Select
-              :model-value="eccDisplayValue"
-              :disabled="hasLogo"
-              @update:model-value="(v) => (ecc = String(v))"
-            >
-              <SelectTrigger
+            <!-- A logo pins error correction to H, so the control is inert (blocks
+                 both pointer and keyboard) while one is present, and the handler
+                 refuses writes as a second guard so the stored preference is kept. -->
+            <div :inert="hasLogo" :class="hasLogo ? 'opacity-50' : ''">
+              <SearchableSelect
+                v-if="eccSelectSpec"
                 id="qr-ecc"
-                size="sm"
-                class="w-full"
+                :spec="eccSelectSpec"
+                :model-value="eccDisplayValue"
                 :aria-disabled="hasLogo || undefined"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="c in eccSpec.choices ?? []" :key="c.value" :value="c.value">
-                  {{ c.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+                class="w-full"
+                @update:model-value="(v) => !hasLogo && (ecc = String(v))"
+              />
+            </div>
           </div>
           <OptionControl v-model="margin" :spec="marginSpec" />
           <div class="flex min-w-0 flex-col gap-1.5">

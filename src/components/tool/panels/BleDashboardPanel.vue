@@ -1,17 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { Bluetooth, Download, Plug, Trash2 } from "lucide-vue-next";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   SUPPORTED_SERVICES,
   downsampleForChart,
@@ -105,17 +99,33 @@ const RECONNECT_TRIES = 5;
 const RECONNECT_DELAY_MS = 1500;
 const CHART_HEIGHT = 76;
 
-const WINDOW_CHOICES = [
-  { value: "60000", label: "1 minute" },
-  { value: "300000", label: "5 minutes" },
-  { value: "900000", label: "15 minutes" },
-];
-const POLL_CHOICES = [
-  { value: "1000", label: "1 second" },
-  { value: "2000", label: "2 seconds" },
-  { value: "5000", label: "5 seconds" },
-  { value: "10000", label: "10 seconds" },
-];
+const windowSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "ble-window",
+  label: "Chart window",
+  default: "300000",
+  options: [
+    { value: "60000", label: "1 minute", synonyms: ["60 seconds", "1 min", "one minute"] },
+    { value: "300000", label: "5 minutes", synonyms: ["5 min", "five minutes", "300 seconds"] },
+    {
+      value: "900000",
+      label: "15 minutes",
+      synonyms: ["15 min", "fifteen minutes", "quarter hour"],
+    },
+  ],
+};
+const pollSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "ble-poll",
+  label: "Poll interval",
+  default: "2000",
+  options: [
+    { value: "1000", label: "1 second", synonyms: ["1 sec", "one second", "fast"] },
+    { value: "2000", label: "2 seconds", synonyms: ["2 sec", "two seconds"] },
+    { value: "5000", label: "5 seconds", synonyms: ["5 sec", "five seconds"] },
+    { value: "10000", label: "10 seconds", synonyms: ["10 sec", "ten seconds", "slow"] },
+  ],
+};
 
 /* ---------------------------------------------------------------- */
 /* series model                                                      */
@@ -724,34 +734,12 @@ onUnmounted(() => {
       <div class="flex flex-wrap items-end gap-4">
         <div class="flex w-40 flex-col gap-1.5">
           <Label for="ble-window" class="text-xs text-muted-foreground">Chart window</Label>
-          <Select v-model="windowMs">
-            <SelectTrigger id="ble-window" size="sm" class="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="choice in WINDOW_CHOICES"
-                :key="choice.value"
-                :value="choice.value"
-              >
-                {{ choice.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect id="ble-window" v-model="windowMs" :spec="windowSpec" />
         </div>
 
         <div class="flex w-40 flex-col gap-1.5">
           <Label for="ble-poll" class="text-xs text-muted-foreground">Poll interval</Label>
-          <Select v-model="pollMs">
-            <SelectTrigger id="ble-poll" size="sm" class="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="choice in POLL_CHOICES" :key="choice.value" :value="choice.value">
-                {{ choice.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect id="ble-poll" v-model="pollMs" :spec="pollSpec" />
         </div>
 
         <div class="flex items-center gap-2 pb-2">

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from "vue";
 import { ChevronLeft, ChevronRight, X } from "lucide-vue-next";
-import type { ToolMeta } from "@/tools/types";
+import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import {
   formatTimecode,
   frameName,
@@ -13,13 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 /**
  * Bespoke panel for the frame extractor. There is no pure transform that turns
@@ -80,6 +74,22 @@ const burstCountText = ref(String(optionDefault("count", 1)));
 const burstInterval = ref(String(optionDefault("interval", "1")));
 const format = ref(String(optionDefault("format", "png")));
 const quality = ref(Number(optionDefault("quality", 92)));
+
+const formatSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "fx-format",
+  label: "Format",
+  default: "png",
+  options: [
+    {
+      value: "png",
+      label: "PNG",
+      synonyms: ["lossless", "portable network graphics", "transparent"],
+    },
+    { value: "jpeg", label: "JPEG", synonyms: ["jpg", "lossy", "photo", "compressed"] },
+    { value: "webp", label: "WebP", synonyms: ["web picture", "google webp", "modern format"] },
+  ],
+};
 
 const error = ref<{ message: string; fix?: string } | null>(null);
 
@@ -657,16 +667,12 @@ onUnmounted(() => {
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-28 flex-col gap-1.5">
             <Label for="fx-format" class="text-xs text-muted-foreground">Format</Label>
-            <Select :model-value="format" @update:model-value="(v) => (format = String(v))">
-              <SelectTrigger id="fx-format" size="sm" class="w-full bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="png"> PNG </SelectItem>
-                <SelectItem value="jpeg"> JPEG </SelectItem>
-                <SelectItem value="webp"> WebP </SelectItem>
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="fx-format"
+              :spec="formatSpec"
+              :model-value="format"
+              @update:model-value="(v) => (format = String(v))"
+            />
           </div>
 
           <div class="flex min-w-44 flex-1 flex-col gap-1.5">
