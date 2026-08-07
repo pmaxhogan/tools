@@ -23,9 +23,11 @@ const panels: Record<string, Component> = {
   'favicon-generator': defineAsyncComponent(() => import('./panels/FaviconPanel.vue')),
   'gif-editor': defineAsyncComponent(() => import('./panels/GifEditorPanel.vue')),
   'har-viewer': defineAsyncComponent(() => import('./panels/HarViewerPanel.vue')),
+  'image-redactor': defineAsyncComponent(() => import('./panels/RedactorPanel.vue')),
   'image-toolbox': defineAsyncComponent(() => import('./panels/ImageToolboxPanel.vue')),
   keycode: defineAsyncComponent(() => import('./panels/KeycodePanel.vue')),
   'qr-code-generator': defineAsyncComponent(() => import('./panels/QrPanel.vue')),
+  'sqlite-viewer': defineAsyncComponent(() => import('./panels/SqliteViewerPanel.vue')),
   'unicode-picker': defineAsyncComponent(() => import('./panels/UnicodePanel.vue')),
   'video-converter': defineAsyncComponent(() => import('./panels/AvConverterPanel.vue')),
   'video-frame-extractor': defineAsyncComponent(
