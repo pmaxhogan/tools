@@ -29,6 +29,7 @@ const files = walk(dist)
   .filter((f) => statSync(f).size <= PRECACHE_MAX_BYTES)
   .map((f) => '/' + relative(dist, f).split(sep).join('/'))
   .filter((f) => !f.startsWith('/og/')) // OG images are for crawlers, not offline use
+  .filter((f) => !f.endsWith('.wasm')) // engines download on demand, never on first visit
   .map((f) => f.replace(/\/index\.html$/, '/').replace(/^\/index\.html$/, '/'));
 
 const hash = createHash('sha256');

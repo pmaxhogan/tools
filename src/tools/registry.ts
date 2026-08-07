@@ -60,6 +60,7 @@ import { meta as videoFrameExtractor } from './video-frame-extractor/meta';
 import { meta as videoToGif } from './video-to-gif/meta';
 import { meta as videoTrimmer } from './video-trimmer/meta';
 import { meta as weekNumber } from './week-number/meta';
+import { meta as wireguardConfigGenerator } from './wireguard-config-generator/meta';
 
 export const tools: ToolMeta[] = [
   audioSpectrogram,
@@ -112,6 +113,7 @@ export const tools: ToolMeta[] = [
   videoToGif,
   videoTrimmer,
   weekNumber,
+  wireguardConfigGenerator,
 ];
 
 /** Lazy loaders for tool logic, keyed by URL slug. */
@@ -169,6 +171,8 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'video-to-gif': () => import('./video-to-gif/index').then((m) => m.default),
   'video-trimmer': () => import('./video-trimmer/index').then((m) => m.default),
   'week-number': () => import('./week-number/index').then((m) => m.default),
+  'wireguard-config-generator': () =>
+    import('./wireguard-config-generator/index').then((m) => m.default),
 };
 
 export function getTool(slug: string): ToolMeta | undefined {

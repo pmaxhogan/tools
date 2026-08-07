@@ -32,6 +32,7 @@ const panels: Record<string, Component> = {
   ),
   'video-to-gif': defineAsyncComponent(() => import('./panels/VideoToGifPanel.vue')),
   'video-trimmer': defineAsyncComponent(() => import('./panels/VideoTrimmerPanel.vue')),
+  'wireguard-config-generator': defineAsyncComponent(() => import('./panels/WireguardPanel.vue')),
 };
 
 const props = defineProps<{ meta: ToolMeta }>();
