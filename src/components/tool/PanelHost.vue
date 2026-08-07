@@ -21,6 +21,7 @@ const panels: Record<string, Component> = {
     () => import('./panels/BackgroundRemoverPanel.vue'),
   ),
   'batch-processor': defineAsyncComponent(() => import('./panels/BatchProcessorPanel.vue')),
+  'bulk-rename': defineAsyncComponent(() => import('./panels/BulkRenamePanel.vue')),
   'clipboard-inspector': defineAsyncComponent(() => import('./panels/ClipboardPanel.vue')),
   'discord-video-compressor': defineAsyncComponent(
     () => import('./panels/DiscordCompressorPanel.vue'),

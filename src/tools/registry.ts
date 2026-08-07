@@ -16,6 +16,7 @@ import { meta as audioTrimmer } from './audio-trimmer/meta';
 import { meta as backgroundRemover } from './background-remover/meta';
 import { meta as baseConverter } from './base-converter/meta';
 import { meta as batchProcessor } from './batch-processor/meta';
+import { meta as bulkRename } from './bulk-rename/meta';
 import { meta as caseConverter } from './case-converter/meta';
 import { meta as characterCounter } from './character-counter/meta';
 import { meta as clipboardInspector } from './clipboard-inspector/meta';
@@ -87,6 +88,7 @@ export const tools: ToolMeta[] = [
   backgroundRemover,
   baseConverter,
   batchProcessor,
+  bulkRename,
   caseConverter,
   characterCounter,
   clipboardInspector,
@@ -160,6 +162,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'background-remover': () => import('./background-remover/index').then((m) => m.default),
   'base-converter': () => import('./base-converter/index').then((m) => m.default),
   'batch-processor': () => import('./batch-processor/index').then((m) => m.default),
+  'bulk-rename': () => import('./bulk-rename/index').then((m) => m.default),
   'case-converter': () => import('./case-converter/index').then((m) => m.default),
   'character-counter': () => import('./character-counter/index').then((m) => m.default),
   'clipboard-inspector': () => import('./clipboard-inspector/index').then((m) => m.default),
