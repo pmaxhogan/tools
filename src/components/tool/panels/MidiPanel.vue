@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, shallowRef } from "vue";
+import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { CircleAlert, FileMusic, Music4, Radio, Trash2, X } from "lucide-vue-next";
 import type { ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
@@ -62,7 +62,12 @@ interface MidiNavigator {
   requestMIDIAccess?: (options?: { sysex?: boolean }) => Promise<MidiAccessLike>;
 }
 
-const midiSupported = typeof navigator !== "undefined" && "requestMIDIAccess" in navigator;
+// Starts false so the server render and the first client render agree (no
+// hydration mismatch); the real capability is read after mount, client only.
+const midiSupported = ref(false);
+onMounted(() => {
+  midiSupported.value = typeof navigator !== "undefined" && "requestMIDIAccess" in navigator;
+});
 
 /* ---------------------------------------------------------------- */
 /* mode                                                              */

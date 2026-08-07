@@ -61,6 +61,15 @@ function onOpenChange(next: boolean) {
   }
 }
 
+/**
+ * reka fills the auto-focused input with the current selection's label when the
+ * panel opens. Select it so the first keystroke replaces it instead of
+ * concatenating (which otherwise turns "Morse code" + "b64" into no matches).
+ */
+function onSearchFocus(e: FocusEvent) {
+  (e.target as HTMLInputElement | null)?.select?.();
+}
+
 function onSelect(value: string) {
   emit("update:modelValue", value);
   // Single-select always collapses once a value is chosen.
@@ -114,6 +123,7 @@ function onSelect(value: string) {
               auto-focus
               :aria-label="`Filter ${spec.label} options`"
               :placeholder="showSearch ? 'Search options' : undefined"
+              @focus="onSearchFocus"
               :class="
                 showSearch
                   ? 'placeholder:text-muted-foreground h-9 w-full bg-transparent text-sm outline-hidden'
