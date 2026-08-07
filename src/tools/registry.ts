@@ -36,6 +36,7 @@ import { meta as fakeDataGenerator } from './fake-data-generator/meta';
 import { meta as faviconGenerator } from './favicon-generator/meta';
 import { meta as figlet } from './figlet/meta';
 import { meta as fileTypeIdentifier } from './file-type-identifier/meta';
+import { meta as folderDiff } from './folder-diff/meta';
 import { meta as gamCommandBuilder } from './gam-command-builder/meta';
 import { meta as gifEditor } from './gif-editor/meta';
 import { meta as gzipCompressionTest } from './gzip-compression-test/meta';
@@ -105,6 +106,7 @@ export const tools: ToolMeta[] = [
   faviconGenerator,
   figlet,
   fileTypeIdentifier,
+  folderDiff,
   gamCommandBuilder,
   gifEditor,
   gzipCompressionTest,
@@ -178,6 +180,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'favicon-generator': () => import('./favicon-generator/index').then((m) => m.default),
   figlet: () => import('./figlet/index').then((m) => m.default),
   'file-type-identifier': () => import('./file-type-identifier/index').then((m) => m.default),
+  'folder-diff': () => import('./folder-diff/index').then((m) => m.default),
   'gam-command-builder': () => import('./gam-command-builder/index').then((m) => m.default),
   'gif-editor': () => import('./gif-editor/index').then((m) => m.default),
   'gzip-compression-test': () => import('./gzip-compression-test/index').then((m) => m.default),
