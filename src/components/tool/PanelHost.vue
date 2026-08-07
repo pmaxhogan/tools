@@ -27,6 +27,7 @@ const panels: Record<string, Component> = {
   'image-toolbox': defineAsyncComponent(() => import('./panels/ImageToolboxPanel.vue')),
   keycode: defineAsyncComponent(() => import('./panels/KeycodePanel.vue')),
   'qr-code-generator': defineAsyncComponent(() => import('./panels/QrPanel.vue')),
+  'sqlite-viewer': defineAsyncComponent(() => import('./panels/SqliteViewerPanel.vue')),
   'unicode-picker': defineAsyncComponent(() => import('./panels/UnicodePanel.vue')),
   'video-converter': defineAsyncComponent(() => import('./panels/AvConverterPanel.vue')),
   'video-frame-extractor': defineAsyncComponent(

@@ -54,6 +54,7 @@ import { meta as randomPicker } from './random-picker/meta';
 import { meta as smartctlAnalyzer } from './smartctl-analyzer/meta';
 import { meta as snowflakeDecoder } from './snowflake-decoder/meta';
 import { meta as sqlFormatter } from './sql-formatter/meta';
+import { meta as sqliteViewer } from './sqlite-viewer/meta';
 import { meta as subtitleEditor } from './subtitle-editor/meta';
 import { meta as svgOptimizer } from './svg-optimizer/meta';
 import { meta as unicodePicker } from './unicode-picker/meta';
@@ -112,6 +113,7 @@ export const tools: ToolMeta[] = [
   smartctlAnalyzer,
   snowflakeDecoder,
   sqlFormatter,
+  sqliteViewer,
   subtitleEditor,
   svgOptimizer,
   unicodePicker,
@@ -174,6 +176,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'smartctl-analyzer': () => import('./smartctl-analyzer/index').then((m) => m.default),
   'snowflake-decoder': () => import('./snowflake-decoder/index').then((m) => m.default),
   'sql-formatter': () => import('./sql-formatter/index').then((m) => m.default),
+  'sqlite-viewer': () => import('./sqlite-viewer/index').then((m) => m.default),
   'subtitle-editor': () => import('./subtitle-editor/index').then((m) => m.default),
   'svg-optimizer': () => import('./svg-optimizer/index').then((m) => m.default),
   'unicode-picker': () => import('./unicode-picker/index').then((m) => m.default),
