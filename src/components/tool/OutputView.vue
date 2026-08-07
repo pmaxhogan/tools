@@ -21,13 +21,15 @@ const all = computed(() =>
 </script>
 
 <template>
-  <div class="rounded-lg border bg-card">
-    <div class="flex items-center justify-between border-b px-3 py-1.5">
-      <span class="text-xs font-medium text-muted-foreground">Output</span>
+  <div class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
+    <div class="flex items-center justify-between px-3 pt-2">
+      <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+        >Output</span
+      >
       <CopyButton :text="all" label="Copy" />
     </div>
 
-    <div v-if="isRecord" class="divide-y">
+    <div v-if="isRecord" class="divide-y divide-border/60">
       <div
         v-for="[k, v] in entries"
         :key="k"

@@ -1,5 +1,15 @@
 ---
 import '@/styles/global.css';
+import CommandPalette from '@/components/CommandPalette.vue';
+import { tools } from '@/tools/registry';
+
+const paletteTools = tools.map((t) => ({
+  slug: t.slug,
+  name: t.name,
+  description: t.description,
+  category: t.category,
+  keywords: t.keywords,
+}));
 
 export interface Props {
   title: string;
@@ -60,5 +70,11 @@ const og = ogImage ? new URL(ogImage, site).href : undefined;
   </head>
   <body class="min-h-dvh bg-background font-sans text-foreground antialiased">
     <slot />
+    <CommandPalette client:idle tools={paletteTools} />
+    <script>
+      if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+      }
+    </script>
   </body>
 </html>

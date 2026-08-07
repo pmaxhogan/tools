@@ -34,7 +34,13 @@ const jsonLd = {
 };
 ---
 
-<BaseLayout title={title} description={meta.description} path={`/${meta.slug}`} jsonLd={jsonLd}>
+<BaseLayout
+  title={title}
+  description={meta.description}
+  path={`/${meta.slug}`}
+  jsonLd={jsonLd}
+  ogImage={`/og/${meta.slug}.png`}
+>
   <SiteHeader />
   <main class="mx-auto max-w-3xl px-4 py-8">
     <nav aria-label="Breadcrumb" class="text-xs text-muted-foreground">

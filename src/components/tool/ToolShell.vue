@@ -102,17 +102,19 @@ function onPickFile(e: Event) {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <div
       v-if="hasInput"
-      class="rounded-lg border bg-card"
+      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
       :class="dragging ? 'ring-2 ring-ring' : ''"
       @dragover.prevent="dragging = true"
       @dragleave="dragging = false"
       @drop.prevent="onDrop"
     >
-      <div class="flex items-center justify-between border-b px-3 py-1.5">
-        <span class="text-xs font-medium text-muted-foreground">Input</span>
+      <div class="flex items-center justify-between px-3 pt-2">
+        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+          >Input</span
+        >
         <div class="flex items-center gap-1">
           <Button variant="ghost" size="sm" @click="fileInput?.click()">Open file…</Button>
           <input
@@ -127,7 +129,7 @@ function onPickFile(e: Event) {
       <Textarea
         v-model="input"
         :placeholder="`Paste or drop ${meta.input === 'text/plain' ? 'text' : meta.input} here…`"
-        class="min-h-28 rounded-t-none border-0 font-mono text-sm shadow-none focus-visible:ring-0"
+        class="min-h-28 border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0 dark:bg-transparent"
         @paste="onPaste"
       />
     </div>

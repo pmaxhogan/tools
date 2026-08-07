@@ -6,18 +6,82 @@
  * loads only on the page that needs it).
  *
  * Adding a tool: create src/tools/<slug>/{meta.ts,index.ts,index.test.ts},
- * then register meta + loader here. tool-matrix.csv stays the planning doc.
+ * then register meta + loader here, alphabetized by URL slug.
+ * tool-matrix.csv stays the planning doc.
  */
 import type { ToolMeta } from './types';
+import { meta as baseConverter } from './base-converter/meta';
+import { meta as caseConverter } from './case-converter/meta';
+import { meta as cronParser } from './cron-parser/meta';
+import { meta as discordTimestamp } from './discord-timestamp/meta';
+import { meta as durationCalculator } from './duration-calculator/meta';
 import { meta as epochConverter } from './epoch-converter/meta';
+import { meta as escapeUnescape } from './escape-unescape/meta';
+import { meta as fakeDataGenerator } from './fake-data-generator/meta';
+import { meta as figlet } from './figlet/meta';
+import { meta as hashGenerator } from './hash-generator/meta';
+import { meta as jsonFormatter } from './json-formatter/meta';
+import { meta as keycode } from './keycode/meta';
+import { meta as lineSorter } from './line-sorter/meta';
+import { meta as passwordGenerator } from './password-generator/meta';
+import { meta as placeholderImage } from './placeholder-image/meta';
+import { meta as qrCodeGenerator } from './qr-code-generator/meta';
+import { meta as randomPicker } from './random-picker/meta';
+import { meta as snowflakeDecoder } from './snowflake-decoder/meta';
+import { meta as urlParser } from './url-parser/meta';
+import { meta as userAgentParser } from './user-agent-parser/meta';
 import { meta as uuid } from './uuid/meta';
+import { meta as weekNumber } from './week-number/meta';
 
-export const tools: ToolMeta[] = [epochConverter, uuid];
+export const tools: ToolMeta[] = [
+  baseConverter,
+  caseConverter,
+  cronParser,
+  discordTimestamp,
+  durationCalculator,
+  epochConverter,
+  escapeUnescape,
+  fakeDataGenerator,
+  figlet,
+  hashGenerator,
+  jsonFormatter,
+  keycode,
+  lineSorter,
+  passwordGenerator,
+  placeholderImage,
+  qrCodeGenerator,
+  randomPicker,
+  snowflakeDecoder,
+  urlParser,
+  userAgentParser,
+  uuid,
+  weekNumber,
+];
 
 /** Lazy loaders for tool logic, keyed by URL slug. */
 export const loaders: Record<string, () => Promise<unknown>> = {
+  'base-converter': () => import('./base-converter/index').then((m) => m.default),
+  'case-converter': () => import('./case-converter/index').then((m) => m.default),
+  'cron-parser': () => import('./cron-parser/index').then((m) => m.default),
+  'discord-timestamp': () => import('./discord-timestamp/index').then((m) => m.default),
+  'duration-calculator': () => import('./duration-calculator/index').then((m) => m.default),
   'epoch-converter': () => import('./epoch-converter/index').then((m) => m.default),
+  'escape-unescape': () => import('./escape-unescape/index').then((m) => m.default),
+  'fake-data-generator': () => import('./fake-data-generator/index').then((m) => m.default),
+  figlet: () => import('./figlet/index').then((m) => m.default),
+  'hash-generator': () => import('./hash-generator/index').then((m) => m.default),
+  'json-formatter': () => import('./json-formatter/index').then((m) => m.default),
+  keycode: () => import('./keycode/index').then((m) => m.default),
+  'line-sorter': () => import('./line-sorter/index').then((m) => m.default),
+  'password-generator': () => import('./password-generator/index').then((m) => m.default),
+  'placeholder-image': () => import('./placeholder-image/index').then((m) => m.default),
+  'qr-code-generator': () => import('./qr-code-generator/index').then((m) => m.default),
+  'random-picker': () => import('./random-picker/index').then((m) => m.default),
+  'snowflake-decoder': () => import('./snowflake-decoder/index').then((m) => m.default),
+  'url-parser': () => import('./url-parser/index').then((m) => m.default),
+  'user-agent-parser': () => import('./user-agent-parser/index').then((m) => m.default),
   'uuid-generator': () => import('./uuid/index').then((m) => m.default),
+  'week-number': () => import('./week-number/index').then((m) => m.default),
 };
 
 export function getTool(slug: string): ToolMeta | undefined {

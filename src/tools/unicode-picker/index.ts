@@ -16,7 +16,7 @@ const LABELS = new Map(CATEGORIES.map((c) => [c.id, c.label]));
 
 /** Everything a query is matched against, lowercased once per entry. */
 const HAYSTACK = new Map<UnicodeEntry, string>(
-  ENTRIES.map((e) => [e, `${e.name} ${e.category} ${LABELS.get(e.category) ?? ''}`.toLowerCase()])
+  ENTRIES.map((e) => [e, `${e.name} ${e.category} ${LABELS.get(e.category) ?? ''}`.toLowerCase()]),
 );
 
 /**
@@ -63,14 +63,14 @@ export function describe(e: UnicodeEntry): string {
 
 export const run: ToolLogic<string, UnicodePickerResult, UnicodePickerOpts>['run'] = (
   input,
-  opts
+  opts,
 ) => {
   const category = String(opts?.category ?? 'all').trim() || 'all';
   if (category !== 'all' && !LABELS.has(category))
     throw new ToolError(
       'unknown-category',
       `Unknown category "${category}".`,
-      `Use "all" or one of: ${CATEGORIES.map((c) => c.id).join(', ')}.`
+      `Use "all" or one of: ${CATEGORIES.map((c) => c.id).join(', ')}.`,
     );
 
   const query = (input ?? '').trim();

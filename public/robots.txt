@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tools.maxhogan.dev/sitemap-index.xml

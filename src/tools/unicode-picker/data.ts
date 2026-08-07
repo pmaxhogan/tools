@@ -43,6 +43,8 @@ export const CATEGORIES: readonly UnicodeCategory[] = [
   { id: 'invisible', label: 'Invisible characters' },
 ];
 
+// One line per character keeps this generated table readable and diffable.
+// prettier-ignore
 export const ENTRIES: readonly UnicodeEntry[] = [
   { char: '←', name: 'leftwards arrow', category: 'arrows', codepoint: 'U+2190', htmlEntity: '&larr;' },
   { char: '↑', name: 'upwards arrow', category: 'arrows', codepoint: 'U+2191', htmlEntity: '&uarr;' },
