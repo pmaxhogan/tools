@@ -359,6 +359,30 @@ function stage(entry, source) {
 }
 
 /**
+ * Resolves the installed version of the package an entry copies from, given a
+ * path like `onnxruntime-web/dist/x.wasm` or `@tesseract.js-data/eng/...`.
+ */
+function packageVersion(from) {
+  const parts = from.split('/');
+  const name = from.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
+  try {
+    const json = readFileSync(join(root, 'node_modules', name, 'package.json'), 'utf8');
+    return JSON.parse(json).version ?? 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+// Stamp every node_modules entry with its package version so a dependency bump
+// changes the entries hash below and forces a restage. Without this, upgrading
+// onnxruntime-web leaves the previous engine binaries sitting in public/ next
+// to a loader built for different ones: the byte counts still match the old
+// manifest, so the idempotence check would call the tree current and skip them.
+for (const entry of ENTRIES) {
+  if (entry.source === 'node_modules') entry.pkgVersion = packageVersion(entry.from);
+}
+
+/**
  * Fingerprint of the entry list. Any edit to a source, destination or pin
  * changes this, which invalidates an already-staged public/ tree.
  */

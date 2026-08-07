@@ -36,3 +36,6 @@ public/models/
 public/tesseract/
 # raw downloads that back the staging step, so rebuilds refetch nothing
 .model-cache/
+
+# wrangler dry-run output
+dist-worker-check/

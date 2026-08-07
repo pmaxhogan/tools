@@ -40,9 +40,27 @@ import {
  *    `onnxruntime-web/webgpu`, which resolves to the bundled build with the
  *    loader inlined, so the only file fetched from that prefix is
  *    `ort-wasm-simd-threaded.asyncify.wasm`, and that is the one staged.
+ *  - onnxruntime-web is held at 1.27.0 by a `overrides` entry in package.json
+ *    rather than the 1.26.0-dev build transformers 4.2.0 asks for. From 1.25
+ *    onward the graph optimizer rewrote quantized MatMul into MatMulNBits, and
+ *    on Whisper it walked into its own tied decoder embedding twice: the first
+ *    rewrite consumed the shared scale initializer and the second died on
+ *    "Missing required scale", so no q8 Whisper decoder could open a session at
+ *    all. onnxruntime PR 28326 (in 1.27.0) declines the rewrite when the weight
+ *    or scale is shared. The staged model files were never the problem, and the
+ *    engine binaries under /models/ort/ are copied from whatever version is
+ *    installed, so the two can never drift apart.
  *  - This site sends no COOP or COEP headers, so `crossOriginIsolated` is
  *    false, and onnxruntime sets `numThreads` to 1 by itself in that case.
  *    Forcing it here would be a no op, so it is left alone.
+ *  - A cold load asks for each weight file two or three times. That is inside
+ *    transformers.js, not here: `pipeline()` is called once, and stack traces
+ *    taken at `fetch` show only the first request coming from this panel while
+ *    the rest start within about 60ms from separate paths in the library, too
+ *    close together for any of them to see another's cache write. The repeats
+ *    come back from the browser HTTP cache with `transferSize` 0, so a visitor
+ *    downloads the model once. Left alone deliberately: the only fix here would
+ *    be patching global fetch, which is a lot of blast radius for no bytes.
  *  - Model download progress comes from `progress_callback`. Version 4 reports
  *    an aggregated `progress_total` across every file, with a per file
  *    `progress` fallback for older shapes.
