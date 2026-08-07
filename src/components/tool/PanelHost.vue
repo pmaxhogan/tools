@@ -24,6 +24,7 @@ const panels: Record<string, Component> = {
   'discord-video-compressor': defineAsyncComponent(
     () => import('./panels/DiscordCompressorPanel.vue'),
   ),
+  'duplicate-finder': defineAsyncComponent(() => import('./panels/DuplicateFinderPanel.vue')),
   'favicon-generator': defineAsyncComponent(() => import('./panels/FaviconPanel.vue')),
   'gif-editor': defineAsyncComponent(() => import('./panels/GifEditorPanel.vue')),
   'har-viewer': defineAsyncComponent(() => import('./panels/HarViewerPanel.vue')),

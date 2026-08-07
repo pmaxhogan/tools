@@ -26,6 +26,7 @@ import { meta as diffChecker } from './diff-checker/meta';
 import { meta as discordTimestamp } from './discord-timestamp/meta';
 import { meta as dmarcReportViewer } from './dmarc-report-viewer/meta';
 import { meta as discordVideoCompressor } from './discord-video-compressor/meta';
+import { meta as duplicateFinder } from './duplicate-finder/meta';
 import { meta as durationCalculator } from './duration-calculator/meta';
 import { meta as emailHeaderAnalyzer } from './email-header-analyzer/meta';
 import { meta as epochConverter } from './epoch-converter/meta';
@@ -94,6 +95,7 @@ export const tools: ToolMeta[] = [
   discordTimestamp,
   discordVideoCompressor,
   dmarcReportViewer,
+  duplicateFinder,
   durationCalculator,
   emailHeaderAnalyzer,
   epochConverter,
@@ -165,6 +167,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'discord-video-compressor': () =>
     import('./discord-video-compressor/index').then((m) => m.default),
   'dmarc-report-viewer': () => import('./dmarc-report-viewer/index').then((m) => m.default),
+  'duplicate-finder': () => import('./duplicate-finder/index').then((m) => m.default),
   'duration-calculator': () => import('./duration-calculator/index').then((m) => m.default),
   'email-header-analyzer': () => import('./email-header-analyzer/index').then((m) => m.default),
   'epoch-converter': () => import('./epoch-converter/index').then((m) => m.default),
