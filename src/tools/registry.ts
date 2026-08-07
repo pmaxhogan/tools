@@ -38,6 +38,7 @@ import { meta as harViewer } from './har-viewer/meta';
 import { meta as hashGenerator } from './hash-generator/meta';
 import { meta as htmlToMarkdown } from './html-to-markdown/meta';
 import { meta as imageRedactor } from './image-redactor/meta';
+import { meta as imageToText } from './image-to-text/meta';
 import { meta as imageToolbox } from './image-toolbox/meta';
 import { meta as invisibleCharacterDetector } from './invisible-character-detector/meta';
 import { meta as jsonFormatter } from './json-formatter/meta';
@@ -98,6 +99,7 @@ export const tools: ToolMeta[] = [
   hashGenerator,
   htmlToMarkdown,
   imageRedactor,
+  imageToText,
   imageToolbox,
   invisibleCharacterDetector,
   jsonFormatter,
@@ -161,6 +163,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'hash-generator': () => import('./hash-generator/index').then((m) => m.default),
   'html-to-markdown': () => import('./html-to-markdown/index').then((m) => m.default),
   'image-redactor': () => import('./image-redactor/index').then((m) => m.default),
+  'image-to-text': () => import('./image-to-text/index').then((m) => m.default),
   'image-toolbox': () => import('./image-toolbox/index').then((m) => m.default),
   'invisible-character-detector': () =>
     import('./invisible-character-detector/index').then((m) => m.default),

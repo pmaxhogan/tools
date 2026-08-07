@@ -24,6 +24,7 @@ const panels: Record<string, Component> = {
   'gif-editor': defineAsyncComponent(() => import('./panels/GifEditorPanel.vue')),
   'har-viewer': defineAsyncComponent(() => import('./panels/HarViewerPanel.vue')),
   'image-redactor': defineAsyncComponent(() => import('./panels/RedactorPanel.vue')),
+  'image-to-text': defineAsyncComponent(() => import('./panels/OcrPanel.vue')),
   'image-toolbox': defineAsyncComponent(() => import('./panels/ImageToolboxPanel.vue')),
   keycode: defineAsyncComponent(() => import('./panels/KeycodePanel.vue')),
   'pdf-toolbox': defineAsyncComponent(() => import('./panels/PdfToolboxPanel.vue')),
