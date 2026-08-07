@@ -26,6 +26,14 @@ the plan for all 168 tools.
   Record<string,string> outputs render generically.
 - `worker/index.ts` — Cloudflare Worker: serves static assets plus the
   stateless `/api/<slug>` endpoints for tools whose meta declares `http`.
+- Media tools (Phase 3): `src/lib/ffmpeg.ts` loads the self-hosted single
+  thread ffmpeg.wasm core, which ships as two chunks under `public/ffmpeg/`
+  (generated from node_modules by `scripts/prepare-ffmpeg.mjs`, gitignored,
+  the Workers asset cap is 25 MiB per file). `MediaShell.vue` is the shared
+  media panel; tool logic layers export pure ffmpeg arg builders that are
+  unit tested, panels execute them via `runJob`. The engine download is
+  opt-in, never automatic, and the service worker never precaches files
+  over 2 MB.
 - URL slugs are keyword-shaped for SEO (`qr-code-generator`); `matrixSlug`
   maps back to `tool-matrix.csv` when they differ.
 
