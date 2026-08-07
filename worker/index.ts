@@ -13,6 +13,7 @@
  * 25 MiB per asset cap are stitched back together here (see reassemble).
  */
 import { ToolError, type OptionSpec, type ToolMeta } from "../src/tools/types";
+import { flattenSelectOptions } from "../src/lib/select-options";
 
 import { meta as baseConverterMeta } from "../src/tools/base-converter/meta";
 import { run as baseConverterRun } from "../src/tools/base-converter/index";
@@ -282,9 +283,8 @@ function json(value: unknown, status = 200, cache = "no-store"): Response {
 /** Human-readable summary of one option, for the plain-text index. */
 function describeOption(o: OptionSpec): string {
   if (o.kind === "select") {
-    const choices = o.choices.map((c) => c.value);
-    const detail =
-      choices.length <= 6 ? `one of: ${choices.join(", ")}` : `${choices.length} choices`;
+    const values = flattenSelectOptions(o).map((c) => c.value);
+    const detail = values.length <= 6 ? `one of: ${values.join(", ")}` : `${values.length} choices`;
     return `${o.id}=${o.default} (${detail})`;
   }
   if (o.kind === "boolean") return `${o.id}=${o.default} (true or false)`;

@@ -29,6 +29,14 @@ entry, and build verification. The result is a live page at `/<url-slug>`.
 5. **Wire the registry** (`src/tools/registry.ts`): import the meta into the
    `tools` array and add the lazy loader keyed by URL slug. Keep both lists
    alphabetized by slug.
+   - **Dropdowns:** every `kind: "select"` option must use the new model in
+     `src/tools/types.ts`. Give every option `synonyms` (hidden search aliases, treat
+     as required), and organise any select large enough to benefit into hierarchical
+     `groups` with their own synonyms. The shared searchable-select adds a search field
+     automatically once the flat option count passes 6, so you never wire search
+     yourself. Do not add new `choices` arrays; use `options`. See
+     `src/tools/escape-unescape/meta.ts` for a grouped example. No em or en dashes in
+     labels or synonyms.
 6. **Decide the UI surface.** The generic `ToolShell` covers text-in/text-out and
    options-driven tools. If the tool needs a custom panel (live events, canvas,
    image preview, editable tables), create `src/components/tool/panels/<PascalName>Panel.vue`

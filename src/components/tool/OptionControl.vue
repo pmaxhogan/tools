@@ -4,13 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 defineProps<{ spec: OptionSpec; modelValue: unknown }>();
 const emit = defineEmits<{ "update:modelValue": [value: unknown] }>();
@@ -29,25 +23,13 @@ function set(v: unknown) {
       >{{ spec.label }}</Label
     >
 
-    <Select
+    <SearchableSelect
       v-if="spec.kind === 'select'"
+      :id="spec.id"
+      :spec="spec"
       :model-value="String(modelValue)"
       @update:model-value="set($event)"
-    >
-      <SelectTrigger
-        :id="spec.id"
-        size="sm"
-        class="w-full min-w-0 *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate"
-        :title="spec.choices?.find((c) => String(c.value) === String(modelValue))?.label"
-      >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem v-for="c in spec.choices" :key="c.value" :value="c.value">
-          {{ c.label }}
-        </SelectItem>
-      </SelectContent>
-    </Select>
+    />
 
     <Input
       v-else-if="spec.kind === 'text'"

@@ -34,15 +34,67 @@ export type Capability =
   | "desktop"
   | "chromium";
 
+/**
+ * One selectable value in a dropdown.
+ *
+ * `synonyms` are extra search aliases that the shared searchable-select filters
+ * on in addition to the visible `label` (for example ["hex", "base16"] on a
+ * "Hexadecimal" option). They are never rendered. They are optional FOR NOW so
+ * the codebase stays green while consumers migrate; the orchestrator flips them
+ * to REQUIRED once every meta.ts select and every bespoke `<Select>` carries
+ * them.
+ */
+export interface SelectOption {
+  value: string;
+  label: string;
+  /** Search aliases. Optional during migration, will become required. */
+  synonyms?: string[];
+}
+
+/**
+ * A hierarchical category of options for a dropdown. Groups nest recursively:
+ * a group may hold leaf `options`, child `groups`, or both. A group carries its
+ * own `synonyms`, and the searchable-select matches on the group label and its
+ * synonyms too, so matching a category surfaces every option beneath it.
+ */
+export interface SelectGroup {
+  label: string;
+  /** Search aliases for the category. Optional during migration. */
+  synonyms?: string[];
+  options?: SelectOption[];
+  groups?: SelectGroup[];
+}
+
+/**
+ * The dropdown option. Three ways to supply the choices, checked in this order
+ * by `flattenSelectOptions`:
+ *
+ * - `groups` — hierarchical categories (the preferred model for larger selects).
+ * - `options` — a flat list of {value,label,synonyms} (the preferred model for
+ *   small selects with no useful grouping).
+ * - `choices` — the legacy flat {value,label} list, kept working only so
+ *   unmigrated tools still compile. Do not add new `choices`; use `options`.
+ *
+ * The shared searchable-select shows a search field automatically once the flat
+ * leaf-option count is greater than 6, and filters on option labels, option
+ * synonyms, group labels, and group synonyms.
+ */
+export interface SelectOptionSpec {
+  kind: "select";
+  id: string;
+  label: string;
+  default: string;
+  /** Legacy flat list. Backward compat during migration only; prefer `options`. */
+  choices?: { value: string; label: string }[];
+  /** Flat option list (new model). Every option carries search synonyms. */
+  options?: SelectOption[];
+  /** Hierarchical category groups (new model), recursively nestable. */
+  groups?: SelectGroup[];
+}
+
 /** Schema-driven options — the generic tool panel renders these controls. */
 export type OptionSpec =
-  | {
-      kind: "select";
-      id: string;
-      label: string;
-      default: string;
-      choices: { value: string; label: string }[];
-    }
+  | SelectOptionSpec
   | { kind: "text"; id: string; label: string; default: string; placeholder?: string }
   | {
       kind: "number";

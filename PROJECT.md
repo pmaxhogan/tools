@@ -124,6 +124,22 @@ Rules for `run`:
 - Throws typed errors with actionable messages — see rule 17 in spirit: errors say what
   went wrong and how to fix it.
 
+### The dropdown contract (options)
+
+Every `kind: "select"` option, and every bespoke `<Select>` in a custom panel, renders
+through the one shared `searchable-select` component so the whole site gains search at once.
+The model is nested groups (see `SelectOptionSpec` in `src/tools/types.ts`):
+
+- Each selectable value is `{ value, label, synonyms }`. **Synonyms are required** (typed
+  optional only during the migration): they are hidden search aliases the filter matches on
+  besides the visible label.
+- Options may be organised into recursively nestable `groups`, each `{ label, synonyms,
+options?, groups? }`. Search matches category labels and synonyms too, and matching a
+  category surfaces its options. Group any select large enough to benefit.
+- The search field appears automatically once the flat leaf-option count (via
+  `flattenSelectOptions`, in `src/lib/select-options.ts`) exceeds 6. Authors never wire it.
+- The legacy flat `choices` array still compiles but is deprecated; migrate it to `options`.
+
 ---
 
 ## 4. Build order

@@ -104,8 +104,8 @@ describe("unicode-picker", () => {
     expect(choices?.kind).toBe("select");
     if (choices?.kind !== "select") throw new Error("expected a select option");
     expect(choices.default).toBe("all");
-    expect(choices.choices.map((c) => c.value)).toEqual(["all", ...CATEGORIES.map((c) => c.id)]);
-    expect(choices.choices.slice(1).map((c) => c.label)).toEqual(CATEGORIES.map((c) => c.label));
+    expect(choices.choices?.map((c) => c.value)).toEqual(["all", ...CATEGORIES.map((c) => c.id)]);
+    expect(choices.choices?.slice(1).map((c) => c.label)).toEqual(CATEGORIES.map((c) => c.label));
   });
 
   it("quotes the real dataset size in the page copy", () => {

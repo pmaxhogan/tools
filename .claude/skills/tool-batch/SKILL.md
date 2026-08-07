@@ -33,6 +33,13 @@ merge conflicts.
    design notes (options, output shape, error branches, which preinstalled dep
    to use), the exact test expectations, and whether http: belongs in meta.
    Vague prompts produce incompatible tools.
+   - **Dropdowns:** instruct every agent that each `kind: "select"` option must
+     carry `synonyms` (hidden search aliases, treat as required) and that any
+     select large enough to benefit must be organised into hierarchical `groups`
+     (categories with their own synonyms), per the model in `src/tools/types.ts`.
+     The shared searchable-select shows a search field automatically past 6
+     options. Use `options`/`groups`, never new `choices`. No em or en dashes in
+     labels or synonyms. `src/tools/escape-unescape/meta.ts` is the reference.
 5. **After each agent lands (or all at once):** wire registry.ts (meta import +
    lazy loader, alphabetized), then run the full gate:
    - `npx vitest run` (whole suite - catches cross-tool surprises)

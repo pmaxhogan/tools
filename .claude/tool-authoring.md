@@ -61,6 +61,35 @@ Export `export const meta: ToolMeta = {...}` matching `src/tools/types.ts`:
 - `input`/`output` TypeSpecs; `options: OptionSpec[]` for every user-tunable
   behavior — the generic panel renders these. Sensible defaults; selects for
   enums, boolean for toggles, number with min/max.
+
+### The dropdown contract (every `kind: "select"`)
+
+Every select renders through the shared searchable-select component, so authoring
+one has a fixed contract:
+
+- **Use `options`, not `choices`.** `choices` is the legacy `{value,label}[]` and
+  is kept only so unmigrated tools still compile. New selects use
+  `options: SelectOption[]` where each option is `{ value, label, synonyms }`.
+- **Every option carries `synonyms`.** These are extra search aliases, never
+  rendered, that the search field filters on alongside the visible label (for
+  example `synonyms: ["hex", "base16"]` on a "Hexadecimal" option). Write the
+  words a user would actually type, including abbreviations and alternate names.
+  Synonyms are currently typed optional so the codebase stays green during the
+  migration; treat them as required. An empty `synonyms: []` is only acceptable
+  when no real alias exists.
+- **Group large selects into hierarchical categories.** When a select has enough
+  options to benefit (roughly eight or more, or whenever the options fall into
+  obvious families), use `groups: SelectGroup[]` instead of a flat `options`
+  list. A group is `{ label, synonyms, options?, groups? }` and nests
+  recursively. Categories carry their own synonyms, and the search matches on
+  category label and synonyms too: matching a category surfaces every option
+  beneath it. See `src/tools/escape-unescape/meta.ts` for a grouped example and
+  its flat `direction` select for the small-select example.
+- **The search field is automatic.** The component shows a search input once the
+  flat leaf-option count (from `flattenSelectOptions`, counted once per spec) is
+  greater than 6. You never wire the search field yourself; just supply good
+  synonyms and, for large lists, good groups.
+- **No em or en dashes** in option labels, group labels, or synonyms (DESIGN.md).
 - `http`: include `{ method: 'GET', contentType: 'text/plain' | 'application/json' }`
   ONLY for cheap pure text transforms/generators. Omit for anything heavy.
 - `copy`: REAL page copy (rule 23 — thin pages don't rank, fake copy is worse):
