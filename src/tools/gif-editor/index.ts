@@ -264,7 +264,7 @@ export function buildOptimize(input: {
   if (input.lossy === true) {
     return {
       error: 'Lossy GIF compression is not something ffmpeg can do.',
-      fix: 'Lower the colour count or the frame rate instead. Those are the two levers ffmpeg has, and together they usually beat a lossy pass.',
+      fix: 'Lower the color count or the frame rate instead. Those are the two levers ffmpeg has, and together they usually beat a lossy pass.',
     };
   }
 
@@ -275,7 +275,7 @@ export function buildOptimize(input: {
 
   const colors = toInt(input.colors);
   if (colors === null || colors < MIN_COLORS || colors > MAX_COLORS) {
-    return badInteger('Colours', MIN_COLORS, MAX_COLORS);
+    return badInteger('Colors', MIN_COLORS, MAX_COLORS);
   }
 
   return gifPlan(
@@ -409,7 +409,7 @@ export function buildCaption(input: {
   if (!fontFile) {
     return {
       error: 'Captioning needs a font file, and this build does not ship one.',
-      fix: 'Add the text in an image editor first, or use resize, crop, optimise, reverse, speed or split here.',
+      fix: 'Add the text in an image editor first, or use resize, crop, optimize, reverse, speed or split here.',
     };
   }
   if (!/^[A-Za-z0-9._-]+$/.test(fontFile)) {
@@ -630,7 +630,7 @@ export function parseGifInfo(logText: string): GifLogInfo | null {
 const OPERATION_LABELS: Record<GifOperation, string> = {
   resize: 'Resize',
   crop: 'Crop',
-  optimize: 'Optimise',
+  optimize: 'Optimize',
   reverse: 'Reverse',
   speed: 'Change speed',
   caption: 'Caption',
@@ -642,7 +642,7 @@ const OPERATION_NOTES: Record<GifOperation, string> = {
     'Height follows the width so the aspect ratio is kept. The frames are re-palettized, which is what stops a resized GIF from banding.',
   crop: 'The rectangle is measured in pixels from the top left corner. A rectangle larger than the frame is rejected by ffmpeg at run time.',
   optimize:
-    'Fewer frames per second and a smaller colour table are the two levers ffmpeg has. There is no gifsicle style lossy mode.',
+    'Fewer frames per second and a smaller color table are the two levers ffmpeg has. There is no gifsicle style lossy mode.',
   reverse:
     'Every frame is buffered in memory to play them back to front, so a very long GIF can run out of room in the browser.',
   speed:

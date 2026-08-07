@@ -78,7 +78,7 @@ const sourceInfo = ref<string | null>(null);
 const OPERATIONS: { value: GifOperation; label: string }[] = [
   { value: 'resize', label: 'Resize' },
   { value: 'crop', label: 'Crop' },
-  { value: 'optimize', label: 'Optimise' },
+  { value: 'optimize', label: 'Optimize' },
   { value: 'reverse', label: 'Reverse' },
   { value: 'speed', label: 'Change speed' },
   { value: 'caption', label: 'Caption' },
@@ -88,7 +88,7 @@ const OPERATIONS: { value: GifOperation; label: string }[] = [
 const RUN_LABELS: Record<GifOperation, string> = {
   resize: 'Resize GIF',
   crop: 'Crop GIF',
-  optimize: 'Optimise GIF',
+  optimize: 'Optimize GIF',
   reverse: 'Reverse GIF',
   speed: 'Change speed',
   caption: 'Add caption',
@@ -158,7 +158,7 @@ function buildArgs(ctx: MediaBuildContext): MediaBuildResult {
     default:
       return {
         error: 'Pick an operation first.',
-        fix: 'Choose resize, crop, optimise, reverse, speed or split.',
+        fix: 'Choose resize, crop, optimize, reverse, speed or split.',
       };
   }
 }
@@ -335,7 +335,7 @@ function onFiles() {
             <Label
               for="gif-colors"
               class="text-xs text-muted-foreground"
-            >Colours</Label>
+            >Colors</Label>
             <Input
               id="gif-colors"
               type="number"
@@ -425,12 +425,12 @@ function onFiles() {
             </div>
           </div>
           <p class="text-xs text-muted-foreground">
-            Captioning is turned off, and the run button above is disabled while this operation is
-            selected, rather than failing after you press it. Burning text into frames needs the
-            drawtext filter, which wants a TrueType or OpenType font file loaded into the media
-            engine and a build of ffmpeg compiled with FreeType. This site ships web fonts in
-            woff2 only, which drawtext cannot read. Add the text in an image editor first, then
-            resize or optimise the result here.
+            Captioning is turned off, and the Add caption button stays disabled while this
+            operation is selected, rather than failing after you press it. Burning text into
+            frames needs the drawtext filter, which wants a TrueType or OpenType font file loaded
+            into the media engine and a build of ffmpeg compiled with FreeType. This site ships
+            web fonts in woff2 only, which drawtext cannot read. Add the text in an image editor
+            first, then resize or optimize the result here.
           </p>
         </div>
 
@@ -492,7 +492,7 @@ function onFiles() {
       <p class="text-xs text-muted-foreground">
         <template v-if="operation === 'resize'">
           The height follows the width so the shape is kept. Frames are scaled with lanczos and
-          given a new colour palette, which is what stops a resized GIF from banding.
+          given a new color palette, which is what stops a resized GIF from banding.
         </template>
         <template v-else-if="operation === 'crop'">
           The rectangle is measured in pixels from the top left corner of the frame. A rectangle
@@ -501,7 +501,7 @@ function onFiles() {
         <template v-else-if="operation === 'optimize'">
           Fewer frames per second and a smaller palette are the two levers ffmpeg has. There is no
           gifsicle style lossy mode here, so the honest way to a smaller file is 10 to 12 frames
-          per second and 64 to 128 colours.
+          per second and 64 to 128 colors.
         </template>
         <template v-else-if="operation === 'speed'">
           Speed is a rewrite of the frame timings. GIF delays are stored in hundredths of a second
@@ -516,7 +516,7 @@ function onFiles() {
           last run is shown above.
         </template>
         <template v-else-if="operation === 'reverse'">
-          The reversed GIF is re-palettized from its own frames, so the colours match the original.
+          The reversed GIF is re-palettized from its own frames, so the colors match the original.
         </template>
         <template v-else>
           Captioning is unavailable in this build. Every other operation runs entirely in this tab.

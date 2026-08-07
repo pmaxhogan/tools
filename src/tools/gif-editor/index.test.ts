@@ -188,12 +188,12 @@ describe('buildOptimize', () => {
     expect(filter).toContain('paletteuse=dither=bayer:bayer_scale=5');
   });
 
-  it('refuses lossy optimisation, which ffmpeg cannot do', () => {
+  it('refuses lossy optimization, which ffmpeg cannot do', () => {
     const result = refusal(
       buildOptimize({ inputName: 'a.gif', fps: 12, colors: 64, lossy: true })
     );
     expect(result.error).toContain('not something ffmpeg can do');
-    expect(result.fix).toContain('colour count');
+    expect(result.fix).toContain('color count');
   });
 
   it('refuses a frame rate outside the range', () => {
@@ -202,9 +202,9 @@ describe('buildOptimize', () => {
     );
   });
 
-  it('refuses a colour count outside the GIF limit', () => {
+  it('refuses a color count outside the GIF limit', () => {
     expect(refusal(buildOptimize({ inputName: 'a.gif', fps: 12, colors: 300 })).error).toContain(
-      'Colours'
+      'Colors'
     );
   });
 });
