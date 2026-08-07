@@ -42,6 +42,8 @@ import { meta as factorioBlueprintDecoderMeta } from '../src/tools/factorio-blue
 import { run as factorioBlueprintDecoderRun } from '../src/tools/factorio-blueprint-decoder/index';
 import { meta as figletMeta } from '../src/tools/figlet/meta';
 import { run as figletRun } from '../src/tools/figlet/index';
+import { meta as gamCommandBuilderMeta } from '../src/tools/gam-command-builder/meta';
+import { run as gamCommandBuilderRun } from '../src/tools/gam-command-builder/index';
 import { meta as hashGeneratorMeta } from '../src/tools/hash-generator/meta';
 import { run as hashGeneratorRun } from '../src/tools/hash-generator/index';
 import { meta as invisibleCharacterDetectorMeta } from '../src/tools/invisible-character-detector/meta';
@@ -166,6 +168,10 @@ const ALL: Endpoint[] = [
       `printf '0eNqrVkrKKU0tKMrMK1GyqlbKTC...' | curl -X POST --data-binary @- "${base}/api/factorio-blueprint-decoder?operation=inspect"`,
   }),
   expose(figletMeta, figletRun, { sample: 'hello', sampleQuery: 'font=Standard' }),
+  expose(gamCommandBuilderMeta, gamCommandBuilderRun, {
+    sample: 'suspend user',
+    sampleQuery: 'category=all',
+  }),
   expose(hashGeneratorMeta, hashGeneratorRun, { sample: 'hello world' }),
   expose(invisibleCharacterDetectorMeta, invisibleCharacterDetectorRun, {
     sample: 'hello​world',
