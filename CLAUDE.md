@@ -36,6 +36,10 @@ the plan for all 168 tools.
 - `npm run lint` — includes purity rules for `src/tools`
 - Deploy: push to main; the git-connected Cloudflare Worker "tools" builds and
   deploys automatically (`wrangler.jsonc` is the config).
+- **Lockfile rule:** Workers Builds runs npm 10.9.2, which requires `@emnapi/*`
+  entries that npm 11 omits. After changing dependencies, regenerate the lock
+  with `npx -y npm@10.9.2 install --package-lock-only` or CI's `npm ci` fails
+  with a lockfile-sync error. Drop this once the build image ships npm 11.
 
 ## Project skills
 
