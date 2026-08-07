@@ -10,6 +10,7 @@
  * tool-matrix.csv stays the planning doc.
  */
 import type { ToolMeta } from './types';
+import { meta as audioTrimmer } from './audio-trimmer/meta';
 import { meta as baseConverter } from './base-converter/meta';
 import { meta as caseConverter } from './case-converter/meta';
 import { meta as characterCounter } from './character-counter/meta';
@@ -19,6 +20,7 @@ import { meta as csvViewer } from './csv-viewer/meta';
 import { meta as dataFormatConverter } from './data-format-converter/meta';
 import { meta as diffChecker } from './diff-checker/meta';
 import { meta as discordTimestamp } from './discord-timestamp/meta';
+import { meta as discordVideoCompressor } from './discord-video-compressor/meta';
 import { meta as durationCalculator } from './duration-calculator/meta';
 import { meta as epochConverter } from './epoch-converter/meta';
 import { meta as escapeUnescape } from './escape-unescape/meta';
@@ -26,6 +28,7 @@ import { meta as fakeDataGenerator } from './fake-data-generator/meta';
 import { meta as faviconGenerator } from './favicon-generator/meta';
 import { meta as figlet } from './figlet/meta';
 import { meta as fileTypeIdentifier } from './file-type-identifier/meta';
+import { meta as gifEditor } from './gif-editor/meta';
 import { meta as gzipCompressionTest } from './gzip-compression-test/meta';
 import { meta as hashGenerator } from './hash-generator/meta';
 import { meta as htmlToMarkdown } from './html-to-markdown/meta';
@@ -49,9 +52,14 @@ import { meta as unicodePicker } from './unicode-picker/meta';
 import { meta as urlParser } from './url-parser/meta';
 import { meta as userAgentParser } from './user-agent-parser/meta';
 import { meta as uuid } from './uuid/meta';
+import { meta as videoConverter } from './video-converter/meta';
+import { meta as videoFrameExtractor } from './video-frame-extractor/meta';
+import { meta as videoToGif } from './video-to-gif/meta';
+import { meta as videoTrimmer } from './video-trimmer/meta';
 import { meta as weekNumber } from './week-number/meta';
 
 export const tools: ToolMeta[] = [
+  audioTrimmer,
   baseConverter,
   caseConverter,
   characterCounter,
@@ -61,6 +69,7 @@ export const tools: ToolMeta[] = [
   dataFormatConverter,
   diffChecker,
   discordTimestamp,
+  discordVideoCompressor,
   durationCalculator,
   epochConverter,
   escapeUnescape,
@@ -68,6 +77,7 @@ export const tools: ToolMeta[] = [
   faviconGenerator,
   figlet,
   fileTypeIdentifier,
+  gifEditor,
   gzipCompressionTest,
   hashGenerator,
   htmlToMarkdown,
@@ -91,11 +101,16 @@ export const tools: ToolMeta[] = [
   urlParser,
   userAgentParser,
   uuid,
+  videoConverter,
+  videoFrameExtractor,
+  videoToGif,
+  videoTrimmer,
   weekNumber,
 ];
 
 /** Lazy loaders for tool logic, keyed by URL slug. */
 export const loaders: Record<string, () => Promise<unknown>> = {
+  'audio-trimmer': () => import('./audio-trimmer/index').then((m) => m.default),
   'base-converter': () => import('./base-converter/index').then((m) => m.default),
   'case-converter': () => import('./case-converter/index').then((m) => m.default),
   'character-counter': () => import('./character-counter/index').then((m) => m.default),
@@ -105,6 +120,8 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'data-format-converter': () => import('./data-format-converter/index').then((m) => m.default),
   'diff-checker': () => import('./diff-checker/index').then((m) => m.default),
   'discord-timestamp': () => import('./discord-timestamp/index').then((m) => m.default),
+  'discord-video-compressor': () =>
+    import('./discord-video-compressor/index').then((m) => m.default),
   'duration-calculator': () => import('./duration-calculator/index').then((m) => m.default),
   'epoch-converter': () => import('./epoch-converter/index').then((m) => m.default),
   'escape-unescape': () => import('./escape-unescape/index').then((m) => m.default),
@@ -112,6 +129,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'favicon-generator': () => import('./favicon-generator/index').then((m) => m.default),
   figlet: () => import('./figlet/index').then((m) => m.default),
   'file-type-identifier': () => import('./file-type-identifier/index').then((m) => m.default),
+  'gif-editor': () => import('./gif-editor/index').then((m) => m.default),
   'gzip-compression-test': () => import('./gzip-compression-test/index').then((m) => m.default),
   'hash-generator': () => import('./hash-generator/index').then((m) => m.default),
   'html-to-markdown': () => import('./html-to-markdown/index').then((m) => m.default),
@@ -136,6 +154,11 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'url-parser': () => import('./url-parser/index').then((m) => m.default),
   'user-agent-parser': () => import('./user-agent-parser/index').then((m) => m.default),
   'uuid-generator': () => import('./uuid/index').then((m) => m.default),
+  'video-converter': () => import('./video-converter/index').then((m) => m.default),
+  'video-frame-extractor': () =>
+    import('./video-frame-extractor/index').then((m) => m.default),
+  'video-to-gif': () => import('./video-to-gif/index').then((m) => m.default),
+  'video-trimmer': () => import('./video-trimmer/index').then((m) => m.default),
   'week-number': () => import('./week-number/index').then((m) => m.default),
 };
 

@@ -91,7 +91,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   complete: [files: MediaFile[]];
-  files: [files: { name: string; size: number }[]];
+  files: [files: { name: string; size: number; file: File }[]];
 }>();
 
 const slots = useSlots();
@@ -259,7 +259,7 @@ function setFiles(list: File[]) {
   error.value = null;
   emit(
     'files',
-    picked.value.map(({ file }) => ({ name: file.name, size: file.size }))
+    picked.value.map(({ file }) => ({ name: file.name, size: file.size, file }))
   );
 }
 
@@ -282,7 +282,7 @@ function removeFile(index: number) {
   clearOutputs();
   emit(
     'files',
-    picked.value.map(({ file }) => ({ name: file.name, size: file.size }))
+    picked.value.map(({ file }) => ({ name: file.name, size: file.size, file }))
   );
 }
 

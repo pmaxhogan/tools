@@ -1,0 +1,59 @@
+import type { ToolMeta } from '../types';
+
+export const meta: ToolMeta = {
+  slug: 'audio-trimmer',
+  matrixSlug: 'audio-trim',
+  name: 'Audio Trimmer',
+  description: 'Cut, fade and loudness-normalise audio in your browser.',
+  category: 'Media',
+  keywords: [
+    'audio trimmer',
+    'cut audio',
+    'trim mp3',
+    'audio fade in fade out',
+    'loudness normalize',
+    'audio cutter online',
+    'mp3 cutter',
+  ],
+  input: 'audio/*',
+  output: 'application/json',
+  options: [
+    { kind: 'text', id: 'start', label: 'Start', default: '', placeholder: 'e.g. 1:23' },
+    { kind: 'text', id: 'end', label: 'End', default: '', placeholder: 'e.g. 2:45' },
+    { kind: 'number', id: 'fadeIn', label: 'Fade in (sec)', default: 0, min: 0, max: 10, step: 0.1 },
+    { kind: 'number', id: 'fadeOut', label: 'Fade out (sec)', default: 0, min: 0, max: 10, step: 0.1 },
+    { kind: 'boolean', id: 'normalize', label: 'Normalize loudness', default: false },
+    {
+      kind: 'select',
+      id: 'format',
+      label: 'Output format',
+      default: 'same',
+      choices: [
+        { value: 'same', label: 'Same as source' },
+        { value: 'mp3', label: 'MP3' },
+        { value: 'm4a', label: 'M4A (AAC)' },
+        { value: 'wav', label: 'WAV' },
+        { value: 'ogg', label: 'OGG (Vorbis)' },
+      ],
+    },
+  ],
+  copy: {
+    what: 'Cuts a clip out of an audio file, applies a fade in and fade out in seconds, and can loudness normalize the result to a consistent target, all inside your browser tab using ffmpeg compiled to WebAssembly. Export as MP3, M4A, WAV, OGG, or keep the source format and cut without re-encoding.',
+    how: 'Drop an audio file, load the media engine once, then set a start and end time (plain seconds like 12.5, mm:ss like 1:23, or hh:mm:ss.mmm) either by typing them or by playing the preview and pressing "use current time". Add a fade in or fade out in seconds, turn on normalize if you want a consistent loudness, pick a format, and run.',
+    why: 'Most online audio cutters make you upload the file to their server, cap the length or file size on the free tier, and skip loudness normalization entirely. This tool trims and fades locally, has no length cap beyond your browser memory, and includes normalization to a streaming-style loudness target, which the online cutters usually charge for or omit.',
+    faq: [
+      {
+        q: 'What does normalize actually do?',
+        a: 'It runs a single pass loudness normalization targeting minus 16 LUFS integrated loudness, minus 1.5 dB true peak, and 11 LU loudness range, the same kind of target streaming platforms use, so the trimmed clip does not sound quieter or louder than everything else.',
+      },
+      {
+        q: 'Can it cut audio without re-encoding?',
+        a: 'Yes. Set the output format to "Same as source" and leave the fades and normalize off. The trim then runs as a stream copy, which is fast and keeps the original audio bytes rather than decoding and re-encoding them.',
+      },
+      {
+        q: 'Is my audio uploaded anywhere?',
+        a: 'No. Your files and inputs never leave your device. The trim, fades, and normalization all run inside this browser tab using a local WebAssembly build of ffmpeg.',
+      },
+    ],
+  },
+};

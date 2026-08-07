@@ -1,0 +1,80 @@
+import type { ToolMeta } from '../types';
+
+export const meta: ToolMeta = {
+  slug: 'gif-editor',
+  matrixSlug: 'gif-tools',
+  name: 'GIF Toolbox',
+  description: 'Resize, crop, optimise, reverse, slow down, speed up or split GIFs.',
+  category: 'Media',
+  keywords: [
+    'gif resizer',
+    'crop gif online',
+    'optimise gif file size',
+    'reverse a gif',
+    'speed up gif',
+    'slow down gif',
+    'split gif into frames',
+    'gif editor without upload',
+  ],
+  input: 'image/*',
+  output: 'application/json',
+  options: [
+    {
+      kind: 'select',
+      id: 'operation',
+      label: 'Operation',
+      default: 'resize',
+      choices: [
+        { value: 'resize', label: 'Resize' },
+        { value: 'crop', label: 'Crop' },
+        { value: 'optimize', label: 'Optimise' },
+        { value: 'reverse', label: 'Reverse' },
+        { value: 'speed', label: 'Change speed' },
+        { value: 'caption', label: 'Caption' },
+        { value: 'split', label: 'Split into frames' },
+      ],
+    },
+    { kind: 'number', id: 'width', label: 'Resize: width in pixels', default: 480, min: 16, max: 4000, step: 1 },
+    { kind: 'number', id: 'cropX', label: 'Crop: left offset', default: 0, min: 0, max: 10000, step: 1 },
+    { kind: 'number', id: 'cropY', label: 'Crop: top offset', default: 0, min: 0, max: 10000, step: 1 },
+    { kind: 'number', id: 'cropW', label: 'Crop: width', default: 320, min: 1, max: 10000, step: 1 },
+    { kind: 'number', id: 'cropH', label: 'Crop: height', default: 240, min: 1, max: 10000, step: 1 },
+    { kind: 'number', id: 'fps', label: 'Optimise: frames per second', default: 15, min: 1, max: 50, step: 1 },
+    { kind: 'number', id: 'colors', label: 'Optimise: colours in the palette', default: 128, min: 4, max: 256, step: 1 },
+    { kind: 'number', id: 'factor', label: 'Speed: multiplier', default: 2, min: 0.25, max: 4, step: 0.25 },
+    { kind: 'number', id: 'speedFps', label: 'Speed: resample to frames per second (0 keeps the original)', default: 0, min: 0, max: 50, step: 1 },
+    { kind: 'text', id: 'text', label: 'Caption: text', default: '', placeholder: 'when it finally builds' },
+    {
+      kind: 'select',
+      id: 'position',
+      label: 'Caption: position',
+      default: 'bottom',
+      choices: [
+        { value: 'bottom', label: 'Bottom' },
+        { value: 'top', label: 'Top' },
+      ],
+    },
+    { kind: 'number', id: 'fontSize', label: 'Caption: font size', default: 32, min: 8, max: 200, step: 1 },
+    { kind: 'number', id: 'everyNth', label: 'Split: keep every nth frame', default: 1, min: 1, max: 20, step: 1 },
+    { kind: 'number', id: 'frames', label: 'Split: frames to export', default: 8, min: 1, max: 50, step: 1 },
+  ],
+  copy: {
+    what: 'Edits an animated GIF in your browser with the same ffmpeg pipeline the command line uses. It can scale a GIF to a target width, crop a rectangle out of every frame, shrink the file by dropping frames and colours, play it backwards, speed it up or slow it down, and export individual frames as PNG files. Every GIF it writes gets a fresh colour palette generated from the frames themselves, which is what keeps an edited GIF from banding. It also reads the file directly, so it can tell you the size, frame count and average frame rate before you change anything.',
+    how: 'Drop a .gif on the input, then load the media engine once: it is about 31 MB, your browser keeps it, and later visits start it from the cache. Pick an operation, set its numbers, and press the run button. The result appears with a preview and a download button, and the ffmpeg log is there if you want to see exactly what ran.',
+    why: 'Ezgif is the incumbent and it works, but every GIF you touch is uploaded to its servers, the page is wrapped in ads, and the file size is capped. This runs the same ffmpeg filters inside your tab, so your files and inputs never leave your device, there is no upload wait, and the only limit is your own machine. The palette handling is the real ffmpeg one rather than a generic re-encode, so colours survive an edit.',
+    faq: [
+      {
+        q: 'Why does my GIF get re-encoded instead of edited in place?',
+        a: 'A GIF stores at most 256 colours in a palette, and every frame is compressed against it. Change the pixels and that palette no longer fits, so the frames have to be written again. This tool always generates a new palette from the edited frames and maps them onto it, which is why a resized or cropped GIF keeps its colours instead of turning blotchy. It also means the output is never byte for byte the same file, even for an edit that looks small.',
+      },
+      {
+        q: 'Can it make a GIF from a video?',
+        a: 'Not here. This tool takes a GIF and gives you a GIF or its frames. Use the Video to GIF tool on this site for the other direction: it trims the clip, picks a frame rate, and builds the palette for you.',
+      },
+      {
+        q: 'Is my GIF uploaded anywhere?',
+        a: 'No. The ffmpeg engine is downloaded to your browser once and every frame is decoded and encoded inside this tab, so your files and inputs never leave your device.',
+      },
+    ],
+  },
+};

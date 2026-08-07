@@ -14,12 +14,23 @@ import PopoutButton from './PopoutButton.vue';
  * Document Picture-in-Picture window.
  */
 const panels: Record<string, Component> = {
+  'audio-trimmer': defineAsyncComponent(() => import('./panels/AudioTrimmerPanel.vue')),
   'clipboard-inspector': defineAsyncComponent(() => import('./panels/ClipboardPanel.vue')),
+  'discord-video-compressor': defineAsyncComponent(
+    () => import('./panels/DiscordCompressorPanel.vue'),
+  ),
   'favicon-generator': defineAsyncComponent(() => import('./panels/FaviconPanel.vue')),
+  'gif-editor': defineAsyncComponent(() => import('./panels/GifEditorPanel.vue')),
   'image-toolbox': defineAsyncComponent(() => import('./panels/ImageToolboxPanel.vue')),
   keycode: defineAsyncComponent(() => import('./panels/KeycodePanel.vue')),
   'qr-code-generator': defineAsyncComponent(() => import('./panels/QrPanel.vue')),
   'unicode-picker': defineAsyncComponent(() => import('./panels/UnicodePanel.vue')),
+  'video-converter': defineAsyncComponent(() => import('./panels/AvConverterPanel.vue')),
+  'video-frame-extractor': defineAsyncComponent(
+    () => import('./panels/FrameExtractorPanel.vue'),
+  ),
+  'video-to-gif': defineAsyncComponent(() => import('./panels/VideoToGifPanel.vue')),
+  'video-trimmer': defineAsyncComponent(() => import('./panels/VideoTrimmerPanel.vue')),
 };
 
 const props = defineProps<{ meta: ToolMeta }>();
