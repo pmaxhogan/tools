@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/prepare-ffmpeg.mjs && node scripts/prepare-models.mjs && astro build && node scripts/generate-sw.mjs",
+    "build": "node scripts/prepare-ffmpeg.mjs && node scripts/prepare-models.mjs && node scripts/prepare-pyodide.mjs && astro build && node scripts/generate-sw.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "test": "vitest run",
@@ -55,6 +55,7 @@
     "papaparse": "^5.5.4",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.2.108",
+    "pyodide": "^314.0.3",
     "qrcode": "^1.5.4",
     "reka-ui": "^2.10.1",
     "smol-toml": "^1.7.1",

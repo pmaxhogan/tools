@@ -34,6 +34,8 @@ public/ffmpeg/
 # model weights and OCR engine, staged by scripts/prepare-models.mjs
 public/models/
 public/tesseract/
+# pyodide runtime and jinja2 wheels, staged by scripts/prepare-pyodide.mjs
+public/pyodide/
 # raw downloads that back the staging step, so rebuilds refetch nothing
 .model-cache/
 

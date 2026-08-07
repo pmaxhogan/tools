@@ -55,6 +55,7 @@ import { meta as invisibleCharacterDetector } from './invisible-character-detect
 import { meta as jsonFormatter } from './json-formatter/meta';
 import { meta as jsonSchemaValidator } from './json-schema-validator/meta';
 import { meta as jsonToTypescript } from './json-to-typescript/meta';
+import { meta as jinjaTemplateTester } from './jinja-template-tester/meta';
 import { meta as keycode } from './keycode/meta';
 import { meta as lineSorter } from './line-sorter/meta';
 import { meta as mojibakeFixer } from './mojibake-fixer/meta';
@@ -128,6 +129,7 @@ export const tools: ToolMeta[] = [
   invisibleCharacterDetector,
   jsonFormatter,
   jsonSchemaValidator,
+  jinjaTemplateTester,
   jsonToTypescript,
   keycode,
   lineSorter,
@@ -207,6 +209,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
     import('./invisible-character-detector/index').then((m) => m.default),
   'json-formatter': () => import('./json-formatter/index').then((m) => m.default),
   'json-schema-validator': () => import('./json-schema-validator/index').then((m) => m.default),
+  'jinja-template-tester': () => import('./jinja-template-tester/index').then((m) => m.default),
   'json-to-typescript': () => import('./json-to-typescript/index').then((m) => m.default),
   keycode: () => import('./keycode/index').then((m) => m.default),
   'line-sorter': () => import('./line-sorter/index').then((m) => m.default),

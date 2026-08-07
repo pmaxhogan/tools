@@ -37,6 +37,7 @@ const panels: Record<string, Component> = {
   'image-redactor': defineAsyncComponent(() => import('./panels/RedactorPanel.vue')),
   'image-to-text': defineAsyncComponent(() => import('./panels/OcrPanel.vue')),
   'image-toolbox': defineAsyncComponent(() => import('./panels/ImageToolboxPanel.vue')),
+  'jinja-template-tester': defineAsyncComponent(() => import('./panels/JinjaTesterPanel.vue')),
   keycode: defineAsyncComponent(() => import('./panels/KeycodePanel.vue')),
   'pdf-toolbox': defineAsyncComponent(() => import('./panels/PdfToolboxPanel.vue')),
   'qr-code-generator': defineAsyncComponent(() => import('./panels/QrPanel.vue')),

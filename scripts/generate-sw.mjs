@@ -30,8 +30,8 @@ const files = walk(dist)
   .map((f) => '/' + relative(dist, f).split(sep).join('/'))
   .filter((f) => !f.startsWith('/og/')) // OG images are for crawlers, not offline use
   .filter((f) => !f.endsWith('.wasm')) // engines download on demand, never on first visit
-  // model weights and OCR data are opt-in downloads on their tool pages
-  .filter((f) => !f.startsWith('/models/') && !f.startsWith('/tesseract/'))
+  // model weights, OCR data, and the pyodide runtime are opt-in downloads on their tool pages
+  .filter((f) => !f.startsWith('/models/') && !f.startsWith('/tesseract/') && !f.startsWith('/pyodide/'))
   .map((f) => f.replace(/\/index\.html$/, '/').replace(/^\/index\.html$/, '/'));
 
 const hash = createHash('sha256');
