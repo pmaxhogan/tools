@@ -24,6 +24,7 @@ function set(v: unknown) {
     <Label
       :for="spec.id"
       class="text-xs text-muted-foreground"
+      :class="spec.kind === 'boolean' ? 'w-fit cursor-pointer' : undefined"
     >{{ spec.label }}</Label>
 
     <Select

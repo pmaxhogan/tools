@@ -20,6 +20,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* reka-ui exposes component state as data-state="checked|unchecked|open|closed",
+   but the shadcn-vue class strings use the shorthand data-checked / data-open
+   names, which Tailwind compiles to bare [data-checked] / [data-open] selectors
+   that never match. Bridge the two so switches, checkboxes, and overlay
+   enter/exit animations actually pick up their state styles. */
+@custom-variant data-checked (&[data-state="checked"]);
+@custom-variant data-unchecked (&[data-state="unchecked"]);
+@custom-variant data-open (&[data-state="open"]);
+@custom-variant data-closed (&[data-state="closed"]);
+
 @theme inline {
   --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
