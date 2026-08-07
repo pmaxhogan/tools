@@ -16,6 +16,18 @@ export const meta: ToolMeta = {
     'trim video to gif',
     'high quality gif converter',
   ],
+  searchTerms: [
+    'gif maker from video',
+    'create animated gif',
+    'video clip to gif',
+    'gif converter online',
+    'palettegen paletteuse',
+    'giphy alternative',
+    'ezgif alternative',
+    'looping gif creator',
+    'meme gif maker',
+    'clip to gif converter',
+  ],
   input: 'video/*',
   output: 'application/json',
   options: [

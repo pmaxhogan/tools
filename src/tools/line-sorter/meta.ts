@@ -16,6 +16,16 @@ export const meta: ToolMeta = {
     'natural sort',
     'alphabetize text',
   ],
+  searchTerms: [
+    'sort text lines',
+    'unique lines',
+    'remove blank lines',
+    'randomize list order',
+    'text list sorter',
+    'sort by length',
+    'de-duplicate list',
+    'shuffle a list online',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

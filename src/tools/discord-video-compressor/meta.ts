@@ -17,6 +17,16 @@ export const meta: ToolMeta = {
     'fit video under upload limit',
     'compress video without uploading',
   ],
+  searchTerms: [
+    'compress video for discord free',
+    'shrink video file size',
+    'two pass h264 encode',
+    'video bitrate calculator',
+    'discord nitro upload limit',
+    'compress mp4 online',
+    'video compressor no upload',
+    'reduce mp4 size',
+  ],
   input: 'video/*',
   output: 'application/json',
   options: [

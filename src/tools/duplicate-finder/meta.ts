@@ -15,6 +15,15 @@ export const meta: ToolMeta = {
     'delete duplicate photos',
     'duplicate file finder no download',
   ],
+  searchTerms: [
+    'find identical files',
+    'remove duplicate files',
+    'disk space cleaner',
+    'duplicate photo finder',
+    'sha256 file compare',
+    'file hash duplicate check',
+    'clean up folder duplicates',
+  ],
   input: 'none',
   output: 'application/json',
   // No http entry: the folder never leaves the machine it is on, so there is

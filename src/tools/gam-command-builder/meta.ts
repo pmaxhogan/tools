@@ -16,6 +16,18 @@ export const meta: ToolMeta = {
     'gam transfer drive ownership',
     'gam offboard user checklist',
   ],
+  searchTerms: [
+    'google workspace admin cli',
+    'gam7 syntax',
+    'gam cheat sheet',
+    'gam suspend user',
+    'gam create user',
+    'gam offboarding',
+    'workspace bulk user management',
+    'admin console cli alternative',
+    'gam command generator',
+    'google admin sdk cli',
+  ],
   input: 'text/plain',
   output: 'application/json',
   options: [

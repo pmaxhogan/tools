@@ -12,6 +12,16 @@ export const meta: ToolMeta = {
     'shareable tool chain',
     'pipe tools browser',
   ],
+  searchTerms: [
+    'tool chain builder',
+    'multi step converter',
+    'workflow builder',
+    'combine tools',
+    'tool automation',
+    'unix pipe for tools',
+    'chained transformations',
+    'macro tool chain',
+  ],
   input: 'text/plain',
   output: 'application/json',
   options: [

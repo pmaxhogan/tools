@@ -16,6 +16,18 @@ export const meta: ToolMeta = {
     'export video frames',
     'get a single frame out of a video',
   ],
+  searchTerms: [
+    'video still image grabber',
+    'extract png from video',
+    'video screenshot tool',
+    'save video frame as image',
+    'video thumbnail extractor',
+    'frame by frame video viewer',
+    'video scrubber tool',
+    'capture video frame online',
+    'video to image sequence',
+    'burst frame capture',
+  ],
   input: 'video/*',
   output: 'application/json',
   options: [

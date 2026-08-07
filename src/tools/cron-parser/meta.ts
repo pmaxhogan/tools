@@ -16,6 +16,18 @@ export const meta: ToolMeta = {
     'next run times',
     'cron expression generator',
   ],
+  searchTerms: [
+    'crontab generator',
+    'cron tester',
+    'cron validator',
+    'cron to human readable',
+    'cron next run time',
+    'quartz cron expression',
+    'cron schedule builder',
+    'crontab syntax checker',
+    'systemd timer',
+    'node-cron syntax',
+  ],
   input: 'text/plain',
   output: 'application/json',
   options: [

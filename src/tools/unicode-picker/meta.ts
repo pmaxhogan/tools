@@ -16,6 +16,18 @@ export const meta: ToolMeta = {
     'em dash character',
     'zero width space',
   ],
+  searchTerms: [
+    'special character picker',
+    'copy paste symbols',
+    'alt code lookup',
+    'unicode code point lookup',
+    'html entity finder',
+    'text symbol generator',
+    'character map online',
+    'fancy text symbols',
+    'currency symbol lookup',
+    'find unicode character',
+  ],
   input: 'text/plain',
   output: 'application/json',
   options: [

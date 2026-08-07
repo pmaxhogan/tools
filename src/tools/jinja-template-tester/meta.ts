@@ -13,6 +13,17 @@ export const meta: ToolMeta = {
     'test jinja template',
     'home assistant jinja sandbox',
   ],
+  searchTerms: [
+    'jinja2 playground',
+    'python template engine test',
+    'ha template debug',
+    'home assistant templating',
+    'jinja sandbox online',
+    'pyodide jinja',
+    'states() function tester',
+    'namespace jinja test',
+    'homeassistant yaml template',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

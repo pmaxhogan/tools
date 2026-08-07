@@ -15,6 +15,17 @@ export const meta: ToolMeta = {
     'verify checksum',
     'hash text online',
   ],
+  searchTerms: [
+    'digest calculator',
+    'sha512 generator',
+    'sha384 generator',
+    'file checksum verifier',
+    'compare hashes',
+    'md5sum online',
+    'sha256sum online',
+    'password hash lookup',
+    'checksum mismatch',
+  ],
   input: 'text/plain',
   output: 'application/json',
   options: [

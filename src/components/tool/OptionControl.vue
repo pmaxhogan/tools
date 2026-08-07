@@ -3,6 +3,7 @@ import type { OptionSpec } from '@/tools/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
 import {
   Select,
   SelectContent,
@@ -61,7 +62,7 @@ function set(v: unknown) {
     />
 
     <Input
-      v-else-if="spec.kind === 'number' || spec.kind === 'slider'"
+      v-else-if="spec.kind === 'number'"
       :id="spec.id"
       type="number"
       :model-value="Number(modelValue)"
@@ -71,6 +72,25 @@ function set(v: unknown) {
       class="h-8"
       @update:model-value="set(Number($event))"
     />
+
+    <div
+      v-else-if="spec.kind === 'slider'"
+      class="flex items-center gap-3"
+    >
+      <Slider
+        :id="spec.id"
+        :model-value="[Number(modelValue)]"
+        :min="spec.min"
+        :max="spec.max"
+        :step="spec.step ?? 1"
+        :aria-label="spec.label"
+        class="min-w-0 flex-1"
+        @update:model-value="set(Number($event?.[0] ?? modelValue))"
+      />
+      <span class="w-10 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">
+        {{ Number(modelValue) }}
+      </span>
+    </div>
 
     <Switch
       v-else-if="spec.kind === 'boolean'"

@@ -17,6 +17,18 @@ export const meta: ToolMeta = {
     'optimize svg online',
     'svg file size reducer',
   ],
+  searchTerms: [
+    'shrink svg',
+    'svg minifier',
+    'clean up svg code',
+    'remove svg metadata',
+    'svgomg alternative',
+    'svg file compressor',
+    'reduce svg size',
+    'strip inkscape metadata',
+    'illustrator svg cleanup',
+    'svg path optimizer',
+  ],
   input: 'image/svg+xml',
   output: 'application/json',
   options: [

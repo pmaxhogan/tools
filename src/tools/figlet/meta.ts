@@ -15,6 +15,18 @@ export const meta: ToolMeta = {
     'banner text',
     'ascii art font',
   ],
+  searchTerms: [
+    'figlet fonts',
+    'text banner generator',
+    'ascii art text',
+    'big text generator',
+    'terminal banner',
+    'readme banner',
+    'cli splash screen',
+    'motd generator',
+    'block letters text',
+    'text art maker',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

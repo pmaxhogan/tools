@@ -15,6 +15,18 @@ export const meta: ToolMeta = {
     'audio cutter online',
     'mp3 cutter',
   ],
+  searchTerms: [
+    'clip audio',
+    'split audio file',
+    'extract audio clip',
+    'ringtone maker',
+    'audio splitter',
+    'crop audio',
+    'shorten audio file',
+    'lufs normalizer',
+    'loudness meter',
+    'audio slicer',
+  ],
   input: 'audio/*',
   output: 'application/json',
   options: [

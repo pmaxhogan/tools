@@ -13,6 +13,18 @@ export const meta: ToolMeta = {
     'wg genkey online',
     'wireguard peer setup',
   ],
+  searchTerms: [
+    'wg config maker',
+    'vpn config generator',
+    'wireguard qr code generator',
+    'x25519 key generator',
+    'wireguard client config',
+    'wireguard server config',
+    'vpn peer setup',
+    'wg-quick config',
+    'wireguard mobile app config',
+    'self hosted vpn setup',
+  ],
   input: 'none',
   output: 'application/json',
   // No http entry: the whole point is that the private key is generated in

@@ -15,6 +15,17 @@ export const meta: ToolMeta = {
     'rich text to markdown converter',
     'html markdown converter',
   ],
+  searchTerms: [
+    'turndown online',
+    'rich text to md',
+    'clean up pasted html',
+    'docx to markdown',
+    'gfm converter',
+    'markdown cleaner',
+    'strip word formatting',
+    'notion to markdown',
+    'convert to gfm',
+  ],
   input: 'text/html',
   output: 'text/plain',
   options: [

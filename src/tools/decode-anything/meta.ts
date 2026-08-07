@@ -17,6 +17,18 @@ export const meta: ToolMeta = {
     'decode unknown string',
     'identify encoding',
   ],
+  searchTerms: [
+    'jwt decoder',
+    'base64 decoder',
+    'gzip decompress online',
+    'unix timestamp decoder',
+    'snowflake id decoder',
+    'uuid decoder',
+    'mystery string decoder',
+    'multi layer decoder',
+    'auto detect encoding',
+    'universal decoder',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

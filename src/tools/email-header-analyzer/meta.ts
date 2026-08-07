@@ -14,6 +14,16 @@ export const meta: ToolMeta = {
     'received header parser',
     'trace email path',
   ],
+  searchTerms: [
+    'eml file viewer',
+    'authentication results parser',
+    'mail hop analyzer',
+    'email delivery delay',
+    'trace email route',
+    'email routing analyzer',
+    'mail server hop viewer',
+    'email latency waterfall',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

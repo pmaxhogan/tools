@@ -17,6 +17,17 @@ export const meta: ToolMeta = {
     'test gzip compression',
     'file entropy calculator',
   ],
+  searchTerms: [
+    'gzip online',
+    'compress file online',
+    'zlib test',
+    'shannon entropy calculator',
+    'gunzip online',
+    'compressionstream test',
+    'compare compression algorithms',
+    'gz decompress browser',
+    'how well does this compress',
+  ],
   input: 'File',
   output: 'application/json',
   options: [

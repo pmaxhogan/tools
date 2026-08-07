@@ -17,6 +17,16 @@ export const meta: ToolMeta = {
     'typescript interface generator',
     'json to data class',
   ],
+  searchTerms: [
+    'quicktype alternative',
+    'json to interface generator',
+    'api response to types',
+    'json to schema types',
+    'generate zod from json',
+    'json to model class',
+    'transform.tools alternative',
+    'infer types from json',
+  ],
   input: 'application/json',
   output: 'text/plain',
   options: [

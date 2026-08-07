@@ -16,6 +16,18 @@ export const meta: ToolMeta = {
     'subtitle editor',
     'clean up srt file',
   ],
+  searchTerms: [
+    'caption converter',
+    'subtitle format converter',
+    'subtitle timing fixer',
+    'delay subtitles',
+    'subtitle sync tool',
+    'closed caption editor',
+    'srt cleaner',
+    'subtitle offset adjuster',
+    'webvtt editor',
+    'caption resync',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

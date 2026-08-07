@@ -16,6 +16,17 @@ export const meta: ToolMeta = {
     'ftfy online',
     'fix broken characters in csv',
   ],
+  searchTerms: [
+    'ftfy alternative',
+    'fix character encoding',
+    'windows-1252 vs utf-8',
+    'latin1 encoding fix',
+    'garbled csv text',
+    'weird symbols instead of accents',
+    'encoding mismatch fix',
+    'repair unicode text',
+    'question marks instead of characters',
+  ],
   input: 'text/plain',
   output: 'application/json',
   options: [

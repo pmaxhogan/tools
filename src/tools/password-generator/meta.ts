@@ -15,6 +15,18 @@ export const meta: ToolMeta = {
     'eff wordlist',
     'password entropy',
   ],
+  searchTerms: [
+    'secure password maker',
+    'strong passphrase generator',
+    'crack time calculator',
+    'entropy calculator',
+    'random string generator',
+    'pwgen',
+    'memorable password',
+    'xkcd password generator',
+    'correct horse battery staple',
+    'passphrase with words',
+  ],
   input: 'none',
   output: 'application/json',
   options: [

@@ -7,6 +7,16 @@ export const meta: ToolMeta = {
   description: 'Convert unix timestamps to and from human-readable dates in any time zone.',
   category: 'Time',
   keywords: ['epoch', 'unix timestamp', 'timestamp converter', 'unix time', 'date converter'],
+  searchTerms: [
+    'unix time converter',
+    'timestamp to date',
+    'date to timestamp',
+    'seconds since epoch',
+    'milliseconds timestamp',
+    'convert timestamp to human readable',
+    'iso 8601 converter',
+    'unix epoch calculator',
+  ],
   input: 'text/plain',
   output: 'application/json',
   options: [

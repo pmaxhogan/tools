@@ -15,6 +15,18 @@ export const meta: ToolMeta = {
     'sqlite browser online',
     'read .sqlite3 file',
   ],
+  searchTerms: [
+    'db browser alternative',
+    'sqlite database explorer',
+    'open db file online',
+    'sqlite query tool',
+    'db3 file viewer',
+    'sqlite3 online',
+    'view sqlite tables',
+    'run sql on sqlite file',
+    'sqlite web client',
+    'inspect sqlite database',
+  ],
   input: 'File',
   output: 'text/plain',
   options: [

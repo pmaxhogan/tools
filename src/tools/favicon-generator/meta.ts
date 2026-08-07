@@ -15,6 +15,17 @@ export const meta: ToolMeta = {
     'png to ico',
     'site.webmanifest',
   ],
+  searchTerms: [
+    'favicon maker',
+    'ico converter',
+    'app icon generator',
+    'website icon generator',
+    'touch icon generator',
+    'manifest.json generator',
+    'pwa icon generator',
+    'logo to favicon',
+    'generate favicon sizes',
+  ],
   input: 'image/*',
   output: 'application/json',
   options: [

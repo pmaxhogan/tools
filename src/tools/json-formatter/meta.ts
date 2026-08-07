@@ -16,6 +16,18 @@ export const meta: ToolMeta = {
     'base64 decode',
     'url encode decode',
   ],
+  searchTerms: [
+    'json pretty print',
+    'json prettify',
+    'jwt.io alternative',
+    'decode jwt token',
+    'base64 to text',
+    'text to base64',
+    'urlencode urldecode',
+    'json linter',
+    'json syntax checker',
+    'bearer token decoder',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

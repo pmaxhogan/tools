@@ -15,6 +15,15 @@ export const meta: ToolMeta = {
     'dmarc report parser',
     'open dmarc zip attachment',
   ],
+  searchTerms: [
+    'dmarc aggregate report reader',
+    'spf dkim report',
+    'email spoofing checker',
+    'dmarc rua xml',
+    'dmarc gz reader',
+    'domain spoofing report',
+    'email authentication report',
+  ],
   input: 'File',
   output: 'text/plain',
   options: [

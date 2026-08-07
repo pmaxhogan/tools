@@ -15,6 +15,17 @@ export const meta: ToolMeta = {
     'redact image online',
     'hide personal info in screenshot',
   ],
+  searchTerms: [
+    'blackout image',
+    'blur alternative',
+    'redact pdf screenshot',
+    'cover sensitive info',
+    'obscure text in photo',
+    'anonymize screenshot',
+    'mask part of image',
+    'privacy blur tool',
+    'remove personal info from image',
+  ],
   input: 'image/*',
   output: 'application/json',
   options: [

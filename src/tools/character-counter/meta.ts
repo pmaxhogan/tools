@@ -17,6 +17,17 @@ export const meta: ToolMeta = {
     'sentence counter',
     'letter count',
   ],
+  searchTerms: [
+    'word count tool',
+    'letter counter',
+    'text length checker',
+    'essay word counter',
+    'twitter character limit',
+    'sms character count',
+    'unicode grapheme counter',
+    'string length checker',
+    'paragraph counter',
+  ],
   input: 'text/plain',
   output: 'application/json',
   options: [

@@ -15,6 +15,17 @@ export const meta: ToolMeta = {
     'hid report layout',
     'webhid input report log',
   ],
+  searchTerms: [
+    'webhid tester',
+    'usb device debugger',
+    'hid input report',
+    'hid descriptor decoder',
+    'gamepad hid debug',
+    'macro pad debugger',
+    'usage page lookup',
+    'hid report descriptor viewer',
+    'hid bytes decoder',
+  ],
   input: 'none',
   output: 'application/json',
   options: [

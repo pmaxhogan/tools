@@ -16,6 +16,17 @@ export const meta: ToolMeta = {
     'unknown file extension',
     'zip xlsx docx checker',
   ],
+  searchTerms: [
+    'file signature checker',
+    'mime type detector',
+    'what is this file',
+    'no extension file',
+    'file header inspector',
+    'binary file identifier',
+    'hex signature lookup',
+    'file format detector',
+    'trueid',
+  ],
   input: 'File',
   output: 'application/json',
   copy: {

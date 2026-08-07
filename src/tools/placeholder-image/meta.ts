@@ -15,6 +15,18 @@ export const meta: ToolMeta = {
     'lorem picsum alternative',
     'mock image',
   ],
+  searchTerms: [
+    'dummy image generator',
+    'fake image placeholder',
+    'image stub',
+    'test image generator',
+    'lorem ipsum image',
+    'placeholder.com alternative',
+    'placekitten alternative',
+    'sample image generator',
+    'wireframe image',
+    'stock placeholder graphic',
+  ],
   input: 'none',
   output: 'application/json',
   options: [

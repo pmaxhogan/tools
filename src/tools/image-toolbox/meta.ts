@@ -17,6 +17,18 @@ export const meta: ToolMeta = {
     'remove gps from photo',
     'check image resolution',
   ],
+  searchTerms: [
+    'exiftool online',
+    'photo geotag checker',
+    'remove metadata from photo',
+    'image resizer',
+    'image cropper',
+    'convert image format',
+    'png to jpg',
+    'jpg to webp',
+    'check image size in pixels',
+    'gps data in photo',
+  ],
   input: 'image/*',
   output: 'application/json',
   options: [

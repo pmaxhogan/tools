@@ -17,6 +17,18 @@ export const meta: ToolMeta = {
     'zero width character remover',
     'bidi control character detector',
   ],
+  searchTerms: [
+    'hidden unicode checker',
+    'zero width joiner',
+    'chatgpt watermark detector',
+    'ai text watermark',
+    'unicode steganography',
+    'find hidden characters',
+    'strange characters in text',
+    'trailing whitespace finder',
+    'string comparison fails',
+    'copy paste weird characters',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

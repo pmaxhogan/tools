@@ -16,6 +16,18 @@ export const meta: ToolMeta = {
     'ffmpeg in the browser',
     'offline video converter',
   ],
+  searchTerms: [
+    'ffmpeg online',
+    'convert video format',
+    'video format changer',
+    'mov to mp4',
+    'webm to mp4 converter',
+    'audio format converter',
+    'video compressor',
+    'transcode video browser',
+    'handbrake alternative online',
+    'video codec converter',
+  ],
   input: 'video/*',
   output: 'application/json',
   options: [

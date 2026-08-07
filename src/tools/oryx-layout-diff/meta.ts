@@ -15,6 +15,18 @@ export const meta: ToolMeta = {
     'keymap.c diff tool',
     'oryx revision compare',
   ],
+  searchTerms: [
+    'zsa moonlander',
+    'keyboard layout diff',
+    'keymap comparison',
+    'qmk layout compare',
+    'keyboard firmware diff',
+    'layer diff tool',
+    'moonlander revision history',
+    'compare keymaps',
+    'keyboard config diff',
+    'oryx configurator diff',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

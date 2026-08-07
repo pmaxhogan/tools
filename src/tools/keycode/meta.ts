@@ -14,6 +14,16 @@ export const meta: ToolMeta = {
     'key code lookup',
     'event.key event.code',
   ],
+  searchTerms: [
+    'keydown event tester',
+    'keyboard shortcut tester',
+    'key event decoder',
+    'javascript key event',
+    'keycode lookup table',
+    'event.key reference',
+    'modifier key checker',
+    'shortcut combo tester',
+  ],
   input: 'application/json',
   output: 'application/json',
   copy: {

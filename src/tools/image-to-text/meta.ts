@@ -14,6 +14,17 @@ export const meta: ToolMeta = {
     'tesseract online',
     'picture to text',
   ],
+  searchTerms: [
+    'ocr',
+    'read text in picture',
+    'extract text from screenshot',
+    'photo to text',
+    'scanned document to text',
+    'handwriting to text',
+    'receipt scanner text',
+    'copy text from image',
+    'tesseract wasm',
+  ],
   input: 'image/*',
   output: 'text/plain',
   options: [

@@ -15,6 +15,18 @@ export const meta: ToolMeta = {
     'factorio blueprint json editor',
     'decode factorio blueprint online',
   ],
+  searchTerms: [
+    'factorio blueprint',
+    'blueprint string parser',
+    'bp string decoder',
+    'factorio json',
+    'blueprint book',
+    'factorio zlib base64',
+    'undo mangled blueprint',
+    'factorio save editor',
+    'production line planner',
+    'factorio calculator',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

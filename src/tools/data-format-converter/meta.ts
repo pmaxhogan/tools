@@ -15,6 +15,17 @@ export const meta: ToolMeta = {
     'convert csv to yaml online',
     'data format converter',
   ],
+  searchTerms: [
+    'json to yaml converter',
+    'yaml to json converter',
+    'toml to yaml',
+    'csv to yaml',
+    'json to toml',
+    'yaml to csv',
+    'config format converter',
+    'serialization format converter',
+    'structured data converter',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

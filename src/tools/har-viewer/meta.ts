@@ -16,6 +16,17 @@ export const meta: ToolMeta = {
     'har file analyzer',
     'read har file',
   ],
+  searchTerms: [
+    'http archive viewer',
+    'network tab export viewer',
+    'chrome devtools export viewer',
+    'redact har file',
+    'find slow requests',
+    'network waterfall chart',
+    'remove cookies from har',
+    'inspect network capture',
+    'devtools network export',
+  ],
   input: 'application/json',
   output: 'text/plain',
   options: [

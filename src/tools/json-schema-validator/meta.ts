@@ -16,6 +16,16 @@ export const meta: ToolMeta = {
     'validate json document',
     'json schema draft 7 validator',
   ],
+  searchTerms: [
+    'ajv online',
+    'jsonschema.net alternative',
+    'validate api payload',
+    'schema conformance checker',
+    'openapi schema checker',
+    'check json against spec',
+    'json schema linter',
+    'schema error path',
+  ],
   input: 'application/json',
   output: 'application/json',
   options: [

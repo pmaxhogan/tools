@@ -16,6 +16,18 @@ export const meta: ToolMeta = {
     'word diff online',
     'compare text differences',
   ],
+  searchTerms: [
+    'text compare tool',
+    'file compare online',
+    'compare two strings',
+    'patch viewer',
+    'side by side diff',
+    'inline diff',
+    'merge conflict viewer',
+    'string diff',
+    'compare json objects',
+    'compare yaml files',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

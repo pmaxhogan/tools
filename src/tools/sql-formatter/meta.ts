@@ -17,6 +17,18 @@ export const meta: ToolMeta = {
     'sql indent tool',
     'online sql formatter free',
   ],
+  searchTerms: [
+    'sql linter',
+    'reformat sql',
+    'sql code formatter',
+    'query beautifier',
+    'sql style formatter',
+    'sql capitalize keywords',
+    'multi statement sql formatter',
+    'oracle sql formatter',
+    'mariadb sql formatter',
+    'sql formatting rules',
+  ],
   input: 'text/plain',
   output: 'text/plain',
   options: [

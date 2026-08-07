@@ -14,6 +14,18 @@ export const meta: ToolMeta = {
     'local background removal',
     'portrait matting in browser',
   ],
+  searchTerms: [
+    'remove bg',
+    'transparent png maker',
+    'photo cutout tool',
+    'image matting',
+    'background eraser',
+    'alpha matte',
+    'silhouette cutout',
+    'erase photo background',
+    'modnet',
+    'clip person from photo',
+  ],
   input: 'image/*',
   output: 'application/json',
   options: [

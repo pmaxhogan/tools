@@ -16,6 +16,18 @@ export const meta: ToolMeta = {
     'split gif into frames',
     'gif editor without upload',
   ],
+  searchTerms: [
+    'ezgif alternative',
+    'gif compressor',
+    'shrink gif size',
+    'gif frame extractor',
+    'gif to frames',
+    'add caption to gif',
+    'gif meme maker',
+    'trim gif',
+    'change gif fps',
+    'gif palette fix',
+  ],
   input: 'image/*',
   output: 'application/json',
   options: [

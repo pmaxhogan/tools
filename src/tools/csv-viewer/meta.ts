@@ -16,6 +16,16 @@ export const meta: ToolMeta = {
     'view csv file',
     'csv column stats',
   ],
+  searchTerms: [
+    'excel alternative online',
+    'spreadsheet viewer',
+    'tsv opener',
+    'csv to table',
+    'csv reader online',
+    'view csv without excel',
+    'tabular data viewer',
+    'delimited file viewer',
+  ],
   input: 'text/csv',
   output: 'text/plain',
   options: [

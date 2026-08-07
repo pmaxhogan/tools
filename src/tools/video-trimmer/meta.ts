@@ -15,6 +15,18 @@ export const meta: ToolMeta = {
     'clip a video without uploading',
     'trim mp4 to webm',
   ],
+  searchTerms: [
+    'cut video clip',
+    'video cutter online',
+    'clip video without upload',
+    'crop video length',
+    'video editor trim',
+    'webcodecs trimmer',
+    'cut video to length',
+    'remove part of video',
+    'video splitter',
+    'shorten video clip',
+  ],
   input: 'video/*',
   output: 'application/json',
   options: [
