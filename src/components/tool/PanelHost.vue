@@ -19,6 +19,7 @@ const panels: Record<string, Component> = {
   "audio-trimmer": defineAsyncComponent(() => import("./panels/AudioTrimmerPanel.vue")),
   "background-remover": defineAsyncComponent(() => import("./panels/BackgroundRemoverPanel.vue")),
   "batch-processor": defineAsyncComponent(() => import("./panels/BatchProcessorPanel.vue")),
+  "bingo-card-generator": defineAsyncComponent(() => import("./panels/BingoBoardPanel.vue")),
   "ble-sensor-dashboard": defineAsyncComponent(() => import("./panels/BleDashboardPanel.vue")),
   "bulk-rename": defineAsyncComponent(() => import("./panels/BulkRenamePanel.vue")),
   "clipboard-inspector": defineAsyncComponent(() => import("./panels/ClipboardPanel.vue")),
