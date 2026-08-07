@@ -1,0 +1,20 @@
+---
+import ToolPage from '@/layouts/ToolPage.astro';
+import ToolShell from '@/components/tool/ToolShell.vue';
+import { tools } from '@/tools/registry';
+import type { ToolMeta } from '@/tools/types';
+
+export function getStaticPaths() {
+  return tools.map((t) => ({ params: { slug: t.slug }, props: { meta: t } }));
+}
+
+interface Props {
+  meta: ToolMeta;
+}
+
+const { meta } = Astro.props;
+---
+
+<ToolPage meta={meta}>
+  <ToolShell client:load meta={meta} />
+</ToolPage>

@@ -1,0 +1,89 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SiteHeader from '@/components/SiteHeader.astro';
+import type { ToolMeta } from '@/tools/types';
+
+export interface Props {
+  meta: ToolMeta;
+}
+
+const { meta } = Astro.props;
+const title = `${meta.name} — free, private, in your browser`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      name: meta.name,
+      description: meta.description,
+      url: new URL(`/${meta.slug}`, Astro.site).href,
+      applicationCategory: 'UtilityApplication',
+      operatingSystem: 'Any',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: meta.copy.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
+};
+---
+
+<BaseLayout title={title} description={meta.description} path={`/${meta.slug}`} jsonLd={jsonLd}>
+  <SiteHeader />
+  <main class="mx-auto max-w-3xl px-4 py-8">
+    <nav aria-label="Breadcrumb" class="text-xs text-muted-foreground">
+      <a href="/" class="hover:text-foreground">Tools</a>
+      <span aria-hidden="true"> / </span>
+      <span>{meta.category}</span>
+    </nav>
+    <h1 class="mt-2 text-2xl font-semibold tracking-tight">{meta.name}</h1>
+    <p class="mt-1 text-muted-foreground">{meta.description}</p>
+
+    <div class="mt-6">
+      <slot />
+    </div>
+
+    <section class="mt-12 space-y-3 border-t pt-6 text-sm">
+      <details>
+        <summary class="cursor-pointer font-medium">What it does</summary>
+        <p class="mt-2 text-muted-foreground">{meta.copy.what}</p>
+      </details>
+      <details>
+        <summary class="cursor-pointer font-medium">How to use it</summary>
+        <p class="mt-2 text-muted-foreground">{meta.copy.how}</p>
+      </details>
+      <details>
+        <summary class="cursor-pointer font-medium">Why this one</summary>
+        <p class="mt-2 text-muted-foreground">{meta.copy.why}</p>
+      </details>
+      <details>
+        <summary class="cursor-pointer font-medium">FAQ</summary>
+        <dl class="mt-2 space-y-3">
+          {
+            meta.copy.faq.map((f) => (
+              <div>
+                <dt class="font-medium">{f.q}</dt>
+                <dd class="mt-1 text-muted-foreground">{f.a}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </details>
+    </section>
+
+    <footer class="mt-12 border-t pt-6 text-xs text-muted-foreground">
+      <p>
+        No ads, no accounts, no limits. Your files and inputs never leave your device.
+        <a href="https://github.com/pmaxhogan/tools" class="underline hover:text-foreground"
+          >MIT licensed</a
+        >.
+      </p>
+    </footer>
+  </main>
+</BaseLayout>

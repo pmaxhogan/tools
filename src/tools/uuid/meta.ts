@@ -1,0 +1,46 @@
+import type { ToolMeta } from '../types';
+
+export const meta: ToolMeta = {
+  slug: 'uuid-generator',
+  matrixSlug: 'uuid',
+  name: 'UUID Generator',
+  description: 'Generate v4 (random) or v7 (time-ordered) UUIDs, one or a thousand at a time.',
+  category: 'Generators',
+  keywords: ['uuid', 'guid', 'uuid v4', 'uuid v7', 'uuid generator', 'random id'],
+  input: 'none',
+  output: 'text/plain',
+  options: [
+    {
+      kind: 'select',
+      id: 'version',
+      label: 'Version',
+      default: 'v4',
+      choices: [
+        { value: 'v4', label: 'v4 — random' },
+        { value: 'v7', label: 'v7 — time-ordered' },
+      ],
+    },
+    { kind: 'number', id: 'count', label: 'Count', default: 1, min: 1, max: 1000 },
+    { kind: 'boolean', id: 'uppercase', label: 'Uppercase', default: false },
+  ],
+  http: { method: 'GET', contentType: 'text/plain' },
+  copy: {
+    what: 'Generates RFC 9562 UUIDs in your browser using the cryptographically secure random source. Supports v4 (fully random) and v7 (time-ordered — sortable by creation time, ideal for database keys).',
+    how: 'Pick a version and a count, hit Generate, and copy the result. Generate up to 1000 at once. The options are stored in the URL so you can bookmark your preferred setup.',
+    why: 'No ads, no artificial caps on how many you can generate, and nothing is requested from a server — the IDs are generated locally and never logged anywhere.',
+    faq: [
+      {
+        q: 'Are these UUIDs cryptographically random?',
+        a: 'Yes — randomness comes from crypto.getRandomValues, the same secure source used for key generation.',
+      },
+      {
+        q: 'When should I use v7 instead of v4?',
+        a: 'Use v7 when IDs will be database keys or need to sort by creation time — the timestamp prefix keeps indexes efficient. Use v4 when you want no information leakage at all.',
+      },
+      {
+        q: 'Can anyone else see the generated IDs?',
+        a: 'No. Generation happens entirely on your device; the page makes no network requests with your data.',
+      },
+    ],
+  },
+};
