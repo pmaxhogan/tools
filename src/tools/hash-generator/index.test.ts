@@ -10,6 +10,25 @@ describe('hash-generator', () => {
     it('hashes "abc"', () => {
       expect(md5('abc')).toBe('900150983cd24fb0d6963f7d28e17f72');
     });
+
+    // Longer RFC 1321 vectors that force the padding to spill into a
+    // second 64-byte block (62 chars) and span two full blocks (80 chars),
+    // exercising the chunk-chaining path that "" and "abc" never touch.
+    it('hashes a 26-char single-block message', () => {
+      expect(md5('abcdefghijklmnopqrstuvwxyz')).toBe('c3fcd3d76192e4007dfb496cca67e13b');
+    });
+
+    it('hashes a 62-char message (padding spills into a second block)', () => {
+      expect(md5('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789')).toBe(
+        'd174ab98d277d9f5a5611c2c9f419d9f'
+      );
+    });
+
+    it('hashes an 80-char message spanning two full blocks', () => {
+      expect(
+        md5('12345678901234567890123456789012345678901234567890123456789012345678901234567890')
+      ).toBe('57edf4a22be3c955ac49da2e2107b67a');
+    });
   });
 
   it('computes every algorithm for "abc" against known vectors', async () => {

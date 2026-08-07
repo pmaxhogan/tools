@@ -65,7 +65,7 @@ describe('password-generator', () => {
         digits: false,
         symbols: false,
         seed: 'entropy-check-2',
-      })
+      }),
     );
     const expected = (Math.log2(LOWER.length) * 10).toFixed(1);
     expect(out.Entropy).toBe(`${expected} bits`);
@@ -74,7 +74,7 @@ describe('password-generator', () => {
   it('excludes ambiguous characters when requested', () => {
     const out = run(
       undefined,
-      passwordOpts({ length: 128, excludeAmbiguous: true, seed: 'ambiguous-check' })
+      passwordOpts({ length: 128, excludeAmbiguous: true, seed: 'ambiguous-check' }),
     );
     for (const ch of out.Password as string) {
       expect(AMBIGUOUS_CHARS.includes(ch)).toBe(false);
@@ -84,7 +84,7 @@ describe('password-generator', () => {
   it('omits symbols when the symbols charset is disabled', () => {
     const out = run(
       undefined,
-      passwordOpts({ length: 128, symbols: false, seed: 'no-symbols-check' })
+      passwordOpts({ length: 128, symbols: false, seed: 'no-symbols-check' }),
     );
     for (const ch of out.Password as string) {
       expect(SYMBOLS.includes(ch)).toBe(false);
@@ -94,7 +94,7 @@ describe('password-generator', () => {
   it('capitalizes and joins passphrase words with the given separator', () => {
     const out = run(
       undefined,
-      passphraseOpts({ words: 4, separator: '_', capitalize: true, seed: 'capitalize-check' })
+      passphraseOpts({ words: 4, separator: '_', capitalize: true, seed: 'capitalize-check' }),
     );
     const parts = (out.Passphrase as string).split('_');
     expect(parts).toHaveLength(4);
@@ -107,8 +107,8 @@ describe('password-generator', () => {
     expect(() =>
       run(
         undefined,
-        passwordOpts({ lowercase: false, uppercase: false, digits: false, symbols: false })
-      )
+        passwordOpts({ lowercase: false, uppercase: false, digits: false, symbols: false }),
+      ),
     ).toThrowError(ToolError);
   });
 

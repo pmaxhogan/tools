@@ -53,7 +53,7 @@ function makeXorshift128(seed: string): () => number {
     x = y;
     y = z;
     z = w;
-    w = (w ^ (w >>> 19)) ^ (t ^ (t >>> 8));
+    w = w ^ (w >>> 19) ^ (t ^ (t >>> 8));
     w >>>= 0;
     return w;
   };
@@ -99,7 +99,7 @@ function generatePassword(opts: PasswordOpts): { value: string; poolSize: number
     throw new ToolError(
       'no-charset',
       'At least one character set must be enabled to generate a password.',
-      'Turn on lowercase, uppercase, digits, or symbols.'
+      'Turn on lowercase, uppercase, digits, or symbols.',
     );
 
   const length = Math.floor(opts.length);
@@ -117,7 +117,10 @@ function generatePassphrase(opts: PasswordOpts): { value: string; wordCount: num
     throw new ToolError('bad-word-count', 'Word count must be between 3 and 12.');
 
   const next = makeRng(opts.seed || '');
-  const picked = Array.from({ length: count }, () => words[randomIndex(words.length, next)] as string);
+  const picked = Array.from(
+    { length: count },
+    () => words[randomIndex(words.length, next)] as string,
+  );
   const finalWords = opts.capitalize
     ? picked.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     : picked;
@@ -182,7 +185,7 @@ export const run: ToolLogic<undefined, PasswordResult, PasswordOpts>['run'] = (_
     throw new ToolError(
       'no-charset',
       'At least one character set must be enabled to generate a password.',
-      'Turn on lowercase, uppercase, digits, or symbols.'
+      'Turn on lowercase, uppercase, digits, or symbols.',
     );
 
   const { value, poolSize } = generatePassword(opts);
