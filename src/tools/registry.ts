@@ -48,6 +48,7 @@ import { meta as lineSorter } from './line-sorter/meta';
 import { meta as mojibakeFixer } from './mojibake-fixer/meta';
 import { meta as oauthScopeDecoder } from './oauth-scope-decoder/meta';
 import { meta as passwordGenerator } from './password-generator/meta';
+import { meta as pdfToolbox } from './pdf-toolbox/meta';
 import { meta as placeholderImage } from './placeholder-image/meta';
 import { meta as qrCodeGenerator } from './qr-code-generator/meta';
 import { meta as randomPicker } from './random-picker/meta';
@@ -107,6 +108,7 @@ export const tools: ToolMeta[] = [
   mojibakeFixer,
   oauthScopeDecoder,
   passwordGenerator,
+  pdfToolbox,
   placeholderImage,
   qrCodeGenerator,
   randomPicker,
@@ -170,6 +172,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'mojibake-fixer': () => import('./mojibake-fixer/index').then((m) => m.default),
   'oauth-scope-decoder': () => import('./oauth-scope-decoder/index').then((m) => m.default),
   'password-generator': () => import('./password-generator/index').then((m) => m.default),
+  'pdf-toolbox': () => import('./pdf-toolbox/index').then((m) => m.default),
   'placeholder-image': () => import('./placeholder-image/index').then((m) => m.default),
   'qr-code-generator': () => import('./qr-code-generator/index').then((m) => m.default),
   'random-picker': () => import('./random-picker/index').then((m) => m.default),
