@@ -513,6 +513,222 @@ export function freqToLabel(hz: number): string {
 }
 
 /* ------------------------------------------------------------------ */
+/* Container headers                                                   */
+/* ------------------------------------------------------------------ */
+
+function tag(bytes: Uint8Array, at: number, length: number): string {
+  if (at < 0 || at + length > bytes.length) return '';
+  let out = '';
+  for (let i = at; i < at + length; i++) out += String.fromCharCode(bytes[i]!);
+  return out;
+}
+
+function u32le(bytes: Uint8Array, at: number): number | null {
+  if (at < 0 || at + 4 > bytes.length) return null;
+  return (
+    bytes[at]! + bytes[at + 1]! * 0x100 + bytes[at + 2]! * 0x10000 + bytes[at + 3]! * 0x1000000
+  );
+}
+
+function u32be(bytes: Uint8Array, at: number): number | null {
+  if (at < 0 || at + 4 > bytes.length) return null;
+  return (
+    bytes[at]! * 0x1000000 + bytes[at + 1]! * 0x10000 + bytes[at + 2]! * 0x100 + bytes[at + 3]!
+  );
+}
+
+/** A sample rate is only believable when it is a positive whole number. */
+function positive(rate: number | null): number | null {
+  return rate !== null && Number.isFinite(rate) && rate > 0 ? rate : null;
+}
+
+/**
+ * WAV: walk the RIFF chunk list and read the rate out of the fmt chunk.
+ *
+ * The fmt chunk is conventionally first but nothing requires it, and writers
+ * routinely put JUNK, bext, or LIST ahead of it, so the chunks are walked
+ * rather than assumed to start at offset 12. RIFF pads odd sized chunks to an
+ * even boundary, and skipping that pad byte is what keeps the walk aligned.
+ */
+function sniffWav(bytes: Uint8Array): number | null {
+  if (tag(bytes, 0, 4) !== 'RIFF' || tag(bytes, 8, 4) !== 'WAVE') return null;
+  let p = 12;
+  while (p + 8 <= bytes.length) {
+    const id = tag(bytes, p, 4);
+    const size = u32le(bytes, p + 4);
+    if (size === null) return null;
+    if (id === 'fmt ' && size >= 16) {
+      // Field order in fmt: format tag (2), channels (2), sample rate (4).
+      return positive(u32le(bytes, p + 12));
+    }
+    p += 8 + size + (size % 2);
+  }
+  return null;
+}
+
+/**
+ * FLAC: the rate is a 20 bit field inside the mandatory STREAMINFO block.
+ *
+ * STREAMINFO is required to be the first metadata block, so its 4 byte header
+ * sits at offset 4 and its payload at offset 8. Inside that payload the rate
+ * starts 10 bytes in and is not byte aligned: 8 bits, then 8 bits, then the
+ * top 4 bits of the next byte.
+ */
+function sniffFlac(bytes: Uint8Array): number | null {
+  if (tag(bytes, 0, 4) !== 'fLaC') return null;
+  if (bytes.length < 21) return null;
+  if ((bytes[4]! & 0x7f) !== 0) return null;
+  const rate = (bytes[18]! << 12) | (bytes[19]! << 4) | (bytes[20]! >> 4);
+  return positive(rate);
+}
+
+/**
+ * Ogg: read the rate from a Vorbis identification header in the first page.
+ *
+ * Opus and other Ogg payloads return null on purpose. Opus always decodes at
+ * 48 kHz whatever the original rate was, so claiming a source rate for it
+ * would be a guess rather than a fact from the header.
+ */
+function sniffOgg(bytes: Uint8Array): number | null {
+  if (tag(bytes, 0, 4) !== 'OggS') return null;
+  if (bytes.length < 27) return null;
+  const segments = bytes[26]!;
+  const payload = 27 + segments;
+  if (payload + 16 > bytes.length) return null;
+  if (bytes[payload] !== 0x01 || tag(bytes, payload + 1, 6) !== 'vorbis') return null;
+  return positive(u32le(bytes, payload + 12));
+}
+
+/**
+ * Decode the IEEE 754 80 bit extended float that AIFF stores its rate in.
+ *
+ * The layout is a sign bit, a 15 bit exponent biased by 16383, and a 64 bit
+ * mantissa with an explicit leading one. The mantissa is split into two 32 bit
+ * halves here because a JavaScript number cannot hold all 64 bits exactly, and
+ * the 2**-63 in the exponent is what turns the integer mantissa into a
+ * fraction. 44100 Hz encodes as exponent 0x400E, mantissa 0xAC440000_00000000.
+ */
+function extended80(bytes: Uint8Array, at: number): number | null {
+  if (at + 10 > bytes.length) return null;
+  const first = bytes[at]!;
+  if ((first & 0x80) !== 0) return null;
+  const exponent = ((first & 0x7f) << 8) | bytes[at + 1]!;
+  // Zero is a zero or denormal rate, and all ones is an infinity or a NaN.
+  if (exponent === 0 || exponent === 0x7fff) return null;
+  const high = u32be(bytes, at + 2);
+  const low = u32be(bytes, at + 6);
+  if (high === null || low === null) return null;
+  const mantissa = high * 4294967296 + low;
+  const value = mantissa * Math.pow(2, exponent - 16383 - 63);
+  return positive(value);
+}
+
+/**
+ * AIFF and AIFC: walk the IFF chunk list to the COMM chunk.
+ *
+ * IFF is RIFF with big endian sizes, including the same even boundary padding,
+ * so the walk mirrors the WAV one with the byte order flipped.
+ */
+function sniffAiff(bytes: Uint8Array): number | null {
+  if (tag(bytes, 0, 4) !== 'FORM') return null;
+  const form = tag(bytes, 8, 4);
+  if (form !== 'AIFF' && form !== 'AIFC') return null;
+  let p = 12;
+  while (p + 8 <= bytes.length) {
+    const id = tag(bytes, p, 4);
+    const size = u32be(bytes, p + 4);
+    if (size === null) return null;
+    if (id === 'COMM' && size >= 18) {
+      // Field order in COMM: channels (2), frames (4), bits (2), rate (10).
+      const rate = extended80(bytes, p + 16);
+      return rate === null ? null : Math.round(rate);
+    }
+    p += 8 + size + (size % 2);
+  }
+  return null;
+}
+
+/** Sample rates by MPEG version bits, then by the 2 bit rate index. */
+const MPEG_RATES: Record<number, number[]> = {
+  // MPEG 1
+  3: [44100, 48000, 32000],
+  // MPEG 2
+  2: [22050, 24000, 16000],
+  // MPEG 2.5
+  0: [11025, 12000, 8000],
+};
+
+/** How far past any ID3 tag to keep looking for a valid frame header. */
+const MP3_SCAN_LIMIT = 65536;
+
+/**
+ * MP3: read the rate out of the first valid frame header.
+ *
+ * An ID3v2 tag is skipped first, using its synchsafe length (seven usable bits
+ * per byte, because a set high bit could otherwise look like a frame sync).
+ * The scan then walks forward because tags, padding, and garbage can sit
+ * between the tag and the first real frame.
+ */
+function sniffMp3(bytes: Uint8Array): number | null {
+  let start = 0;
+  const hasId3 = tag(bytes, 0, 3) === 'ID3';
+  if (hasId3) {
+    if (bytes.length < 10) return null;
+    const size =
+      ((bytes[6]! & 0x7f) << 21) |
+      ((bytes[7]! & 0x7f) << 14) |
+      ((bytes[8]! & 0x7f) << 7) |
+      (bytes[9]! & 0x7f);
+    start = 10 + size + ((bytes[5]! & 0x10) !== 0 ? 10 : 0);
+  } else if (!(bytes.length >= 4 && bytes[0] === 0xff && (bytes[1]! & 0xe0) === 0xe0)) {
+    // Neither an ID3 tag nor a frame sync at the very start: not an MP3.
+    return null;
+  }
+
+  const end = Math.min(bytes.length - 3, start + MP3_SCAN_LIMIT);
+  for (let p = Math.max(0, start); p < end; p++) {
+    if (bytes[p] !== 0xff) continue;
+    const b1 = bytes[p + 1]!;
+    if ((b1 & 0xe0) !== 0xe0) continue;
+    const version = (b1 >> 3) & 3;
+    // Version 1 and layer 0 are both reserved, so a header using them is noise.
+    if (version === 1) continue;
+    if (((b1 >> 1) & 3) === 0) continue;
+    const b2 = bytes[p + 2]!;
+    if (((b2 >> 4) & 0x0f) === 0x0f) continue;
+    const index = (b2 >> 2) & 3;
+    if (index === 3) continue;
+    const table = MPEG_RATES[version];
+    if (!table) continue;
+    return positive(table[index] ?? null);
+  }
+  return null;
+}
+
+/**
+ * Read the true sample rate straight out of a file's container header.
+ *
+ * This exists because `decodeAudioData` resamples to whatever rate the
+ * AudioContext runs at, so the decoded buffer reports 48000 Hz for an 8000 Hz
+ * recording and the frequency axis then runs to a Nyquist the file never had.
+ * Sniffing the header first lets the caller decode at the file's own rate.
+ *
+ * WAV, FLAC, Ogg Vorbis, AIFF, and MP3 are covered. Anything else, including
+ * MP4 and M4A, WebM, and Ogg Opus, returns null: the caller should decode
+ * normally and label the result as resampled rather than guess.
+ *
+ * The value is returned exactly as the header states it, with no range check,
+ * so an absurd rate stays visible to the caller instead of being silently
+ * turned into something plausible.
+ */
+export function sniffSampleRate(bytes: Uint8Array): number | null {
+  if (!bytes || bytes.length < 4) return null;
+  return (
+    sniffWav(bytes) ?? sniffFlac(bytes) ?? sniffOgg(bytes) ?? sniffAiff(bytes) ?? sniffMp3(bytes)
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* run                                                                 */
 /* ------------------------------------------------------------------ */
 

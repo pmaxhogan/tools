@@ -45,6 +45,13 @@ const MAX_ANALYSIS_SECONDS = 600;
 const MAX_COLUMNS = 2000;
 /** Bottom of the logarithmic frequency axis. Below this is mostly rumble. */
 const LOG_MIN_HZ = 20;
+/**
+ * Rates an OfflineAudioContext is asked to run at. The spec allows 8000 to
+ * 96000 everywhere and browsers accept far more, but a header can hold any
+ * number at all, so anything outside this band decodes the ordinary way.
+ */
+const MIN_DECODE_RATE = 8000;
+const MAX_DECODE_RATE = 384000;
 
 const GUTTER_LEFT = 56;
 const GUTTER_RIGHT = 12;
@@ -70,7 +77,10 @@ const fileInput = ref<HTMLInputElement>();
 
 const audioBuffer = shallowRef<AudioBuffer | null>(null);
 const mono = shallowRef<Float32Array | null>(null);
+/** The rate of the decoded buffer. Everything on the frequency axis uses this. */
 const sampleRate = ref(48000);
+/** The rate the file's own header states, or null when it could not be read. */
+const sourceRate = ref<number | null>(null);
 const fullDuration = ref(0);
 const analyzedDuration = ref(0);
 const channelCount = ref(0);
@@ -272,6 +282,7 @@ function resetAudio() {
   specImage = null;
   audioBuffer.value = null;
   mono.value = null;
+  sourceRate.value = null;
   columns.value = [];
   peaks.value = null;
   hover.value = null;
@@ -297,6 +308,38 @@ function toMono(buffer: AudioBuffer, maxSamples: number): Float32Array {
   return out;
 }
 
+/**
+ * Decode without letting the browser rewrite the sample rate.
+ *
+ * `decodeAudioData` resamples to whatever rate its context runs at, which is
+ * normally 48 kHz, so an 8 kHz recording came back claiming 48 kHz and the
+ * frequency axis ran to 24 kHz with nothing above 4 kHz in it. Decoding on an
+ * OfflineAudioContext pinned to the file's own rate skips the resampler, so
+ * `buffer.sampleRate` is the real one and the axis follows.
+ *
+ * The fallback matters: not every browser accepts an arbitrary offline rate or
+ * implements decodeAudioData on an offline context, and a resampled picture is
+ * much better than no picture. The caller labels that case honestly.
+ */
+async function decodeAudio(bytes: Uint8Array, rate: number | null): Promise<AudioBuffer> {
+  // decodeAudioData detaches the buffer it is handed, so every attempt gets a
+  // fresh copy and the sniffed bytes stay readable for the error path.
+  if (rate !== null && rate >= MIN_DECODE_RATE && rate <= MAX_DECODE_RATE) {
+    try {
+      const offline = new OfflineAudioContext({
+        numberOfChannels: 1,
+        length: 1,
+        sampleRate: rate,
+      });
+      return await offline.decodeAudioData(bytes.slice().buffer as ArrayBuffer);
+    } catch {
+      // Fall through to the shared context below.
+    }
+  }
+  const ac = ensureAudioContext();
+  return await ac.decodeAudioData(bytes.slice().buffer as ArrayBuffer);
+}
+
 async function readFile(file: File) {
   analysisToken += 1;
   resetAudio();
@@ -316,10 +359,10 @@ async function readFile(file: File) {
 
   try {
     logic.value ??= await loadLogic();
-    const ac = ensureAudioContext();
-    // decodeAudioData detaches the buffer it is handed, so it gets a copy and
-    // the sniffed bytes stay readable for the error path below.
-    const buffer = await ac.decodeAudioData(bytes.slice().buffer as ArrayBuffer);
+    // The container header is the only honest source of the original rate.
+    const sniffed = logic.value.sniffSampleRate(bytes);
+    sourceRate.value = sniffed;
+    const buffer = await decodeAudio(bytes, sniffed);
     audioBuffer.value = buffer;
     sampleRate.value = buffer.sampleRate;
     fullDuration.value = buffer.duration;
@@ -955,12 +998,33 @@ watch(fftSize, () => {
   analyze();
 });
 
+/**
+ * The rate part of the file info line.
+ *
+ * Three cases, and all three have to be told apart. The header rate and the
+ * decoded rate agree: print the one number. They disagree, which happens when
+ * the offline decode was refused and the shared context resampled: print both.
+ * The header could not be read at all: print only what the decode produced and
+ * say so, rather than passing a browser default off as a fact about the file.
+ */
+const rateSummary = computed(() => {
+  const decoded = sampleRate.value;
+  const source = sourceRate.value;
+  if (source === null) {
+    return `decoded at ${decoded.toLocaleString()} Hz (browser resampled)`;
+  }
+  if (Math.round(source) === Math.round(decoded)) {
+    return `${source.toLocaleString()} Hz`;
+  }
+  return `${source.toLocaleString()} Hz source, decoded at ${decoded.toLocaleString()} Hz (browser resampled)`;
+});
+
 const summary = computed(() => {
   if (!hasAudio.value) return '';
   const channels = channelCount.value === 1 ? 'mono' : `${channelCount.value} channels`;
   const mod = logic.value;
   const length = mod ? mod.secondsToLabel(fullDuration.value) : '';
-  return `${length}, ${sampleRate.value.toLocaleString()} Hz, ${channels}`;
+  return `${length}, ${rateSummary.value}, ${channels}`;
 });
 
 const hoverChipStyle = computed(() => {

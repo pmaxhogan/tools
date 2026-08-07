@@ -15,6 +15,7 @@ import {
   planSpectrogram,
   run,
   secondsToLabel,
+  sniffSampleRate,
   type ColorScheme,
   type SpectrogramOptions,
 } from './index';
@@ -529,5 +530,343 @@ describe('audio-spectrogram: run', () => {
   it('rejects text input', () => {
     expect(() => run('not audio', OPTS)).toThrow(ToolError);
     expect(() => run('not audio', OPTS)).toThrow(/audio bytes/);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* sniffSampleRate                                                     */
+/* ------------------------------------------------------------------ */
+
+function ascii(text: string): number[] {
+  return [...text].map((c) => c.charCodeAt(0));
+}
+
+function le16(n: number): number[] {
+  return [n & 0xff, (n >> 8) & 0xff];
+}
+
+function le32(n: number): number[] {
+  return [n & 0xff, (n >>> 8) & 0xff, (n >>> 16) & 0xff, (n >>> 24) & 0xff];
+}
+
+function be16(n: number): number[] {
+  return [(n >> 8) & 0xff, n & 0xff];
+}
+
+function be32(n: number): number[] {
+  return [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff];
+}
+
+function join(...parts: number[][]): Uint8Array {
+  return Uint8Array.from(parts.flat());
+}
+
+/** A RIFF or IFF chunk body of `size` bytes, padded to an even boundary. */
+function filler(size: number): number[] {
+  return new Array(size + (size % 2)).fill(0x5a);
+}
+
+function wavFmt(rate: number, channels = 1, bits = 16): number[] {
+  return [
+    ...ascii('fmt '),
+    ...le32(16),
+    ...le16(1),
+    ...le16(channels),
+    ...le32(rate),
+    ...le32((rate * channels * bits) / 8),
+    ...le16((channels * bits) / 8),
+    ...le16(bits),
+  ];
+}
+
+function wav(...chunks: number[][]): Uint8Array {
+  const body = chunks.flat();
+  return join(ascii('RIFF'), le32(4 + body.length), ascii('WAVE'), body);
+}
+
+function flac(rate: number, blockType = 0, channels = 2, bps = 16): Uint8Array {
+  const info: number[] = new Array(34).fill(0);
+  info[10] = (rate >> 12) & 0xff;
+  info[11] = (rate >> 4) & 0xff;
+  // The low nibble of the rate shares this byte with the channel count and the
+  // bit depth, so the neighbours are filled in to prove the field really is
+  // read as 20 bits rather than as two and a half bytes.
+  info[12] = ((rate & 0x0f) << 4) | (((channels - 1) & 0x07) << 1) | (((bps - 1) >> 4) & 1);
+  return join(ascii('fLaC'), [blockType & 0x7f, 0x00, 0x00, 0x22], info);
+}
+
+function oggPage(payload: number[], segments = 1): Uint8Array {
+  const table: number[] = new Array(segments).fill(0);
+  table[segments - 1] = Math.min(255, payload.length);
+  return join(
+    ascii('OggS'),
+    [0x00, 0x02],
+    new Array(8).fill(0),
+    le32(1),
+    le32(0),
+    le32(0),
+    [segments],
+    table,
+    payload,
+  );
+}
+
+function vorbisIdent(rate: number, channels = 2): number[] {
+  return [
+    0x01,
+    ...ascii('vorbis'),
+    ...le32(0),
+    channels,
+    ...le32(rate),
+    ...le32(0),
+    ...le32(0),
+    ...le32(0),
+    0xb8,
+    0x01,
+  ];
+}
+
+function aiffComm(extended: number[], frames = 1000): number[] {
+  return [...ascii('COMM'), ...be32(18), ...be16(1), ...be32(frames), ...be16(16), ...extended];
+}
+
+function aiff(formType: string, ...chunks: number[][]): Uint8Array {
+  const body = chunks.flat();
+  return join(ascii('FORM'), be32(4 + body.length), ascii(formType), body);
+}
+
+function id3(size: number, flags = 0): number[] {
+  return [
+    ...ascii('ID3'),
+    0x04,
+    0x00,
+    flags,
+    (size >> 21) & 0x7f,
+    (size >> 14) & 0x7f,
+    (size >> 7) & 0x7f,
+    size & 0x7f,
+  ];
+}
+
+/**
+ * Cut a fixture off at every possible length and check the sniffer never reads
+ * out of bounds: below `needed` bytes the rate field is incomplete and the
+ * answer must be null, and from there on it must be the real rate.
+ */
+function expectTruncationSafe(full: Uint8Array, needed: number, rate: number): void {
+  for (let n = 0; n <= full.length; n++) {
+    expect(sniffSampleRate(full.slice(0, n))).toBe(n < needed ? null : rate);
+  }
+}
+
+describe('audio-spectrogram: sniffSampleRate, WAV', () => {
+  it('reads the rate from a plain 8 kHz mono file', () => {
+    expect(sniffSampleRate(wav(wavFmt(8000)))).toBe(8000);
+  });
+
+  it('reads 44.1 kHz and 96 kHz too', () => {
+    expect(sniffSampleRate(wav(wavFmt(44100, 2)))).toBe(44100);
+    expect(sniffSampleRate(wav(wavFmt(96000, 2, 24)))).toBe(96000);
+  });
+
+  it('walks past a JUNK chunk instead of assuming fmt sits at offset 12', () => {
+    const junk = [...ascii('JUNK'), ...le32(28), ...filler(28)];
+    expect(sniffSampleRate(wav(junk, wavFmt(11025)))).toBe(11025);
+  });
+
+  it('skips the pad byte after an odd sized chunk', () => {
+    const odd = [...ascii('LIST'), ...le32(3), ...filler(3)];
+    expect(sniffSampleRate(wav(odd, wavFmt(22050)))).toBe(22050);
+  });
+
+  it('walks several chunks, odd and even, before fmt', () => {
+    const bext = [...ascii('bext'), ...le32(9), ...filler(9)];
+    const junk = [...ascii('JUNK'), ...le32(4), ...filler(4)];
+    const cue = [...ascii('cue '), ...le32(1), ...filler(1)];
+    expect(sniffSampleRate(wav(bext, junk, cue, wavFmt(48000)))).toBe(48000);
+  });
+
+  it('returns null when the fmt chunk never arrives', () => {
+    const junk = [...ascii('JUNK'), ...le32(20), ...filler(20)];
+    expect(sniffSampleRate(wav(junk))).toBeNull();
+  });
+
+  it('returns null for a RIFF file that is not WAVE', () => {
+    const avi = join(ascii('RIFF'), le32(100), ascii('AVI '), wavFmt(44100));
+    expect(sniffSampleRate(avi)).toBeNull();
+  });
+
+  it('stays in bounds for the header truncated at every length', () => {
+    // 12 bytes of RIFF header, 8 of chunk header, 4 into fmt, then the 4 byte
+    // rate itself, so 28 bytes is the shortest file that can answer.
+    expectTruncationSafe(wav(wavFmt(44100)), 28, 44100);
+  });
+
+  it('returns null when a chunk size runs past the end of the file', () => {
+    const lying = [...ascii('JUNK'), ...le32(0x7fffffff)];
+    expect(sniffSampleRate(wav(lying, wavFmt(44100)))).toBeNull();
+  });
+
+  it('returns null for a zero sample rate', () => {
+    expect(sniffSampleRate(wav(wavFmt(0)))).toBeNull();
+  });
+});
+
+describe('audio-spectrogram: sniffSampleRate, FLAC', () => {
+  it('reads the packed 20 bit rate field', () => {
+    expect(sniffSampleRate(flac(44100))).toBe(44100);
+    expect(sniffSampleRate(flac(48000))).toBe(48000);
+    expect(sniffSampleRate(flac(8000))).toBe(8000);
+    expect(sniffSampleRate(flac(192000))).toBe(192000);
+  });
+
+  it('ignores the channel and bit depth bits sharing the last byte', () => {
+    expect(sniffSampleRate(flac(96000, 0, 8, 32))).toBe(96000);
+  });
+
+  it('returns null when the first metadata block is not STREAMINFO', () => {
+    expect(sniffSampleRate(flac(44100, 4))).toBeNull();
+  });
+
+  it('returns null for a zero rate, which FLAC uses to mean unknown', () => {
+    expect(sniffSampleRate(flac(0))).toBeNull();
+  });
+
+  it('stays in bounds for the header truncated at every length', () => {
+    // The 20 bit rate ends inside byte 20, so 21 bytes is the whole field.
+    expectTruncationSafe(flac(44100), 21, 44100);
+  });
+});
+
+describe('audio-spectrogram: sniffSampleRate, Ogg', () => {
+  it('reads the rate from a Vorbis identification header', () => {
+    expect(sniffSampleRate(oggPage(vorbisIdent(44100)))).toBe(44100);
+    expect(sniffSampleRate(oggPage(vorbisIdent(8000, 1)))).toBe(8000);
+  });
+
+  it('honours the segment table length instead of a fixed payload offset', () => {
+    expect(sniffSampleRate(oggPage(vorbisIdent(32000), 4))).toBe(32000);
+    expect(sniffSampleRate(oggPage(vorbisIdent(32000), 17))).toBe(32000);
+  });
+
+  it('returns null for Ogg Opus, which always decodes at 48 kHz anyway', () => {
+    const opus = [...ascii('OpusHead'), 1, 2, ...le16(312), ...le32(48000), 0, 0, 0];
+    expect(sniffSampleRate(oggPage(opus))).toBeNull();
+  });
+
+  it('stays in bounds for the header truncated at every length', () => {
+    // 27 bytes of page header, 1 of segment table, then 16 into the payload.
+    expectTruncationSafe(oggPage(vorbisIdent(44100)), 44, 44100);
+  });
+});
+
+describe('audio-spectrogram: sniffSampleRate, AIFF', () => {
+  // 44100 Hz as an 80 bit extended float: exponent 0x400e, mantissa 0xac44...
+  const EXT_44100 = [0x40, 0x0e, 0xac, 0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+  const EXT_8000 = [0x40, 0x0b, 0xfa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+  const EXT_96000 = [0x40, 0x0f, 0xbb, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+
+  it('decodes the 80 bit extended sample rate', () => {
+    expect(sniffSampleRate(aiff('AIFF', aiffComm(EXT_44100)))).toBe(44100);
+    expect(sniffSampleRate(aiff('AIFF', aiffComm(EXT_8000)))).toBe(8000);
+    expect(sniffSampleRate(aiff('AIFF', aiffComm(EXT_96000)))).toBe(96000);
+  });
+
+  it('accepts the AIFC form type', () => {
+    expect(sniffSampleRate(aiff('AIFC', aiffComm(EXT_44100)))).toBe(44100);
+  });
+
+  it('walks big endian chunks, including the odd size pad', () => {
+    const name = [...ascii('NAME'), ...be32(5), ...filler(5)];
+    const anno = [...ascii('ANNO'), ...be32(12), ...filler(12)];
+    expect(sniffSampleRate(aiff('AIFF', name, anno, aiffComm(EXT_8000)))).toBe(8000);
+  });
+
+  it('returns null for a zero exponent and for a negative rate', () => {
+    const zero = [0x00, 0x00, 0xac, 0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+    const negative = [0xc0, 0x0e, 0xac, 0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+    expect(sniffSampleRate(aiff('AIFF', aiffComm(zero)))).toBeNull();
+    expect(sniffSampleRate(aiff('AIFF', aiffComm(negative)))).toBeNull();
+  });
+
+  it('returns null when there is no COMM chunk', () => {
+    const ssnd = [...ascii('SSND'), ...be32(8), ...filler(8)];
+    expect(sniffSampleRate(aiff('AIFF', ssnd))).toBeNull();
+  });
+
+  it('stays in bounds for the header truncated at every length', () => {
+    // 12 bytes of FORM header, 8 of chunk header, 8 of COMM fields, 10 of float.
+    expectTruncationSafe(aiff('AIFF', aiffComm(EXT_44100)), 38, 44100);
+  });
+});
+
+describe('audio-spectrogram: sniffSampleRate, MP3', () => {
+  it('reads MPEG 1 layer 3 rates from a bare frame header', () => {
+    expect(sniffSampleRate(Uint8Array.from([0xff, 0xfb, 0x90, 0x00]))).toBe(44100);
+    expect(sniffSampleRate(Uint8Array.from([0xff, 0xfb, 0x94, 0x00]))).toBe(48000);
+    expect(sniffSampleRate(Uint8Array.from([0xff, 0xfb, 0x98, 0x00]))).toBe(32000);
+  });
+
+  it('reads MPEG 2 and MPEG 2.5 rates', () => {
+    expect(sniffSampleRate(Uint8Array.from([0xff, 0xf3, 0x90, 0x00]))).toBe(22050);
+    expect(sniffSampleRate(Uint8Array.from([0xff, 0xe3, 0x90, 0x00]))).toBe(11025);
+    expect(sniffSampleRate(Uint8Array.from([0xff, 0xe3, 0x98, 0x00]))).toBe(8000);
+  });
+
+  it('skips an ID3v2 tag using its synchsafe length', () => {
+    // A synchsafe 200 is 0x01 0x48, which a plain 8 bit read would misjudge.
+    const file = join(id3(200), new Array(200).fill(0x00), [0xff, 0xfb, 0x90, 0x00]);
+    expect(sniffSampleRate(file)).toBe(44100);
+  });
+
+  it('accounts for the ten byte ID3 footer when the flag is set', () => {
+    const file = join(id3(16, 0x10), new Array(26).fill(0x00), [0xff, 0xe3, 0x98, 0x00]);
+    expect(sniffSampleRate(file)).toBe(8000);
+  });
+
+  it('skips reserved version and layer bits and keeps scanning', () => {
+    // 0xff 0xea has version bits 01 (reserved) and 0xff 0xf9 has layer bits 00.
+    const file = join(
+      [0xff, 0xea, 0x90, 0x00],
+      [0xff, 0xf9, 0x90, 0x00],
+      [0xff, 0xfb, 0x94, 0x00],
+    );
+    expect(sniffSampleRate(file)).toBe(48000);
+  });
+
+  it('rejects the reserved rate index and the invalid bitrate index', () => {
+    expect(sniffSampleRate(Uint8Array.from([0xff, 0xfb, 0x9c, 0x00]))).toBeNull();
+    expect(sniffSampleRate(Uint8Array.from([0xff, 0xfb, 0xf0, 0x00]))).toBeNull();
+  });
+
+  it('returns null when an ID3 tag is followed by no frame at all', () => {
+    expect(sniffSampleRate(join(id3(8), new Array(8).fill(0x00)))).toBeNull();
+  });
+});
+
+describe('audio-spectrogram: sniffSampleRate, unknown containers', () => {
+  it('returns null for MP4 and M4A', () => {
+    const m4a = join(be32(32), ascii('ftypM4A '), le32(0), ascii('M4A mp42isom'));
+    expect(sniffSampleRate(m4a)).toBeNull();
+  });
+
+  it('returns null for WebM', () => {
+    const webm = join([0x1a, 0x45, 0xdf, 0xa3], new Array(40).fill(0x00));
+    expect(sniffSampleRate(webm)).toBeNull();
+  });
+
+  it('returns null for junk, for text, and for an empty file', () => {
+    expect(sniffSampleRate(new Uint8Array(0))).toBeNull();
+    expect(sniffSampleRate(Uint8Array.from(ascii('hello world, not audio')))).toBeNull();
+    expect(sniffSampleRate(new Uint8Array(64))).toBeNull();
+  });
+
+  it('returns null for pseudo random bytes', () => {
+    const random = lcg(20260807);
+    const bytes = new Uint8Array(512);
+    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(random() * 256);
+    // Only a sync in the first two bytes would start an MP3 scan at all.
+    bytes[0] = 0x00;
+    expect(sniffSampleRate(bytes)).toBeNull();
   });
 });
