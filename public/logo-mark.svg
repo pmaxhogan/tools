@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="tools.maxhogan.dev">
+  <defs>
+    <linearGradient id="brand" gradientUnits="userSpaceOnUse" x1="12" y1="12" x2="54" y2="54">
+      <stop offset="0" stop-color="#5B4BD6"/>
+      <stop offset="1" stop-color="#8A79F5"/>
+    </linearGradient>
+    <linearGradient id="brandHead" gradientUnits="userSpaceOnUse" x1="0" y1="-7" x2="0" y2="7">
+      <stop offset="0" stop-color="#5B4BD6"/>
+      <stop offset="1" stop-color="#6E5DE6"/>
+    </linearGradient>
+  </defs>
+  <line x1="36" y1="36" x2="22" y2="22" stroke="url(#brand)" stroke-width="8" stroke-linecap="round"/>
+  <g transform="translate(20 20) rotate(-45)">
+    <path d="M-15 -7 L15 -5.5 L15 5.5 L-15 7 L-10 0 Z"
+          fill="url(#brandHead)" stroke="url(#brandHead)" stroke-width="3.4" stroke-linejoin="round"/>
+  </g>
+  <circle cx="42" cy="42" r="11" fill="none" stroke="url(#brand)" stroke-width="6.5"/>
+</svg>

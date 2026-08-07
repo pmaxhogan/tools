@@ -32,6 +32,8 @@ import { meta as discordTimestampMeta } from '../src/tools/discord-timestamp/met
 import { run as discordTimestampRun } from '../src/tools/discord-timestamp/index';
 import { meta as durationCalculatorMeta } from '../src/tools/duration-calculator/meta';
 import { run as durationCalculatorRun } from '../src/tools/duration-calculator/index';
+import { meta as electromagneticSpectrumMeta } from '../src/tools/electromagnetic-spectrum/meta';
+import { run as electromagneticSpectrumRun } from '../src/tools/electromagnetic-spectrum/index';
 import { meta as emailHeaderAnalyzerMeta } from '../src/tools/email-header-analyzer/meta';
 import { run as emailHeaderAnalyzerRun } from '../src/tools/email-header-analyzer/index';
 import { meta as epochConverterMeta } from '../src/tools/epoch-converter/meta';
@@ -149,6 +151,9 @@ const ALL: Endpoint[] = [
   }),
   expose(discordTimestampMeta, discordTimestampRun, { sample: '2026-08-06T21:00:00Z' }),
   expose(durationCalculatorMeta, durationCalculatorRun, { sample: '1h 30m + 45m' }),
+  expose(electromagneticSpectrumMeta, electromagneticSpectrumRun, {
+    sampleQuery: 'query=2.45%20GHz',
+  }),
   expose(emailHeaderAnalyzerMeta, emailHeaderAnalyzerRun, {
     sampleQuery: 'section=hops',
     sampleCommand: (base) =>

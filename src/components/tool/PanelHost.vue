@@ -29,6 +29,9 @@ const panels: Record<string, Component> = {
   ),
   'display-info': defineAsyncComponent(() => import('./panels/DisplayInfoPanel.vue')),
   'duplicate-finder': defineAsyncComponent(() => import('./panels/DuplicateFinderPanel.vue')),
+  'electromagnetic-spectrum': defineAsyncComponent(
+    () => import('./panels/ElectromagneticSpectrumPanel.vue'),
+  ),
   'favicon-generator': defineAsyncComponent(() => import('./panels/FaviconPanel.vue')),
   'firmware-flasher': defineAsyncComponent(() => import('./panels/FirmwareFlasherPanel.vue')),
   'folder-diff': defineAsyncComponent(() => import('./panels/FolderDiffPanel.vue')),

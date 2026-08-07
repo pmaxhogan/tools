@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="tools.maxhogan.dev">
+  <defs>
+    <linearGradient id="brand" gradientUnits="userSpaceOnUse" x1="14" y1="14" x2="52" y2="52">
+      <stop offset="0" stop-color="#5B4BD6"/>
+      <stop offset="1" stop-color="#8A79F5"/>
+    </linearGradient>
+    <linearGradient id="brandHead" gradientUnits="userSpaceOnUse" x1="0" y1="-6" x2="0" y2="6">
+      <stop offset="0" stop-color="#5B4BD6"/>
+      <stop offset="1" stop-color="#6E5DE6"/>
+    </linearGradient>
+  </defs>
+  <!-- short thick shaft: shared hammer handle / magnifier grip -->
+  <line x1="34" y1="34" x2="23" y2="23" stroke="url(#brand)" stroke-width="7.5" stroke-linecap="round"/>
+  <!-- claw hammer head: dominant chunky bar, striking face + blunt claw end -->
+  <g transform="translate(19 19) rotate(-45)">
+    <path d="M-14 -6 L14 -4.5 L14 4.5 L-14 6 L-9.5 0 Z"
+          fill="url(#brandHead)" stroke="url(#brandHead)" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <!-- magnifying-glass lens at the lower-right end -->
+  <circle cx="41" cy="41" r="10.5" fill="none" stroke="url(#brand)" stroke-width="6"/>
+</svg>

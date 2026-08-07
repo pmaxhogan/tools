@@ -32,6 +32,7 @@ import { meta as discordVideoCompressor } from './discord-video-compressor/meta'
 import { meta as displayInfo } from './display-info/meta';
 import { meta as duplicateFinder } from './duplicate-finder/meta';
 import { meta as durationCalculator } from './duration-calculator/meta';
+import { meta as electromagneticSpectrum } from './electromagnetic-spectrum/meta';
 import { meta as emailHeaderAnalyzer } from './email-header-analyzer/meta';
 import { meta as epochConverter } from './epoch-converter/meta';
 import { meta as escapeUnescape } from './escape-unescape/meta';
@@ -112,6 +113,7 @@ export const tools: ToolMeta[] = [
   dmarcReportViewer,
   duplicateFinder,
   durationCalculator,
+  electromagneticSpectrum,
   emailHeaderAnalyzer,
   epochConverter,
   escapeUnescape,
@@ -195,6 +197,8 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'dmarc-report-viewer': () => import('./dmarc-report-viewer/index').then((m) => m.default),
   'duplicate-finder': () => import('./duplicate-finder/index').then((m) => m.default),
   'duration-calculator': () => import('./duration-calculator/index').then((m) => m.default),
+  'electromagnetic-spectrum': () =>
+    import('./electromagnetic-spectrum/index').then((m) => m.default),
   'email-header-analyzer': () => import('./email-header-analyzer/index').then((m) => m.default),
   'epoch-converter': () => import('./epoch-converter/index').then((m) => m.default),
   'escape-unescape': () => import('./escape-unescape/index').then((m) => m.default),
