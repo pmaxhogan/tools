@@ -23,8 +23,12 @@ const props = defineProps<{ meta: ToolMeta }>();
 const ICO_SIZES = [16, 32, 48];
 /** Every size rendered, in preview order. */
 const ALL_SIZES = [16, 32, 48, 180, 192, 512];
-/** Widest a preview tile may draw. Only the 512 pixel icon exceeds it. */
-const PREVIEW_CAP = 192;
+/** Widest a preview image may draw inside its cell. 16, 32 and 48 stay at
+ *  natural size since they never reach this; 180, 192 and 512 scale down to it. */
+const PREVIEW_CAP = 80;
+/** Fixed size of every preview cell, so the strip stays aligned regardless of
+ *  how small or large the icon inside each cell is. */
+const PREVIEW_CELL = 96;
 /** Gap between saves in "Download all" so browsers do not drop files. */
 const DOWNLOAD_GAP_MS = 250;
 
@@ -700,28 +704,25 @@ onUnmounted(() => {
     <template v-if="rasters.length && !error">
       <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">Preview</span>
-        <div class="flex flex-wrap items-end gap-4">
+        <div class="flex flex-wrap gap-3">
           <div
             v-for="raster in rasters"
             :key="raster.size"
             class="flex flex-col items-center gap-1.5"
+            :style="{ width: `${PREVIEW_CELL}px` }"
           >
-            <img
-              :src="raster.url"
-              :alt="`Icon rendered at ${raster.size} pixels`"
-              :width="previewWidth(raster.size)"
-              :height="previewWidth(raster.size)"
-              class="rounded-[6px] bg-background shadow-[var(--sh-inset)]"
-              :style="{ width: `${previewWidth(raster.size)}px`, height: `${previewWidth(raster.size)}px` }"
+            <div
+              class="grid shrink-0 place-items-center rounded-[6px] bg-background shadow-[var(--sh-inset)]"
+              :style="{ width: `${PREVIEW_CELL}px`, height: `${PREVIEW_CELL}px` }"
             >
+              <img
+                :src="raster.url"
+                :alt="`Icon rendered at ${raster.size} pixels`"
+                :style="{ width: `${previewWidth(raster.size)}px`, height: `${previewWidth(raster.size)}px` }"
+              >
+            </div>
             <span class="font-mono text-[11px] text-muted-foreground tabular-nums">
               {{ raster.size }} px
-            </span>
-            <span
-              v-if="raster.size > PREVIEW_CAP"
-              class="text-[11px] text-muted-foreground"
-            >
-              shown at {{ PREVIEW_CAP }} px
             </span>
           </div>
         </div>

@@ -12,8 +12,8 @@ describe('html-to-markdown', () => {
     );
     expect(md).toContain('# Title');
     expect(md).toContain('Some **bold** prose.');
-    expect(md).toContain('-   one');
-    expect(md).toContain('-   two');
+    expect(md).toContain('- one');
+    expect(md).toContain('- two');
     expect(md.endsWith('\n')).toBe(true);
     expect(md.endsWith('\n\n')).toBe(false);
   });
@@ -80,6 +80,16 @@ describe('html-to-markdown', () => {
     const md = run('<ul><li>outer<ul><li>inner</li></ul></li></ul>', opts);
     expect(md).toMatch(/^-\s+outer/m);
     expect(md).toMatch(/\n[ \t]+-\s+inner/);
+  });
+
+  it('emits a single space after the list marker', () => {
+    const md = run('<ul><li>one</li><li>two</li></ul>', opts);
+    expect(md).toBe('- one\n- two\n');
+  });
+
+  it('keeps nested list indentation valid with the single-space marker', () => {
+    const md = run('<ul><li>outer<ul><li>inner</li></ul></li></ul>', opts);
+    expect(md).toBe('- outer\n  - inner\n');
   });
 
   it('converts pre + code to a fenced code block', () => {

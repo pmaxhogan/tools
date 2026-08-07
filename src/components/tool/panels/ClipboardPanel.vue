@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onUnmounted, ref } from 'vue';
 import type { ToolMeta } from '@/tools/types';
 import { run } from '@/tools/clipboard-inspector/index';
 import type { ClipboardEntrySnapshot, ClipboardSnapshot } from '@/tools/clipboard-inspector/index';
@@ -32,13 +32,26 @@ interface MarkupPreview {
 }
 
 const MAX_TEXT_CHARS = 2000;
+/** How long a read runs before the panel explains that the browser's own
+ *  permission prompt, not this page, is what it is waiting on. */
+const SLOW_READ_MS = 1500;
 
 const output = ref<Record<string, string> | null>(null);
 const imagePreviews = ref<ImagePreview[]>([]);
 const markupPreviews = ref<MarkupPreview[]>([]);
 const reading = ref(false);
+const readingSlow = ref(false);
 const errorTitle = ref<string | null>(null);
 const errorDetail = ref<string | null>(null);
+let slowReadTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearSlowReadTimer() {
+  if (slowReadTimer !== null) {
+    clearTimeout(slowReadTimer);
+    slowReadTimer = null;
+  }
+  readingSlow.value = false;
+}
 
 function resetState() {
   output.value = null;
@@ -92,6 +105,10 @@ async function readClipboard() {
   }
 
   reading.value = true;
+  clearSlowReadTimer();
+  slowReadTimer = setTimeout(() => {
+    readingSlow.value = true;
+  }, SLOW_READ_MS);
   try {
     const items = await navigator.clipboard.read();
 
@@ -139,12 +156,17 @@ async function readClipboard() {
     errorDetail.value = described.detail;
   } finally {
     reading.value = false;
+    clearSlowReadTimer();
   }
 }
 
 function clear() {
   resetState();
 }
+
+onUnmounted(() => {
+  clearSlowReadTimer();
+});
 </script>
 
 <template>
@@ -170,6 +192,15 @@ function clear() {
         Clear
       </Button>
     </div>
+
+    <p
+      v-if="reading && readingSlow"
+      class="text-xs text-muted-foreground"
+      aria-live="polite"
+    >
+      Still waiting on the browser. Check for a permission prompt near the address bar and allow
+      clipboard access. This page cannot read the clipboard without it.
+    </p>
 
     <p class="text-xs text-muted-foreground">
       Everything runs locally: your files and inputs never leave your device. The clipboard is only

@@ -204,6 +204,29 @@ function buildService(opts: ToMarkdownOpts): TurndownService {
   if (opts.keepLinks === false) {
     service.addRule('unlinkAnchors', { filter: 'a', replacement: (content: string) => content });
   }
+
+  // Turndown's built in listItem rule pads the marker out to a fixed column
+  // ("-   " for bullets, "1.  " for ordered items) so nested content lines up.
+  // That reads as a stray run of spaces, so this replaces it with a single
+  // space after the marker. Continuation lines still indent to the width of
+  // the new, shorter prefix, so nesting stays valid.
+  service.addRule('listItem', {
+    filter: 'li',
+    replacement: (content, node, options) => {
+      const parent = node.parentNode as HTMLElement | null;
+      let prefix = `${options.bulletListMarker ?? '-'} `;
+      if (parent && parent.nodeName === 'OL') {
+        const start = parent.getAttribute('start');
+        const index = Array.prototype.indexOf.call(parent.children, node);
+        prefix = `${start ? Number(start) + index : index + 1}. `;
+      }
+      const isParagraph = /\n$/.test(content);
+      let body = content.replace(/^\n+/, '').replace(/\n+$/, '') + (isParagraph ? '\n' : '');
+      body = body.replace(/\n/gm, '\n' + ' '.repeat(prefix.length));
+      return prefix + body + (node.nextSibling ? '\n' : '');
+    },
+  });
+
   return service;
 }
 

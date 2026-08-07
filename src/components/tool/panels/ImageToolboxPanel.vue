@@ -305,6 +305,17 @@ function fitWidth(width: number) {
   targetHeight.value = toDimension(width / aspect.value);
 }
 
+/** A width preset only makes sense when the source is at least that wide;
+ *  otherwise applying it would upscale the image and add no real detail. */
+function presetUpscales(width: number): boolean {
+  return sourceWidth.value > 0 && sourceWidth.value < width;
+}
+
+function presetTitle(width: number): string | undefined {
+  if (!presetUpscales(width)) return undefined;
+  return `This image is only ${sourceWidth.value} px wide, so scaling up to ${width} px would upscale it and look soft.`;
+}
+
 /* ---------------------------------------------------------------- */
 /* crop                                                              */
 /* ---------------------------------------------------------------- */
@@ -660,19 +671,55 @@ onUnmounted(() => {
               :src="previewUrl ?? ''"
               alt="Preview of the loaded image"
               draggable="false"
-              class="block h-auto max-h-[360px] w-auto max-w-full rounded-[10px] select-none"
+              class="block h-auto max-h-[360px] min-h-[200px] w-auto max-w-full rounded-[10px] select-none"
               @dragstart.prevent
             >
-            <div
-              v-if="crop"
-              class="pointer-events-none absolute border border-primary bg-primary/15"
-              :style="{
-                left: `${crop.x * 100}%`,
-                top: `${crop.y * 100}%`,
-                width: `${crop.w * 100}%`,
-                height: `${crop.h * 100}%`,
-              }"
-            />
+            <template v-if="crop">
+              <!-- Four shaded strips dim everything outside the crop marquee. -->
+              <div
+                class="pointer-events-none absolute inset-x-0 top-0 bg-black/50"
+                :style="{ height: `${clamp01(crop.y) * 100}%` }"
+              />
+              <div
+                class="pointer-events-none absolute inset-x-0 bottom-0 bg-black/50"
+                :style="{ height: `${clamp01(1 - crop.y - crop.h) * 100}%` }"
+              />
+              <div
+                class="pointer-events-none absolute left-0 bg-black/50"
+                :style="{
+                  top: `${crop.y * 100}%`,
+                  height: `${crop.h * 100}%`,
+                  width: `${clamp01(crop.x) * 100}%`,
+                }"
+              />
+              <div
+                class="pointer-events-none absolute right-0 bg-black/50"
+                :style="{
+                  top: `${crop.y * 100}%`,
+                  height: `${crop.h * 100}%`,
+                  width: `${clamp01(1 - crop.x - crop.w) * 100}%`,
+                }"
+              />
+              <div
+                class="pointer-events-none absolute border border-primary"
+                :style="{
+                  left: `${crop.x * 100}%`,
+                  top: `${crop.y * 100}%`,
+                  width: `${crop.w * 100}%`,
+                  height: `${crop.h * 100}%`,
+                }"
+              />
+              <div
+                v-if="cropPixels"
+                class="pointer-events-none absolute rounded-[4px] bg-background px-1.5 py-0.5 font-mono text-[11px] whitespace-nowrap text-foreground shadow-[var(--sh-sm)]"
+                :style="{
+                  left: `calc(${crop.x * 100}% + 4px)`,
+                  top: `calc(${crop.y * 100}% + 4px)`,
+                }"
+              >
+                {{ cropPixels.w }} x {{ cropPixels.h }} px
+              </div>
+            </template>
           </div>
           <p class="text-xs text-muted-foreground tabular-nums">
             Source: {{ sourceWidth }} x {{ sourceHeight }} px
@@ -750,6 +797,8 @@ onUnmounted(() => {
             <Button
               variant="outline"
               size="sm"
+              :disabled="presetUpscales(1920)"
+              :title="presetTitle(1920)"
               @click="fitWidth(1920)"
             >
               1920 wide
@@ -757,6 +806,8 @@ onUnmounted(() => {
             <Button
               variant="outline"
               size="sm"
+              :disabled="presetUpscales(1280)"
+              :title="presetTitle(1280)"
               @click="fitWidth(1280)"
             >
               1280 wide
@@ -764,6 +815,8 @@ onUnmounted(() => {
             <Button
               variant="outline"
               size="sm"
+              :disabled="presetUpscales(640)"
+              :title="presetTitle(640)"
               @click="fitWidth(640)"
             >
               640 wide
