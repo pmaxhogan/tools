@@ -38,16 +38,76 @@ export const meta: ToolMeta = {
       id: "dialect",
       label: "Dialect",
       default: "sql",
-      choices: [
-        { value: "sql", label: "Standard SQL" },
-        { value: "postgresql", label: "PostgreSQL" },
-        { value: "mysql", label: "MySQL" },
-        { value: "sqlite", label: "SQLite" },
-        { value: "tsql", label: "SQL Server (T-SQL)" },
-        { value: "bigquery", label: "BigQuery" },
-        { value: "snowflake", label: "Snowflake" },
-        { value: "mariadb", label: "MariaDB" },
-        { value: "plsql", label: "Oracle (PL/SQL)" },
+      groups: [
+        {
+          label: "Standard",
+          synonyms: ["ansi", "generic sql", "vanilla sql"],
+          options: [
+            {
+              value: "sql",
+              label: "Standard SQL",
+              synonyms: ["ansi sql", "generic sql"],
+            },
+          ],
+        },
+        {
+          label: "Open source databases",
+          synonyms: ["postgres", "mysql", "mariadb", "sqlite", "free database"],
+          options: [
+            {
+              value: "postgresql",
+              label: "PostgreSQL",
+              synonyms: ["postgres", "psql"],
+            },
+            {
+              value: "mysql",
+              label: "MySQL",
+              synonyms: ["my sql"],
+            },
+            {
+              value: "mariadb",
+              label: "MariaDB",
+              synonyms: ["maria db"],
+            },
+            {
+              value: "sqlite",
+              label: "SQLite",
+              synonyms: ["sqlite3", "embedded database"],
+            },
+          ],
+        },
+        {
+          label: "Commercial databases",
+          synonyms: ["sql server", "oracle", "proprietary database", "enterprise database"],
+          options: [
+            {
+              value: "tsql",
+              label: "SQL Server (T-SQL)",
+              synonyms: ["sql server", "microsoft sql server", "transact-sql", "mssql"],
+            },
+            {
+              value: "plsql",
+              label: "Oracle (PL/SQL)",
+              synonyms: ["oracle", "oracle database", "procedural language sql"],
+            },
+          ],
+        },
+        {
+          label: "Cloud data warehouses",
+          synonyms: ["bigquery", "snowflake", "warehouse", "cloud database"],
+          options: [
+            {
+              value: "bigquery",
+              label: "BigQuery",
+              synonyms: ["google bigquery", "gcp sql"],
+            },
+            {
+              value: "snowflake",
+              label: "Snowflake",
+              synonyms: ["snowflake data cloud", "snowsql"],
+            },
+          ],
+        },
       ],
     },
     {
@@ -55,10 +115,22 @@ export const meta: ToolMeta = {
       id: "keywordCase",
       label: "Keyword case",
       default: "upper",
-      choices: [
-        { value: "upper", label: "UPPERCASE" },
-        { value: "lower", label: "lowercase" },
-        { value: "preserve", label: "Preserve as typed" },
+      options: [
+        {
+          value: "upper",
+          label: "UPPERCASE",
+          synonyms: ["all caps", "capitalize keywords"],
+        },
+        {
+          value: "lower",
+          label: "lowercase",
+          synonyms: ["small caps", "lowercase keywords"],
+        },
+        {
+          value: "preserve",
+          label: "Preserve as typed",
+          synonyms: ["as typed", "keep case", "unchanged", "leave as is"],
+        },
       ],
     },
     {

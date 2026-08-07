@@ -36,12 +36,32 @@ export const meta: ToolMeta = {
       id: "keep",
       label: "Which copy to keep",
       default: "shallowest",
-      choices: [
-        { value: "first-alpha", label: "First by path (A to Z)" },
-        { value: "shortest-path", label: "Shortest path" },
-        { value: "newest", label: "Newest file" },
-        { value: "oldest", label: "Oldest file" },
-        { value: "shallowest", label: "Closest to the top folder" },
+      options: [
+        {
+          value: "first-alpha",
+          label: "First by path (A to Z)",
+          synonyms: ["alphabetical", "first alphabetically", "a-z order", "path order"],
+        },
+        {
+          value: "shortest-path",
+          label: "Shortest path",
+          synonyms: ["shortest", "least nested path", "fewest folders"],
+        },
+        {
+          value: "newest",
+          label: "Newest file",
+          synonyms: ["most recent", "latest modified", "newest modified date"],
+        },
+        {
+          value: "oldest",
+          label: "Oldest file",
+          synonyms: ["earliest", "oldest modified", "first created"],
+        },
+        {
+          value: "shallowest",
+          label: "Closest to the top folder",
+          synonyms: ["shallowest", "top level", "least nested folder", "root closest"],
+        },
       ],
     },
   ],

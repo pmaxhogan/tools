@@ -39,11 +39,27 @@ export const meta: ToolMeta = {
       id: "mode",
       label: "Mode",
       default: "dice",
-      choices: [
-        { value: "dice", label: "Dice: roll notation like 3d6+2" },
-        { value: "coin", label: "Coin flip" },
-        { value: "pick", label: "Pick from list" },
-        { value: "teams", label: "Split into teams" },
+      options: [
+        {
+          value: "dice",
+          label: "Dice: roll notation like 3d6+2",
+          synonyms: ["dice roller", "roll dice", "d20", "dnd dice", "tabletop dice"],
+        },
+        {
+          value: "coin",
+          label: "Coin flip",
+          synonyms: ["heads or tails", "flip a coin"],
+        },
+        {
+          value: "pick",
+          label: "Pick from list",
+          synonyms: ["random name picker", "raffle", "draw a winner"],
+        },
+        {
+          value: "teams",
+          label: "Split into teams",
+          synonyms: ["team randomizer", "group generator", "shuffle teams"],
+        },
       ],
     },
     {

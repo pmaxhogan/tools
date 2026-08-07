@@ -43,17 +43,75 @@ export const meta: ToolMeta = {
       id: "operation",
       label: "Operation",
       default: "find-replace",
-      choices: [
-        { value: "find-replace", label: "Find and replace" },
-        { value: "case", label: "Change case" },
-        { value: "trim-whitespace", label: "Trim whitespace" },
-        { value: "line-endings", label: "Convert line endings" },
-        { value: "encoding-normalize", label: "Strip byte order mark" },
-        { value: "prefix-suffix", label: "Add header or footer" },
-        { value: "sort-lines", label: "Sort lines" },
-        { value: "dedupe-lines", label: "Remove duplicate lines" },
-        { value: "json-format", label: "Format JSON" },
-        { value: "template-wrap", label: "Wrap in a template" },
+      groups: [
+        {
+          label: "Text editing",
+          synonyms: ["edit text", "text transform", "cleanup"],
+          options: [
+            {
+              value: "find-replace",
+              label: "Find and replace",
+              synonyms: ["search and replace", "regex replace", "substitute"],
+            },
+            {
+              value: "case",
+              label: "Change case",
+              synonyms: ["uppercase", "lowercase", "title case"],
+            },
+            {
+              value: "trim-whitespace",
+              label: "Trim whitespace",
+              synonyms: ["remove trailing spaces", "strip whitespace"],
+            },
+            {
+              value: "line-endings",
+              label: "Convert line endings",
+              synonyms: ["crlf to lf", "lf to crlf", "eol conversion", "unix windows line endings"],
+            },
+            {
+              value: "encoding-normalize",
+              label: "Strip byte order mark",
+              synonyms: ["remove bom", "utf-8 bom", "strip bom"],
+            },
+            {
+              value: "prefix-suffix",
+              label: "Add header or footer",
+              synonyms: ["prepend text", "append text", "add banner"],
+            },
+          ],
+        },
+        {
+          label: "Line operations",
+          synonyms: ["lines", "row operations"],
+          options: [
+            {
+              value: "sort-lines",
+              label: "Sort lines",
+              synonyms: ["alphabetize", "order lines"],
+            },
+            {
+              value: "dedupe-lines",
+              label: "Remove duplicate lines",
+              synonyms: ["deduplicate", "unique lines", "remove duplicates"],
+            },
+          ],
+        },
+        {
+          label: "Formatting",
+          synonyms: ["structure", "reformat"],
+          options: [
+            {
+              value: "json-format",
+              label: "Format JSON",
+              synonyms: ["pretty print json", "minify json", "json beautify"],
+            },
+            {
+              value: "template-wrap",
+              label: "Wrap in a template",
+              synonyms: ["wrap content", "template tokens", "boilerplate wrap"],
+            },
+          ],
+        },
       ],
     },
     {
@@ -61,10 +119,22 @@ export const meta: ToolMeta = {
       id: "output",
       label: "Where results go",
       default: "subfolder",
-      choices: [
-        { value: "subfolder", label: "Into a subfolder (originals untouched)" },
-        { value: "suffix", label: "Alongside, as name.processed.ext" },
-        { value: "in-place", label: "In place (overwrites the originals)" },
+      options: [
+        {
+          value: "subfolder",
+          label: "Into a subfolder (originals untouched)",
+          synonyms: ["copy to folder", "safe mode", "non destructive"],
+        },
+        {
+          value: "suffix",
+          label: "Alongside, as name.processed.ext",
+          synonyms: ["suffix filename", "processed suffix", "same folder"],
+        },
+        {
+          value: "in-place",
+          label: "In place (overwrites the originals)",
+          synonyms: ["overwrite originals", "destructive", "replace files"],
+        },
       ],
     },
     {

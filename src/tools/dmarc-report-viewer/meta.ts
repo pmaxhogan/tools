@@ -33,9 +33,17 @@ export const meta: ToolMeta = {
       id: "view",
       label: "View",
       default: "summary",
-      choices: [
-        { value: "summary", label: "Summary" },
-        { value: "full", label: "Full (every record)" },
+      options: [
+        {
+          value: "summary",
+          label: "Summary",
+          synonyms: ["overview", "compact view", "short report", "at a glance"],
+        },
+        {
+          value: "full",
+          label: "Full (every record)",
+          synonyms: ["all records", "detailed view", "every row", "raw records"],
+        },
       ],
     },
     {

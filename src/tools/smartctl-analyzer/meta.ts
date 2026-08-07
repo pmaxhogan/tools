@@ -37,9 +37,17 @@ export const meta: ToolMeta = {
       id: "detail",
       label: "Detail",
       default: "verdict",
-      choices: [
-        { value: "verdict", label: "Verdict and findings" },
-        { value: "full", label: "Full attribute list" },
+      options: [
+        {
+          value: "verdict",
+          label: "Verdict and findings",
+          synonyms: ["summary", "health verdict", "short"],
+        },
+        {
+          value: "full",
+          label: "Full attribute list",
+          synonyms: ["all attributes", "detailed", "raw attributes"],
+        },
       ],
     },
   ],

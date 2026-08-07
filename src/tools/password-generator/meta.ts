@@ -36,9 +36,17 @@ export const meta: ToolMeta = {
       id: "mode",
       label: "Mode",
       default: "password",
-      choices: [
-        { value: "password", label: "Password" },
-        { value: "passphrase", label: "Passphrase (diceware)" },
+      options: [
+        {
+          value: "password",
+          label: "Password",
+          synonyms: ["random password", "character password", "standard password"],
+        },
+        {
+          value: "passphrase",
+          label: "Passphrase (diceware)",
+          synonyms: ["diceware", "word based password", "eff wordlist", "memorable password"],
+        },
       ],
     },
     { kind: "number", id: "length", label: "Password length", default: 20, min: 8, max: 128 },

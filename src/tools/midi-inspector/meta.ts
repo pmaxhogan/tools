@@ -36,10 +36,18 @@ export const meta: ToolMeta = {
       id: "middleC",
       label: "Middle C octave",
       default: "4",
-      choices: [
-        { value: "3", label: "C3 is note 60 (Yamaha style)" },
-        { value: "4", label: "C4 is note 60 (scientific)" },
-        { value: "5", label: "C5 is note 60" },
+      options: [
+        {
+          value: "3",
+          label: "C3 is note 60 (Yamaha style)",
+          synonyms: ["yamaha", "c3", "roland style"],
+        },
+        {
+          value: "4",
+          label: "C4 is note 60 (scientific)",
+          synonyms: ["scientific pitch notation", "c4", "spn"],
+        },
+        { value: "5", label: "C5 is note 60", synonyms: ["c5"] },
       ],
     },
   ],

@@ -26,17 +26,77 @@ export const meta: ToolMeta = {
       id: "tz",
       label: "Time zone",
       default: "UTC",
-      choices: [
-        { value: "UTC", label: "UTC" },
-        { value: "local", label: "Local time" },
-        { value: "America/New_York", label: "America/New_York" },
-        { value: "America/Chicago", label: "America/Chicago" },
-        { value: "America/Denver", label: "America/Denver" },
-        { value: "America/Los_Angeles", label: "America/Los_Angeles" },
-        { value: "Europe/London", label: "Europe/London" },
-        { value: "Europe/Berlin", label: "Europe/Berlin" },
-        { value: "Asia/Tokyo", label: "Asia/Tokyo" },
-        { value: "Australia/Sydney", label: "Australia/Sydney" },
+      groups: [
+        {
+          label: "Universal and local",
+          synonyms: ["utc", "gmt", "system time zone", "browser time zone", "no time zone"],
+          options: [
+            { value: "UTC", label: "UTC", synonyms: ["gmt", "coordinated universal time", "zulu"] },
+            {
+              value: "local",
+              label: "Local time",
+              synonyms: ["my time zone", "browser time zone", "device time zone"],
+            },
+          ],
+        },
+        {
+          label: "Americas",
+          synonyms: ["north america", "us time zones", "united states", "canada"],
+          options: [
+            {
+              value: "America/New_York",
+              label: "America/New_York",
+              synonyms: ["eastern time", "est", "edt", "new york"],
+            },
+            {
+              value: "America/Chicago",
+              label: "America/Chicago",
+              synonyms: ["central time", "cst", "cdt", "chicago"],
+            },
+            {
+              value: "America/Denver",
+              label: "America/Denver",
+              synonyms: ["mountain time", "mst", "mdt", "denver"],
+            },
+            {
+              value: "America/Los_Angeles",
+              label: "America/Los_Angeles",
+              synonyms: ["pacific time", "pst", "pdt", "los angeles", "california"],
+            },
+          ],
+        },
+        {
+          label: "Europe",
+          synonyms: ["european time zones", "uk", "united kingdom", "germany"],
+          options: [
+            {
+              value: "Europe/London",
+              label: "Europe/London",
+              synonyms: ["gmt", "bst", "uk time", "london"],
+            },
+            {
+              value: "Europe/Berlin",
+              label: "Europe/Berlin",
+              synonyms: ["cet", "cest", "germany", "central european time"],
+            },
+          ],
+        },
+        {
+          label: "Asia and Pacific",
+          synonyms: ["asia pacific", "apac"],
+          options: [
+            {
+              value: "Asia/Tokyo",
+              label: "Asia/Tokyo",
+              synonyms: ["jst", "japan time", "tokyo"],
+            },
+            {
+              value: "Australia/Sydney",
+              label: "Australia/Sydney",
+              synonyms: ["aest", "aedt", "australia time", "sydney"],
+            },
+          ],
+        },
       ],
     },
   ],

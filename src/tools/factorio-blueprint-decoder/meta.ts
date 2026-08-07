@@ -36,12 +36,32 @@ export const meta: ToolMeta = {
       id: "operation",
       label: "Operation",
       default: "inspect",
-      choices: [
-        { value: "inspect", label: "Inspect (summary)" },
-        { value: "json", label: "Show raw JSON" },
-        { value: "reencode", label: "Re-encode JSON to a string" },
-        { value: "repair", label: "Repair a mangled string" },
-        { value: "strip", label: "Strip junk and re-encode" },
+      options: [
+        {
+          value: "inspect",
+          label: "Inspect (summary)",
+          synonyms: ["overview", "summary view", "read blueprint", "analyze"],
+        },
+        {
+          value: "json",
+          label: "Show raw JSON",
+          synonyms: ["view json", "raw data", "decode to json"],
+        },
+        {
+          value: "reencode",
+          label: "Re-encode JSON to a string",
+          synonyms: ["encode", "json to string", "rebuild blueprint string"],
+        },
+        {
+          value: "repair",
+          label: "Repair a mangled string",
+          synonyms: ["fix broken blueprint", "fix corrupted string", "recover blueprint"],
+        },
+        {
+          value: "strip",
+          label: "Strip junk and re-encode",
+          synonyms: ["clean blueprint", "remove trees", "sanitize blueprint"],
+        },
       ],
     },
     {

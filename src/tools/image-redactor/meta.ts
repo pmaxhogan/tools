@@ -38,9 +38,17 @@ export const meta: ToolMeta = {
       id: "mode",
       label: "Redaction style",
       default: "solid",
-      choices: [
-        { value: "solid", label: "Solid fill (safest)" },
-        { value: "pixelate", label: "Pixelate (weaker)" },
+      options: [
+        {
+          value: "solid",
+          label: "Solid fill (safest)",
+          synonyms: ["black out", "block out", "opaque", "cover"],
+        },
+        {
+          value: "pixelate",
+          label: "Pixelate (weaker)",
+          synonyms: ["mosaic", "blocky", "pixelated"],
+        },
       ],
     },
     {
@@ -48,9 +56,9 @@ export const meta: ToolMeta = {
       id: "color",
       label: "Solid color",
       default: "black",
-      choices: [
-        { value: "black", label: "Black" },
-        { value: "white", label: "White" },
+      options: [
+        { value: "black", label: "Black", synonyms: ["dark", "blackout color"] },
+        { value: "white", label: "White", synonyms: ["light", "blank"] },
       ],
     },
     {
@@ -76,9 +84,9 @@ export const meta: ToolMeta = {
       id: "format",
       label: "Export format",
       default: "png",
-      choices: [
-        { value: "png", label: "PNG (lossless)" },
-        { value: "jpeg", label: "JPEG (quality 90)" },
+      options: [
+        { value: "png", label: "PNG (lossless)", synonyms: ["portable network graphics"] },
+        { value: "jpeg", label: "JPEG (quality 90)", synonyms: ["jpg", "compressed"] },
       ],
     },
   ],

@@ -35,12 +35,24 @@ export const meta: ToolMeta = {
       id: "from",
       label: "From",
       default: "auto",
-      choices: [
-        { value: "auto", label: "Auto detect" },
-        { value: "csv", label: "CSV" },
-        { value: "json", label: "JSON" },
-        { value: "yaml", label: "YAML" },
-        { value: "toml", label: "TOML" },
+      options: [
+        {
+          value: "auto",
+          label: "Auto detect",
+          synonyms: ["automatic", "guess format", "detect format"],
+        },
+        { value: "csv", label: "CSV", synonyms: ["comma separated values", "spreadsheet"] },
+        {
+          value: "json",
+          label: "JSON",
+          synonyms: ["javascript object notation", "json object"],
+        },
+        { value: "yaml", label: "YAML", synonyms: ["yml", "yaml ain't markup language"] },
+        {
+          value: "toml",
+          label: "TOML",
+          synonyms: ["toml config", "tom's obvious minimal language"],
+        },
       ],
     },
     {
@@ -48,11 +60,19 @@ export const meta: ToolMeta = {
       id: "to",
       label: "To",
       default: "json",
-      choices: [
-        { value: "json", label: "JSON" },
-        { value: "csv", label: "CSV" },
-        { value: "yaml", label: "YAML" },
-        { value: "toml", label: "TOML" },
+      options: [
+        {
+          value: "json",
+          label: "JSON",
+          synonyms: ["javascript object notation", "json object"],
+        },
+        { value: "csv", label: "CSV", synonyms: ["comma separated values", "spreadsheet"] },
+        { value: "yaml", label: "YAML", synonyms: ["yml", "yaml ain't markup language"] },
+        {
+          value: "toml",
+          label: "TOML",
+          synonyms: ["toml config", "tom's obvious minimal language"],
+        },
       ],
     },
     {

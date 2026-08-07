@@ -36,10 +36,22 @@ export const meta: ToolMeta = {
       id: "platform",
       label: "Platform",
       default: "discord",
-      choices: [
-        { value: "discord", label: "Discord" },
-        { value: "twitter", label: "Twitter / X" },
-        { value: "instagram", label: "Instagram" },
+      options: [
+        {
+          value: "discord",
+          label: "Discord",
+          synonyms: ["discord id", "discord snowflake"],
+        },
+        {
+          value: "twitter",
+          label: "Twitter / X",
+          synonyms: ["x", "twitter id", "tweet id"],
+        },
+        {
+          value: "instagram",
+          label: "Instagram",
+          synonyms: ["ig", "instagram id"],
+        },
       ],
     },
   ],

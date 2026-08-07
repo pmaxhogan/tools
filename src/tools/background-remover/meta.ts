@@ -35,10 +35,18 @@ export const meta: ToolMeta = {
       id: "output",
       label: "Background",
       default: "transparent",
-      choices: [
-        { value: "transparent", label: "Transparent PNG" },
-        { value: "white", label: "White" },
-        { value: "color", label: "Custom color" },
+      options: [
+        {
+          value: "transparent",
+          label: "Transparent PNG",
+          synonyms: ["no background", "alpha channel", "cutout"],
+        },
+        { value: "white", label: "White", synonyms: ["white background", "plain white"] },
+        {
+          value: "color",
+          label: "Custom color",
+          synonyms: ["custom colour", "hex color", "solid color background"],
+        },
       ],
     },
     {

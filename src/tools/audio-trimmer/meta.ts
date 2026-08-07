@@ -57,12 +57,16 @@ export const meta: ToolMeta = {
       id: "format",
       label: "Output format",
       default: "same",
-      choices: [
-        { value: "same", label: "Same as source" },
-        { value: "mp3", label: "MP3" },
-        { value: "m4a", label: "M4A (AAC)" },
-        { value: "wav", label: "WAV" },
-        { value: "ogg", label: "OGG (Vorbis)" },
+      options: [
+        {
+          value: "same",
+          label: "Same as source",
+          synonyms: ["no conversion", "keep format", "stream copy"],
+        },
+        { value: "mp3", label: "MP3", synonyms: ["mpeg audio", ".mp3"] },
+        { value: "m4a", label: "M4A (AAC)", synonyms: ["aac", ".m4a", "apple audio"] },
+        { value: "wav", label: "WAV", synonyms: ["waveform audio", ".wav", "uncompressed"] },
+        { value: "ogg", label: "OGG (Vorbis)", synonyms: ["vorbis", ".ogg", "open source audio"] },
       ],
     },
   ],

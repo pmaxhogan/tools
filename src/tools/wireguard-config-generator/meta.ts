@@ -49,9 +49,17 @@ export const meta: ToolMeta = {
       id: "allowedIps",
       label: "Client routing",
       default: "full",
-      choices: [
-        { value: "full", label: "Full tunnel (0.0.0.0/0, ::/0)" },
-        { value: "split", label: "Split tunnel (subnet only)" },
+      options: [
+        {
+          value: "full",
+          label: "Full tunnel (0.0.0.0/0, ::/0)",
+          synonyms: ["route everything", "all traffic"],
+        },
+        {
+          value: "split",
+          label: "Split tunnel (subnet only)",
+          synonyms: ["subnet only", "partial routing"],
+        },
       ],
     },
   ],

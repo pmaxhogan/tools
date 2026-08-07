@@ -50,11 +50,15 @@ export const meta: ToolMeta = {
       id: "view",
       label: "View",
       default: "table",
-      choices: [
-        { value: "table", label: "Table" },
-        { value: "stats", label: "Column stats" },
-        { value: "json", label: "JSON" },
-        { value: "csv", label: "CSV" },
+      options: [
+        { value: "table", label: "Table", synonyms: ["grid view", "spreadsheet view"] },
+        {
+          value: "stats",
+          label: "Column stats",
+          synonyms: ["statistics", "summary", "column summary"],
+        },
+        { value: "json", label: "JSON", synonyms: ["json array", "convert to json"] },
+        { value: "csv", label: "CSV", synonyms: ["comma separated", "raw csv", "cleaned csv"] },
       ],
     },
     { kind: "number", id: "limit", label: "Row limit", default: 100, min: 1, max: 1000 },

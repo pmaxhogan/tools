@@ -36,12 +36,32 @@ export const meta: ToolMeta = {
       id: "mode",
       label: "Rename mode",
       default: "find-replace",
-      choices: [
-        { value: "find-replace", label: "Find and replace" },
-        { value: "template", label: "Template with tokens" },
-        { value: "case", label: "Change case" },
-        { value: "sequence", label: "Number in sequence" },
-        { value: "clean", label: "Clean up names" },
+      options: [
+        {
+          value: "find-replace",
+          label: "Find and replace",
+          synonyms: ["search and replace", "regex rename", "substitute"],
+        },
+        {
+          value: "template",
+          label: "Template with tokens",
+          synonyms: ["pattern rename", "tokens", "placeholders"],
+        },
+        {
+          value: "case",
+          label: "Change case",
+          synonyms: ["uppercase", "lowercase", "title case", "kebab case"],
+        },
+        {
+          value: "sequence",
+          label: "Number in sequence",
+          synonyms: ["sequential numbering", "auto number", "counter rename"],
+        },
+        {
+          value: "clean",
+          label: "Clean up names",
+          synonyms: ["sanitize filenames", "strip accents", "tidy filenames"],
+        },
       ],
     },
     { kind: "text", id: "find", label: "Find", default: "", placeholder: "DSC_" },
@@ -60,13 +80,21 @@ export const meta: ToolMeta = {
       id: "caseMode",
       label: "Case",
       default: "lower",
-      choices: [
-        { value: "lower", label: "lower case" },
-        { value: "upper", label: "UPPER CASE" },
-        { value: "title", label: "Title Case" },
-        { value: "kebab", label: "kebab-case" },
-        { value: "snake", label: "snake_case" },
-        { value: "camel", label: "camelCase" },
+      options: [
+        { value: "lower", label: "lower case", synonyms: ["lowercase", "all lower"] },
+        { value: "upper", label: "UPPER CASE", synonyms: ["uppercase", "all caps"] },
+        {
+          value: "title",
+          label: "Title Case",
+          synonyms: ["capitalize each word", "headline case"],
+        },
+        {
+          value: "kebab",
+          label: "kebab-case",
+          synonyms: ["dash case", "hyphen case", "slug case"],
+        },
+        { value: "snake", label: "snake_case", synonyms: ["underscore case"] },
+        { value: "camel", label: "camelCase", synonyms: ["mixed case", "javascript naming"] },
       ],
     },
     { kind: "text", id: "prefix", label: "Prefix", default: "file-", placeholder: "photo-" },
@@ -77,10 +105,10 @@ export const meta: ToolMeta = {
       id: "separator",
       label: "Separator",
       default: "dash",
-      choices: [
-        { value: "dash", label: "Dash" },
-        { value: "underscore", label: "Underscore" },
-        { value: "none", label: "None" },
+      options: [
+        { value: "dash", label: "Dash", synonyms: ["hyphen", "-"] },
+        { value: "underscore", label: "Underscore", synonyms: ["_", "snake separator"] },
+        { value: "none", label: "None", synonyms: ["no separator", "blank"] },
       ],
     },
     { kind: "boolean", id: "lowercase", label: "Lowercase the result", default: true },
@@ -90,10 +118,18 @@ export const meta: ToolMeta = {
       id: "filterMode",
       label: "Only rename files matching",
       default: "none",
-      choices: [
-        { value: "none", label: "Every file" },
-        { value: "glob", label: "A glob, like *.jpg" },
-        { value: "regex", label: "A regular expression" },
+      options: [
+        { value: "none", label: "Every file", synonyms: ["no filter", "all files"] },
+        {
+          value: "glob",
+          label: "A glob, like *.jpg",
+          synonyms: ["wildcard pattern", "glob pattern"],
+        },
+        {
+          value: "regex",
+          label: "A regular expression",
+          synonyms: ["regexp", "regex pattern", "regular expression filter"],
+        },
       ],
     },
     { kind: "text", id: "filter", label: "Pattern", default: "", placeholder: "*.jpg" },
@@ -102,10 +138,18 @@ export const meta: ToolMeta = {
       id: "sortBy",
       label: "Numbering order",
       default: "name",
-      choices: [
-        { value: "name", label: "Filename" },
-        { value: "date", label: "Date modified, oldest first" },
-        { value: "size", label: "Size, smallest first" },
+      options: [
+        { value: "name", label: "Filename", synonyms: ["alphabetical", "by name"] },
+        {
+          value: "date",
+          label: "Date modified, oldest first",
+          synonyms: ["modification date", "chronological", "oldest to newest"],
+        },
+        {
+          value: "size",
+          label: "Size, smallest first",
+          synonyms: ["file size", "smallest to largest"],
+        },
       ],
     },
   ],

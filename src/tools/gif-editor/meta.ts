@@ -37,14 +37,58 @@ export const meta: ToolMeta = {
       id: "operation",
       label: "Operation",
       default: "resize",
-      choices: [
-        { value: "resize", label: "Resize" },
-        { value: "crop", label: "Crop" },
-        { value: "optimize", label: "Optimize" },
-        { value: "reverse", label: "Reverse" },
-        { value: "speed", label: "Change speed" },
-        { value: "caption", label: "Caption" },
-        { value: "split", label: "Split into frames" },
+      options: [
+        {
+          value: "optimize",
+          label: "Optimize",
+          synonyms: ["compress", "shrink file size", "reduce colors", "lossy"],
+        },
+      ],
+      groups: [
+        {
+          label: "Resize and crop",
+          synonyms: ["geometry", "scale", "trim frame", "dimensions"],
+          options: [
+            {
+              value: "resize",
+              label: "Resize",
+              synonyms: ["scale", "change size", "shrink dimensions"],
+            },
+            { value: "crop", label: "Crop", synonyms: ["trim", "cut edges", "cut rectangle"] },
+          ],
+        },
+        {
+          label: "Playback",
+          synonyms: ["timing", "play backwards", "change speed", "fps"],
+          options: [
+            {
+              value: "reverse",
+              label: "Reverse",
+              synonyms: ["play backwards", "flip direction", "backwards"],
+            },
+            {
+              value: "speed",
+              label: "Change speed",
+              synonyms: ["speed up", "slow down", "fps", "playback rate"],
+            },
+          ],
+        },
+        {
+          label: "Annotate and export",
+          synonyms: ["add text", "extract frames", "export png"],
+          options: [
+            {
+              value: "caption",
+              label: "Caption",
+              synonyms: ["add text", "meme text", "overlay text"],
+            },
+            {
+              value: "split",
+              label: "Split into frames",
+              synonyms: ["extract frames", "gif to frames", "export png frames"],
+            },
+          ],
+        },
       ],
     },
     {
@@ -140,9 +184,9 @@ export const meta: ToolMeta = {
       id: "position",
       label: "Caption: position",
       default: "bottom",
-      choices: [
-        { value: "bottom", label: "Bottom" },
-        { value: "top", label: "Top" },
+      options: [
+        { value: "bottom", label: "Bottom", synonyms: ["below", "bottom caption", "underneath"] },
+        { value: "top", label: "Top", synonyms: ["above", "top caption", "overhead"] },
       ],
     },
     {

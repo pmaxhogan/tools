@@ -37,16 +37,64 @@ export const meta: ToolMeta = {
       id: "target",
       label: "Convert to",
       default: "mp4",
-      choices: [
-        { value: "mp4", label: "MP4 video (H.264 and AAC)" },
-        { value: "webm", label: "WebM video (VP8 and Vorbis)" },
-        { value: "mkv", label: "MKV video (remux, no re-encode)" },
-        { value: "gif", label: "GIF animation" },
-        { value: "mp3", label: "MP3 audio" },
-        { value: "m4a", label: "M4A audio (AAC)" },
-        { value: "wav", label: "WAV audio (16 bit PCM)" },
-        { value: "ogg", label: "OGG audio (Vorbis)" },
-        { value: "flac", label: "FLAC audio (lossless)" },
+      groups: [
+        {
+          label: "Video",
+          synonyms: ["video formats", "mp4", "webm", "mkv", "gif"],
+          options: [
+            {
+              value: "mp4",
+              label: "MP4 video (H.264 and AAC)",
+              synonyms: ["h.264", "aac video", "mpeg4"],
+            },
+            {
+              value: "webm",
+              label: "WebM video (VP8 and Vorbis)",
+              synonyms: ["vp8", "vorbis video"],
+            },
+            {
+              value: "mkv",
+              label: "MKV video (remux, no re-encode)",
+              synonyms: ["matroska", "remux", "stream copy"],
+            },
+            {
+              value: "gif",
+              label: "GIF animation",
+              synonyms: ["animated gif", "gif animation"],
+            },
+          ],
+        },
+        {
+          label: "Audio",
+          synonyms: ["audio formats", "extract audio", "mp3", "wav", "flac"],
+          options: [
+            {
+              value: "mp3",
+              label: "MP3 audio",
+              synonyms: ["mpeg audio layer 3", "lame"],
+            },
+            {
+              value: "m4a",
+              label: "M4A audio (AAC)",
+              synonyms: ["aac audio", "apple audio"],
+            },
+            {
+              value: "wav",
+              label: "WAV audio (16 bit PCM)",
+              synonyms: ["pcm", "wave file", "16 bit pcm"],
+            },
+            {
+              value: "ogg",
+              label: "OGG audio (Vorbis)",
+              synonyms: ["vorbis", "ogg vorbis"],
+            },
+            {
+              value: "flac",
+              label: "FLAC audio (lossless)",
+              synonyms: ["lossless audio", "free lossless audio codec"],
+            },
+          ],
+        },
       ],
     },
     {
@@ -54,10 +102,22 @@ export const meta: ToolMeta = {
       id: "quality",
       label: "Quality",
       default: "balanced",
-      choices: [
-        { value: "high", label: "High: closest to the source, slowest" },
-        { value: "balanced", label: "Balanced: good quality, sensible size" },
-        { value: "small", label: "Small: smallest file, softest picture" },
+      options: [
+        {
+          value: "high",
+          label: "High: closest to the source, slowest",
+          synonyms: ["best quality", "closest to source", "slow"],
+        },
+        {
+          value: "balanced",
+          label: "Balanced: good quality, sensible size",
+          synonyms: ["default", "good quality", "medium"],
+        },
+        {
+          value: "small",
+          label: "Small: smallest file, softest picture",
+          synonyms: ["smallest file", "lowest quality", "compressed"],
+        },
       ],
     },
     {

@@ -37,9 +37,17 @@ export const meta: ToolMeta = {
       id: "encoding",
       label: "Token encoding",
       default: "o200k_base",
-      choices: [
-        { value: "o200k_base", label: "GPT-4o / GPT-4.1 / o-series" },
-        { value: "cl100k_base", label: "GPT-3.5 / GPT-4" },
+      options: [
+        {
+          value: "o200k_base",
+          label: "GPT-4o / GPT-4.1 / o-series",
+          synonyms: ["gpt-4o", "gpt-4.1", "o1", "o3", "newest tokenizer"],
+        },
+        {
+          value: "cl100k_base",
+          label: "GPT-3.5 / GPT-4",
+          synonyms: ["gpt-3.5", "gpt-4", "chatgpt", "older tokenizer"],
+        },
       ],
     },
   ],

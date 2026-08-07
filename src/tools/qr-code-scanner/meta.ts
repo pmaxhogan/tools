@@ -35,10 +35,22 @@ export const meta: ToolMeta = {
       id: "inversion",
       label: "Color handling",
       default: "attemptBoth",
-      choices: [
-        { value: "attemptBoth", label: "Standard and inverted" },
-        { value: "dontInvert", label: "Standard only (dark on light)" },
-        { value: "onlyInvert", label: "Inverted only (light on dark)" },
+      options: [
+        {
+          value: "attemptBoth",
+          label: "Standard and inverted",
+          synonyms: ["both", "auto detect", "either"],
+        },
+        {
+          value: "dontInvert",
+          label: "Standard only (dark on light)",
+          synonyms: ["normal", "dark text light background", "no invert"],
+        },
+        {
+          value: "onlyInvert",
+          label: "Inverted only (light on dark)",
+          synonyms: ["inverted", "light text dark background", "dark mode qr"],
+        },
       ],
     },
   ],

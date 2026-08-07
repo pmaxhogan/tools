@@ -40,16 +40,76 @@ export const meta: ToolMeta = {
       id: "preset",
       label: "Content type",
       default: "text",
-      choices: [
-        { value: "text", label: "Plain text" },
-        { value: "url", label: "URL" },
-        { value: "wifi", label: "Wi-Fi network" },
-        { value: "vcard", label: "Contact card (vCard)" },
-        { value: "email", label: "Email message" },
-        { value: "sms", label: "SMS message" },
-        { value: "phone", label: "Phone number" },
-        { value: "geo", label: "Map location" },
-        { value: "event", label: "Calendar event" },
+      groups: [
+        {
+          label: "Text and links",
+          synonyms: ["plain text", "url", "website link"],
+          options: [
+            {
+              value: "text",
+              label: "Plain text",
+              synonyms: ["free text", "raw text", "any text"],
+            },
+            {
+              value: "url",
+              label: "URL",
+              synonyms: ["link", "website", "web address", "http"],
+            },
+          ],
+        },
+        {
+          label: "Contact and messaging",
+          synonyms: ["vcard", "email", "sms", "phone number", "contact"],
+          options: [
+            {
+              value: "vcard",
+              label: "Contact card (vCard)",
+              synonyms: ["business card", "vcf", "contact info"],
+            },
+            {
+              value: "email",
+              label: "Email message",
+              synonyms: ["mailto", "send email"],
+            },
+            {
+              value: "sms",
+              label: "SMS message",
+              synonyms: ["text message", "sms draft"],
+            },
+            {
+              value: "phone",
+              label: "Phone number",
+              synonyms: ["dial", "call", "tel link"],
+            },
+          ],
+        },
+        {
+          label: "Network",
+          synonyms: ["wifi", "wireless"],
+          options: [
+            {
+              value: "wifi",
+              label: "Wi-Fi network",
+              synonyms: ["wi-fi", "wireless network", "wifi password", "network join"],
+            },
+          ],
+        },
+        {
+          label: "Places and events",
+          synonyms: ["location", "calendar", "map", "event"],
+          options: [
+            {
+              value: "geo",
+              label: "Map location",
+              synonyms: ["gps coordinates", "location pin", "map pin"],
+            },
+            {
+              value: "event",
+              label: "Calendar event",
+              synonyms: ["vevent", "ics file", "appointment"],
+            },
+          ],
+        },
       ],
     },
     {
@@ -57,11 +117,27 @@ export const meta: ToolMeta = {
       id: "ecc",
       label: "Error correction",
       default: "M",
-      choices: [
-        { value: "L", label: "L: 7% recovery" },
-        { value: "M", label: "M: 15% recovery" },
-        { value: "Q", label: "Q: 25% recovery" },
-        { value: "H", label: "H: 30% recovery" },
+      options: [
+        {
+          value: "L",
+          label: "L: 7% recovery",
+          synonyms: ["low", "level l", "7 percent"],
+        },
+        {
+          value: "M",
+          label: "M: 15% recovery",
+          synonyms: ["medium", "level m", "15 percent"],
+        },
+        {
+          value: "Q",
+          label: "Q: 25% recovery",
+          synonyms: ["quartile", "level q", "25 percent"],
+        },
+        {
+          value: "H",
+          label: "H: 30% recovery",
+          synonyms: ["high", "level h", "30 percent", "logo safe"],
+        },
       ],
     },
     { kind: "number", id: "margin", label: "Quiet zone (modules)", default: 4, min: 0, max: 20 },

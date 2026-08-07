@@ -35,12 +35,32 @@ export const meta: ToolMeta = {
       id: "view",
       label: "View",
       default: "summary",
-      choices: [
-        { value: "summary", label: "Summary and waterfall" },
-        { value: "waterfall", label: "Full waterfall" },
-        { value: "slowest", label: "Slowest requests" },
-        { value: "largest", label: "Largest responses" },
-        { value: "domains", label: "Domains" },
+      options: [
+        {
+          value: "summary",
+          label: "Summary and waterfall",
+          synonyms: ["overview", "at a glance"],
+        },
+        {
+          value: "waterfall",
+          label: "Full waterfall",
+          synonyms: ["timeline view", "request timeline", "full timeline"],
+        },
+        {
+          value: "slowest",
+          label: "Slowest requests",
+          synonyms: ["slow requests", "highest latency", "longest duration"],
+        },
+        {
+          value: "largest",
+          label: "Largest responses",
+          synonyms: ["biggest responses", "largest payload", "biggest transfer size"],
+        },
+        {
+          value: "domains",
+          label: "Domains",
+          synonyms: ["hosts", "by domain", "domain breakdown"],
+        },
       ],
     },
     {
@@ -55,12 +75,28 @@ export const meta: ToolMeta = {
       id: "status",
       label: "Status",
       default: "all",
-      choices: [
-        { value: "all", label: "All" },
-        { value: "2xx", label: "2xx success" },
-        { value: "3xx", label: "3xx redirect" },
-        { value: "4xx", label: "4xx client error" },
-        { value: "5xx", label: "5xx server error" },
+      options: [
+        { value: "all", label: "All", synonyms: ["every status", "no filter"] },
+        {
+          value: "2xx",
+          label: "2xx success",
+          synonyms: ["success", "ok responses", "200 status"],
+        },
+        {
+          value: "3xx",
+          label: "3xx redirect",
+          synonyms: ["redirects", "300 status", "redirected"],
+        },
+        {
+          value: "4xx",
+          label: "4xx client error",
+          synonyms: ["client errors", "400 status", "not found", "bad request"],
+        },
+        {
+          value: "5xx",
+          label: "5xx server error",
+          synonyms: ["server errors", "500 status", "internal server error"],
+        },
       ],
     },
     {

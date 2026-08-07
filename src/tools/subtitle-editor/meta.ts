@@ -37,11 +37,27 @@ export const meta: ToolMeta = {
       id: "operation",
       label: "Operation",
       default: "convert",
-      choices: [
-        { value: "convert", label: "Convert format" },
-        { value: "shift", label: "Shift timing" },
-        { value: "resync", label: "Resync from two anchors" },
-        { value: "clean", label: "Clean up" },
+      options: [
+        {
+          value: "convert",
+          label: "Convert format",
+          synonyms: ["change format", "srt to vtt", "vtt to srt", "format conversion"],
+        },
+        {
+          value: "shift",
+          label: "Shift timing",
+          synonyms: ["offset", "delay", "time shift", "move timing"],
+        },
+        {
+          value: "resync",
+          label: "Resync from two anchors",
+          synonyms: ["resynchronize", "two point sync", "fix drift", "linear resync"],
+        },
+        {
+          value: "clean",
+          label: "Clean up",
+          synonyms: ["cleanup", "tidy", "fix formatting", "remove markup"],
+        },
       ],
     },
     {
@@ -49,9 +65,17 @@ export const meta: ToolMeta = {
       id: "format",
       label: "Convert to",
       default: "vtt",
-      choices: [
-        { value: "vtt", label: "WebVTT (.vtt)" },
-        { value: "srt", label: "SubRip (.srt)" },
+      options: [
+        {
+          value: "vtt",
+          label: "WebVTT (.vtt)",
+          synonyms: ["webvtt", "web vtt"],
+        },
+        {
+          value: "srt",
+          label: "SubRip (.srt)",
+          synonyms: ["subrip", "srt file"],
+        },
       ],
     },
     {

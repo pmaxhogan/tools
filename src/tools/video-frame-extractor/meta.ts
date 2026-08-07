@@ -52,10 +52,22 @@ export const meta: ToolMeta = {
       id: "format",
       label: "Image format",
       default: "png",
-      choices: [
-        { value: "png", label: "PNG (lossless)" },
-        { value: "jpeg", label: "JPEG" },
-        { value: "webp", label: "WebP" },
+      options: [
+        {
+          value: "png",
+          label: "PNG (lossless)",
+          synonyms: ["portable network graphics", "lossless image"],
+        },
+        {
+          value: "jpeg",
+          label: "JPEG",
+          synonyms: ["jpg", "lossy image"],
+        },
+        {
+          value: "webp",
+          label: "WebP",
+          synonyms: ["google webp"],
+        },
       ],
     },
     {

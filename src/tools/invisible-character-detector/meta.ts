@@ -38,10 +38,22 @@ export const meta: ToolMeta = {
       id: "mode",
       label: "Mode",
       default: "annotate",
-      choices: [
-        { value: "annotate", label: "Annotate (show tags inline)" },
-        { value: "strip", label: "Strip (clean the text)" },
-        { value: "report", label: "Report (list positions)" },
+      options: [
+        {
+          value: "annotate",
+          label: "Annotate (show tags inline)",
+          synonyms: ["highlight", "mark inline", "tag characters"],
+        },
+        {
+          value: "strip",
+          label: "Strip (clean the text)",
+          synonyms: ["remove", "clean", "delete invisible characters", "sanitize"],
+        },
+        {
+          value: "report",
+          label: "Report (list positions)",
+          synonyms: ["list", "find", "scan", "positions", "line and column"],
+        },
       ],
     },
     {

@@ -35,10 +35,10 @@ export const meta: ToolMeta = {
       id: "bullet",
       label: "Bullet marker",
       default: "-",
-      choices: [
-        { value: "-", label: "Hyphen (-)" },
-        { value: "*", label: "Asterisk (*)" },
-        { value: "+", label: "Plus (+)" },
+      options: [
+        { value: "-", label: "Hyphen (-)", synonyms: ["dash", "minus", "hyphen"] },
+        { value: "*", label: "Asterisk (*)", synonyms: ["star", "asterisk"] },
+        { value: "+", label: "Plus (+)", synonyms: ["plus sign", "addition"] },
       ],
     },
     { kind: "boolean", id: "keepLinks", label: "Keep links", default: true },

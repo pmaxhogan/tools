@@ -38,9 +38,17 @@ export const meta: ToolMeta = {
       id: "sort",
       label: "Sort",
       default: "risk",
-      choices: [
-        { value: "risk", label: "Widest access first" },
-        { value: "input", label: "Order I pasted" },
+      options: [
+        {
+          value: "risk",
+          label: "Widest access first",
+          synonyms: ["by risk", "riskiest first", "most dangerous first", "sort by risk"],
+        },
+        {
+          value: "input",
+          label: "Order I pasted",
+          synonyms: ["original order", "as pasted", "unsorted"],
+        },
       ],
     },
     { kind: "boolean", id: "hideLow", label: "Hide low risk scopes", default: false },

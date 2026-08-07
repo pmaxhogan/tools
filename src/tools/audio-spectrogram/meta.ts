@@ -41,10 +41,22 @@ export const meta: ToolMeta = {
       id: "fftSize",
       label: "FFT size",
       default: "2048",
-      choices: [
-        { value: "1024", label: "1024 (sharper in time)" },
-        { value: "2048", label: "2048 (balanced)" },
-        { value: "4096", label: "4096 (sharper in frequency)" },
+      options: [
+        {
+          value: "1024",
+          label: "1024 (sharper in time)",
+          synonyms: ["fast", "low resolution", "small window"],
+        },
+        {
+          value: "2048",
+          label: "2048 (balanced)",
+          synonyms: ["default", "medium", "standard"],
+        },
+        {
+          value: "4096",
+          label: "4096 (sharper in frequency)",
+          synonyms: ["high resolution", "large window", "slow"],
+        },
       ],
     },
     {
@@ -52,10 +64,18 @@ export const meta: ToolMeta = {
       id: "colors",
       label: "Color scheme",
       default: "viridis",
-      choices: [
-        { value: "viridis", label: "Viridis" },
-        { value: "magma", label: "Magma" },
-        { value: "gray", label: "Grayscale" },
+      options: [
+        {
+          value: "viridis",
+          label: "Viridis",
+          synonyms: ["green purple", "default colormap", "matplotlib default"],
+        },
+        { value: "magma", label: "Magma", synonyms: ["black orange", "heat colormap"] },
+        {
+          value: "gray",
+          label: "Grayscale",
+          synonyms: ["greyscale", "black and white", "monochrome"],
+        },
       ],
     },
     {
@@ -63,9 +83,13 @@ export const meta: ToolMeta = {
       id: "scale",
       label: "Frequency axis",
       default: "linear",
-      choices: [
-        { value: "linear", label: "Linear" },
-        { value: "log", label: "Logarithmic" },
+      options: [
+        { value: "linear", label: "Linear", synonyms: ["uniform scale", "hz scale"] },
+        {
+          value: "log",
+          label: "Logarithmic",
+          synonyms: ["log scale", "octave scale", "musical scale", "pitch scale"],
+        },
       ],
     },
     {

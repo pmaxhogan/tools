@@ -54,10 +54,22 @@ export const meta: ToolMeta = {
       id: "format",
       label: "Report format",
       default: "tree",
-      choices: [
-        { value: "tree", label: "Tree" },
-        { value: "flat", label: "Flat list" },
-        { value: "csv", label: "CSV" },
+      options: [
+        {
+          value: "tree",
+          label: "Tree",
+          synonyms: ["tree view", "hierarchical", "nested view"],
+        },
+        {
+          value: "flat",
+          label: "Flat list",
+          synonyms: ["list view", "flat report", "linear list"],
+        },
+        {
+          value: "csv",
+          label: "CSV",
+          synonyms: ["comma separated", "spreadsheet export", "csv export"],
+        },
       ],
     },
   ],

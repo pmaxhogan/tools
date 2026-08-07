@@ -41,9 +41,17 @@ export const meta: ToolMeta = {
       id: "palette",
       label: "Palette",
       default: "global",
-      choices: [
-        { value: "global", label: "One palette for the whole clip" },
-        { value: "perframe", label: "A new palette on every frame" },
+      options: [
+        {
+          value: "global",
+          label: "One palette for the whole clip",
+          synonyms: ["single palette", "whole clip palette"],
+        },
+        {
+          value: "perframe",
+          label: "A new palette on every frame",
+          synonyms: ["per frame palette", "adaptive palette"],
+        },
       ],
     },
     {
@@ -51,10 +59,22 @@ export const meta: ToolMeta = {
       id: "dither",
       label: "Dithering",
       default: "sierra2_4a",
-      choices: [
-        { value: "sierra2_4a", label: "Sierra2 4a (smooth gradients)" },
-        { value: "bayer", label: "Bayer (patterned, smaller file)" },
-        { value: "none", label: "None (flat bands, sharpest text)" },
+      options: [
+        {
+          value: "sierra2_4a",
+          label: "Sierra2 4a (smooth gradients)",
+          synonyms: ["sierra", "default dithering"],
+        },
+        {
+          value: "bayer",
+          label: "Bayer (patterned, smaller file)",
+          synonyms: ["bayer matrix", "crosshatch"],
+        },
+        {
+          value: "none",
+          label: "None (flat bands, sharpest text)",
+          synonyms: ["no dithering", "flat bands"],
+        },
       ],
     },
     { kind: "boolean", id: "loop", label: "Loop forever", default: true },

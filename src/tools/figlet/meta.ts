@@ -36,17 +36,81 @@ export const meta: ToolMeta = {
       id: "font",
       label: "Font",
       default: "Standard",
-      choices: [
-        { value: "Standard", label: "Standard" },
-        { value: "Slant", label: "Slant" },
-        { value: "Small", label: "Small" },
-        { value: "Big", label: "Big" },
-        { value: "Banner", label: "Banner" },
-        { value: "Block", label: "Block" },
-        { value: "Shadow", label: "Shadow" },
-        { value: "Doom", label: "Doom" },
-        { value: "Ghost", label: "Ghost" },
-        { value: "Mini", label: "Mini" },
+      groups: [
+        {
+          label: "Classic",
+          synonyms: ["default fonts", "plain block letters", "simple", "readable"],
+          options: [
+            {
+              value: "Standard",
+              label: "Standard",
+              synonyms: ["default font", "classic figlet", "original"],
+            },
+            {
+              value: "Small",
+              label: "Small",
+              synonyms: ["compact", "small text", "narrow"],
+            },
+            {
+              value: "Mini",
+              label: "Mini",
+              synonyms: ["tiny", "smallest", "one line"],
+            },
+          ],
+        },
+        {
+          label: "Slanted and shadow",
+          synonyms: ["italic style", "3d shadow", "angled", "leaning"],
+          options: [
+            {
+              value: "Slant",
+              label: "Slant",
+              synonyms: ["italic", "slanted", "leaning letters"],
+            },
+            {
+              value: "Shadow",
+              label: "Shadow",
+              synonyms: ["drop shadow", "3d effect", "shadowed letters"],
+            },
+          ],
+        },
+        {
+          label: "Bold and block",
+          synonyms: ["heavy", "thick letters", "large banner", "wide"],
+          options: [
+            {
+              value: "Big",
+              label: "Big",
+              synonyms: ["large", "big text", "bold"],
+            },
+            {
+              value: "Block",
+              label: "Block",
+              synonyms: ["blocky", "solid letters", "chunky"],
+            },
+            {
+              value: "Banner",
+              label: "Banner",
+              synonyms: ["wide banner", "billboard style", "big banner"],
+            },
+          ],
+        },
+        {
+          label: "Decorative",
+          synonyms: ["stylized", "outline font", "gothic", "spooky"],
+          options: [
+            {
+              value: "Doom",
+              label: "Doom",
+              synonyms: ["horror style", "video game font", "gothic"],
+            },
+            {
+              value: "Ghost",
+              label: "Ghost",
+              synonyms: ["outline font", "spooky", "faded"],
+            },
+          ],
+        },
       ],
     },
     {
@@ -54,10 +118,22 @@ export const meta: ToolMeta = {
       id: "layout",
       label: "Letter spacing",
       default: "default",
-      choices: [
-        { value: "default", label: "Default: the font's own kerning" },
-        { value: "full", label: "Full: no letters touching" },
-        { value: "fitted", label: "Fitted: letters pushed together" },
+      options: [
+        {
+          value: "default",
+          label: "Default: the font's own kerning",
+          synonyms: ["normal spacing", "font default", "original kerning"],
+        },
+        {
+          value: "full",
+          label: "Full: no letters touching",
+          synonyms: ["wide spacing", "spaced out", "no overlap"],
+        },
+        {
+          value: "fitted",
+          label: "Fitted: letters pushed together",
+          synonyms: ["tight spacing", "compact", "kerned tight"],
+        },
       ],
     },
     {

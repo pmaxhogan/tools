@@ -37,16 +37,62 @@ export const meta: ToolMeta = {
       id: "category",
       label: "Category",
       default: "all",
-      choices: [
-        { value: "all", label: "All categories" },
-        { value: "users", label: "Users" },
-        { value: "groups", label: "Groups" },
-        { value: "drive", label: "Drive and shared drives" },
-        { value: "gmail", label: "Gmail" },
-        { value: "calendar", label: "Calendar" },
-        { value: "org-units", label: "Org units" },
-        { value: "licenses", label: "Licenses" },
-        { value: "reports", label: "Reports, devices and diagnostics" },
+      options: [
+        {
+          value: "all",
+          label: "All categories",
+          synonyms: ["everything", "whole catalog", "no filter"],
+        },
+        {
+          value: "reports",
+          label: "Reports, devices and diagnostics",
+          synonyms: ["diagnostics", "audit", "device management", "logs", "mobile devices"],
+        },
+      ],
+      groups: [
+        {
+          label: "Identity and access",
+          synonyms: ["accounts", "user management", "permissions", "iam", "org structure"],
+          options: [
+            { value: "users", label: "Users", synonyms: ["accounts", "user accounts", "staff"] },
+            {
+              value: "groups",
+              label: "Groups",
+              synonyms: ["mailing lists", "distribution lists", "group membership"],
+            },
+            {
+              value: "org-units",
+              label: "Org units",
+              synonyms: ["organizational units", "ous", "org structure"],
+            },
+            {
+              value: "licenses",
+              label: "Licenses",
+              synonyms: ["license assignment", "skus", "seat management"],
+            },
+          ],
+        },
+        {
+          label: "Content and communication",
+          synonyms: ["google apps", "collaboration", "messaging", "productivity apps"],
+          options: [
+            {
+              value: "drive",
+              label: "Drive and shared drives",
+              synonyms: ["google drive", "team drives", "file ownership", "shared drive"],
+            },
+            {
+              value: "gmail",
+              label: "Gmail",
+              synonyms: ["email", "mail filters", "mailbox", "message deletion"],
+            },
+            {
+              value: "calendar",
+              label: "Calendar",
+              synonyms: ["google calendar", "scheduling", "events"],
+            },
+          ],
+        },
       ],
     },
     {

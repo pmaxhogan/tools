@@ -42,9 +42,17 @@ export const meta: ToolMeta = {
       id: "format",
       label: "Output format",
       default: "report",
-      choices: [
-        { value: "report", label: "Readable report" },
-        { value: "csv", label: "CSV (position, layer, old, new)" },
+      options: [
+        {
+          value: "report",
+          label: "Readable report",
+          synonyms: ["human readable", "text report", "summary"],
+        },
+        {
+          value: "csv",
+          label: "CSV (position, layer, old, new)",
+          synonyms: ["comma separated values", "spreadsheet", "export csv"],
+        },
       ],
     },
   ],

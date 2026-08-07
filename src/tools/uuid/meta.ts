@@ -29,9 +29,17 @@ export const meta: ToolMeta = {
       id: "version",
       label: "Version",
       default: "v4",
-      choices: [
-        { value: "v4", label: "v4 (random)" },
-        { value: "v7", label: "v7 (time-ordered)" },
+      options: [
+        {
+          value: "v4",
+          label: "v4 (random)",
+          synonyms: ["random uuid", "version 4", "uuidv4"],
+        },
+        {
+          value: "v7",
+          label: "v7 (time-ordered)",
+          synonyms: ["time ordered", "version 7", "uuidv7", "sortable uuid"],
+        },
       ],
     },
     { kind: "number", id: "count", label: "Count", default: 1, min: 1, max: 1000 },

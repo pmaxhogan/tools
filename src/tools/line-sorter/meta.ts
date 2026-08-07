@@ -35,14 +35,42 @@ export const meta: ToolMeta = {
       id: "operation",
       label: "Operation",
       default: "sort-az",
-      choices: [
-        { value: "sort-az", label: "Sort A → Z" },
-        { value: "sort-za", label: "Sort Z → A" },
-        { value: "sort-natural", label: "Sort naturally (item2 before item10)" },
-        { value: "sort-length", label: "Sort by length" },
-        { value: "dedupe", label: "Deduplicate (keep first)" },
-        { value: "reverse", label: "Reverse order" },
-        { value: "shuffle", label: "Shuffle" },
+      options: [
+        {
+          value: "sort-az",
+          label: "Sort A → Z",
+          synonyms: ["alphabetize", "ascending", "alphabetical order", "a to z"],
+        },
+        {
+          value: "sort-za",
+          label: "Sort Z → A",
+          synonyms: ["descending", "reverse alphabetical", "z to a"],
+        },
+        {
+          value: "sort-natural",
+          label: "Sort naturally (item2 before item10)",
+          synonyms: ["natural sort", "numeric sort", "human sort", "version sort"],
+        },
+        {
+          value: "sort-length",
+          label: "Sort by length",
+          synonyms: ["shortest to longest", "sort by size", "character count"],
+        },
+        {
+          value: "dedupe",
+          label: "Deduplicate (keep first)",
+          synonyms: ["unique", "remove duplicates", "distinct lines", "de-duplicate"],
+        },
+        {
+          value: "reverse",
+          label: "Reverse order",
+          synonyms: ["flip order", "invert lines", "bottom to top"],
+        },
+        {
+          value: "shuffle",
+          label: "Shuffle",
+          synonyms: ["randomize", "random order", "mix up", "scramble"],
+        },
       ],
     },
     { kind: "boolean", id: "caseInsensitive", label: "Case-insensitive", default: false },

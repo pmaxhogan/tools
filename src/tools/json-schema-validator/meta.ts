@@ -35,11 +35,15 @@ export const meta: ToolMeta = {
       id: "draft",
       label: "Draft",
       default: "2020-12",
-      choices: [
-        { value: "2020-12", label: "2020-12" },
-        { value: "2019-09", label: "2019-09" },
-        { value: "7", label: "Draft 7" },
-        { value: "4", label: "Draft 4" },
+      options: [
+        {
+          value: "2020-12",
+          label: "2020-12",
+          synonyms: ["latest", "draft 2020-12", "newest draft"],
+        },
+        { value: "2019-09", label: "2019-09", synonyms: ["draft 2019-09"] },
+        { value: "7", label: "Draft 7", synonyms: ["draft-07", "draft7"] },
+        { value: "4", label: "Draft 4", synonyms: ["draft-04", "draft4"] },
       ],
     },
     {

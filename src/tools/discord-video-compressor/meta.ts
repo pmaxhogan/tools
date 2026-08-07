@@ -36,10 +36,18 @@ export const meta: ToolMeta = {
       id: "cap",
       label: "Size cap",
       default: "10",
-      choices: [
-        { value: "10", label: "10 MB (free tier)" },
-        { value: "50", label: "50 MB (Nitro Basic)" },
-        { value: "500", label: "500 MB (Nitro)" },
+      options: [
+        {
+          value: "10",
+          label: "10 MB (free tier)",
+          synonyms: ["discord free", "default limit", "no nitro"],
+        },
+        {
+          value: "50",
+          label: "50 MB (Nitro Basic)",
+          synonyms: ["nitro basic limit", "discord basic"],
+        },
+        { value: "500", label: "500 MB (Nitro)", synonyms: ["discord nitro limit", "nitro full"] },
       ],
     },
     {
@@ -54,11 +62,15 @@ export const meta: ToolMeta = {
       id: "maxHeight",
       label: "Resolution",
       default: "0",
-      choices: [
-        { value: "0", label: "Keep the source height" },
-        { value: "1080", label: "Cap at 1080p" },
-        { value: "720", label: "Cap at 720p" },
-        { value: "480", label: "Cap at 480p" },
+      options: [
+        {
+          value: "0",
+          label: "Keep the source height",
+          synonyms: ["original resolution", "no resize", "native resolution"],
+        },
+        { value: "1080", label: "Cap at 1080p", synonyms: ["full hd", "1920x1080"] },
+        { value: "720", label: "Cap at 720p", synonyms: ["hd", "1280x720"] },
+        { value: "480", label: "Cap at 480p", synonyms: ["sd", "standard definition"] },
       ],
     },
     { kind: "boolean", id: "keepFps", label: "Keep the source frame rate", default: true },

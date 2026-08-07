@@ -34,12 +34,28 @@ export const meta: ToolMeta = {
       id: "language",
       label: "Language",
       default: "eng",
-      choices: [
-        { value: "eng", label: "English (2.8 MB download)" },
-        { value: "spa", label: "Spanish (2.0 MB download)" },
-        { value: "fra", label: "French (0.7 MB download)" },
-        { value: "deu", label: "German (1.3 MB download)" },
-        { value: "jpn", label: "Japanese (1.9 MB download)" },
+      options: [
+        { value: "eng", label: "English (2.8 MB download)", synonyms: ["english", "en", "eng"] },
+        {
+          value: "spa",
+          label: "Spanish (2.0 MB download)",
+          synonyms: ["spanish", "espanol", "es", "spa"],
+        },
+        {
+          value: "fra",
+          label: "French (0.7 MB download)",
+          synonyms: ["french", "francais", "fr", "fra"],
+        },
+        {
+          value: "deu",
+          label: "German (1.3 MB download)",
+          synonyms: ["german", "deutsch", "de", "deu"],
+        },
+        {
+          value: "jpn",
+          label: "Japanese (1.9 MB download)",
+          synonyms: ["japanese", "ja", "jp", "jpn"],
+        },
       ],
     },
     {
@@ -47,10 +63,18 @@ export const meta: ToolMeta = {
       id: "format",
       label: "Output format",
       default: "text",
-      choices: [
-        { value: "text", label: "Plain text" },
-        { value: "blocks", label: "Blocks with confidence" },
-        { value: "tsv", label: "TSV with positions" },
+      options: [
+        { value: "text", label: "Plain text", synonyms: ["raw text", "just text"] },
+        {
+          value: "blocks",
+          label: "Blocks with confidence",
+          synonyms: ["confidence score", "per block", "accuracy"],
+        },
+        {
+          value: "tsv",
+          label: "TSV with positions",
+          synonyms: ["tab separated values", "bounding box", "coordinates", "word positions"],
+        },
       ],
     },
     {

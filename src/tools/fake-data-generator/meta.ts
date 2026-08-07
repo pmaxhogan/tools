@@ -39,13 +39,37 @@ export const meta: ToolMeta = {
       id: "type",
       label: "Data type",
       default: "people",
-      choices: [
-        { value: "people", label: "People: name, email, phone" },
-        { value: "addresses", label: "Addresses" },
-        { value: "companies", label: "Companies" },
-        { value: "users-json", label: "Users (JSON fixture)" },
-        { value: "credit-cards", label: "Credit cards: fake numbers" },
-        { value: "lorem", label: "Lorem ipsum paragraphs" },
+      options: [
+        {
+          value: "people",
+          label: "People: name, email, phone",
+          synonyms: ["person", "contact info", "names and emails", "fake person"],
+        },
+        {
+          value: "addresses",
+          label: "Addresses",
+          synonyms: ["street address", "mailing address", "location data"],
+        },
+        {
+          value: "companies",
+          label: "Companies",
+          synonyms: ["business names", "company names", "organizations"],
+        },
+        {
+          value: "users-json",
+          label: "Users (JSON fixture)",
+          synonyms: ["json users", "user fixture", "seed data", "database fixture"],
+        },
+        {
+          value: "credit-cards",
+          label: "Credit cards: fake numbers",
+          synonyms: ["fake card numbers", "test card numbers", "luhn valid numbers"],
+        },
+        {
+          value: "lorem",
+          label: "Lorem ipsum paragraphs",
+          synonyms: ["placeholder text", "dummy text", "filler text"],
+        },
       ],
     },
     { kind: "number", id: "count", label: "Count", default: 5, min: 1, max: 100 },

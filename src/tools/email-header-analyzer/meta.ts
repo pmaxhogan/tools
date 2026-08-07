@@ -39,11 +39,27 @@ export const meta: ToolMeta = {
       id: "section",
       label: "Section",
       default: "all",
-      choices: [
-        { value: "all", label: "Everything" },
-        { value: "summary", label: "Summary only" },
-        { value: "auth", label: "Authentication only" },
-        { value: "hops", label: "Hop waterfall only" },
+      options: [
+        {
+          value: "all",
+          label: "Everything",
+          synonyms: ["all sections", "full report", "complete"],
+        },
+        {
+          value: "summary",
+          label: "Summary only",
+          synonyms: ["overview", "at a glance", "quick summary"],
+        },
+        {
+          value: "auth",
+          label: "Authentication only",
+          synonyms: ["spf dkim dmarc", "auth results", "authentication results"],
+        },
+        {
+          value: "hops",
+          label: "Hop waterfall only",
+          synonyms: ["received headers", "delivery path", "routing", "waterfall"],
+        },
       ],
     },
   ],

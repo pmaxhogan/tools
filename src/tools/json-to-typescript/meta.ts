@@ -36,10 +36,18 @@ export const meta: ToolMeta = {
       id: "target",
       label: "Target",
       default: "typescript",
-      choices: [
-        { value: "typescript", label: "TypeScript interfaces" },
-        { value: "zod", label: "Zod schemas" },
-        { value: "kotlin", label: "Kotlin data classes" },
+      options: [
+        {
+          value: "typescript",
+          label: "TypeScript interfaces",
+          synonyms: ["ts", "typescript types", "interface"],
+        },
+        { value: "zod", label: "Zod schemas", synonyms: ["zod schema", "zod validator"] },
+        {
+          value: "kotlin",
+          label: "Kotlin data classes",
+          synonyms: ["kotlin", "data class", "android"],
+        },
       ],
     },
     {

@@ -37,12 +37,20 @@ export const meta: ToolMeta = {
       id: "mode",
       label: "Mode",
       default: "lines",
-      choices: [
-        { value: "lines", label: "Lines" },
-        { value: "words", label: "Words" },
-        { value: "chars", label: "Characters" },
-        { value: "json", label: "JSON (semantic)" },
-        { value: "yaml", label: "YAML (semantic)" },
+      options: [
+        { value: "lines", label: "Lines", synonyms: ["line diff", "line by line"] },
+        { value: "words", label: "Words", synonyms: ["word diff", "word by word"] },
+        { value: "chars", label: "Characters", synonyms: ["character diff", "char diff"] },
+        {
+          value: "json",
+          label: "JSON (semantic)",
+          synonyms: ["json diff", "compare json objects", "structural json compare"],
+        },
+        {
+          value: "yaml",
+          label: "YAML (semantic)",
+          synonyms: ["yaml diff", "compare yaml files", "structural yaml compare"],
+        },
       ],
     },
     {

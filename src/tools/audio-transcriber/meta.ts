@@ -37,9 +37,17 @@ export const meta: ToolMeta = {
       id: "model",
       label: "Model",
       default: "whisper-tiny",
-      choices: [
-        { value: "whisper-tiny", label: "Tiny, 43 MB, fastest" },
-        { value: "whisper-base", label: "Base, 78 MB, more accurate" },
+      options: [
+        {
+          value: "whisper-tiny",
+          label: "Tiny, 43 MB, fastest",
+          synonyms: ["small model", "quick", "low accuracy", "smallest"],
+        },
+        {
+          value: "whisper-base",
+          label: "Base, 78 MB, more accurate",
+          synonyms: ["larger model", "better accuracy", "slower"],
+        },
       ],
     },
     {
@@ -47,11 +55,23 @@ export const meta: ToolMeta = {
       id: "format",
       label: "Output format",
       default: "text",
-      choices: [
-        { value: "text", label: "Plain text" },
-        { value: "srt", label: "SRT subtitles" },
-        { value: "vtt", label: "WebVTT subtitles" },
-        { value: "json", label: "JSON with timings" },
+      options: [
+        { value: "text", label: "Plain text", synonyms: ["txt", "raw text", "no timestamps"] },
+        {
+          value: "srt",
+          label: "SRT subtitles",
+          synonyms: ["subrip", ".srt", "subtitle file"],
+        },
+        {
+          value: "vtt",
+          label: "WebVTT subtitles",
+          synonyms: ["webvtt", ".vtt", "html5 subtitles"],
+        },
+        {
+          value: "json",
+          label: "JSON with timings",
+          synonyms: ["structured output", "timestamps json", "machine readable"],
+        },
       ],
     },
     {
@@ -59,23 +79,45 @@ export const meta: ToolMeta = {
       id: "language",
       label: "Language",
       default: "auto",
-      choices: [
-        { value: "auto", label: "Detect automatically" },
-        { value: "en", label: "English" },
-        { value: "es", label: "Spanish" },
-        { value: "fr", label: "French" },
-        { value: "de", label: "German" },
-        { value: "it", label: "Italian" },
-        { value: "pt", label: "Portuguese" },
-        { value: "nl", label: "Dutch" },
-        { value: "ja", label: "Japanese" },
-        { value: "ko", label: "Korean" },
-        { value: "zh", label: "Chinese" },
-        { value: "ru", label: "Russian" },
-        { value: "pl", label: "Polish" },
-        { value: "tr", label: "Turkish" },
-        { value: "ar", label: "Arabic" },
-        { value: "hi", label: "Hindi" },
+      options: [
+        {
+          value: "auto",
+          label: "Detect automatically",
+          synonyms: ["auto detect", "unknown language", "guess language"],
+        },
+      ],
+      groups: [
+        {
+          label: "European languages",
+          synonyms: ["europe", "western languages"],
+          options: [
+            { value: "en", label: "English", synonyms: ["eng"] },
+            { value: "es", label: "Spanish", synonyms: ["espanol", "castilian"] },
+            { value: "fr", label: "French", synonyms: ["francais"] },
+            { value: "de", label: "German", synonyms: ["deutsch"] },
+            { value: "it", label: "Italian", synonyms: ["italiano"] },
+            { value: "pt", label: "Portuguese", synonyms: ["portugues", "brazilian portuguese"] },
+            { value: "nl", label: "Dutch", synonyms: ["nederlands", "flemish"] },
+            { value: "pl", label: "Polish", synonyms: ["polski"] },
+            { value: "ru", label: "Russian", synonyms: ["russkiy"] },
+            { value: "tr", label: "Turkish", synonyms: ["turkce"] },
+          ],
+        },
+        {
+          label: "Asian languages",
+          synonyms: ["asia"],
+          options: [
+            { value: "ja", label: "Japanese", synonyms: ["nihongo"] },
+            { value: "ko", label: "Korean", synonyms: ["hangugeo", "hangul"] },
+            { value: "zh", label: "Chinese", synonyms: ["mandarin", "putonghua", "zhongwen"] },
+            { value: "hi", label: "Hindi", synonyms: ["devanagari"] },
+          ],
+        },
+        {
+          label: "Middle Eastern languages",
+          synonyms: ["middle east"],
+          options: [{ value: "ar", label: "Arabic", synonyms: ["arabiya"] }],
+        },
       ],
     },
     {

@@ -36,12 +36,32 @@ export const meta: ToolMeta = {
       id: "chain",
       label: "Encoding chain",
       default: "auto",
-      choices: [
-        { value: "auto", label: "Auto detect" },
-        { value: "cp1252-once", label: "UTF-8 read as Windows-1252 (once)" },
-        { value: "cp1252-twice", label: "UTF-8 read as Windows-1252 (twice)" },
-        { value: "latin1-once", label: "UTF-8 read as Latin-1 (once)" },
-        { value: "latin1-twice", label: "UTF-8 read as Latin-1 (twice)" },
+      options: [
+        {
+          value: "auto",
+          label: "Auto detect",
+          synonyms: ["automatic", "guess", "best guess", "default"],
+        },
+        {
+          value: "cp1252-once",
+          label: "UTF-8 read as Windows-1252 (once)",
+          synonyms: ["windows-1252", "ansi", "cp-1252", "single encoded"],
+        },
+        {
+          value: "cp1252-twice",
+          label: "UTF-8 read as Windows-1252 (twice)",
+          synonyms: ["windows-1252", "ansi", "cp-1252", "double encoded"],
+        },
+        {
+          value: "latin1-once",
+          label: "UTF-8 read as Latin-1 (once)",
+          synonyms: ["iso-8859-1", "iso 8859-1", "single encoded"],
+        },
+        {
+          value: "latin1-twice",
+          label: "UTF-8 read as Latin-1 (twice)",
+          synonyms: ["iso-8859-1", "iso 8859-1", "double encoded"],
+        },
       ],
     },
   ],

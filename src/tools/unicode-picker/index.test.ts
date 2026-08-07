@@ -100,12 +100,19 @@ describe("unicode-picker", () => {
     const used = new Set(ENTRIES.map((e) => e.category));
     expect([...used].sort()).toEqual([...CATEGORIES.map((c) => c.id)].sort());
 
-    const choices = meta.options?.[0];
-    expect(choices?.kind).toBe("select");
-    if (choices?.kind !== "select") throw new Error("expected a select option");
-    expect(choices.default).toBe("all");
-    expect(choices.choices?.map((c) => c.value)).toEqual(["all", ...CATEGORIES.map((c) => c.id)]);
-    expect(choices.choices?.slice(1).map((c) => c.label)).toEqual(CATEGORIES.map((c) => c.label));
+    const categorySelect = meta.options?.[0];
+    expect(categorySelect?.kind).toBe("select");
+    if (categorySelect?.kind !== "select") throw new Error("expected a select option");
+    expect(categorySelect.default).toBe("all");
+    expect(categorySelect.options?.map((o) => o.value)).toEqual([
+      "all",
+      ...CATEGORIES.map((c) => c.id),
+    ]);
+    expect(categorySelect.options?.slice(1).map((o) => o.label)).toEqual(
+      CATEGORIES.map((c) => c.label),
+    );
+    // Every option carries real search synonyms (the dropdown contract).
+    expect(categorySelect.options?.every((o) => (o.synonyms?.length ?? 0) > 0)).toBe(true);
   });
 
   it("quotes the real dataset size in the page copy", () => {

@@ -38,19 +38,66 @@ export const meta: ToolMeta = {
       label: "Category",
       default: "all",
       // Kept in sync with CATEGORIES in ./data.ts by a test — meta stays
-      // dependency-free because the registry imports it eagerly.
-      choices: [
-        { value: "all", label: "All categories" },
-        { value: "arrows", label: "Arrows" },
-        { value: "math", label: "Maths & logic" },
-        { value: "greek", label: "Greek letters" },
-        { value: "currency", label: "Currency" },
-        { value: "punctuation", label: "Punctuation & dashes" },
-        { value: "box", label: "Box drawing" },
-        { value: "superscript", label: "Superscript & subscript" },
-        { value: "symbols", label: "Checks, stars & bullets" },
-        { value: "legal", label: "Legal & editorial" },
-        { value: "invisible", label: "Invisible characters" },
+      // dependency-free because the registry imports it eagerly. Flat, not
+      // grouped: every option already IS a category, so nesting them under
+      // invented meta-categories would add structure the data does not have,
+      // and the 11-option count already clears the search threshold on its own.
+      options: [
+        {
+          value: "all",
+          label: "All categories",
+          synonyms: ["everything", "any category", "no filter", "browse all"],
+        },
+        {
+          value: "arrows",
+          label: "Arrows",
+          synonyms: ["arrow symbols", "pointer", "direction"],
+        },
+        {
+          value: "math",
+          label: "Maths & logic",
+          synonyms: ["math symbols", "logic operators", "mathematics"],
+        },
+        {
+          value: "greek",
+          label: "Greek letters",
+          synonyms: ["greek alphabet", "alpha beta", "pi sigma"],
+        },
+        {
+          value: "currency",
+          label: "Currency",
+          synonyms: ["money symbols", "currency signs", "dollar euro"],
+        },
+        {
+          value: "punctuation",
+          label: "Punctuation & dashes",
+          synonyms: ["dashes", "smart quotes", "em dash en dash"],
+        },
+        {
+          value: "box",
+          label: "Box drawing",
+          synonyms: ["box characters", "line drawing", "ascii art borders"],
+        },
+        {
+          value: "superscript",
+          label: "Superscript & subscript",
+          synonyms: ["exponent", "small numbers", "footnote marks"],
+        },
+        {
+          value: "symbols",
+          label: "Checks, stars & bullets",
+          synonyms: ["checkmarks", "stars", "bullets", "list markers"],
+        },
+        {
+          value: "legal",
+          label: "Legal & editorial",
+          synonyms: ["copyright", "trademark", "registered", "section sign"],
+        },
+        {
+          value: "invisible",
+          label: "Invisible characters",
+          synonyms: ["zero width space", "no break space", "hidden characters"],
+        },
       ],
     },
   ],

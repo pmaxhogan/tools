@@ -35,10 +35,22 @@ export const meta: ToolMeta = {
       id: "view",
       label: "Sections",
       default: "both",
-      choices: [
-        { value: "both", label: "Tree and layout" },
-        { value: "tree", label: "Item tree only" },
-        { value: "layout", label: "Report layout only" },
+      options: [
+        {
+          value: "both",
+          label: "Tree and layout",
+          synonyms: ["everything", "full view", "combined view"],
+        },
+        {
+          value: "tree",
+          label: "Item tree only",
+          synonyms: ["descriptor tree", "item hierarchy", "raw items"],
+        },
+        {
+          value: "layout",
+          label: "Report layout only",
+          synonyms: ["field layout", "bit layout", "report fields"],
+        },
       ],
     },
     { kind: "boolean", id: "showBytes", label: "Show raw item bytes", default: true },

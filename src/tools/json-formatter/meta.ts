@@ -37,15 +37,71 @@ export const meta: ToolMeta = {
       id: "mode",
       label: "Mode",
       default: "format",
-      choices: [
-        { value: "format", label: "Format JSON" },
-        { value: "minify", label: "Minify JSON" },
-        { value: "validate", label: "Validate JSON" },
-        { value: "jwt-decode", label: "Decode JWT" },
-        { value: "base64-encode", label: "Base64 encode" },
-        { value: "base64-decode", label: "Base64 decode" },
-        { value: "url-encode", label: "URL encode" },
-        { value: "url-decode", label: "URL decode" },
+      groups: [
+        {
+          label: "JSON",
+          synonyms: ["json", "javascript object notation"],
+          options: [
+            {
+              value: "format",
+              label: "Format JSON",
+              synonyms: ["pretty print", "beautify", "indent json"],
+            },
+            {
+              value: "minify",
+              label: "Minify JSON",
+              synonyms: ["compact", "strip whitespace", "shrink"],
+            },
+            {
+              value: "validate",
+              label: "Validate JSON",
+              synonyms: ["check syntax", "lint", "is valid json"],
+            },
+          ],
+        },
+        {
+          label: "JWT",
+          synonyms: ["json web token", "bearer token", "jwt.io"],
+          options: [
+            {
+              value: "jwt-decode",
+              label: "Decode JWT",
+              synonyms: ["jwt decoder", "parse token", "read claims"],
+            },
+          ],
+        },
+        {
+          label: "Base64",
+          synonyms: ["base 64", "b64"],
+          options: [
+            {
+              value: "base64-encode",
+              label: "Base64 encode",
+              synonyms: ["text to base64", "encode base64"],
+            },
+            {
+              value: "base64-decode",
+              label: "Base64 decode",
+              synonyms: ["base64 to text", "decode base64"],
+            },
+          ],
+        },
+        {
+          label: "URL",
+          synonyms: ["percent encoding", "uri", "query string"],
+          options: [
+            {
+              value: "url-encode",
+              label: "URL encode",
+              synonyms: ["urlencode", "percent encode", "escape url"],
+            },
+            {
+              value: "url-decode",
+              label: "URL decode",
+              synonyms: ["urldecode", "percent decode", "unescape url"],
+            },
+          ],
+        },
       ],
     },
     {
@@ -53,10 +109,10 @@ export const meta: ToolMeta = {
       id: "indent",
       label: "Indent (format mode)",
       default: "2",
-      choices: [
-        { value: "2", label: "2 spaces" },
-        { value: "4", label: "4 spaces" },
-        { value: "tab", label: "Tab" },
+      options: [
+        { value: "2", label: "2 spaces", synonyms: ["two spaces", "narrow indent"] },
+        { value: "4", label: "4 spaces", synonyms: ["four spaces", "wide indent"] },
+        { value: "tab", label: "Tab", synonyms: ["tab character", "tabs"] },
       ],
     },
   ],
