@@ -39,10 +39,28 @@ const EXAMPLE_PLACEHOLDER =
   'Paste one item per line, for example:\nCoffee break\nTypo in a deck\nCat on the call\nMuted mic\n"Can everyone see my screen?"\nDouble booked meeting';
 
 /** A cryptographically random uint32, used to pick a fresh seed on reshuffle. */
-function randomSeed(): number {
+function randomSeed(): string {
   const a = new Uint32Array(1);
   globalThis.crypto.getRandomValues(a);
-  return a[0]!;
+  return String(a[0]!);
+}
+
+/**
+ * Turn a free-form seed into the uint32 the pure logic wants. A digit-only
+ * seed maps straight through (so old numeric share links reproduce exactly);
+ * anything else is FNV-1a hashed, letting people type a memorable phrase like
+ * "party-2026" and get the same set of cards back every time.
+ */
+function seedToNumber(raw: string): number {
+  const s = raw.trim();
+  if (s === "") return 0;
+  if (/^\d+$/.test(s)) return Number(s) >>> 0;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i += 1) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
 }
 
 const itemsText = ref("");
@@ -51,7 +69,7 @@ const freeSpace = ref(props.meta.options?.find((o) => o.id === "freeSpace")?.def
 const freeText = ref(optionDefault("freeText", "FREE"));
 const title = ref(optionDefault("title", ""));
 const count = ref(Number(optionDefault("count", "4")) || 4);
-const seed = ref(randomSeed());
+const seedText = ref(randomSeed());
 const mounted = ref(false);
 
 const items = computed(() => itemsText.value.split("\n"));
@@ -78,7 +96,7 @@ const result = computed<GenResult>(() => {
       size: sizeNumber.value,
       freeSpace: freeSpace.value,
       freeText: freeText.value,
-      seed: seed.value,
+      seed: seedToNumber(seedText.value),
       count: count.value,
     });
     return { boards, error: null };
@@ -92,7 +110,7 @@ const result = computed<GenResult>(() => {
 });
 
 function reshuffle() {
-  seed.value = randomSeed();
+  seedText.value = randomSeed();
 }
 
 function onSizeChange(value: string) {
@@ -103,7 +121,7 @@ function onSizeChange(value: string) {
 /* URL fragment: shareable state (rule 6, never localStorage)        */
 /* ---------------------------------------------------------------- */
 
-watch([itemsText, size, freeSpace, freeText, title, count, seed], () => {
+watch([itemsText, size, freeSpace, freeText, title, count, seedText], () => {
   if (!mounted.value) return;
   writeFragment({
     input: itemsText.value,
@@ -113,7 +131,7 @@ watch([itemsText, size, freeSpace, freeText, title, count, seed], () => {
       freeText: freeText.value,
       title: title.value,
       count: String(count.value),
-      seed: String(seed.value),
+      seed: seedText.value,
     },
   });
 });
@@ -126,7 +144,7 @@ onMounted(() => {
   if (frag.opts.freeText !== undefined) freeText.value = frag.opts.freeText;
   if (frag.opts.title !== undefined) title.value = frag.opts.title;
   if (frag.opts.count) count.value = Number(frag.opts.count) || count.value;
-  if (frag.opts.seed) seed.value = Number(frag.opts.seed) || seed.value;
+  if (frag.opts.seed) seedText.value = frag.opts.seed;
   mounted.value = true;
 });
 
@@ -342,7 +360,17 @@ async function exportCardPng(index: number) {
       </div>
     </div>
 
-    <div class="no-print flex flex-wrap items-center gap-2">
+    <div class="no-print flex flex-wrap items-end gap-2">
+      <div class="flex min-w-0 flex-col gap-1.5">
+        <Label for="bingo-seed" class="text-xs text-muted-foreground">Seed (repeatable sets)</Label>
+        <Input
+          id="bingo-seed"
+          v-model="seedText"
+          placeholder="e.g. party-2026"
+          spellcheck="false"
+          class="h-8 w-44 font-mono text-xs"
+        />
+      </div>
       <Button size="sm" @click="reshuffle">
         <Shuffle class="size-3.5" />
         Shuffle
@@ -352,6 +380,10 @@ async function exportCardPng(index: number) {
         Print {{ result.boards.length > 1 ? "all cards" : "card" }}
       </Button>
     </div>
+    <p class="no-print -mt-2 text-xs text-muted-foreground">
+      Same seed, list, and settings always produce the same set of cards. Shuffle rolls a new seed;
+      type your own to reproduce a set. The page link captures it either way.
+    </p>
 
     <div
       v-if="usableCount === 0"
