@@ -16,6 +16,7 @@ import { meta as audioTrimmer } from './audio-trimmer/meta';
 import { meta as backgroundRemover } from './background-remover/meta';
 import { meta as baseConverter } from './base-converter/meta';
 import { meta as batchProcessor } from './batch-processor/meta';
+import { meta as bleSensorDashboard } from './ble-sensor-dashboard/meta';
 import { meta as bulkRename } from './bulk-rename/meta';
 import { meta as caseConverter } from './case-converter/meta';
 import { meta as characterCounter } from './character-counter/meta';
@@ -89,6 +90,7 @@ export const tools: ToolMeta[] = [
   backgroundRemover,
   baseConverter,
   batchProcessor,
+  bleSensorDashboard,
   bulkRename,
   caseConverter,
   characterCounter,
@@ -164,6 +166,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'background-remover': () => import('./background-remover/index').then((m) => m.default),
   'base-converter': () => import('./base-converter/index').then((m) => m.default),
   'batch-processor': () => import('./batch-processor/index').then((m) => m.default),
+  'ble-sensor-dashboard': () => import('./ble-sensor-dashboard/index').then((m) => m.default),
   'bulk-rename': () => import('./bulk-rename/index').then((m) => m.default),
   'case-converter': () => import('./case-converter/index').then((m) => m.default),
   'character-counter': () => import('./character-counter/index').then((m) => m.default),
