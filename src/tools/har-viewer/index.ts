@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * HAR (HTTP Archive) viewer.
@@ -172,35 +172,35 @@ export interface WaterfallOpts {
 
 /** Header names whose value is a credential. Compared case insensitively. */
 export const SENSITIVE_HEADERS = [
-  'cookie',
-  'set-cookie',
-  'authorization',
-  'proxy-authorization',
+  "cookie",
+  "set-cookie",
+  "authorization",
+  "proxy-authorization",
 ] as const;
 
-const COOKIE_HEADERS = new Set(['cookie', 'set-cookie']);
+const COOKIE_HEADERS = new Set(["cookie", "set-cookie"]);
 
 /** Query parameter name fragments that usually carry a secret. */
 export const SECRET_PARAM_WORDS = [
-  'token',
-  'key',
-  'auth',
-  'session',
-  'password',
-  'code',
-  'signature',
+  "token",
+  "key",
+  "auth",
+  "session",
+  "password",
+  "code",
+  "signature",
 ] as const;
 
-export const REDACTED = '[redacted]';
+export const REDACTED = "[redacted]";
 
 /** True when a header name is one this tool redacts. */
 export function isSensitiveHeader(name: string): boolean {
-  return (SENSITIVE_HEADERS as readonly string[]).includes(String(name ?? '').toLowerCase());
+  return (SENSITIVE_HEADERS as readonly string[]).includes(String(name ?? "").toLowerCase());
 }
 
 /** True when a query parameter name looks like it carries a credential. */
 export function isSecretParam(name: string): boolean {
-  const lower = String(name ?? '').toLowerCase();
+  const lower = String(name ?? "").toLowerCase();
   return SECRET_PARAM_WORDS.some((word) => lower.includes(word));
 }
 
@@ -209,19 +209,19 @@ export function isSecretParam(name: string): boolean {
 /* ------------------------------------------------------------------ */
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
-function asString(value: unknown, fallback = ''): string {
-  return typeof value === 'string' ? value : fallback;
+function asString(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
 }
 
 function asNumber(value: unknown, fallback = 0): number {
-  const n = typeof value === 'number' ? value : Number(value);
+  const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : fallback;
 }
 
@@ -240,7 +240,7 @@ function nameValues(value: unknown): HarNameValue[] {
 export function humanBytes(bytes: number): string {
   const n = Math.max(0, Math.round(bytes));
   if (n < 1024) return `${n} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = n / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -267,7 +267,7 @@ function hostOf(url: string): string {
   try {
     return new URL(url).host;
   } catch {
-    return '';
+    return "";
   }
 }
 
@@ -282,13 +282,13 @@ function entryBytes(bodySize: number, contentSize: number): number {
 
 export function statusClass(status: number): string {
   if (status >= 100 && status < 600) return `${Math.floor(status / 100)}xx`;
-  return 'other';
+  return "other";
 }
 
 /** Strips parameters and normalises a MIME type down to its bucket name. */
 export function mimeBucket(mimeType: string): string {
-  const base = mimeType.split(';')[0]?.trim().toLowerCase() ?? '';
-  if (!base) return 'unknown';
+  const base = mimeType.split(";")[0]?.trim().toLowerCase() ?? "";
+  if (!base) return "unknown";
   return base;
 }
 
@@ -305,12 +305,12 @@ const HAR_FIX =
  * `log.entries` is not a HAR and is rejected outright.
  */
 export function parseHar(text: string): HarModel {
-  const source = typeof text === 'string' ? text : '';
-  if (source.trim() === '') {
+  const source = typeof text === "string" ? text : "";
+  if (source.trim() === "") {
     throw new ToolError(
-      'empty-input',
-      'Nothing to read yet.',
-      'Drop a .har file here, or paste the contents of one.',
+      "empty-input",
+      "Nothing to read yet.",
+      "Drop a .har file here, or paste the contents of one.",
     );
   }
 
@@ -319,21 +319,21 @@ export function parseHar(text: string): HarModel {
     parsed = JSON.parse(source);
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
-    throw new ToolError('invalid-har', `This file is not valid JSON: ${detail}.`, HAR_FIX);
+    throw new ToolError("invalid-har", `This file is not valid JSON: ${detail}.`, HAR_FIX);
   }
 
   const log = isRecord(parsed) && isRecord(parsed.log) ? parsed.log : null;
   if (!log || !Array.isArray(log.entries)) {
     throw new ToolError(
-      'invalid-har',
-      'This JSON has no log.entries array, so it is not a HAR capture.',
+      "invalid-har",
+      "This JSON has no log.entries array, so it is not a HAR capture.",
       HAR_FIX,
     );
   }
 
   const creator = isRecord(log.creator)
-    ? [asString(log.creator.name), asString(log.creator.version)].filter(Boolean).join(' ')
-    : '';
+    ? [asString(log.creator.name), asString(log.creator.version)].filter(Boolean).join(" ")
+    : "";
 
   const pages: HarPage[] = asArray(log.pages)
     .filter(isRecord)
@@ -359,7 +359,7 @@ export function parseHar(text: string): HarModel {
     const postData: HarPostData | undefined = postDataRaw
       ? {
           mimeType: asString(postDataRaw.mimeType),
-          ...(typeof postDataRaw.text === 'string' ? { text: postDataRaw.text } : {}),
+          ...(typeof postDataRaw.text === "string" ? { text: postDataRaw.text } : {}),
           params: nameValues(postDataRaw.params),
         }
       : undefined;
@@ -371,7 +371,7 @@ export function parseHar(text: string): HarModel {
       host: hostOf(url),
       bytes: entryBytes(bodySize, contentSize),
       request: {
-        method: asString(request.method, 'GET').toUpperCase(),
+        method: asString(request.method, "GET").toUpperCase(),
         url,
         headers: nameValues(request.headers),
         cookies: nameValues(request.cookies),
@@ -415,7 +415,7 @@ export function parseHar(text: string): HarModel {
   }
 
   return {
-    version: asString(log.version, '1.2'),
+    version: asString(log.version, "1.2"),
     creator,
     pages,
     entries: parsedEntries,
@@ -456,7 +456,7 @@ export function summarize(entries: HarEntry[]): HarSummary {
 
   const domainCounts = new Map<string, { count: number; bytes: number }>();
   for (const entry of list) {
-    const host = entry.host || 'unknown';
+    const host = entry.host || "unknown";
     const row = domainCounts.get(host) ?? { count: 0, bytes: 0 };
     row.count += 1;
     row.bytes += entry.bytes;
@@ -466,7 +466,7 @@ export function summarize(entries: HarEntry[]): HarSummary {
     .map(([host, row]) => ({ host, ...row }))
     .sort((a, b) => b.count - a.count || b.bytes - a.bytes || a.host.localeCompare(b.host));
 
-  const primaryHost = list[0]?.host ?? '';
+  const primaryHost = list[0]?.host ?? "";
   const thirdPartyRequests = primaryHost
     ? list.filter((entry) => entry.host !== primaryHost).length
     : 0;
@@ -475,7 +475,7 @@ export function summarize(entries: HarEntry[]): HarSummary {
     requests,
     transferred,
     contentBytes,
-    startedDateTime: list[0]?.startedDateTime ?? '',
+    startedDateTime: list[0]?.startedDateTime ?? "",
     spanMs,
     totalTimeMs,
     byStatus: countBy(list, (entry) => statusClass(entry.response.status)),
@@ -495,14 +495,14 @@ export function summarize(entries: HarEntry[]): HarSummary {
 
 /** Applies the URL, status class, MIME and duration filters in one pass. */
 export function filterEntries(entries: HarEntry[], o: WaterfallOpts = {}): HarEntry[] {
-  const needle = (o.filter ?? '').trim().toLowerCase();
-  const status = (o.status ?? 'all').trim().toLowerCase();
-  const mime = (o.mime ?? '').trim().toLowerCase();
+  const needle = (o.filter ?? "").trim().toLowerCase();
+  const status = (o.status ?? "all").trim().toLowerCase();
+  const mime = (o.mime ?? "").trim().toLowerCase();
   const minMs = Math.max(0, asNumber(o.minMs, 0));
 
   return (entries ?? []).filter((entry) => {
     if (needle && !entry.request.url.toLowerCase().includes(needle)) return false;
-    if (status && status !== 'all' && statusClass(entry.response.status) !== status) return false;
+    if (status && status !== "all" && statusClass(entry.response.status) !== status) return false;
     if (mime && !entry.response.content.mimeType.toLowerCase().includes(mime)) return false;
     if (minMs > 0 && entry.time < minMs) return false;
     return true;
@@ -513,8 +513,8 @@ export function filterEntries(entries: HarEntry[], o: WaterfallOpts = {}): HarEn
 /* waterfall                                                           */
 /* ------------------------------------------------------------------ */
 
-const PHASE_CHARS = { dns: '░', connect: '▒', wait: '▓', receive: '█' } as const;
-const BAR_CHAR = '█';
+const PHASE_CHARS = { dns: "░", connect: "▒", wait: "▓", receive: "█" } as const;
+const BAR_CHAR = "█";
 const DEFAULT_WIDTH = 100;
 const DEFAULT_LIMIT = 200;
 
@@ -563,22 +563,22 @@ function barFor(entry: HarEntry, span: number, barWidth: number): string {
   const offset = Math.min(barWidth - 1, Math.max(0, Math.floor(entry.startMs * scale)));
   const length = Math.min(barWidth - offset, Math.max(1, Math.round(entry.time * scale)));
 
-  let body = '';
+  let body = "";
   const weights = phaseWeights(entry.timings);
   if (length >= 4 && weights.some((w) => w > 0)) {
     const parts = distribute(weights, length);
     const chars = [PHASE_CHARS.dns, PHASE_CHARS.connect, PHASE_CHARS.wait, PHASE_CHARS.receive];
-    for (let i = 0; i < parts.length; i++) body += chars[i]?.repeat(parts[i] ?? 0) ?? '';
+    for (let i = 0; i < parts.length; i++) body += chars[i]?.repeat(parts[i] ?? 0) ?? "";
   } else {
     body = BAR_CHAR.repeat(length);
   }
 
-  return `${' '.repeat(offset)}${body}`.padEnd(barWidth);
+  return `${" ".repeat(offset)}${body}`.padEnd(barWidth);
 }
 
 /** Shortens a URL to `host/tail` so the interesting end stays visible. */
 export function shortUrl(url: string, max: number): string {
-  if (max <= 1) return '';
+  if (max <= 1) return "";
   let text: string;
   try {
     const parsed = new URL(url);
@@ -607,7 +607,7 @@ export function renderWaterfall(entries: HarEntry[], o: WaterfallOpts = {}): str
   );
 
   if (rows.length === 0) {
-    return 'No requests match these filters.';
+    return "No requests match these filters.";
   }
 
   const barWidth = Math.max(12, Math.floor(width * 0.4));
@@ -617,24 +617,28 @@ export function renderWaterfall(entries: HarEntry[], o: WaterfallOpts = {}): str
   const out: string[] = [
     `Timeline 0 to ${humanMs(span)} across ${barWidth} columns.`,
     `Phases: ${PHASE_CHARS.dns} dns  ${PHASE_CHARS.connect} connect  ${PHASE_CHARS.wait} wait  ${PHASE_CHARS.receive} receive`,
-    '',
+    "",
   ];
 
   const shown = rows.slice(0, limit);
   for (const entry of shown) {
     const method = entry.request.method.slice(0, 6).padEnd(6);
-    const status = String(entry.response.status || '-').padStart(3);
+    const status = String(entry.response.status || "-").padStart(3);
     const url = shortUrl(entry.request.url, urlWidth).padEnd(urlWidth);
     const size = humanBytes(entry.bytes).padStart(9);
     const time = `${Math.round(entry.time)} ms`.padStart(8);
-    out.push(`${method} ${status} ${url} ${size} ${time} ${barFor(entry, span, barWidth)}`.trimEnd());
+    out.push(
+      `${method} ${status} ${url} ${size} ${time} ${barFor(entry, span, barWidth)}`.trimEnd(),
+    );
   }
 
   if (shown.length < rows.length) {
     const rest = rows.length - shown.length;
-    out.push(`... ${rest} more ${rest === 1 ? 'request' : 'requests'} (${rows.length} shown by the filters)`);
+    out.push(
+      `... ${rest} more ${rest === 1 ? "request" : "requests"} (${rows.length} shown by the filters)`,
+    );
   }
-  return out.join('\n');
+  return out.join("\n");
 }
 
 /* ------------------------------------------------------------------ */
@@ -751,7 +755,7 @@ function scan(root: unknown, mutate: boolean): SensitiveReport {
 
     if (response) {
       const content = isRecord(response.content) ? response.content : null;
-      const text = content ? asString(content.text) : '';
+      const text = content ? asString(content.text) : "";
       if (content && text.length > 0) {
         report.responseBodies += 1;
         report.responseBodyChars += text.length;
@@ -795,9 +799,9 @@ export function sanitizeHar(model: HarModel): unknown {
   const source = model?.raw;
   if (source === undefined) {
     throw new ToolError(
-      'invalid-har',
-      'There is no parsed capture to sanitize.',
-      'Load a .har file first, then export the sanitized copy.',
+      "invalid-har",
+      "There is no parsed capture to sanitize.",
+      "Load a .har file first, then export the sanitized copy.",
     );
   }
   const copy: unknown = JSON.parse(JSON.stringify(source));
@@ -814,13 +818,13 @@ function percent(fraction: number): string {
 }
 
 function bucketLine(buckets: { key: string; count: number }[]): string {
-  if (buckets.length === 0) return 'none';
-  return buckets.map((b) => `${b.key} ${b.count}`).join(', ');
+  if (buckets.length === 0) return "none";
+  return buckets.map((b) => `${b.key} ${b.count}`).join(", ");
 }
 
 function summaryBlock(model: HarModel, s: HarSummary): string {
   const out = [
-    'Capture summary',
+    "Capture summary",
     `  Requests: ${s.requests}`,
     `  Transferred: ${humanBytes(s.transferred)} (${humanBytes(s.contentBytes)} uncompressed)`,
     `  Time span: ${humanMs(s.spanMs)}`,
@@ -836,9 +840,9 @@ function summaryBlock(model: HarModel, s: HarSummary): string {
   if (s.startedDateTime) out.push(`  Started: ${s.startedDateTime}`);
   if (model.creator) out.push(`  Recorded by: ${model.creator}`);
   if (model.pages.length > 0) {
-    out.push(`  Pages: ${model.pages.map((p) => p.title || p.id).join(', ')}`);
+    out.push(`  Pages: ${model.pages.map((p) => p.title || p.id).join(", ")}`);
   }
-  return out.join('\n');
+  return out.join("\n");
 }
 
 function entryList(title: string, entries: HarEntry[], metric: (e: HarEntry) => string): string {
@@ -846,31 +850,31 @@ function entryList(title: string, entries: HarEntry[], metric: (e: HarEntry) => 
   const out = [title];
   entries.forEach((entry, i) => {
     out.push(
-      `  ${String(i + 1).padStart(2)}. ${metric(entry).padStart(9)}  ${entry.response.status || '-'} ${shortUrl(entry.request.url, 70)}`,
+      `  ${String(i + 1).padStart(2)}. ${metric(entry).padStart(9)}  ${entry.response.status || "-"} ${shortUrl(entry.request.url, 70)}`,
     );
   });
-  return out.join('\n');
+  return out.join("\n");
 }
 
 function domainBlock(s: HarSummary): string {
-  if (s.domains.length === 0) return 'Domains\n  none';
-  const out = ['Domains'];
+  if (s.domains.length === 0) return "Domains\n  none";
+  const out = ["Domains"];
   const nameWidth = Math.min(40, Math.max(6, ...s.domains.map((d) => d.host.length)));
   for (const domain of s.domains) {
-    const flag = s.primaryHost && domain.host !== s.primaryHost ? ' third party' : '';
+    const flag = s.primaryHost && domain.host !== s.primaryHost ? " third party" : "";
     out.push(
       `  ${shortUrl(domain.host, nameWidth).padEnd(nameWidth)}  ${String(domain.count).padStart(4)} req  ${humanBytes(domain.bytes).padStart(9)}${flag}`,
     );
   }
-  return out.join('\n');
+  return out.join("\n");
 }
 
 function sensitiveBlock(report: SensitiveReport): string {
-  const out = ['Sensitive content'];
+  const out = ["Sensitive content"];
   if (report.total === 0) {
-    out.push('  Nothing that looks like a credential was found in this capture.');
-    out.push('  Check it yourself before sharing it anyway: a session id can hide in any field.');
-    return out.join('\n');
+    out.push("  Nothing that looks like a credential was found in this capture.");
+    out.push("  Check it yourself before sharing it anyway: a session id can hide in any field.");
+    return out.join("\n");
   }
   out.push(`  Cookies: ${report.cookies}`);
   out.push(`  Cookie headers: ${report.cookieHeaders}`);
@@ -884,7 +888,7 @@ function sensitiveBlock(report: SensitiveReport): string {
   out.push(
     '  Use "Download sanitized copy" on the tool page to get a version with all of the above redacted.',
   );
-  return out.join('\n');
+  return out.join("\n");
 }
 
 /* ------------------------------------------------------------------ */
@@ -893,10 +897,10 @@ function sensitiveBlock(report: SensitiveReport): string {
 
 export function run(input: string, opts: HarOpts): string {
   const model = parseHar(input);
-  const view = (opts?.view || 'summary').toLowerCase();
+  const view = (opts?.view || "summary").toLowerCase();
   const waterfallOpts: WaterfallOpts = {
-    filter: opts?.filter ?? '',
-    status: opts?.status ?? 'all',
+    filter: opts?.filter ?? "",
+    status: opts?.status ?? "all",
     minMs: asNumber(opts?.minMs, 0),
   };
 
@@ -905,16 +909,18 @@ export function run(input: string, opts: HarOpts): string {
   const sections = [summaryBlock(model, summary)];
 
   switch (view) {
-    case 'waterfall':
+    case "waterfall":
       sections.push(renderWaterfall(model.entries, { ...waterfallOpts, limit: 200 }));
       break;
-    case 'slowest':
-      sections.push(entryList('Slowest requests', summary.slowest, (e) => `${Math.round(e.time)} ms`));
+    case "slowest":
+      sections.push(
+        entryList("Slowest requests", summary.slowest, (e) => `${Math.round(e.time)} ms`),
+      );
       break;
-    case 'largest':
-      sections.push(entryList('Largest responses', summary.largest, (e) => humanBytes(e.bytes)));
+    case "largest":
+      sections.push(entryList("Largest responses", summary.largest, (e) => humanBytes(e.bytes)));
       break;
-    case 'domains':
+    case "domains":
       sections.push(domainBlock(summary));
       break;
     default:
@@ -923,7 +929,7 @@ export function run(input: string, opts: HarOpts): string {
   }
 
   sections.push(sensitiveBlock(listSensitive(model)));
-  return sections.join('\n\n');
+  return sections.join("\n\n");
 }
 
 export default { run } satisfies ToolLogic<string, string, HarOpts>;

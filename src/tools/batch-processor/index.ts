@@ -15,24 +15,24 @@
  * pipeline (bytes in, bytes out, per format decoders), so they are filtered
  * out by extension rather than half handled.
  */
-import { ToolError, type ToolLogic } from '../types';
-import type { FsScan, WriteOp } from '@/lib/fs-access';
+import { ToolError, type ToolLogic } from "../types";
+import type { FsScan, WriteOp } from "@/lib/fs-access";
 
 /* ------------------------------------------------------------------ */
 /* operations                                                          */
 /* ------------------------------------------------------------------ */
 
 export type BatchOperationId =
-  | 'find-replace'
-  | 'case'
-  | 'trim-whitespace'
-  | 'line-endings'
-  | 'encoding-normalize'
-  | 'prefix-suffix'
-  | 'sort-lines'
-  | 'dedupe-lines'
-  | 'json-format'
-  | 'template-wrap';
+  | "find-replace"
+  | "case"
+  | "trim-whitespace"
+  | "line-endings"
+  | "encoding-normalize"
+  | "prefix-suffix"
+  | "sort-lines"
+  | "dedupe-lines"
+  | "json-format"
+  | "template-wrap";
 
 /**
  * Every option any operation takes, in one flat bag. The panel builds it from
@@ -51,17 +51,17 @@ export interface BatchOperationOpts {
   caseSensitive?: boolean;
 
   /** case: which casing to apply to the whole file. */
-  caseMode?: 'upper' | 'lower' | 'title' | 'sentence';
+  caseMode?: "upper" | "lower" | "title" | "sentence";
 
   /** trim-whitespace: remove spaces and tabs at the end of each line. Default true. */
   trimTrailingSpaces?: boolean;
   /** trim-whitespace: what to do about the last line. Default "ensure". */
-  finalNewline?: 'ensure' | 'strip' | 'keep';
+  finalNewline?: "ensure" | "strip" | "keep";
   /** trim-whitespace: squeeze runs of blank lines down to one. Default false. */
   collapseBlankLines?: boolean;
 
   /** line-endings: which line ending every line should use. Default "lf". */
-  eol?: 'lf' | 'crlf';
+  eol?: "lf" | "crlf";
 
   /** encoding-normalize: also remove byte order marks found mid file. Default false. */
   stripInnerBom?: boolean;
@@ -72,7 +72,7 @@ export interface BatchOperationOpts {
   suffix?: string;
 
   /** sort-lines: which way round. Default "asc". */
-  sortDirection?: 'asc' | 'desc';
+  sortDirection?: "asc" | "desc";
   /** sort-lines: compare digit runs as numbers, so file10 sorts after file9. */
   sortNumeric?: boolean;
   /** sort-lines: uppercase sorts separately from lowercase. Default false. */
@@ -86,7 +86,7 @@ export interface BatchOperationOpts {
   keepBlankLines?: boolean;
 
   /** json-format: pretty print or squeeze onto one line. Default "pretty". */
-  jsonMode?: 'pretty' | 'minify';
+  jsonMode?: "pretty" | "minify";
   /** json-format: spaces per indent level when pretty printing. Default 2. */
   jsonIndent?: number;
 
@@ -120,13 +120,13 @@ export interface BatchOperationSpec {
 /* ---------------- line helpers ---------------- */
 
 /** The line ending a file already uses, so a line based edit does not switch it. */
-export function detectEol(text: string): '\r\n' | '\n' {
-  return text.includes('\r\n') ? '\r\n' : '\n';
+export function detectEol(text: string): "\r\n" | "\n" {
+  return text.includes("\r\n") ? "\r\n" : "\n";
 }
 
 interface SplitText {
   lines: string[];
-  eol: '\r\n' | '\n';
+  eol: "\r\n" | "\n";
   /** True when the text ended with a line ending, which is not a blank line. */
   trailingNewline: boolean;
 }
@@ -134,48 +134,48 @@ interface SplitText {
 function splitLines(text: string): SplitText {
   const eol = detectEol(text);
   const lines = text.split(/\r\n|\r|\n/);
-  const trailingNewline = lines.length > 1 && lines[lines.length - 1] === '';
+  const trailingNewline = lines.length > 1 && lines[lines.length - 1] === "";
   if (trailingNewline) lines.pop();
   return { lines, eol, trailingNewline };
 }
 
 function joinLines(split: SplitText, lines: string[]): string {
-  return lines.join(split.eol) + (split.trailingNewline ? split.eol : '');
+  return lines.join(split.eol) + (split.trailingNewline ? split.eol : "");
 }
 
 /* ---------------- individual operations ---------------- */
 
 function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function findReplace(text: string, opts: BatchOperationOpts): OperationResult {
-  const find = opts.find ?? '';
-  if (find === '') {
+  const find = opts.find ?? "";
+  if (find === "") {
     throw new ToolError(
-      'empty-find',
-      'Find and replace needs something to look for, and the find box is empty.',
-      'Type the text or the pattern you want replaced.',
+      "empty-find",
+      "Find and replace needs something to look for, and the find box is empty.",
+      "Type the text or the pattern you want replaced.",
     );
   }
 
-  const flags = `g${opts.caseSensitive === false ? 'i' : ''}`;
+  const flags = `g${opts.caseSensitive === false ? "i" : ""}`;
   let pattern: RegExp;
   if (opts.regex) {
     try {
       pattern = new RegExp(find, flags);
     } catch (error) {
       throw new ToolError(
-        'invalid-regex',
+        "invalid-regex",
         `That regular expression is not valid: ${error instanceof Error ? error.message : String(error)}.`,
-        'Check the pattern, or switch off regex mode to search for the text exactly as typed.',
+        "Check the pattern, or switch off regex mode to search for the text exactly as typed.",
       );
     }
   } else {
     pattern = new RegExp(escapeRegExp(find), flags);
   }
 
-  return { ok: true, text: text.replace(pattern, opts.replace ?? '') };
+  return { ok: true, text: text.replace(pattern, opts.replace ?? "") };
 }
 
 function toTitleCase(text: string): string {
@@ -185,90 +185,91 @@ function toTitleCase(text: string): string {
 function toSentenceCase(text: string): string {
   return text
     .toLowerCase()
-    .replace(/(^|[.!?]["')\]]?\s+|\r?\n\s*)([a-z])/g, (_m, lead: string, letter: string) =>
-      lead + letter.toUpperCase(),
+    .replace(
+      /(^|[.!?]["')\]]?\s+|\r?\n\s*)([a-z])/g,
+      (_m, lead: string, letter: string) => lead + letter.toUpperCase(),
     );
 }
 
 function changeCase(text: string, opts: BatchOperationOpts): OperationResult {
-  switch (opts.caseMode ?? 'lower') {
-    case 'upper':
+  switch (opts.caseMode ?? "lower") {
+    case "upper":
       return { ok: true, text: text.toUpperCase() };
-    case 'lower':
+    case "lower":
       return { ok: true, text: text.toLowerCase() };
-    case 'title':
+    case "title":
       return { ok: true, text: toTitleCase(text) };
-    case 'sentence':
+    case "sentence":
       return { ok: true, text: toSentenceCase(text) };
     default:
       throw new ToolError(
-        'unknown-case-mode',
+        "unknown-case-mode",
         `"${String(opts.caseMode)}" is not a casing this tool knows.`,
-        'Choose upper, lower, title or sentence.',
+        "Choose upper, lower, title or sentence.",
       );
   }
 }
 
 function trimWhitespace(text: string, opts: BatchOperationOpts): OperationResult {
-  if (text === '') return { ok: true, text };
+  if (text === "") return { ok: true, text };
   const split = splitLines(text);
   let lines = split.lines;
 
   if (opts.trimTrailingSpaces !== false) {
-    lines = lines.map((line) => line.replace(/[ \t]+$/, ''));
+    lines = lines.map((line) => line.replace(/[ \t]+$/, ""));
   }
   if (opts.collapseBlankLines) {
-    lines = lines.filter((line, i) => !(line.trim() === '' && (lines[i - 1] ?? 'x').trim() === ''));
+    lines = lines.filter((line, i) => !(line.trim() === "" && (lines[i - 1] ?? "x").trim() === ""));
   }
 
-  const mode = opts.finalNewline ?? 'ensure';
-  if (mode === 'ensure') {
-    while (lines.length > 1 && (lines[lines.length - 1] as string).trim() === '') lines.pop();
+  const mode = opts.finalNewline ?? "ensure";
+  if (mode === "ensure") {
+    while (lines.length > 1 && (lines[lines.length - 1] as string).trim() === "") lines.pop();
     return { ok: true, text: lines.join(split.eol) + split.eol };
   }
-  if (mode === 'strip') {
-    while (lines.length > 1 && (lines[lines.length - 1] as string).trim() === '') lines.pop();
+  if (mode === "strip") {
+    while (lines.length > 1 && (lines[lines.length - 1] as string).trim() === "") lines.pop();
     return { ok: true, text: lines.join(split.eol) };
   }
   return { ok: true, text: joinLines(split, lines) };
 }
 
 function convertLineEndings(text: string, opts: BatchOperationOpts): OperationResult {
-  const target = (opts.eol ?? 'lf') === 'crlf' ? '\r\n' : '\n';
+  const target = (opts.eol ?? "lf") === "crlf" ? "\r\n" : "\n";
   return { ok: true, text: text.replace(/\r\n|\r|\n/g, target) };
 }
 
 /** U+FEFF, the character a UTF-8 BOM decodes to. */
-const BOM = '\uFEFF';
+const BOM = "\uFEFF";
 
 function normalizeEncoding(text: string, opts: BatchOperationOpts): OperationResult {
   let out = text.startsWith(BOM) ? text.slice(1) : text;
-  if (opts.stripInnerBom) out = out.split(BOM).join('');
+  if (opts.stripInnerBom) out = out.split(BOM).join("");
   return { ok: true, text: out };
 }
 
 function prefixSuffix(text: string, opts: BatchOperationOpts): OperationResult {
-  const prefix = opts.prefix ?? '';
-  const suffix = opts.suffix ?? '';
-  if (prefix === '' && suffix === '') {
+  const prefix = opts.prefix ?? "";
+  const suffix = opts.suffix ?? "";
+  if (prefix === "" && suffix === "") {
     throw new ToolError(
-      'empty-prefix-suffix',
-      'Add header or footer needs a header, a footer, or both, and neither was given.',
-      'Type the text you want above or below every file.',
+      "empty-prefix-suffix",
+      "Add header or footer needs a header, a footer, or both, and neither was given.",
+      "Type the text you want above or below every file.",
     );
   }
 
   const eol = detectEol(text);
-  let out = prefix === '' ? text : `${prefix}${eol}${text}`;
-  if (suffix !== '') {
-    const needsBreak = out !== '' && !out.endsWith('\n');
-    out = `${out}${needsBreak ? eol : ''}${suffix}${eol}`;
+  let out = prefix === "" ? text : `${prefix}${eol}${text}`;
+  if (suffix !== "") {
+    const needsBreak = out !== "" && !out.endsWith("\n");
+    out = `${out}${needsBreak ? eol : ""}${suffix}${eol}`;
   }
   return { ok: true, text: out };
 }
 
 function sortLines(text: string, opts: BatchOperationOpts): OperationResult {
-  if (text === '') return { ok: true, text };
+  if (text === "") return { ok: true, text };
   const split = splitLines(text);
   const caseSensitive = opts.sortCaseSensitive === true;
 
@@ -276,7 +277,7 @@ function sortLines(text: string, opts: BatchOperationOpts): OperationResult {
     const left = caseSensitive ? a : a.toLowerCase();
     const right = caseSensitive ? b : b.toLowerCase();
     if (opts.sortNumeric) {
-      const compared = left.localeCompare(right, 'en', { numeric: true, sensitivity: 'variant' });
+      const compared = left.localeCompare(right, "en", { numeric: true, sensitivity: "variant" });
       if (compared !== 0) return compared;
     } else if (left !== right) {
       return left < right ? -1 : 1;
@@ -284,18 +285,18 @@ function sortLines(text: string, opts: BatchOperationOpts): OperationResult {
     return a < b ? -1 : a > b ? 1 : 0;
   });
 
-  if ((opts.sortDirection ?? 'asc') === 'desc') sorted.reverse();
+  if ((opts.sortDirection ?? "asc") === "desc") sorted.reverse();
   return { ok: true, text: joinLines(split, sorted) };
 }
 
 function dedupeLines(text: string, opts: BatchOperationOpts): OperationResult {
-  if (text === '') return { ok: true, text };
+  if (text === "") return { ok: true, text };
   const split = splitLines(text);
   const seen = new Set<string>();
   const kept: string[] = [];
 
   for (const line of split.lines) {
-    if (line.trim() === '' && opts.keepBlankLines !== false) {
+    if (line.trim() === "" && opts.keepBlankLines !== false) {
       kept.push(line);
       continue;
     }
@@ -310,9 +311,9 @@ function dedupeLines(text: string, opts: BatchOperationOpts): OperationResult {
 }
 
 function formatJson(text: string, opts: BatchOperationOpts): OperationResult {
-  const body = text.startsWith('\uFEFF') ? text.slice(1) : text;
-  if (body.trim() === '') {
-    return { ok: false, reason: 'the file is empty, so there is no JSON to format' };
+  const body = text.startsWith("\uFEFF") ? text.slice(1) : text;
+  if (body.trim() === "") {
+    return { ok: false, reason: "the file is empty, so there is no JSON to format" };
   }
 
   let value: unknown;
@@ -323,36 +324,36 @@ function formatJson(text: string, opts: BatchOperationOpts): OperationResult {
     return { ok: false, reason: `not valid JSON (${detail})` };
   }
 
-  if (opts.jsonMode === 'minify') return { ok: true, text: JSON.stringify(value) };
+  if (opts.jsonMode === "minify") return { ok: true, text: JSON.stringify(value) };
 
   const indent = Math.min(8, Math.max(0, Math.floor(opts.jsonIndent ?? 2)));
   return { ok: true, text: `${JSON.stringify(value, null, indent)}\n` };
 }
 
 function templateWrap(text: string, opts: BatchOperationOpts): OperationResult {
-  const template = opts.template ?? '';
-  if (template === '') {
+  const template = opts.template ?? "";
+  if (template === "") {
     throw new ToolError(
-      'empty-template',
-      'Wrap in a template needs a template, and none was given.',
-      'Write the wrapper you want, putting {content} where the file should go.',
+      "empty-template",
+      "Wrap in a template needs a template, and none was given.",
+      "Write the wrapper you want, putting {content} where the file should go.",
     );
   }
-  if (!template.includes('{content}')) {
+  if (!template.includes("{content}")) {
     throw new ToolError(
-      'template-missing-content',
-      'That template never uses {content}, so every file would be replaced by the template itself.',
-      'Put {content} where the original text should sit. {name} and {path} are available too.',
+      "template-missing-content",
+      "That template never uses {content}, so every file would be replaced by the template itself.",
+      "Put {content} where the original text should sit. {name} and {path} are available too.",
     );
   }
 
   const out = template
-    .split('{content}')
+    .split("{content}")
     .join(text)
-    .split('{name}')
-    .join(opts.name ?? '')
-    .split('{path}')
-    .join(opts.path ?? opts.name ?? '');
+    .split("{name}")
+    .join(opts.name ?? "")
+    .split("{path}")
+    .join(opts.path ?? opts.name ?? "");
   return { ok: true, text: out };
 }
 
@@ -360,73 +361,73 @@ function templateWrap(text: string, opts: BatchOperationOpts): OperationResult {
 
 /** Every batch operation, keyed by id. The panel renders this list. */
 export const BATCH_OPERATIONS: Record<BatchOperationId, BatchOperationSpec> = {
-  'find-replace': {
-    id: 'find-replace',
-    label: 'Find and replace',
-    description: 'Replace every match of a literal string or a regular expression.',
+  "find-replace": {
+    id: "find-replace",
+    label: "Find and replace",
+    description: "Replace every match of a literal string or a regular expression.",
     canSkip: false,
     apply: findReplace,
   },
   case: {
-    id: 'case',
-    label: 'Change case',
-    description: 'Convert the whole file to upper, lower, title or sentence case.',
+    id: "case",
+    label: "Change case",
+    description: "Convert the whole file to upper, lower, title or sentence case.",
     canSkip: false,
     apply: changeCase,
   },
-  'trim-whitespace': {
-    id: 'trim-whitespace',
-    label: 'Trim whitespace',
-    description: 'Strip trailing spaces on each line and settle the final newline.',
+  "trim-whitespace": {
+    id: "trim-whitespace",
+    label: "Trim whitespace",
+    description: "Strip trailing spaces on each line and settle the final newline.",
     canSkip: false,
     apply: trimWhitespace,
   },
-  'line-endings': {
-    id: 'line-endings',
-    label: 'Convert line endings',
-    description: 'Rewrite every line ending as LF or as CRLF.',
+  "line-endings": {
+    id: "line-endings",
+    label: "Convert line endings",
+    description: "Rewrite every line ending as LF or as CRLF.",
     canSkip: false,
     apply: convertLineEndings,
   },
-  'encoding-normalize': {
-    id: 'encoding-normalize',
-    label: 'Strip byte order mark',
-    description: 'Remove the UTF-8 BOM that some editors write at the start of a file.',
+  "encoding-normalize": {
+    id: "encoding-normalize",
+    label: "Strip byte order mark",
+    description: "Remove the UTF-8 BOM that some editors write at the start of a file.",
     canSkip: false,
     apply: normalizeEncoding,
   },
-  'prefix-suffix': {
-    id: 'prefix-suffix',
-    label: 'Add header or footer',
-    description: 'Put fixed text above the file, below it, or both.',
+  "prefix-suffix": {
+    id: "prefix-suffix",
+    label: "Add header or footer",
+    description: "Put fixed text above the file, below it, or both.",
     canSkip: false,
     apply: prefixSuffix,
   },
-  'sort-lines': {
-    id: 'sort-lines',
-    label: 'Sort lines',
-    description: 'Sort every line, optionally numerically or in reverse.',
+  "sort-lines": {
+    id: "sort-lines",
+    label: "Sort lines",
+    description: "Sort every line, optionally numerically or in reverse.",
     canSkip: false,
     apply: sortLines,
   },
-  'dedupe-lines': {
-    id: 'dedupe-lines',
-    label: 'Remove duplicate lines',
-    description: 'Keep the first copy of each line and drop the repeats.',
+  "dedupe-lines": {
+    id: "dedupe-lines",
+    label: "Remove duplicate lines",
+    description: "Keep the first copy of each line and drop the repeats.",
     canSkip: false,
     apply: dedupeLines,
   },
-  'json-format': {
-    id: 'json-format',
-    label: 'Format JSON',
-    description: 'Pretty print or minify JSON. Files that are not JSON are skipped and listed.',
+  "json-format": {
+    id: "json-format",
+    label: "Format JSON",
+    description: "Pretty print or minify JSON. Files that are not JSON are skipped and listed.",
     canSkip: true,
     apply: formatJson,
   },
-  'template-wrap': {
-    id: 'template-wrap',
-    label: 'Wrap in a template',
-    description: 'Wrap each file in a template using {content}, {name} and {path}.',
+  "template-wrap": {
+    id: "template-wrap",
+    label: "Wrap in a template",
+    description: "Wrap each file in a template using {content}, {name} and {path}.",
     canSkip: false,
     apply: templateWrap,
   },
@@ -434,16 +435,16 @@ export const BATCH_OPERATIONS: Record<BatchOperationId, BatchOperationSpec> = {
 
 /** The operations in the order the panel offers them. */
 export const BATCH_OPERATION_LIST: BatchOperationSpec[] = [
-  BATCH_OPERATIONS['find-replace'],
+  BATCH_OPERATIONS["find-replace"],
   BATCH_OPERATIONS.case,
-  BATCH_OPERATIONS['trim-whitespace'],
-  BATCH_OPERATIONS['line-endings'],
-  BATCH_OPERATIONS['encoding-normalize'],
-  BATCH_OPERATIONS['prefix-suffix'],
-  BATCH_OPERATIONS['sort-lines'],
-  BATCH_OPERATIONS['dedupe-lines'],
-  BATCH_OPERATIONS['json-format'],
-  BATCH_OPERATIONS['template-wrap'],
+  BATCH_OPERATIONS["trim-whitespace"],
+  BATCH_OPERATIONS["line-endings"],
+  BATCH_OPERATIONS["encoding-normalize"],
+  BATCH_OPERATIONS["prefix-suffix"],
+  BATCH_OPERATIONS["sort-lines"],
+  BATCH_OPERATIONS["dedupe-lines"],
+  BATCH_OPERATIONS["json-format"],
+  BATCH_OPERATIONS["template-wrap"],
 ];
 
 /**
@@ -463,9 +464,9 @@ export function applyOperation(
   const spec = BATCH_OPERATIONS[operation];
   if (!spec) {
     throw new ToolError(
-      'unknown-operation',
+      "unknown-operation",
       `"${String(operation)}" is not an operation this tool knows how to run.`,
-      `Choose one of: ${Object.keys(BATCH_OPERATIONS).join(', ')}.`,
+      `Choose one of: ${Object.keys(BATCH_OPERATIONS).join(", ")}.`,
     );
   }
   return spec.apply(text, opts);
@@ -481,12 +482,74 @@ export function applyOperation(
  * back as mojibake, then be written back as damage.
  */
 export const BINARY_EXTENSIONS = new Set([
-  '7z', 'aac', 'avi', 'bin', 'bmp', 'bz2', 'class', 'dat', 'db', 'dll', 'dmg', 'doc', 'docx',
-  'dylib', 'ear', 'exe', 'flac', 'flv', 'gif', 'gz', 'heic', 'heif', 'ico', 'iso', 'jar', 'jpeg',
-  'jpg', 'lz4', 'lzma', 'm4a', 'm4v', 'mkv', 'mov', 'mp3', 'mp4', 'mpg', 'mpeg', 'o', 'odp', 'ods',
-  'odt', 'ogg', 'otf', 'pdf', 'png', 'ppt', 'pptx', 'psd', 'pyc', 'rar', 'so', 'sqlite', 'tar',
-  'tgz', 'tif', 'tiff', 'ttf', 'wasm', 'wav', 'webm', 'webp', 'wmv', 'woff', 'woff2', 'xls',
-  'xlsx', 'zip', 'zst',
+  "7z",
+  "aac",
+  "avi",
+  "bin",
+  "bmp",
+  "bz2",
+  "class",
+  "dat",
+  "db",
+  "dll",
+  "dmg",
+  "doc",
+  "docx",
+  "dylib",
+  "ear",
+  "exe",
+  "flac",
+  "flv",
+  "gif",
+  "gz",
+  "heic",
+  "heif",
+  "ico",
+  "iso",
+  "jar",
+  "jpeg",
+  "jpg",
+  "lz4",
+  "lzma",
+  "m4a",
+  "m4v",
+  "mkv",
+  "mov",
+  "mp3",
+  "mp4",
+  "mpg",
+  "mpeg",
+  "o",
+  "odp",
+  "ods",
+  "odt",
+  "ogg",
+  "otf",
+  "pdf",
+  "png",
+  "ppt",
+  "pptx",
+  "psd",
+  "pyc",
+  "rar",
+  "so",
+  "sqlite",
+  "tar",
+  "tgz",
+  "tif",
+  "tiff",
+  "ttf",
+  "wasm",
+  "wav",
+  "webm",
+  "webp",
+  "wmv",
+  "woff",
+  "woff2",
+  "xls",
+  "xlsx",
+  "zip",
+  "zst",
 ]);
 
 /** Files larger than this are skipped: a text edit should not eat a gigabyte. */
@@ -494,28 +557,28 @@ export const DEFAULT_MAX_FILE_BYTES = 8 * 1024 * 1024;
 
 /** The extension of a path without its dot, lowercased. Empty when there is none. */
 function extensionOf(path: string): string {
-  const name = path.slice(path.lastIndexOf('/') + 1);
-  const dot = name.lastIndexOf('.');
-  return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
 }
 
 /** Split a filter on the commas that are not inside a brace group. */
 function splitPatterns(filter: string): string[] {
   const out: string[] = [];
   let depth = 0;
-  let current = '';
+  let current = "";
   for (const ch of filter) {
-    if (ch === '{') depth += 1;
-    else if (ch === '}') depth = Math.max(0, depth - 1);
-    if (ch === ',' && depth === 0) {
+    if (ch === "{") depth += 1;
+    else if (ch === "}") depth = Math.max(0, depth - 1);
+    if (ch === "," && depth === 0) {
       out.push(current);
-      current = '';
+      current = "";
       continue;
     }
     current += ch;
   }
   out.push(current);
-  return out.map((part) => part.trim()).filter((part) => part !== '');
+  return out.map((part) => part.trim()).filter((part) => part !== "");
 }
 
 /**
@@ -526,29 +589,29 @@ function splitPatterns(filter: string): string[] {
  * insensitive, because Windows and macOS file names are.
  */
 export function globToRegExp(pattern: string): RegExp {
-  let out = '';
+  let out = "";
   for (let i = 0; i < pattern.length; i += 1) {
     const ch = pattern[i] as string;
-    if (ch === '*') {
-      if (pattern[i + 1] === '*') {
+    if (ch === "*") {
+      if (pattern[i + 1] === "*") {
         i += 1;
-        if (pattern[i + 1] === '/') {
+        if (pattern[i + 1] === "/") {
           i += 1;
-          out += '(?:.*/)?';
+          out += "(?:.*/)?";
         } else {
-          out += '.*';
+          out += ".*";
         }
       } else {
-        out += '[^/]*';
+        out += "[^/]*";
       }
-    } else if (ch === '?') out += '[^/]';
-    else if (ch === '{') out += '(?:';
-    else if (ch === '}') out += ')';
-    else if (ch === ',') out += '|';
-    else if ('.+^$()[]|\\'.includes(ch)) out += `\\${ch}`;
+    } else if (ch === "?") out += "[^/]";
+    else if (ch === "{") out += "(?:";
+    else if (ch === "}") out += ")";
+    else if (ch === ",") out += "|";
+    else if (".+^$()[]|\\".includes(ch)) out += `\\${ch}`;
     else out += ch;
   }
-  return new RegExp(`^${out}$`, 'i');
+  return new RegExp(`^${out}$`, "i");
 }
 
 interface CompiledFilter {
@@ -563,21 +626,21 @@ interface CompiledFilter {
  * and a pattern starting with `!` excludes instead of including.
  * Regex mode: the whole box is one expression, tested against the path.
  */
-export function compileFilter(filter: string, mode: 'glob' | 'regex' = 'glob'): CompiledFilter {
-  const raw = (filter ?? '').trim();
-  if (raw === '' || raw === '*' || raw === '**' || raw === '**/*') {
+export function compileFilter(filter: string, mode: "glob" | "regex" = "glob"): CompiledFilter {
+  const raw = (filter ?? "").trim();
+  if (raw === "" || raw === "*" || raw === "**" || raw === "**/*") {
     return { test: () => true };
   }
 
-  if (mode === 'regex') {
+  if (mode === "regex") {
     let expression: RegExp;
     try {
-      expression = new RegExp(raw, 'i');
+      expression = new RegExp(raw, "i");
     } catch (error) {
       throw new ToolError(
-        'invalid-filter-regex',
+        "invalid-filter-regex",
         `That filter is not a valid regular expression: ${error instanceof Error ? error.message : String(error)}.`,
-        'Fix the pattern, or switch the filter back to glob mode and use something like *.txt.',
+        "Fix the pattern, or switch the filter back to glob mode and use something like *.txt.",
       );
     }
     return { test: (path) => expression.test(path) };
@@ -590,16 +653,16 @@ export function compileFilter(filter: string, mode: 'glob' | 'regex' = 'glob'): 
   const excludes: { expression: RegExp; wholePath: boolean }[] = [];
 
   for (const pattern of patterns) {
-    const negated = pattern.startsWith('!');
+    const negated = pattern.startsWith("!");
     const body = negated ? pattern.slice(1) : pattern;
-    if (body === '') continue;
-    const entry = { expression: globToRegExp(body), wholePath: body.includes('/') };
+    if (body === "") continue;
+    const entry = { expression: globToRegExp(body), wholePath: body.includes("/") };
     (negated ? excludes : includes).push(entry);
   }
 
   return {
     test(path: string) {
-      const name = path.slice(path.lastIndexOf('/') + 1);
+      const name = path.slice(path.lastIndexOf("/") + 1);
       const matches = (entry: { expression: RegExp; wholePath: boolean }) =>
         entry.expression.test(entry.wholePath ? path : name);
       if (includes.length > 0 && !includes.some(matches)) return false;
@@ -613,13 +676,13 @@ export function compileFilter(filter: string, mode: 'glob' | 'regex' = 'glob'): 
 /* planning                                                            */
 /* ------------------------------------------------------------------ */
 
-export type BatchOutputMode = 'in-place' | 'suffix' | 'subfolder';
+export type BatchOutputMode = "in-place" | "suffix" | "subfolder";
 
 export interface BatchPlanOpts {
   /** Which files the run covers. Empty means every file. */
   filter?: string;
   /** How to read the filter. Default "glob". */
-  filterMode?: 'glob' | 'regex';
+  filterMode?: "glob" | "regex";
   operation: BatchOperationId;
   operationOpts?: BatchOperationOpts;
   /** Where the results land. Default "in-place". */
@@ -639,7 +702,7 @@ export interface BatchPlanItem {
   path: string;
   name: string;
   size: number;
-  action: 'transform';
+  action: "transform";
   /** Where the result is written. Equal to `path` in in-place mode. */
   outPath: string;
 }
@@ -669,27 +732,29 @@ export interface BatchPlan {
 
 /** Insert a marker before the last extension: notes.txt gives notes.processed.txt. */
 export function suffixedPath(path: string, marker: string): string {
-  const cut = path.lastIndexOf('/');
-  const dir = cut === -1 ? '' : path.slice(0, cut + 1);
+  const cut = path.lastIndexOf("/");
+  const dir = cut === -1 ? "" : path.slice(0, cut + 1);
   const name = path.slice(cut + 1);
-  const dot = name.lastIndexOf('.');
+  const dot = name.lastIndexOf(".");
   if (dot <= 0) return `${dir}${name}.${marker}`;
   return `${dir}${name.slice(0, dot)}.${marker}${name.slice(dot)}`;
 }
 
 function cleanFolderName(value: string, fallback: string): string {
-  const trimmed = String(value ?? '')
-    .replace(/\\/g, '/')
-    .split('/')
+  const trimmed = String(value ?? "")
+    .replace(/\\/g, "/")
+    .split("/")
     .map((part) => part.trim())
-    .filter((part) => part !== '' && part !== '.' && part !== '..')
-    .join('/');
-  return trimmed === '' ? fallback : trimmed;
+    .filter((part) => part !== "" && part !== "." && part !== "..")
+    .join("/");
+  return trimmed === "" ? fallback : trimmed;
 }
 
 function cleanMarker(value: string, fallback: string): string {
-  const trimmed = String(value ?? '').replace(/[\\/]/g, '').trim();
-  return trimmed === '' ? fallback : trimmed;
+  const trimmed = String(value ?? "")
+    .replace(/[\\/]/g, "")
+    .trim();
+  return trimmed === "" ? fallback : trimmed;
 }
 
 /**
@@ -705,21 +770,21 @@ function cleanMarker(value: string, fallback: string): string {
  * Both are excluded here rather than explained afterwards.
  */
 export function planBatch(scan: FsScan, opts: BatchPlanOpts): BatchPlan {
-  const output = opts.output ?? 'in-place';
-  const marker = cleanMarker(opts.suffix ?? '', 'processed');
-  const subfolder = cleanFolderName(opts.subfolder ?? '', 'processed');
+  const output = opts.output ?? "in-place";
+  const marker = cleanMarker(opts.suffix ?? "", "processed");
+  const subfolder = cleanFolderName(opts.subfolder ?? "", "processed");
   const maxBytes = Math.max(1, Math.floor(opts.maxBytes ?? DEFAULT_MAX_FILE_BYTES));
   const skipBinary = opts.skipBinary !== false;
 
   if (!BATCH_OPERATIONS[opts.operation]) {
     throw new ToolError(
-      'unknown-operation',
+      "unknown-operation",
       `"${String(opts.operation)}" is not an operation this tool knows how to run.`,
-      `Choose one of: ${Object.keys(BATCH_OPERATIONS).join(', ')}.`,
+      `Choose one of: ${Object.keys(BATCH_OPERATIONS).join(", ")}.`,
     );
   }
 
-  const match = compileFilter(opts.filter ?? '', opts.filterMode ?? 'glob');
+  const match = compileFilter(opts.filter ?? "", opts.filterMode ?? "glob");
 
   const items: BatchPlanItem[] = [];
   const unmatched: string[] = [];
@@ -732,14 +797,14 @@ export function planBatch(scan: FsScan, opts: BatchPlanOpts): BatchPlan {
       continue;
     }
 
-    if (output === 'subfolder' && entry.path.startsWith(`${subfolder}/`)) {
+    if (output === "subfolder" && entry.path.startsWith(`${subfolder}/`)) {
       skipped.push({
         path: entry.path,
         reason: `already inside the "${subfolder}" output folder`,
       });
       continue;
     }
-    if (output === 'suffix' && entry.name.includes(`.${marker}.`)) {
+    if (output === "suffix" && entry.name.includes(`.${marker}.`)) {
       skipped.push({
         path: entry.path,
         reason: `already carries the "${marker}" marker, so it is a result of an earlier run`,
@@ -762,13 +827,19 @@ export function planBatch(scan: FsScan, opts: BatchPlanOpts): BatchPlan {
     }
 
     const outPath =
-      output === 'in-place'
+      output === "in-place"
         ? entry.path
-        : output === 'suffix'
+        : output === "suffix"
           ? suffixedPath(entry.path, marker)
           : `${subfolder}/${entry.path}`;
 
-    items.push({ path: entry.path, name: entry.name, size: entry.size, action: 'transform', outPath });
+    items.push({
+      path: entry.path,
+      name: entry.name,
+      size: entry.size,
+      action: "transform",
+      outPath,
+    });
     totalBytes += entry.size;
   }
 
@@ -782,7 +853,7 @@ export function planBatch(scan: FsScan, opts: BatchPlanOpts): BatchPlan {
     unmatchedCount: unmatched.length,
     skippedCount: skipped.length,
     totalBytes,
-    inPlace: output === 'in-place',
+    inPlace: output === "in-place",
   };
 }
 
@@ -810,7 +881,7 @@ export interface BatchFileResult {
 export function buildWriteOps(results: BatchFileResult[]): WriteOp[] {
   return (results ?? [])
     .filter((result) => result.changed)
-    .map((result) => ({ op: 'writeFile', path: result.outPath, data: result.newText }));
+    .map((result) => ({ op: "writeFile", path: result.outPath, data: result.newText }));
 }
 
 /* ------------------------------------------------------------------ */
@@ -818,17 +889,17 @@ export function buildWriteOps(results: BatchFileResult[]): WriteOp[] {
 /* ------------------------------------------------------------------ */
 
 const USAGE_ROWS: Record<string, string> = {
-  'How this works':
-    'This tool is panel first, because it works on a folder on your disk rather than on pasted text. Choose a folder, filter down to the files you mean, pick one transform, preview it on the first match, then apply it to the rest.',
-  Operations: BATCH_OPERATION_LIST.map((spec) => `${spec.label}: ${spec.description}`).join('\n'),
-  'Where results go':
-    'In place overwrites each file. Alongside writes name.processed.ext next to the original. Into a subfolder copies the folder structure under a folder you name, leaving the originals untouched.',
-  'Text only in v1':
-    'Images, archives, PDFs and other binary formats are skipped by extension. Editing those needs a per format decoder rather than a text transform, so they are left alone instead of half handled.',
-  Undo: 'Before an in place run the panel offers a backup file holding the original contents of every file it is about to change. That backup, not the folder tool undo file, is what puts an overwritten file back.',
+  "How this works":
+    "This tool is panel first, because it works on a folder on your disk rather than on pasted text. Choose a folder, filter down to the files you mean, pick one transform, preview it on the first match, then apply it to the rest.",
+  Operations: BATCH_OPERATION_LIST.map((spec) => `${spec.label}: ${spec.description}`).join("\n"),
+  "Where results go":
+    "In place overwrites each file. Alongside writes name.processed.ext next to the original. Into a subfolder copies the folder structure under a folder you name, leaving the originals untouched.",
+  "Text only in v1":
+    "Images, archives, PDFs and other binary formats are skipped by extension. Editing those needs a per format decoder rather than a text transform, so they are left alone instead of half handled.",
+  Undo: "Before an in place run the panel offers a backup file holding the original contents of every file it is about to change. That backup, not the folder tool undo file, is what puts an overwritten file back.",
   Browsers:
-    'Opening a folder in place needs the File System Access API, which Chromium browsers such as Chrome, Edge, Brave and Opera ship on desktop. Firefox and Safari do not support it yet.',
-  Privacy: 'Everything happens in this tab: your files and inputs never leave your device.',
+    "Opening a folder in place needs the File System Access API, which Chromium browsers such as Chrome, Edge, Brave and Opera ship on desktop. Firefox and Safari do not support it yet.",
+  Privacy: "Everything happens in this tab: your files and inputs never leave your device.",
 };
 
 /**
@@ -841,4 +912,8 @@ export function run(): Record<string, string> {
   return { ...USAGE_ROWS };
 }
 
-export default { run } satisfies ToolLogic<unknown, Record<string, string>, Record<string, unknown>>;
+export default { run } satisfies ToolLogic<
+  unknown,
+  Record<string, string>,
+  Record<string, unknown>
+>;

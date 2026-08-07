@@ -1,5 +1,5 @@
-import { ToolError, type ToolLogic } from '../types';
-import type { FsFileEntry, FsScan, WriteOp } from '@/lib/fs-access';
+import { ToolError, type ToolLogic } from "../types";
+import type { FsFileEntry, FsScan, WriteOp } from "@/lib/fs-access";
 
 /**
  * Bulk rename: the pure planning half of the tool.
@@ -35,11 +35,11 @@ import type { FsFileEntry, FsScan, WriteOp } from '@/lib/fs-access';
 /* options                                                             */
 /* ------------------------------------------------------------------ */
 
-export type RenameMode = 'find-replace' | 'template' | 'case' | 'sequence' | 'clean';
-export type CaseMode = 'lower' | 'upper' | 'title' | 'kebab' | 'snake' | 'camel';
-export type FilterMode = 'none' | 'glob' | 'regex';
-export type SortMode = 'name' | 'date' | 'size';
-export type SeparatorChoice = 'dash' | 'underscore' | 'none';
+export type RenameMode = "find-replace" | "template" | "case" | "sequence" | "clean";
+export type CaseMode = "lower" | "upper" | "title" | "kebab" | "snake" | "camel";
+export type FilterMode = "none" | "glob" | "regex";
+export type SortMode = "name" | "date" | "size";
+export type SeparatorChoice = "dash" | "underscore" | "none";
 
 export interface BulkRenameOpts {
   /** Which renaming strategy runs. */
@@ -84,22 +84,22 @@ export interface BulkRenameOpts {
 }
 
 export const DEFAULT_OPTS: BulkRenameOpts = {
-  mode: 'find-replace',
-  find: '',
-  replace: '',
+  mode: "find-replace",
+  find: "",
+  replace: "",
   regex: false,
   caseInsensitive: false,
-  template: '{n}-{name}',
+  template: "{n}-{name}",
   seqStart: 1,
   seqPad: 3,
-  caseMode: 'lower',
-  prefix: 'file-',
-  separator: 'dash',
+  caseMode: "lower",
+  prefix: "file-",
+  separator: "dash",
   lowercase: true,
   includeExt: false,
-  filterMode: 'none',
-  filter: '',
-  sortBy: 'name',
+  filterMode: "none",
+  filter: "",
+  sortBy: "name",
 };
 
 /* ------------------------------------------------------------------ */
@@ -136,12 +136,12 @@ export interface RenamePlan {
 /* ------------------------------------------------------------------ */
 
 function parentOf(path: string): string {
-  const cut = path.lastIndexOf('/');
-  return cut === -1 ? '' : path.slice(0, cut);
+  const cut = path.lastIndexOf("/");
+  return cut === -1 ? "" : path.slice(0, cut);
 }
 
 function lastSegment(path: string): string {
-  const cut = path.lastIndexOf('/');
+  const cut = path.lastIndexOf("/");
   return cut === -1 ? path : path.slice(cut + 1);
 }
 
@@ -151,14 +151,14 @@ function joinRelative(parent: string, name: string): string {
 
 /** Split a filename into its base and its extension, dot included. */
 export function splitName(name: string): { base: string; ext: string } {
-  const dot = name.lastIndexOf('.');
+  const dot = name.lastIndexOf(".");
   // A leading dot is part of the name (".gitignore" has no extension).
-  if (dot <= 0) return { base: name, ext: '' };
+  if (dot <= 0) return { base: name, ext: "" };
   return { base: name.slice(0, dot), ext: name.slice(dot) };
 }
 
 function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /* ------------------------------------------------------------------ */
@@ -190,7 +190,7 @@ export function sanitizeFileName(name: string): SanitizeResult {
   const warnings: string[] = [];
   let out = name;
 
-  const cleaned = out.replace(ILLEGAL_CHARS, '_');
+  const cleaned = out.replace(ILLEGAL_CHARS, "_");
   if (cleaned !== out) {
     out = cleaned;
     warnings.push(
@@ -198,16 +198,16 @@ export function sanitizeFileName(name: string): SanitizeResult {
     );
   }
 
-  const trimmed = out.replace(/[. ]+$/, '');
+  const trimmed = out.replace(/[. ]+$/, "");
   if (trimmed !== out) {
     out = trimmed;
-    warnings.push('Trailing dots and spaces were removed, because Windows drops them silently.');
+    warnings.push("Trailing dots and spaces were removed, because Windows drops them silently.");
   }
 
-  const leading = out.replace(/^ +/, '');
+  const leading = out.replace(/^ +/, "");
   if (leading !== out) {
     out = leading;
-    warnings.push('A leading space was removed.');
+    warnings.push("A leading space was removed.");
   }
 
   const { base } = splitName(out);
@@ -228,8 +228,8 @@ export function sanitizeFileName(name: string): SanitizeResult {
 /** Break a string into words, splitting camelCase as well as separators. */
 function words(text: string): string[] {
   return text
-    .replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, '$1 $2')
-    .replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, '$1 $2')
+    .replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2")
+    .replace(/(\p{Lu}+)(\p{Lu}\p{Ll})/gu, "$1 $2")
     .split(/[^\p{L}\p{N}]+/u)
     .filter(Boolean);
 }
@@ -244,37 +244,37 @@ function titleCase(text: string): string {
 
 export function applyCase(text: string, mode: CaseMode): string {
   switch (mode) {
-    case 'lower':
+    case "lower":
       return text.toLowerCase();
-    case 'upper':
+    case "upper":
       return text.toUpperCase();
-    case 'title':
+    case "title":
       return titleCase(text);
-    case 'kebab':
+    case "kebab":
       return words(text)
         .map((word) => word.toLowerCase())
-        .join('-');
-    case 'snake':
+        .join("-");
+    case "snake":
       return words(text)
         .map((word) => word.toLowerCase())
-        .join('_');
-    case 'camel':
+        .join("_");
+    case "camel":
       return words(text)
         .map((word, index) =>
           index === 0
             ? word.toLowerCase()
             : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
         )
-        .join('');
+        .join("");
     default:
       return text;
   }
 }
 
 function separatorChar(choice: SeparatorChoice): string {
-  if (choice === 'underscore') return '_';
-  if (choice === 'none') return '';
-  return '-';
+  if (choice === "underscore") return "_";
+  if (choice === "none") return "";
+  return "-";
 }
 
 /**
@@ -284,11 +284,14 @@ function separatorChar(choice: SeparatorChoice): string {
  */
 export function cleanName(text: string, choice: SeparatorChoice, lowercase: boolean): string {
   const sep = separatorChar(choice);
-  let out = text.normalize('NFD').replace(/\p{M}+/gu, '');
+  let out = text.normalize("NFD").replace(/\p{M}+/gu, "");
   out = out.replace(/\s+/g, sep);
-  out = out.replace(/[^\p{L}\p{N}._-]+/gu, '');
-  out = out.replace(/-{2,}/g, '-').replace(/_{2,}/g, '_').replace(/\.{2,}/g, '.');
-  out = out.replace(/^[-_.]+/, '').replace(/[-_]+$/, '');
+  out = out.replace(/[^\p{L}\p{N}._-]+/gu, "");
+  out = out
+    .replace(/-{2,}/g, "-")
+    .replace(/_{2,}/g, "_")
+    .replace(/\.{2,}/g, ".");
+  out = out.replace(/^[-_.]+/, "").replace(/[-_]+$/, "");
   return lowercase ? out.toLowerCase() : out;
 }
 
@@ -298,44 +301,44 @@ export function cleanName(text: string, choice: SeparatorChoice, lowercase: bool
 
 /** Turn a shell style glob into a regular expression. `**` crosses folders. */
 export function globToRegExp(glob: string): RegExp {
-  let source = '';
+  let source = "";
   for (let i = 0; i < glob.length; i += 1) {
     const char = glob[i] as string;
-    if (char === '*') {
-      if (glob[i + 1] === '*') {
-        source += '.*';
+    if (char === "*") {
+      if (glob[i + 1] === "*") {
+        source += ".*";
         i += 1;
-        if (glob[i + 1] === '/') i += 1;
+        if (glob[i + 1] === "/") i += 1;
       } else {
-        source += '[^/]*';
+        source += "[^/]*";
       }
-    } else if (char === '?') {
-      source += '[^/]';
+    } else if (char === "?") {
+      source += "[^/]";
     } else {
       source += escapeRegExp(char);
     }
   }
-  return new RegExp(`^${source}$`, 'i');
+  return new RegExp(`^${source}$`, "i");
 }
 
 function buildFilter(opts: BulkRenameOpts): (entry: FsFileEntry) => boolean {
   const pattern = opts.filter.trim();
-  if (opts.filterMode === 'none' || pattern === '') return () => true;
+  if (opts.filterMode === "none" || pattern === "") return () => true;
 
-  if (opts.filterMode === 'glob') {
+  if (opts.filterMode === "glob") {
     const matcher = globToRegExp(pattern);
-    const wholePath = pattern.includes('/');
+    const wholePath = pattern.includes("/");
     return (entry) => matcher.test(wholePath ? entry.path : entry.name);
   }
 
   let matcher: RegExp;
   try {
-    matcher = new RegExp(pattern, 'i');
+    matcher = new RegExp(pattern, "i");
   } catch (error) {
     throw new ToolError(
-      'bad-filter',
+      "bad-filter",
       `The filter is not a valid regular expression: ${error instanceof Error ? error.message : String(error)}`,
-      'Fix the pattern, or switch the filter to glob and use something like *.jpg.',
+      "Fix the pattern, or switch the filter to glob and use something like *.jpg.",
     );
   }
   return (entry) => matcher.test(entry.name);
@@ -344,11 +347,11 @@ function buildFilter(opts: BulkRenameOpts): (entry: FsFileEntry) => boolean {
 function sortEntries(entries: FsFileEntry[], sortBy: SortMode): FsFileEntry[] {
   const out = [...entries];
   out.sort((a, b) => {
-    if (sortBy === 'date' && a.lastModified !== b.lastModified) {
+    if (sortBy === "date" && a.lastModified !== b.lastModified) {
       return a.lastModified - b.lastModified;
     }
-    if (sortBy === 'size' && a.size !== b.size) return a.size - b.size;
-    if (sortBy === 'name' && a.name !== b.name) return a.name < b.name ? -1 : 1;
+    if (sortBy === "size" && a.size !== b.size) return a.size - b.size;
+    if (sortBy === "name" && a.name !== b.name) return a.name < b.name ? -1 : 1;
     // Path is the tie break everywhere, so two scans of the same folder always
     // number the files the same way.
     return a.path < b.path ? -1 : a.path > b.path ? 1 : 0;
@@ -362,34 +365,34 @@ function sortEntries(entries: FsFileEntry[], sortBy: SortMode): FsFileEntry[] {
 
 function pad(value: number, width: number): string {
   const digits = String(Math.abs(Math.trunc(value)));
-  const sign = value < 0 ? '-' : '';
-  return sign + digits.padStart(Math.max(1, Math.trunc(width)), '0');
+  const sign = value < 0 ? "-" : "";
+  return sign + digits.padStart(Math.max(1, Math.trunc(width)), "0");
 }
 
 /** `lastModified` as YYYY-MM-DD, in UTC so a plan never depends on a timezone. */
 export function dateToken(lastModified: number): string {
-  if (!Number.isFinite(lastModified) || lastModified <= 0) return '';
+  if (!Number.isFinite(lastModified) || lastModified <= 0) return "";
   return new Date(lastModified).toISOString().slice(0, 10);
 }
 
 function findReplace(target: string, opts: BulkRenameOpts): string {
-  if (opts.find === '') return target;
+  if (opts.find === "") return target;
 
-  const flags = `g${opts.caseInsensitive ? 'i' : ''}`;
+  const flags = `g${opts.caseInsensitive ? "i" : ""}`;
   let matcher: RegExp;
   try {
     matcher = new RegExp(opts.regex ? opts.find : escapeRegExp(opts.find), flags);
   } catch (error) {
     throw new ToolError(
-      'bad-regex',
+      "bad-regex",
       `"${opts.find}" is not a valid regular expression: ${error instanceof Error ? error.message : String(error)}`,
-      'Fix the pattern, or turn the regex switch off to search for that text literally.',
+      "Fix the pattern, or turn the regex switch off to search for that text literally.",
     );
   }
 
   // Without regex mode, `$` in the replacement is literal text, not a group
   // reference, so it has to be escaped before String.replace sees it.
-  const replacement = opts.regex ? opts.replace : opts.replace.replace(/\$/g, '$$$$');
+  const replacement = opts.regex ? opts.replace : opts.replace.replace(/\$/g, "$$$$");
   return target.replace(matcher, replacement);
 }
 
@@ -405,15 +408,15 @@ interface TemplateContext {
 function renderTemplate(template: string, ctx: TemplateContext): string {
   return template.replace(/\{(name|ext|n|counter|parent|date)\}/g, (_all, token: string) => {
     switch (token) {
-      case 'name':
+      case "name":
         return ctx.base;
-      case 'ext':
+      case "ext":
         return ctx.ext;
-      case 'n':
+      case "n":
         return ctx.n;
-      case 'counter':
+      case "counter":
         return ctx.counter;
-      case 'parent':
+      case "parent":
         return ctx.parent;
       default:
         return ctx.date;
@@ -437,8 +440,8 @@ function resolveOpts(opts: Partial<BulkRenameOpts> = {}): BulkRenameOpts {
   for (const [key, value] of Object.entries(opts ?? {})) {
     if (value !== undefined) merged[key] = value;
   }
-  for (const key of ['find', 'replace', 'template', 'prefix', 'filter'] as const) {
-    merged[key] = String(merged[key] ?? '');
+  for (const key of ["find", "replace", "template", "prefix", "filter"] as const) {
+    merged[key] = String(merged[key] ?? "");
   }
   return merged;
 }
@@ -492,7 +495,7 @@ export function planRenames(scan: FsScan, options: Partial<BulkRenameOpts> = {})
     if (!matches(entry)) continue;
 
     const { base, ext } = splitName(entry.name);
-    const extNoDot = ext.startsWith('.') ? ext.slice(1) : ext;
+    const extNoDot = ext.startsWith(".") ? ext.slice(1) : ext;
 
     const nextCounter = perExtension.get(extNoDot.toLowerCase()) ?? start;
     perExtension.set(extNoDot.toLowerCase(), nextCounter + 1);
@@ -506,52 +509,52 @@ export function planRenames(scan: FsScan, options: Partial<BulkRenameOpts> = {})
     let bodyHasExt = opts.includeExt;
 
     switch (opts.mode) {
-      case 'find-replace':
+      case "find-replace":
         body = findReplace(target, opts);
         break;
-      case 'template':
+      case "template":
         body = renderTemplate(opts.template, {
           base,
           ext: extNoDot,
-          parent: lastSegment(parentOf(entry.path)) || scan.rootName || '',
+          parent: lastSegment(parentOf(entry.path)) || scan.rootName || "",
           date: dateToken(entry.lastModified),
           n: pad(nth, width),
           counter: pad(nextCounter, width),
         });
         break;
-      case 'case':
+      case "case":
         body = applyCase(target, opts.caseMode);
         break;
-      case 'sequence':
+      case "sequence":
         // The extension always survives here: a sequence is about ordering, and
         // a numbered file with no extension is not what anybody wants.
         body = `${opts.prefix}${pad(nth, width)}`;
         bodyHasExt = false;
         break;
-      case 'clean':
+      case "clean":
         body = cleanName(target, opts.separator, opts.lowercase);
         break;
       default:
         throw new ToolError(
-          'unknown-mode',
+          "unknown-mode",
           `"${String(opts.mode)}" is not a renaming mode this tool knows.`,
-          'Choose find and replace, template, case, sequence or clean up.',
+          "Choose find and replace, template, case, sequence or clean up.",
         );
     }
 
     // An emptied body means the pattern ate the whole name. Putting the
     // extension back would leave a hidden file called ".txt", which is never
     // what was meant, so the file is left alone and the row says why.
-    if (body.trim() === '') {
-      addWarning(row, 'The new name would be empty, so this file was left alone.');
+    if (body.trim() === "") {
+      addWarning(row, "The new name would be empty, so this file was left alone.");
       continue;
     }
 
     const safe = sanitizeFileName(bodyHasExt ? body : body + ext);
     for (const warning of safe.warnings) addWarning(row, warning);
 
-    if (safe.name === '') {
-      addWarning(row, 'The new name would be empty, so this file was left alone.');
+    if (safe.name === "") {
+      addWarning(row, "The new name would be empty, so this file was left alone.");
       continue;
     }
 
@@ -577,7 +580,9 @@ export function planRenames(scan: FsScan, options: Partial<BulkRenameOpts> = {})
   for (const [target, indexes] of byTarget) {
     if (indexes.length < 2) continue;
     const names = indexes.map((i) => (preview[i] as RenamePreviewRow).from);
-    collisions.push(`${names.length} files would all be renamed to "${target}": ${names.join(', ')}.`);
+    collisions.push(
+      `${names.length} files would all be renamed to "${target}": ${names.join(", ")}.`,
+    );
     for (const index of indexes) {
       blocked.add(index);
       addWarning(
@@ -640,8 +645,8 @@ export function planRenames(scan: FsScan, options: Partial<BulkRenameOpts> = {})
         // is the only form of this rename that works on a case insensitive
         // filesystem, and both steps are in the undo manifest.
         const temp = freeTempPath(row.to, occupied);
-        ops.push({ op: 'rename', from: row.from, to: temp });
-        ops.push({ op: 'rename', from: temp, to: row.to });
+        ops.push({ op: "rename", from: row.from, to: temp });
+        ops.push({ op: "rename", from: temp, to: row.to });
         occupied.delete(row.from);
         occupied.add(row.to);
         row.changed = true;
@@ -649,7 +654,7 @@ export function planRenames(scan: FsScan, options: Partial<BulkRenameOpts> = {})
         continue;
       }
 
-      ops.push({ op: 'rename', from: row.from, to: row.to });
+      ops.push({ op: "rename", from: row.from, to: row.to });
       occupied.delete(row.from);
       occupied.add(row.to);
       row.changed = true;
@@ -667,7 +672,7 @@ export function planRenames(scan: FsScan, options: Partial<BulkRenameOpts> = {})
       );
       addWarning(
         row,
-        'These names form a loop, so the rename was held back. Rename one of them to something else first.',
+        "These names form a loop, so the rename was held back. Rename one of them to something else first.",
       );
     } else {
       collisions.push(`"${row.to}" already exists, and a rename never overwrites a file.`);
@@ -683,16 +688,16 @@ export function planRenames(scan: FsScan, options: Partial<BulkRenameOpts> = {})
 /* ------------------------------------------------------------------ */
 
 const USAGE_ROWS: Record<string, string> = {
-  'How this works':
-    'This tool is panel first. Choose a folder, and the panel reads it in place and shows every file with the name it would get. Nothing is written until you press Apply renames, review the exact list, and confirm.',
+  "How this works":
+    "This tool is panel first. Choose a folder, and the panel reads it in place and shows every file with the name it would get. Nothing is written until you press Apply renames, review the exact list, and confirm.",
   Modes:
-    'Find and replace (with optional regular expressions and $1 group references), template (tokens {name}, {ext}, {n}, {counter}, {parent} and {date}), case (lower, upper, title, kebab, snake, camel), sequence (a prefix plus a zero padded number) and clean up (strip accents, tidy spaces and drop characters that cause trouble).',
+    "Find and replace (with optional regular expressions and $1 group references), template (tokens {name}, {ext}, {n}, {counter}, {parent} and {date}), case (lower, upper, title, kebab, snake, camel), sequence (a prefix plus a zero padded number) and clean up (strip accents, tidy spaces and drop characters that cause trouble).",
   Safety:
-    'Every plan is checked before it runs: two files aiming at one name, a name that already exists, and names that would swap are all held back and listed. Renames come out in an order that lets a whole run shift down by one without any file overwriting the next.',
-  Undo: 'An undo file listing the reverse of every rename downloads before anything is written, and it stays on your device.',
+    "Every plan is checked before it runs: two files aiming at one name, a name that already exists, and names that would swap are all held back and listed. Renames come out in an order that lets a whole run shift down by one without any file overwriting the next.",
+  Undo: "An undo file listing the reverse of every rename downloads before anything is written, and it stays on your device.",
   Browsers:
-    'Opening a folder in place needs the File System Access API, which Chromium browsers such as Chrome, Edge, Brave and Opera ship on desktop. Firefox and Safari do not support it yet.',
-  Privacy: 'Everything happens in this tab: your files and inputs never leave your device.',
+    "Opening a folder in place needs the File System Access API, which Chromium browsers such as Chrome, Edge, Brave and Opera ship on desktop. Firefox and Safari do not support it yet.",
+  Privacy: "Everything happens in this tab: your files and inputs never leave your device.",
 };
 
 /**

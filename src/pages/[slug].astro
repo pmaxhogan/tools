@@ -1,8 +1,8 @@
 ---
-import ToolPage from '@/layouts/ToolPage.astro';
-import PanelHost from '@/components/tool/PanelHost.vue';
-import { tools } from '@/tools/registry';
-import type { ToolMeta } from '@/tools/types';
+import ToolPage from "@/layouts/ToolPage.astro";
+import PanelHost from "@/components/tool/PanelHost.vue";
+import { tools } from "@/tools/registry";
+import type { ToolMeta } from "@/tools/types";
 
 export function getStaticPaths() {
   return tools.map((t) => ({ params: { slug: t.slug }, props: { meta: t } }));

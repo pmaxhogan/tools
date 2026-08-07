@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * Audio Trimmer logic layer.
@@ -14,7 +14,7 @@ import { ToolError, type ToolLogic } from '../types';
  * environments (tests, curl, the plain ToolShell) that cannot run ffmpeg.wasm.
  */
 
-export type AudioFormat = 'mp3' | 'm4a' | 'wav' | 'ogg' | 'same';
+export type AudioFormat = "mp3" | "m4a" | "wav" | "ogg" | "same";
 
 /* ------------------------------------------------------------------ */
 /* time parsing                                                        */
@@ -34,7 +34,7 @@ export function parseTimeSpec(raw: string): number | null {
     return Number(s);
   }
 
-  const parts = s.split(':');
+  const parts = s.split(":");
   if (parts.length !== 2 && parts.length !== 3) return null;
 
   const lastIndex = parts.length - 1;
@@ -83,32 +83,31 @@ export interface TrimArgsInput {
 }
 
 export type TrimArgsResult =
-  | { args: string[]; outputs: [string] }
-  | { error: string; fix?: string; code: string };
+  { args: string[]; outputs: [string] } | { error: string; fix?: string; code: string };
 
-const FORMAT_EXT: Record<Exclude<AudioFormat, 'same'>, string> = {
-  mp3: 'mp3',
-  m4a: 'm4a',
-  wav: 'wav',
-  ogg: 'ogg',
+const FORMAT_EXT: Record<Exclude<AudioFormat, "same">, string> = {
+  mp3: "mp3",
+  m4a: "m4a",
+  wav: "wav",
+  ogg: "ogg",
 };
 
-function codecArgs(format: Exclude<AudioFormat, 'same'>): string[] {
+function codecArgs(format: Exclude<AudioFormat, "same">): string[] {
   switch (format) {
-    case 'mp3':
-      return ['-c:a', 'libmp3lame', '-q:a', '2'];
-    case 'm4a':
-      return ['-c:a', 'aac', '-b:a', '192k'];
-    case 'wav':
-      return ['-c:a', 'pcm_s16le'];
-    case 'ogg':
-      return ['-c:a', 'libvorbis', '-q:a', '5'];
+    case "mp3":
+      return ["-c:a", "libmp3lame", "-q:a", "2"];
+    case "m4a":
+      return ["-c:a", "aac", "-b:a", "192k"];
+    case "wav":
+      return ["-c:a", "pcm_s16le"];
+    case "ogg":
+      return ["-c:a", "libvorbis", "-q:a", "5"];
   }
 }
 
 function extensionOf(name: string): string {
-  const dot = name.lastIndexOf('.');
-  return dot > 0 && dot < name.length - 1 ? name.slice(dot + 1).toLowerCase() : '';
+  const dot = name.lastIndexOf(".");
+  return dot > 0 && dot < name.length - 1 ? name.slice(dot + 1).toLowerCase() : "";
 }
 
 /** Trims trailing float noise (e.g. 8.000000001) without losing precision ffmpeg needs. */
@@ -143,17 +142,21 @@ function secStr(n: number): string {
  * at the fix: pick a real output format, or turn the filters off.
  */
 export function buildTrimArgs(o: TrimArgsInput): TrimArgsResult {
-  const { inputName, startSec, endSec, durationSec, fadeInSec, fadeOutSec, normalize, format } =
-    o;
+  const { inputName, startSec, endSec, durationSec, fadeInSec, fadeOutSec, normalize, format } = o;
 
   if (startSec !== null && (!Number.isFinite(startSec) || startSec < 0)) {
-    return { error: 'Start time cannot be negative.', code: 'invalid-start' };
+    return { error: "Start time cannot be negative.", code: "invalid-start" };
   }
   if (endSec !== null && (!Number.isFinite(endSec) || endSec <= 0)) {
-    return { error: 'End time must be a positive number of seconds.', code: 'invalid-end' };
+    return { error: "End time must be a positive number of seconds.", code: "invalid-end" };
   }
-  if (!Number.isFinite(fadeInSec) || !Number.isFinite(fadeOutSec) || fadeInSec < 0 || fadeOutSec < 0) {
-    return { error: 'Fade lengths cannot be negative.', code: 'invalid-fade' };
+  if (
+    !Number.isFinite(fadeInSec) ||
+    !Number.isFinite(fadeOutSec) ||
+    fadeInSec < 0 ||
+    fadeOutSec < 0
+  ) {
+    return { error: "Fade lengths cannot be negative.", code: "invalid-fade" };
   }
 
   const effectiveStart = startSec ?? 0;
@@ -163,9 +166,9 @@ export function buildTrimArgs(o: TrimArgsInput): TrimArgsResult {
   }
   if (effectiveEnd === null && fadeOutSec > 0) {
     return {
-      error: 'Fade out needs to know where the clip ends.',
-      fix: 'Set an end time, or wait for the audio preview to report the file length.',
-      code: 'fadeout-needs-end',
+      error: "Fade out needs to know where the clip ends.",
+      fix: "Set an end time, or wait for the audio preview to report the file length.",
+      code: "fadeout-needs-end",
     };
   }
 
@@ -174,16 +177,16 @@ export function buildTrimArgs(o: TrimArgsInput): TrimArgsResult {
     duration = effectiveEnd - effectiveStart;
     if (duration <= 0) {
       return {
-        error: 'End time must be after the start time.',
-        fix: 'Pick an end time later than the start time.',
-        code: 'invalid-range',
+        error: "End time must be after the start time.",
+        fix: "Pick an end time later than the start time.",
+        code: "invalid-range",
       };
     }
     if (fadeInSec + fadeOutSec > duration) {
       return {
-        error: 'The fades are longer than the trimmed clip.',
-        fix: 'Shorten the fade in or fade out, or widen the trim range.',
-        code: 'fades-too-long',
+        error: "The fades are longer than the trimmed clip.",
+        fix: "Shorten the fade in or fade out, or widen the trim range.",
+        code: "fades-too-long",
       };
     }
   }
@@ -193,23 +196,23 @@ export function buildTrimArgs(o: TrimArgsInput): TrimArgsResult {
   if (fadeOutSec > 0 && duration !== null) {
     filters.push(`afade=t=out:st=${secStr(duration - fadeOutSec)}:d=${secStr(fadeOutSec)}`);
   }
-  if (normalize) filters.push('loudnorm=I=-16:TP=-1.5:LRA=11');
+  if (normalize) filters.push("loudnorm=I=-16:TP=-1.5:LRA=11");
 
   let outExt: string;
-  if (format === 'same') {
+  if (format === "same") {
     if (filters.length > 0) {
       return {
-        error: 'Stream copy cannot apply fades or normalization.',
-        fix: 'Choose an output format other than Same, or turn off fades and normalization.',
-        code: 'copy-with-filters',
+        error: "Stream copy cannot apply fades or normalization.",
+        fix: "Choose an output format other than Same, or turn off fades and normalization.",
+        code: "copy-with-filters",
       };
     }
     const ext = extensionOf(inputName);
     if (!ext) {
       return {
-        error: 'The source file has no recognizable audio extension to copy into.',
-        fix: 'Pick an output format instead of Same.',
-        code: 'copy-unknown-extension',
+        error: "The source file has no recognizable audio extension to copy into.",
+        fix: "Pick an output format instead of Same.",
+        code: "copy-unknown-extension",
       };
     }
     outExt = ext;
@@ -220,12 +223,12 @@ export function buildTrimArgs(o: TrimArgsInput): TrimArgsResult {
   const outputName = `trimmed.${outExt}`;
 
   const args: string[] = [];
-  if (effectiveStart > 0) args.push('-ss', secStr(effectiveStart));
-  if (duration !== null) args.push('-t', secStr(duration));
-  args.push('-i', inputName, '-vn');
-  if (filters.length) args.push('-af', filters.join(','));
-  if (format === 'same') {
-    args.push('-c:a', 'copy');
+  if (effectiveStart > 0) args.push("-ss", secStr(effectiveStart));
+  if (duration !== null) args.push("-t", secStr(duration));
+  args.push("-i", inputName, "-vn");
+  if (filters.length) args.push("-af", filters.join(","));
+  if (format === "same") {
+    args.push("-c:a", "copy");
   } else {
     args.push(...codecArgs(format));
   }
@@ -249,14 +252,14 @@ export interface AudioTrimmerOpts {
 }
 
 function parseOptTime(raw: string, label: string): number | null {
-  const trimmed = (raw ?? '').trim();
+  const trimmed = (raw ?? "").trim();
   if (!trimmed) return null;
   const parsed = parseTimeSpec(trimmed);
   if (parsed === null) {
     throw new ToolError(
-      'invalid-time',
+      "invalid-time",
       `"${raw}" is not a valid ${label} time.`,
-      'Use seconds like 12.5, mm:ss like 1:23, or hh:mm:ss.mmm like 01:23:45.678.'
+      "Use seconds like 12.5, mm:ss like 1:23, or hh:mm:ss.mmm like 01:23:45.678.",
     );
   }
   return parsed;
@@ -268,32 +271,32 @@ function parseOptTime(raw: string, label: string): number | null {
  * input, since the plan depends only on the options, not on the file itself.
  */
 export function run(input: Uint8Array | string, opts: AudioTrimmerOpts): Record<string, string> {
-  const startSec = parseOptTime(opts.start, 'start');
-  const endSec = parseOptTime(opts.end, 'end');
+  const startSec = parseOptTime(opts.start, "start");
+  const endSec = parseOptTime(opts.end, "end");
 
   const built = buildTrimArgs({
-    inputName: 'input.mp3',
+    inputName: "input.mp3",
     startSec,
     endSec,
     durationSec: null,
     fadeInSec: Number(opts.fadeIn) || 0,
     fadeOutSec: Number(opts.fadeOut) || 0,
     normalize: Boolean(opts.normalize),
-    format: opts.format ?? 'same',
+    format: opts.format ?? "same",
   });
 
-  if ('error' in built) {
+  if ("error" in built) {
     throw new ToolError(built.code, built.error, built.fix);
   }
 
-  const hasFile = typeof input === 'string' ? input.trim().length > 0 : input.length > 0;
+  const hasFile = typeof input === "string" ? input.trim().length > 0 : input.length > 0;
 
   return {
-    Command: `ffmpeg ${built.args.join(' ')}`,
-    'Output file': built.outputs[0],
+    Command: `ffmpeg ${built.args.join(" ")}`,
+    "Output file": built.outputs[0],
     Note: hasFile
-      ? 'This previews the ffmpeg command. Open the Audio Trimmer tool in a browser to run it on your file.'
-      : 'This previews the ffmpeg command for the options above. Pick a file on the tool page to run it.',
+      ? "This previews the ffmpeg command. Open the Audio Trimmer tool in a browser to run it on your file."
+      : "This previews the ffmpeg command for the options above. Pick a file on the tool page to run it.",
   };
 }
 

@@ -1,5 +1,5 @@
-import { x25519 } from '@noble/curves/ed25519.js';
-import { ToolError, type ToolLogic } from '../types';
+import { x25519 } from "@noble/curves/ed25519.js";
+import { ToolError, type ToolLogic } from "../types";
 
 export interface WireguardOpts {
   peers: number;
@@ -25,11 +25,11 @@ const DEFAULT_LISTEN_PORT = 51820;
 /* Base64                                                                     */
 /* -------------------------------------------------------------------------- */
 
-const B64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /** Standard base64 (RFC 4648), written by hand so this file stays DOM/Buffer-free. */
 export function toBase64(bytes: Uint8Array): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < bytes.length; i += 3) {
     const b0 = bytes[i] as number;
     const b1 = bytes[i + 1];
@@ -37,8 +37,8 @@ export function toBase64(bytes: Uint8Array): string {
     const chunk = (b0 << 16) | ((b1 ?? 0) << 8) | (b2 ?? 0);
     out += B64_CHARS[(chunk >> 18) & 63];
     out += B64_CHARS[(chunk >> 12) & 63];
-    out += b1 !== undefined ? B64_CHARS[(chunk >> 6) & 63] : '=';
-    out += b2 !== undefined ? B64_CHARS[chunk & 63] : '=';
+    out += b1 !== undefined ? B64_CHARS[(chunk >> 6) & 63] : "=";
+    out += b2 !== undefined ? B64_CHARS[chunk & 63] : "=";
   }
   return out;
 }
@@ -70,7 +70,7 @@ export function generateKeypair(randomBytes?: Uint8Array): Keypair {
   const raw = randomBytes ? Uint8Array.from(randomBytes) : randomBytesFromCrypto(KEY_BYTES);
   if (raw.length !== KEY_BYTES)
     throw new ToolError(
-      'bad-key-length',
+      "bad-key-length",
       `A WireGuard private key needs exactly ${KEY_BYTES} random bytes, got ${raw.length}.`,
     );
 
@@ -91,7 +91,7 @@ export function generatePsk(randomBytes?: Uint8Array): string {
   const raw = randomBytes ? Uint8Array.from(randomBytes) : randomBytesFromCrypto(KEY_BYTES);
   if (raw.length !== KEY_BYTES)
     throw new ToolError(
-      'bad-key-length',
+      "bad-key-length",
       `A WireGuard preshared key needs exactly ${KEY_BYTES} random bytes, got ${raw.length}.`,
     );
   return toBase64(raw);
@@ -112,43 +112,43 @@ function ipToInt(a: number, b: number, c: number, d: number): number {
 }
 
 function intToIp(n: number): string {
-  return [24, 16, 8, 0].map((shift) => Math.floor(n / 2 ** shift) % 256).join('.');
+  return [24, 16, 8, 0].map((shift) => Math.floor(n / 2 ** shift) % 256).join(".");
 }
 
 const CIDR_RE = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\/(\d{1,2})$/;
 
 /** Parses and validates an IPv4 CIDR subnet string like "10.8.0.0/24". */
 function parseSubnet(subnet: string): ParsedSubnet {
-  const s = (subnet ?? '').trim();
+  const s = (subnet ?? "").trim();
   const m = CIDR_RE.exec(s);
   if (!m)
     throw new ToolError(
-      'bad-subnet',
+      "bad-subnet",
       `"${subnet}" is not a valid CIDR subnet.`,
-      'Use a form like 10.8.0.0/24.',
+      "Use a form like 10.8.0.0/24.",
     );
 
   const octets = [m[1], m[2], m[3], m[4]].map(Number) as [number, number, number, number];
   if (octets.some((o) => o > 255))
     throw new ToolError(
-      'bad-subnet',
+      "bad-subnet",
       `"${subnet}" has an octet outside 0-255.`,
-      'Use a form like 10.8.0.0/24.',
+      "Use a form like 10.8.0.0/24.",
     );
 
   const prefix = Number(m[5]);
   if (prefix > 32)
     throw new ToolError(
-      'bad-subnet',
+      "bad-subnet",
       `"${subnet}" has a prefix outside 0-32.`,
-      'Use a form like 10.8.0.0/24.',
+      "Use a form like 10.8.0.0/24.",
     );
 
   if (prefix > 30)
     throw new ToolError(
-      'subnet-too-small',
+      "subnet-too-small",
       `A /${prefix} subnet has no room for a server plus peers.`,
-      'Use /30 or larger (a lower prefix number), such as 10.8.0.0/24.',
+      "Use /30 or larger (a lower prefix number), such as 10.8.0.0/24.",
     );
 
   const base = ipToInt(...octets);
@@ -156,7 +156,7 @@ function parseSubnet(subnet: string): ParsedSubnet {
   const network = (base & mask) >>> 0;
   if (network !== base)
     throw new ToolError(
-      'bad-subnet',
+      "bad-subnet",
       `"${subnet}" is not the network address for a /${prefix}.`,
       `Did you mean ${intToIp(network)}/${prefix}?`,
     );
@@ -171,16 +171,16 @@ function parseSubnet(subnet: string): ParsedSubnet {
  */
 export function deriveAddresses(subnet: string, count: number): string[] {
   if (!Number.isInteger(count) || count < 1)
-    throw new ToolError('bad-count', 'Address count must be a positive integer.');
+    throw new ToolError("bad-count", "Address count must be a positive integer.");
 
   const { base, prefix } = parseSubnet(subnet);
   const usable = 2 ** (32 - prefix) - 2;
 
   if (count > usable)
     throw new ToolError(
-      'subnet-too-small',
-      `A /${prefix} subnet has room for ${usable} address${usable === 1 ? '' : 'es'} (1 server + ${Math.max(usable - 1, 0)} peer${usable - 1 === 1 ? '' : 's'}), but ${count} ${count === 1 ? 'was' : 'were'} requested.`,
-      'Use a larger subnet (a lower prefix number) or fewer peers.',
+      "subnet-too-small",
+      `A /${prefix} subnet has room for ${usable} address${usable === 1 ? "" : "es"} (1 server + ${Math.max(usable - 1, 0)} peer${usable - 1 === 1 ? "" : "s"}), but ${count} ${count === 1 ? "was" : "were"} requested.`,
+      "Use a larger subnet (a lower prefix number) or fewer peers.",
     );
 
   return Array.from({ length: count }, (_, i) => intToIp(base + 1 + i));
@@ -193,8 +193,8 @@ export function subnetPrefix(subnet: string): number {
 
 /** Reads the port out of an "host:port" endpoint, falling back to the default. */
 export function listenPortFromEndpoint(endpoint: string): number {
-  const raw = (endpoint ?? '').trim();
-  const idx = raw.lastIndexOf(':');
+  const raw = (endpoint ?? "").trim();
+  const idx = raw.lastIndexOf(":");
   if (idx === -1) return DEFAULT_LISTEN_PORT;
   const port = Number(raw.slice(idx + 1));
   return Number.isInteger(port) && port >= 1 && port <= 65535 ? port : DEFAULT_LISTEN_PORT;
@@ -202,7 +202,7 @@ export function listenPortFromEndpoint(endpoint: string): number {
 
 /** What a peer routes through the tunnel: everything, or just the VPN subnet. */
 export function resolveAllowedIps(mode: string, subnet: string): string {
-  return mode === 'split' ? subnet : '0.0.0.0/0, ::/0';
+  return mode === "split" ? subnet : "0.0.0.0/0, ::/0";
 }
 
 /* -------------------------------------------------------------------------- */
@@ -237,20 +237,20 @@ export interface PeerConfigOptions {
 }
 
 function section(lines: (string | undefined)[]): string {
-  return lines.filter((l): l is string => l !== undefined).join('\n');
+  return lines.filter((l): l is string => l !== undefined).join("\n");
 }
 
 /** Builds the [Interface] + one [Peer] block per client for the server's wg0.conf. */
 export function buildServerConfig(o: ServerConfigOptions): string {
   if (!o.privateKey)
-    throw new ToolError('missing-private-key', 'A server private key is required.');
-  if (!o.address) throw new ToolError('missing-address', 'A server interface address is required.');
+    throw new ToolError("missing-private-key", "A server private key is required.");
+  if (!o.address) throw new ToolError("missing-address", "A server interface address is required.");
   if (!Number.isInteger(o.listenPort) || o.listenPort < 1 || o.listenPort > 65535)
-    throw new ToolError('bad-listen-port', 'ListenPort must be between 1 and 65535.');
+    throw new ToolError("bad-listen-port", "ListenPort must be between 1 and 65535.");
 
   const sections = [
     section([
-      '[Interface]',
+      "[Interface]",
       `PrivateKey = ${o.privateKey}`,
       `Address = ${o.address}`,
       `ListenPort = ${o.listenPort}`,
@@ -260,10 +260,10 @@ export function buildServerConfig(o: ServerConfigOptions): string {
 
   for (const peer of o.peers) {
     if (!peer.publicKey)
-      throw new ToolError('missing-peer-public-key', 'Each peer needs a public key.');
+      throw new ToolError("missing-peer-public-key", "Each peer needs a public key.");
     sections.push(
       section([
-        '[Peer]',
+        "[Peer]",
         `PublicKey = ${peer.publicKey}`,
         peer.presharedKey ? `PresharedKey = ${peer.presharedKey}` : undefined,
         `AllowedIPs = ${peer.allowedIps}`,
@@ -271,25 +271,25 @@ export function buildServerConfig(o: ServerConfigOptions): string {
     );
   }
 
-  return `${sections.join('\n\n')}\n`;
+  return `${sections.join("\n\n")}\n`;
 }
 
 /** Builds one client's wgN.conf: its own [Interface] plus the server as its [Peer]. */
 export function buildPeerConfig(o: PeerConfigOptions): string {
-  if (!o.privateKey) throw new ToolError('missing-private-key', 'A peer private key is required.');
-  if (!o.address) throw new ToolError('missing-address', 'A peer interface address is required.');
+  if (!o.privateKey) throw new ToolError("missing-private-key", "A peer private key is required.");
+  if (!o.address) throw new ToolError("missing-address", "A peer interface address is required.");
   if (!o.serverPublicKey)
-    throw new ToolError('missing-server-public-key', "The server's public key is required.");
+    throw new ToolError("missing-server-public-key", "The server's public key is required.");
 
   const iface = section([
-    '[Interface]',
+    "[Interface]",
     `PrivateKey = ${o.privateKey}`,
     `Address = ${o.address}`,
     o.dns ? `DNS = ${o.dns}` : undefined,
   ]);
 
   const peer = section([
-    '[Peer]',
+    "[Peer]",
     `PublicKey = ${o.serverPublicKey}`,
     o.presharedKey ? `PresharedKey = ${o.presharedKey}` : undefined,
     `AllowedIPs = ${o.allowedIps}`,
@@ -320,10 +320,10 @@ export async function run(
   const { privateKey, publicKey } = generateKeypair();
   const presharedKey = generatePsk();
   return {
-    Note: 'This tool is interactive: open the WireGuard Config Generator page in a browser to build a full server and peer configuration with QR codes for mobile clients. The keys below were generated fresh for this response only, to show the output shape. They are real, unique keys, not placeholders, so do not reuse them in an actual tunnel: generate your own in the browser instead.',
-    'Sample private key': privateKey,
-    'Sample public key': publicKey,
-    'Sample preshared key': presharedKey,
+    Note: "This tool is interactive: open the WireGuard Config Generator page in a browser to build a full server and peer configuration with QR codes for mobile clients. The keys below were generated fresh for this response only, to show the output shape. They are real, unique keys, not placeholders, so do not reuse them in an actual tunnel: generate your own in the browser instead.",
+    "Sample private key": privateKey,
+    "Sample public key": publicKey,
+    "Sample preshared key": presharedKey,
   };
 }
 

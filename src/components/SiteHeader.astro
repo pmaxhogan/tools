@@ -1,4 +1,5 @@
 ---
+
 ---
 
 <header
@@ -106,9 +107,9 @@
 <script is:inline>
   // Delegated on document (which persists across ClientRouter swaps) so the
   // toggle keeps working after client-side navigation replaces the button.
-  document.addEventListener('click', (e) => {
-    if (!(e.target instanceof Element) || !e.target.closest('#theme-toggle')) return;
-    const dark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('theme', dark ? 'dark' : 'light');
+  document.addEventListener("click", (e) => {
+    if (!(e.target instanceof Element) || !e.target.closest("#theme-toggle")) return;
+    const dark = document.documentElement.classList.toggle("dark");
+    localStorage.setItem("theme", dark ? "dark" : "light");
   });
 </script>

@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface RandomPickerOpts {
   /** 'dice' | 'coin' | 'pick' | 'teams' */
@@ -69,7 +69,7 @@ function shuffle<T>(items: T[], next: () => number): T[] {
 // ---------------------------------------------------------------------------
 
 function parseLines(input: string | undefined): string[] {
-  return (input ?? '')
+  return (input ?? "")
     .split(/\r?\n/)
     .map((s) => s.trim())
     .filter(Boolean);
@@ -78,7 +78,7 @@ function parseLines(input: string | undefined): string[] {
 function validateCount(count: number): number {
   const n = Math.floor(count);
   if (!Number.isFinite(n) || n < 1 || n > 100)
-    throw new ToolError('bad-count', 'Count must be between 1 and 100.');
+    throw new ToolError("bad-count", "Count must be between 1 and 100.");
   return n;
 }
 
@@ -95,35 +95,35 @@ export interface DiceNotation {
 const DICE_RE = /^(\d*)d(\d+)\s*([+-]\s*\d+)?$/i;
 
 export function parseDiceNotation(raw: string): DiceNotation {
-  const s = (raw ?? '').trim();
+  const s = (raw ?? "").trim();
   if (!s)
     throw new ToolError(
-      'empty-input',
-      'Enter dice notation to roll.',
+      "empty-input",
+      "Enter dice notation to roll.",
       'Use notation like "d20", "3d6", or "2d6+3".',
     );
 
   const m = DICE_RE.exec(s);
   if (!m)
     throw new ToolError(
-      'invalid-notation',
+      "invalid-notation",
       `Could not parse "${s}" as dice notation.`,
       'Use notation like "d20", "3d6", or "2d6+3" (NdM with an optional +/-K modifier).',
     );
 
   const count = m[1] ? parseInt(m[1], 10) : 1;
   const sides = parseInt(m[2]!, 10);
-  const modifier = m[3] ? parseInt(m[3].replace(/\s+/g, ''), 10) : 0;
+  const modifier = m[3] ? parseInt(m[3].replace(/\s+/g, ""), 10) : 0;
 
   if (count < 1 || count > 100)
     throw new ToolError(
-      'invalid-notation',
+      "invalid-notation",
       `Dice count ${count} is out of range.`,
       'Use between 1 and 100 dice, e.g. "3d6+2".',
     );
   if (sides < 1 || sides > 1000)
     throw new ToolError(
-      'invalid-notation',
+      "invalid-notation",
       `Die size d${sides} is out of range.`,
       'Use a die size between 1 and 1000, e.g. "d20".',
     );
@@ -144,10 +144,10 @@ export function rollDice(notation: DiceNotation, next: () => number): DiceResult
 }
 
 function formatDiceResult({ rolls, modifier, total }: DiceResult): string {
-  const parts = [`Rolls: ${rolls.join(', ')}`];
-  if (modifier !== 0) parts.push(`Modifier: ${modifier > 0 ? '+' : ''}${modifier}`);
+  const parts = [`Rolls: ${rolls.join(", ")}`];
+  if (modifier !== 0) parts.push(`Modifier: ${modifier > 0 ? "+" : ""}${modifier}`);
   parts.push(`Total: ${total}`);
-  return parts.join(' | ');
+  return parts.join(" | ");
 }
 
 // ---------------------------------------------------------------------------
@@ -155,14 +155,14 @@ function formatDiceResult({ rolls, modifier, total }: DiceResult): string {
 // ---------------------------------------------------------------------------
 
 function flipCoins(count: number, next: () => number): string[] {
-  return Array.from({ length: count }, () => (next() < 0.5 ? 'Heads' : 'Tails'));
+  return Array.from({ length: count }, () => (next() < 0.5 ? "Heads" : "Tails"));
 }
 
 function formatCoinResult(flips: string[]): string {
   if (flips.length === 1) return flips[0]!;
-  const heads = flips.filter((f) => f === 'Heads').length;
+  const heads = flips.filter((f) => f === "Heads").length;
   const tails = flips.length - heads;
-  return `Flips: ${flips.join(', ')} | Heads: ${heads}, Tails: ${tails}`;
+  return `Flips: ${flips.join(", ")} | Heads: ${heads}, Tails: ${tails}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -171,12 +171,12 @@ function formatCoinResult(flips: string[]): string {
 
 export function pickItems(items: string[], count: number, next: () => number): string[] {
   if (items.length === 0)
-    throw new ToolError('empty-input', 'Enter at least one item, one per line, to pick from.');
+    throw new ToolError("empty-input", "Enter at least one item, one per line, to pick from.");
   if (count > items.length)
     throw new ToolError(
-      'not-enough-items',
+      "not-enough-items",
       `Cannot pick ${count} distinct items from a list of ${items.length}.`,
-      'Reduce the count or add more items, one per line.',
+      "Reduce the count or add more items, one per line.",
     );
   return shuffle(items, next).slice(0, count);
 }
@@ -188,14 +188,14 @@ export function pickItems(items: string[], count: number, next: () => number): s
 export function splitTeams(names: string[], teamCount: number, next: () => number): string[][] {
   if (names.length === 0)
     throw new ToolError(
-      'empty-input',
-      'Enter at least one name, one per line, to split into teams.',
+      "empty-input",
+      "Enter at least one name, one per line, to split into teams.",
     );
   if (teamCount > names.length)
     throw new ToolError(
-      'not-enough-items',
+      "not-enough-items",
       `Cannot split ${names.length} names into ${teamCount} teams.`,
-      'Reduce the team count or add more names, one per line.',
+      "Reduce the team count or add more names, one per line.",
     );
 
   const shuffled = shuffle(names, next);
@@ -209,32 +209,32 @@ export function splitTeams(names: string[], teamCount: number, next: () => numbe
 // ---------------------------------------------------------------------------
 
 export function run(input: string, opts: RandomPickerOpts): string {
-  const next = getRng(opts.seed ?? '');
+  const next = getRng(opts.seed ?? "");
 
   switch (opts.mode) {
-    case 'dice': {
-      const notation = parseDiceNotation(input ?? '');
+    case "dice": {
+      const notation = parseDiceNotation(input ?? "");
       return formatDiceResult(rollDice(notation, next));
     }
-    case 'coin': {
+    case "coin": {
       const count = validateCount(opts.count);
       return formatCoinResult(flipCoins(count, next));
     }
-    case 'pick': {
+    case "pick": {
       const count = validateCount(opts.count);
       const picked = pickItems(parseLines(input), count, next);
-      return `Picked: ${picked.join(', ')}`;
+      return `Picked: ${picked.join(", ")}`;
     }
-    case 'teams': {
+    case "teams": {
       const count = validateCount(opts.count);
       const teams = splitTeams(parseLines(input), count, next);
-      return teams.map((t, i) => `Team ${i + 1}: ${t.join(', ')}`).join('\n');
+      return teams.map((t, i) => `Team ${i + 1}: ${t.join(", ")}`).join("\n");
     }
     default:
       throw new ToolError(
-        'bad-mode',
+        "bad-mode",
         `Unknown mode "${opts.mode}".`,
-        'Use one of: dice, coin, pick, teams.',
+        "Use one of: dice, coin, pick, teams.",
       );
   }
 }

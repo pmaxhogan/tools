@@ -1,15 +1,14 @@
-
 /* Self-hosted fonts only — rule 8: no third-party requests at runtime. */
 @font-face {
-  font-family: 'Geist';
-  src: url('/fonts/Geist-Variable.woff2') format('woff2');
+  font-family: "Geist";
+  src: url("/fonts/Geist-Variable.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Geist Mono';
-  src: url('/fonts/GeistMono-Variable.woff2') format('woff2');
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-Variable.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -31,8 +30,8 @@
 @custom-variant data-closed (&[data-state="closed"]);
 
 @theme inline {
-  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "Cascadia Code", "Source Code Pro", monospace;
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -107,7 +106,11 @@
   --grad-brand: linear-gradient(135deg, #5b4bd6 0%, #7b5bf0 100%);
   --grad-brand-strong: linear-gradient(135deg, #4c3ecb 0%, #7b5bf0 100%);
   --grad-brand-soft: linear-gradient(135deg, #efeafe 0%, #f5f0fe 100%);
-  --brand-glow: radial-gradient(62% 82% at 50% -8%, rgba(123, 91, 240, 0.2), rgba(123, 91, 240, 0) 70%);
+  --brand-glow: radial-gradient(
+    62% 82% at 50% -8%,
+    rgba(123, 91, 240, 0.2),
+    rgba(123, 91, 240, 0) 70%
+  );
   --brand-band: linear-gradient(180deg, rgba(123, 91, 240, 0.1) 0%, rgba(123, 91, 240, 0) 100%);
   --brand-hairline: rgba(91, 75, 214, 0.28);
   --sh-sm: 0 1px 2px rgba(28, 26, 23, 0.05), 0 3px 8px -2px rgba(28, 26, 23, 0.06);
@@ -162,7 +165,11 @@
   --grad-brand: linear-gradient(135deg, #8a79f5 0%, #a78bfa 100%);
   --grad-brand-strong: linear-gradient(135deg, #9a8bf7 0%, #b49bfb 100%);
   --grad-brand-soft: linear-gradient(135deg, #241f3c 0%, #2c2449 100%);
-  --brand-glow: radial-gradient(62% 82% at 50% -8%, rgba(138, 121, 245, 0.24), rgba(138, 121, 245, 0) 70%);
+  --brand-glow: radial-gradient(
+    62% 82% at 50% -8%,
+    rgba(138, 121, 245, 0.24),
+    rgba(138, 121, 245, 0) 70%
+  );
   --brand-band: linear-gradient(180deg, rgba(138, 121, 245, 0.16) 0%, rgba(138, 121, 245, 0) 100%);
   --brand-hairline: rgba(138, 121, 245, 0.32);
   --sh-sm: 0 1px 3px rgba(0, 0, 0, 0.4);

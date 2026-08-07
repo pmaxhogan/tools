@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface LineSorterOpts {
   /** 'sort-az' | 'sort-za' | 'sort-natural' | 'sort-length' | 'dedupe' | 'reverse' | 'shuffle' */
@@ -15,7 +15,7 @@ export interface LineSorterOpts {
 function compareLines(a: string, b: string, natural: boolean, caseInsensitive: boolean): number {
   return a.localeCompare(b, undefined, {
     numeric: natural,
-    sensitivity: caseInsensitive ? 'base' : 'variant',
+    sensitivity: caseInsensitive ? "base" : "variant",
   });
 }
 
@@ -70,11 +70,11 @@ function shuffleLines(lines: string[], seed: string): string[] {
 }
 
 export function run(input: string, opts: LineSorterOpts): string {
-  if (!input || input.trim() === '')
+  if (!input || input.trim() === "")
     throw new ToolError(
-      'empty-input',
-      'Enter some lines of text to process.',
-      'Paste multiple lines into the input, one per line.',
+      "empty-input",
+      "Enter some lines of text to process.",
+      "Paste multiple lines into the input, one per line.",
     );
 
   let lines = input.split(/\r?\n/);
@@ -82,36 +82,36 @@ export function run(input: string, opts: LineSorterOpts): string {
   if (opts.removeEmpty) lines = lines.filter((l) => l.length > 0);
 
   switch (opts.operation) {
-    case 'sort-az':
+    case "sort-az":
       lines = [...lines].sort((a, b) => compareLines(a, b, false, opts.caseInsensitive));
       break;
-    case 'sort-za':
+    case "sort-za":
       lines = [...lines].sort((a, b) => compareLines(b, a, false, opts.caseInsensitive));
       break;
-    case 'sort-natural':
+    case "sort-natural":
       lines = [...lines].sort((a, b) => compareLines(a, b, true, opts.caseInsensitive));
       break;
-    case 'sort-length':
+    case "sort-length":
       lines = [...lines].sort((a, b) => a.length - b.length);
       break;
-    case 'dedupe':
+    case "dedupe":
       lines = dedupe(lines, opts.caseInsensitive);
       break;
-    case 'reverse':
+    case "reverse":
       lines = [...lines].reverse();
       break;
-    case 'shuffle':
-      lines = shuffleLines(lines, opts.seed ?? '');
+    case "shuffle":
+      lines = shuffleLines(lines, opts.seed ?? "");
       break;
     default:
       throw new ToolError(
-        'unknown-operation',
+        "unknown-operation",
         `Unknown operation "${opts.operation}".`,
-        'Choose one of sort-az, sort-za, sort-natural, sort-length, dedupe, reverse, shuffle.',
+        "Choose one of sort-az, sort-za, sort-natural, sort-length, dedupe, reverse, shuffle.",
       );
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 export default { run } satisfies ToolLogic<string, string, LineSorterOpts>;

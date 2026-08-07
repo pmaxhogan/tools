@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, shallowRef, watch } from 'vue';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, X } from 'lucide-vue-next';
-import { ToolError, type ToolMeta } from '@/tools/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { computed, onUnmounted, ref, shallowRef, watch } from "vue";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, X } from "lucide-vue-next";
+import { ToolError, type ToolMeta } from "@/tools/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 /**
  * Bespoke panel for the PDF toolbox.
@@ -33,8 +33,8 @@ import {
  */
 defineProps<{ meta: ToolMeta }>();
 
-type PdfLogic = typeof import('@/tools/pdf-toolbox/index');
-type PdfJs = typeof import('pdfjs-dist');
+type PdfLogic = typeof import("@/tools/pdf-toolbox/index");
+type PdfJs = typeof import("pdfjs-dist");
 
 /** Width of a page thumbnail in CSS pixels, before device pixel ratio. */
 const THUMB_WIDTH = 120;
@@ -77,7 +77,7 @@ interface FieldInfo {
 
 let logicPromise: Promise<PdfLogic> | null = null;
 function loadLogic(): Promise<PdfLogic> {
-  logicPromise ??= import('@/tools/pdf-toolbox/index');
+  logicPromise ??= import("@/tools/pdf-toolbox/index");
   return logicPromise;
 }
 
@@ -85,8 +85,8 @@ let pdfjsPromise: Promise<PdfJs> | null = null;
 function loadPdfjs(): Promise<PdfJs> {
   pdfjsPromise ??= (async () => {
     const [lib, worker] = await Promise.all([
-      import('pdfjs-dist'),
-      import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+      import("pdfjs-dist"),
+      import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
     ]);
     // Self hosted worker: Vite emits this file into the site's own assets.
     lib.GlobalWorkerOptions.workerSrc = worker.default;
@@ -101,9 +101,9 @@ function loadPdfjs(): Promise<PdfJs> {
 
 const files = ref<LoadedFile[]>([]);
 const activeId = ref<number | null>(null);
-const operation = ref('merge');
+const operation = ref("merge");
 const busy = ref(false);
-const busyLabel = ref('');
+const busyLabel = ref("");
 const dragging = ref(false);
 const error = ref<{ message: string; fix?: string } | null>(null);
 const results = ref<ResultFile[]>([]);
@@ -119,21 +119,21 @@ let stripToken = 0;
 let nextId = 1;
 
 // Split
-const splitSpec = ref('1-3');
+const splitSpec = ref("1-3");
 // Rotate
 const rotateAll = ref(true);
-const rotateSpec = ref('1');
-const rotateAngle = ref('90');
+const rotateSpec = ref("1");
+const rotateAngle = ref("90");
 // Reorder and delete
 const order = ref<number[]>([]);
 // Watermark
-const markText = ref('DRAFT');
+const markText = ref("DRAFT");
 const markSize = ref(48);
 const markOpacity = ref(20);
 const markAngle = ref(45);
-const markColor = ref('#ff0000');
-const markColorText = ref('#ff0000');
-const markPosition = ref('diagonal');
+const markColor = ref("#ff0000");
+const markColorText = ref("#ff0000");
+const markPosition = ref("diagonal");
 // Form fill
 const formFields = ref<FieldInfo[]>([]);
 const formValues = ref<Record<string, string>>({});
@@ -152,7 +152,7 @@ const canMerge = computed(() => readyFiles.value.length >= 2);
 
 const activePageCount = computed(() => activeFile.value?.pageCount ?? 0);
 
-const orderText = computed(() => order.value.join(', '));
+const orderText = computed(() => order.value.join(", "));
 
 const deletedPages = computed(() => {
   const kept = new Set(order.value);
@@ -165,13 +165,13 @@ const deletedPages = computed(() => {
 function checkSpec(spec: string): { ok: boolean; note: string } {
   const lib = logic.value;
   const pages = activePageCount.value;
-  if (!lib || pages < 1) return { ok: true, note: '' };
+  if (!lib || pages < 1) return { ok: true, note: "" };
   try {
     const groups = lib.parsePageRanges(spec, pages);
     const total = groups.reduce((sum, g) => sum + g.length, 0);
     return {
       ok: true,
-      note: `${groups.length} ${groups.length === 1 ? 'range' : 'ranges'}, ${total} ${total === 1 ? 'page' : 'pages'} in total.`,
+      note: `${groups.length} ${groups.length === 1 ? "range" : "ranges"}, ${total} ${total === 1 ? "page" : "pages"} in total.`,
     };
   } catch (e) {
     return { ok: false, note: e instanceof ToolError ? e.message : String(e) };
@@ -180,7 +180,7 @@ function checkSpec(spec: string): { ok: boolean; note: string } {
 
 const splitCheck = computed(() => checkSpec(splitSpec.value));
 const rotateCheck = computed(() =>
-  rotateAll.value ? { ok: true, note: 'Every page turns.' } : checkSpec(rotateSpec.value),
+  rotateAll.value ? { ok: true, note: "Every page turns." } : checkSpec(rotateSpec.value),
 );
 
 /* ---------------------------------------------------------------- */
@@ -189,7 +189,7 @@ const rotateCheck = computed(() =>
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -200,8 +200,8 @@ function humanSize(bytes: number): string {
 }
 
 function baseName(name: string): string {
-  const dot = name.toLowerCase().lastIndexOf('.pdf');
-  return (dot > 0 ? name.slice(0, dot) : name) || 'document';
+  const dot = name.toLowerCase().lastIndexOf(".pdf");
+  return (dot > 0 ? name.slice(0, dot) : name) || "document";
 }
 
 function toToolError(e: unknown): { message: string; fix?: string } {
@@ -213,12 +213,12 @@ function toToolError(e: unknown): { message: string; fix?: string } {
 function toPdfBlob(bytes: Uint8Array): Blob {
   // A fresh copy keeps the Blob independent of the array it came from, and
   // gives TypeScript a plain ArrayBuffer rather than an ArrayBufferLike.
-  return new Blob([bytes.slice().buffer as ArrayBuffer], { type: 'application/pdf' });
+  return new Blob([bytes.slice().buffer as ArrayBuffer], { type: "application/pdf" });
 }
 
 function triggerDownload(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = name;
   document.body.appendChild(a);
@@ -228,12 +228,12 @@ function triggerDownload(blob: Blob, name: string) {
 }
 
 function parseHex(raw: string): string | null {
-  const body = raw.trim().replace(/^#/, '');
+  const body = raw.trim().replace(/^#/, "");
   if (/^[0-9a-fA-F]{3}$/.test(body)) {
     return `#${body
-      .split('')
+      .split("")
       .map((c) => c + c)
-      .join('')}`.toLowerCase();
+      .join("")}`.toLowerCase();
   }
   if (/^[0-9a-fA-F]{6}$/.test(body)) return `#${body.toLowerCase()}`;
   return null;
@@ -262,7 +262,7 @@ function onColorText(value: string) {
  * list holding an empty array.
  */
 async function renderPage(
-  pdf: Awaited<ReturnType<PdfJs['getDocument']>['promise']>,
+  pdf: Awaited<ReturnType<PdfJs["getDocument"]>["promise"]>,
   pageNumber: number,
   targetWidth: number,
 ): Promise<string | null> {
@@ -270,17 +270,17 @@ async function renderPage(
   const unscaled = page.getViewport({ scale: 1 });
   const scale = targetWidth / unscaled.width;
   const viewport = page.getViewport({ scale });
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.ceil(viewport.width));
   canvas.height = Math.max(1, Math.ceil(viewport.height));
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   // PDF pages assume paper, so an unpainted canvas would show as transparent.
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvas, viewport }).promise;
   page.cleanup();
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
   return blob ? URL.createObjectURL(blob) : null;
 }
 
@@ -354,7 +354,7 @@ function thumbFor(page: number): string | null {
 async function addFiles(list: File[]) {
   if (list.length === 0) return;
   busy.value = true;
-  busyLabel.value = 'Reading files';
+  busyLabel.value = "Reading files";
   error.value = null;
   try {
     const lib = logic.value ?? (await loadLogic());
@@ -387,14 +387,14 @@ async function addFiles(list: File[]) {
     error.value = toToolError(e);
   } finally {
     busy.value = false;
-    busyLabel.value = '';
+    busyLabel.value = "";
   }
 }
 
 function pdfsFrom(list: FileList | null | undefined): File[] {
   if (!list) return [];
   return [...list].filter(
-    (f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'),
+    (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
   );
 }
 
@@ -403,8 +403,8 @@ function onDrop(e: DragEvent) {
   const picked = pdfsFrom(e.dataTransfer?.files);
   if (picked.length === 0) {
     error.value = {
-      message: 'Nothing in that drop was a PDF file.',
-      fix: 'Drop files whose names end in .pdf. This toolbox only edits PDFs.',
+      message: "Nothing in that drop was a PDF file.",
+      fix: "Drop files whose names end in .pdf. This toolbox only edits PDFs.",
     };
     return;
   }
@@ -416,7 +416,7 @@ function onPickFiles(e: Event) {
   const picked = pdfsFrom(picker.files);
   void addFiles(picked).then(() => {
     // Reset so picking the same file again still fires a change event.
-    picker.value = '';
+    picker.value = "";
   });
 }
 
@@ -446,7 +446,7 @@ function clearAll() {
   formFields.value = [];
   formValues.value = {};
   formLoaded.value = false;
-  if (fileInput.value) fileInput.value.value = '';
+  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -464,7 +464,7 @@ async function loadFormFields() {
     const fields = await lib.listFormFields(file.bytes);
     formFields.value = fields;
     const values: Record<string, string> = {};
-    for (const field of fields) values[field.name] = field.value ?? '';
+    for (const field of fields) values[field.name] = field.value ?? "";
     formValues.value = values;
     formLoaded.value = true;
   } catch (e) {
@@ -531,16 +531,16 @@ async function withBusy(label: string, work: (lib: PdfLogic) => Promise<ResultFi
     error.value = toToolError(e);
   } finally {
     busy.value = false;
-    busyLabel.value = '';
+    busyLabel.value = "";
   }
 }
 
 function runMerge() {
-  void withBusy('Merging', async (lib) => {
+  void withBusy("Merging", async (lib) => {
     const bytes = await lib.mergePdfs(readyFiles.value.map((f) => f.bytes));
     return [
       {
-        name: 'merged.pdf',
+        name: "merged.pdf",
         blob: toPdfBlob(bytes),
         note: `${readyFiles.value.length} files in the order shown above`,
       },
@@ -551,12 +551,12 @@ function runMerge() {
 function runSplit() {
   const file = activeFile.value;
   if (!file) return;
-  void withBusy('Splitting', async (lib) => {
+  void withBusy("Splitting", async (lib) => {
     const parts = await lib.splitPdf(file.bytes, splitSpec.value);
     return parts.map((part) => ({
       name: `${baseName(file.name)}-${part.suffix}.pdf`,
       blob: toPdfBlob(part.bytes),
-      note: `${part.pages.length} ${part.pages.length === 1 ? 'page' : 'pages'}`,
+      note: `${part.pages.length} ${part.pages.length === 1 ? "page" : "pages"}`,
     }));
   });
 }
@@ -564,13 +564,13 @@ function runSplit() {
 function runExtract() {
   const file = activeFile.value;
   if (!file) return;
-  void withBusy('Extracting', async (lib) => {
+  void withBusy("Extracting", async (lib) => {
     const bytes = await lib.extractPages(file.bytes, splitSpec.value);
     return [
       {
         name: `${baseName(file.name)}-extract.pdf`,
         blob: toPdfBlob(bytes),
-        note: 'every listed page in one file',
+        note: "every listed page in one file",
       },
     ];
   });
@@ -579,10 +579,10 @@ function runExtract() {
 function runRotate() {
   const file = activeFile.value;
   if (!file) return;
-  void withBusy('Rotating', async (lib) => {
+  void withBusy("Rotating", async (lib) => {
     const angle = Number(rotateAngle.value) as 90 | 180 | 270;
     const pages = rotateAll.value
-      ? ('all' as const)
+      ? ("all" as const)
       : lib.parsePageRanges(rotateSpec.value, file.pageCount).flat();
     const bytes = await lib.rotatePages(file.bytes, pages, angle);
     return [
@@ -598,7 +598,7 @@ function runRotate() {
 function runReorder() {
   const file = activeFile.value;
   if (!file) return;
-  void withBusy('Rebuilding', async (lib) => {
+  void withBusy("Rebuilding", async (lib) => {
     const bytes = await lib.reorderPages(file.bytes, order.value);
     const removed = deletedPages.value.length;
     return [
@@ -617,14 +617,14 @@ function runReorder() {
 function runWatermark() {
   const file = activeFile.value;
   if (!file) return;
-  void withBusy('Stamping', async (lib) => {
+  void withBusy("Stamping", async (lib) => {
     const bytes = await lib.watermarkPdf(file.bytes, {
       text: markText.value,
       opacity: markOpacity.value / 100,
       fontSize: markSize.value,
       angle: markAngle.value,
       color: markColor.value,
-      position: markPosition.value as 'center' | 'diagonal' | 'bottom',
+      position: markPosition.value as "center" | "diagonal" | "bottom",
     });
     return [
       {
@@ -639,15 +639,19 @@ function runWatermark() {
 function runFill() {
   const file = activeFile.value;
   if (!file) return;
-  void withBusy('Filling', async (lib) => {
-    const bytes = await lib.fillForm(file.bytes, { ...formValues.value }, {
-      flatten: flattenForm.value,
-    });
+  void withBusy("Filling", async (lib) => {
+    const bytes = await lib.fillForm(
+      file.bytes,
+      { ...formValues.value },
+      {
+        flatten: flattenForm.value,
+      },
+    );
     return [
       {
         name: `${baseName(file.name)}-filled.pdf`,
         blob: toPdfBlob(bytes),
-        note: flattenForm.value ? 'values flattened into the page' : 'still fillable',
+        note: flattenForm.value ? "values flattened into the page" : "still fillable",
       },
     ];
   });
@@ -680,21 +684,8 @@ onUnmounted(() => {
           PDF files
         </span>
         <div class="flex items-center gap-1">
-          <Button
-            v-if="files.length"
-            variant="ghost"
-            size="sm"
-            @click="clearAll"
-          >
-            Clear
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            @click="fileInput?.click()"
-          >
-            Open files
-          </Button>
+          <Button v-if="files.length" variant="ghost" size="sm" @click="clearAll"> Clear </Button>
+          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open files </Button>
           <input
             ref="fileInput"
             type="file"
@@ -702,28 +693,18 @@ onUnmounted(() => {
             accept="application/pdf,.pdf"
             multiple
             @change="onPickFiles"
-          >
+          />
         </div>
       </div>
 
-      <p
-        v-if="!files.length"
-        class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
-      >
+      <p v-if="!files.length" class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
         Drop one or more PDF files here, or pick them. Merging uses the order of this list, and
         every other operation works on the file you select. Everything runs in this tab: your files
         and inputs never leave your device.
       </p>
 
-      <ul
-        v-else
-        class="divide-y divide-border/60"
-      >
-        <li
-          v-for="(file, index) in files"
-          :key="file.id"
-          class="flex items-center gap-3 px-3 py-2"
-        >
+      <ul v-else class="divide-y divide-border/60">
+        <li v-for="(file, index) in files" :key="file.id" class="flex items-center gap-3 px-3 py-2">
           <div
             class="grid h-14 w-11 shrink-0 place-items-center overflow-hidden rounded-[4px] bg-background shadow-[var(--sh-inset)]"
           >
@@ -732,11 +713,8 @@ onUnmounted(() => {
               :src="file.thumbUrl"
               :alt="`First page of ${file.name}`"
               class="max-h-full max-w-full object-contain"
-            >
-            <span
-              v-else
-              class="font-mono text-[10px] text-muted-foreground"
-            >PDF</span>
+            />
+            <span v-else class="font-mono text-[10px] text-muted-foreground">PDF</span>
           </div>
 
           <button
@@ -755,7 +733,7 @@ onUnmounted(() => {
             <span class="block font-mono text-xs text-muted-foreground tabular-nums">
               <template v-if="file.error">Could not be read</template>
               <template v-else>
-                {{ file.pageCount }} {{ file.pageCount === 1 ? 'page' : 'pages' }},
+                {{ file.pageCount }} {{ file.pageCount === 1 ? "page" : "pages" }},
                 {{ humanSize(file.size) }}
                 <template v-if="file.id === activeId"> (selected)</template>
               </template>
@@ -801,13 +779,8 @@ onUnmounted(() => {
       role="alert"
       class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
     >
-      <p class="font-medium text-destructive">
-        {{ file.name }}: {{ file.error?.message }}
-      </p>
-      <p
-        v-if="file.error?.fix"
-        class="mt-1 text-muted-foreground"
-      >
+      <p class="font-medium text-destructive">{{ file.name }}: {{ file.error?.message }}</p>
+      <p v-if="file.error?.fix" class="mt-1 text-muted-foreground">
         {{ file.error.fix }}
       </p>
     </div>
@@ -821,71 +794,36 @@ onUnmounted(() => {
       <p class="font-medium text-destructive">
         {{ error.message }}
       </p>
-      <p
-        v-if="error.fix"
-        class="mt-1 text-muted-foreground"
-      >
+      <p v-if="error.fix" class="mt-1 text-muted-foreground">
         {{ error.fix }}
       </p>
     </div>
 
-    <p
-      v-if="busy"
-      class="text-sm text-muted-foreground"
-      aria-live="polite"
-    >
-      {{ busyLabel }}.
-    </p>
+    <p v-if="busy" class="text-sm text-muted-foreground" aria-live="polite">{{ busyLabel }}.</p>
 
     <!-- Operations -->
-    <Tabs
-      v-if="readyFiles.length"
-      v-model="operation"
-      class="w-full"
-    >
+    <Tabs v-if="readyFiles.length" v-model="operation" class="w-full">
       <TabsList class="flex w-full flex-wrap">
-        <TabsTrigger value="merge">
-          Merge
-        </TabsTrigger>
-        <TabsTrigger value="split">
-          Split
-        </TabsTrigger>
-        <TabsTrigger value="rotate">
-          Rotate
-        </TabsTrigger>
-        <TabsTrigger value="pages">
-          Pages
-        </TabsTrigger>
-        <TabsTrigger value="watermark">
-          Watermark
-        </TabsTrigger>
-        <TabsTrigger value="form">
-          Fill form
-        </TabsTrigger>
+        <TabsTrigger value="merge"> Merge </TabsTrigger>
+        <TabsTrigger value="split"> Split </TabsTrigger>
+        <TabsTrigger value="rotate"> Rotate </TabsTrigger>
+        <TabsTrigger value="pages"> Pages </TabsTrigger>
+        <TabsTrigger value="watermark"> Watermark </TabsTrigger>
+        <TabsTrigger value="form"> Fill form </TabsTrigger>
       </TabsList>
 
       <!-- Merge -->
-      <TabsContent
-        value="merge"
-        class="pt-4"
-      >
+      <TabsContent value="merge" class="pt-4">
         <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
           <p class="text-sm text-muted-foreground">
             Every readable file in the list is joined into one PDF, top to bottom. Use the arrows
             beside each file to set the order first.
           </p>
           <div class="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              :disabled="!canMerge || busy"
-              @click="runMerge"
-            >
+            <Button size="sm" :disabled="!canMerge || busy" @click="runMerge">
               Merge {{ readyFiles.length }} files
             </Button>
-            <span
-              v-if="!canMerge"
-              class="text-xs text-muted-foreground"
-            >
+            <span v-if="!canMerge" class="text-xs text-muted-foreground">
               Add a second PDF to merge.
             </span>
           </div>
@@ -893,16 +831,10 @@ onUnmounted(() => {
       </TabsContent>
 
       <!-- Split -->
-      <TabsContent
-        value="split"
-        class="pt-4"
-      >
+      <TabsContent value="split" class="pt-4">
         <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
           <div class="flex flex-col gap-1.5">
-            <Label
-              for="pdf-split-spec"
-              class="text-xs text-muted-foreground"
-            >Page ranges</Label>
+            <Label for="pdf-split-spec" class="text-xs text-muted-foreground">Page ranges</Label>
             <Input
               id="pdf-split-spec"
               v-model="splitSpec"
@@ -918,11 +850,7 @@ onUnmounted(() => {
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              :disabled="busy || !splitCheck.ok"
-              @click="runSplit"
-            >
+            <Button size="sm" :disabled="busy || !splitCheck.ok" @click="runSplit">
               Split into separate files
             </Button>
             <Button
@@ -942,38 +870,22 @@ onUnmounted(() => {
       </TabsContent>
 
       <!-- Rotate -->
-      <TabsContent
-        value="rotate"
-        class="pt-4"
-      >
+      <TabsContent value="rotate" class="pt-4">
         <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-36 flex-col gap-1.5">
-              <Label
-                for="pdf-rotate-angle"
-                class="text-xs text-muted-foreground"
-              >Turn by</Label>
+              <Label for="pdf-rotate-angle" class="text-xs text-muted-foreground">Turn by</Label>
               <Select
                 :model-value="rotateAngle"
                 @update:model-value="(v) => (rotateAngle = String(v))"
               >
-                <SelectTrigger
-                  id="pdf-rotate-angle"
-                  size="sm"
-                  class="w-full bg-card"
-                >
+                <SelectTrigger id="pdf-rotate-angle" size="sm" class="w-full bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="90">
-                    90 degrees clockwise
-                  </SelectItem>
-                  <SelectItem value="180">
-                    180 degrees
-                  </SelectItem>
-                  <SelectItem value="270">
-                    270 degrees clockwise
-                  </SelectItem>
+                  <SelectItem value="90"> 90 degrees clockwise </SelectItem>
+                  <SelectItem value="180"> 180 degrees </SelectItem>
+                  <SelectItem value="270"> 270 degrees clockwise </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -983,19 +895,12 @@ onUnmounted(() => {
                 :model-value="rotateAll"
                 @update:model-value="(v) => (rotateAll = Boolean(v))"
               />
-              <Label
-                for="pdf-rotate-all"
-                class="text-xs text-muted-foreground"
-              >All pages</Label>
+              <Label for="pdf-rotate-all" class="text-xs text-muted-foreground">All pages</Label>
             </div>
-            <div
-              v-if="!rotateAll"
-              class="flex min-w-40 flex-1 flex-col gap-1.5"
-            >
-              <Label
-                for="pdf-rotate-spec"
-                class="text-xs text-muted-foreground"
-              >Pages to turn</Label>
+            <div v-if="!rotateAll" class="flex min-w-40 flex-1 flex-col gap-1.5">
+              <Label for="pdf-rotate-spec" class="text-xs text-muted-foreground"
+                >Pages to turn</Label
+              >
               <Input
                 id="pdf-rotate-spec"
                 v-model="rotateSpec"
@@ -1005,18 +910,11 @@ onUnmounted(() => {
               />
             </div>
           </div>
-          <p
-            class="text-xs"
-            :class="rotateCheck.ok ? 'text-muted-foreground' : 'text-destructive'"
-          >
+          <p class="text-xs" :class="rotateCheck.ok ? 'text-muted-foreground' : 'text-destructive'">
             {{ rotateCheck.note }}
           </p>
           <div>
-            <Button
-              size="sm"
-              :disabled="busy || !rotateCheck.ok"
-              @click="runRotate"
-            >
+            <Button size="sm" :disabled="busy || !rotateCheck.ok" @click="runRotate">
               Rotate
             </Button>
           </div>
@@ -1028,10 +926,7 @@ onUnmounted(() => {
       </TabsContent>
 
       <!-- Reorder and delete -->
-      <TabsContent
-        value="pages"
-        class="pt-4"
-      >
+      <TabsContent value="pages" class="pt-4">
         <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
           <p class="text-sm text-muted-foreground">
             Drag free reordering: move a page with the arrows, or remove it. Pages you remove are
@@ -1052,11 +947,8 @@ onUnmounted(() => {
                   :src="thumbFor(page) ?? ''"
                   :alt="`Page ${page}`"
                   class="max-h-full max-w-full object-contain"
-                >
-                <span
-                  v-else
-                  class="font-mono text-xs text-muted-foreground"
-                >{{ page }}</span>
+                />
+                <span v-else class="font-mono text-xs text-muted-foreground">{{ page }}</span>
               </div>
               <span class="font-mono text-[11px] text-muted-foreground tabular-nums">
                 page {{ page }}
@@ -1092,10 +984,7 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div
-            v-if="deletedPages.length"
-            class="flex flex-wrap items-center gap-2"
-          >
+          <div v-if="deletedPages.length" class="flex flex-wrap items-center gap-2">
             <span class="text-xs text-muted-foreground">Deleted:</span>
             <Button
               v-for="page in deletedPages"
@@ -1109,40 +998,24 @@ onUnmounted(() => {
           </div>
 
           <p class="font-mono text-xs text-muted-foreground">
-            New order: {{ orderText || 'no pages left' }}
+            New order: {{ orderText || "no pages left" }}
           </p>
 
           <div class="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              :disabled="busy || order.length === 0"
-              @click="runReorder"
-            >
+            <Button size="sm" :disabled="busy || order.length === 0" @click="runReorder">
               Apply page changes
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              @click="resetOrder"
-            >
-              Reset
-            </Button>
+            <Button variant="ghost" size="sm" @click="resetOrder"> Reset </Button>
           </div>
         </div>
       </TabsContent>
 
       <!-- Watermark -->
-      <TabsContent
-        value="watermark"
-        class="pt-4"
-      >
+      <TabsContent value="watermark" class="pt-4">
         <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div class="flex min-w-0 flex-col gap-1.5">
-              <Label
-                for="pdf-mark-text"
-                class="text-xs text-muted-foreground"
-              >Text</Label>
+              <Label for="pdf-mark-text" class="text-xs text-muted-foreground">Text</Label>
               <Input
                 id="pdf-mark-text"
                 v-model="markText"
@@ -1152,40 +1025,24 @@ onUnmounted(() => {
             </div>
 
             <div class="flex min-w-0 flex-col gap-1.5">
-              <Label
-                for="pdf-mark-position"
-                class="text-xs text-muted-foreground"
-              >Placement</Label>
+              <Label for="pdf-mark-position" class="text-xs text-muted-foreground">Placement</Label>
               <Select
                 :model-value="markPosition"
                 @update:model-value="(v) => (markPosition = String(v))"
               >
-                <SelectTrigger
-                  id="pdf-mark-position"
-                  size="sm"
-                  class="w-full bg-card"
-                >
+                <SelectTrigger id="pdf-mark-position" size="sm" class="w-full bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="diagonal">
-                    Diagonal across the page
-                  </SelectItem>
-                  <SelectItem value="center">
-                    Centered
-                  </SelectItem>
-                  <SelectItem value="bottom">
-                    Along the bottom
-                  </SelectItem>
+                  <SelectItem value="diagonal"> Diagonal across the page </SelectItem>
+                  <SelectItem value="center"> Centered </SelectItem>
+                  <SelectItem value="bottom"> Along the bottom </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div class="flex min-w-0 flex-col gap-1.5">
-              <Label
-                for="pdf-mark-color"
-                class="text-xs text-muted-foreground"
-              >Color</Label>
+              <Label for="pdf-mark-color" class="text-xs text-muted-foreground">Color</Label>
               <div
                 class="flex h-9 items-center gap-2 rounded-[10px] border border-input bg-card px-2 focus-within:ring-3 focus-within:ring-ring/50"
               >
@@ -1196,7 +1053,7 @@ onUnmounted(() => {
                   class="size-6 shrink-0 cursor-pointer rounded-[6px] border-0 bg-transparent p-0 outline-none"
                   :value="markColor"
                   @input="onColorPicker(($event.target as HTMLInputElement).value)"
-                >
+                />
                 <input
                   type="text"
                   aria-label="Watermark color hex value"
@@ -1205,15 +1062,14 @@ onUnmounted(() => {
                   class="min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                   :value="markColorText"
                   @input="onColorText(($event.target as HTMLInputElement).value)"
-                >
+                />
               </div>
             </div>
 
             <div class="flex min-w-0 flex-col gap-1.5">
-              <Label
-                for="pdf-mark-size"
-                class="text-xs text-muted-foreground"
-              >Font size (points)</Label>
+              <Label for="pdf-mark-size" class="text-xs text-muted-foreground"
+                >Font size (points)</Label
+              >
               <Input
                 id="pdf-mark-size"
                 type="number"
@@ -1226,10 +1082,9 @@ onUnmounted(() => {
             </div>
 
             <div class="flex min-w-0 flex-col gap-1.5">
-              <Label
-                for="pdf-mark-angle"
-                class="text-xs text-muted-foreground"
-              >Angle (degrees)</Label>
+              <Label for="pdf-mark-angle" class="text-xs text-muted-foreground"
+                >Angle (degrees)</Label
+              >
               <Input
                 id="pdf-mark-angle"
                 type="number"
@@ -1258,11 +1113,7 @@ onUnmounted(() => {
           </div>
 
           <div>
-            <Button
-              size="sm"
-              :disabled="busy || markText.trim() === ''"
-              @click="runWatermark"
-            >
+            <Button size="sm" :disabled="busy || markText.trim() === ''" @click="runWatermark">
               Stamp every page
             </Button>
           </div>
@@ -1275,15 +1126,9 @@ onUnmounted(() => {
       </TabsContent>
 
       <!-- Fill form -->
-      <TabsContent
-        value="form"
-        class="pt-4"
-      >
+      <TabsContent value="form" class="pt-4">
         <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
-          <p
-            v-if="formLoaded && formFields.length === 0"
-            class="text-sm text-muted-foreground"
-          >
+          <p v-if="formLoaded && formFields.length === 0" class="text-sm text-muted-foreground">
             This PDF has no interactive form fields, so there is nothing to fill in. A scanned form
             is a picture of a form: it has no fields until someone adds them.
           </p>
@@ -1302,16 +1147,11 @@ onUnmounted(() => {
                   {{ field.name }} ({{ field.type }})
                 </Label>
 
-                <div
-                  v-if="field.type === 'checkbox'"
-                  class="flex h-9 items-center"
-                >
+                <div v-if="field.type === 'checkbox'" class="flex h-9 items-center">
                   <Switch
                     :id="`pdf-field-${field.name}`"
                     :model-value="formValues[field.name] === 'true'"
-                    @update:model-value="
-                      (v) => (formValues[field.name] = v ? 'true' : 'false')
-                    "
+                    @update:model-value="(v) => (formValues[field.name] = v ? 'true' : 'false')"
                   />
                 </div>
 
@@ -1320,19 +1160,11 @@ onUnmounted(() => {
                   :model-value="formValues[field.name] ?? ''"
                   @update:model-value="(v) => (formValues[field.name] = String(v))"
                 >
-                  <SelectTrigger
-                    :id="`pdf-field-${field.name}`"
-                    size="sm"
-                    class="w-full bg-card"
-                  >
+                  <SelectTrigger :id="`pdf-field-${field.name}`" size="sm" class="w-full bg-card">
                     <SelectValue placeholder="Choose one" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem
-                      v-for="choice in field.options"
-                      :key="choice"
-                      :value="choice"
-                    >
+                    <SelectItem v-for="choice in field.options" :key="choice" :value="choice">
                       {{ choice }}
                     </SelectItem>
                   </SelectContent>
@@ -1350,23 +1182,16 @@ onUnmounted(() => {
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-              <Button
-                size="sm"
-                :disabled="busy"
-                @click="runFill"
-              >
-                Fill and download
-              </Button>
+              <Button size="sm" :disabled="busy" @click="runFill"> Fill and download </Button>
               <div class="flex items-center gap-2">
                 <Switch
                   id="pdf-flatten"
                   :model-value="flattenForm"
                   @update:model-value="(v) => (flattenForm = Boolean(v))"
                 />
-                <Label
-                  for="pdf-flatten"
-                  class="text-xs text-muted-foreground"
-                >Flatten the values in</Label>
+                <Label for="pdf-flatten" class="text-xs text-muted-foreground"
+                  >Flatten the values in</Label
+                >
               </div>
             </div>
             <p class="text-xs text-muted-foreground">
@@ -1375,12 +1200,7 @@ onUnmounted(() => {
             </p>
           </template>
 
-          <p
-            v-else
-            class="text-sm text-muted-foreground"
-          >
-            Reading the form fields.
-          </p>
+          <p v-else class="text-sm text-muted-foreground">Reading the form fields.</p>
         </div>
       </TabsContent>
     </Tabs>
@@ -1393,17 +1213,11 @@ onUnmounted(() => {
       <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
         {{ activeFile.name }}
       </span>
-      <p
-        v-if="stripFailed"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-if="stripFailed" class="text-xs text-muted-foreground">
         These pages could not be drawn as previews, which happens with unusual fonts or embedded
         color profiles. Every operation above still works on the file.
       </p>
-      <div
-        v-else
-        class="flex gap-3 overflow-x-auto pb-1"
-      >
+      <div v-else class="flex gap-3 overflow-x-auto pb-1">
         <div
           v-for="thumb in stripThumbs"
           :key="thumb.page"
@@ -1414,26 +1228,20 @@ onUnmounted(() => {
             :alt="`Page ${thumb.page}`"
             class="rounded-[4px] bg-background shadow-[var(--sh-inset)]"
             :style="{ width: `${THUMB_WIDTH}px` }"
-          >
+          />
           <span class="font-mono text-[11px] text-muted-foreground tabular-nums">
             {{ thumb.page }}
           </span>
         </div>
       </div>
-      <p
-        v-if="stripTruncated"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-if="stripTruncated" class="text-xs text-muted-foreground">
         Only the first {{ STRIP_LIMIT }} pages are previewed. Operations still cover the whole
         document.
       </p>
     </div>
 
     <!-- Results -->
-    <div
-      v-if="results.length"
-      class="flex flex-col gap-2"
-    >
+    <div v-if="results.length" class="flex flex-col gap-2">
       <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
         Result
       </span>
@@ -1451,25 +1259,13 @@ onUnmounted(() => {
               {{ file.note }}, {{ humanSize(file.blob.size) }}
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            @click="triggerDownload(file.blob, file.name)"
-          >
+          <Button variant="outline" size="sm" @click="triggerDownload(file.blob, file.name)">
             Download
           </Button>
         </div>
       </div>
-      <div
-        v-if="results.length > 1"
-        class="flex items-center gap-2"
-      >
-        <Button
-          size="sm"
-          @click="downloadAll"
-        >
-          Download all {{ results.length }} files
-        </Button>
+      <div v-if="results.length > 1" class="flex items-center gap-2">
+        <Button size="sm" @click="downloadAll"> Download all {{ results.length }} files </Button>
         <span class="text-xs text-muted-foreground">
           Your browser may ask once for permission to save multiple files.
         </span>

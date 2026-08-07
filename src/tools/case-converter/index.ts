@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface CaseOpts {
   [key: string]: unknown;
@@ -9,28 +9,28 @@ export interface CaseResult {
 }
 
 const LABELS = [
-  'camelCase',
-  'PascalCase',
-  'snake_case',
-  'SCREAMING_SNAKE_CASE',
-  'kebab-case',
-  'Title Case',
-  'Sentence case',
-  'lowercase',
-  'UPPERCASE',
-  'URL slug',
+  "camelCase",
+  "PascalCase",
+  "snake_case",
+  "SCREAMING_SNAKE_CASE",
+  "kebab-case",
+  "Title Case",
+  "Sentence case",
+  "lowercase",
+  "UPPERCASE",
+  "URL slug",
 ] as const;
 
 type Label = (typeof LABELS)[number];
 
-const SMALL_WORDS = new Set(['a', 'an', 'the', 'of', 'in', 'on', 'for', 'to', 'and']);
+const SMALL_WORDS = new Set(["a", "an", "the", "of", "in", "on", "for", "to", "and"]);
 
 /** Split a single alphanumeric chunk at camelCase boundaries, including acronym runs. */
 function splitCamel(chunk: string): string[] {
   return chunk
-    .replace(/([a-z0-9])([A-Z])/g, '$1\0$2')
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1\0$2')
-    .split('\0')
+    .replace(/([a-z0-9])([A-Z])/g, "$1\0$2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1\0$2")
+    .split("\0")
     .filter(Boolean);
 }
 
@@ -52,10 +52,10 @@ function cap(t: string): string {
 }
 
 /** Strip combining diacritical marks after Unicode NFD decomposition (e.g. é -> e). */
-const COMBINING_MARKS = new RegExp('[\\u0300-\\u036f]', 'g');
+const COMBINING_MARKS = new RegExp("[\\u0300-\\u036f]", "g");
 
 function foldDiacritics(s: string): string {
-  return s.normalize('NFD').replace(COMBINING_MARKS, '');
+  return s.normalize("NFD").replace(COMBINING_MARKS, "");
 }
 
 function slugify(tokens: string[]): string {
@@ -63,24 +63,24 @@ function slugify(tokens: string[]): string {
     .map((t) =>
       foldDiacritics(t)
         .toLowerCase()
-        .replace(/[^a-z0-9]/g, ''),
+        .replace(/[^a-z0-9]/g, ""),
     )
     .filter(Boolean)
-    .join('-');
+    .join("-");
 }
 
 function emptyForms(): Record<Label, string> {
   return {
-    camelCase: '',
-    PascalCase: '',
-    snake_case: '',
-    SCREAMING_SNAKE_CASE: '',
-    'kebab-case': '',
-    'Title Case': '',
-    'Sentence case': '',
-    lowercase: '',
-    UPPERCASE: '',
-    'URL slug': '',
+    camelCase: "",
+    PascalCase: "",
+    snake_case: "",
+    SCREAMING_SNAKE_CASE: "",
+    "kebab-case": "",
+    "Title Case": "",
+    "Sentence case": "",
+    lowercase: "",
+    UPPERCASE: "",
+    "URL slug": "",
   };
 }
 
@@ -90,11 +90,11 @@ function convertLine(line: string): Record<Label, string> {
 
   const lower = tokens.map((t) => t.toLowerCase());
 
-  const camelCase = lower[0] + tokens.slice(1).map(cap).join('');
-  const PascalCase = tokens.map(cap).join('');
-  const snake_case = lower.join('_');
-  const SCREAMING_SNAKE_CASE = tokens.map((t) => t.toUpperCase()).join('_');
-  const kebabCase = lower.join('-');
+  const camelCase = lower[0] + tokens.slice(1).map(cap).join("");
+  const PascalCase = tokens.map(cap).join("");
+  const snake_case = lower.join("_");
+  const SCREAMING_SNAKE_CASE = tokens.map((t) => t.toUpperCase()).join("_");
+  const kebabCase = lower.join("-");
 
   const titleWords = tokens.map((t, i) => {
     const isEdge = i === 0 || i === tokens.length - 1;
@@ -102,13 +102,13 @@ function convertLine(line: string): Record<Label, string> {
     if (!isEdge && SMALL_WORDS.has(lw)) return lw;
     return cap(t);
   });
-  const TitleCase = titleWords.join(' ');
+  const TitleCase = titleWords.join(" ");
 
-  const sentenceJoined = lower.join(' ');
+  const sentenceJoined = lower.join(" ");
   const SentenceCase = sentenceJoined.charAt(0).toUpperCase() + sentenceJoined.slice(1);
 
-  const lowercase = lower.join(' ');
-  const UPPERCASE = tokens.map((t) => t.toUpperCase()).join(' ');
+  const lowercase = lower.join(" ");
+  const UPPERCASE = tokens.map((t) => t.toUpperCase()).join(" ");
   const urlSlug = slugify(tokens);
 
   return {
@@ -116,22 +116,22 @@ function convertLine(line: string): Record<Label, string> {
     PascalCase,
     snake_case,
     SCREAMING_SNAKE_CASE,
-    'kebab-case': kebabCase,
-    'Title Case': TitleCase,
-    'Sentence case': SentenceCase,
+    "kebab-case": kebabCase,
+    "Title Case": TitleCase,
+    "Sentence case": SentenceCase,
     lowercase,
     UPPERCASE,
-    'URL slug': urlSlug,
+    "URL slug": urlSlug,
   };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: CaseOpts): CaseResult {
-  const raw = input ?? '';
+  const raw = input ?? "";
   if (!raw.trim())
     throw new ToolError(
-      'empty-input',
-      'Enter some text to convert.',
+      "empty-input",
+      "Enter some text to convert.",
       'Type or paste text like "hello world" or "parseHTMLDocument".',
     );
 
@@ -140,7 +140,7 @@ export function run(input: string, _opts: CaseOpts): CaseResult {
 
   const result: CaseResult = {};
   for (const label of LABELS) {
-    result[label] = perLine.map((f) => f[label]).join('\n');
+    result[label] = perLine.map((f) => f[label]).join("\n");
   }
   return result;
 }

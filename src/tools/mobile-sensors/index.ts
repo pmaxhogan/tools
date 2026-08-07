@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * The math core of the Mobile Sensors Explorer.
@@ -41,7 +41,7 @@ export function compassHeading(alpha: number, screenAngle = 0): number {
   return normalizeDegrees(360 - alpha - screenAngle);
 }
 
-const COMPASS_POINTS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+const COMPASS_POINTS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 
 /** The nearest of the 8 compass points for a heading in degrees. */
 export function compassDirection(heading: number): string {
@@ -186,17 +186,17 @@ const INVALID_SNAPSHOT_FIX =
   'The panel produces this JSON automatically while sensors are enabled. If pasting one by hand, it must be an object shaped like {"orientation":{"alpha":10,"beta":20,"gamma":-5}}, using any combination of "orientation", "screenAngle", "acceleration", "accelerationIncludingGravity", "rotationRate" and "ambientLight".';
 
 function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value);
+  return typeof value === "number" && Number.isFinite(value);
 }
 
 function isVector3(value: unknown): value is Vector3 {
-  if (value === null || typeof value !== 'object') return false;
+  if (value === null || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
   return isFiniteNumber(v.x) && isFiniteNumber(v.y) && isFiniteNumber(v.z);
 }
 
 function isOrientation(value: unknown): value is OrientationReading {
-  if (value === null || typeof value !== 'object') return false;
+  if (value === null || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
   return isFiniteNumber(v.alpha) && isFiniteNumber(v.beta) && isFiniteNumber(v.gamma);
 }
@@ -206,13 +206,13 @@ function parseSnapshot(raw: string): SensorSnapshot {
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throw new ToolError('invalid-json', 'The input is not valid JSON.', INVALID_SNAPSHOT_FIX);
+    throw new ToolError("invalid-json", "The input is not valid JSON.", INVALID_SNAPSHOT_FIX);
   }
 
-  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
     throw new ToolError(
-      'invalid-snapshot',
-      'The JSON is not a sensor snapshot object.',
+      "invalid-snapshot",
+      "The JSON is not a sensor snapshot object.",
       INVALID_SNAPSHOT_FIX,
     );
   }
@@ -223,7 +223,7 @@ function parseSnapshot(raw: string): SensorSnapshot {
   if (obj.orientation !== undefined) {
     if (!isOrientation(obj.orientation)) {
       throw new ToolError(
-        'invalid-orientation',
+        "invalid-orientation",
         'The "orientation" field needs numeric alpha, beta and gamma values.',
         INVALID_SNAPSHOT_FIX,
       );
@@ -234,7 +234,7 @@ function parseSnapshot(raw: string): SensorSnapshot {
   if (obj.screenAngle !== undefined) {
     if (!isFiniteNumber(obj.screenAngle)) {
       throw new ToolError(
-        'invalid-screen-angle',
+        "invalid-screen-angle",
         'The "screenAngle" field needs to be a number.',
         INVALID_SNAPSHOT_FIX,
       );
@@ -245,7 +245,7 @@ function parseSnapshot(raw: string): SensorSnapshot {
   if (obj.acceleration !== undefined) {
     if (!isVector3(obj.acceleration)) {
       throw new ToolError(
-        'invalid-acceleration',
+        "invalid-acceleration",
         'The "acceleration" field needs numeric x, y and z values.',
         INVALID_SNAPSHOT_FIX,
       );
@@ -256,7 +256,7 @@ function parseSnapshot(raw: string): SensorSnapshot {
   if (obj.accelerationIncludingGravity !== undefined) {
     if (!isVector3(obj.accelerationIncludingGravity)) {
       throw new ToolError(
-        'invalid-acceleration-gravity',
+        "invalid-acceleration-gravity",
         'The "accelerationIncludingGravity" field needs numeric x, y and z values.',
         INVALID_SNAPSHOT_FIX,
       );
@@ -267,7 +267,7 @@ function parseSnapshot(raw: string): SensorSnapshot {
   if (obj.rotationRate !== undefined) {
     if (!isOrientation(obj.rotationRate)) {
       throw new ToolError(
-        'invalid-rotation-rate',
+        "invalid-rotation-rate",
         'The "rotationRate" field needs numeric alpha, beta and gamma values.',
         INVALID_SNAPSHOT_FIX,
       );
@@ -278,7 +278,7 @@ function parseSnapshot(raw: string): SensorSnapshot {
   if (obj.ambientLight !== undefined) {
     if (!isFiniteNumber(obj.ambientLight)) {
       throw new ToolError(
-        'invalid-ambient-light',
+        "invalid-ambient-light",
         'The "ambientLight" field needs to be a number.',
         INVALID_SNAPSHOT_FIX,
       );
@@ -295,8 +295,8 @@ function parseSnapshot(raw: string): SensorSnapshot {
 
   if (!hasAnyField) {
     throw new ToolError(
-      'empty-snapshot',
-      'The snapshot has none of the recognized sensor fields.',
+      "empty-snapshot",
+      "The snapshot has none of the recognized sensor fields.",
       INVALID_SNAPSHOT_FIX,
     );
   }
@@ -322,13 +322,13 @@ function formatVector(v: Vector3, unit: string): string {
  * ------------------------------------------------------------------ */
 
 const USAGE_ROWS: Record<string, string> = {
-  'How this works':
-    'This tool is panel first. Click Enable sensors and, on iOS, grant the motion and orientation permission prompt. Readings then update live: a compass and tilt from the device orientation sensor, a bubble level and raw accelerometer, gyroscope and rotation rate values from the motion sensor, and ambient light where the browser exposes it.',
-  'Devices that work':
-    'Needs a phone or tablet with an accelerometer and, for the compass, a magnetometer. A laptop or desktop reports no orientation or motion events, so the panel shows an honest message instead of blank readouts.',
-  'Decode a saved snapshot':
+  "How this works":
+    "This tool is panel first. Click Enable sensors and, on iOS, grant the motion and orientation permission prompt. Readings then update live: a compass and tilt from the device orientation sensor, a bubble level and raw accelerometer, gyroscope and rotation rate values from the motion sensor, and ambient light where the browser exposes it.",
+  "Devices that work":
+    "Needs a phone or tablet with an accelerometer and, for the compass, a magnetometer. A laptop or desktop reports no orientation or motion events, so the panel shows an honest message instead of blank readouts.",
+  "Decode a saved snapshot":
     'Paste a JSON object with any of "orientation", "screenAngle", "acceleration", "accelerationIncludingGravity", "rotationRate" or "ambientLight" to compute the same heading, tilt and magnitudes the live panel shows, without a device attached.',
-  Privacy: 'Everything runs on your device: your files and inputs never leave your device.',
+  Privacy: "Everything runs on your device: your files and inputs never leave your device.",
 };
 
 /**
@@ -338,7 +338,7 @@ const USAGE_ROWS: Record<string, string> = {
  * which makes the pure surface useful for a saved capture and keeps the
  * heading, tilt and magnitude formulas unit tested in one place.
  */
-export function run(input: string = '', _opts: MobileSensorsOpts = {}): Record<string, string> {
+export function run(input: string = "", _opts: MobileSensorsOpts = {}): Record<string, string> {
   void _opts;
   if (!input.trim()) return { ...USAGE_ROWS };
 
@@ -352,28 +352,28 @@ export function run(input: string = '', _opts: MobileSensorsOpts = {}): Record<s
     out.Heading = `${round(heading, 1)}° (${compassDirection(heading)})`;
     out.Pitch = `${round(tilt.pitch, 1)}°`;
     out.Roll = `${round(tilt.roll, 1)}°`;
-    out['Tilt off flat'] = `${round(tilt.magnitude, 1)}°`;
+    out["Tilt off flat"] = `${round(tilt.magnitude, 1)}°`;
   }
 
   if (snapshot.acceleration) {
-    out['Acceleration (gravity removed)'] = formatVector(snapshot.acceleration, 'm/s²');
+    out["Acceleration (gravity removed)"] = formatVector(snapshot.acceleration, "m/s²");
   }
 
   if (snapshot.accelerationIncludingGravity) {
-    out['Acceleration (with gravity)'] = formatVector(
+    out["Acceleration (with gravity)"] = formatVector(
       snapshot.accelerationIncludingGravity,
-      'm/s²',
+      "m/s²",
     );
   }
 
   if (snapshot.rotationRate) {
     const { alpha, beta, gamma } = snapshot.rotationRate;
-    out['Rotation rate'] =
+    out["Rotation rate"] =
       `${round(vectorMagnitude(alpha, beta, gamma), 1)} deg/s (alpha: ${round(alpha, 1)}, beta: ${round(beta, 1)}, gamma: ${round(gamma, 1)})`;
   }
 
   if (snapshot.ambientLight !== undefined) {
-    out['Ambient light'] = `${round(snapshot.ambientLight, 1)} lux`;
+    out["Ambient light"] = `${round(snapshot.ambientLight, 1)} lux`;
   }
 
   return out;

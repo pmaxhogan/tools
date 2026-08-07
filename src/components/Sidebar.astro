@@ -1,6 +1,6 @@
 ---
-import { tools } from '@/tools/registry';
-import SidebarNav from '@/components/SidebarNav.vue';
+import { tools } from "@/tools/registry";
+import SidebarNav from "@/components/SidebarNav.vue";
 
 /**
  * Sitewide tool navigation: every tool grouped by category, with live search.
@@ -14,7 +14,7 @@ import SidebarNav from '@/components/SidebarNav.vue';
  */
 
 const path = Astro.url.pathname;
-const currentSlug = path.replace(/^\/+/, '').replace(/\/+$/, '');
+const currentSlug = path.replace(/^\/+/, "").replace(/\/+$/, "");
 
 const navTools = tools.map((t) => ({
   slug: t.slug,
@@ -27,22 +27,10 @@ const navTools = tools.map((t) => ({
 }));
 ---
 
-<div
-  id="sidebar-scrim"
-  class="sidebar-scrim"
-  aria-hidden="true"
->
-</div>
+<div id="sidebar-scrim" class="sidebar-scrim" aria-hidden="true"></div>
 
-<aside
-  id="site-sidebar"
-  class="site-sidebar border-r bg-card"
-  aria-label="All tools"
-  tabindex="-1"
->
-  <div
-    class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-card px-4 py-3"
-  >
+<aside id="site-sidebar" class="site-sidebar border-r bg-card" aria-label="All tools" tabindex="-1">
+  <div class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-card px-4 py-3">
     <h2 class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
       All tools
     </h2>
@@ -65,12 +53,7 @@ const navTools = tools.map((t) => ({
     </button>
   </div>
 
-  <SidebarNav
-    client:load
-    transition:persist="sidebar"
-    tools={navTools}
-    currentSlug={currentSlug}
-  />
+  <SidebarNav client:load transition:persist="sidebar" tools={navTools} currentSlug={currentSlug} />
 </aside>
 
 <style>

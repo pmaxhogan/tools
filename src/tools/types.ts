@@ -9,43 +9,43 @@
 
 /** MIME-ish type tags. Drive pipeline connectivity and the curl API. */
 export type TypeSpec =
-  | 'text/plain'
-  | 'application/json'
-  | 'text/csv'
-  | 'text/html'
-  | 'image/*'
-  | 'image/png'
-  | 'image/svg+xml'
-  | 'audio/*'
-  | 'video/*'
-  | 'application/octet-stream'
-  | 'File'
-  | 'none';
+  | "text/plain"
+  | "application/json"
+  | "text/csv"
+  | "text/html"
+  | "image/*"
+  | "image/png"
+  | "image/svg+xml"
+  | "audio/*"
+  | "video/*"
+  | "application/octet-stream"
+  | "File"
+  | "none";
 
 export type Capability =
-  | 'webgpu'
-  | 'webcodecs'
-  | 'serial'
-  | 'hid'
-  | 'bluetooth'
-  | 'fs-access'
-  | 'clipboard-read'
-  | 'camera'
-  | 'desktop'
-  | 'chromium';
+  | "webgpu"
+  | "webcodecs"
+  | "serial"
+  | "hid"
+  | "bluetooth"
+  | "fs-access"
+  | "clipboard-read"
+  | "camera"
+  | "desktop"
+  | "chromium";
 
 /** Schema-driven options — the generic tool panel renders these controls. */
 export type OptionSpec =
   | {
-      kind: 'select';
+      kind: "select";
       id: string;
       label: string;
       default: string;
       choices: { value: string; label: string }[];
     }
-  | { kind: 'text'; id: string; label: string; default: string; placeholder?: string }
+  | { kind: "text"; id: string; label: string; default: string; placeholder?: string }
   | {
-      kind: 'number';
+      kind: "number";
       id: string;
       label: string;
       default: number;
@@ -53,9 +53,9 @@ export type OptionSpec =
       max?: number;
       step?: number;
     }
-  | { kind: 'boolean'; id: string; label: string; default: boolean }
+  | { kind: "boolean"; id: string; label: string; default: boolean }
   | {
-      kind: 'slider';
+      kind: "slider";
       id: string;
       label: string;
       default: number;
@@ -100,7 +100,7 @@ export interface ToolMeta {
   output: TypeSpec;
   options?: OptionSpec[];
   /** Exposed as a stateless curl endpoint. Cheap, pure runs only. */
-  http?: { method: 'GET' | 'POST'; contentType: string };
+  http?: { method: "GET" | "POST"; contentType: string };
   /** Gates the UI with an honest message instead of breaking (rule 15). */
   requires?: Capability[];
   /** Page copy (rule 23): real, thin, collapsed. */
@@ -136,7 +136,7 @@ export class ToolError extends Error {
 
   constructor(code: string, message: string, fix?: string) {
     super(message);
-    this.name = 'ToolError';
+    this.name = "ToolError";
     this.code = code;
     this.fix = fix;
   }

@@ -37,11 +37,11 @@ export function tokenize(query: string): string[] {
 /** HTML-escape a string for safe insertion via v-html. */
 export function escapeHtml(text: string): string {
   return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 /**
@@ -78,7 +78,7 @@ export function highlightHtml(text: string, query: string): string {
     }
   }
 
-  let out = '';
+  let out = "";
   let pos = 0;
   for (const [s, e] of merged) {
     if (s > pos) out += escapeHtml(text.slice(pos, s));

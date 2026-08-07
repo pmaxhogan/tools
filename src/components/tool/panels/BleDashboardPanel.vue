@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { Bluetooth, Download, Plug, Trash2 } from 'lucide-vue-next';
-import type { ToolMeta } from '@/tools/types';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { Bluetooth, Download, Plug, Trash2 } from "lucide-vue-next";
+import type { ToolMeta } from "@/tools/types";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   SUPPORTED_SERVICES,
   downsampleForChart,
@@ -21,7 +21,7 @@ import {
   toCsv,
   uuidName,
   type CsvRow,
-} from '@/tools/ble-sensor-dashboard/index';
+} from "@/tools/ble-sensor-dashboard/index";
 
 /**
  * Bespoke panel for the BLE Sensor Dashboard. Web Bluetooth only exists in a
@@ -106,15 +106,15 @@ const RECONNECT_DELAY_MS = 1500;
 const CHART_HEIGHT = 76;
 
 const WINDOW_CHOICES = [
-  { value: '60000', label: '1 minute' },
-  { value: '300000', label: '5 minutes' },
-  { value: '900000', label: '15 minutes' },
+  { value: "60000", label: "1 minute" },
+  { value: "300000", label: "5 minutes" },
+  { value: "900000", label: "15 minutes" },
 ];
 const POLL_CHOICES = [
-  { value: '1000', label: '1 second' },
-  { value: '2000', label: '2 seconds' },
-  { value: '5000', label: '5 seconds' },
-  { value: '10000', label: '10 seconds' },
+  { value: "1000", label: "1 second" },
+  { value: "2000", label: "2 seconds" },
+  { value: "5000", label: "5 seconds" },
+  { value: "10000", label: "10 seconds" },
 ];
 
 /* ---------------------------------------------------------------- */
@@ -149,8 +149,8 @@ const sessionLog: CsvRow[] = [];
 const revision = ref(0);
 let frame: number | null = null;
 
-const windowMs = ref('300000');
-const pollMs = ref('2000');
+const windowMs = ref("300000");
+const pollMs = ref("2000");
 const autoReconnect = ref(true);
 
 const canvasEls = new Map<string, HTMLCanvasElement>();
@@ -178,8 +178,8 @@ const readingCount = computed(() => {
 });
 
 const batteryLevel = computed(() => {
-  const battery = seriesList.value.find((s) => s.fieldName === 'Battery level');
-  return battery && typeof battery.last === 'number' ? battery.last : null;
+  const battery = seriesList.value.find((s) => s.fieldName === "Battery level");
+  return battery && typeof battery.last === "number" ? battery.last : null;
 });
 
 function seriesKey(charUuid: string, fieldName: string): string {
@@ -195,7 +195,7 @@ function ingestField(
   t: number,
 ) {
   const key = seriesKey(charUuid, fieldName);
-  const numeric = typeof value === 'number' && Number.isFinite(value);
+  const numeric = typeof value === "number" && Number.isFinite(value);
   let series = seriesMap.get(key);
   if (!series) {
     series = {
@@ -219,11 +219,7 @@ function ingestField(
     series.numeric = true;
     ringBufferPush(series.points, { t, v: value as number }, MAX_POINTS);
   }
-  ringBufferPush(
-    sessionLog,
-    { t, name: `${charName} / ${fieldName}`, value },
-    MAX_LOG,
-  );
+  ringBufferPush(sessionLog, { t, name: `${charName} / ${fieldName}`, value }, MAX_LOG);
 }
 
 function handleReading(charUuid: string, view: DataView) {
@@ -240,17 +236,17 @@ function handleReading(charUuid: string, view: DataView) {
 /* connection state                                                  */
 /* ---------------------------------------------------------------- */
 
-type State = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
+type State = "idle" | "connecting" | "connected" | "reconnecting" | "disconnected";
 
-const state = ref<State>('idle');
-const deviceName = ref<string>('');
+const state = ref<State>("idle");
+const deviceName = ref<string>("");
 const rssi = ref<number | null>(null);
 const discovered = ref<{ name: string; mode: string }[]>([]);
 const errorTitle = ref<string | null>(null);
 const errorDetail = ref<string | null>(null);
 
-const connected = computed(() => state.value === 'connected');
-const busy = computed(() => state.value === 'connecting' || state.value === 'reconnecting');
+const connected = computed(() => state.value === "connected");
+const busy = computed(() => state.value === "connecting" || state.value === "reconnecting");
 
 let device: BluetoothDeviceLike | null = null;
 const subscribed: GattCharacteristicLike[] = [];
@@ -300,17 +296,17 @@ async function setupCharacteristic(char: GattCharacteristicLike) {
   const name = uuidName(char.uuid);
   const props = char.properties;
   if (props.notify || props.indicate) {
-    char.addEventListener('characteristicvaluechanged', onCharValue);
+    char.addEventListener("characteristicvaluechanged", onCharValue);
     try {
       await char.startNotifications();
       subscribed.push(char);
-      discovered.value.push({ name, mode: 'live' });
+      discovered.value.push({ name, mode: "live" });
     } catch {
-      discovered.value.push({ name, mode: 'unavailable' });
+      discovered.value.push({ name, mode: "unavailable" });
     }
   } else if (props.read) {
     pollList.push(char);
-    discovered.value.push({ name, mode: 'polled' });
+    discovered.value.push({ name, mode: "polled" });
     try {
       handleReading(char.uuid, await char.readValue());
     } catch {
@@ -346,10 +342,10 @@ async function discover(server: GattServerLike) {
 }
 
 async function watchRssi(target: BluetoothDeviceLike) {
-  if (typeof target.watchAdvertisements !== 'function') return;
-  target.addEventListener('advertisementreceived', (event: Event) => {
+  if (typeof target.watchAdvertisements !== "function") return;
+  target.addEventListener("advertisementreceived", (event: Event) => {
     const value = (event as AdvertisementEventLike).rssi;
-    if (typeof value === 'number') rssi.value = value;
+    if (typeof value === "number") rssi.value = value;
   });
   try {
     await target.watchAdvertisements();
@@ -361,35 +357,35 @@ async function watchRssi(target: BluetoothDeviceLike) {
 async function connectGatt(target: BluetoothDeviceLike, reconnecting: boolean) {
   const server = target.gatt;
   if (!server) {
-    setError('This device has no GATT server.', 'It cannot expose readable characteristics.');
-    state.value = 'disconnected';
+    setError("This device has no GATT server.", "It cannot expose readable characteristics.");
+    state.value = "disconnected";
     return;
   }
-  state.value = reconnecting ? 'reconnecting' : 'connecting';
+  state.value = reconnecting ? "reconnecting" : "connecting";
   await server.connect();
   await discover(server);
-  state.value = 'connected';
+  state.value = "connected";
   void watchRssi(target);
 }
 
 function describeError(err: unknown): { title: string; detail: string } {
-  const name = err instanceof DOMException ? err.name : '';
-  if (name === 'SecurityError') {
+  const name = err instanceof DOMException ? err.name : "";
+  if (name === "SecurityError") {
     return {
-      title: 'This page is not allowed to use Web Bluetooth.',
+      title: "This page is not allowed to use Web Bluetooth.",
       detail:
-        'Web Bluetooth only works over a secure connection and outside a restricted frame. Open the page directly over HTTPS and try again.',
+        "Web Bluetooth only works over a secure connection and outside a restricted frame. Open the page directly over HTTPS and try again.",
     };
   }
-  if (name === 'NetworkError') {
+  if (name === "NetworkError") {
     return {
-      title: 'The device would not connect.',
+      title: "The device would not connect.",
       detail:
-        'It may be out of range, already paired to another app, or asleep. Bring it close, wake it, and try again.',
+        "It may be out of range, already paired to another app, or asleep. Bring it close, wake it, and try again.",
     };
   }
   return {
-    title: 'Could not connect to the device.',
+    title: "Could not connect to the device.",
     detail: err instanceof Error ? err.message : String(err),
   };
 }
@@ -409,7 +405,7 @@ async function connect() {
     });
   } catch (err) {
     // NotFoundError just means the chooser was dismissed, which is not a fault.
-    if (err instanceof DOMException && err.name === 'NotFoundError') return;
+    if (err instanceof DOMException && err.name === "NotFoundError") return;
     const described = describeError(err);
     setError(described.title, described.detail);
     return;
@@ -422,16 +418,16 @@ async function connect() {
   revision.value++;
 
   device = picked;
-  deviceName.value = picked.name || 'Unnamed device';
+  deviceName.value = picked.name || "Unnamed device";
   intentionalDisconnect = false;
-  picked.addEventListener('gattserverdisconnected', onDisconnected);
+  picked.addEventListener("gattserverdisconnected", onDisconnected);
 
   try {
     await connectGatt(picked, false);
   } catch (err) {
     const described = describeError(err);
     setError(described.title, described.detail);
-    state.value = 'disconnected';
+    state.value = "disconnected";
   }
 }
 
@@ -447,22 +443,22 @@ async function reconnectLoop() {
       await new Promise((resolve) => setTimeout(resolve, RECONNECT_DELAY_MS));
     }
   }
-  state.value = 'disconnected';
+  state.value = "disconnected";
   setError(
-    'Lost the device and could not reconnect.',
-    'It may be out of range or powered off. Click Connect a sensor to start again. The charts so far are kept.',
+    "Lost the device and could not reconnect.",
+    "It may be out of range or powered off. Click Connect a sensor to start again. The charts so far are kept.",
   );
 }
 
 function onDisconnected() {
   stopPolling();
   if (intentionalDisconnect || !autoReconnect.value || !device) {
-    state.value = 'disconnected';
+    state.value = "disconnected";
     return;
   }
   setError(
-    'The device dropped off.',
-    'Auto reconnect is on, so it is trying to come back. The charts so far are kept.',
+    "The device dropped off.",
+    "Auto reconnect is on, so it is trying to come back. The charts so far are kept.",
   );
   void reconnectLoop();
 }
@@ -471,7 +467,7 @@ async function teardown() {
   intentionalDisconnect = true;
   stopPolling();
   for (const char of subscribed) {
-    char.removeEventListener('characteristicvaluechanged', onCharValue);
+    char.removeEventListener("characteristicvaluechanged", onCharValue);
     try {
       await char.stopNotifications();
     } catch {
@@ -481,7 +477,7 @@ async function teardown() {
   subscribed.length = 0;
   pollList.length = 0;
   if (device) {
-    device.removeEventListener('gattserverdisconnected', onDisconnected);
+    device.removeEventListener("gattserverdisconnected", onDisconnected);
     try {
       device.gatt?.disconnect();
     } catch {
@@ -493,7 +489,7 @@ async function teardown() {
 async function disconnect() {
   await teardown();
   device = null;
-  state.value = 'disconnected';
+  state.value = "disconnected";
   clearError();
 }
 
@@ -511,10 +507,10 @@ function clearCharts() {
 function exportCsv() {
   if (sessionLog.length === 0) return;
   const csv = toCsv(sessionLog);
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const blob = new Blob([`${csv}\n`], { type: 'text/csv' });
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const blob = new Blob([`${csv}\n`], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = `ble-session-${stamp}.csv`;
   document.body.appendChild(a);
@@ -539,11 +535,11 @@ function readTheme(el: HTMLElement): Theme {
   const style = getComputedStyle(el);
   const pick = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback;
   return {
-    text: pick('--foreground', '#1b1917'),
-    muted: pick('--muted-foreground', '#79726b'),
-    border: pick('--border', '#e7e2da'),
-    accent: pick('--primary', '#5b4bd6'),
-    well: pick('--secondary', '#f0ede8'),
+    text: pick("--foreground", "#1b1917"),
+    muted: pick("--muted-foreground", "#79726b"),
+    border: pick("--border", "#e7e2da"),
+    accent: pick("--primary", "#5b4bd6"),
+    well: pick("--secondary", "#f0ede8"),
   };
 }
 
@@ -566,7 +562,7 @@ function drawSeries(canvas: HTMLCanvasElement, series: Series, theme: Theme, now
     canvas.width = backingW;
     canvas.height = backingH;
   }
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cssWidth, cssHeight);
@@ -584,9 +580,9 @@ function drawSeries(canvas: HTMLCanvasElement, series: Series, theme: Theme, now
   if (windowed.length < 2) {
     ctx.fillStyle = theme.muted;
     ctx.font = '11px "Geist", ui-sans-serif, system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Waiting for readings…', cssWidth / 2, cssHeight / 2);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Waiting for readings…", cssWidth / 2, cssHeight / 2);
     return;
   }
 
@@ -611,7 +607,7 @@ function drawSeries(canvas: HTMLCanvasElement, series: Series, theme: Theme, now
 
   ctx.strokeStyle = theme.accent;
   ctx.lineWidth = 1.5;
-  ctx.lineJoin = 'round';
+  ctx.lineJoin = "round";
   ctx.beginPath();
   for (let i = 0; i < points.length; i++) {
     const p = points[i] as Point;
@@ -625,10 +621,10 @@ function drawSeries(canvas: HTMLCanvasElement, series: Series, theme: Theme, now
   // Min and max guide labels down the right edge.
   ctx.fillStyle = theme.muted;
   ctx.font = '10px "Geist Mono", ui-monospace, monospace';
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'top';
+  ctx.textAlign = "right";
+  ctx.textBaseline = "top";
   ctx.fillText(String(Math.round(max * 100) / 100), cssWidth - 4, 3);
-  ctx.textBaseline = 'bottom';
+  ctx.textBaseline = "bottom";
   ctx.fillText(String(Math.round(min * 100) / 100), cssWidth - 4, cssHeight - 3);
 }
 
@@ -654,16 +650,16 @@ function displayValue(series: Series): string {
 
 const stateLabel = computed(() => {
   switch (state.value) {
-    case 'connecting':
-      return 'Connecting…';
-    case 'connected':
-      return 'Connected';
-    case 'reconnecting':
-      return 'Reconnecting…';
-    case 'disconnected':
-      return 'Disconnected';
+    case "connecting":
+      return "Connecting…";
+    case "connected":
+      return "Connected";
+    case "reconnecting":
+      return "Reconnecting…";
+    case "disconnected":
+      return "Disconnected";
     default:
-      return 'Not connected';
+      return "Not connected";
   }
 });
 
@@ -681,7 +677,7 @@ onMounted(() => {
     if (seriesMap.size) scheduleRender();
   }, 1000);
   themeWatcher = new MutationObserver(() => drawCharts());
-  themeWatcher.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  themeWatcher.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 });
 
 onUnmounted(() => {
@@ -694,49 +690,25 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div
-    ref="wrapper"
-    class="flex flex-col gap-4"
-  >
+  <div ref="wrapper" class="flex flex-col gap-4">
     <!-- connection -->
     <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
       <div class="flex flex-wrap items-center gap-3">
-        <Button
-          v-if="!connected && !busy"
-          size="lg"
-          @click="connect"
-        >
-          <Bluetooth
-            class="size-4"
-            aria-hidden="true"
-          />
+        <Button v-if="!connected && !busy" size="lg" @click="connect">
+          <Bluetooth class="size-4" aria-hidden="true" />
           Connect a sensor
         </Button>
-        <Button
-          v-else-if="busy"
-          size="lg"
-          disabled
-        >
+        <Button v-else-if="busy" size="lg" disabled>
           {{ stateLabel }}
         </Button>
-        <Button
-          v-else
-          size="lg"
-          variant="secondary"
-          @click="disconnect"
-        >
-          Disconnect
-        </Button>
+        <Button v-else size="lg" variant="secondary" @click="disconnect"> Disconnect </Button>
 
         <div
           v-if="state !== 'idle'"
           class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground"
         >
           <span class="font-medium text-foreground">{{ deviceName }}</span>
-          <span
-            class="inline-flex items-center gap-1.5"
-            :class="connected ? 'text-positive' : ''"
-          >
+          <span class="inline-flex items-center gap-1.5" :class="connected ? 'text-positive' : ''">
             <span
               class="size-2 rounded-full"
               :class="connected ? 'bg-positive' : 'bg-muted-foreground'"
@@ -744,29 +716,16 @@ onUnmounted(() => {
             />
             {{ stateLabel }}
           </span>
-          <span
-            v-if="rssi !== null"
-            class="tabular-nums"
-          >{{ rssi }} dBm</span>
-          <span
-            v-if="batteryLevel !== null"
-            class="tabular-nums"
-          >Battery {{ batteryLevel }}%</span>
+          <span v-if="rssi !== null" class="tabular-nums">{{ rssi }} dBm</span>
+          <span v-if="batteryLevel !== null" class="tabular-nums">Battery {{ batteryLevel }}%</span>
         </div>
       </div>
 
       <div class="flex flex-wrap items-end gap-4">
         <div class="flex w-40 flex-col gap-1.5">
-          <Label
-            for="ble-window"
-            class="text-xs text-muted-foreground"
-          >Chart window</Label>
+          <Label for="ble-window" class="text-xs text-muted-foreground">Chart window</Label>
           <Select v-model="windowMs">
-            <SelectTrigger
-              id="ble-window"
-              size="sm"
-              class="w-full"
-            >
+            <SelectTrigger id="ble-window" size="sm" class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -782,24 +741,13 @@ onUnmounted(() => {
         </div>
 
         <div class="flex w-40 flex-col gap-1.5">
-          <Label
-            for="ble-poll"
-            class="text-xs text-muted-foreground"
-          >Poll interval</Label>
+          <Label for="ble-poll" class="text-xs text-muted-foreground">Poll interval</Label>
           <Select v-model="pollMs">
-            <SelectTrigger
-              id="ble-poll"
-              size="sm"
-              class="w-full"
-            >
+            <SelectTrigger id="ble-poll" size="sm" class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="choice in POLL_CHOICES"
-                :key="choice.value"
-                :value="choice.value"
-              >
+              <SelectItem v-for="choice in POLL_CHOICES" :key="choice.value" :value="choice.value">
                 {{ choice.label }}
               </SelectItem>
             </SelectContent>
@@ -807,39 +755,19 @@ onUnmounted(() => {
         </div>
 
         <div class="flex items-center gap-2 pb-2">
-          <Switch
-            id="ble-reconnect"
-            v-model="autoReconnect"
-          />
-          <Label
-            for="ble-reconnect"
-            class="cursor-pointer text-xs text-muted-foreground"
-          >Auto reconnect</Label>
+          <Switch id="ble-reconnect" v-model="autoReconnect" />
+          <Label for="ble-reconnect" class="cursor-pointer text-xs text-muted-foreground"
+            >Auto reconnect</Label
+          >
         </div>
 
         <div class="ml-auto flex items-center gap-2 pb-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            :disabled="!readingCount"
-            @click="clearCharts"
-          >
-            <Trash2
-              class="size-3.5"
-              aria-hidden="true"
-            />
+          <Button variant="ghost" size="sm" :disabled="!readingCount" @click="clearCharts">
+            <Trash2 class="size-3.5" aria-hidden="true" />
             Clear
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="!readingCount"
-            @click="exportCsv"
-          >
-            <Download
-              class="size-3.5"
-              aria-hidden="true"
-            />
+          <Button variant="outline" size="sm" :disabled="!readingCount" @click="exportCsv">
+            <Download class="size-3.5" aria-hidden="true" />
             Export CSV
           </Button>
         </div>
@@ -847,8 +775,8 @@ onUnmounted(() => {
 
       <p class="text-xs text-muted-foreground">
         Everything runs in this tab: your files and inputs never leave your device. Web Bluetooth is
-        a Chromium feature, so this works in Chrome, Edge and Opera on desktop and Android, and not in
-        Firefox, Safari or any browser on iOS. This version connects one device at a time.
+        a Chromium feature, so this works in Chrome, Edge and Opera on desktop and Android, and not
+        in Firefox, Safari or any browser on iOS. This version connects one device at a time.
       </p>
 
       <div
@@ -859,10 +787,7 @@ onUnmounted(() => {
         <p class="font-medium text-destructive">
           {{ errorTitle }}
         </p>
-        <p
-          v-if="errorDetail"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="errorDetail" class="mt-1 text-muted-foreground">
           {{ errorDetail }}
         </p>
       </div>
@@ -873,10 +798,7 @@ onUnmounted(() => {
       v-if="state === 'idle'"
       class="flex min-h-[180px] flex-col items-center justify-center gap-3 rounded-[18px] border bg-card p-8 text-center shadow-[var(--sh-inset)]"
     >
-      <Plug
-        class="size-6 text-muted-foreground"
-        aria-hidden="true"
-      />
+      <Plug class="size-6 text-muted-foreground" aria-hidden="true" />
       <p class="text-muted-foreground">
         Click Connect a sensor and pick your Bluetooth device. Each numeric reading gets a live tile
         and chart, and the whole session exports as CSV.
@@ -884,17 +806,16 @@ onUnmounted(() => {
     </div>
 
     <!-- numeric field charts -->
-    <div
-      v-if="numericSeries.length"
-      class="grid grid-cols-1 gap-4 sm:grid-cols-2"
-    >
+    <div v-if="numericSeries.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div
         v-for="series in numericSeries"
         :key="series.key"
         class="flex flex-col gap-2 rounded-[14px] border bg-card p-4 shadow-[var(--sh-sm)]"
       >
         <div class="flex items-baseline justify-between gap-2">
-          <span class="truncate text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+          <span
+            class="truncate text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+          >
             {{ series.fieldName }}
           </span>
           <span class="truncate text-xs text-muted-foreground">{{ series.charName }}</span>
@@ -903,10 +824,7 @@ onUnmounted(() => {
           <span class="font-mono text-3xl leading-none font-semibold tabular-nums">
             {{ displayValue(series) }}
           </span>
-          <span
-            v-if="series.unit"
-            class="text-sm text-muted-foreground"
-          >{{ series.unit }}</span>
+          <span v-if="series.unit" class="text-sm text-muted-foreground">{{ series.unit }}</span>
         </div>
         <canvas
           :ref="bindCanvas(series.key)"
@@ -958,8 +876,9 @@ onUnmounted(() => {
         </span>
       </div>
       <p class="text-xs text-muted-foreground">
-        Live characteristics push readings as they change. Polled ones are read on the interval above.
-        A reading shown as raw hex is a non-standard characteristic with no public definition.
+        Live characteristics push readings as they change. Polled ones are read on the interval
+        above. A reading shown as raw hex is a non-standard characteristic with no public
+        definition.
       </p>
     </div>
   </div>

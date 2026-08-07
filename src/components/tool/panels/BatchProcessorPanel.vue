@@ -19,11 +19,11 @@
  * backup has been saved. That backup, not the undo file, is what restores an
  * overwritten file.
  */
-import { computed, ref, watch } from 'vue';
-import { Download, Eye, Play, TriangleAlert } from 'lucide-vue-next';
-import { diffLines } from 'diff';
-import type { ToolMeta } from '@/tools/types';
-import { ToolError } from '@/tools/types';
+import { computed, ref, watch } from "vue";
+import { Download, Eye, Play, TriangleAlert } from "lucide-vue-next";
+import { diffLines } from "diff";
+import type { ToolMeta } from "@/tools/types";
+import { ToolError } from "@/tools/types";
 import {
   bytesToBase64,
   readFileBytes,
@@ -31,7 +31,7 @@ import {
   type ExecuteResult,
   type FsScan,
   type WriteOp,
-} from '@/lib/fs-access';
+} from "@/lib/fs-access";
 import {
   applyOperation,
   BATCH_OPERATION_LIST,
@@ -43,20 +43,20 @@ import {
   type BatchOperationOpts,
   type BatchOutputMode,
   type BatchPlan,
-} from '@/tools/batch-processor/index';
-import FsShell from '../FsShell.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/tools/batch-processor/index";
+import FsShell from "../FsShell.vue";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -75,33 +75,33 @@ type ApplyWrites = (ops: WriteOp[]) => Promise<ExecuteResult | null>;
 /* settings                                                          */
 /* ---------------------------------------------------------------- */
 
-const filter = ref('*');
-const filterMode = ref<'glob' | 'regex'>('glob');
-const operation = ref<BatchOperationId>('find-replace');
-const output = ref<BatchOutputMode>('subfolder');
-const subfolder = ref('processed');
-const suffixMarker = ref('processed');
+const filter = ref("*");
+const filterMode = ref<"glob" | "regex">("glob");
+const operation = ref<BatchOperationId>("find-replace");
+const output = ref<BatchOutputMode>("subfolder");
+const subfolder = ref("processed");
+const suffixMarker = ref("processed");
 
 /** find-replace */
-const find = ref('');
-const replace = ref('');
+const find = ref("");
+const replace = ref("");
 const useRegex = ref(false);
 const caseSensitive = ref(true);
 /** case */
-const caseMode = ref<'upper' | 'lower' | 'title' | 'sentence'>('lower');
+const caseMode = ref<"upper" | "lower" | "title" | "sentence">("lower");
 /** trim-whitespace */
 const trimTrailingSpaces = ref(true);
-const finalNewline = ref<'ensure' | 'strip' | 'keep'>('ensure');
+const finalNewline = ref<"ensure" | "strip" | "keep">("ensure");
 const collapseBlankLines = ref(false);
 /** line-endings */
-const eol = ref<'lf' | 'crlf'>('lf');
+const eol = ref<"lf" | "crlf">("lf");
 /** encoding-normalize */
 const stripInnerBom = ref(false);
 /** prefix-suffix */
-const prefix = ref('');
-const suffix = ref('');
+const prefix = ref("");
+const suffix = ref("");
 /** sort-lines */
-const sortDirection = ref<'asc' | 'desc'>('asc');
+const sortDirection = ref<"asc" | "desc">("asc");
 const sortNumeric = ref(false);
 const sortCaseSensitive = ref(false);
 /** dedupe-lines */
@@ -109,10 +109,10 @@ const dedupeCaseSensitive = ref(true);
 const dedupeTrim = ref(false);
 const keepBlankLines = ref(true);
 /** json-format */
-const jsonMode = ref<'pretty' | 'minify'>('pretty');
+const jsonMode = ref<"pretty" | "minify">("pretty");
 const jsonIndent = ref<string | number>(2);
 /** template-wrap */
-const template = ref('---\ntitle: {name}\n---\n\n{content}\n');
+const template = ref("---\ntitle: {name}\n---\n\n{content}\n");
 
 const operationOpts = computed<BatchOperationOpts>(() => ({
   find: find.value,
@@ -152,7 +152,7 @@ interface SkipRow {
 
 interface DiffRow {
   key: string;
-  kind: 'added' | 'removed' | 'same' | 'gap';
+  kind: "added" | "removed" | "same" | "gap";
   sign: string;
   text: string;
 }
@@ -183,7 +183,7 @@ const readTotal = ref(0);
 const abort = ref(false);
 
 /** 'idle' before a run, 'ready' once the text is transformed and ops exist. */
-const stage = ref<'idle' | 'ready'>('idle');
+const stage = ref<"idle" | "ready">("idle");
 const pendingOps = ref<WriteOp[]>([]);
 const runSkips = ref<SkipRow[]>([]);
 const unchangedCount = ref(0);
@@ -227,11 +227,11 @@ const plan = computed(() => planState.value.plan);
  */
 const configError = computed(() => {
   try {
-    applyOperation('probe', operation.value, operationOpts.value);
+    applyOperation("probe", operation.value, operationOpts.value);
     return null;
   } catch (e) {
     return e instanceof ToolError
-      ? `${e.message}${e.fix ? ` ${e.fix}` : ''}`
+      ? `${e.message}${e.fix ? ` ${e.fix}` : ""}`
       : e instanceof Error
         ? e.message
         : String(e);
@@ -240,24 +240,24 @@ const configError = computed(() => {
 
 const planError = computed(() => planState.value.error);
 
-const ready = computed(
-  () => !!plan.value?.items.length && !planError.value && !configError.value,
-);
+const ready = computed(() => !!plan.value?.items.length && !planError.value && !configError.value);
 
 const matchedLine = computed(() => {
   const current = plan.value;
-  if (!current) return 'Waiting for a folder scan.';
-  const parts = [`${current.matchedCount.toLocaleString()} file${current.matchedCount === 1 ? '' : 's'} matched`];
+  if (!current) return "Waiting for a folder scan.";
+  const parts = [
+    `${current.matchedCount.toLocaleString()} file${current.matchedCount === 1 ? "" : "s"} matched`,
+  ];
   if (current.skippedCount) parts.push(`${current.skippedCount.toLocaleString()} skipped`);
   if (current.unmatchedCount) parts.push(`${current.unmatchedCount.toLocaleString()} not matched`);
-  return `${parts.join(', ')}.`;
+  return `${parts.join(", ")}.`;
 });
 
 /** Where the first matched file would end up, shown next to the output picker. */
 const outputExample = computed(() => {
   const first = plan.value?.items[0];
-  if (!first) return '';
-  return output.value === 'in-place'
+  if (!first) return "";
+  return output.value === "in-place"
     ? `${first.path} is overwritten in place`
     : `${first.path} becomes ${first.outPath}`;
 });
@@ -284,7 +284,7 @@ function looksBinary(bytes: Uint8Array): boolean {
  */
 function decodeText(bytes: Uint8Array): string | null {
   try {
-    return new TextDecoder('utf-8', { ignoreBOM: true, fatal: true }).decode(bytes);
+    return new TextDecoder("utf-8", { ignoreBOM: true, fatal: true }).decode(bytes);
   } catch {
     return null;
   }
@@ -308,27 +308,27 @@ function yieldToBrowser(): Promise<void> {
 /** Make trailing spaces, tabs and carriage returns visible in the diff. */
 function visualize(line: string): string {
   return line
-    .replace(/\r/g, '␍')
-    .replace(/[ \t]+$/, (run) => run.replace(/ /g, '·').replace(/\t/g, '→'));
+    .replace(/\r/g, "␍")
+    .replace(/[ \t]+$/, (run) => run.replace(/ /g, "·").replace(/\t/g, "→"));
 }
 
 function buildDiffRows(before: string, after: string): { rows: DiffRow[]; truncated: boolean } {
   const rows: DiffRow[] = [];
   let key = 0;
 
-  const push = (kind: DiffRow['kind'], sign: string, text: string) => {
+  const push = (kind: DiffRow["kind"], sign: string, text: string) => {
     rows.push({ key: `r${key++}`, kind, sign, text });
   };
 
   for (const part of diffLines(before, after)) {
-    const lines = part.value.split('\n');
-    if (lines.length > 1 && lines[lines.length - 1] === '') lines.pop();
-    const kind: DiffRow['kind'] = part.added ? 'added' : part.removed ? 'removed' : 'same';
-    const sign = part.added ? '+' : part.removed ? '-' : ' ';
+    const lines = part.value.split("\n");
+    if (lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
+    const kind: DiffRow["kind"] = part.added ? "added" : part.removed ? "removed" : "same";
+    const sign = part.added ? "+" : part.removed ? "-" : " ";
 
-    if (kind === 'same' && lines.length > 6) {
+    if (kind === "same" && lines.length > 6) {
       for (const line of lines.slice(0, 3)) push(kind, sign, visualize(line));
-      push('gap', ' ', `${lines.length - 6} unchanged lines`);
+      push("gap", " ", `${lines.length - 6} unchanged lines`);
       for (const line of lines.slice(-3)) push(kind, sign, visualize(line));
       continue;
     }
@@ -352,7 +352,7 @@ async function runPreview(handle: DirectoryHandleWrapper) {
         path: first.path,
         rows: [],
         identical: false,
-        skippedReason: 'this file holds null bytes, so it is binary and will be skipped',
+        skippedReason: "this file holds null bytes, so it is binary and will be skipped",
         truncated: false,
       };
       return;
@@ -363,7 +363,7 @@ async function runPreview(handle: DirectoryHandleWrapper) {
         path: first.path,
         rows: [],
         identical: false,
-        skippedReason: 'this file is not valid UTF-8 text, so it will be skipped',
+        skippedReason: "this file is not valid UTF-8 text, so it will be skipped",
         truncated: false,
       };
       return;
@@ -406,7 +406,7 @@ async function runPreview(handle: DirectoryHandleWrapper) {
 /* ---------------------------------------------------------------- */
 
 function resetRun() {
-  stage.value = 'idle';
+  stage.value = "idle";
   pendingOps.value = [];
   runSkips.value = [];
   unchangedCount.value = 0;
@@ -445,9 +445,9 @@ async function runTransform(handle: DirectoryHandleWrapper) {
     backupBytes += bytes.byteLength;
     if (backupBytes > MAX_BACKUP_BYTES) {
       throw new ToolError(
-        'backup-too-large',
+        "backup-too-large",
         `Backing up the originals would need more than ${Math.round(MAX_BACKUP_BYTES / (1024 * 1024))} MB of memory, which is more than this page should hold.`,
-        'Narrow the filter so fewer files are covered, or switch the output to a subfolder so your originals are never overwritten and no backup is needed.',
+        "Narrow the filter so fewer files are covered, or switch the output to a subfolder so your originals are never overwritten and no backup is needed.",
       );
     }
     backedUp.add(path);
@@ -464,13 +464,16 @@ async function runTransform(handle: DirectoryHandleWrapper) {
       const bytes = await readFileBytes(handle, item.path);
 
       if (looksBinary(bytes)) {
-        skips.push({ path: item.path, reason: 'holds null bytes, so it is binary rather than text' });
+        skips.push({
+          path: item.path,
+          reason: "holds null bytes, so it is binary rather than text",
+        });
       } else {
         const before = decodeText(bytes);
         if (before === null) {
           skips.push({
             path: item.path,
-            reason: 'not valid UTF-8 text, so editing it would corrupt the characters',
+            reason: "not valid UTF-8 text, so editing it would corrupt the characters",
           });
         } else {
           const result = applyOperation(before, current.operation, {
@@ -504,7 +507,7 @@ async function runTransform(handle: DirectoryHandleWrapper) {
     // originals were never read above, so read them now: an overwrite is an
     // overwrite whichever mode produced it.
     for (const op of ops) {
-      if (op.op !== 'writeFile') continue;
+      if (op.op !== "writeFile") continue;
       if (!existing.has(op.path) || backedUp.has(op.path)) continue;
       capture(op.path, await readFileBytes(handle, op.path));
     }
@@ -515,7 +518,7 @@ async function runTransform(handle: DirectoryHandleWrapper) {
     backup.value = backupEntries.length ? backupEntries : null;
     backupSaved.value = false;
     stoppedAt.value = stopped;
-    stage.value = 'ready';
+    stage.value = "ready";
   } catch (e) {
     setError(e);
     resetRun();
@@ -530,9 +533,9 @@ const canApply = computed(
 );
 
 const runSummary = computed(() => {
-  if (stage.value !== 'ready') return '';
+  if (stage.value !== "ready") return "";
   const parts = [
-    `${pendingOps.value.length.toLocaleString()} file${pendingOps.value.length === 1 ? '' : 's'} to write`,
+    `${pendingOps.value.length.toLocaleString()} file${pendingOps.value.length === 1 ? "" : "s"} to write`,
   ];
   if (unchangedCount.value) {
     parts.push(`${unchangedCount.value.toLocaleString()} already in shape, so left alone`);
@@ -544,8 +547,8 @@ const runSummary = computed(() => {
   // A batch that was stopped part way must never read like a finished one.
   const lead = halted
     ? `Stopped after ${halted.done.toLocaleString()} of ${halted.total.toLocaleString()} files: `
-    : '';
-  return `${lead}${parts.join(', ')}.`;
+    : "";
+  return `${lead}${parts.join(", ")}.`;
 });
 
 /* ---------------------------------------------------------------- */
@@ -558,24 +561,24 @@ function downloadBackup(rootName: string) {
 
   const payload = {
     version: 1,
-    tool: 'batch-processor',
+    tool: "batch-processor",
     root: rootName,
     createdAt: new Date().toISOString(),
-    note: 'Original contents of every file this batch is about to overwrite, base64 encoded. Decode a file entry and write it back over the same path to restore it. The folder undo file cannot do this, because it never held the old bytes.',
+    note: "Original contents of every file this batch is about to overwrite, base64 encoded. Decode a file entry and write it back over the same path to restore it. The folder undo file cannot do this, because it never held the old bytes.",
     files: entries,
   };
 
   const slug =
     rootName
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 40) || 'folder';
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "folder";
   const day = new Date().toISOString().slice(0, 10);
 
-  const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: 'application/json' });
+  const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
+  const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = `batch-backup-${slug}-${day}.json`;
   document.body.appendChild(anchor);
@@ -620,7 +623,7 @@ const settingsKey = computed(() =>
 // the moment anything changes rather than sitting there looking current.
 watch(settingsKey, () => {
   preview.value = null;
-  if (stage.value === 'ready') resetRun();
+  if (stage.value === "ready") resetRun();
 });
 
 function onScan(next: FsScan) {
@@ -632,16 +635,12 @@ function onScan(next: FsScan) {
 </script>
 
 <template>
-  <FsShell
-    :meta="meta"
-    mode="readwrite"
-    @scan="onScan"
-  >
+  <FsShell :meta="meta" mode="readwrite" @scan="onScan">
     <template #empty>
       <p class="text-sm text-muted-foreground">
         Choose a folder to run one text transform over many files at once. Filter the files you
-        mean, preview the change on the first match, then apply it. Text files only for now:
-        images, archives and other binary formats are skipped and listed rather than damaged.
+        mean, preview the change on the first match, then apply it. Text files only for now: images,
+        archives and other binary formats are skipped and listed rather than damaged.
       </p>
     </template>
 
@@ -651,62 +650,46 @@ function onScan(next: FsScan) {
         <div class="flex flex-col gap-2">
           <div class="grid gap-3 sm:grid-cols-[1fr_auto]">
             <div class="flex min-w-0 flex-col gap-1.5">
-              <Label
-                for="batch-filter"
-                class="text-xs text-muted-foreground"
-              >Files to include</Label>
+              <Label for="batch-filter" class="text-xs text-muted-foreground"
+                >Files to include</Label
+              >
               <Input
                 id="batch-filter"
                 v-model="filter"
                 class="h-8 font-mono"
-                :placeholder="filterMode === 'glob' ? '*.md, docs/**/*.txt, !draft-*.md' : '\\.(md|txt)$'"
+                :placeholder="
+                  filterMode === 'glob' ? '*.md, docs/**/*.txt, !draft-*.md' : '\\.(md|txt)$'
+                "
               />
             </div>
             <div class="flex min-w-0 flex-col gap-1.5">
-              <Label
-                for="batch-filter-mode"
-                class="text-xs text-muted-foreground"
-              >Filter type</Label>
-              <Select
-                v-model="filterMode"
+              <Label for="batch-filter-mode" class="text-xs text-muted-foreground"
+                >Filter type</Label
               >
-                <SelectTrigger
-                  id="batch-filter-mode"
-                  size="sm"
-                  class="w-full min-w-0"
-                >
+              <Select v-model="filterMode">
+                <SelectTrigger id="batch-filter-mode" size="sm" class="w-full min-w-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="glob">
-                    Glob
-                  </SelectItem>
-                  <SelectItem value="regex">
-                    Regex
-                  </SelectItem>
+                  <SelectItem value="glob"> Glob </SelectItem>
+                  <SelectItem value="regex"> Regex </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <p
-            role="status"
-            class="font-mono text-xs text-muted-foreground tabular-nums"
-          >
+          <p role="status" class="font-mono text-xs text-muted-foreground tabular-nums">
             {{ matchedLine }}
           </p>
-          <p
-            v-if="plan?.skipped.length"
-            class="text-xs text-muted-foreground"
-          >
-            Skipped: {{ plan.skipped.slice(0, 3).map((s) => `${s.path} (${s.reason})`).join('; ') }}<span
-              v-if="plan.skipped.length > 3"
-            >, and {{ plan.skipped.length - 3 }} more</span>.
+          <p v-if="plan?.skipped.length" class="text-xs text-muted-foreground">
+            Skipped:
+            {{
+              plan.skipped
+                .slice(0, 3)
+                .map((s) => `${s.path} (${s.reason})`)
+                .join("; ")
+            }}<span v-if="plan.skipped.length > 3">, and {{ plan.skipped.length - 3 }} more</span>.
           </p>
-          <p
-            v-if="planError"
-            role="alert"
-            class="text-xs text-destructive"
-          >
+          <p v-if="planError" role="alert" class="text-xs text-destructive">
             {{ planError }}
           </p>
         </div>
@@ -714,26 +697,13 @@ function onScan(next: FsScan) {
         <!-- What to do -->
         <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
           <div class="flex min-w-0 flex-col gap-1.5">
-            <Label
-              for="batch-operation"
-              class="text-xs text-muted-foreground"
-            >Operation</Label>
-            <Select
-              v-model="operation"
-            >
-              <SelectTrigger
-                id="batch-operation"
-                size="sm"
-                class="w-full min-w-0"
-              >
+            <Label for="batch-operation" class="text-xs text-muted-foreground">Operation</Label>
+            <Select v-model="operation">
+              <SelectTrigger id="batch-operation" size="sm" class="w-full min-w-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="spec in BATCH_OPERATION_LIST"
-                  :key="spec.id"
-                  :value="spec.id"
-                >
+                <SelectItem v-for="spec in BATCH_OPERATION_LIST" :key="spec.id" :value="spec.id">
                   {{ spec.label }}
                 </SelectItem>
               </SelectContent>
@@ -741,26 +711,16 @@ function onScan(next: FsScan) {
             <p class="text-xs text-muted-foreground">
               {{ currentSpec.description }}
             </p>
-            <p
-              v-if="configError"
-              role="alert"
-              class="text-xs text-destructive"
-            >
+            <p v-if="configError" role="alert" class="text-xs text-destructive">
               {{ configError }}
             </p>
           </div>
 
           <!-- find and replace -->
-          <div
-            v-if="operation === 'find-replace'"
-            class="flex flex-col gap-3"
-          >
+          <div v-if="operation === 'find-replace'" class="flex flex-col gap-3">
             <div class="grid gap-3 sm:grid-cols-2">
               <div class="flex min-w-0 flex-col gap-1.5">
-                <Label
-                  for="batch-find"
-                  class="text-xs text-muted-foreground"
-                >Find</Label>
+                <Label for="batch-find" class="text-xs text-muted-foreground">Find</Label>
                 <Input
                   id="batch-find"
                   v-model="find"
@@ -769,10 +729,9 @@ function onScan(next: FsScan) {
                 />
               </div>
               <div class="flex min-w-0 flex-col gap-1.5">
-                <Label
-                  for="batch-replace"
-                  class="text-xs text-muted-foreground"
-                >Replace with</Label>
+                <Label for="batch-replace" class="text-xs text-muted-foreground"
+                  >Replace with</Label
+                >
                 <Input
                   id="batch-replace"
                   v-model="replace"
@@ -783,117 +742,71 @@ function onScan(next: FsScan) {
             </div>
             <div class="flex flex-wrap items-center gap-4">
               <div class="flex items-center gap-2">
-                <Switch
-                  id="batch-regex"
-                  v-model="useRegex"
-                />
-                <Label
-                  for="batch-regex"
-                  class="cursor-pointer text-xs text-muted-foreground"
-                >Regular expression ($1 works in the replacement)</Label>
+                <Switch id="batch-regex" v-model="useRegex" />
+                <Label for="batch-regex" class="cursor-pointer text-xs text-muted-foreground"
+                  >Regular expression ($1 works in the replacement)</Label
+                >
               </div>
               <div class="flex items-center gap-2">
-                <Switch
-                  id="batch-case-sensitive"
-                  v-model="caseSensitive"
-                />
+                <Switch id="batch-case-sensitive" v-model="caseSensitive" />
                 <Label
                   for="batch-case-sensitive"
                   class="cursor-pointer text-xs text-muted-foreground"
-                >Match case</Label>
+                  >Match case</Label
+                >
               </div>
             </div>
           </div>
 
           <!-- case -->
-          <div
-            v-else-if="operation === 'case'"
-            class="flex min-w-0 flex-col gap-1.5 sm:max-w-xs"
-          >
-            <Label
-              for="batch-case-mode"
-              class="text-xs text-muted-foreground"
-            >Casing</Label>
-            <Select
-              v-model="caseMode"
-            >
-              <SelectTrigger
-                id="batch-case-mode"
-                size="sm"
-                class="w-full min-w-0"
-              >
+          <div v-else-if="operation === 'case'" class="flex min-w-0 flex-col gap-1.5 sm:max-w-xs">
+            <Label for="batch-case-mode" class="text-xs text-muted-foreground">Casing</Label>
+            <Select v-model="caseMode">
+              <SelectTrigger id="batch-case-mode" size="sm" class="w-full min-w-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="upper">
-                  UPPERCASE
-                </SelectItem>
-                <SelectItem value="lower">
-                  lowercase
-                </SelectItem>
-                <SelectItem value="title">
-                  Title Case
-                </SelectItem>
-                <SelectItem value="sentence">
-                  Sentence case
-                </SelectItem>
+                <SelectItem value="upper"> UPPERCASE </SelectItem>
+                <SelectItem value="lower"> lowercase </SelectItem>
+                <SelectItem value="title"> Title Case </SelectItem>
+                <SelectItem value="sentence"> Sentence case </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <!-- trim whitespace -->
-          <div
-            v-else-if="operation === 'trim-whitespace'"
-            class="flex flex-col gap-3"
-          >
+          <div v-else-if="operation === 'trim-whitespace'" class="flex flex-col gap-3">
             <div class="flex min-w-0 flex-col gap-1.5 sm:max-w-xs">
-              <Label
-                for="batch-final-newline"
-                class="text-xs text-muted-foreground"
-              >Final newline</Label>
-              <Select
-                v-model="finalNewline"
+              <Label for="batch-final-newline" class="text-xs text-muted-foreground"
+                >Final newline</Label
               >
-                <SelectTrigger
-                  id="batch-final-newline"
-                  size="sm"
-                  class="w-full min-w-0"
-                >
+              <Select v-model="finalNewline">
+                <SelectTrigger id="batch-final-newline" size="sm" class="w-full min-w-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ensure">
-                    End with exactly one newline
-                  </SelectItem>
-                  <SelectItem value="strip">
-                    No newline at the end
-                  </SelectItem>
-                  <SelectItem value="keep">
-                    Leave the end alone
-                  </SelectItem>
+                  <SelectItem value="ensure"> End with exactly one newline </SelectItem>
+                  <SelectItem value="strip"> No newline at the end </SelectItem>
+                  <SelectItem value="keep"> Leave the end alone </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div class="flex flex-wrap items-center gap-4">
               <div class="flex items-center gap-2">
-                <Switch
-                  id="batch-trim-trailing"
-                  v-model="trimTrailingSpaces"
-                />
+                <Switch id="batch-trim-trailing" v-model="trimTrailingSpaces" />
                 <Label
                   for="batch-trim-trailing"
                   class="cursor-pointer text-xs text-muted-foreground"
-                >Strip trailing spaces and tabs</Label>
+                  >Strip trailing spaces and tabs</Label
+                >
               </div>
               <div class="flex items-center gap-2">
-                <Switch
-                  id="batch-collapse-blank"
-                  v-model="collapseBlankLines"
-                />
+                <Switch id="batch-collapse-blank" v-model="collapseBlankLines" />
                 <Label
                   for="batch-collapse-blank"
                   class="cursor-pointer text-xs text-muted-foreground"
-                >Collapse runs of blank lines</Label>
+                  >Collapse runs of blank lines</Label
+                >
               </div>
             </div>
           </div>
@@ -903,56 +816,32 @@ function onScan(next: FsScan) {
             v-else-if="operation === 'line-endings'"
             class="flex min-w-0 flex-col gap-1.5 sm:max-w-xs"
           >
-            <Label
-              for="batch-eol"
-              class="text-xs text-muted-foreground"
-            >Line ending</Label>
-            <Select
-              v-model="eol"
-            >
-              <SelectTrigger
-                id="batch-eol"
-                size="sm"
-                class="w-full min-w-0"
-              >
+            <Label for="batch-eol" class="text-xs text-muted-foreground">Line ending</Label>
+            <Select v-model="eol">
+              <SelectTrigger id="batch-eol" size="sm" class="w-full min-w-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="lf">
-                  LF, the Linux and macOS ending
-                </SelectItem>
-                <SelectItem value="crlf">
-                  CRLF, the Windows ending
-                </SelectItem>
+                <SelectItem value="lf"> LF, the Linux and macOS ending </SelectItem>
+                <SelectItem value="crlf"> CRLF, the Windows ending </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <!-- encoding -->
-          <div
-            v-else-if="operation === 'encoding-normalize'"
-            class="flex items-center gap-2"
-          >
-            <Switch
-              id="batch-inner-bom"
-              v-model="stripInnerBom"
-            />
-            <Label
-              for="batch-inner-bom"
-              class="cursor-pointer text-xs text-muted-foreground"
-            >Also remove byte order marks found in the middle of a file</Label>
+          <div v-else-if="operation === 'encoding-normalize'" class="flex items-center gap-2">
+            <Switch id="batch-inner-bom" v-model="stripInnerBom" />
+            <Label for="batch-inner-bom" class="cursor-pointer text-xs text-muted-foreground"
+              >Also remove byte order marks found in the middle of a file</Label
+            >
           </div>
 
           <!-- prefix and suffix -->
-          <div
-            v-else-if="operation === 'prefix-suffix'"
-            class="grid gap-3 sm:grid-cols-2"
-          >
+          <div v-else-if="operation === 'prefix-suffix'" class="grid gap-3 sm:grid-cols-2">
             <div class="flex min-w-0 flex-col gap-1.5">
-              <Label
-                for="batch-prefix"
-                class="text-xs text-muted-foreground"
-              >Header, added above every file</Label>
+              <Label for="batch-prefix" class="text-xs text-muted-foreground"
+                >Header, added above every file</Label
+              >
               <Textarea
                 id="batch-prefix"
                 v-model="prefix"
@@ -962,10 +851,9 @@ function onScan(next: FsScan) {
               />
             </div>
             <div class="flex min-w-0 flex-col gap-1.5">
-              <Label
-                for="batch-suffix"
-                class="text-xs text-muted-foreground"
-              >Footer, added below every file</Label>
+              <Label for="batch-suffix" class="text-xs text-muted-foreground"
+                >Footer, added below every file</Label
+              >
               <Textarea
                 id="batch-suffix"
                 v-model="suffix"
@@ -977,134 +865,75 @@ function onScan(next: FsScan) {
           </div>
 
           <!-- sort -->
-          <div
-            v-else-if="operation === 'sort-lines'"
-            class="flex flex-col gap-3"
-          >
+          <div v-else-if="operation === 'sort-lines'" class="flex flex-col gap-3">
             <div class="flex min-w-0 flex-col gap-1.5 sm:max-w-xs">
-              <Label
-                for="batch-sort-direction"
-                class="text-xs text-muted-foreground"
-              >Direction</Label>
-              <Select
-                v-model="sortDirection"
+              <Label for="batch-sort-direction" class="text-xs text-muted-foreground"
+                >Direction</Label
               >
-                <SelectTrigger
-                  id="batch-sort-direction"
-                  size="sm"
-                  class="w-full min-w-0"
-                >
+              <Select v-model="sortDirection">
+                <SelectTrigger id="batch-sort-direction" size="sm" class="w-full min-w-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="asc">
-                    A to Z
-                  </SelectItem>
-                  <SelectItem value="desc">
-                    Z to A
-                  </SelectItem>
+                  <SelectItem value="asc"> A to Z </SelectItem>
+                  <SelectItem value="desc"> Z to A </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div class="flex flex-wrap items-center gap-4">
               <div class="flex items-center gap-2">
-                <Switch
-                  id="batch-sort-numeric"
-                  v-model="sortNumeric"
-                />
-                <Label
-                  for="batch-sort-numeric"
-                  class="cursor-pointer text-xs text-muted-foreground"
-                >Numeric, so file10 lands after file9</Label>
+                <Switch id="batch-sort-numeric" v-model="sortNumeric" />
+                <Label for="batch-sort-numeric" class="cursor-pointer text-xs text-muted-foreground"
+                  >Numeric, so file10 lands after file9</Label
+                >
               </div>
               <div class="flex items-center gap-2">
-                <Switch
-                  id="batch-sort-case"
-                  v-model="sortCaseSensitive"
-                />
-                <Label
-                  for="batch-sort-case"
-                  class="cursor-pointer text-xs text-muted-foreground"
-                >Case sensitive</Label>
+                <Switch id="batch-sort-case" v-model="sortCaseSensitive" />
+                <Label for="batch-sort-case" class="cursor-pointer text-xs text-muted-foreground"
+                  >Case sensitive</Label
+                >
               </div>
             </div>
           </div>
 
           <!-- dedupe -->
-          <div
-            v-else-if="operation === 'dedupe-lines'"
-            class="flex flex-wrap items-center gap-4"
-          >
+          <div v-else-if="operation === 'dedupe-lines'" class="flex flex-wrap items-center gap-4">
             <div class="flex items-center gap-2">
-              <Switch
-                id="batch-dedupe-case"
-                v-model="dedupeCaseSensitive"
-              />
-              <Label
-                for="batch-dedupe-case"
-                class="cursor-pointer text-xs text-muted-foreground"
-              >Case sensitive</Label>
+              <Switch id="batch-dedupe-case" v-model="dedupeCaseSensitive" />
+              <Label for="batch-dedupe-case" class="cursor-pointer text-xs text-muted-foreground"
+                >Case sensitive</Label
+              >
             </div>
             <div class="flex items-center gap-2">
-              <Switch
-                id="batch-dedupe-trim"
-                v-model="dedupeTrim"
-              />
-              <Label
-                for="batch-dedupe-trim"
-                class="cursor-pointer text-xs text-muted-foreground"
-              >Ignore surrounding spaces when comparing</Label>
+              <Switch id="batch-dedupe-trim" v-model="dedupeTrim" />
+              <Label for="batch-dedupe-trim" class="cursor-pointer text-xs text-muted-foreground"
+                >Ignore surrounding spaces when comparing</Label
+              >
             </div>
             <div class="flex items-center gap-2">
-              <Switch
-                id="batch-dedupe-blank"
-                v-model="keepBlankLines"
-              />
-              <Label
-                for="batch-dedupe-blank"
-                class="cursor-pointer text-xs text-muted-foreground"
-              >Keep blank lines</Label>
+              <Switch id="batch-dedupe-blank" v-model="keepBlankLines" />
+              <Label for="batch-dedupe-blank" class="cursor-pointer text-xs text-muted-foreground"
+                >Keep blank lines</Label
+              >
             </div>
           </div>
 
           <!-- json -->
-          <div
-            v-else-if="operation === 'json-format'"
-            class="grid gap-3 sm:grid-cols-2"
-          >
+          <div v-else-if="operation === 'json-format'" class="grid gap-3 sm:grid-cols-2">
             <div class="flex min-w-0 flex-col gap-1.5">
-              <Label
-                for="batch-json-mode"
-                class="text-xs text-muted-foreground"
-              >Style</Label>
-              <Select
-                v-model="jsonMode"
-              >
-                <SelectTrigger
-                  id="batch-json-mode"
-                  size="sm"
-                  class="w-full min-w-0"
-                >
+              <Label for="batch-json-mode" class="text-xs text-muted-foreground">Style</Label>
+              <Select v-model="jsonMode">
+                <SelectTrigger id="batch-json-mode" size="sm" class="w-full min-w-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pretty">
-                    Pretty print
-                  </SelectItem>
-                  <SelectItem value="minify">
-                    Minify
-                  </SelectItem>
+                  <SelectItem value="pretty"> Pretty print </SelectItem>
+                  <SelectItem value="minify"> Minify </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div
-              v-if="jsonMode === 'pretty'"
-              class="flex min-w-0 flex-col gap-1.5"
-            >
-              <Label
-                for="batch-json-indent"
-                class="text-xs text-muted-foreground"
-              >Indent</Label>
+            <div v-if="jsonMode === 'pretty'" class="flex min-w-0 flex-col gap-1.5">
+              <Label for="batch-json-indent" class="text-xs text-muted-foreground">Indent</Label>
               <Input
                 id="batch-json-indent"
                 v-model="jsonIndent"
@@ -1117,20 +946,11 @@ function onScan(next: FsScan) {
           </div>
 
           <!-- template -->
-          <div
-            v-else-if="operation === 'template-wrap'"
-            class="flex min-w-0 flex-col gap-1.5"
-          >
-            <Label
-              for="batch-template"
-              class="text-xs text-muted-foreground"
-            >Template, using {content}, {name} and {path}</Label>
-            <Textarea
-              id="batch-template"
-              v-model="template"
-              rows="5"
-              class="font-mono text-sm"
-            />
+          <div v-else-if="operation === 'template-wrap'" class="flex min-w-0 flex-col gap-1.5">
+            <Label for="batch-template" class="text-xs text-muted-foreground"
+              >Template, using {content}, {name} and {path}</Label
+            >
+            <Textarea id="batch-template" v-model="template" rows="5" class="font-mono text-sm" />
           </div>
         </div>
 
@@ -1138,41 +958,24 @@ function onScan(next: FsScan) {
         <div class="flex flex-col gap-3">
           <div class="grid gap-3 sm:grid-cols-2">
             <div class="flex min-w-0 flex-col gap-1.5">
-              <Label
-                for="batch-output"
-                class="text-xs text-muted-foreground"
-              >Where results go</Label>
-              <Select
-                v-model="output"
+              <Label for="batch-output" class="text-xs text-muted-foreground"
+                >Where results go</Label
               >
-                <SelectTrigger
-                  id="batch-output"
-                  size="sm"
-                  class="w-full min-w-0"
-                >
+              <Select v-model="output">
+                <SelectTrigger id="batch-output" size="sm" class="w-full min-w-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="subfolder">
-                    Into a subfolder, originals untouched
-                  </SelectItem>
-                  <SelectItem value="suffix">
-                    Alongside, as name.processed.ext
-                  </SelectItem>
-                  <SelectItem value="in-place">
-                    In place, overwriting the originals
-                  </SelectItem>
+                  <SelectItem value="subfolder"> Into a subfolder, originals untouched </SelectItem>
+                  <SelectItem value="suffix"> Alongside, as name.processed.ext </SelectItem>
+                  <SelectItem value="in-place"> In place, overwriting the originals </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div
-              v-if="output === 'subfolder'"
-              class="flex min-w-0 flex-col gap-1.5"
-            >
-              <Label
-                for="batch-subfolder"
-                class="text-xs text-muted-foreground"
-              >Subfolder name</Label>
+            <div v-if="output === 'subfolder'" class="flex min-w-0 flex-col gap-1.5">
+              <Label for="batch-subfolder" class="text-xs text-muted-foreground"
+                >Subfolder name</Label
+              >
               <Input
                 id="batch-subfolder"
                 v-model="subfolder"
@@ -1180,14 +983,10 @@ function onScan(next: FsScan) {
                 placeholder="processed"
               />
             </div>
-            <div
-              v-else-if="output === 'suffix'"
-              class="flex min-w-0 flex-col gap-1.5"
-            >
-              <Label
-                for="batch-suffix-marker"
-                class="text-xs text-muted-foreground"
-              >Marker inserted before the extension</Label>
+            <div v-else-if="output === 'suffix'" class="flex min-w-0 flex-col gap-1.5">
+              <Label for="batch-suffix-marker" class="text-xs text-muted-foreground"
+                >Marker inserted before the extension</Label
+              >
               <Input
                 id="batch-suffix-marker"
                 v-model="suffixMarker"
@@ -1197,10 +996,7 @@ function onScan(next: FsScan) {
             </div>
           </div>
 
-          <p
-            v-if="outputExample"
-            class="font-mono text-xs text-muted-foreground"
-          >
+          <p v-if="outputExample" class="font-mono text-xs text-muted-foreground">
             {{ outputExample }}
           </p>
 
@@ -1212,9 +1008,7 @@ function onScan(next: FsScan) {
           >
             <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" />
             <div>
-              <p class="font-medium text-destructive">
-                In place overwrites your original files.
-              </p>
+              <p class="font-medium text-destructive">In place overwrites your original files.</p>
               <p class="mt-1 text-muted-foreground">
                 The undo file that comes with every write batch lists the changes, but it cannot
                 bring back the contents of a file that was overwritten, because it never held the
@@ -1237,7 +1031,7 @@ function onScan(next: FsScan) {
             @click="runPreview(handle)"
           >
             <Eye class="size-3.5" />
-            {{ previewing ? 'Reading the first file…' : 'Preview the first match' }}
+            {{ previewing ? "Reading the first file…" : "Preview the first match" }}
           </Button>
           <Button
             size="sm"
@@ -1245,17 +1039,11 @@ function onScan(next: FsScan) {
             @click="runTransform(handle)"
           >
             <Play class="size-3.5" />
-            Process {{ (plan?.matchedCount ?? 0).toLocaleString() }}
-            file{{ plan?.matchedCount === 1 ? '' : 's' }}
+            Process {{ (plan?.matchedCount ?? 0).toLocaleString() }} file{{
+              plan?.matchedCount === 1 ? "" : "s"
+            }}
           </Button>
-          <Button
-            v-if="reading"
-            variant="outline"
-            size="sm"
-            @click="abort = true"
-          >
-            Stop
-          </Button>
+          <Button v-if="reading" variant="outline" size="sm" @click="abort = true"> Stop </Button>
         </div>
 
         <!-- Preview -->
@@ -1266,18 +1054,12 @@ function onScan(next: FsScan) {
           <p class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Preview: {{ preview.path }}
           </p>
-          <p
-            v-if="preview.skippedReason"
-            class="text-sm text-muted-foreground"
-          >
+          <p v-if="preview.skippedReason" class="text-sm text-muted-foreground">
             This file would be skipped: {{ preview.skippedReason }}.
           </p>
-          <p
-            v-else-if="preview.identical"
-            class="text-sm text-muted-foreground"
-          >
-            This transform changes nothing in this file, so it would not be written. Files that
-            come out identical are never rewritten.
+          <p v-else-if="preview.identical" class="text-sm text-muted-foreground">
+            This transform changes nothing in this file, so it would not be written. Files that come
+            out identical are never rewritten.
           </p>
           <template v-else>
             <div class="max-h-72 overflow-auto rounded-[8px] bg-background p-2">
@@ -1291,21 +1073,21 @@ function onScan(next: FsScan) {
                   'text-primary': row.kind === 'added',
                   'italic text-muted-foreground/70': row.kind === 'gap',
                 }"
-              >{{ row.kind === 'gap' ? `    ${row.text}` : `${row.sign} ${row.text}` }}</span>
+                >{{ row.kind === "gap" ? `    ${row.text}` : `${row.sign} ${row.text}` }}</span
+              >
             </div>
             <p class="text-xs text-muted-foreground">
               Removed lines are marked with a minus, added lines with a plus. A middle dot stands
               for a trailing space, an arrow for a trailing tab, and ␍ for a carriage return.
-              <span v-if="preview.truncated">Only the first {{ MAX_DIFF_ROWS }} lines are shown.</span>
+              <span v-if="preview.truncated"
+                >Only the first {{ MAX_DIFF_ROWS }} lines are shown.</span
+              >
             </p>
           </template>
         </div>
 
         <!-- Reading progress -->
-        <div
-          v-if="reading"
-          class="flex flex-col gap-2"
-        >
+        <div v-if="reading" class="flex flex-col gap-2">
           <div
             class="h-2 overflow-hidden rounded-full bg-secondary"
             role="progressbar"
@@ -1334,25 +1116,17 @@ function onScan(next: FsScan) {
             {{ runSummary }}
           </p>
 
-          <div
-            v-if="runSkips.length"
-            class="flex flex-col gap-1"
-          >
+          <div v-if="runSkips.length" class="flex flex-col gap-1">
             <p class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
               Skipped files
             </p>
             <ul class="list-disc pl-4 text-xs text-muted-foreground">
-              <li
-                v-for="skip in runSkips.slice(0, 10)"
-                :key="skip.path"
-              >
-                <span class="font-mono">{{ skip.path }}</span>: {{ skip.reason }}
+              <li v-for="skip in runSkips.slice(0, 10)" :key="skip.path">
+                <span class="font-mono">{{ skip.path }}</span
+                >: {{ skip.reason }}
               </li>
             </ul>
-            <p
-              v-if="runSkips.length > 10"
-              class="text-xs text-muted-foreground"
-            >
+            <p v-if="runSkips.length > 10" class="text-xs text-muted-foreground">
               and {{ runSkips.length - 10 }} more.
             </p>
           </div>
@@ -1362,7 +1136,7 @@ function onScan(next: FsScan) {
             class="flex flex-col gap-2 rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2"
           >
             <p class="text-sm font-medium text-destructive">
-              {{ overwriteCount }} existing file{{ overwriteCount === 1 ? '' : 's' }} will be
+              {{ overwriteCount }} existing file{{ overwriteCount === 1 ? "" : "s" }} will be
               overwritten.
             </p>
             <p class="text-xs text-muted-foreground">
@@ -1378,46 +1152,27 @@ function onScan(next: FsScan) {
               @click="downloadBackup(handle.name)"
             >
               <Download class="size-3.5" />
-              {{ backupSaved ? 'Download the backup again' : 'Download backup of originals' }}
+              {{ backupSaved ? "Download the backup again" : "Download backup of originals" }}
             </Button>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              :disabled="!canApply || busy"
-              @click="applyNow(applyWrites)"
-            >
-              Apply {{ pendingOps.length }} write{{ pendingOps.length === 1 ? '' : 's' }}
+            <Button size="sm" :disabled="!canApply || busy" @click="applyNow(applyWrites)">
+              Apply {{ pendingOps.length }} write{{ pendingOps.length === 1 ? "" : "s" }}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              :disabled="busy"
-              @click="resetRun"
-            >
+            <Button variant="ghost" size="sm" :disabled="busy" @click="resetRun">
               Start over
             </Button>
           </div>
-          <p
-            v-if="overwriteCount && !backupSaved"
-            class="text-xs text-muted-foreground"
-          >
+          <p v-if="overwriteCount && !backupSaved" class="text-xs text-muted-foreground">
             Apply stays switched off until the backup has been downloaded.
           </p>
-          <p
-            v-else-if="!pendingOps.length"
-            class="text-xs text-muted-foreground"
-          >
+          <p v-else-if="!pendingOps.length" class="text-xs text-muted-foreground">
             Nothing to write: every matched file already came out exactly as the transform would
             leave it, or was skipped.
           </p>
-          <p
-            v-else
-            class="text-xs text-muted-foreground"
-          >
-            You still get the full list of changes to review and confirm before anything is
-            written.
+          <p v-else class="text-xs text-muted-foreground">
+            You still get the full list of changes to review and confirm before anything is written.
           </p>
         </div>
 
@@ -1429,10 +1184,7 @@ function onScan(next: FsScan) {
           <p class="font-medium text-destructive">
             {{ error.message }}
           </p>
-          <p
-            v-if="error.fix"
-            class="mt-1 text-muted-foreground"
-          >
+          <p v-if="error.fix" class="mt-1 text-muted-foreground">
             {{ error.fix }}
           </p>
         </div>

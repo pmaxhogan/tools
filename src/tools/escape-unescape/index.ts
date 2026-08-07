@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface EscapeOpts {
   /** Which encoding/format to apply — see the `format` select choices in meta.ts. */
@@ -19,7 +19,7 @@ function strToBytes(str: string): Uint8Array {
 
 function bytesToStr(bytes: Uint8Array, code: string, message: string, fix: string): string {
   try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   } catch {
     throw new ToolError(code, message, fix);
   }
@@ -38,13 +38,13 @@ function jsonEscape(str: string): string {
 function jsonUnescape(str: string): string {
   try {
     const parsed: unknown = JSON.parse(`"${str}"`);
-    if (typeof parsed !== 'string') throw new Error('not a string');
+    if (typeof parsed !== "string") throw new Error("not a string");
     return parsed;
   } catch {
     throw new ToolError(
-      'invalid-json-escape',
+      "invalid-json-escape",
       `"${str}" is not valid JSON string-escaped text.`,
-      'Check for unescaped quotes, raw control characters, or invalid \\ escape sequences.',
+      "Check for unescaped quotes, raw control characters, or invalid \\ escape sequences.",
     );
   }
 }
@@ -56,66 +56,66 @@ function jsonUnescape(str: string): string {
 
 /** name -> character, for the common HTML entities. Source of truth for both directions. */
 const ENTITY_TO_CHAR: Record<string, string> = {
-  amp: '&',
-  lt: '<',
-  gt: '>',
+  amp: "&",
+  lt: "<",
+  gt: ">",
   quot: '"',
   apos: "'",
-  nbsp: '\u00A0',
-  copy: '\u00A9',
-  reg: '\u00AE',
-  trade: '\u2122',
-  mdash: '\u2014',
-  ndash: '\u2013',
-  hellip: '\u2026',
-  lsquo: '\u2018',
-  rsquo: '\u2019',
-  ldquo: '\u201C',
-  rdquo: '\u201D',
-  eacute: '\u00E9',
-  egrave: '\u00E8',
-  ecirc: '\u00EA',
-  agrave: '\u00E0',
-  acirc: '\u00E2',
-  ccedil: '\u00E7',
-  ntilde: '\u00F1',
-  uuml: '\u00FC',
-  ouml: '\u00F6',
-  auml: '\u00E4',
-  szlig: '\u00DF',
-  euro: '\u20AC',
-  pound: '\u00A3',
-  yen: '\u00A5',
-  cent: '\u00A2',
-  deg: '\u00B0',
-  plusmn: '\u00B1',
-  times: '\u00D7',
-  divide: '\u00F7',
-  frac12: '\u00BD',
-  frac14: '\u00BC',
-  frac34: '\u00BE',
-  sect: '\u00A7',
-  para: '\u00B6',
-  middot: '\u00B7',
-  bull: '\u2022',
-  larr: '\u2190',
-  rarr: '\u2192',
-  uarr: '\u2191',
-  darr: '\u2193',
-  hearts: '\u2665',
-  spades: '\u2660',
-  clubs: '\u2663',
-  diams: '\u2666',
-  alpha: '\u03B1',
-  beta: '\u03B2',
-  gamma: '\u03B3',
-  pi: '\u03C0',
-  sum: '\u2211',
-  infin: '\u221E',
-  ne: '\u2260',
-  le: '\u2264',
-  ge: '\u2265',
-  radic: '\u221A',
+  nbsp: "\u00A0",
+  copy: "\u00A9",
+  reg: "\u00AE",
+  trade: "\u2122",
+  mdash: "\u2014",
+  ndash: "\u2013",
+  hellip: "\u2026",
+  lsquo: "\u2018",
+  rsquo: "\u2019",
+  ldquo: "\u201C",
+  rdquo: "\u201D",
+  eacute: "\u00E9",
+  egrave: "\u00E8",
+  ecirc: "\u00EA",
+  agrave: "\u00E0",
+  acirc: "\u00E2",
+  ccedil: "\u00E7",
+  ntilde: "\u00F1",
+  uuml: "\u00FC",
+  ouml: "\u00F6",
+  auml: "\u00E4",
+  szlig: "\u00DF",
+  euro: "\u20AC",
+  pound: "\u00A3",
+  yen: "\u00A5",
+  cent: "\u00A2",
+  deg: "\u00B0",
+  plusmn: "\u00B1",
+  times: "\u00D7",
+  divide: "\u00F7",
+  frac12: "\u00BD",
+  frac14: "\u00BC",
+  frac34: "\u00BE",
+  sect: "\u00A7",
+  para: "\u00B6",
+  middot: "\u00B7",
+  bull: "\u2022",
+  larr: "\u2190",
+  rarr: "\u2192",
+  uarr: "\u2191",
+  darr: "\u2193",
+  hearts: "\u2665",
+  spades: "\u2660",
+  clubs: "\u2663",
+  diams: "\u2666",
+  alpha: "\u03B1",
+  beta: "\u03B2",
+  gamma: "\u03B3",
+  pi: "\u03C0",
+  sum: "\u2211",
+  infin: "\u221E",
+  ne: "\u2260",
+  le: "\u2264",
+  ge: "\u2265",
+  radic: "\u221A",
 };
 
 /** character -> entity name, derived from ENTITY_TO_CHAR (last writer wins on dupes, none expected). */
@@ -125,7 +125,7 @@ for (const [name, ch] of Object.entries(ENTITY_TO_CHAR)) {
 }
 
 function htmlEscape(str: string): string {
-  let out = '';
+  let out = "";
   for (const ch of str) {
     const named = CHAR_TO_ENTITY[ch];
     if (named) {
@@ -143,8 +143,8 @@ const HTML_ENTITY_RE = /&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z][a-zA-Z0-9]*);/g;
 
 function htmlUnescape(str: string): string {
   return str.replace(HTML_ENTITY_RE, (match, body: string) => {
-    if (body[0] === '#') {
-      const isHex = body[1] === 'x' || body[1] === 'X';
+    if (body[0] === "#") {
+      const isHex = body[1] === "x" || body[1] === "X";
       const code = isHex ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
       if (!Number.isFinite(code)) return match;
       try {
@@ -165,9 +165,9 @@ function htmlUnescape(str: string): string {
 // ---------------------------------------------------------------------------
 
 const XML_NAMED_TO_CHAR: Record<string, string> = {
-  amp: '&',
-  lt: '<',
-  gt: '>',
+  amp: "&",
+  lt: "<",
+  gt: ">",
   quot: '"',
   apos: "'",
 };
@@ -175,48 +175,48 @@ const XML_NAMED_TO_CHAR: Record<string, string> = {
 function xmlEscape(str: string): string {
   return str.replace(/[&<>"']/g, (ch) => {
     switch (ch) {
-      case '&':
-        return '&amp;';
-      case '<':
-        return '&lt;';
-      case '>':
-        return '&gt;';
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
       case '"':
-        return '&quot;';
+        return "&quot;";
       default:
-        return '&apos;';
+        return "&apos;";
     }
   });
 }
 
 function xmlUnescape(str: string): string {
   return str.replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z][a-zA-Z0-9]*);/g, (match, body: string) => {
-    if (body[0] === '#') {
-      const isHex = body[1] === 'x' || body[1] === 'X';
+    if (body[0] === "#") {
+      const isHex = body[1] === "x" || body[1] === "X";
       const code = isHex ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
       if (!Number.isFinite(code)) {
         throw new ToolError(
-          'invalid-xml-escape',
+          "invalid-xml-escape",
           `"${match}" is not a valid numeric character reference.`,
-          'Use decimal (&#233;) or hex (&#xE9;) digits only.',
+          "Use decimal (&#233;) or hex (&#xE9;) digits only.",
         );
       }
       try {
         return String.fromCodePoint(code);
       } catch {
         throw new ToolError(
-          'invalid-xml-escape',
+          "invalid-xml-escape",
           `"${match}" is not a valid Unicode code point.`,
-          'Numeric character references must be between 0 and 10FFFF.',
+          "Numeric character references must be between 0 and 10FFFF.",
         );
       }
     }
     const ch = XML_NAMED_TO_CHAR[body];
     if (ch === undefined) {
       throw new ToolError(
-        'invalid-xml-escape',
+        "invalid-xml-escape",
         `"${match}" is not one of the five predefined XML entities.`,
-        'XML only defines &amp; &lt; &gt; &quot; and &apos; by default; use a numeric reference for anything else.',
+        "XML only defines &amp; &lt; &gt; &quot; and &apos; by default; use a numeric reference for anything else.",
       );
     }
     return ch;
@@ -236,9 +236,9 @@ function urlUnescape(str: string): string {
     return decodeURIComponent(str);
   } catch {
     throw new ToolError(
-      'invalid-url-escape',
+      "invalid-url-escape",
       `"${str}" contains a malformed percent-encoding sequence.`,
-      'Make sure every % is followed by two hex digits and the encoded bytes form valid UTF-8.',
+      "Make sure every % is followed by two hex digits and the encoded bytes form valid UTF-8.",
     );
   }
 }
@@ -252,42 +252,42 @@ function urlFullUnescape(str: string): string {
     return decodeURI(str);
   } catch {
     throw new ToolError(
-      'invalid-url-escape',
+      "invalid-url-escape",
       `"${str}" contains a malformed percent-encoding sequence.`,
-      'Make sure every % is followed by two hex digits and the encoded bytes form valid UTF-8.',
+      "Make sure every % is followed by two hex digits and the encoded bytes form valid UTF-8.",
     );
   }
 }
 
 function urlFormEscape(str: string): string {
-  return encodeURIComponent(str).replace(/%20/g, '+');
+  return encodeURIComponent(str).replace(/%20/g, "+");
 }
 
 function urlFormUnescape(str: string): string {
   try {
-    return decodeURIComponent(str.replace(/\+/g, '%20'));
+    return decodeURIComponent(str.replace(/\+/g, "%20"));
   } catch {
     throw new ToolError(
-      'invalid-url-escape',
+      "invalid-url-escape",
       `"${str}" contains a malformed percent-encoding sequence.`,
-      'Make sure every % is followed by two hex digits and the encoded bytes form valid UTF-8.',
+      "Make sure every % is followed by two hex digits and the encoded bytes form valid UTF-8.",
     );
   }
 }
 
 function urlBytesEscape(str: string): string {
   const bytes = strToBytes(str);
-  let out = '';
-  for (const b of bytes) out += '%' + b.toString(16).toUpperCase().padStart(2, '0');
+  let out = "";
+  for (const b of bytes) out += "%" + b.toString(16).toUpperCase().padStart(2, "0");
   return out;
 }
 
 function urlBytesUnescape(str: string): string {
   if (!/^(%[0-9a-fA-F]{2})+$/.test(str)) {
     throw new ToolError(
-      'invalid-url-bytes-escape',
+      "invalid-url-bytes-escape",
       `"${str}" is not a sequence of %XX byte escapes.`,
-      'Every byte must be written as a percent sign followed by two hex digits, with nothing else in the string.',
+      "Every byte must be written as a percent sign followed by two hex digits, with nothing else in the string.",
     );
   }
   const hexPairs = str.match(/[0-9a-fA-F]{2}/g)!;
@@ -295,9 +295,9 @@ function urlBytesUnescape(str: string): string {
   hexPairs.forEach((h, i) => (bytes[i] = parseInt(h, 16)));
   return bytesToStr(
     bytes,
-    'invalid-url-bytes-utf8',
-    'The decoded bytes are not valid UTF-8.',
-    'Check that the byte sequence represents complete UTF-8 characters.',
+    "invalid-url-bytes-utf8",
+    "The decoded bytes are not valid UTF-8.",
+    "Check that the byte sequence represents complete UTF-8 characters.",
   );
 }
 
@@ -309,11 +309,11 @@ const REGEX_METACHARS = /[.*+?^${}()|[\]\\]/g;
 const REGEX_ESCAPED = /\\([.*+?^${}()|[\]\\])/g;
 
 function regexEscape(str: string): string {
-  return str.replace(REGEX_METACHARS, '\\$&');
+  return str.replace(REGEX_METACHARS, "\\$&");
 }
 
 function regexUnescape(str: string): string {
-  return str.replace(REGEX_ESCAPED, '$1');
+  return str.replace(REGEX_ESCAPED, "$1");
 }
 
 // ---------------------------------------------------------------------------
@@ -325,58 +325,58 @@ function regexUnescape(str: string): string {
 // ---------------------------------------------------------------------------
 
 const C_NAMED_ESCAPES: Record<number, string> = {
-  0x07: '\\a',
-  0x08: '\\b',
-  0x0c: '\\f',
-  0x0a: '\\n',
-  0x0d: '\\r',
-  0x09: '\\t',
-  0x0b: '\\v',
-  0x00: '\\0',
+  0x07: "\\a",
+  0x08: "\\b",
+  0x0c: "\\f",
+  0x0a: "\\n",
+  0x0d: "\\r",
+  0x09: "\\t",
+  0x0b: "\\v",
+  0x00: "\\0",
 };
 const C_NAMED_UNESCAPE: Record<string, string> = {
-  a: '\x07',
-  b: '\b',
-  f: '\f',
-  n: '\n',
-  r: '\r',
-  t: '\t',
-  v: '\v',
-  '0': '\0',
-  '\\': '\\',
+  a: "\x07",
+  b: "\b",
+  f: "\f",
+  n: "\n",
+  r: "\r",
+  t: "\t",
+  v: "\v",
+  "0": "\0",
+  "\\": "\\",
   '"': '"',
   "'": "'",
 };
 
 function cEscape(str: string): string {
-  let out = '';
+  let out = "";
   for (const ch of str) {
     const code = ch.codePointAt(0)!;
-    if (ch === '\\') out += '\\\\';
+    if (ch === "\\") out += "\\\\";
     else if (ch === '"') out += '\\"';
     else if (code in C_NAMED_ESCAPES) out += C_NAMED_ESCAPES[code];
-    else if (code < 0x20 || code === 0x7f) out += '\\x' + code.toString(16).padStart(2, '0');
+    else if (code < 0x20 || code === 0x7f) out += "\\x" + code.toString(16).padStart(2, "0");
     else out += ch;
   }
   return out;
 }
 
 function cUnescape(str: string): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
-    if (ch !== '\\') {
+    if (ch !== "\\") {
       out += ch;
       continue;
     }
     const next = str[i + 1];
-    if (next === 'x') {
+    if (next === "x") {
       const hex = str.slice(i + 2, i + 4);
       if (!/^[0-9a-fA-F]{2}$/.test(hex)) {
         throw new ToolError(
-          'invalid-c-escape',
+          "invalid-c-escape",
           `"\\x${hex}" is not a valid two-digit hex escape.`,
-          '\\x must be followed by exactly two hex digits, like \\x1b.',
+          "\\x must be followed by exactly two hex digits, like \\x1b.",
         );
       }
       out += String.fromCharCode(parseInt(hex, 16));
@@ -386,9 +386,9 @@ function cUnescape(str: string): string {
       i += 1;
     } else {
       throw new ToolError(
-        'invalid-c-escape',
-        `"\\${next ?? ''}" is not a recognized C escape sequence.`,
-        'Valid escapes are \\\\, \\", \\\', \\n, \\t, \\r, \\a, \\b, \\f, \\v, \\0 and \\xHH.',
+        "invalid-c-escape",
+        `"\\${next ?? ""}" is not a recognized C escape sequence.`,
+        "Valid escapes are \\\\, \\\", \\', \\n, \\t, \\r, \\a, \\b, \\f, \\v, \\0 and \\xHH.",
       );
     }
   }
@@ -402,81 +402,81 @@ function cUnescape(str: string): string {
 // ---------------------------------------------------------------------------
 
 const PY_NAMED_ESCAPES: Record<number, string> = {
-  0x07: '\\a',
-  0x08: '\\b',
-  0x0c: '\\f',
-  0x0a: '\\n',
-  0x0d: '\\r',
-  0x09: '\\t',
-  0x0b: '\\v',
+  0x07: "\\a",
+  0x08: "\\b",
+  0x0c: "\\f",
+  0x0a: "\\n",
+  0x0d: "\\r",
+  0x09: "\\t",
+  0x0b: "\\v",
 };
 const PY_NAMED_UNESCAPE: Record<string, string> = {
-  a: '\x07',
-  b: '\b',
-  f: '\f',
-  n: '\n',
-  r: '\r',
-  t: '\t',
-  v: '\v',
-  '\\': '\\',
+  a: "\x07",
+  b: "\b",
+  f: "\f",
+  n: "\n",
+  r: "\r",
+  t: "\t",
+  v: "\v",
+  "\\": "\\",
   "'": "'",
   '"': '"',
 };
 
 function pythonEscape(str: string): string {
-  let out = '';
+  let out = "";
   for (const ch of str) {
     const code = ch.codePointAt(0)!;
-    if (ch === '\\') out += '\\\\';
+    if (ch === "\\") out += "\\\\";
     else if (ch === "'") out += "\\'";
-    else if (code === 0x00) out += '\\x00';
+    else if (code === 0x00) out += "\\x00";
     else if (code in PY_NAMED_ESCAPES) out += PY_NAMED_ESCAPES[code];
-    else if (code < 0x20 || code === 0x7f) out += '\\x' + code.toString(16).padStart(2, '0');
-    else if (code > 0xffff) out += '\\U' + code.toString(16).padStart(8, '0');
-    else if (code > 0x7e) out += '\\u' + code.toString(16).padStart(4, '0');
+    else if (code < 0x20 || code === 0x7f) out += "\\x" + code.toString(16).padStart(2, "0");
+    else if (code > 0xffff) out += "\\U" + code.toString(16).padStart(8, "0");
+    else if (code > 0x7e) out += "\\u" + code.toString(16).padStart(4, "0");
     else out += ch;
   }
   return out;
 }
 
 function pythonUnescape(str: string): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
-    if (ch !== '\\') {
+    if (ch !== "\\") {
       out += ch;
       continue;
     }
     const next = str[i + 1];
-    if (next === 'x') {
+    if (next === "x") {
       const hex = str.slice(i + 2, i + 4);
       if (!/^[0-9a-fA-F]{2}$/.test(hex)) {
         throw new ToolError(
-          'invalid-python-escape',
+          "invalid-python-escape",
           `"\\x${hex}" is not a valid two-digit hex escape.`,
-          '\\x must be followed by exactly two hex digits, like \\x1b.',
+          "\\x must be followed by exactly two hex digits, like \\x1b.",
         );
       }
       out += String.fromCharCode(parseInt(hex, 16));
       i += 3;
-    } else if (next === 'u') {
+    } else if (next === "u") {
       const hex = str.slice(i + 2, i + 6);
       if (!/^[0-9a-fA-F]{4}$/.test(hex)) {
         throw new ToolError(
-          'invalid-python-escape',
+          "invalid-python-escape",
           `"\\u${hex}" is not a valid four-digit unicode escape.`,
-          '\\u must be followed by exactly four hex digits, like \\u00e9.',
+          "\\u must be followed by exactly four hex digits, like \\u00e9.",
         );
       }
       out += String.fromCharCode(parseInt(hex, 16));
       i += 5;
-    } else if (next === 'U') {
+    } else if (next === "U") {
       const hex = str.slice(i + 2, i + 10);
       if (!/^[0-9a-fA-F]{8}$/.test(hex)) {
         throw new ToolError(
-          'invalid-python-escape',
+          "invalid-python-escape",
           `"\\U${hex}" is not a valid eight-digit unicode escape.`,
-          '\\U must be followed by exactly eight hex digits, like \\U0001f389.',
+          "\\U must be followed by exactly eight hex digits, like \\U0001f389.",
         );
       }
       const code = parseInt(hex, 16);
@@ -484,9 +484,9 @@ function pythonUnescape(str: string): string {
         out += String.fromCodePoint(code);
       } catch {
         throw new ToolError(
-          'invalid-python-escape',
+          "invalid-python-escape",
           `"\\U${hex}" is not a valid Unicode code point.`,
-          'Eight-digit escapes must be between \\U00000000 and \\U0010FFFF.',
+          "Eight-digit escapes must be between \\U00000000 and \\U0010FFFF.",
         );
       }
       i += 9;
@@ -495,9 +495,9 @@ function pythonUnescape(str: string): string {
       i += 1;
     } else {
       throw new ToolError(
-        'invalid-python-escape',
-        `"\\${next ?? ''}" is not a recognized Python escape sequence.`,
-        'Valid escapes are \\\\, \\\', \\", \\n, \\t, \\r, \\a, \\b, \\f, \\v, \\xHH, \\uXXXX and \\UXXXXXXXX.',
+        "invalid-python-escape",
+        `"\\${next ?? ""}" is not a recognized Python escape sequence.`,
+        "Valid escapes are \\\\, \\', \\\", \\n, \\t, \\r, \\a, \\b, \\f, \\v, \\xHH, \\uXXXX and \\UXXXXXXXX.",
       );
     }
   }
@@ -511,52 +511,52 @@ function pythonUnescape(str: string): string {
 // ---------------------------------------------------------------------------
 
 const JAVA_NAMED_ESCAPES: Record<number, string> = {
-  0x08: '\\b',
-  0x09: '\\t',
-  0x0a: '\\n',
-  0x0c: '\\f',
-  0x0d: '\\r',
+  0x08: "\\b",
+  0x09: "\\t",
+  0x0a: "\\n",
+  0x0c: "\\f",
+  0x0d: "\\r",
 };
 const JAVA_NAMED_UNESCAPE: Record<string, string> = {
-  b: '\b',
-  t: '\t',
-  n: '\n',
-  f: '\f',
-  r: '\r',
-  '\\': '\\',
+  b: "\b",
+  t: "\t",
+  n: "\n",
+  f: "\f",
+  r: "\r",
+  "\\": "\\",
   '"': '"',
   "'": "'",
 };
 
 function javaEscape(str: string): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < str.length; i++) {
     const code = str.charCodeAt(i);
-    if (str[i] === '\\') out += '\\\\';
+    if (str[i] === "\\") out += "\\\\";
     else if (str[i] === '"') out += '\\"';
     else if (code in JAVA_NAMED_ESCAPES) out += JAVA_NAMED_ESCAPES[code];
-    else if (code < 0x20 || code > 0x7e) out += '\\u' + code.toString(16).padStart(4, '0');
+    else if (code < 0x20 || code > 0x7e) out += "\\u" + code.toString(16).padStart(4, "0");
     else out += str[i];
   }
   return out;
 }
 
 function javaUnescape(str: string): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
-    if (ch !== '\\') {
+    if (ch !== "\\") {
       out += ch;
       continue;
     }
     const next = str[i + 1];
-    if (next === 'u') {
+    if (next === "u") {
       const hex = str.slice(i + 2, i + 6);
       if (!/^[0-9a-fA-F]{4}$/.test(hex)) {
         throw new ToolError(
-          'invalid-java-escape',
+          "invalid-java-escape",
           `"\\u${hex}" is not a valid four-digit unicode escape.`,
-          '\\u must be followed by exactly four hex digits, like \\u00e9.',
+          "\\u must be followed by exactly four hex digits, like \\u00e9.",
         );
       }
       out += String.fromCharCode(parseInt(hex, 16));
@@ -566,9 +566,9 @@ function javaUnescape(str: string): string {
       i += 1;
     } else {
       throw new ToolError(
-        'invalid-java-escape',
-        `"\\${next ?? ''}" is not a recognized Java escape sequence.`,
-        'Valid escapes are \\\\, \\", \\\', \\n, \\t, \\r, \\b, \\f and \\uXXXX.',
+        "invalid-java-escape",
+        `"\\${next ?? ""}" is not a recognized Java escape sequence.`,
+        "Valid escapes are \\\\, \\\", \\', \\n, \\t, \\r, \\b, \\f and \\uXXXX.",
       );
     }
   }
@@ -582,10 +582,10 @@ function javaUnescape(str: string): string {
 // ---------------------------------------------------------------------------
 
 function unicodeBraceEscape(str: string): string {
-  let out = '';
+  let out = "";
   for (const ch of str) {
     const code = ch.codePointAt(0)!;
-    if (ch === '\\') out += '\\\\';
+    if (ch === "\\") out += "\\\\";
     else if (code < 0x20 || code === 0x7f || code > 0x7e) out += `\\u{${code.toString(16)}}`;
     else out += ch;
   }
@@ -593,49 +593,49 @@ function unicodeBraceEscape(str: string): string {
 }
 
 function unicodeBraceUnescape(str: string): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
-    if (ch !== '\\') {
+    if (ch !== "\\") {
       out += ch;
       continue;
     }
     const next = str[i + 1];
-    if (next === '\\') {
-      out += '\\';
+    if (next === "\\") {
+      out += "\\";
       i += 1;
-    } else if (next === 'u' && str[i + 2] === '{') {
-      const close = str.indexOf('}', i + 3);
+    } else if (next === "u" && str[i + 2] === "{") {
+      const close = str.indexOf("}", i + 3);
       if (close === -1) {
         throw new ToolError(
-          'invalid-unicode-brace-escape',
+          "invalid-unicode-brace-escape",
           `"\\u{" at position ${i} is never closed with a "}".`,
-          'Every \\u{...} escape needs a matching closing brace.',
+          "Every \\u{...} escape needs a matching closing brace.",
         );
       }
       const hex = str.slice(i + 3, close);
       if (!/^[0-9a-fA-F]+$/.test(hex)) {
         throw new ToolError(
-          'invalid-unicode-brace-escape',
+          "invalid-unicode-brace-escape",
           `"\\u{${hex}}" is not valid hex.`,
-          '\\u{...} must contain only hex digits, like \\u{1f389}.',
+          "\\u{...} must contain only hex digits, like \\u{1f389}.",
         );
       }
       const code = parseInt(hex, 16);
       if (code > 0x10ffff) {
         throw new ToolError(
-          'invalid-unicode-brace-escape',
+          "invalid-unicode-brace-escape",
           `"\\u{${hex}}" is above the maximum Unicode code point.`,
-          'Code points must be between 0 and 10FFFF.',
+          "Code points must be between 0 and 10FFFF.",
         );
       }
       out += String.fromCodePoint(code);
       i = close;
     } else {
       throw new ToolError(
-        'invalid-unicode-brace-escape',
-        `"\\${next ?? ''}" is not a recognized escape here.`,
-        'Only \\\\ and \\u{...} are used by this format.',
+        "invalid-unicode-brace-escape",
+        `"\\${next ?? ""}" is not a recognized escape here.`,
+        "Only \\\\ and \\u{...} are used by this format.",
       );
     }
   }
@@ -648,56 +648,56 @@ function unicodeBraceUnescape(str: string): string {
 // ---------------------------------------------------------------------------
 
 function whitespaceEscape(str: string): string {
-  let out = '';
+  let out = "";
   for (const ch of str) {
     const code = ch.codePointAt(0)!;
-    if (ch === '\\') out += '\\\\';
-    else if (ch === '\n') out += '\\n';
-    else if (ch === '\t') out += '\\t';
-    else if (ch === '\r') out += '\\r';
-    else if (code < 0x20 || code === 0x7f) out += '\\x' + code.toString(16).padStart(2, '0');
+    if (ch === "\\") out += "\\\\";
+    else if (ch === "\n") out += "\\n";
+    else if (ch === "\t") out += "\\t";
+    else if (ch === "\r") out += "\\r";
+    else if (code < 0x20 || code === 0x7f) out += "\\x" + code.toString(16).padStart(2, "0");
     else out += ch;
   }
   return out;
 }
 
 function whitespaceUnescape(str: string): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
-    if (ch !== '\\') {
+    if (ch !== "\\") {
       out += ch;
       continue;
     }
     const next = str[i + 1];
-    if (next === '\\') {
-      out += '\\';
+    if (next === "\\") {
+      out += "\\";
       i += 1;
-    } else if (next === 'n') {
-      out += '\n';
+    } else if (next === "n") {
+      out += "\n";
       i += 1;
-    } else if (next === 't') {
-      out += '\t';
+    } else if (next === "t") {
+      out += "\t";
       i += 1;
-    } else if (next === 'r') {
-      out += '\r';
+    } else if (next === "r") {
+      out += "\r";
       i += 1;
-    } else if (next === 'x') {
+    } else if (next === "x") {
       const hex = str.slice(i + 2, i + 4);
       if (!/^[0-9a-fA-F]{2}$/.test(hex)) {
         throw new ToolError(
-          'invalid-whitespace-escape',
+          "invalid-whitespace-escape",
           `"\\x${hex}" is not a valid two-digit hex escape.`,
-          '\\x must be followed by exactly two hex digits.',
+          "\\x must be followed by exactly two hex digits.",
         );
       }
       out += String.fromCharCode(parseInt(hex, 16));
       i += 3;
     } else {
       throw new ToolError(
-        'invalid-whitespace-escape',
-        `"\\${next ?? ''}" is not a recognized escape here.`,
-        'Only \\\\, \\n, \\t, \\r and \\xHH are used by this format.',
+        "invalid-whitespace-escape",
+        `"\\${next ?? ""}" is not a recognized escape here.`,
+        "Only \\\\, \\n, \\t, \\r and \\xHH are used by this format.",
       );
     }
   }
@@ -712,17 +712,17 @@ function whitespaceUnescape(str: string): string {
 
 function hexBytesEscape(str: string): string {
   const bytes = strToBytes(str);
-  let out = '';
-  for (const b of bytes) out += '\\x' + b.toString(16).padStart(2, '0');
+  let out = "";
+  for (const b of bytes) out += "\\x" + b.toString(16).padStart(2, "0");
   return out;
 }
 
 function hexBytesUnescape(str: string): string {
   if (!/^(\\x[0-9a-fA-F]{2})+$/.test(str)) {
     throw new ToolError(
-      'invalid-hex-bytes-escape',
+      "invalid-hex-bytes-escape",
       `"${str}" is not a sequence of \\xHH byte escapes.`,
-      'Every byte must be written as \\x followed by two hex digits, with nothing else in the string.',
+      "Every byte must be written as \\x followed by two hex digits, with nothing else in the string.",
     );
   }
   const hexPairs = str.match(/[0-9a-fA-F]{2}/g)!;
@@ -730,25 +730,25 @@ function hexBytesUnescape(str: string): string {
   hexPairs.forEach((h, i) => (bytes[i] = parseInt(h, 16)));
   return bytesToStr(
     bytes,
-    'invalid-hex-bytes-utf8',
-    'The decoded bytes are not valid UTF-8.',
-    'Check that the byte sequence represents complete UTF-8 characters.',
+    "invalid-hex-bytes-utf8",
+    "The decoded bytes are not valid UTF-8.",
+    "Check that the byte sequence represents complete UTF-8 characters.",
   );
 }
 
 function octalBytesEscape(str: string): string {
   const bytes = strToBytes(str);
-  let out = '';
-  for (const b of bytes) out += '\\' + b.toString(8).padStart(3, '0');
+  let out = "";
+  for (const b of bytes) out += "\\" + b.toString(8).padStart(3, "0");
   return out;
 }
 
 function octalBytesUnescape(str: string): string {
   if (!/^(\\[0-7]{3})+$/.test(str)) {
     throw new ToolError(
-      'invalid-octal-bytes-escape',
+      "invalid-octal-bytes-escape",
       `"${str}" is not a sequence of \\NNN byte escapes.`,
-      'Every byte must be written as a backslash followed by exactly three octal digits (0-7), with nothing else in the string.',
+      "Every byte must be written as a backslash followed by exactly three octal digits (0-7), with nothing else in the string.",
     );
   }
   const groups = str.match(/[0-7]{3}/g)!;
@@ -756,9 +756,9 @@ function octalBytesUnescape(str: string): string {
   groups.forEach((g, i) => (bytes[i] = parseInt(g, 8)));
   return bytesToStr(
     bytes,
-    'invalid-octal-bytes-utf8',
-    'The decoded bytes are not valid UTF-8.',
-    'Check that the byte sequence represents complete UTF-8 characters.',
+    "invalid-octal-bytes-utf8",
+    "The decoded bytes are not valid UTF-8.",
+    "Check that the byte sequence represents complete UTF-8 characters.",
   );
 }
 
@@ -780,7 +780,7 @@ function shellUnescape(str: string): string {
 }
 
 function shellDoubleEscape(str: string): string {
-  return `"${str.replace(/[\\$`"]/g, '\\$&')}"`;
+  return `"${str.replace(/[\\$`"]/g, "\\$&")}"`;
 }
 
 function shellDoubleUnescape(str: string): string {
@@ -788,7 +788,7 @@ function shellDoubleUnescape(str: string): string {
   if (s.length >= 2 && s.startsWith('"') && s.endsWith('"')) {
     s = s.slice(1, -1);
   }
-  return s.replace(/\\([\\$`"])/g, '$1');
+  return s.replace(/\\([\\$`"])/g, "$1");
 }
 
 // ---------------------------------------------------------------------------
@@ -798,11 +798,11 @@ function shellDoubleUnescape(str: string): string {
 // ---------------------------------------------------------------------------
 
 function batchEscape(str: string): string {
-  return str.replace(/[\^&|<>()"]/g, '^$&').replace(/%/g, '%%');
+  return str.replace(/[\^&|<>()"]/g, "^$&").replace(/%/g, "%%");
 }
 
 function batchUnescape(str: string): string {
-  return str.replace(/%%/g, '%').replace(/\^([\^&|<>()"])/g, '$1');
+  return str.replace(/%%/g, "%").replace(/\^([\^&|<>()"])/g, "$1");
 }
 
 // ---------------------------------------------------------------------------
@@ -850,11 +850,11 @@ function csvUnescape(str: string): string {
 // ---------------------------------------------------------------------------
 
 const LDAP_ESCAPE_MAP: Record<string, string> = {
-  '*': '\\2a',
-  '(': '\\28',
-  ')': '\\29',
-  '\\': '\\5c',
-  '\u0000': '\\00',
+  "*": "\\2a",
+  "(": "\\28",
+  ")": "\\29",
+  "\\": "\\5c",
+  "\u0000": "\\00",
 };
 
 function ldapEscape(str: string): string {
@@ -862,20 +862,20 @@ function ldapEscape(str: string): string {
   // (flagged by the no-control-regex lint rule), so it is handled as a
   // plain string split/join instead of folding it into the character class.
   const escaped = str.replace(/[*()\\]/g, (ch) => LDAP_ESCAPE_MAP[ch]);
-  return escaped.split('\u0000').join('\\00');
+  return escaped.split("\u0000").join("\\00");
 }
 
 function ldapUnescape(str: string): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
-    if (ch === '\\') {
+    if (ch === "\\") {
       const hex = str.slice(i + 1, i + 3);
       if (!/^[0-9a-fA-F]{2}$/.test(hex)) {
         throw new ToolError(
-          'invalid-ldap-escape',
+          "invalid-ldap-escape",
           `Backslash at position ${i} is not followed by two hex digits.`,
-          'LDAP filter escapes are always a backslash followed by exactly two hex digits, like \\2a for *.',
+          "LDAP filter escapes are always a backslash followed by exactly two hex digits, like \\2a for *.",
         );
       }
       out += String.fromCharCode(parseInt(hex, 16));
@@ -893,11 +893,11 @@ function ldapUnescape(str: string): string {
 // binary-string APIs.
 // ---------------------------------------------------------------------------
 
-const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-const BASE64URL_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+const BASE64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const BASE64URL_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
 function base64EncodeBytes(bytes: Uint8Array, chars: string, pad: boolean): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < bytes.length; i += 3) {
     const b0 = bytes[i];
     const b1 = bytes[i + 1];
@@ -905,8 +905,8 @@ function base64EncodeBytes(bytes: Uint8Array, chars: string, pad: boolean): stri
     const triplet = (b0 << 16) | ((b1 ?? 0) << 8) | (b2 ?? 0);
     out += chars[(triplet >> 18) & 63];
     out += chars[(triplet >> 12) & 63];
-    out += i + 1 < bytes.length ? chars[(triplet >> 6) & 63] : pad ? '=' : '';
-    out += i + 2 < bytes.length ? chars[triplet & 63] : pad ? '=' : '';
+    out += i + 1 < bytes.length ? chars[(triplet >> 6) & 63] : pad ? "=" : "";
+    out += i + 2 < bytes.length ? chars[triplet & 63] : pad ? "=" : "";
   }
   return out;
 }
@@ -942,17 +942,17 @@ function base64Escape(str: string): string {
 function base64Unescape(str: string): string {
   if (!/^[A-Za-z0-9+/]*={0,2}$/.test(str)) {
     throw new ToolError(
-      'invalid-base64',
+      "invalid-base64",
       `"${str}" is not valid base64.`,
-      'Base64 only uses A-Z, a-z, 0-9, + and /, with optional = padding at the end.',
+      "Base64 only uses A-Z, a-z, 0-9, + and /, with optional = padding at the end.",
     );
   }
-  const clean = str.replace(/=+$/, '');
+  const clean = str.replace(/=+$/, "");
   return bytesToStr(
-    base64DecodeToBytes(clean, BASE64_CHARS, 'base64'),
-    'invalid-base64-utf8',
-    'The decoded bytes are not valid UTF-8.',
-    'Check that this is actually base64-encoded text and not binary data.',
+    base64DecodeToBytes(clean, BASE64_CHARS, "base64"),
+    "invalid-base64-utf8",
+    "The decoded bytes are not valid UTF-8.",
+    "Check that this is actually base64-encoded text and not binary data.",
   );
 }
 
@@ -963,16 +963,16 @@ function base64urlEscape(str: string): string {
 function base64urlUnescape(str: string): string {
   if (!/^[A-Za-z0-9_-]*$/.test(str)) {
     throw new ToolError(
-      'invalid-base64url',
+      "invalid-base64url",
       `"${str}" is not valid base64url.`,
-      'Base64url only uses A-Z, a-z, 0-9, - and _, with no padding.',
+      "Base64url only uses A-Z, a-z, 0-9, - and _, with no padding.",
     );
   }
   return bytesToStr(
-    base64DecodeToBytes(str, BASE64URL_CHARS, 'base64url'),
-    'invalid-base64url-utf8',
-    'The decoded bytes are not valid UTF-8.',
-    'Check that this is actually base64url-encoded text and not binary data.',
+    base64DecodeToBytes(str, BASE64URL_CHARS, "base64url"),
+    "invalid-base64url-utf8",
+    "The decoded bytes are not valid UTF-8.",
+    "Check that this is actually base64url-encoded text and not binary data.",
   );
 }
 
@@ -980,13 +980,13 @@ function base64urlUnescape(str: string): string {
 // Base32 (RFC 4648).
 // ---------------------------------------------------------------------------
 
-const BASE32_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+const BASE32_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
 function base32Escape(str: string): string {
   const bytes = strToBytes(str);
   let bits = 0;
   let value = 0;
-  let out = '';
+  let out = "";
   for (const b of bytes) {
     value = (value << 8) | b;
     bits += 8;
@@ -998,20 +998,20 @@ function base32Escape(str: string): string {
   if (bits > 0) {
     out += BASE32_CHARS[(value << (5 - bits)) & 31];
   }
-  while (out.length % 8 !== 0) out += '=';
+  while (out.length % 8 !== 0) out += "=";
   return out;
 }
 
 function base32Unescape(str: string): string {
-  const clean = str.replace(/=+$/, '').toUpperCase();
+  const clean = str.replace(/=+$/, "").toUpperCase();
   const lookup: Record<string, number> = {};
   for (let i = 0; i < BASE32_CHARS.length; i++) lookup[BASE32_CHARS[i]] = i;
   for (const ch of clean) {
     if (!(ch in lookup)) {
       throw new ToolError(
-        'invalid-base32',
+        "invalid-base32",
         `"${ch}" is not a valid base32 character.`,
-        'Base32 only uses A-Z and 2-7, with optional = padding at the end.',
+        "Base32 only uses A-Z and 2-7, with optional = padding at the end.",
       );
     }
   }
@@ -1028,9 +1028,9 @@ function base32Unescape(str: string): string {
   }
   return bytesToStr(
     new Uint8Array(bytes),
-    'invalid-base32-utf8',
-    'The decoded bytes are not valid UTF-8.',
-    'Check that this is actually base32-encoded text and not binary data.',
+    "invalid-base32-utf8",
+    "The decoded bytes are not valid UTF-8.",
+    "Check that this is actually base32-encoded text and not binary data.",
   );
 }
 
@@ -1039,14 +1039,14 @@ function base32Unescape(str: string): string {
 // Uses BigInt since it is a big-number base conversion, not a bit-packing.
 // ---------------------------------------------------------------------------
 
-const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 function base58Escape(str: string): string {
   const bytes = strToBytes(str);
-  if (bytes.length === 0) return '';
+  if (bytes.length === 0) return "";
   let num = 0n;
   for (const b of bytes) num = (num << 8n) | BigInt(b);
-  let out = '';
+  let out = "";
   while (num > 0n) {
     const rem = num % 58n;
     num /= 58n;
@@ -1057,19 +1057,19 @@ function base58Escape(str: string): string {
     if (b === 0) leadingZeros++;
     else break;
   }
-  return '1'.repeat(leadingZeros) + out;
+  return "1".repeat(leadingZeros) + out;
 }
 
 function base58Unescape(str: string): string {
-  if (str === '') return '';
+  if (str === "") return "";
   const lookup: Record<string, number> = {};
   for (let i = 0; i < BASE58_ALPHABET.length; i++) lookup[BASE58_ALPHABET[i]] = i;
   for (const ch of str) {
     if (!(ch in lookup)) {
       throw new ToolError(
-        'invalid-base58',
+        "invalid-base58",
         `"${ch}" is not a valid base58 character.`,
-        'Base58 excludes 0, O, I and l to avoid visual confusion; check for those.',
+        "Base58 excludes 0, O, I and l to avoid visual confusion; check for those.",
       );
     }
   }
@@ -1082,15 +1082,15 @@ function base58Unescape(str: string): string {
   }
   let leadingOnes = 0;
   for (const ch of str) {
-    if (ch === '1') leadingOnes++;
+    if (ch === "1") leadingOnes++;
     else break;
   }
   bytes = new Array(leadingOnes).fill(0).concat(bytes);
   return bytesToStr(
     new Uint8Array(bytes),
-    'invalid-base58-utf8',
-    'The decoded bytes are not valid UTF-8.',
-    'Check that this is actually base58-encoded text and not binary data.',
+    "invalid-base58-utf8",
+    "The decoded bytes are not valid UTF-8.",
+    "Check that this is actually base58-encoded text and not binary data.",
   );
 }
 
@@ -1101,7 +1101,7 @@ function base58Unescape(str: string): string {
 
 function ascii85Escape(str: string): string {
   const bytes = strToBytes(str);
-  let out = '<~';
+  let out = "<~";
   for (let i = 0; i < bytes.length; i += 4) {
     const chunk = bytes.slice(i, i + 4);
     const isFull = chunk.length === 4;
@@ -1109,7 +1109,7 @@ function ascii85Escape(str: string): string {
     padded.set(chunk);
     const value = ((padded[0] << 24) | (padded[1] << 16) | (padded[2] << 8) | padded[3]) >>> 0;
     if (isFull && value === 0) {
-      out += 'z';
+      out += "z";
       continue;
     }
     const chars: string[] = new Array(5) as string[];
@@ -1119,21 +1119,21 @@ function ascii85Escape(str: string): string {
       v = Math.floor(v / 85);
     }
     const numChars = isFull ? 5 : chunk.length + 1;
-    out += chars.slice(0, numChars).join('');
+    out += chars.slice(0, numChars).join("");
   }
-  out += '~>';
+  out += "~>";
   return out;
 }
 
 function ascii85Unescape(str: string): string {
   let s = str.trim();
-  if (s.startsWith('<~')) s = s.slice(2);
-  if (s.endsWith('~>')) s = s.slice(0, -2);
-  s = s.replace(/\s+/g, '');
+  if (s.startsWith("<~")) s = s.slice(2);
+  if (s.endsWith("~>")) s = s.slice(0, -2);
+  s = s.replace(/\s+/g, "");
   const bytes: number[] = [];
   let i = 0;
   while (i < s.length) {
-    if (s[i] === 'z') {
+    if (s[i] === "z") {
       bytes.push(0, 0, 0, 0);
       i++;
       continue;
@@ -1142,29 +1142,29 @@ function ascii85Unescape(str: string): string {
     const groupLen = group.length;
     if (groupLen < 2) {
       throw new ToolError(
-        'invalid-ascii85',
-        'An ascii85 group must have at least two characters.',
-        'Check that the encoded text was not truncated.',
+        "invalid-ascii85",
+        "An ascii85 group must have at least two characters.",
+        "Check that the encoded text was not truncated.",
       );
     }
     for (const ch of group) {
       const code = ch.charCodeAt(0);
       if (code < 33 || code > 117) {
         throw new ToolError(
-          'invalid-ascii85',
+          "invalid-ascii85",
           `"${ch}" is outside the ascii85 character range (! to u).`,
-          'Ascii85 only uses printable ASCII 33 to 117; check for stray characters.',
+          "Ascii85 only uses printable ASCII 33 to 117; check for stray characters.",
         );
       }
     }
-    const padded = group + 'u'.repeat(5 - groupLen);
+    const padded = group + "u".repeat(5 - groupLen);
     let value = 0;
     for (const ch of padded) value = value * 85 + (ch.charCodeAt(0) - 33);
     if (value > 0xffffffff) {
       throw new ToolError(
-        'invalid-ascii85',
-        'This group decodes to a value larger than 32 bits.',
-        'Check the encoded text for corruption.',
+        "invalid-ascii85",
+        "This group decodes to a value larger than 32 bits.",
+        "Check the encoded text for corruption.",
       );
     }
     const groupBytes = [
@@ -1178,9 +1178,9 @@ function ascii85Unescape(str: string): string {
   }
   return bytesToStr(
     new Uint8Array(bytes),
-    'invalid-ascii85-utf8',
-    'The decoded bytes are not valid UTF-8.',
-    'Check that this is actually ascii85-encoded text and not binary data.',
+    "invalid-ascii85-utf8",
+    "The decoded bytes are not valid UTF-8.",
+    "Check that this is actually ascii85-encoded text and not binary data.",
   );
 }
 
@@ -1201,9 +1201,9 @@ function uuDecodeChar(ch: string): number {
   const v = code - 32;
   if (v < 0 || v > 63) {
     throw new ToolError(
-      'invalid-uuencode',
+      "invalid-uuencode",
       `"${ch}" is not a valid uuencode character.`,
-      'Uuencode characters are ASCII 32 (or the backtick standing in for it) through 95.',
+      "Uuencode characters are ASCII 32 (or the backtick standing in for it) through 95.",
     );
   }
   return v;
@@ -1213,7 +1213,7 @@ function uuencode(bytes: Uint8Array): string {
   const lines: string[] = [];
   for (let i = 0; i < bytes.length; i += 45) {
     const chunk = bytes.slice(i, i + 45);
-    let lineChars = '';
+    let lineChars = "";
     for (let j = 0; j < chunk.length; j += 3) {
       const b0 = chunk[j];
       const b1 = chunk[j + 1] ?? 0;
@@ -1226,7 +1226,7 @@ function uuencode(bytes: Uint8Array): string {
     lines.push(uuEncodeChar(chunk.length) + lineChars);
   }
   lines.push(uuEncodeChar(0));
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 function uudecode(text: string): Uint8Array {
@@ -1239,9 +1239,9 @@ function uudecode(text: string): Uint8Array {
     const neededChars = Math.ceil(n / 3) * 4;
     if (dataChars.length < neededChars) {
       throw new ToolError(
-        'invalid-uuencode',
+        "invalid-uuencode",
         `A line declares ${n} bytes but does not have enough encoded characters.`,
-        'Check that the uuencoded text was not truncated or had characters removed.',
+        "Check that the uuencoded text was not truncated or had characters removed.",
       );
     }
     const lineBytes: number[] = [];
@@ -1266,9 +1266,9 @@ function uuencodeEscape(str: string): string {
 function uuencodeUnescape(str: string): string {
   return bytesToStr(
     uudecode(str),
-    'invalid-uuencode-utf8',
-    'The decoded bytes are not valid UTF-8.',
-    'Check that this is actually uuencoded text and not binary data.',
+    "invalid-uuencode-utf8",
+    "The decoded bytes are not valid UTF-8.",
+    "Check that this is actually uuencoded text and not binary data.",
   );
 }
 
@@ -1280,11 +1280,11 @@ function uuencodeUnescape(str: string): string {
 
 function qpEscape(str: string): string {
   const bytes = strToBytes(str);
-  let out = '';
+  let out = "";
   for (const b of bytes) {
     const isControl = b < 0x20 && b !== 0x09 && b !== 0x0a && b !== 0x0d;
     if (b === 0x3d || isControl || b > 0x7e) {
-      out += '=' + b.toString(16).toUpperCase().padStart(2, '0');
+      out += "=" + b.toString(16).toUpperCase().padStart(2, "0");
     } else {
       out += String.fromCharCode(b);
     }
@@ -1296,21 +1296,21 @@ function qpUnescape(str: string): string {
   const bytes: number[] = [];
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
-    if (ch === '=') {
-      if (str[i + 1] === '\r' && str[i + 2] === '\n') {
+    if (ch === "=") {
+      if (str[i + 1] === "\r" && str[i + 2] === "\n") {
         i += 2;
         continue;
       }
-      if (str[i + 1] === '\n') {
+      if (str[i + 1] === "\n") {
         i += 1;
         continue;
       }
       const hex = str.slice(i + 1, i + 3);
       if (!/^[0-9A-Fa-f]{2}$/.test(hex)) {
         throw new ToolError(
-          'invalid-quoted-printable',
+          "invalid-quoted-printable",
           `"=${hex}" is not a valid quoted-printable escape.`,
-          'A quoted-printable escape is an equals sign followed by two hex digits, or a trailing = for a soft line break.',
+          "A quoted-printable escape is an equals sign followed by two hex digits, or a trailing = for a soft line break.",
         );
       }
       bytes.push(parseInt(hex, 16));
@@ -1321,9 +1321,9 @@ function qpUnescape(str: string): string {
   }
   return bytesToStr(
     new Uint8Array(bytes),
-    'invalid-quoted-printable-utf8',
-    'The decoded bytes are not valid UTF-8.',
-    'Check the input for corrupted quoted-printable escapes.',
+    "invalid-quoted-printable-utf8",
+    "The decoded bytes are not valid UTF-8.",
+    "Check the input for corrupted quoted-printable escapes.",
   );
 }
 
@@ -1334,7 +1334,7 @@ function qpUnescape(str: string): string {
 
 function rot13(str: string): string {
   return str.replace(/[a-zA-Z]/g, (ch) => {
-    const base = ch <= 'Z' ? 65 : 97;
+    const base = ch <= "Z" ? 65 : 97;
     return String.fromCharCode(((ch.charCodeAt(0) - base + 13) % 26) + base);
   });
 }
@@ -1352,67 +1352,67 @@ function rot47(str: string): string {
 // ---------------------------------------------------------------------------
 
 const MORSE_MAP: Record<string, string> = {
-  A: '.-',
-  B: '-...',
-  C: '-.-.',
-  D: '-..',
-  E: '.',
-  F: '..-.',
-  G: '--.',
-  H: '....',
-  I: '..',
-  J: '.---',
-  K: '-.-',
-  L: '.-..',
-  M: '--',
-  N: '-.',
-  O: '---',
-  P: '.--.',
-  Q: '--.-',
-  R: '.-.',
-  S: '...',
-  T: '-',
-  U: '..-',
-  V: '...-',
-  W: '.--',
-  X: '-..-',
-  Y: '-.--',
-  Z: '--..',
-  '0': '-----',
-  '1': '.----',
-  '2': '..---',
-  '3': '...--',
-  '4': '....-',
-  '5': '.....',
-  '6': '-....',
-  '7': '--...',
-  '8': '---..',
-  '9': '----.',
-  '.': '.-.-.-',
-  ',': '--..--',
-  '?': '..--..',
-  "'": '.----.',
-  '!': '-.-.--',
-  '/': '-..-.',
-  '(': '-.--.',
-  ')': '-.--.-',
-  '&': '.-...',
-  ':': '---...',
-  ';': '-.-.-.',
-  '=': '-...-',
-  '+': '.-.-.',
-  '-': '-....-',
-  _: '..--.-',
-  '"': '.-..-.',
-  $: '...-..-',
-  '@': '.--.-.',
+  A: ".-",
+  B: "-...",
+  C: "-.-.",
+  D: "-..",
+  E: ".",
+  F: "..-.",
+  G: "--.",
+  H: "....",
+  I: "..",
+  J: ".---",
+  K: "-.-",
+  L: ".-..",
+  M: "--",
+  N: "-.",
+  O: "---",
+  P: ".--.",
+  Q: "--.-",
+  R: ".-.",
+  S: "...",
+  T: "-",
+  U: "..-",
+  V: "...-",
+  W: ".--",
+  X: "-..-",
+  Y: "-.--",
+  Z: "--..",
+  "0": "-----",
+  "1": ".----",
+  "2": "..---",
+  "3": "...--",
+  "4": "....-",
+  "5": ".....",
+  "6": "-....",
+  "7": "--...",
+  "8": "---..",
+  "9": "----.",
+  ".": ".-.-.-",
+  ",": "--..--",
+  "?": "..--..",
+  "'": ".----.",
+  "!": "-.-.--",
+  "/": "-..-.",
+  "(": "-.--.",
+  ")": "-.--.-",
+  "&": ".-...",
+  ":": "---...",
+  ";": "-.-.-.",
+  "=": "-...-",
+  "+": ".-.-.",
+  "-": "-....-",
+  _: "..--.-",
+  '"': ".-..-.",
+  $: "...-..-",
+  "@": ".--.-.",
 };
 const MORSE_REVERSE: Record<string, string> = {};
 for (const [ch, code] of Object.entries(MORSE_MAP)) MORSE_REVERSE[code] = ch;
 
 function morseEscape(str: string): string {
   const words = str.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return '';
+  if (words.length === 0) return "";
   return words
     .map((word) =>
       Array.from(word.toUpperCase())
@@ -1420,23 +1420,23 @@ function morseEscape(str: string): string {
           const code = MORSE_MAP[ch];
           if (!code) {
             throw new ToolError(
-              'unsupported-morse-char',
+              "unsupported-morse-char",
               `"${ch}" has no Morse code representation.`,
-              'Morse code here covers A-Z, 0-9 and common punctuation; remove or replace other characters.',
+              "Morse code here covers A-Z, 0-9 and common punctuation; remove or replace other characters.",
             );
           }
           return code;
         })
-        .join(' '),
+        .join(" "),
     )
-    .join(' / ');
+    .join(" / ");
 }
 
 function morseUnescape(str: string): string {
   const trimmed = str.trim();
-  if (trimmed === '') return '';
+  if (trimmed === "") return "";
   const words = trimmed
-    .split('/')
+    .split("/")
     .map((w) => w.trim())
     .filter((w) => w.length > 0);
   return words
@@ -1448,16 +1448,16 @@ function morseUnescape(str: string): string {
           const ch = MORSE_REVERSE[code];
           if (!ch) {
             throw new ToolError(
-              'invalid-morse-code',
+              "invalid-morse-code",
               `"${code}" is not a recognized Morse code sequence.`,
-              'Use only dots (.) and dashes (-), separate letters with a space and words with a slash.',
+              "Use only dots (.) and dashes (-), separate letters with a space and words with a slash.",
             );
           }
           return ch;
         })
-        .join(''),
+        .join(""),
     )
-    .join(' ');
+    .join(" ");
 }
 
 // ---------------------------------------------------------------------------
@@ -1465,49 +1465,49 @@ function morseUnescape(str: string): string {
 // ---------------------------------------------------------------------------
 
 const NATO_MAP: Record<string, string> = {
-  A: 'Alpha',
-  B: 'Bravo',
-  C: 'Charlie',
-  D: 'Delta',
-  E: 'Echo',
-  F: 'Foxtrot',
-  G: 'Golf',
-  H: 'Hotel',
-  I: 'India',
-  J: 'Juliett',
-  K: 'Kilo',
-  L: 'Lima',
-  M: 'Mike',
-  N: 'November',
-  O: 'Oscar',
-  P: 'Papa',
-  Q: 'Quebec',
-  R: 'Romeo',
-  S: 'Sierra',
-  T: 'Tango',
-  U: 'Uniform',
-  V: 'Victor',
-  W: 'Whiskey',
-  X: 'Xray',
-  Y: 'Yankee',
-  Z: 'Zulu',
-  '0': 'Zero',
-  '1': 'One',
-  '2': 'Two',
-  '3': 'Three',
-  '4': 'Four',
-  '5': 'Five',
-  '6': 'Six',
-  '7': 'Seven',
-  '8': 'Eight',
-  '9': 'Niner',
+  A: "Alpha",
+  B: "Bravo",
+  C: "Charlie",
+  D: "Delta",
+  E: "Echo",
+  F: "Foxtrot",
+  G: "Golf",
+  H: "Hotel",
+  I: "India",
+  J: "Juliett",
+  K: "Kilo",
+  L: "Lima",
+  M: "Mike",
+  N: "November",
+  O: "Oscar",
+  P: "Papa",
+  Q: "Quebec",
+  R: "Romeo",
+  S: "Sierra",
+  T: "Tango",
+  U: "Uniform",
+  V: "Victor",
+  W: "Whiskey",
+  X: "Xray",
+  Y: "Yankee",
+  Z: "Zulu",
+  "0": "Zero",
+  "1": "One",
+  "2": "Two",
+  "3": "Three",
+  "4": "Four",
+  "5": "Five",
+  "6": "Six",
+  "7": "Seven",
+  "8": "Eight",
+  "9": "Niner",
 };
 const NATO_REVERSE: Record<string, string> = {};
 for (const [ch, word] of Object.entries(NATO_MAP)) NATO_REVERSE[word.toLowerCase()] = ch;
 
 function natoEscape(str: string): string {
   const words = str.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return '';
+  if (words.length === 0) return "";
   return words
     .map((word) =>
       Array.from(word.toUpperCase())
@@ -1515,23 +1515,23 @@ function natoEscape(str: string): string {
           const w = NATO_MAP[ch];
           if (!w) {
             throw new ToolError(
-              'unsupported-nato-char',
+              "unsupported-nato-char",
               `"${ch}" has no NATO phonetic alphabet word.`,
-              'The NATO alphabet here only covers A-Z and 0-9; remove or replace other characters.',
+              "The NATO alphabet here only covers A-Z and 0-9; remove or replace other characters.",
             );
           }
           return w;
         })
-        .join(' '),
+        .join(" "),
     )
-    .join(' / ');
+    .join(" / ");
 }
 
 function natoUnescape(str: string): string {
   const trimmed = str.trim();
-  if (trimmed === '') return '';
+  if (trimmed === "") return "";
   const words = trimmed
-    .split('/')
+    .split("/")
     .map((w) => w.trim())
     .filter((w) => w.length > 0);
   return words
@@ -1543,16 +1543,16 @@ function natoUnescape(str: string): string {
           const ch = NATO_REVERSE[tok.toLowerCase()];
           if (!ch) {
             throw new ToolError(
-              'invalid-nato-word',
+              "invalid-nato-word",
               `"${tok}" is not a recognized NATO phonetic alphabet word.`,
-              'Use the standard words (Alpha, Bravo, Charlie...) and Zero through Niner for digits, space-separated, with a slash between original words.',
+              "Use the standard words (Alpha, Bravo, Charlie...) and Zero through Niner for digits, space-separated, with a slash between original words.",
             );
           }
           return ch;
         })
-        .join(''),
+        .join(""),
     )
-    .join(' ');
+    .join(" ");
 }
 
 // ---------------------------------------------------------------------------
@@ -1568,8 +1568,8 @@ const PUNY_SKEW = 38;
 const PUNY_DAMP = 700;
 const PUNY_INITIAL_BIAS = 72;
 const PUNY_INITIAL_N = 128;
-const PUNY_DELIMITER = '-';
-const PUNYCODE_PREFIX = 'xn--';
+const PUNY_DELIMITER = "-";
+const PUNYCODE_PREFIX = "xn--";
 
 function punycodeAdapt(delta: number, numPoints: number, firstTime: boolean): number {
   let d = firstTime ? Math.floor(delta / PUNY_DAMP) : Math.floor(delta / 2);
@@ -1633,7 +1633,7 @@ function punycodeEncodeLabel(input: string): string {
     delta++;
     n++;
   }
-  return output.join('');
+  return output.join("");
 }
 
 function punycodeDecodeLabel(input: string): string {
@@ -1643,14 +1643,14 @@ function punycodeDecodeLabel(input: string): string {
   const output: number[] = [];
 
   const lastDelim = input.lastIndexOf(PUNY_DELIMITER);
-  const basic = lastDelim >= 0 ? input.slice(0, lastDelim) : '';
+  const basic = lastDelim >= 0 ? input.slice(0, lastDelim) : "";
   for (const ch of basic) {
     const code = ch.charCodeAt(0);
     if (code >= 0x80) {
       throw new ToolError(
-        'invalid-punycode',
+        "invalid-punycode",
         `"${ch}" in the basic-code-point part is not ASCII.`,
-        'Everything before the last hyphen in a punycode label must be plain ASCII.',
+        "Everything before the last hyphen in a punycode label must be plain ASCII.",
       );
     }
     output.push(code);
@@ -1664,18 +1664,18 @@ function punycodeDecodeLabel(input: string): string {
     for (let k = PUNY_BASE; ; k += PUNY_BASE) {
       if (pos >= inputLength) {
         throw new ToolError(
-          'invalid-punycode',
-          'Unexpected end of punycode input.',
-          'The encoded text looks truncated; make sure the full punycode label was pasted.',
+          "invalid-punycode",
+          "Unexpected end of punycode input.",
+          "The encoded text looks truncated; make sure the full punycode label was pasted.",
         );
       }
       const digitChar = input[pos++];
       const digit = punycodeCharToDigit(digitChar);
       if (digit === -1) {
         throw new ToolError(
-          'invalid-punycode',
+          "invalid-punycode",
           `"${digitChar}" is not a valid punycode digit.`,
-          'Punycode digits are a-z and 0-9 only.',
+          "Punycode digits are a-z and 0-9 only.",
         );
       }
       i += digit * w;
@@ -1690,34 +1690,34 @@ function punycodeDecodeLabel(input: string): string {
     i++;
   }
   try {
-    return output.map((cp) => String.fromCodePoint(cp)).join('');
+    return output.map((cp) => String.fromCodePoint(cp)).join("");
   } catch {
     throw new ToolError(
-      'invalid-punycode',
-      'Decoded to an invalid Unicode code point.',
-      'The encoded text may be corrupted.',
+      "invalid-punycode",
+      "Decoded to an invalid Unicode code point.",
+      "The encoded text may be corrupted.",
     );
   }
 }
 
 function punycodeEscape(str: string): string {
   return str
-    .split('.')
+    .split(".")
     .map((label) => {
       if (Array.from(label).every((ch) => ch.codePointAt(0)! < 0x80)) return label;
       return PUNYCODE_PREFIX + punycodeEncodeLabel(label);
     })
-    .join('.');
+    .join(".");
 }
 
 function punycodeUnescape(str: string): string {
   return str
-    .split('.')
+    .split(".")
     .map((label) => {
       if (!label.toLowerCase().startsWith(PUNYCODE_PREFIX)) return label;
       return punycodeDecodeLabel(label.slice(PUNYCODE_PREFIX.length));
     })
-    .join('.');
+    .join(".");
 }
 
 // ---------------------------------------------------------------------------
@@ -1728,19 +1728,19 @@ const FORMATS: Record<string, { escape: (s: string) => string; unescape: (s: str
     html: { escape: htmlEscape, unescape: htmlUnescape },
     xml: { escape: xmlEscape, unescape: xmlUnescape },
     url: { escape: urlEscape, unescape: urlUnescape },
-    'url-full': { escape: urlFullEscape, unescape: urlFullUnescape },
-    'url-form': { escape: urlFormEscape, unescape: urlFormUnescape },
-    'url-bytes': { escape: urlBytesEscape, unescape: urlBytesUnescape },
+    "url-full": { escape: urlFullEscape, unescape: urlFullUnescape },
+    "url-form": { escape: urlFormEscape, unescape: urlFormUnescape },
+    "url-bytes": { escape: urlBytesEscape, unescape: urlBytesUnescape },
     regex: { escape: regexEscape, unescape: regexUnescape },
     c: { escape: cEscape, unescape: cUnescape },
     python: { escape: pythonEscape, unescape: pythonUnescape },
     java: { escape: javaEscape, unescape: javaUnescape },
-    'unicode-brace': { escape: unicodeBraceEscape, unescape: unicodeBraceUnescape },
+    "unicode-brace": { escape: unicodeBraceEscape, unescape: unicodeBraceUnescape },
     whitespace: { escape: whitespaceEscape, unescape: whitespaceUnescape },
-    'hex-bytes': { escape: hexBytesEscape, unescape: hexBytesUnescape },
-    'octal-bytes': { escape: octalBytesEscape, unescape: octalBytesUnescape },
+    "hex-bytes": { escape: hexBytesEscape, unescape: hexBytesUnescape },
+    "octal-bytes": { escape: octalBytesEscape, unescape: octalBytesUnescape },
     shell: { escape: shellEscape, unescape: shellUnescape },
-    'shell-double': { escape: shellDoubleEscape, unescape: shellDoubleUnescape },
+    "shell-double": { escape: shellDoubleEscape, unescape: shellDoubleUnescape },
     batch: { escape: batchEscape, unescape: batchUnescape },
     powershell: { escape: singleQuoteDouble, unescape: singleQuoteUndouble },
     sql: { escape: singleQuoteDouble, unescape: singleQuoteUndouble },
@@ -1752,7 +1752,7 @@ const FORMATS: Record<string, { escape: (s: string) => string; unescape: (s: str
     base58: { escape: base58Escape, unescape: base58Unescape },
     ascii85: { escape: ascii85Escape, unescape: ascii85Unescape },
     uuencode: { escape: uuencodeEscape, unescape: uuencodeUnescape },
-    'quoted-printable': { escape: qpEscape, unescape: qpUnescape },
+    "quoted-printable": { escape: qpEscape, unescape: qpUnescape },
     rot13: { escape: rot13, unescape: rot13 },
     rot47: { escape: rot47, unescape: rot47 },
     morse: { escape: morseEscape, unescape: morseUnescape },
@@ -1761,24 +1761,24 @@ const FORMATS: Record<string, { escape: (s: string) => string; unescape: (s: str
   };
 
 export function run(input: string, opts: EscapeOpts): string {
-  const text = input ?? '';
+  const text = input ?? "";
   // Empty input is a no-op in both directions for every format — there is
   // nothing to escape or decode, and this keeps behavior consistent across
   // formats (rather than e.g. shell producing `''` for empty input).
-  if (text === '') return '';
+  if (text === "") return "";
 
   const format = FORMATS[opts.format];
   if (!format)
     throw new ToolError(
-      'bad-format',
+      "bad-format",
       `Unknown format "${opts.format}".`,
-      'Pick a format from the dropdown.',
+      "Pick a format from the dropdown.",
     );
 
-  if (opts.direction === 'unescape') return format.unescape(text);
-  if (opts.direction === 'escape') return format.escape(text);
+  if (opts.direction === "unescape") return format.unescape(text);
+  if (opts.direction === "escape") return format.escape(text);
   throw new ToolError(
-    'bad-direction',
+    "bad-direction",
     `Unknown direction "${opts.direction}".`,
     'Use "escape" or "unescape".',
   );

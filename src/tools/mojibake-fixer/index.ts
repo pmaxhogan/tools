@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface MojibakeOpts {
   /** 'auto' or an explicit chain id. */
@@ -57,17 +57,17 @@ const LEAD_MIN = 0xc2;
 const LEAD_MAX = 0xf4;
 const REPLACEMENT = 0xfffd;
 /** U+FEFF, the real byte order mark. */
-const BOM = '\uFEFF';
+const BOM = "\uFEFF";
 /** The same BOM after its bytes EF BB BF were read as Windows-1252 or Latin-1. */
-const BOM_MOJIBAKE = '\u00EF\u00BB\u00BF';
+const BOM_MOJIBAKE = "\u00EF\u00BB\u00BF";
 
 /** Share of characters allowed to survive a step unmapped before it is rejected. */
 const PASSTHROUGH_TOLERANCE = 0.02;
 
 const utf8Encoder = new TextEncoder();
-const strictUtf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+const strictUtf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
-type Legacy = 'cp1252' | 'latin1';
+type Legacy = "cp1252" | "latin1";
 
 const REVERSE_MAPS: Record<Legacy, ReadonlyMap<number, number>> = {
   cp1252: CP1252_REVERSE,
@@ -81,32 +81,32 @@ interface ChainSpec {
 }
 
 const CHAINS: readonly ChainSpec[] = [
-  { id: 'cp1252-once', steps: ['cp1252'], label: 'UTF-8 was read as Windows-1252 once' },
-  { id: 'latin1-once', steps: ['latin1'], label: 'UTF-8 was read as Latin-1 once' },
+  { id: "cp1252-once", steps: ["cp1252"], label: "UTF-8 was read as Windows-1252 once" },
+  { id: "latin1-once", steps: ["latin1"], label: "UTF-8 was read as Latin-1 once" },
   {
-    id: 'cp1252-twice',
-    steps: ['cp1252', 'cp1252'],
-    label: 'UTF-8 was read as Windows-1252 twice, so the text was double encoded',
+    id: "cp1252-twice",
+    steps: ["cp1252", "cp1252"],
+    label: "UTF-8 was read as Windows-1252 twice, so the text was double encoded",
   },
   {
-    id: 'latin1-twice',
-    steps: ['latin1', 'latin1'],
-    label: 'UTF-8 was read as Latin-1 twice, so the text was double encoded',
+    id: "latin1-twice",
+    steps: ["latin1", "latin1"],
+    label: "UTF-8 was read as Latin-1 twice, so the text was double encoded",
   },
   {
-    id: 'cp1252-latin1',
-    steps: ['cp1252', 'latin1'],
-    label: 'UTF-8 was read as Windows-1252, then the result was read as Latin-1',
+    id: "cp1252-latin1",
+    steps: ["cp1252", "latin1"],
+    label: "UTF-8 was read as Windows-1252, then the result was read as Latin-1",
   },
   {
-    id: 'latin1-cp1252',
-    steps: ['latin1', 'cp1252'],
-    label: 'UTF-8 was read as Latin-1, then the result was read as Windows-1252',
+    id: "latin1-cp1252",
+    steps: ["latin1", "cp1252"],
+    label: "UTF-8 was read as Latin-1, then the result was read as Windows-1252",
   },
 ];
 
 /** Chains a user can force from the options panel. */
-const MANUAL_CHAIN_IDS = ['cp1252-once', 'cp1252-twice', 'latin1-once', 'latin1-twice'];
+const MANUAL_CHAIN_IDS = ["cp1252-once", "cp1252-twice", "latin1-once", "latin1-twice"];
 
 interface StepResult {
   text: string;
@@ -256,16 +256,16 @@ function stripBom(text: string): { text: string; removed: boolean } {
 
 function confidenceOf(before: number, after: number, partial: boolean): string {
   if (after === 0 && !partial)
-    return 'High. Every mojibake signature is gone and every character mapped cleanly.';
+    return "High. Every mojibake signature is gone and every character mapped cleanly.";
   if (after === 0)
-    return 'Medium. The signatures are gone, but some characters had to be passed through unchanged.';
+    return "Medium. The signatures are gone, but some characters had to be passed through unchanged.";
   if (after < before)
-    return 'Medium. Some mojibake was undone, but signatures remain, so the text was probably damaged more than once.';
-  return 'Low. The chain applied, but the result still looks garbled.';
+    return "Medium. Some mojibake was undone, but signatures remain, so the text was probably damaged more than once.";
+  return "Low. The chain applied, but the result still looks garbled.";
 }
 
 const CLEAN_MESSAGE =
-  'No mojibake signatures were found. This text already looks like correct UTF-8, so nothing was changed.';
+  "No mojibake signatures were found. This text already looks like correct UTF-8, so nothing was changed.";
 
 function present(
   candidate: Candidate,
@@ -275,64 +275,64 @@ function present(
   const stripped = stripBom(candidate.text);
   const partial = candidate.passthrough > 0;
 
-  if (candidate.id === 'none') {
+  if (candidate.id === "none") {
     if (stripped.removed) {
       return {
-        'Fixed text': stripped.text,
-        'Applied fix': 'Removed a leading byte order mark. Nothing else needed changing.',
-        Confidence: 'High. The only problem was a stray byte order mark.',
-        'Byte order mark': 'A leading UTF-8 byte order mark was found and removed.',
+        "Fixed text": stripped.text,
+        "Applied fix": "Removed a leading byte order mark. Nothing else needed changing.",
+        Confidence: "High. The only problem was a stray byte order mark.",
+        "Byte order mark": "A leading UTF-8 byte order mark was found and removed.",
       };
     }
     return {
-      'Fixed text': input,
-      'Applied fix':
-        'None. This text has mojibake signatures, but no encoding chain decoded cleanly, so nothing was changed.',
-      Confidence: 'Low. The original bytes were probably lost before this text was saved.',
+      "Fixed text": input,
+      "Applied fix":
+        "None. This text has mojibake signatures, but no encoding chain decoded cleanly, so nothing was changed.",
+      Confidence: "Low. The original bytes were probably lost before this text was saved.",
     };
   }
 
   const note = partial
-    ? ` ${candidate.passthrough} character${candidate.passthrough === 1 ? ' was' : 's were'} passed through unchanged because the legacy encoding has no byte for ${candidate.passthrough === 1 ? 'it' : 'them'}.`
-    : '';
+    ? ` ${candidate.passthrough} character${candidate.passthrough === 1 ? " was" : "s were"} passed through unchanged because the legacy encoding has no byte for ${candidate.passthrough === 1 ? "it" : "them"}.`
+    : "";
 
   const rows: Record<string, string> = {
-    'Fixed text': stripped.text,
-    'Applied fix': `${candidate.label}.${note}`,
+    "Fixed text": stripped.text,
+    "Applied fix": `${candidate.label}.${note}`,
     Confidence: confidenceOf(beforeSignatures, countSignatures(stripped.text), partial),
   };
   if (stripped.removed)
-    rows['Byte order mark'] = 'A leading UTF-8 byte order mark was found and removed.';
+    rows["Byte order mark"] = "A leading UTF-8 byte order mark was found and removed.";
   return rows;
 }
 
 export function run(input: string, opts: MojibakeOpts): Record<string, string> {
-  const text = input ?? '';
+  const text = input ?? "";
   if (!text.trim())
     throw new ToolError(
-      'empty-input',
-      'Enter some text to repair.',
-      'Paste the garbled text, for example a line containing \u00C3\u00A9 or \u00E2\u20AC\u2122.',
+      "empty-input",
+      "Enter some text to repair.",
+      "Paste the garbled text, for example a line containing \u00C3\u00A9 or \u00E2\u20AC\u2122.",
     );
 
-  const chainId = (opts?.chain || 'auto').trim() || 'auto';
+  const chainId = (opts?.chain || "auto").trim() || "auto";
   const beforeSignatures = countSignatures(text);
 
-  if (chainId !== 'auto') {
+  if (chainId !== "auto") {
     const spec = CHAINS.find((c) => c.id === chainId);
     if (!spec || !MANUAL_CHAIN_IDS.includes(chainId))
       throw new ToolError(
-        'unknown-chain',
+        "unknown-chain",
         `"${chainId}" is not a chain this tool knows.`,
-        `Pick auto, or one of: ${MANUAL_CHAIN_IDS.join(', ')}.`,
+        `Pick auto, or one of: ${MANUAL_CHAIN_IDS.join(", ")}.`,
       );
 
     const applied = applyChain(text, spec.steps);
     if (!applied) {
       return {
-        'Fixed text': text,
-        'Applied fix': `None. ${spec.label}, but that chain does not fit this text: re-encoding it produced bytes that are not valid UTF-8, or characters the legacy encoding cannot represent.`,
-        Confidence: 'Low. The forced chain was not applied, so the text is unchanged.',
+        "Fixed text": text,
+        "Applied fix": `None. ${spec.label}, but that chain does not fit this text: re-encoding it produced bytes that are not valid UTF-8, or characters the legacy encoding cannot represent.`,
+        Confidence: "Low. The forced chain was not applied, so the text is unchanged.",
       };
     }
     return present(
@@ -352,7 +352,7 @@ export function run(input: string, opts: MojibakeOpts): Record<string, string> {
   const bomOnly = beforeSignatures === 0 && stripBom(text).removed;
   if (beforeSignatures === 0 && !bomOnly) return { Result: CLEAN_MESSAGE };
 
-  const candidates: Candidate[] = [scoreCandidate('none', 'No change', text, 0, 0, 0)];
+  const candidates: Candidate[] = [scoreCandidate("none", "No change", text, 0, 0, 0)];
   for (const spec of CHAINS) {
     const applied = applyChain(text, spec.steps);
     if (!applied) continue;

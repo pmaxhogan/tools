@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * Pixel maths for the background remover.
@@ -14,7 +14,7 @@ import { ToolError, type ToolLogic } from '../types';
  * paths it ships to visitors.
  */
 
-export type OutputMode = 'transparent' | 'white' | 'color';
+export type OutputMode = "transparent" | "white" | "color";
 
 export interface BackgroundRemoverOpts {
   /** What to put behind the cutout: nothing, white, or a color you pick. */
@@ -32,7 +32,7 @@ export type BackgroundRemoverResult = Record<string, string>;
 export type Matte = Float32Array | Uint8ClampedArray | Uint8Array;
 
 const HEX_FIX =
-  'Use a hex color such as #ffffff, #1b1b1b, or the short form #fff. Named colors and rgb() are not accepted.';
+  "Use a hex color such as #ffffff, #1b1b1b, or the short form #fff. Named colors and rgb() are not accepted.";
 
 /* ------------------------------------------------------------------ *
  * color
@@ -43,16 +43,16 @@ const HEX_FIX =
  * of those without the leading hash, in either case.
  */
 export function parseHexColor(hex: string): { r: number; g: number; b: number } {
-  const raw = typeof hex === 'string' ? hex.trim().replace(/^#/, '') : '';
+  const raw = typeof hex === "string" ? hex.trim().replace(/^#/, "") : "";
   if (!/^[0-9a-fA-F]+$/.test(raw) || (raw.length !== 3 && raw.length !== 6)) {
-    throw new ToolError('invalid-color', `"${String(hex)}" is not a hex color.`, HEX_FIX);
+    throw new ToolError("invalid-color", `"${String(hex)}" is not a hex color.`, HEX_FIX);
   }
   const full =
     raw.length === 3
       ? raw
-          .split('')
+          .split("")
           .map((c) => c + c)
-          .join('')
+          .join("")
       : raw;
   return {
     r: parseInt(full.slice(0, 2), 16),
@@ -68,9 +68,9 @@ export function parseHexColor(hex: string): { r: number; g: number; b: number } 
 function assertSize(w: number, h: number): void {
   if (!Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1) {
     throw new ToolError(
-      'invalid-size',
+      "invalid-size",
       `A width and height of ${w} by ${h} is not a usable image size.`,
-      'Pass the pixel width and height of the image as positive whole numbers.',
+      "Pass the pixel width and height of the image as positive whole numbers.",
     );
   }
 }
@@ -117,16 +117,16 @@ export function applyMatte(
   assertSize(w, h);
   if (rgba.length !== w * h * 4) {
     throw new ToolError(
-      'size-mismatch',
+      "size-mismatch",
       `The pixel buffer holds ${rgba.length} bytes, but ${w} by ${h} pixels needs ${w * h * 4}.`,
-      'Pass the RGBA data and the dimensions that came from the same canvas.',
+      "Pass the RGBA data and the dimensions that came from the same canvas.",
     );
   }
   if (matte.length !== w * h) {
     throw new ToolError(
-      'size-mismatch',
+      "size-mismatch",
       `The matte holds ${matte.length} values, but ${w} by ${h} pixels needs ${w * h}.`,
-      'Rescale the matte to the size of the image before applying it, for example with resizeMatteNearest.',
+      "Rescale the matte to the size of the image before applying it, for example with resizeMatteNearest.",
     );
   }
   const alpha = normalizeMatte(matte);
@@ -155,9 +155,9 @@ export function resizeMatteNearest(
   assertSize(toW, toH);
   if (matte.length !== fromW * fromH) {
     throw new ToolError(
-      'size-mismatch',
+      "size-mismatch",
       `The matte holds ${matte.length} values, but ${fromW} by ${fromH} needs ${fromW * fromH}.`,
-      'Pass the dimensions the matte was produced at.',
+      "Pass the dimensions the matte was produced at.",
     );
   }
   const out = new Float32Array(toW * toH);
@@ -193,16 +193,16 @@ export function boxBlurAlpha(
   assertSize(w, h);
   if (rgba.length !== w * h * 4) {
     throw new ToolError(
-      'size-mismatch',
+      "size-mismatch",
       `The pixel buffer holds ${rgba.length} bytes, but ${w} by ${h} pixels needs ${w * h * 4}.`,
-      'Pass the RGBA data and the dimensions that came from the same canvas.',
+      "Pass the RGBA data and the dimensions that came from the same canvas.",
     );
   }
   if (!Number.isFinite(radius) || radius < 0) {
     throw new ToolError(
-      'invalid-radius',
+      "invalid-radius",
       `A blur radius of ${radius} is not usable.`,
-      'Use 0 to leave the edge alone, or a small whole number such as 1 or 2.',
+      "Use 0 to leave the edge alone, or a small whole number such as 1 or 2.",
     );
   }
   const r = Math.floor(radius);
@@ -259,9 +259,9 @@ export function compositeOnColor(
   assertSize(w, h);
   if (rgba.length !== w * h * 4) {
     throw new ToolError(
-      'size-mismatch',
+      "size-mismatch",
       `The pixel buffer holds ${rgba.length} bytes, but ${w} by ${h} pixels needs ${w * h * 4}.`,
-      'Pass the RGBA data and the dimensions that came from the same canvas.',
+      "Pass the RGBA data and the dimensions that came from the same canvas.",
     );
   }
   const { r, g, b } = parseHexColor(hex);
@@ -282,23 +282,23 @@ export function compositeOnColor(
  * run
  * ------------------------------------------------------------------ */
 
-const OUTPUT_MODES: OutputMode[] = ['transparent', 'white', 'color'];
+const OUTPUT_MODES: OutputMode[] = ["transparent", "white", "color"];
 
 function readOutputMode(value: unknown): OutputMode {
-  if (value === undefined || value === null || value === '') return 'transparent';
-  if (typeof value === 'string' && (OUTPUT_MODES as string[]).includes(value)) {
+  if (value === undefined || value === null || value === "") return "transparent";
+  if (typeof value === "string" && (OUTPUT_MODES as string[]).includes(value)) {
     return value as OutputMode;
   }
   throw new ToolError(
-    'invalid-output',
+    "invalid-output",
     `"${String(value)}" is not a background option.`,
-    'Choose one of: transparent, white, color.',
+    "Choose one of: transparent, white, color.",
   );
 }
 
 function humanBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -323,38 +323,38 @@ export function run(
   const mode = readOutputMode(opts?.output);
   const feather = opts?.featherEdges !== false;
   const bgColor =
-    typeof opts?.bgColor === 'string' && opts.bgColor !== '' ? opts.bgColor : '#ffffff';
+    typeof opts?.bgColor === "string" && opts.bgColor !== "" ? opts.bgColor : "#ffffff";
 
   let background: string;
-  if (mode === 'transparent') {
-    background = 'None. The cutout keeps a transparent alpha channel and saves as a PNG.';
-  } else if (mode === 'white') {
-    background = 'Solid white, saved as a JPEG.';
+  if (mode === "transparent") {
+    background = "None. The cutout keeps a transparent alpha channel and saves as a PNG.";
+  } else if (mode === "white") {
+    background = "Solid white, saved as a JPEG.";
   } else {
     const { r, g, b } = parseHexColor(bgColor);
-    const normalized = `#${[r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+    const normalized = `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
     background = `Solid ${normalized}, saved as a JPEG.`;
   }
 
   const rows: BackgroundRemoverResult = {
     Model:
-      'MODNet portrait matting, quantized to about 6.3 MB of ONNX weights, served from this site.',
-    'Best on': 'Photos of people. Products, pets, and busy objects often come out worse.',
+      "MODNet portrait matting, quantized to about 6.3 MB of ONNX weights, served from this site.",
+    "Best on": "Photos of people. Products, pets, and busy objects often come out worse.",
     Background: background,
-    'Feather edges': feather
-      ? 'On. A small blur is applied to the alpha edge so the cutout does not read as a sticker.'
-      : 'Off. The alpha edge stays exactly as the model predicted it.',
-    'Where it runs':
-      'In this browser tab, so your files and inputs never leave your device. The model is downloaded once and then kept in the browser cache.',
-    'Next step':
-      'Drop a photo into the panel above, press Load model, then press Remove background.',
+    "Feather edges": feather
+      ? "On. A small blur is applied to the alpha edge so the cutout does not read as a sticker."
+      : "Off. The alpha edge stays exactly as the model predicted it.",
+    "Where it runs":
+      "In this browser tab, so your files and inputs never leave your device. The model is downloaded once and then kept in the browser cache.",
+    "Next step":
+      "Drop a photo into the panel above, press Load model, then press Remove background.",
   };
 
   if (input instanceof Uint8Array && input.length > 0) {
     rows.Image = `${humanBytes(input.length)} of image data ready for the panel.`;
-  } else if (typeof input === 'string' && input.trim() !== '') {
+  } else if (typeof input === "string" && input.trim() !== "") {
     rows.Note =
-      'This tool works on image files rather than text. Drop or pick a photo in the panel above.';
+      "This tool works on image files rather than text. Drop or pick a photo in the panel above.";
   }
 
   return rows;

@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * The pure core of the firmware flasher.
@@ -21,17 +21,17 @@ import { ToolError, type ToolLogic } from '../types';
  * ------------------------------------------------------------------ */
 
 /** The ESP families this tool flashes over serial. */
-export type ChipKey = 'esp32' | 'esp32s2' | 'esp32s3' | 'esp32c3' | 'esp8266';
+export type ChipKey = "esp32" | "esp32s2" | "esp32s3" | "esp32c3" | "esp8266";
 
-export const CHIP_KEYS: ChipKey[] = ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp8266'];
+export const CHIP_KEYS: ChipKey[] = ["esp32", "esp32s2", "esp32s3", "esp32c3", "esp8266"];
 
 /** Human label for a chip key, for panel dropdowns and messages. */
 export const CHIP_LABELS: Record<ChipKey, string> = {
-  esp32: 'ESP32',
-  esp32s2: 'ESP32-S2',
-  esp32s3: 'ESP32-S3',
-  esp32c3: 'ESP32-C3',
-  esp8266: 'ESP8266',
+  esp32: "ESP32",
+  esp32s2: "ESP32-S2",
+  esp32s3: "ESP32-S3",
+  esp32c3: "ESP32-C3",
+  esp8266: "ESP8266",
 };
 
 /**
@@ -42,12 +42,12 @@ export const CHIP_LABELS: Record<ChipKey, string> = {
  * panel can fall back to asking the user rather than guessing an offset.
  */
 export function chipKeyFromName(name: string): ChipKey | null {
-  const n = name.toUpperCase().replace(/[\s_-]+/g, '');
-  if (n.includes('ESP8266')) return 'esp8266';
-  if (n.includes('ESP32S2')) return 'esp32s2';
-  if (n.includes('ESP32S3')) return 'esp32s3';
-  if (n.includes('ESP32C3')) return 'esp32c3';
-  if (n.includes('ESP32')) return 'esp32';
+  const n = name.toUpperCase().replace(/[\s_-]+/g, "");
+  if (n.includes("ESP8266")) return "esp8266";
+  if (n.includes("ESP32S2")) return "esp32s2";
+  if (n.includes("ESP32S3")) return "esp32s3";
+  if (n.includes("ESP32C3")) return "esp32c3";
+  if (n.includes("ESP32")) return "esp32";
   return null;
 }
 
@@ -88,9 +88,9 @@ const OFFSETS: Record<ChipKey, ChipOffsets> = {
     bootloader: 0x1000,
     partitionTable: 0x8000,
     full: [
-      { address: 0x1000, name: 'bootloader.bin' },
-      { address: 0x8000, name: 'partitions.bin' },
-      { address: 0x10000, name: 'firmware.bin' },
+      { address: 0x1000, name: "bootloader.bin" },
+      { address: 0x8000, name: "partitions.bin" },
+      { address: 0x10000, name: "firmware.bin" },
     ],
   },
   esp32s2: {
@@ -98,9 +98,9 @@ const OFFSETS: Record<ChipKey, ChipOffsets> = {
     bootloader: 0x1000,
     partitionTable: 0x8000,
     full: [
-      { address: 0x1000, name: 'bootloader.bin' },
-      { address: 0x8000, name: 'partitions.bin' },
-      { address: 0x10000, name: 'firmware.bin' },
+      { address: 0x1000, name: "bootloader.bin" },
+      { address: 0x8000, name: "partitions.bin" },
+      { address: 0x10000, name: "firmware.bin" },
     ],
   },
   esp32s3: {
@@ -108,9 +108,9 @@ const OFFSETS: Record<ChipKey, ChipOffsets> = {
     bootloader: 0x0,
     partitionTable: 0x8000,
     full: [
-      { address: 0x0, name: 'bootloader.bin' },
-      { address: 0x8000, name: 'partitions.bin' },
-      { address: 0x10000, name: 'firmware.bin' },
+      { address: 0x0, name: "bootloader.bin" },
+      { address: 0x8000, name: "partitions.bin" },
+      { address: 0x10000, name: "firmware.bin" },
     ],
   },
   esp32c3: {
@@ -118,16 +118,16 @@ const OFFSETS: Record<ChipKey, ChipOffsets> = {
     bootloader: 0x0,
     partitionTable: 0x8000,
     full: [
-      { address: 0x0, name: 'bootloader.bin' },
-      { address: 0x8000, name: 'partitions.bin' },
-      { address: 0x10000, name: 'firmware.bin' },
+      { address: 0x0, name: "bootloader.bin" },
+      { address: 0x8000, name: "partitions.bin" },
+      { address: 0x10000, name: "firmware.bin" },
     ],
   },
   esp8266: {
     app: 0x0,
     bootloader: 0x0,
     partitionTable: 0x0,
-    full: [{ address: 0x0, name: 'firmware.bin' }],
+    full: [{ address: 0x0, name: "firmware.bin" }],
   },
 };
 
@@ -163,22 +163,22 @@ export function parseFlashLayout(input: string, sizes?: number[]): FlashRegion[]
   const lines = input.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     const raw = (lines[i] as string).trim();
-    if (!raw || raw.startsWith('#')) continue;
+    if (!raw || raw.startsWith("#")) continue;
 
     const match = raw.match(/^(\S+)\s+(.+)$/);
     if (!match) {
       throw new ToolError(
-        'bad-layout-line',
+        "bad-layout-line",
         `Line ${i + 1} ("${raw}") is not an offset followed by a file name.`,
         OFFSET_FIX,
       );
     }
 
     const [, offsetToken, name] = match as unknown as [string, string, string];
-    const cleaned = offsetToken.replace(/^0x/i, '');
+    const cleaned = offsetToken.replace(/^0x/i, "");
     if (!/^[0-9a-f]+$/i.test(cleaned)) {
       throw new ToolError(
-        'bad-offset',
+        "bad-offset",
         `"${offsetToken}" on line ${i + 1} is not a hex offset.`,
         OFFSET_FIX,
       );
@@ -187,7 +187,7 @@ export function parseFlashLayout(input: string, sizes?: number[]): FlashRegion[]
     const address = parseInt(cleaned, 16);
     if (!Number.isSafeInteger(address) || address < 0) {
       throw new ToolError(
-        'bad-offset',
+        "bad-offset",
         `"${offsetToken}" on line ${i + 1} is out of range for a flash offset.`,
         OFFSET_FIX,
       );
@@ -197,19 +197,15 @@ export function parseFlashLayout(input: string, sizes?: number[]): FlashRegion[]
   }
 
   if (regions.length === 0) {
-    throw new ToolError(
-      'empty-layout',
-      'The offset table is empty.',
-      OFFSET_FIX,
-    );
+    throw new ToolError("empty-layout", "The offset table is empty.", OFFSET_FIX);
   }
 
   if (sizes !== undefined) {
     if (sizes.length !== regions.length) {
       throw new ToolError(
-        'size-mismatch',
-        `The offset table has ${regions.length} region${regions.length === 1 ? '' : 's'} but ${sizes.length} file size${sizes.length === 1 ? '' : 's'} were given.`,
-        'This is an internal mismatch: every region needs exactly one file behind it.',
+        "size-mismatch",
+        `The offset table has ${regions.length} region${regions.length === 1 ? "" : "s"} but ${sizes.length} file size${sizes.length === 1 ? "" : "s"} were given.`,
+        "This is an internal mismatch: every region needs exactly one file behind it.",
       );
     }
     assertNoOverlap(regions, sizes);
@@ -227,9 +223,9 @@ function assertNoDuplicateAddress(regions: FlashRegion[]): void {
     const prior = seen.get(region.address);
     if (prior !== undefined) {
       throw new ToolError(
-        'overlap',
+        "overlap",
         `${region.name} and ${prior} both start at 0x${region.address.toString(16)}.`,
-        'Give each region a different offset. Flashing two files to one offset would overwrite the first.',
+        "Give each region a different offset. Flashing two files to one offset would overwrite the first.",
       );
     }
     seen.set(region.address, region.name);
@@ -252,9 +248,9 @@ function assertNoOverlap(regions: FlashRegion[], sizes: number[]): void {
     const end = current.region.address + current.size;
     if (end > next.region.address) {
       throw new ToolError(
-        'overlap',
+        "overlap",
         `${current.region.name} at 0x${current.region.address.toString(16)} is ${current.size} bytes, which runs to 0x${end.toString(16)} and overlaps ${next.region.name} at 0x${next.region.address.toString(16)}.`,
-        'Move one region so their byte ranges do not touch, or use a smaller build. Overlapping writes corrupt whichever file is flashed first.',
+        "Move one region so their byte ranges do not touch, or use a smaller build. Overlapping writes corrupt whichever file is flashed first.",
       );
     }
   }
@@ -291,9 +287,9 @@ export interface FirmwareCheck {
 export function validateFirmware(bytes: Uint8Array, chip: ChipKey): FirmwareCheck {
   if (bytes.length === 0) {
     throw new ToolError(
-      'empty-firmware',
-      'The firmware file is empty.',
-      'Pick a .bin file that actually contains a build. A zero byte file has nothing to flash.',
+      "empty-firmware",
+      "The firmware file is empty.",
+      "Pick a .bin file that actually contains a build. A zero byte file has nothing to flash.",
     );
   }
 
@@ -320,7 +316,7 @@ export function validateFirmware(bytes: Uint8Array, chip: ChipKey): FirmwareChec
  * ------------------------------------------------------------------ */
 
 const MANUAL_RESET =
-  'If your board has no auto reset circuit, hold the BOOT button, tap the EN or RST button, then release BOOT to force it into the download mode, and connect again.';
+  "If your board has no auto reset circuit, hold the BOOT button, tap the EN or RST button, then release BOOT to force it into the download mode, and connect again.";
 
 export interface HumanError {
   title: string;
@@ -341,48 +337,56 @@ export function humanFlashError(err: unknown): HumanError {
   const message = err instanceof Error ? err.message : String(err);
   const lower = message.toLowerCase();
 
-  if (lower.includes('failed to connect') || lower.includes('no serial data received')) {
+  if (lower.includes("failed to connect") || lower.includes("no serial data received")) {
     return {
-      title: 'Could not talk to the board.',
+      title: "Could not talk to the board.",
       detail: `The board did not answer the sync handshake. Check the USB cable carries data and not just power, that the board is in a mode that accepts a flash, and that nothing else holds the port. ${MANUAL_RESET}`,
     };
   }
-  if (lower.includes('timed out') || lower.includes('timeout')) {
+  if (lower.includes("timed out") || lower.includes("timeout")) {
     return {
-      title: 'The board stopped responding.',
+      title: "The board stopped responding.",
       detail: `A packet timed out partway through. This is usually a flaky USB cable or hub, or a baud rate the USB bridge cannot keep up with. Try a shorter cable, a direct USB port, and a lower flash baud such as 115200. ${MANUAL_RESET}`,
     };
   }
-  if (lower.includes('invalid head of packet') || lower.includes('wrong boot mode')) {
+  if (lower.includes("invalid head of packet") || lower.includes("wrong boot mode")) {
     return {
-      title: 'The board is not in download mode.',
+      title: "The board is not in download mode.",
       detail: `The reply was garbled, which usually means the chip booted your existing firmware instead of the download stub. ${MANUAL_RESET}`,
     };
   }
-  if (lower.includes('wrong chip') || lower.includes('unsupported') || lower.includes('unexpected chip')) {
+  if (
+    lower.includes("wrong chip") ||
+    lower.includes("unsupported") ||
+    lower.includes("unexpected chip")
+  ) {
     return {
-      title: 'This is not the chip you selected.',
+      title: "This is not the chip you selected.",
       detail:
-        'The connected board reports a different chip than the layout expects. Pick the matching chip, or let the tool detect it, so the bootloader and partition offsets are right for this family.',
+        "The connected board reports a different chip than the layout expects. Pick the matching chip, or let the tool detect it, so the bootloader and partition offsets are right for this family.",
     };
   }
-  if (lower.includes('md5') || lower.includes('verif')) {
+  if (lower.includes("md5") || lower.includes("verif")) {
     return {
-      title: 'The flash did not verify.',
+      title: "The flash did not verify.",
       detail:
-        'What was read back does not match what was written, so the flash may be worn or the write was interrupted. Try again, and if it keeps failing at the same offset the flash chip may be failing.',
+        "What was read back does not match what was written, so the flash may be worn or the write was interrupted. Try again, and if it keeps failing at the same offset the flash chip may be failing.",
     };
   }
-  if (lower.includes('port is not open') || lower.includes('device has been lost') || lower.includes('the device has been lost')) {
+  if (
+    lower.includes("port is not open") ||
+    lower.includes("device has been lost") ||
+    lower.includes("the device has been lost")
+  ) {
     return {
-      title: 'The board was disconnected.',
+      title: "The board was disconnected.",
       detail:
-        'The serial port went away mid flash, usually an unplugged cable or a board that reset itself. Plug it back in and start the flash again from the beginning.',
+        "The serial port went away mid flash, usually an unplugged cable or a board that reset itself. Plug it back in and start the flash again from the beginning.",
     };
   }
 
   return {
-    title: 'The flash failed.',
+    title: "The flash failed.",
     detail: `${message}. ${MANUAL_RESET}`,
   };
 }
@@ -401,7 +405,7 @@ const BINARY_STRING_CHUNK = 0x8000;
  * firmware image. Round trips with {@link binaryStringToBytes}.
  */
 export function bytesToBinaryString(bytes: Uint8Array): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < bytes.length; i += BINARY_STRING_CHUNK) {
     const chunk = bytes.subarray(i, i + BINARY_STRING_CHUNK);
     out += String.fromCharCode(...chunk);
@@ -423,16 +427,16 @@ export function binaryStringToBytes(text: string): Uint8Array {
  * ------------------------------------------------------------------ */
 
 const USAGE_ROWS: Record<string, string> = {
-  'How this works':
-    'This tool flashes ESP32 family and ESP8266 boards over USB, straight from the browser. Plug the board in, click Connect and flash, pick the port, and it runs Espressif\'s own esptool to identify the chip and write your .bin files. The flasher stubs ship inside the page, so nothing is downloaded when you flash.',
+  "How this works":
+    "This tool flashes ESP32 family and ESP8266 boards over USB, straight from the browser. Plug the board in, click Connect and flash, pick the port, and it runs Espressif's own esptool to identify the chip and write your .bin files. The flasher stubs ship inside the page, so nothing is downloaded when you flash.",
   Chips:
-    'It covers the ESP32, ESP32-S2, ESP32-S3, ESP32-C3 and ESP8266. A Raspberry Pi Pico is not serial flashable: it appears as a USB drive and takes a UF2 file by drag and drop, so this tool cannot flash it.',
+    "It covers the ESP32, ESP32-S2, ESP32-S3, ESP32-C3 and ESP8266. A Raspberry Pi Pico is not serial flashable: it appears as a USB drive and takes a UF2 file by drag and drop, so this tool cannot flash it.",
   Offsets:
-    'Single file mode drops your build at the conventional application offset for the chip, 0x10000 on the ESP32 line and 0x0 on the ESP8266. Advanced mode lets you set an offset per file for a full bootloader, partition table and app flash.',
+    "Single file mode drops your build at the conventional application offset for the chip, 0x10000 on the ESP32 line and 0x0 on the ESP8266. Advanced mode lets you set an offset per file for a full bootloader, partition table and app flash.",
   Browsers:
-    'Flashing needs the Web Serial API, which Chromium browsers such as Chrome, Edge, Brave, Arc and Opera ship on desktop, and which Firefox 151 and later also support. The page checks for the API rather than for a browser name.',
+    "Flashing needs the Web Serial API, which Chromium browsers such as Chrome, Edge, Brave, Arc and Opera ship on desktop, and which Firefox 151 and later also support. The page checks for the API rather than for a browser name.",
   Privacy:
-    'Everything runs in this tab: your files and inputs never leave your device. Your firmware is never uploaded anywhere.',
+    "Everything runs in this tab: your files and inputs never leave your device. Your firmware is never uploaded anywhere.",
 };
 
 /**

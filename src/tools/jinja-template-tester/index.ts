@@ -26,8 +26,8 @@
  * expand() over live groups, distance() to real coordinates, device_id/area
  * lookups, and history. now()/utcnow() use the real current time.
  */
-import { parse as parseYaml } from 'yaml';
-import { ToolError, type ToolLogic } from '../types';
+import { parse as parseYaml } from "yaml";
+import { ToolError, type ToolLogic } from "../types";
 
 /** One entity, normalized: a string state plus an attributes map. */
 export interface NormalizedState {
@@ -60,24 +60,24 @@ export interface TemplateError {
 /** Coerce one entity's value into { state, attributes }, allowing shorthands. */
 function normalizeEntity(value: unknown): NormalizedState {
   // Scalar shorthand: `light.kitchen: "on"` means the value is the state.
-  if (value === null || value === undefined || typeof value !== 'object' || Array.isArray(value)) {
-    return { state: value === null || value === undefined ? '' : String(value), attributes: {} };
+  if (value === null || value === undefined || typeof value !== "object" || Array.isArray(value)) {
+    return { state: value === null || value === undefined ? "" : String(value), attributes: {} };
   }
   const obj = value as Record<string, unknown>;
-  if ('state' in obj) {
+  if ("state" in obj) {
     // Either an explicit `attributes:` map, or inline keys beside `state:`.
     const explicit =
-      obj.attributes && typeof obj.attributes === 'object' && !Array.isArray(obj.attributes)
+      obj.attributes && typeof obj.attributes === "object" && !Array.isArray(obj.attributes)
         ? (obj.attributes as Record<string, unknown>)
         : null;
     const attributes =
       explicit ??
-      Object.fromEntries(Object.entries(obj).filter(([k]) => k !== 'state' && k !== 'attributes'));
+      Object.fromEntries(Object.entries(obj).filter(([k]) => k !== "state" && k !== "attributes"));
     const raw = obj.state;
-    return { state: raw === null || raw === undefined ? '' : String(raw), attributes };
+    return { state: raw === null || raw === undefined ? "" : String(raw), attributes };
   }
   // An object with no `state`: treat the whole thing as attributes.
-  return { state: '', attributes: obj };
+  return { state: "", attributes: obj };
 }
 
 /**
@@ -86,25 +86,25 @@ function normalizeEntity(value: unknown): NormalizedState {
  * an empty input is a valid empty map, not an error.
  */
 export function parseStatesInput(input: string): StatesMap {
-  const text = (input ?? '').trim();
-  if (text === '') return {};
+  const text = (input ?? "").trim();
+  if (text === "") return {};
 
   let parsed: unknown;
   try {
     parsed = parseYaml(text);
   } catch {
     throw new ToolError(
-      'invalid-state',
-      'The sample state is not valid YAML or JSON.',
+      "invalid-state",
+      "The sample state is not valid YAML or JSON.",
       'Use "entity.id:" keys with a "state:" value under each, or a JSON object of the same shape.',
     );
   }
 
   if (parsed === null || parsed === undefined) return {};
-  if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+  if (typeof parsed !== "object" || Array.isArray(parsed)) {
     throw new ToolError(
-      'invalid-state',
-      'The sample state must be a mapping of entity ids to their state, not a list or a single value.',
+      "invalid-state",
+      "The sample state must be a mapping of entity ids to their state, not a list or a single value.",
       'Write each entity on its own line, like "sensor.temperature:" then an indented "state:".',
     );
   }
@@ -326,13 +326,13 @@ def _make_ha_env(_STATES):
  */
 export function buildHaGlobals(states: StatesMap): string {
   return [
-    'import json',
-    'from datetime import datetime, timedelta, timezone',
+    "import json",
+    "from datetime import datetime, timedelta, timezone",
     `_STATES = ${pyJsonLoads(states)}`,
     HA_STUBS,
-    'HA_GLOBALS, HA_FILTERS, HA_TESTS = _make_ha_env(_STATES)',
-    '',
-  ].join('\n');
+    "HA_GLOBALS, HA_FILTERS, HA_TESTS = _make_ha_env(_STATES)",
+    "",
+  ].join("\n");
 }
 
 /**
@@ -344,15 +344,15 @@ export function buildHaGlobals(states: StatesMap): string {
 export function buildRenderProgram(states: StatesMap, template: string): string {
   return [
     buildHaGlobals(states),
-    'import jinja2',
-    '_env = jinja2.Environment()',
-    '_env.globals.update(HA_GLOBALS)',
-    '_env.filters.update(HA_FILTERS)',
-    '_env.tests.update(HA_TESTS)',
+    "import jinja2",
+    "_env = jinja2.Environment()",
+    "_env.globals.update(HA_GLOBALS)",
+    "_env.filters.update(HA_FILTERS)",
+    "_env.tests.update(HA_TESTS)",
     `_TEMPLATE = ${pyJsonLoads(template)}`,
-    '_env.from_string(_TEMPLATE).render()',
-    '',
-  ].join('\n');
+    "_env.from_string(_TEMPLATE).render()",
+    "",
+  ].join("\n");
 }
 
 /* ------------------------------------------------------------------ */
@@ -361,8 +361,8 @@ export function buildRenderProgram(states: StatesMap, template: string): string 
 
 /** Normalize whatever Pyodide returns from a render into a display string. */
 export function extractResult(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  return typeof value === 'string' ? value : String(value);
+  if (value === null || value === undefined) return "";
+  return typeof value === "string" ? value : String(value);
 }
 
 /**
@@ -378,11 +378,11 @@ export function extractResult(value: unknown): string {
  * line wins.
  */
 export function formatError(pyErr: string): TemplateError {
-  const raw = (pyErr ?? '').replace(/\r\n/g, '\n');
-  const lines = raw.split('\n').map((l) => l.replace(/\s+$/, ''));
+  const raw = (pyErr ?? "").replace(/\r\n/g, "\n");
+  const lines = raw.split("\n").map((l) => l.replace(/\s+$/, ""));
 
-  let errorType = 'Error';
-  let message = '';
+  let errorType = "Error";
+  let message = "";
   for (let i = lines.length - 1; i >= 0; i -= 1) {
     const m = lines[i]!.match(/^[\w.]*?(\w+(?:Error|Exception|Warning)):\s(.*)$/);
     if (m) {
@@ -391,9 +391,9 @@ export function formatError(pyErr: string): TemplateError {
       break;
     }
   }
-  if (message === '') {
-    const last = [...lines].reverse().find((l) => l.trim() !== '');
-    message = last ? last.trim() : 'The template failed to render.';
+  if (message === "") {
+    const last = [...lines].reverse().find((l) => l.trim() !== "");
+    message = last ? last.trim() : "The template failed to render.";
   }
 
   let line: number | null = null;
@@ -422,20 +422,20 @@ export function formatError(pyErr: string): TemplateError {
  * engine will stub. It still exercises the parsing and code-generation logic.
  */
 export function run(input: string, opts: JinjaOptions = {}): Record<string, string> {
-  const template = typeof input === 'string' ? input : '';
-  const states = parseStatesInput(typeof opts.state === 'string' ? opts.state : '');
+  const template = typeof input === "string" ? input : "";
+  const states = parseStatesInput(typeof opts.state === "string" ? opts.state : "");
   const ids = Object.keys(states);
   const summary = ids.length
-    ? ids.map((id) => `${id} = ${states[id]!.state || '(empty)'}`).join('; ')
-    : 'no entities defined';
+    ? ids.map((id) => `${id} = ${states[id]!.state || "(empty)"}`).join("; ")
+    : "no entities defined";
 
   return {
     engine:
-      'This tool renders in your browser with real Python jinja2 (Pyodide). Load the engine on the tool page to render your template against the sample state.',
-    template: template.trim() === '' ? '(empty template)' : template,
+      "This tool renders in your browser with real Python jinja2 (Pyodide). Load the engine on the tool page to render your template against the sample state.",
+    template: template.trim() === "" ? "(empty template)" : template,
     entities: `${ids.length} parsed: ${summary}`,
     functions:
-      'Stubbed over your sample state: states(), is_state(), state_attr(), is_state_attr(), has_value(), states.<domain>.<object>, now(), utcnow(), as_timestamp(), as_datetime(), timedelta, and the float, int, and timestamp_custom filters.',
+      "Stubbed over your sample state: states(), is_state(), state_attr(), is_state_attr(), has_value(), states.<domain>.<object>, now(), utcnow(), as_timestamp(), as_datetime(), timedelta, and the float, int, and timestamp_custom filters.",
   };
 }
 

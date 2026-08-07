@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface FaviconOpts {
   /** Used for both `name` and `short_name` in the generated web manifest. */
@@ -45,33 +45,33 @@ function readUint32BE(bytes: Uint8Array, offset: number): number {
 export function readPngSize(bytes: Uint8Array): { width: number; height: number } {
   if (!hasPngSignature(bytes)) {
     throw new ToolError(
-      'invalid-png',
-      'That data does not start with the PNG file signature.',
-      'Supply the raw bytes of a .png file. Other formats need converting to PNG first.',
+      "invalid-png",
+      "That data does not start with the PNG file signature.",
+      "Supply the raw bytes of a .png file. Other formats need converting to PNG first.",
     );
   }
   if (bytes.length < 24) {
     throw new ToolError(
-      'invalid-png',
-      'The PNG is truncated: it ends before the IHDR header is complete.',
-      'Re-export or re-download the image, then drop the full file in again.',
+      "invalid-png",
+      "The PNG is truncated: it ends before the IHDR header is complete.",
+      "Re-export or re-download the image, then drop the full file in again.",
     );
   }
   const type = String.fromCharCode(bytes[12]!, bytes[13]!, bytes[14]!, bytes[15]!);
-  if (type !== 'IHDR') {
+  if (type !== "IHDR") {
     throw new ToolError(
-      'invalid-png',
+      "invalid-png",
       `Expected an IHDR chunk right after the PNG signature but found "${type}".`,
-      'The file looks corrupt. Re-export it from your image editor and try again.',
+      "The file looks corrupt. Re-export it from your image editor and try again.",
     );
   }
   const width = readUint32BE(bytes, 16);
   const height = readUint32BE(bytes, 20);
   if (width === 0 || height === 0) {
     throw new ToolError(
-      'invalid-png',
-      'The PNG header declares a width or height of zero.',
-      'Open the file in an image editor, confirm it has real pixel dimensions, and re-export it.',
+      "invalid-png",
+      "The PNG header declares a width or height of zero.",
+      "Open the file in an image editor, confirm it has real pixel dimensions, and re-export it.",
     );
   }
   return { width, height };
@@ -88,24 +88,24 @@ export function readPngSize(bytes: Uint8Array): { width: number; height: number 
 export function buildIco(images: { size: number; png: Uint8Array }[]): Uint8Array {
   if (images.length === 0) {
     throw new ToolError(
-      'no-images',
-      'buildIco was given an empty image list.',
-      'Pass at least one entry shaped like { size, png }.',
+      "no-images",
+      "buildIco was given an empty image list.",
+      "Pass at least one entry shaped like { size, png }.",
     );
   }
   for (const image of images) {
     if (!Number.isInteger(image.size) || image.size < 1) {
       throw new ToolError(
-        'invalid-ico-size',
+        "invalid-ico-size",
         `Icon size "${image.size}" is not a positive whole number of pixels.`,
-        'Use a whole pixel size between 1 and 256, for example 16, 32, 48, or 256.',
+        "Use a whole pixel size between 1 and 256, for example 16, 32, 48, or 256.",
       );
     }
     if (image.size > 256) {
       throw new ToolError(
-        'too-large-for-ico',
+        "too-large-for-ico",
         `An ICO entry cannot be larger than 256 pixels, but ${image.size} was requested.`,
-        'Drop sizes above 256 from the ICO and ship them as standalone PNG files instead.',
+        "Drop sizes above 256 from the ICO and ship them as standalone PNG files instead.",
       );
     }
   }
@@ -153,13 +153,13 @@ export function buildManifest(opts: {
     icons: MANIFEST_ICON_SIZES.map((size) => ({
       src: `/icon-${size}.png`,
       sizes: `${size}x${size}`,
-      type: 'image/png',
-      purpose: 'any',
+      type: "image/png",
+      purpose: "any",
     })),
     theme_color: opts.themeColor,
     background_color: opts.bgColor,
-    display: 'standalone',
-    start_url: '/',
+    display: "standalone",
+    start_url: "/",
   };
   return JSON.stringify(manifest, null, 2);
 }
@@ -177,7 +177,7 @@ export function buildLinkTags(opts: { themeColor: string }): string {
     `<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="${APPLE_TOUCH_SIZE}x${APPLE_TOUCH_SIZE}">`,
     '<link rel="manifest" href="/site.webmanifest">',
     `<meta name="theme-color" content="${opts.themeColor}">`,
-  ].join('\n');
+  ].join("\n");
 }
 
 /**
@@ -189,7 +189,7 @@ export function buildLinkTags(opts: { themeColor: string }): string {
  */
 export function bytesToBase64(bytes: Uint8Array): string {
   const CHUNK = 0x8000;
-  let binary = '';
+  let binary = "";
   for (let i = 0; i < bytes.length; i += CHUNK) {
     binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
   }
@@ -198,13 +198,13 @@ export function bytesToBase64(bytes: Uint8Array): string {
 
 /** Normalize a user-supplied hex color, or throw an actionable error. */
 function normalizeHexColor(raw: string, label: string): string {
-  const value = (raw ?? '').trim();
-  const body = value.startsWith('#') ? value.slice(1) : value;
+  const value = (raw ?? "").trim();
+  const body = value.startsWith("#") ? value.slice(1) : value;
   if (!/^[0-9a-fA-F]{3}$/.test(body) && !/^[0-9a-fA-F]{6}$/.test(body)) {
     throw new ToolError(
-      'bad-color',
+      "bad-color",
       `${label} is not a hex color: "${value}".`,
-      'Use a 3 or 6 digit hex value such as #5B4BD6 or #fff.',
+      "Use a 3 or 6 digit hex value such as #5B4BD6 or #fff.",
     );
   }
   return `#${body.toLowerCase()}`;
@@ -220,32 +220,32 @@ function formatBytes(count: number): string {
 export async function run(input: Uint8Array | string, opts: FaviconOpts): Promise<FaviconResult> {
   if (input === null || input === undefined || input.length === 0) {
     throw new ToolError(
-      'empty-input',
-      'No image was provided.',
-      'Drop a PNG onto the input area or pick one with the file button.',
+      "empty-input",
+      "No image was provided.",
+      "Drop a PNG onto the input area or pick one with the file button.",
     );
   }
 
-  if (typeof input === 'string') {
+  if (typeof input === "string") {
     throw new ToolError(
-      'not-an-image',
-      'This tool needs image bytes, but it received text.',
-      'Drop a PNG file onto the input area instead of pasting text.',
+      "not-an-image",
+      "This tool needs image bytes, but it received text.",
+      "Drop a PNG file onto the input area instead of pasting text.",
     );
   }
 
   if (!hasPngSignature(input)) {
     throw new ToolError(
-      'png-only',
-      'That file is not a PNG. The pure logic layer only packs PNG data today, because reading other formats needs a canvas.',
-      'Convert the image to PNG first, or use the editor panel once it ships: the panel decodes JPEG, WebP, SVG, and friends before packing.',
+      "png-only",
+      "That file is not a PNG. The pure logic layer only packs PNG data today, because reading other formats needs a canvas.",
+      "Convert the image to PNG first, or use the editor panel once it ships: the panel decodes JPEG, WebP, SVG, and friends before packing.",
     );
   }
 
   const { width, height } = readPngSize(input);
-  const appName = (opts.appName ?? '').trim() || 'My App';
-  const themeColor = normalizeHexColor(opts.themeColor ?? '#5B4BD6', 'Theme color');
-  const bgColor = normalizeHexColor(opts.bgColor ?? '#ffffff', 'Background color');
+  const appName = (opts.appName ?? "").trim() || "My App";
+  const themeColor = normalizeHexColor(opts.themeColor ?? "#5B4BD6", "Theme color");
+  const bgColor = normalizeHexColor(opts.bgColor ?? "#ffffff", "Background color");
 
   const rows: FaviconResult = {
     Source: `${width} x ${height} PNG, ${formatBytes(input.length)}`,
@@ -263,7 +263,7 @@ export async function run(input: Uint8Array | string, opts: FaviconOpts): Promis
     );
   }
   if (problems.length > 0) {
-    rows.Warning = `Heads up: ${problems.join(', and ')}. The files below were still generated. For the sharpest result, start from a square PNG of at least 512 by 512.`;
+    rows.Warning = `Heads up: ${problems.join(", and ")}. The files below were still generated. For the sharpest result, start from a square PNG of at least 512 by 512.`;
   }
 
   // The ICO carries the source PNG untouched at its declared size. Proper
@@ -271,16 +271,16 @@ export async function run(input: Uint8Array | string, opts: FaviconOpts): Promis
   const icoSize = Math.min(256, Math.max(1, Math.min(width, height)));
   const ico = buildIco([{ size: icoSize, png: input }]);
 
-  rows['favicon.ico'] = `data:image/x-icon;base64,${bytesToBase64(ico)}`;
-  rows['site.webmanifest'] = buildManifest({
+  rows["favicon.ico"] = `data:image/x-icon;base64,${bytesToBase64(ico)}`;
+  rows["site.webmanifest"] = buildManifest({
     name: appName,
     shortName: appName,
     themeColor,
     bgColor,
   });
-  rows['Link tags'] = buildLinkTags({ themeColor });
-  rows['Next step'] =
-    'Save the ICO as favicon.ico, the manifest as site.webmanifest, and paste the link tags into your head. The editor panel will resize your source into proper 16, 32, 180, 192, and 512 pixel variants; until it ships, this ICO holds one image and browsers scale it down themselves.';
+  rows["Link tags"] = buildLinkTags({ themeColor });
+  rows["Next step"] =
+    "Save the ICO as favicon.ico, the manifest as site.webmanifest, and paste the link tags into your head. The editor panel will resize your source into proper 16, 32, 180, 192, and 512 pixel variants; until it ships, this ICO holds one image and browsers scale it down themselves.";
 
   return rows;
 }

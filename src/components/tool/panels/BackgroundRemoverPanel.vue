@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue';
-import { Check, X } from 'lucide-vue-next';
-import { ToolError, type ToolMeta } from '@/tools/types';
-import { shouldAutoDownload, isMetered, onConnectionChange } from '@/lib/connection';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
+import { Check, X } from "lucide-vue-next";
+import { ToolError, type ToolMeta } from "@/tools/types";
+import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 /**
  * Bespoke panel for the background remover.
@@ -52,7 +52,7 @@ import {
  */
 defineProps<{ meta: ToolMeta }>();
 
-type MatteLogic = typeof import('@/tools/background-remover/index');
+type MatteLogic = typeof import("@/tools/background-remover/index");
 
 /** The shape of the one model output this panel reads. */
 interface MatteTensor {
@@ -71,7 +71,7 @@ interface Engine {
 /* ---------------------------------------------------------------- */
 
 /** Directory name under /models/, which is what transformers.js resolves. */
-const MODEL_ID = 'modnet';
+const MODEL_ID = "modnet";
 /** Staged size of the quantized weights, used before the real total arrives. */
 const MODEL_BYTES = 6_632_188;
 /** Photos larger than this are scaled down first, with a note in the UI. */
@@ -92,7 +92,7 @@ const MODEL_MAX_EDGE = 1024;
 /* ---------------------------------------------------------------- */
 
 const supported = ref(true);
-const fileName = ref('');
+const fileName = ref("");
 const originalUrl = ref<string | null>(null);
 const sourceImg = shallowRef<HTMLImageElement | null>(null);
 const sourceWidth = ref(0);
@@ -101,7 +101,7 @@ const decodeFailed = ref(false);
 const dragging = ref(false);
 const fileInput = ref<HTMLInputElement>();
 
-const engineState = ref<'idle' | 'loading' | 'ready'>('idle');
+const engineState = ref<"idle" | "loading" | "ready">("idle");
 const downloadedBytes = ref(0);
 const downloadTotal = ref(0);
 
@@ -111,20 +111,20 @@ const metered = ref(false);
 let pendingAutoStart = false;
 let stopConnectionWatch: () => void = () => {};
 
-const outputMode = ref('transparent');
-const bgColor = ref('#ffffff');
+const outputMode = ref("transparent");
+const bgColor = ref("#ffffff");
 const featherEdges = ref(true);
 
 const running = ref(false);
 const resultUrl = ref<string | null>(null);
-const resultType = ref('image/png');
+const resultType = ref("image/png");
 const resultBytes = ref(0);
 const elapsedMs = ref(0);
 const downscaleNote = ref<string | null>(null);
 const error = ref<{ message: string; fix?: string } | null>(null);
 
 const hasFile = computed(() => sourceImg.value !== null);
-const canRun = computed(() => hasFile.value && !running.value && engineState.value !== 'loading');
+const canRun = computed(() => hasFile.value && !running.value && engineState.value !== "loading");
 const downloadPercent = computed(() => {
   const total = downloadTotal.value || MODEL_BYTES;
   return Math.min(100, Math.round((downloadedBytes.value / total) * 100));
@@ -135,7 +135,7 @@ const downloadLabel = computed(
       downloadTotal.value || MODEL_BYTES,
     )} MB)`,
 );
-const resultExtension = computed(() => (resultType.value === 'image/png' ? 'png' : 'jpg'));
+const resultExtension = computed(() => (resultType.value === "image/png" ? "png" : "jpg"));
 
 /* ---------------------------------------------------------------- */
 /* small helpers                                                     */
@@ -147,7 +147,7 @@ function megabytes(bytes: number): string {
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -158,8 +158,8 @@ function humanSize(bytes: number): string {
 }
 
 function baseName(name: string): string {
-  const dot = name.lastIndexOf('.');
-  return dot > 0 ? name.slice(0, dot) : name || 'photo';
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(0, dot) : name || "photo";
 }
 
 function revoke(url: string | null) {
@@ -173,7 +173,7 @@ function toToolError(e: unknown): { message: string; fix?: string } {
 }
 
 function triggerDownload(url: string, name: string) {
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = name;
   document.body.appendChild(a);
@@ -191,7 +191,7 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string, q?: number): Prom
 
 let logicPromise: Promise<MatteLogic> | null = null;
 function loadLogic(): Promise<MatteLogic> {
-  logicPromise ??= import('@/tools/background-remover/index');
+  logicPromise ??= import("@/tools/background-remover/index");
   return logicPromise;
 }
 
@@ -201,29 +201,29 @@ const engine = shallowRef<Engine | null>(null);
 let sawAggregateProgress = false;
 
 function onModelProgress(info: { status: string; loaded?: number; total?: number }) {
-  if (info.status === 'progress_total') sawAggregateProgress = true;
-  else if (info.status !== 'progress' || sawAggregateProgress) return;
-  if (typeof info.total === 'number' && info.total > 0) downloadTotal.value = info.total;
-  if (typeof info.loaded === 'number') downloadedBytes.value = info.loaded;
+  if (info.status === "progress_total") sawAggregateProgress = true;
+  else if (info.status !== "progress" || sawAggregateProgress) return;
+  if (typeof info.total === "number" && info.total > 0) downloadTotal.value = info.total;
+  if (typeof info.loaded === "number") downloadedBytes.value = info.loaded;
 }
 
 async function createEngine(): Promise<Engine> {
   // Imported here rather than at module scope so the ~1 MB runtime and the
   // ONNX backend stay out of the page bundle until a visitor asks for them.
-  const tf = await import('@huggingface/transformers');
+  const tf = await import("@huggingface/transformers");
 
   // Everything is served from this origin. Setting wasmPaths before the first
   // session is created is what stops the runtime reaching for a CDN.
   tf.env.allowRemoteModels = false;
   tf.env.allowLocalModels = true;
-  tf.env.localModelPath = '/models/';
-  if (tf.env.backends.onnx.wasm) tf.env.backends.onnx.wasm.wasmPaths = '/models/ort/';
+  tf.env.localModelPath = "/models/";
+  if (tf.env.backends.onnx.wasm) tf.env.backends.onnx.wasm.wasmPaths = "/models/ort/";
 
   const model = await tf.AutoModel.from_pretrained(MODEL_ID, {
     // The staged copy is the weights only, so the config is supplied inline.
-    config: { model_type: 'modnet' } as never,
-    dtype: 'q8',
-    device: 'wasm',
+    config: { model_type: "modnet" } as never,
+    dtype: "q8",
+    device: "wasm",
     progress_callback: onModelProgress,
   });
 
@@ -233,28 +233,28 @@ async function createEngine(): Promise<Engine> {
 
   return {
     run: (inputs) => callable(inputs),
-    makeTensor: (data, dims) => new tf.Tensor('float32', data, dims),
+    makeTensor: (data, dims) => new tf.Tensor("float32", data, dims),
   };
 }
 
 async function ensureEngine(): Promise<Engine> {
   if (engine.value) return engine.value;
-  engineState.value = 'loading';
+  engineState.value = "loading";
   enginePromise ??= createEngine();
   try {
     const loaded = await enginePromise;
     engine.value = loaded;
-    engineState.value = 'ready';
+    engineState.value = "ready";
     downloadedBytes.value = downloadTotal.value || MODEL_BYTES;
     return loaded;
   } catch (e) {
     // A failed load must not poison the singleton: the next press retries.
     enginePromise = null;
-    engineState.value = 'idle';
+    engineState.value = "idle";
     throw new ToolError(
-      'model-load-failed',
+      "model-load-failed",
       `The matting model could not be started: ${e instanceof Error ? e.message : String(e)}`,
-      'Check your connection and press Load model again. The weights are served from this site, so an ad blocker will not be the cause.',
+      "Check your connection and press Load model again. The weights are served from this site, so an ad blocker will not be the cause.",
     );
   }
 }
@@ -276,7 +276,7 @@ async function loadModel() {
  * start and remembers to auto-start later if the link turns unmetered.
  */
 function autoStartModel() {
-  if (engineState.value !== 'idle') return;
+  if (engineState.value !== "idle") return;
   if (shouldAutoDownload()) {
     void loadModel();
   } else {
@@ -328,8 +328,8 @@ async function readFile(file: File) {
   await loadSource(url);
   if (decodeFailed.value) {
     error.value = {
-      message: 'This browser could not decode that file as an image.',
-      fix: 'Try a JPEG, PNG, or WebP file. HEIC photos from an iPhone need converting first.',
+      message: "This browser could not decode that file as an image.",
+      fix: "Try a JPEG, PNG, or WebP file. HEIC photos from an iPhone need converting first.",
     };
   }
 }
@@ -346,7 +346,7 @@ function onPickFile(e: Event) {
   if (!file) return;
   readFile(file).then(() => {
     // Reset so picking the same file again still fires a change event.
-    picker.value = '';
+    picker.value = "";
   });
 }
 
@@ -357,10 +357,10 @@ function clearFile() {
   sourceImg.value = null;
   sourceWidth.value = 0;
   sourceHeight.value = 0;
-  fileName.value = '';
+  fileName.value = "";
   decodeFailed.value = false;
   error.value = null;
-  if (fileInput.value) fileInput.value.value = '';
+  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -410,19 +410,19 @@ function drawInto(
   w: number,
   h: number,
 ): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) {
     throw new ToolError(
-      'no-canvas',
-      'This browser refused to give the page a 2D canvas, so the photo cannot be read.',
-      'Turn off canvas blocking or anti fingerprinting for this site, then try again.',
+      "no-canvas",
+      "This browser refused to give the page a 2D canvas, so the photo cannot be read.",
+      "Turn off canvas blocking or anti fingerprinting for this site, then try again.",
     );
   }
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(img, 0, 0, w, h);
   return { canvas, ctx };
 }
@@ -456,17 +456,17 @@ function upscaleMatte(
   fromH: number,
   toW: number,
   toH: number,
-  fallback: MatteLogic['resizeMatteNearest'],
+  fallback: MatteLogic["resizeMatteNearest"],
 ): Float32Array | Uint8ClampedArray {
   if (fromW === toW && fromH === toH) return clampMatte(matte);
-  const src = document.createElement('canvas');
+  const src = document.createElement("canvas");
   src.width = fromW;
   src.height = fromH;
-  const srcCtx = src.getContext('2d', { willReadFrequently: true });
-  const dst = document.createElement('canvas');
+  const srcCtx = src.getContext("2d", { willReadFrequently: true });
+  const dst = document.createElement("canvas");
   dst.width = toW;
   dst.height = toH;
-  const dstCtx = dst.getContext('2d', { willReadFrequently: true });
+  const dstCtx = dst.getContext("2d", { willReadFrequently: true });
   if (!srcCtx || !dstCtx) return clampMatte(fallback(matte, fromW, fromH, toW, toH));
 
   const clamped = clampMatte(matte);
@@ -481,7 +481,7 @@ function upscaleMatte(
   srcCtx.putImageData(grey, 0, 0);
 
   dstCtx.imageSmoothingEnabled = true;
-  dstCtx.imageSmoothingQuality = 'high';
+  dstCtx.imageSmoothingQuality = "high";
   dstCtx.drawImage(src, 0, 0, toW, toH);
 
   const scaled = dstCtx.getImageData(0, 0, toW, toH).data;
@@ -530,9 +530,9 @@ async function removeBackground() {
     const matte = outputs.output?.data;
     if (!matte || matte.length !== pixels) {
       throw new ToolError(
-        'unexpected-output',
-        'The matting model returned a result this tool does not recognise.',
-        'Reload the page so the model is read again from the browser cache.',
+        "unexpected-output",
+        "The matting model returned a result this tool does not recognise.",
+        "Reload the page so the model is read again from the browser cache.",
       );
     }
 
@@ -545,26 +545,26 @@ async function removeBackground() {
       logic.boxBlurAlpha(image.data, work.w, work.h, featherRadius(work.w, work.h));
     }
 
-    if (outputMode.value === 'transparent') {
+    if (outputMode.value === "transparent") {
       target.ctx.putImageData(image, 0, 0);
-      resultType.value = 'image/png';
+      resultType.value = "image/png";
     } else {
-      const fill = outputMode.value === 'white' ? '#ffffff' : bgColor.value;
+      const fill = outputMode.value === "white" ? "#ffffff" : bgColor.value;
       const composed = logic.compositeOnColor(image.data, work.w, work.h, fill);
       target.ctx.putImageData(new ImageData(composed, work.w, work.h), 0, 0);
-      resultType.value = 'image/jpeg';
+      resultType.value = "image/jpeg";
     }
 
     const blob = await canvasToBlob(
       target.canvas,
       resultType.value,
-      resultType.value === 'image/jpeg' ? 0.92 : undefined,
+      resultType.value === "image/jpeg" ? 0.92 : undefined,
     );
     if (!blob) {
       throw new ToolError(
-        'encode-failed',
-        'The browser could not encode the finished image.',
-        'Try a smaller photo, or switch the background option and run it again.',
+        "encode-failed",
+        "The browser could not encode the finished image.",
+        "Try a smaller photo, or switch the background option and run it again.",
       );
     }
     resultUrl.value = URL.createObjectURL(blob);
@@ -590,7 +590,7 @@ function downloadResult() {
 /* ---------------------------------------------------------------- */
 
 onMounted(() => {
-  supported.value = typeof WebAssembly !== 'undefined';
+  supported.value = typeof WebAssembly !== "undefined";
   if (!supported.value) return;
   metered.value = isMetered();
   autoStartModel();
@@ -618,9 +618,7 @@ onUnmounted(() => {
       role="status"
       class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
     >
-      <p class="font-medium text-muted-foreground">
-        This browser cannot run the matting model.
-      </p>
+      <p class="font-medium text-muted-foreground">This browser cannot run the matting model.</p>
       <p class="mt-1 text-muted-foreground">
         {{ meta.name }} runs a neural network inside this tab, which needs WebAssembly. If this
         message stays, your browser has WebAssembly turned off or is too old to run it.
@@ -640,26 +638,11 @@ onUnmounted(() => {
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Photo
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            @click="fileInput?.click()"
-          >
-            Open file…
-          </Button>
-          <input
-            ref="fileInput"
-            type="file"
-            class="hidden"
-            accept="image/*"
-            @change="onPickFile"
-          >
+          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
+          <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
         </div>
 
-        <div
-          v-if="hasFile"
-          class="px-3 pt-2 pb-3"
-        >
+        <div v-if="hasFile" class="px-3 pt-2 pb-3">
           <span
             class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
@@ -678,10 +661,7 @@ onUnmounted(() => {
           </span>
         </div>
 
-        <p
-          v-else
-          class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
-        >
+        <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
           Drop a photo of a person here, or pick one with the button. Everything runs in this tab:
           your files and inputs never leave your device.
         </p>
@@ -696,10 +676,7 @@ onUnmounted(() => {
         <p class="font-medium text-destructive">
           {{ error.message }}
         </p>
-        <p
-          v-if="error.fix"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="error.fix" class="mt-1 text-muted-foreground">
           {{ error.fix }}
         </p>
       </div>
@@ -720,17 +697,11 @@ onUnmounted(() => {
           uploaded: your files and inputs never leave your device.
         </p>
 
-        <p
-          v-if="metered && engineState === 'idle'"
-          class="text-xs text-muted-foreground"
-        >
+        <p v-if="metered && engineState === 'idle'" class="text-xs text-muted-foreground">
           Your connection looks metered, so the model waits for you to start it.
         </p>
 
-        <div
-          v-if="engineState === 'loading'"
-          class="flex flex-col gap-2"
-        >
+        <div v-if="engineState === 'loading'" class="flex flex-col gap-2">
           <div
             class="h-2 overflow-hidden rounded-full bg-background"
             role="progressbar"
@@ -749,20 +720,12 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <Button
-          v-else
-          class="self-start"
-          size="sm"
-          @click="loadModel"
-        >
+        <Button v-else class="self-start" size="sm" @click="loadModel">
           Load model (6.3 MB)
         </Button>
       </div>
 
-      <p
-        v-else
-        class="flex items-center gap-1.5 text-xs text-muted-foreground"
-      >
+      <p v-else class="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Check class="size-3.5 text-[var(--positive)]" />
         Model ready. It stays loaded for as long as this page is open.
       </p>
@@ -774,43 +737,21 @@ onUnmounted(() => {
         </span>
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-44 flex-col gap-1.5">
-            <Label
-              for="bg-output"
-              class="text-xs text-muted-foreground"
-            >Background</Label>
-            <Select
-              :model-value="outputMode"
-              @update:model-value="(v) => (outputMode = String(v))"
-            >
-              <SelectTrigger
-                id="bg-output"
-                size="sm"
-                class="w-full bg-card"
-              >
+            <Label for="bg-output" class="text-xs text-muted-foreground">Background</Label>
+            <Select :model-value="outputMode" @update:model-value="(v) => (outputMode = String(v))">
+              <SelectTrigger id="bg-output" size="sm" class="w-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="transparent">
-                  Transparent PNG
-                </SelectItem>
-                <SelectItem value="white">
-                  White
-                </SelectItem>
-                <SelectItem value="color">
-                  Custom color
-                </SelectItem>
+                <SelectItem value="transparent"> Transparent PNG </SelectItem>
+                <SelectItem value="white"> White </SelectItem>
+                <SelectItem value="color"> Custom color </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div
-            v-if="outputMode === 'color'"
-            class="flex w-32 flex-col gap-1.5"
-          >
-            <Label
-              for="bg-color"
-              class="text-xs text-muted-foreground"
-            >Color</Label>
+          <div v-if="outputMode === 'color'" class="flex w-32 flex-col gap-1.5">
+            <Label for="bg-color" class="text-xs text-muted-foreground">Color</Label>
             <Input
               id="bg-color"
               :model-value="bgColor"
@@ -826,51 +767,34 @@ onUnmounted(() => {
               :model-value="featherEdges"
               @update:model-value="(v) => (featherEdges = Boolean(v))"
             />
-            <Label
-              for="bg-feather"
-              class="text-xs text-muted-foreground"
-            >Feather edges</Label>
+            <Label for="bg-feather" class="text-xs text-muted-foreground">Feather edges</Label>
           </div>
         </div>
       </div>
 
       <!-- Run -->
       <div class="flex flex-wrap items-center gap-3">
-        <Button
-          :disabled="!canRun"
-          @click="removeBackground"
-        >
-          {{ running ? 'Working…' : 'Remove background' }}
+        <Button :disabled="!canRun" @click="removeBackground">
+          {{ running ? "Working…" : "Remove background" }}
         </Button>
-        <span
-          v-if="elapsedMs > 0"
-          class="font-mono text-xs text-muted-foreground tabular-nums"
-        >
+        <span v-if="elapsedMs > 0" class="font-mono text-xs text-muted-foreground tabular-nums">
           Done in {{ (elapsedMs / 1000).toFixed(1) }} s
         </span>
       </div>
 
-      <p
-        v-if="downscaleNote"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-if="downscaleNote" class="text-xs text-muted-foreground">
         {{ downscaleNote }}
       </p>
 
       <!-- Before and after -->
-      <div
-        v-if="hasFile && !decodeFailed"
-        class="grid gap-3 sm:grid-cols-2"
-      >
+      <div v-if="hasFile && !decodeFailed" class="grid gap-3 sm:grid-cols-2">
         <figure class="flex flex-col gap-1.5">
           <img
             :src="originalUrl ?? ''"
             alt="The photo as it was dropped in"
             class="block max-h-[360px] w-full rounded-[10px] object-contain shadow-[var(--sh-inset)]"
-          >
-          <figcaption class="text-xs text-muted-foreground">
-            Original
-          </figcaption>
+          />
+          <figcaption class="text-xs text-muted-foreground">Original</figcaption>
         </figure>
         <figure class="flex flex-col gap-1.5">
           <div class="checker rounded-[10px] shadow-[var(--sh-inset)]">
@@ -879,11 +803,8 @@ onUnmounted(() => {
               :src="resultUrl"
               alt="The photo with its background removed"
               class="block max-h-[360px] w-full rounded-[10px] object-contain"
-            >
-            <p
-              v-else
-              class="px-3 py-16 text-center text-sm text-muted-foreground"
-            >
+            />
+            <p v-else class="px-3 py-16 text-center text-sm text-muted-foreground">
               The cutout appears here.
             </p>
           </div>
@@ -891,21 +812,13 @@ onUnmounted(() => {
             <template v-if="resultUrl">
               Result, {{ humanSize(resultBytes) }} as {{ resultExtension.toUpperCase() }}
             </template>
-            <template v-else>
-              Result
-            </template>
+            <template v-else> Result </template>
           </figcaption>
         </figure>
       </div>
 
-      <div
-        v-if="resultUrl"
-        class="flex flex-wrap items-center gap-2"
-      >
-        <Button
-          size="sm"
-          @click="downloadResult"
-        >
+      <div v-if="resultUrl" class="flex flex-wrap items-center gap-2">
+        <Button size="sm" @click="downloadResult">
           Download {{ resultExtension.toUpperCase() }}
         </Button>
       </div>

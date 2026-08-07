@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * Spectrogram Viewer: the pure DSP layer.
@@ -52,16 +52,16 @@ export function fft(re: Float32Array, im: Float32Array): void {
   const n = re.length;
   if (im.length !== n) {
     throw new ToolError(
-      'fft-length-mismatch',
+      "fft-length-mismatch",
       `The real and imaginary buffers have different lengths (${n} and ${im.length}).`,
-      'Allocate both arrays with the same power of two length before calling fft.',
+      "Allocate both arrays with the same power of two length before calling fft.",
     );
   }
   if (!isPowerOfTwo(n)) {
     throw new ToolError(
-      'fft-not-power-of-two',
+      "fft-not-power-of-two",
       `A radix-2 FFT needs a power of two length, but the buffer holds ${n} samples.`,
-      'Pad or trim the buffer to 256, 512, 1024, 2048, or another power of two.',
+      "Pad or trim the buffer to 256, 512, 1024, 2048, or another power of two.",
     );
   }
   if (n === 1) return;
@@ -126,9 +126,9 @@ const hannCache = new Map<number, Float32Array>();
 export function hannWindow(n: number): Float32Array {
   if (!Number.isInteger(n) || n < 2) {
     throw new ToolError(
-      'bad-window-length',
+      "bad-window-length",
       `A Hann window needs at least 2 points, but ${n} was requested.`,
-      'Pass a whole number of samples, normally the FFT size.',
+      "Pass a whole number of samples, normally the FFT size.",
     );
   }
   const cached = hannCache.get(n);
@@ -182,25 +182,25 @@ function checkOptions(o: SpectrogramOptions): { fftSize: number; hop: number; ma
   const fftSize = Number(o?.fftSize);
   if (!isPowerOfTwo(fftSize) || fftSize < 2) {
     throw new ToolError(
-      'bad-fft-size',
+      "bad-fft-size",
       `The FFT size must be a power of two, but ${o?.fftSize} was given.`,
-      'Use 1024, 2048, or 4096.',
+      "Use 1024, 2048, or 4096.",
     );
   }
   const hop = Number(o?.hop);
   if (!Number.isInteger(hop) || hop < 1) {
     throw new ToolError(
-      'bad-hop',
+      "bad-hop",
       `The hop size must be a whole number of samples of at least 1, but ${o?.hop} was given.`,
-      'A quarter of the FFT size is a good default, for example 512 with a 2048 point FFT.',
+      "A quarter of the FFT size is a good default, for example 512 with a 2048 point FFT.",
     );
   }
   const raw = o?.maxColumns === undefined ? DEFAULT_MAX_COLUMNS : Number(o.maxColumns);
   if (!Number.isFinite(raw) || raw < 1) {
     throw new ToolError(
-      'bad-max-columns',
+      "bad-max-columns",
       `maxColumns must be a positive number, but ${o?.maxColumns} was given.`,
-      'Leave it out to use the default of 2000 columns, or pass the pixel width you plan to draw.',
+      "Leave it out to use the default of 2000 columns, or pass the pixel width you plan to draw.",
     );
   }
   return { fftSize, hop, maxColumns: Math.floor(raw) };
@@ -216,15 +216,14 @@ export function planSpectrogram(sampleCount: number, o: SpectrogramOptions): Spe
   const { fftSize, hop, maxColumns } = checkOptions(o);
   if (!Number.isFinite(sampleCount) || sampleCount < 1) {
     throw new ToolError(
-      'empty-audio',
-      'There are no audio samples to analyze.',
-      'Load a file that contains at least one sample of audio.',
+      "empty-audio",
+      "There are no audio samples to analyze.",
+      "Load a file that contains at least one sample of audio.",
     );
   }
   // Clips shorter than one frame still get a single zero-padded frame, so a
   // very short blip is drawn rather than silently dropped.
-  const frameCount =
-    sampleCount < fftSize ? 1 : 1 + Math.floor((sampleCount - fftSize) / hop);
+  const frameCount = sampleCount < fftSize ? 1 : 1 + Math.floor((sampleCount - fftSize) / hop);
   const group = Math.max(1, Math.ceil(frameCount / maxColumns));
   const columnCount = Math.ceil(frameCount / group);
   return { fftSize, hop, frameCount, group, columnCount, freqBins: fftSize / 2 };
@@ -279,9 +278,9 @@ export function computeSpectrogramColumns(
   const plan = planSpectrogram(samples.length, o);
   if (!Number.isInteger(fromColumn) || fromColumn < 0) {
     throw new ToolError(
-      'bad-column-range',
+      "bad-column-range",
       `The first column index must be a whole number of at least 0, but ${fromColumn} was given.`,
-      'Start at 0 and advance by the number of columns you already have.',
+      "Start at 0 and advance by the number of columns you already have.",
     );
   }
   const wanted = Math.max(0, Math.min(columnCount, plan.columnCount - fromColumn));
@@ -351,16 +350,16 @@ export function computeWaveformPeaks(
 ): { min: Float32Array; max: Float32Array } {
   if (samples.length === 0) {
     throw new ToolError(
-      'empty-audio',
-      'There are no audio samples to build a waveform from.',
-      'Load a file that contains at least one sample of audio.',
+      "empty-audio",
+      "There are no audio samples to build a waveform from.",
+      "Load a file that contains at least one sample of audio.",
     );
   }
   if (!Number.isInteger(buckets) || buckets < 1) {
     throw new ToolError(
-      'bad-bucket-count',
+      "bad-bucket-count",
       `The bucket count must be a whole number of at least 1, but ${buckets} was given.`,
-      'Pass the pixel width of the waveform strip you are about to draw.',
+      "Pass the pixel width of the waveform strip you are about to draw.",
     );
   }
   const n = samples.length;
@@ -390,7 +389,7 @@ export function computeWaveformPeaks(
 /* Color                                                               */
 /* ------------------------------------------------------------------ */
 
-export type ColorScheme = 'viridis' | 'magma' | 'gray';
+export type ColorScheme = "viridis" | "magma" | "gray";
 
 export type Rgb = [number, number, number];
 
@@ -464,16 +463,16 @@ function sample(table: Rgb[], t: number): Rgb {
  */
 export function dbToColor(db: number, scheme: ColorScheme): Rgb {
   const t = clamp((db - DB_FLOOR) / -DB_FLOOR, 0, 1);
-  if (scheme === 'gray') {
+  if (scheme === "gray") {
     const v = Math.round(t * 255);
     return [v, v, v];
   }
-  if (scheme === 'viridis') return sample(VIRIDIS_STOPS, t);
-  if (scheme === 'magma') return sample(MAGMA_STOPS, t);
+  if (scheme === "viridis") return sample(VIRIDIS_STOPS, t);
+  if (scheme === "magma") return sample(MAGMA_STOPS, t);
   throw new ToolError(
-    'unknown-color-scheme',
+    "unknown-color-scheme",
     `There is no color scheme called "${scheme}".`,
-    'Choose viridis, magma, or gray.',
+    "Choose viridis, magma, or gray.",
   );
 }
 
@@ -494,10 +493,10 @@ export function secondsToLabel(sec: number, decimals = 0): string {
   const hours = Math.floor(whole / 3600);
   const minutes = Math.floor((whole % 3600) / 60);
   const seconds = whole % 60;
-  const pad = (n: number) => String(n).padStart(2, '0');
-  let tail = places > 0 ? (safe - whole).toFixed(places).slice(1) : '';
+  const pad = (n: number) => String(n).padStart(2, "0");
+  let tail = places > 0 ? (safe - whole).toFixed(places).slice(1) : "";
   // toFixed can round up to "1.000", which would print ":09.0" for 9.9999.
-  if (tail.startsWith('1')) tail = `.${'0'.repeat(places)}`;
+  if (tail.startsWith("1")) tail = `.${"0".repeat(places)}`;
   if (hours > 0) return `${hours}:${pad(minutes)}:${pad(seconds)}${tail}`;
   return `${minutes}:${pad(seconds)}${tail}`;
 }
@@ -509,7 +508,7 @@ export function freqToLabel(hz: number): string {
   if (rounded < 1000) return `${rounded} Hz`;
   const k = safe / 1000;
   const text = k < 100 ? k.toFixed(1) : k.toFixed(0);
-  return `${text.replace(/\.0$/, '')} kHz`;
+  return `${text.replace(/\.0$/, "")} kHz`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -517,8 +516,8 @@ export function freqToLabel(hz: number): string {
 /* ------------------------------------------------------------------ */
 
 function tag(bytes: Uint8Array, at: number, length: number): string {
-  if (at < 0 || at + length > bytes.length) return '';
-  let out = '';
+  if (at < 0 || at + length > bytes.length) return "";
+  let out = "";
   for (let i = at; i < at + length; i++) out += String.fromCharCode(bytes[i]!);
   return out;
 }
@@ -551,13 +550,13 @@ function positive(rate: number | null): number | null {
  * even boundary, and skipping that pad byte is what keeps the walk aligned.
  */
 function sniffWav(bytes: Uint8Array): number | null {
-  if (tag(bytes, 0, 4) !== 'RIFF' || tag(bytes, 8, 4) !== 'WAVE') return null;
+  if (tag(bytes, 0, 4) !== "RIFF" || tag(bytes, 8, 4) !== "WAVE") return null;
   let p = 12;
   while (p + 8 <= bytes.length) {
     const id = tag(bytes, p, 4);
     const size = u32le(bytes, p + 4);
     if (size === null) return null;
-    if (id === 'fmt ' && size >= 16) {
+    if (id === "fmt " && size >= 16) {
       // Field order in fmt: format tag (2), channels (2), sample rate (4).
       return positive(u32le(bytes, p + 12));
     }
@@ -575,7 +574,7 @@ function sniffWav(bytes: Uint8Array): number | null {
  * top 4 bits of the next byte.
  */
 function sniffFlac(bytes: Uint8Array): number | null {
-  if (tag(bytes, 0, 4) !== 'fLaC') return null;
+  if (tag(bytes, 0, 4) !== "fLaC") return null;
   if (bytes.length < 21) return null;
   if ((bytes[4]! & 0x7f) !== 0) return null;
   const rate = (bytes[18]! << 12) | (bytes[19]! << 4) | (bytes[20]! >> 4);
@@ -590,12 +589,12 @@ function sniffFlac(bytes: Uint8Array): number | null {
  * would be a guess rather than a fact from the header.
  */
 function sniffOgg(bytes: Uint8Array): number | null {
-  if (tag(bytes, 0, 4) !== 'OggS') return null;
+  if (tag(bytes, 0, 4) !== "OggS") return null;
   if (bytes.length < 27) return null;
   const segments = bytes[26]!;
   const payload = 27 + segments;
   if (payload + 16 > bytes.length) return null;
-  if (bytes[payload] !== 0x01 || tag(bytes, payload + 1, 6) !== 'vorbis') return null;
+  if (bytes[payload] !== 0x01 || tag(bytes, payload + 1, 6) !== "vorbis") return null;
   return positive(u32le(bytes, payload + 12));
 }
 
@@ -630,15 +629,15 @@ function extended80(bytes: Uint8Array, at: number): number | null {
  * so the walk mirrors the WAV one with the byte order flipped.
  */
 function sniffAiff(bytes: Uint8Array): number | null {
-  if (tag(bytes, 0, 4) !== 'FORM') return null;
+  if (tag(bytes, 0, 4) !== "FORM") return null;
   const form = tag(bytes, 8, 4);
-  if (form !== 'AIFF' && form !== 'AIFC') return null;
+  if (form !== "AIFF" && form !== "AIFC") return null;
   let p = 12;
   while (p + 8 <= bytes.length) {
     const id = tag(bytes, p, 4);
     const size = u32be(bytes, p + 4);
     if (size === null) return null;
-    if (id === 'COMM' && size >= 18) {
+    if (id === "COMM" && size >= 18) {
       // Field order in COMM: channels (2), frames (4), bits (2), rate (10).
       const rate = extended80(bytes, p + 16);
       return rate === null ? null : Math.round(rate);
@@ -671,7 +670,7 @@ const MP3_SCAN_LIMIT = 65536;
  */
 function sniffMp3(bytes: Uint8Array): number | null {
   let start = 0;
-  const hasId3 = tag(bytes, 0, 3) === 'ID3';
+  const hasId3 = tag(bytes, 0, 3) === "ID3";
   if (hasId3) {
     if (bytes.length < 10) return null;
     const size =
@@ -754,30 +753,27 @@ function formatBytes(count: number): string {
  * is not available to a pure function, so this reports the analysis settings
  * and what the viewer on this page will show instead of inventing numbers.
  */
-export function run(
-  input: Uint8Array | string,
-  opts: SpectrogramToolOpts,
-): SpectrogramResult {
+export function run(input: Uint8Array | string, opts: SpectrogramToolOpts): SpectrogramResult {
   if (input === null || input === undefined || input.length === 0) {
     throw new ToolError(
-      'empty-input',
-      'No audio was provided.',
-      'Drop an audio file onto the viewer or pick one with the file button.',
+      "empty-input",
+      "No audio was provided.",
+      "Drop an audio file onto the viewer or pick one with the file button.",
     );
   }
-  if (typeof input === 'string') {
+  if (typeof input === "string") {
     throw new ToolError(
-      'not-audio',
-      'This tool needs audio bytes, but it received text.',
-      'Drop a WAV, MP3, FLAC, OGG, or M4A file onto the viewer instead of pasting text.',
+      "not-audio",
+      "This tool needs audio bytes, but it received text.",
+      "Drop a WAV, MP3, FLAC, OGG, or M4A file onto the viewer instead of pasting text.",
     );
   }
 
   const fftSize = Number(opts?.fftSize ?? 2048);
   const safeFft = isPowerOfTwo(fftSize) ? fftSize : 2048;
   const hop = safeFft / 4;
-  const colors = String(opts?.colors ?? 'viridis');
-  const scale = String(opts?.scale ?? 'linear');
+  const colors = String(opts?.colors ?? "viridis");
+  const scale = String(opts?.scale ?? "linear");
   const showWaveform = opts?.showWaveform !== false;
 
   // 44.1 kHz is the safe worked example: the real rate comes from the file
@@ -789,16 +785,20 @@ export function run(
 
   return {
     Status:
-      'Spectrogram Viewer runs in the canvas panel on this page. Decoding compressed audio needs the browser audio decoder, so the picture is drawn there rather than returned as text.',
+      "Spectrogram Viewer runs in the canvas panel on this page. Decoding compressed audio needs the browser audio decoder, so the picture is drawn there rather than returned as text.",
     File: `${formatBytes(input.length)} of audio data`,
-    'FFT size': `${safeFft} samples per frame, hop ${hop} samples (75 percent overlap)`,
-    'Frequency resolution': `${safeFft / 2} bins, about ${binWidth.toFixed(1)} Hz apart at a 44.1 kHz sample rate`,
-    'Time resolution': `each frame covers about ${frameMs.toFixed(1)} ms and starts about ${hopMs.toFixed(1)} ms after the last one`,
-    'Color scheme': colors,
-    'Frequency axis': scale === 'log' ? 'logarithmic, 20 Hz to Nyquist' : 'linear, 0 Hz to Nyquist',
-    Waveform: showWaveform ? 'shown above the spectrogram' : 'hidden',
-    'Level scale': `magnitude in decibels, 0 dB is full scale and anything below ${DB_FLOOR} dB is floored`,
+    "FFT size": `${safeFft} samples per frame, hop ${hop} samples (75 percent overlap)`,
+    "Frequency resolution": `${safeFft / 2} bins, about ${binWidth.toFixed(1)} Hz apart at a 44.1 kHz sample rate`,
+    "Time resolution": `each frame covers about ${frameMs.toFixed(1)} ms and starts about ${hopMs.toFixed(1)} ms after the last one`,
+    "Color scheme": colors,
+    "Frequency axis": scale === "log" ? "logarithmic, 20 Hz to Nyquist" : "linear, 0 Hz to Nyquist",
+    Waveform: showWaveform ? "shown above the spectrogram" : "hidden",
+    "Level scale": `magnitude in decibels, 0 dB is full scale and anything below ${DB_FLOOR} dB is floored`,
   };
 }
 
-export default { run } satisfies ToolLogic<Uint8Array | string, SpectrogramResult, SpectrogramToolOpts>;
+export default { run } satisfies ToolLogic<
+  Uint8Array | string,
+  SpectrogramResult,
+  SpectrogramToolOpts
+>;

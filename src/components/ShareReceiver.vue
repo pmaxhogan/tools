@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from "vue";
 
 /**
  * Receives content shared into the installed PWA. The service worker parks the
@@ -22,8 +22,8 @@ interface CatalogEntry {
 
 const props = defineProps<{ catalog: CatalogEntry[] }>();
 
-const SHARE_CACHE = 'share-target-inbox';
-const SHARE_META_KEY = '/__share/meta';
+const SHARE_CACHE = "share-target-inbox";
+const SHARE_META_KEY = "/__share/meta";
 /** Matches fragment.ts MAX_FRAGMENT_INPUT: bigger text is linked, not carried. */
 const MAX_HANDOFF = 2000;
 
@@ -44,7 +44,7 @@ interface Payload {
 const loading = ref(true);
 const payload = ref<Payload | null>(null);
 /** Text content eligible to be handed straight into a text tool, if small. */
-const handoffText = ref('');
+const handoffText = ref("");
 
 const bySlug = computed(() => new Map(props.catalog.map((t) => [t.slug, t])));
 
@@ -54,7 +54,7 @@ function entries(slugs: string[]): CatalogEntry[] {
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -71,20 +71,26 @@ const detection = computed<{ label: string; slugs: string[] } | null>(() => {
   const file = p.files[0];
   if (file) {
     const t = file.type.toLowerCase();
-    if (t.startsWith('image/')) return { label: 'an image', slugs: ['image-redactor', 'image-toolbox', 'image-to-text'] };
-    if (t.startsWith('audio/')) return { label: 'audio', slugs: ['audio-spectrogram', 'audio-trimmer'] };
-    if (t.startsWith('video/')) return { label: 'a video', slugs: ['video-converter', 'video-to-gif'] };
-    if (t.startsWith('text/') || t.includes('json'))
-      return { label: 'a text file', slugs: ['json-formatter', 'data-format-converter', 'case-converter'] };
-    return { label: 'a file', slugs: ['file-type-identifier'] };
+    if (t.startsWith("image/"))
+      return { label: "an image", slugs: ["image-redactor", "image-toolbox", "image-to-text"] };
+    if (t.startsWith("audio/"))
+      return { label: "audio", slugs: ["audio-spectrogram", "audio-trimmer"] };
+    if (t.startsWith("video/"))
+      return { label: "a video", slugs: ["video-converter", "video-to-gif"] };
+    if (t.startsWith("text/") || t.includes("json"))
+      return {
+        label: "a text file",
+        slugs: ["json-formatter", "data-format-converter", "case-converter"],
+      };
+    return { label: "a file", slugs: ["file-type-identifier"] };
   }
   const shared = p.text || p.url || p.title;
   if (shared) {
-    const looksUrl = /^https?:\/\/\S+$/i.test((p.url || p.text || '').trim());
+    const looksUrl = /^https?:\/\/\S+$/i.test((p.url || p.text || "").trim());
     const slugs = looksUrl
-      ? ['url-parser', 'json-formatter', 'case-converter']
-      : ['json-formatter', 'data-format-converter', 'case-converter'];
-    return { label: looksUrl ? 'a link' : 'text', slugs };
+      ? ["url-parser", "json-formatter", "case-converter"]
+      : ["json-formatter", "data-format-converter", "case-converter"];
+    return { label: looksUrl ? "a link" : "text", slugs };
   }
   return null;
 });
@@ -104,12 +110,12 @@ function toolHref(slug: string): string {
 
 const previewText = computed(() => {
   const p = payload.value;
-  if (!p) return '';
-  return (p.text || p.url || p.title || '').slice(0, 600);
+  if (!p) return "";
+  return (p.text || p.url || p.title || "").slice(0, 600);
 });
 
 async function readShare(): Promise<Payload | null> {
-  if (!('caches' in window)) return null;
+  if (!("caches" in window)) return null;
   const cache = await caches.open(SHARE_CACHE);
   const metaRes = await cache.match(SHARE_META_KEY);
   if (!metaRes) return null;
@@ -127,9 +133,9 @@ async function readShare(): Promise<Payload | null> {
     const shared: SharedFile = { name: f.name, type: f.type, size: f.size };
     if (res) {
       const blob = await res.blob();
-      if (f.type.startsWith('image/')) shared.previewUrl = URL.createObjectURL(blob);
+      if (f.type.startsWith("image/")) shared.previewUrl = URL.createObjectURL(blob);
       // A small text file can be handed straight into a text tool.
-      if ((f.type.startsWith('text/') || f.type.includes('json')) && f.size <= MAX_HANDOFF) {
+      if ((f.type.startsWith("text/") || f.type.includes("json")) && f.size <= MAX_HANDOFF) {
         handoffText.value = await blob.text();
       }
     }
@@ -139,18 +145,18 @@ async function readShare(): Promise<Payload | null> {
   // One-shot: consume the slot so a reload shows the empty state, not stale data.
   for (const key of await cache.keys()) await cache.delete(key);
 
-  return { title: meta.title || '', text: meta.text || '', url: meta.url || '', files };
+  return { title: meta.title || "", text: meta.text || "", url: meta.url || "", files };
 }
 
 /** GET fallback: text/url arriving as query params (some share flows use GET). */
 function readQueryFallback(): Payload | null {
   const q = new URLSearchParams(window.location.search);
-  const title = q.get('title') || '';
-  const text = q.get('text') || '';
-  const url = q.get('url') || '';
+  const title = q.get("title") || "";
+  const text = q.get("text") || "";
+  const url = q.get("url") || "";
   if (!title && !text && !url) return null;
   // Strip so shared content does not linger in the address bar.
-  history.replaceState(null, '', window.location.pathname);
+  history.replaceState(null, "", window.location.pathname);
   return { title, text, url, files: [] };
 }
 
@@ -160,7 +166,7 @@ onMounted(async () => {
     if (!result) result = readQueryFallback();
     if (result) {
       payload.value = result;
-      if (!handoffText.value) handoffText.value = result.text || result.url || result.title || '';
+      if (!handoffText.value) handoffText.value = result.text || result.url || result.title || "";
     }
   } catch {
     payload.value = null;
@@ -196,13 +202,13 @@ onMounted(async () => {
               :src="file.previewUrl"
               alt=""
               class="size-12 shrink-0 rounded-md object-cover"
-            >
+            />
             <div class="min-w-0">
               <p class="truncate text-sm font-medium">
                 {{ file.name }}
               </p>
               <p class="text-xs text-muted-foreground">
-                {{ file.type || 'unknown type' }} &middot; {{ humanSize(file.size) }}
+                {{ file.type || "unknown type" }} &middot; {{ humanSize(file.size) }}
               </p>
             </div>
           </div>
@@ -218,9 +224,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <h2 class="mt-6 text-sm font-semibold text-muted-foreground">
-        Open it in
-      </h2>
+      <h2 class="mt-6 text-sm font-semibold text-muted-foreground">Open it in</h2>
       <div class="mt-3 grid gap-3 sm:grid-cols-2">
         <a
           v-for="tool in matches"
@@ -238,17 +242,12 @@ onMounted(async () => {
       </p>
     </template>
 
-    <div
-      v-else
-      class="rounded-[18px] border bg-card p-8 text-center shadow-[var(--sh-sm)]"
-    >
-      <h2 class="text-lg font-semibold">
-        Nothing was shared
-      </h2>
+    <div v-else class="rounded-[18px] border bg-card p-8 text-center shadow-[var(--sh-sm)]">
+      <h2 class="text-lg font-semibold">Nothing was shared</h2>
       <p class="mx-auto mt-2 max-w-[46ch] text-sm text-muted-foreground">
-        Install this site to your home screen, then use your phone's Share button on an
-        image, file, link, or piece of text and pick tools.maxhogan.dev. It will open here
-        with the right tools ready to go.
+        Install this site to your home screen, then use your phone's Share button on an image, file,
+        link, or piece of text and pick tools.maxhogan.dev. It will open here with the right tools
+        ready to go.
       </p>
       <a
         href="/"

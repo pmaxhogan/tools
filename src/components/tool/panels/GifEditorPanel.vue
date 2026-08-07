@@ -22,19 +22,19 @@
  *    the selected files and nothing else. The planner refuses with that reason
  *    rather than sending a command that would fail in the worker.
  */
-import { computed, reactive, ref } from 'vue';
-import type { ToolMeta } from '@/tools/types';
-import { getLogTail, type MediaBuildContext, type MediaBuildResult } from '@/lib/ffmpeg';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { computed, reactive, ref } from "vue";
+import type { ToolMeta } from "@/tools/types";
+import { getLogTail, type MediaBuildContext, type MediaBuildResult } from "@/lib/ffmpeg";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import MediaShell from '../MediaShell.vue';
+} from "@/components/ui/select";
+import MediaShell from "../MediaShell.vue";
 import {
   buildCaption,
   buildCrop,
@@ -46,7 +46,7 @@ import {
   parseGifInfo,
   type GifOperation,
   type GifOptions,
-} from '@/tools/gif-editor/index';
+} from "@/tools/gif-editor/index";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -55,7 +55,7 @@ defineProps<{ meta: ToolMeta }>();
 /* ---------------------------------------------------------------- */
 
 const opts = reactive<GifOptions>({
-  operation: 'resize',
+  operation: "resize",
   width: 480,
   cropX: 0,
   cropY: 0,
@@ -65,8 +65,8 @@ const opts = reactive<GifOptions>({
   colors: 128,
   factor: 2,
   speedFps: 0,
-  text: '',
-  position: 'bottom',
+  text: "",
+  position: "bottom",
   fontSize: 32,
   everyNth: 1,
   frames: 8,
@@ -76,38 +76,38 @@ const opts = reactive<GifOptions>({
 const sourceInfo = ref<string | null>(null);
 
 const OPERATIONS: { value: GifOperation; label: string }[] = [
-  { value: 'resize', label: 'Resize' },
-  { value: 'crop', label: 'Crop' },
-  { value: 'optimize', label: 'Optimize' },
-  { value: 'reverse', label: 'Reverse' },
-  { value: 'speed', label: 'Change speed' },
-  { value: 'caption', label: 'Caption' },
-  { value: 'split', label: 'Split into frames' },
+  { value: "resize", label: "Resize" },
+  { value: "crop", label: "Crop" },
+  { value: "optimize", label: "Optimize" },
+  { value: "reverse", label: "Reverse" },
+  { value: "speed", label: "Change speed" },
+  { value: "caption", label: "Caption" },
+  { value: "split", label: "Split into frames" },
 ];
 
 const RUN_LABELS: Record<GifOperation, string> = {
-  resize: 'Resize GIF',
-  crop: 'Crop GIF',
-  optimize: 'Optimize GIF',
-  reverse: 'Reverse GIF',
-  speed: 'Change speed',
-  caption: 'Add caption',
-  split: 'Export frames',
+  resize: "Resize GIF",
+  crop: "Crop GIF",
+  optimize: "Optimize GIF",
+  reverse: "Reverse GIF",
+  speed: "Change speed",
+  caption: "Add caption",
+  split: "Export frames",
 };
 
-const operation = computed<GifOperation>(() => opts.operation ?? 'resize');
-const runLabel = computed(() => RUN_LABELS[operation.value] ?? 'Run');
+const operation = computed<GifOperation>(() => opts.operation ?? "resize");
+const runLabel = computed(() => RUN_LABELS[operation.value] ?? "Run");
 /**
  * Captioning is off pending a font (see the module doc). The run button is the
  * single source of truth for that: it goes disabled the moment caption mode is
  * picked, so buildArgs (and buildCaption's own refusal) never runs and never
  * gets a chance to complain about the disabled text field instead.
  */
-const captionUnavailable = computed(() => operation.value === 'caption');
+const captionUnavailable = computed(() => operation.value === "caption");
 
 /** Number inputs hand back strings, and an empty field should not become NaN. */
 function setNumber(key: keyof GifOptions, value: unknown, fallback: number) {
-  const n = Number(typeof value === 'string' ? value.trim() : value);
+  const n = Number(typeof value === "string" ? value.trim() : value);
   const fields = opts as Record<string, unknown>;
   fields[key] = Number.isFinite(n) ? n : fallback;
 }
@@ -120,10 +120,10 @@ function buildArgs(ctx: MediaBuildContext): MediaBuildResult {
   const o = ctx.opts as GifOptions;
   const inputName = ctx.inputName;
 
-  switch (o.operation ?? 'resize') {
-    case 'resize':
+  switch (o.operation ?? "resize") {
+    case "resize":
       return buildResize({ inputName, width: Number(o.width) });
-    case 'crop':
+    case "crop":
       return buildCrop({
         inputName,
         x: Number(o.cropX),
@@ -131,25 +131,25 @@ function buildArgs(ctx: MediaBuildContext): MediaBuildResult {
         w: Number(o.cropW),
         h: Number(o.cropH),
       });
-    case 'optimize':
+    case "optimize":
       return buildOptimize({ inputName, fps: Number(o.fps), colors: Number(o.colors) });
-    case 'reverse':
+    case "reverse":
       return buildReverse({ inputName });
-    case 'speed':
+    case "speed":
       return buildSpeed({
         inputName,
         factor: Number(o.factor),
         fps: Number(o.speedFps) > 0 ? Number(o.speedFps) : undefined,
       });
-    case 'caption':
+    case "caption":
       // No font file is passed, so this always refuses with the reason.
       return buildCaption({
         inputName,
-        text: String(o.text ?? ''),
-        position: o.position ?? 'bottom',
+        text: String(o.text ?? ""),
+        position: o.position ?? "bottom",
         fontSize: Number(o.fontSize),
       });
-    case 'split':
+    case "split":
       return buildSplit({
         inputName,
         everyNth: Number(o.everyNth),
@@ -157,8 +157,8 @@ function buildArgs(ctx: MediaBuildContext): MediaBuildResult {
       });
     default:
       return {
-        error: 'Pick an operation first.',
-        fix: 'Choose resize, crop, optimize, reverse, speed or split.',
+        error: "Pick an operation first.",
+        fix: "Choose resize, crop, optimize, reverse, speed or split.",
       };
   }
 }
@@ -169,7 +169,7 @@ function buildArgs(ctx: MediaBuildContext): MediaBuildResult {
  * has. That frame count is exactly what the split control needs.
  */
 function onComplete() {
-  const info = parseGifInfo(getLogTail(200).join('\n'));
+  const info = parseGifInfo(getLogTail(200).join("\n"));
   if (!info) {
     sourceInfo.value = null;
     return;
@@ -177,7 +177,7 @@ function onComplete() {
   const parts = [`${info.width} x ${info.height} px`];
   if (info.fps !== null) parts.push(`${info.fps} fps`);
   if (info.frames !== null) parts.push(`${info.frames} frames written`);
-  sourceInfo.value = parts.join(', ');
+  sourceInfo.value = parts.join(", ");
 }
 
 function onFiles() {
@@ -201,27 +201,16 @@ function onFiles() {
     <template #options>
       <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
         <div class="flex w-56 max-w-full flex-col gap-1.5">
-          <Label
-            for="gif-operation"
-            class="text-xs text-muted-foreground"
-          >Operation</Label>
+          <Label for="gif-operation" class="text-xs text-muted-foreground">Operation</Label>
           <Select
             :model-value="operation"
             @update:model-value="(v) => (opts.operation = String(v) as GifOperation)"
           >
-            <SelectTrigger
-              id="gif-operation"
-              size="sm"
-              class="w-full bg-card"
-            >
+            <SelectTrigger id="gif-operation" size="sm" class="w-full bg-card">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="item in OPERATIONS"
-                :key="item.value"
-                :value="item.value"
-              >
+              <SelectItem v-for="item in OPERATIONS" :key="item.value" :value="item.value">
                 {{ item.label }}
               </SelectItem>
             </SelectContent>
@@ -229,14 +218,8 @@ function onFiles() {
         </div>
 
         <!-- Resize -->
-        <div
-          v-if="operation === 'resize'"
-          class="flex w-32 flex-col gap-1.5"
-        >
-          <Label
-            for="gif-width"
-            class="text-xs text-muted-foreground"
-          >Width in pixels</Label>
+        <div v-if="operation === 'resize'" class="flex w-32 flex-col gap-1.5">
+          <Label for="gif-width" class="text-xs text-muted-foreground">Width in pixels</Label>
           <Input
             id="gif-width"
             type="number"
@@ -249,15 +232,9 @@ function onFiles() {
         </div>
 
         <!-- Crop -->
-        <div
-          v-else-if="operation === 'crop'"
-          class="flex flex-wrap items-end gap-3"
-        >
+        <div v-else-if="operation === 'crop'" class="flex flex-wrap items-end gap-3">
           <div class="flex w-24 flex-col gap-1.5">
-            <Label
-              for="gif-crop-x"
-              class="text-xs text-muted-foreground"
-            >Left</Label>
+            <Label for="gif-crop-x" class="text-xs text-muted-foreground">Left</Label>
             <Input
               id="gif-crop-x"
               type="number"
@@ -268,10 +245,7 @@ function onFiles() {
             />
           </div>
           <div class="flex w-24 flex-col gap-1.5">
-            <Label
-              for="gif-crop-y"
-              class="text-xs text-muted-foreground"
-            >Top</Label>
+            <Label for="gif-crop-y" class="text-xs text-muted-foreground">Top</Label>
             <Input
               id="gif-crop-y"
               type="number"
@@ -282,10 +256,7 @@ function onFiles() {
             />
           </div>
           <div class="flex w-24 flex-col gap-1.5">
-            <Label
-              for="gif-crop-w"
-              class="text-xs text-muted-foreground"
-            >Width</Label>
+            <Label for="gif-crop-w" class="text-xs text-muted-foreground">Width</Label>
             <Input
               id="gif-crop-w"
               type="number"
@@ -296,10 +267,7 @@ function onFiles() {
             />
           </div>
           <div class="flex w-24 flex-col gap-1.5">
-            <Label
-              for="gif-crop-h"
-              class="text-xs text-muted-foreground"
-            >Height</Label>
+            <Label for="gif-crop-h" class="text-xs text-muted-foreground">Height</Label>
             <Input
               id="gif-crop-h"
               type="number"
@@ -312,15 +280,9 @@ function onFiles() {
         </div>
 
         <!-- Optimise -->
-        <div
-          v-else-if="operation === 'optimize'"
-          class="flex flex-wrap items-end gap-3"
-        >
+        <div v-else-if="operation === 'optimize'" class="flex flex-wrap items-end gap-3">
           <div class="flex w-32 flex-col gap-1.5">
-            <Label
-              for="gif-fps"
-              class="text-xs text-muted-foreground"
-            >Frames per second</Label>
+            <Label for="gif-fps" class="text-xs text-muted-foreground">Frames per second</Label>
             <Input
               id="gif-fps"
               type="number"
@@ -332,10 +294,7 @@ function onFiles() {
             />
           </div>
           <div class="flex w-32 flex-col gap-1.5">
-            <Label
-              for="gif-colors"
-              class="text-xs text-muted-foreground"
-            >Colors</Label>
+            <Label for="gif-colors" class="text-xs text-muted-foreground">Colors</Label>
             <Input
               id="gif-colors"
               type="number"
@@ -349,15 +308,9 @@ function onFiles() {
         </div>
 
         <!-- Speed -->
-        <div
-          v-else-if="operation === 'speed'"
-          class="flex flex-wrap items-end gap-3"
-        >
+        <div v-else-if="operation === 'speed'" class="flex flex-wrap items-end gap-3">
           <div class="flex w-32 flex-col gap-1.5">
-            <Label
-              for="gif-factor"
-              class="text-xs text-muted-foreground"
-            >Speed multiplier</Label>
+            <Label for="gif-factor" class="text-xs text-muted-foreground">Speed multiplier</Label>
             <Input
               id="gif-factor"
               type="number"
@@ -370,10 +323,9 @@ function onFiles() {
             />
           </div>
           <div class="flex w-44 flex-col gap-1.5">
-            <Label
-              for="gif-speed-fps"
-              class="text-xs text-muted-foreground"
-            >Resample to fps (0 keeps the original)</Label>
+            <Label for="gif-speed-fps" class="text-xs text-muted-foreground"
+              >Resample to fps (0 keeps the original)</Label
+            >
             <Input
               id="gif-speed-fps"
               type="number"
@@ -387,16 +339,10 @@ function onFiles() {
         </div>
 
         <!-- Caption -->
-        <div
-          v-else-if="operation === 'caption'"
-          class="flex flex-col gap-3"
-        >
+        <div v-else-if="operation === 'caption'" class="flex flex-col gap-3">
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex min-w-56 flex-1 flex-col gap-1.5">
-              <Label
-                for="gif-text"
-                class="text-xs text-muted-foreground"
-              >Caption text</Label>
+              <Label for="gif-text" class="text-xs text-muted-foreground">Caption text</Label>
               <Input
                 id="gif-text"
                 type="text"
@@ -408,10 +354,7 @@ function onFiles() {
               />
             </div>
             <div class="flex w-28 flex-col gap-1.5">
-              <Label
-                for="gif-font-size"
-                class="text-xs text-muted-foreground"
-              >Font size</Label>
+              <Label for="gif-font-size" class="text-xs text-muted-foreground">Font size</Label>
               <Input
                 id="gif-font-size"
                 type="number"
@@ -425,25 +368,19 @@ function onFiles() {
             </div>
           </div>
           <p class="text-xs text-muted-foreground">
-            Captioning is turned off, and the Add caption button stays disabled while this
-            operation is selected, rather than failing after you press it. Burning text into
-            frames needs the drawtext filter, which wants a TrueType or OpenType font file loaded
-            into the media engine and a build of ffmpeg compiled with FreeType. This site ships
-            web fonts in woff2 only, which drawtext cannot read. Add the text in an image editor
-            first, then resize or optimize the result here.
+            Captioning is turned off, and the Add caption button stays disabled while this operation
+            is selected, rather than failing after you press it. Burning text into frames needs the
+            drawtext filter, which wants a TrueType or OpenType font file loaded into the media
+            engine and a build of ffmpeg compiled with FreeType. This site ships web fonts in woff2
+            only, which drawtext cannot read. Add the text in an image editor first, then resize or
+            optimize the result here.
           </p>
         </div>
 
         <!-- Split -->
-        <div
-          v-else-if="operation === 'split'"
-          class="flex flex-wrap items-end gap-3"
-        >
+        <div v-else-if="operation === 'split'" class="flex flex-wrap items-end gap-3">
           <div class="flex w-32 flex-col gap-1.5">
-            <Label
-              for="gif-frames"
-              class="text-xs text-muted-foreground"
-            >Frames to export</Label>
+            <Label for="gif-frames" class="text-xs text-muted-foreground">Frames to export</Label>
             <Input
               id="gif-frames"
               type="number"
@@ -455,10 +392,7 @@ function onFiles() {
             />
           </div>
           <div class="flex w-32 flex-col gap-1.5">
-            <Label
-              for="gif-every"
-              class="text-xs text-muted-foreground"
-            >Keep every nth</Label>
+            <Label for="gif-every" class="text-xs text-muted-foreground">Keep every nth</Label>
             <Input
               id="gif-every"
               type="number"
@@ -471,21 +405,15 @@ function onFiles() {
           </div>
         </div>
 
-        <p
-          v-else-if="operation === 'reverse'"
-          class="text-xs text-muted-foreground"
-        >
-          Reverse has nothing to set. Every frame is buffered so they can be written back to
-          front, so a very long GIF can run the browser out of memory.
+        <p v-else-if="operation === 'reverse'" class="text-xs text-muted-foreground">
+          Reverse has nothing to set. Every frame is buffered so they can be written back to front,
+          so a very long GIF can run the browser out of memory.
         </p>
       </div>
     </template>
 
     <template #notes>
-      <p
-        v-if="sourceInfo"
-        class="font-mono text-xs text-muted-foreground tabular-nums"
-      >
+      <p v-if="sourceInfo" class="font-mono text-xs text-muted-foreground tabular-nums">
         Last run read: {{ sourceInfo }}
       </p>
 
@@ -500,14 +428,13 @@ function onFiles() {
         </template>
         <template v-else-if="operation === 'optimize'">
           Fewer frames per second and a smaller palette are the two levers ffmpeg has. There is no
-          gifsicle style lossy mode here, so the honest way to a smaller file is 10 to 12 frames
-          per second and 64 to 128 colors.
+          gifsicle style lossy mode here, so the honest way to a smaller file is 10 to 12 frames per
+          second and 64 to 128 colors.
         </template>
         <template v-else-if="operation === 'speed'">
           Speed is a rewrite of the frame timings. GIF delays are stored in hundredths of a second
-          and browsers treat anything under two of those as ten, so a very fast result stops
-          getting faster. Resampling to a frame rate drops frames instead, which keeps the timing
-          honest.
+          and browsers treat anything under two of those as ten, so a very fast result stops getting
+          faster. Resampling to a frame rate drops frames instead, which keeps the timing honest.
         </template>
         <template v-else-if="operation === 'split'">
           Frames come out as PNG files. The run has to declare its file names before it starts, so

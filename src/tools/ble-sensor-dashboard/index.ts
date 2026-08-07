@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * The data core of the BLE Sensor Dashboard.
@@ -123,16 +123,16 @@ function round(value: number, places: number): number {
 }
 
 function pad(value: number, width: number): string {
-  return String(value).padStart(width, '0');
+  return String(value).padStart(width, "0");
 }
 
 /** A missing length is a common cause of a garbled reading, so say so. */
 function ensureLength(view: DataView, needed: number, name: string): void {
   if (view.byteLength < needed) {
     throw new ToolError(
-      'short-data',
-      `${name} needs at least ${needed} byte${needed === 1 ? '' : 's'} but only ${view.byteLength} arrived.`,
-      'The sensor sent a shorter payload than the standard defines. The raw bytes are shown as hex instead.',
+      "short-data",
+      `${name} needs at least ${needed} byte${needed === 1 ? "" : "s"} but only ${view.byteLength} arrived.`,
+      "The sensor sent a shorter payload than the standard defines. The raw bytes are shown as hex instead.",
     );
   }
 }
@@ -146,48 +146,48 @@ function scalar(name: string, value: number, unit: string): ParsedCharacteristic
 }
 
 function parseBatteryLevel(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 1, 'Battery Level');
-  return scalar('Battery level', view.getUint8(0), '%');
+  ensureLength(view, 1, "Battery Level");
+  return scalar("Battery level", view.getUint8(0), "%");
 }
 
 function parseTemperature(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 2, 'Temperature');
-  return scalar('Temperature', round(view.getInt16(0, true) * 0.01, 2), '°C');
+  ensureLength(view, 2, "Temperature");
+  return scalar("Temperature", round(view.getInt16(0, true) * 0.01, 2), "°C");
 }
 
 function parseHumidity(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 2, 'Humidity');
-  return scalar('Humidity', round(view.getUint16(0, true) * 0.01, 2), '%');
+  ensureLength(view, 2, "Humidity");
+  return scalar("Humidity", round(view.getUint16(0, true) * 0.01, 2), "%");
 }
 
 function parsePressure(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 4, 'Pressure');
-  return scalar('Pressure', round(view.getUint32(0, true) * 0.1, 1), 'Pa');
+  ensureLength(view, 4, "Pressure");
+  return scalar("Pressure", round(view.getUint32(0, true) * 0.1, 1), "Pa");
 }
 
 function parseElevation(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 3, 'Elevation');
-  return scalar('Elevation', round(int24LE(view, 0) * 0.01, 2), 'm');
+  ensureLength(view, 3, "Elevation");
+  return scalar("Elevation", round(int24LE(view, 0) * 0.01, 2), "m");
 }
 
 function parseIrradiance(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 2, 'Irradiance');
-  return scalar('Irradiance', round(view.getUint16(0, true) * 0.1, 1), 'W/m²');
+  ensureLength(view, 2, "Irradiance");
+  return scalar("Irradiance", round(view.getUint16(0, true) * 0.1, 1), "W/m²");
 }
 
 function parseUvIndex(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 1, 'UV Index');
-  return scalar('UV index', view.getUint8(0), '');
+  ensureLength(view, 1, "UV Index");
+  return scalar("UV index", view.getUint8(0), "");
 }
 
 function parsePollen(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 3, 'Pollen Concentration');
-  return scalar('Pollen concentration', uint24LE(view, 0), 'grains/m³');
+  ensureLength(view, 3, "Pollen Concentration");
+  return scalar("Pollen concentration", uint24LE(view, 0), "grains/m³");
 }
 
 function parseCo2(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 2, 'CO2 Concentration');
-  return scalar('CO2 concentration', round(decodeSFloat(view.getUint16(0, true)), 1), 'ppm');
+  ensureLength(view, 2, "CO2 Concentration");
+  return scalar("CO2 concentration", round(decodeSFloat(view.getUint16(0, true)), 1), "ppm");
 }
 
 /**
@@ -199,20 +199,20 @@ function parseCo2(view: DataView): ParsedCharacteristic {
 function makePmParser(label: string): GattParser {
   return (view) => {
     ensureLength(view, 2, label);
-    return scalar(label, round(decodeSFloat(view.getUint16(0, true)), 1), 'µg/m³');
+    return scalar(label, round(decodeSFloat(view.getUint16(0, true)), 1), "µg/m³");
   };
 }
 
 const TEMPERATURE_TYPES: Record<number, string> = {
-  1: 'armpit',
-  2: 'body (general)',
-  3: 'ear (tympanum)',
-  4: 'finger',
-  5: 'gastrointestinal tract',
-  6: 'mouth',
-  7: 'rectum',
-  8: 'toe',
-  9: 'tympanum (ear drum)',
+  1: "armpit",
+  2: "body (general)",
+  3: "ear (tympanum)",
+  4: "finger",
+  5: "gastrointestinal tract",
+  6: "mouth",
+  7: "rectum",
+  8: "toe",
+  9: "tympanum (ear drum)",
 };
 
 /**
@@ -224,12 +224,12 @@ const TEMPERATURE_TYPES: Record<number, string> = {
  * IEEE-11073 FLOAT.
  */
 function parseTemperatureMeasurement(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 5, 'Temperature Measurement');
+  ensureLength(view, 5, "Temperature Measurement");
   const flags = view.getUint8(0);
   const fahrenheit = (flags & 0x01) !== 0;
   const temperature = decodeFloat(view.getUint32(1, true));
   const fields: GattField[] = [
-    { name: 'Temperature', value: round(temperature, 2), unit: fahrenheit ? '°F' : '°C' },
+    { name: "Temperature", value: round(temperature, 2), unit: fahrenheit ? "°F" : "°C" },
   ];
 
   let offset = 5;
@@ -242,17 +242,17 @@ function parseTemperatureMeasurement(view: DataView): ParsedCharacteristic {
     const second = view.getUint8(offset + 6);
     offset += 7;
     fields.push({
-      name: 'Measured at',
+      name: "Measured at",
       value: `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)} ${pad(hour, 2)}:${pad(minute, 2)}:${pad(second, 2)}`,
-      unit: '',
+      unit: "",
     });
   }
   if ((flags & 0x04) !== 0 && offset < view.byteLength) {
     const type = view.getUint8(offset);
     fields.push({
-      name: 'Temperature type',
+      name: "Temperature type",
       value: TEMPERATURE_TYPES[type] ?? `type ${type}`,
-      unit: '',
+      unit: "",
     });
   }
   return { fields };
@@ -269,7 +269,7 @@ function parseTemperatureMeasurement(view: DataView): ParsedCharacteristic {
  * whether contact is currently detected.
  */
 function parseHeartRate(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 2, 'Heart Rate Measurement');
+  ensureLength(view, 2, "Heart Rate Measurement");
   const flags = view.getUint8(0);
   const wideValue = (flags & 0x01) !== 0;
   const contactSupported = (flags & 0x04) !== 0;
@@ -280,7 +280,7 @@ function parseHeartRate(view: DataView): ParsedCharacteristic {
   let offset = 1;
   let bpm: number;
   if (wideValue) {
-    ensureLength(view, 3, 'Heart Rate Measurement');
+    ensureLength(view, 3, "Heart Rate Measurement");
     bpm = view.getUint16(offset, true);
     offset += 2;
   } else {
@@ -288,14 +288,14 @@ function parseHeartRate(view: DataView): ParsedCharacteristic {
     offset += 1;
   }
 
-  const fields: GattField[] = [{ name: 'Heart rate', value: bpm, unit: 'bpm' }];
+  const fields: GattField[] = [{ name: "Heart rate", value: bpm, unit: "bpm" }];
 
   if (contactSupported) {
-    fields.push({ name: 'Sensor contact', value: contactDetected ? 'yes' : 'no', unit: '' });
+    fields.push({ name: "Sensor contact", value: contactDetected ? "yes" : "no", unit: "" });
   }
 
   if (energyPresent && offset + 2 <= view.byteLength) {
-    fields.push({ name: 'Energy expended', value: view.getUint16(offset, true), unit: 'kJ' });
+    fields.push({ name: "Energy expended", value: view.getUint16(offset, true), unit: "kJ" });
     offset += 2;
   }
 
@@ -305,7 +305,11 @@ function parseHeartRate(view: DataView): ParsedCharacteristic {
       const rr = view.getUint16(offset, true);
       offset += 2;
       // 1/1024 second resolution, reported in milliseconds.
-      fields.push({ name: `RR interval ${index}`, value: round((rr / 1024) * 1000, 2), unit: 'ms' });
+      fields.push({
+        name: `RR interval ${index}`,
+        value: round((rr / 1024) * 1000, 2),
+        unit: "ms",
+      });
       index += 1;
     }
   }
@@ -314,19 +318,27 @@ function parseHeartRate(view: DataView): ParsedCharacteristic {
 }
 
 const BODY_SENSOR_LOCATIONS: Record<number, string> = {
-  0: 'other',
-  1: 'chest',
-  2: 'wrist',
-  3: 'finger',
-  4: 'hand',
-  5: 'ear lobe',
-  6: 'foot',
+  0: "other",
+  1: "chest",
+  2: "wrist",
+  3: "finger",
+  4: "hand",
+  5: "ear lobe",
+  6: "foot",
 };
 
 function parseBodySensorLocation(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 1, 'Body Sensor Location');
+  ensureLength(view, 1, "Body Sensor Location");
   const code = view.getUint8(0);
-  return { fields: [{ name: 'Body sensor location', value: BODY_SENSOR_LOCATIONS[code] ?? `location ${code}`, unit: '' }] };
+  return {
+    fields: [
+      {
+        name: "Body sensor location",
+        value: BODY_SENSOR_LOCATIONS[code] ?? `location ${code}`,
+        unit: "",
+      },
+    ],
+  };
 }
 
 /**
@@ -340,7 +352,7 @@ function parseBodySensorLocation(view: DataView): ParsedCharacteristic {
  * and event times are the honest GATT-level reading.
  */
 function parseCscMeasurement(view: DataView): ParsedCharacteristic {
-  ensureLength(view, 1, 'CSC Measurement');
+  ensureLength(view, 1, "CSC Measurement");
   const flags = view.getUint8(0);
   const wheelPresent = (flags & 0x01) !== 0;
   const crankPresent = (flags & 0x02) !== 0;
@@ -348,17 +360,25 @@ function parseCscMeasurement(view: DataView): ParsedCharacteristic {
   let offset = 1;
 
   if (wheelPresent) {
-    ensureLength(view, offset + 6, 'CSC Measurement');
-    fields.push({ name: 'Wheel revolutions', value: view.getUint32(offset, true), unit: '' });
+    ensureLength(view, offset + 6, "CSC Measurement");
+    fields.push({ name: "Wheel revolutions", value: view.getUint32(offset, true), unit: "" });
     const eventTime = view.getUint16(offset + 4, true);
-    fields.push({ name: 'Last wheel event', value: round((eventTime / 1024) * 1000, 2), unit: 'ms' });
+    fields.push({
+      name: "Last wheel event",
+      value: round((eventTime / 1024) * 1000, 2),
+      unit: "ms",
+    });
     offset += 6;
   }
   if (crankPresent) {
-    ensureLength(view, offset + 4, 'CSC Measurement');
-    fields.push({ name: 'Crank revolutions', value: view.getUint16(offset, true), unit: '' });
+    ensureLength(view, offset + 4, "CSC Measurement");
+    fields.push({ name: "Crank revolutions", value: view.getUint16(offset, true), unit: "" });
     const eventTime = view.getUint16(offset + 2, true);
-    fields.push({ name: 'Last crank event', value: round((eventTime / 1024) * 1000, 2), unit: 'ms' });
+    fields.push({
+      name: "Last crank event",
+      value: round((eventTime / 1024) * 1000, 2),
+      unit: "ms",
+    });
   }
 
   return fields.length ? { fields } : hexFallback(view);
@@ -367,8 +387,8 @@ function parseCscMeasurement(view: DataView): ParsedCharacteristic {
 /** UTF-8 string characteristics such as the Device Information service fields. */
 function parseUtf8String(view: DataView): ParsedCharacteristic {
   const bytes = new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
-  const text = new TextDecoder('utf-8').decode(bytes).replace(/\0+$/, '');
-  return { fields: [{ name: 'Text', value: text, unit: '' }] };
+  const text = new TextDecoder("utf-8").decode(bytes).replace(/\0+$/, "");
+  return { fields: [{ name: "Text", value: text, unit: "" }] };
 }
 
 /**
@@ -379,12 +399,12 @@ function parseUtf8String(view: DataView): ParsedCharacteristic {
  */
 export function hexFallback(view: DataView): ParsedCharacteristic {
   const bytes = new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
-  let hex = '';
+  let hex = "";
   for (let i = 0; i < bytes.length; i++) {
-    hex += (bytes[i] as number).toString(16).padStart(2, '0');
-    if (i < bytes.length - 1) hex += ' ';
+    hex += (bytes[i] as number).toString(16).padStart(2, "0");
+    if (i < bytes.length - 1) hex += " ";
   }
-  return { fields: [{ name: 'Raw bytes', value: hex || '(empty)', unit: '' }] };
+  return { fields: [{ name: "Raw bytes", value: hex || "(empty)", unit: "" }] };
 }
 
 /**
@@ -393,30 +413,30 @@ export function hexFallback(view: DataView): ParsedCharacteristic {
  * lookup miss falls through to the hex view.
  */
 export const GATT_PARSERS: Record<string, GattParser> = {
-  '2a19': parseBatteryLevel,
-  '2a6e': parseTemperature,
-  '2a6f': parseHumidity,
-  '2a6d': parsePressure,
-  '2a6c': parseElevation,
-  '2a77': parseIrradiance,
-  '2a76': parseUvIndex,
-  '2a75': parsePollen,
-  '2a37': parseHeartRate,
-  '2a38': parseBodySensorLocation,
-  '2a5b': parseCscMeasurement,
-  '2a1c': parseTemperatureMeasurement,
-  '2bd0': parseCo2,
-  '2bd5': makePmParser('PM1 concentration'),
-  '2bd6': makePmParser('PM2.5 concentration'),
-  '2bd7': makePmParser('PM10 concentration'),
+  "2a19": parseBatteryLevel,
+  "2a6e": parseTemperature,
+  "2a6f": parseHumidity,
+  "2a6d": parsePressure,
+  "2a6c": parseElevation,
+  "2a77": parseIrradiance,
+  "2a76": parseUvIndex,
+  "2a75": parsePollen,
+  "2a37": parseHeartRate,
+  "2a38": parseBodySensorLocation,
+  "2a5b": parseCscMeasurement,
+  "2a1c": parseTemperatureMeasurement,
+  "2bd0": parseCo2,
+  "2bd5": makePmParser("PM1 concentration"),
+  "2bd6": makePmParser("PM2.5 concentration"),
+  "2bd7": makePmParser("PM10 concentration"),
   // Device Information service: plain UTF-8 strings.
-  '2a00': parseUtf8String,
-  '2a29': parseUtf8String,
-  '2a24': parseUtf8String,
-  '2a25': parseUtf8String,
-  '2a26': parseUtf8String,
-  '2a27': parseUtf8String,
-  '2a28': parseUtf8String,
+  "2a00": parseUtf8String,
+  "2a29": parseUtf8String,
+  "2a24": parseUtf8String,
+  "2a25": parseUtf8String,
+  "2a26": parseUtf8String,
+  "2a27": parseUtf8String,
+  "2a28": parseUtf8String,
 };
 
 /* ------------------------------------------------------------------ *
@@ -433,11 +453,11 @@ export const GATT_PARSERS: Record<string, GattParser> = {
  */
 export function to16Bit(uuid: string): string | null {
   let u = uuid.trim().toLowerCase();
-  if (u.startsWith('0x')) u = u.slice(2);
-  if (/^[0-9a-f]{1,4}$/.test(u)) return u.padStart(4, '0');
+  if (u.startsWith("0x")) u = u.slice(2);
+  if (/^[0-9a-f]{1,4}$/.test(u)) return u.padStart(4, "0");
   if (/^[0-9a-f]{8}-0000-1000-8000-00805f9b34fb$/.test(u)) {
     const first32 = u.slice(0, 8);
-    return first32.startsWith('0000') ? first32.slice(4) : null;
+    return first32.startsWith("0000") ? first32.slice(4) : null;
   }
   return null;
 }
@@ -445,47 +465,47 @@ export function to16Bit(uuid: string): string | null {
 /** Lowercase the UUID and strip a `0x` prefix, without shortening it. */
 export function normalizeUuid(uuid: string): string {
   const u = uuid.trim().toLowerCase();
-  return u.startsWith('0x') ? u.slice(2) : u;
+  return u.startsWith("0x") ? u.slice(2) : u;
 }
 
 const UUID_NAMES: Record<string, string> = {
   // Services
-  '1800': 'Generic Access',
-  '1801': 'Generic Attribute',
-  '180a': 'Device Information',
-  '180f': 'Battery Service',
-  '180d': 'Heart Rate',
-  '1809': 'Health Thermometer',
-  '181a': 'Environmental Sensing',
-  '1810': 'Blood Pressure',
-  '1816': 'Cycling Speed and Cadence',
-  '1818': 'Cycling Power',
-  '1826': 'Fitness Machine',
+  "1800": "Generic Access",
+  "1801": "Generic Attribute",
+  "180a": "Device Information",
+  "180f": "Battery Service",
+  "180d": "Heart Rate",
+  "1809": "Health Thermometer",
+  "181a": "Environmental Sensing",
+  "1810": "Blood Pressure",
+  "1816": "Cycling Speed and Cadence",
+  "1818": "Cycling Power",
+  "1826": "Fitness Machine",
   // Characteristics
-  '2a19': 'Battery Level',
-  '2a6e': 'Temperature',
-  '2a6f': 'Humidity',
-  '2a6d': 'Pressure',
-  '2a6c': 'Elevation',
-  '2a77': 'Irradiance',
-  '2a76': 'UV Index',
-  '2a75': 'Pollen Concentration',
-  '2a37': 'Heart Rate Measurement',
-  '2a38': 'Body Sensor Location',
-  '2a5b': 'CSC Measurement',
-  '2a1c': 'Temperature Measurement',
-  '2a1d': 'Temperature Type',
-  '2bd0': 'CO2 Concentration',
-  '2bd5': 'PM1 Concentration',
-  '2bd6': 'PM2.5 Concentration',
-  '2bd7': 'PM10 Concentration',
-  '2a00': 'Device Name',
-  '2a29': 'Manufacturer Name',
-  '2a24': 'Model Number',
-  '2a25': 'Serial Number',
-  '2a26': 'Firmware Revision',
-  '2a27': 'Hardware Revision',
-  '2a28': 'Software Revision',
+  "2a19": "Battery Level",
+  "2a6e": "Temperature",
+  "2a6f": "Humidity",
+  "2a6d": "Pressure",
+  "2a6c": "Elevation",
+  "2a77": "Irradiance",
+  "2a76": "UV Index",
+  "2a75": "Pollen Concentration",
+  "2a37": "Heart Rate Measurement",
+  "2a38": "Body Sensor Location",
+  "2a5b": "CSC Measurement",
+  "2a1c": "Temperature Measurement",
+  "2a1d": "Temperature Type",
+  "2bd0": "CO2 Concentration",
+  "2bd5": "PM1 Concentration",
+  "2bd6": "PM2.5 Concentration",
+  "2bd7": "PM10 Concentration",
+  "2a00": "Device Name",
+  "2a29": "Manufacturer Name",
+  "2a24": "Model Number",
+  "2a25": "Serial Number",
+  "2a26": "Firmware Revision",
+  "2a27": "Hardware Revision",
+  "2a28": "Software Revision",
 };
 
 /** Human name for a service or characteristic UUID, or a tidy hex fallback. */
@@ -576,10 +596,10 @@ export interface CsvRow {
 
 /** Render a numeric or string value for display and export. */
 export function formatValue(value: number | string): string {
-  if (typeof value === 'string') return value;
-  if (Number.isNaN(value)) return 'NaN';
-  if (value === Infinity) return 'Infinity';
-  if (value === -Infinity) return '-Infinity';
+  if (typeof value === "string") return value;
+  if (Number.isNaN(value)) return "NaN";
+  if (value === Infinity) return "Infinity";
+  if (value === -Infinity) return "-Infinity";
   return String(value);
 }
 
@@ -594,15 +614,15 @@ function csvEscape(text: string): string {
  * "Heart rate, resting" survives a round trip through a spreadsheet.
  */
 export function toCsv(series: CsvRow[]): string {
-  const header = 'timestamp,field,value';
+  const header = "timestamp,field,value";
   const lines = series.map((row) =>
     [
       csvEscape(new Date(row.t).toISOString()),
       csvEscape(row.name),
       csvEscape(formatValue(row.value)),
-    ].join(','),
+    ].join(","),
   );
-  return [header, ...lines].join('\n');
+  return [header, ...lines].join("\n");
 }
 
 /* ------------------------------------------------------------------ *
@@ -614,17 +634,17 @@ const HEX_FIX =
 
 /** Parse a loose hex string into bytes: separators and 0x prefixes optional. */
 export function parseHexBytes(text: string): Uint8Array {
-  let cleaned = '';
+  let cleaned = "";
   for (const token of text.split(/[\s,]+/)) {
     if (!token) continue;
-    cleaned += token.replace(/^0x/i, '');
+    cleaned += token.replace(/^0x/i, "");
   }
   if (!/^[0-9a-fA-F]*$/.test(cleaned)) {
-    throw new ToolError('invalid-hex', 'That is not a hex byte string.', HEX_FIX);
+    throw new ToolError("invalid-hex", "That is not a hex byte string.", HEX_FIX);
   }
   if (cleaned.length % 2 !== 0) {
     throw new ToolError(
-      'odd-nibbles',
+      "odd-nibbles",
       `Hex input has ${cleaned.length} digits, which is an odd number, so the last byte is incomplete.`,
       HEX_FIX,
     );
@@ -646,15 +666,15 @@ export interface BleDashboardOpts {
 }
 
 const USAGE_ROWS: Record<string, string> = {
-  'How this works':
-    'This tool is a live dashboard. Click Connect a sensor, pick your Bluetooth device from the browser chooser, and the panel subscribes to every readable characteristic and charts each numeric field as it updates.',
+  "How this works":
+    "This tool is a live dashboard. Click Connect a sensor, pick your Bluetooth device from the browser chooser, and the panel subscribes to every readable characteristic and charts each numeric field as it updates.",
   Browsers:
-    'Talking to a sensor needs the Web Bluetooth API. Chromium browsers such as Chrome, Edge and Opera ship it on desktop and Android. Firefox, Safari and every browser on iOS do not, so the page checks for the API rather than a browser name.',
-  'Sensors that work':
-    'Standard GATT characteristics decode into named readings: heart rate, battery level, temperature, humidity, pressure, elevation, CO2 and particulate matter among them. A non-standard characteristic is shown as raw hex instead.',
-  'Decode a saved capture':
-    'Pass a characteristic UUID and its bytes to decode a reading without a device attached, which is handy for a payload you captured elsewhere.',
-  Privacy: 'Everything happens in this tab: your files and inputs never leave your device.',
+    "Talking to a sensor needs the Web Bluetooth API. Chromium browsers such as Chrome, Edge and Opera ship it on desktop and Android. Firefox, Safari and every browser on iOS do not, so the page checks for the API rather than a browser name.",
+  "Sensors that work":
+    "Standard GATT characteristics decode into named readings: heart rate, battery level, temperature, humidity, pressure, elevation, CO2 and particulate matter among them. A non-standard characteristic is shown as raw hex instead.",
+  "Decode a saved capture":
+    "Pass a characteristic UUID and its bytes to decode a reading without a device attached, which is handy for a payload you captured elsewhere.",
+  Privacy: "Everything happens in this tab: your files and inputs never leave your device.",
 };
 
 /**
@@ -664,7 +684,7 @@ const USAGE_ROWS: Record<string, string> = {
  * notification, which makes the pure surface useful for a saved capture.
  */
 export function run(
-  input: string | Uint8Array = '',
+  input: string | Uint8Array = "",
   opts: BleDashboardOpts = {},
 ): Record<string, string> {
   const hasInput = input instanceof Uint8Array ? input.length > 0 : String(input).trim().length > 0;
@@ -672,10 +692,12 @@ export function run(
 
   const bytes = input instanceof Uint8Array ? input : parseHexBytes(String(input));
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const uuid = opts.uuid ?? '';
+  const uuid = opts.uuid ?? "";
   const parsed = parseCharacteristic(uuid, view);
 
-  const out: Record<string, string> = { Characteristic: uuid ? uuidName(uuid) : 'Unknown (raw hex)' };
+  const out: Record<string, string> = {
+    Characteristic: uuid ? uuidName(uuid) : "Unknown (raw hex)",
+  };
   for (const field of parsed.fields) {
     out[field.name] = field.unit
       ? `${formatValue(field.value)} ${field.unit}`
@@ -684,4 +706,8 @@ export function run(
   return out;
 }
 
-export default { run } satisfies ToolLogic<string | Uint8Array, Record<string, string>, BleDashboardOpts>;
+export default { run } satisfies ToolLogic<
+  string | Uint8Array,
+  Record<string, string>,
+  BleDashboardOpts
+>;

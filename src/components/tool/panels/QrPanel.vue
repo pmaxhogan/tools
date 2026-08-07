@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import { ToolError, type ToolMeta } from '@/tools/types';
+import { computed, onMounted, ref, watch } from "vue";
+import { ToolError, type ToolMeta } from "@/tools/types";
 import {
   LOGO_MAX,
   LOGO_MIN,
@@ -9,23 +9,23 @@ import {
   embedLogoInSvg,
   renderSvg,
   scannabilityWarnings,
-} from '@/tools/qr-code-generator/index';
-import { readFragment, writeFragment } from '@/lib/fragment';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
+} from "@/tools/qr-code-generator/index";
+import { readFragment, writeFragment } from "@/lib/fragment";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import OptionControl from '../OptionControl.vue';
-import CopyButton from '../CopyButton.vue';
+} from "@/components/ui/select";
+import OptionControl from "../OptionControl.vue";
+import CopyButton from "../CopyButton.vue";
 
 /**
  * Bespoke panel for the QR code generator. The generic ToolShell only knows
@@ -38,87 +38,87 @@ import CopyButton from '../CopyButton.vue';
  */
 const props = defineProps<{ meta: ToolMeta }>();
 
-const presetSpec = computed(() => props.meta.options?.find((o) => o.id === 'preset'));
-const eccSpec = computed(() => props.meta.options!.find((o) => o.id === 'ecc')!);
-const marginSpec = computed(() => props.meta.options!.find((o) => o.id === 'margin')!);
+const presetSpec = computed(() => props.meta.options?.find((o) => o.id === "preset"));
+const eccSpec = computed(() => props.meta.options!.find((o) => o.id === "ecc")!);
+const marginSpec = computed(() => props.meta.options!.find((o) => o.id === "margin")!);
 
-const preset = ref<string>((presetSpec.value?.default as string) ?? 'text');
-const ecc = ref<string>((eccSpec.value.default as string) ?? 'M');
+const preset = ref<string>((presetSpec.value?.default as string) ?? "text");
+const ecc = ref<string>((eccSpec.value.default as string) ?? "M");
 const margin = ref<number>((marginSpec.value.default as number) ?? 4);
-const color = ref('#000000');
-const background = ref('#ffffff');
+const color = ref("#000000");
+const background = ref("#ffffff");
 
 /** Rendered pixel width baked into the SVG, and the PNG export size. */
 const RENDER_SIZE = 1024;
 
 // Single-field types (plain text and URL share one control).
-const textInput = ref('');
+const textInput = ref("");
 
 // Wi-Fi fields, kept separate from textInput so the password never touches
 // the URL fragment (see persistFragment below).
-const wifiSsid = ref('');
-const wifiPassword = ref('');
-const wifiSecurity = ref('WPA');
+const wifiSsid = ref("");
+const wifiPassword = ref("");
+const wifiSecurity = ref("WPA");
 const wifiHidden = ref(false);
 
 // Contact card fields. The first four keep their historic order so links
 // shared from the previous version still decode into the right boxes.
-const vcardName = ref('');
-const vcardPhone = ref('');
-const vcardEmail = ref('');
-const vcardOrg = ref('');
-const vcardTitle = ref('');
-const vcardUrl = ref('');
-const vcardAddress = ref('');
-const vcardNote = ref('');
+const vcardName = ref("");
+const vcardPhone = ref("");
+const vcardEmail = ref("");
+const vcardOrg = ref("");
+const vcardTitle = ref("");
+const vcardUrl = ref("");
+const vcardAddress = ref("");
+const vcardNote = ref("");
 
-const emailTo = ref('');
-const emailSubject = ref('');
-const emailBody = ref('');
+const emailTo = ref("");
+const emailSubject = ref("");
+const emailBody = ref("");
 
-const smsNumber = ref('');
-const smsMessage = ref('');
+const smsNumber = ref("");
+const smsMessage = ref("");
 
-const phoneNumber = ref('');
+const phoneNumber = ref("");
 
-const geoLat = ref('');
-const geoLng = ref('');
+const geoLat = ref("");
+const geoLng = ref("");
 
 // datetime-local inputs are in the visitor's own timezone; the payload is
 // always UTC, so these two convert on the way in and out.
-const eventSummary = ref('');
-const eventStart = ref('');
-const eventEnd = ref('');
-const eventLocation = ref('');
-const eventDescription = ref('');
+const eventSummary = ref("");
+const eventStart = ref("");
+const eventEnd = ref("");
+const eventLocation = ref("");
+const eventDescription = ref("");
 
 /** Local "YYYY-MM-DDTHH:MM" to a UTC instant the logic layer accepts. */
 function localToUtc(local: string): string {
-  if (!local) return '';
+  if (!local) return "";
   const d = new Date(local);
-  return Number.isNaN(d.getTime()) ? local : d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+  return Number.isNaN(d.getTime()) ? local : d.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
 /** A UTC instant back to the value a datetime-local input wants. */
 function utcToLocal(utc: string): string {
-  if (!utc) return '';
+  if (!utc) return "";
   const d = new Date(utc);
-  if (Number.isNaN(d.getTime())) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 /** The multi-line string the logic layer expects, composed per content type. */
 const composedInput = computed(() => {
   switch (preset.value) {
-    case 'wifi':
+    case "wifi":
       return [
         wifiSsid.value,
         wifiPassword.value,
         wifiSecurity.value,
-        wifiHidden.value ? 'hidden' : '',
-      ].join('\n');
-    case 'vcard':
+        wifiHidden.value ? "hidden" : "",
+      ].join("\n");
+    case "vcard":
       return [
         vcardName.value,
         vcardPhone.value,
@@ -128,23 +128,23 @@ const composedInput = computed(() => {
         vcardUrl.value,
         vcardAddress.value,
         vcardNote.value,
-      ].join('\n');
-    case 'email':
-      return [emailTo.value, emailSubject.value, emailBody.value].join('\n');
-    case 'sms':
-      return [smsNumber.value, smsMessage.value].join('\n');
-    case 'phone':
+      ].join("\n");
+    case "email":
+      return [emailTo.value, emailSubject.value, emailBody.value].join("\n");
+    case "sms":
+      return [smsNumber.value, smsMessage.value].join("\n");
+    case "phone":
       return phoneNumber.value;
-    case 'geo':
-      return [geoLat.value, geoLng.value].join('\n');
-    case 'event':
+    case "geo":
+      return [geoLat.value, geoLng.value].join("\n");
+    case "event":
       return [
         eventSummary.value,
         localToUtc(eventStart.value),
         localToUtc(eventEnd.value),
         eventLocation.value,
         eventDescription.value,
-      ].join('\n');
+      ].join("\n");
     default:
       return textInput.value;
   }
@@ -152,11 +152,11 @@ const composedInput = computed(() => {
 
 /** Fill the per-type fields from a stored line-based input. */
 function applyInput(text: string) {
-  const l = text.split('\n');
-  const at = (i: number) => l[i] ?? '';
-  const rest = (i: number) => l.slice(i).join('\n').trim();
+  const l = text.split("\n");
+  const at = (i: number) => l[i] ?? "";
+  const rest = (i: number) => l.slice(i).join("\n").trim();
   switch (preset.value) {
-    case 'vcard':
+    case "vcard":
       vcardName.value = at(0);
       vcardPhone.value = at(1);
       vcardEmail.value = at(2);
@@ -166,21 +166,21 @@ function applyInput(text: string) {
       vcardAddress.value = at(6);
       vcardNote.value = rest(7);
       break;
-    case 'email':
+    case "email":
       emailTo.value = at(0);
       emailSubject.value = at(1);
       emailBody.value = rest(2);
       break;
-    case 'sms':
+    case "sms":
       smsNumber.value = at(0);
       smsMessage.value = rest(1);
       break;
-    case 'phone':
+    case "phone":
       phoneNumber.value = at(0);
       break;
-    case 'geo':
-      if (at(0).includes(',')) {
-        const [lat = '', lng = ''] = at(0).split(',');
+    case "geo":
+      if (at(0).includes(",")) {
+        const [lat = "", lng = ""] = at(0).split(",");
         geoLat.value = lat.trim();
         geoLng.value = lng.trim();
       } else {
@@ -188,7 +188,7 @@ function applyInput(text: string) {
         geoLng.value = at(1);
       }
       break;
-    case 'event':
+    case "event":
       eventSummary.value = at(0);
       eventStart.value = utcToLocal(at(1));
       eventEnd.value = utcToLocal(at(2));
@@ -207,9 +207,9 @@ function applyInput(text: string) {
 /** Bigger files are refused: a logo this size is being scaled down anyway. */
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 
-const logoDataUrl = ref('');
-const logoName = ref('');
-const logoError = ref('');
+const logoDataUrl = ref("");
+const logoName = ref("");
+const logoError = ref("");
 const logoPercent = ref(20);
 const dragging = ref(false);
 const logoInput = ref<HTMLInputElement | null>(null);
@@ -220,32 +220,32 @@ const logoSize = computed(() => logoPercent.value / 100);
 // The select must show what actually happens, not the stored preference: a
 // logo forces H regardless of what the visitor last picked. The underlying
 // `ecc` ref is left untouched so removing the logo restores their choice.
-const eccDisplayValue = computed(() => (hasLogo.value ? 'H' : ecc.value));
+const eccDisplayValue = computed(() => (hasLogo.value ? "H" : ecc.value));
 
 function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error('That file could not be read.'));
+    reader.onerror = () => reject(new Error("That file could not be read."));
     reader.readAsDataURL(file);
   });
 }
 
 async function loadLogo(file: File) {
-  logoError.value = '';
-  if (!file.type.startsWith('image/')) {
-    logoError.value = 'That file is not an image. Pick a PNG, JPEG, WebP or SVG.';
+  logoError.value = "";
+  if (!file.type.startsWith("image/")) {
+    logoError.value = "That file is not an image. Pick a PNG, JPEG, WebP or SVG.";
     return;
   }
   if (file.size > MAX_LOGO_BYTES) {
-    logoError.value = 'That image is over 2 MB. Export it smaller and try again.';
+    logoError.value = "That image is over 2 MB. Export it smaller and try again.";
     return;
   }
   try {
     logoDataUrl.value = await readAsDataUrl(file);
     logoName.value = file.name;
   } catch (e) {
-    logoError.value = e instanceof Error ? e.message : 'That file could not be read.';
+    logoError.value = e instanceof Error ? e.message : "That file could not be read.";
   }
 }
 
@@ -261,14 +261,14 @@ function onLogoPick(e: Event) {
   if (!file) return;
   loadLogo(file).then(() => {
     // Reset so picking the same file again still fires a change event.
-    picker.value = '';
+    picker.value = "";
   });
 }
 
 function clearLogo() {
-  logoDataUrl.value = '';
-  logoName.value = '';
-  logoError.value = '';
+  logoDataUrl.value = "";
+  logoName.value = "";
+  logoError.value = "";
 }
 
 /* -------------------------------------------------------------------------- */
@@ -282,7 +282,7 @@ const svgOutput = ref<string | null>(null);
 const error = ref<{ message: string; fix?: string } | null>(null);
 
 const previewSrc = computed(() =>
-  svgOutput.value ? `data:image/svg+xml,${encodeURIComponent(svgOutput.value)}` : '',
+  svgOutput.value ? `data:image/svg+xml,${encodeURIComponent(svgOutput.value)}` : "",
 );
 
 const warnings = computed(() =>
@@ -332,7 +332,7 @@ function persistFragment() {
     // address bar, and any link the user shares), so wifi input is skipped
     // entirely here rather than filtered field by field. The logo is left
     // out for the same reason: it is a file from the visitor's device.
-    input: preset.value === 'wifi' ? undefined : composedInput.value,
+    input: preset.value === "wifi" ? undefined : composedInput.value,
     opts: {
       preset: preset.value,
       ecc: ecc.value,
@@ -366,7 +366,7 @@ onMounted(() => {
 
   // Wifi is intentionally excluded: its fragment input is never written, so
   // there is nothing sensitive to read back either.
-  if (frag.input !== undefined && preset.value !== 'wifi') applyInput(frag.input);
+  if (frag.input !== undefined && preset.value !== "wifi") applyInput(frag.input);
 
   performRun();
 });
@@ -376,7 +376,7 @@ onMounted(() => {
 /* -------------------------------------------------------------------------- */
 
 function triggerDownload(url: string, filename: string) {
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -386,9 +386,9 @@ function triggerDownload(url: string, filename: string) {
 
 function downloadSvg() {
   if (!svgOutput.value) return;
-  const blob = new Blob([svgOutput.value], { type: 'image/svg+xml' });
+  const blob = new Blob([svgOutput.value], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
-  triggerDownload(url, 'qr.svg');
+  triggerDownload(url, "qr.svg");
   URL.revokeObjectURL(url);
 }
 
@@ -396,7 +396,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('That image could not be decoded.'));
+    img.onerror = () => reject(new Error("That image could not be decoded."));
     img.src = src;
   });
 }
@@ -411,7 +411,7 @@ function fillRoundedRect(
   r: number,
 ) {
   ctx.beginPath();
-  if (typeof ctx.roundRect === 'function') ctx.roundRect(x, y, w, h, r);
+  if (typeof ctx.roundRect === "function") ctx.roundRect(x, y, w, h, r);
   else ctx.rect(x, y, w, h);
   ctx.fill();
 }
@@ -419,10 +419,10 @@ function fillRoundedRect(
 async function downloadPng() {
   if (!plainSvg.value) return;
   try {
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = RENDER_SIZE;
     canvas.height = RENDER_SIZE;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     // QR readers need a solid quiet zone; a transparent PNG background can
@@ -455,13 +455,13 @@ async function downloadPng() {
     canvas.toBlob((blob) => {
       if (!blob) return;
       const pngUrl = URL.createObjectURL(blob);
-      triggerDownload(pngUrl, 'qr.png');
+      triggerDownload(pngUrl, "qr.png");
       URL.revokeObjectURL(pngUrl);
-    }, 'image/png');
+    }, "image/png");
   } catch (e) {
     error.value = {
-      message: e instanceof Error ? e.message : 'The PNG could not be composed.',
-      fix: 'Try a different logo file, or download the SVG instead.',
+      message: e instanceof Error ? e.message : "The PNG could not be composed.",
+      fix: "Try a different logo file, or download the SVG instead.",
     };
   }
 }
@@ -472,29 +472,15 @@ async function downloadPng() {
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-1.5">
-          <Label
-            for="qr-preset"
-            class="text-xs text-muted-foreground"
-          >
-            {{ presetSpec?.label ?? 'Content type' }}
+          <Label for="qr-preset" class="text-xs text-muted-foreground">
+            {{ presetSpec?.label ?? "Content type" }}
           </Label>
-          <Select
-            :model-value="preset"
-            @update:model-value="(v) => (preset = String(v))"
-          >
-            <SelectTrigger
-              id="qr-preset"
-              size="sm"
-              class="w-full"
-            >
+          <Select :model-value="preset" @update:model-value="(v) => (preset = String(v))">
+            <SelectTrigger id="qr-preset" size="sm" class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="c in presetSpec?.choices ?? []"
-                :key="c.value"
-                :value="c.value"
-              >
+              <SelectItem v-for="c in presetSpec?.choices ?? []" :key="c.value" :value="c.value">
                 {{ c.label }}
               </SelectItem>
             </SelectContent>
@@ -506,14 +492,8 @@ async function downloadPng() {
             Input
           </span>
 
-          <div
-            v-if="preset === 'url'"
-            class="flex flex-col gap-1.5"
-          >
-            <Label
-              for="qr-url"
-              class="text-xs text-muted-foreground"
-            >URL</Label>
+          <div v-if="preset === 'url'" class="flex flex-col gap-1.5">
+            <Label for="qr-url" class="text-xs text-muted-foreground">URL</Label>
             <Input
               id="qr-url"
               v-model="textInput"
@@ -523,15 +503,9 @@ async function downloadPng() {
             />
           </div>
 
-          <div
-            v-else-if="preset === 'wifi'"
-            class="flex flex-col gap-3"
-          >
+          <div v-else-if="preset === 'wifi'" class="flex flex-col gap-3">
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-wifi-ssid"
-                class="text-xs text-muted-foreground"
-              >Network name</Label>
+              <Label for="qr-wifi-ssid" class="text-xs text-muted-foreground">Network name</Label>
               <Input
                 id="qr-wifi-ssid"
                 v-model="wifiSsid"
@@ -540,10 +514,7 @@ async function downloadPng() {
               />
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-wifi-password"
-                class="text-xs text-muted-foreground"
-              >Password</Label>
+              <Label for="qr-wifi-password" class="text-xs text-muted-foreground">Password</Label>
               <Input
                 id="qr-wifi-password"
                 v-model="wifiPassword"
@@ -553,31 +524,18 @@ async function downloadPng() {
               />
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-wifi-security"
-                class="text-xs text-muted-foreground"
-              >Security</Label>
+              <Label for="qr-wifi-security" class="text-xs text-muted-foreground">Security</Label>
               <Select
                 :model-value="wifiSecurity"
                 @update:model-value="(v) => (wifiSecurity = String(v))"
               >
-                <SelectTrigger
-                  id="qr-wifi-security"
-                  size="sm"
-                  class="w-full bg-card"
-                >
+                <SelectTrigger id="qr-wifi-security" size="sm" class="w-full bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="WPA">
-                    WPA
-                  </SelectItem>
-                  <SelectItem value="WEP">
-                    WEP
-                  </SelectItem>
-                  <SelectItem value="nopass">
-                    None
-                  </SelectItem>
+                  <SelectItem value="WPA"> WPA </SelectItem>
+                  <SelectItem value="WEP"> WEP </SelectItem>
+                  <SelectItem value="nopass"> None </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -587,10 +545,9 @@ async function downloadPng() {
                 :model-value="wifiHidden"
                 @update:model-value="(v) => (wifiHidden = Boolean(v))"
               />
-              <Label
-                for="qr-wifi-hidden"
-                class="text-xs text-muted-foreground"
-              >Hidden network (does not broadcast its name)</Label>
+              <Label for="qr-wifi-hidden" class="text-xs text-muted-foreground"
+                >Hidden network (does not broadcast its name)</Label
+              >
             </div>
             <p class="text-xs text-muted-foreground">
               This type is not saved to the page URL, so the password never ends up in your browser
@@ -598,15 +555,9 @@ async function downloadPng() {
             </p>
           </div>
 
-          <div
-            v-else-if="preset === 'vcard'"
-            class="flex flex-col gap-3"
-          >
+          <div v-else-if="preset === 'vcard'" class="flex flex-col gap-3">
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-vcard-name"
-                class="text-xs text-muted-foreground"
-              >Name</Label>
+              <Label for="qr-vcard-name" class="text-xs text-muted-foreground">Name</Label>
               <Input
                 id="qr-vcard-name"
                 v-model="vcardName"
@@ -616,10 +567,7 @@ async function downloadPng() {
             </div>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div class="flex flex-col gap-1.5">
-                <Label
-                  for="qr-vcard-org"
-                  class="text-xs text-muted-foreground"
-                >Organization</Label>
+                <Label for="qr-vcard-org" class="text-xs text-muted-foreground">Organization</Label>
                 <Input
                   id="qr-vcard-org"
                   v-model="vcardOrg"
@@ -628,10 +576,7 @@ async function downloadPng() {
                 />
               </div>
               <div class="flex flex-col gap-1.5">
-                <Label
-                  for="qr-vcard-title"
-                  class="text-xs text-muted-foreground"
-                >Job title</Label>
+                <Label for="qr-vcard-title" class="text-xs text-muted-foreground">Job title</Label>
                 <Input
                   id="qr-vcard-title"
                   v-model="vcardTitle"
@@ -640,10 +585,7 @@ async function downloadPng() {
                 />
               </div>
               <div class="flex flex-col gap-1.5">
-                <Label
-                  for="qr-vcard-phone"
-                  class="text-xs text-muted-foreground"
-                >Phone</Label>
+                <Label for="qr-vcard-phone" class="text-xs text-muted-foreground">Phone</Label>
                 <Input
                   id="qr-vcard-phone"
                   v-model="vcardPhone"
@@ -653,10 +595,7 @@ async function downloadPng() {
                 />
               </div>
               <div class="flex flex-col gap-1.5">
-                <Label
-                  for="qr-vcard-email"
-                  class="text-xs text-muted-foreground"
-                >Email</Label>
+                <Label for="qr-vcard-email" class="text-xs text-muted-foreground">Email</Label>
                 <Input
                   id="qr-vcard-email"
                   v-model="vcardEmail"
@@ -667,10 +606,7 @@ async function downloadPng() {
               </div>
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-vcard-url"
-                class="text-xs text-muted-foreground"
-              >Website</Label>
+              <Label for="qr-vcard-url" class="text-xs text-muted-foreground">Website</Label>
               <Input
                 id="qr-vcard-url"
                 v-model="vcardUrl"
@@ -680,10 +616,7 @@ async function downloadPng() {
               />
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-vcard-address"
-                class="text-xs text-muted-foreground"
-              >Address</Label>
+              <Label for="qr-vcard-address" class="text-xs text-muted-foreground">Address</Label>
               <Input
                 id="qr-vcard-address"
                 v-model="vcardAddress"
@@ -692,10 +625,7 @@ async function downloadPng() {
               />
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-vcard-note"
-                class="text-xs text-muted-foreground"
-              >Note</Label>
+              <Label for="qr-vcard-note" class="text-xs text-muted-foreground">Note</Label>
               <Textarea
                 id="qr-vcard-note"
                 v-model="vcardNote"
@@ -705,15 +635,9 @@ async function downloadPng() {
             </div>
           </div>
 
-          <div
-            v-else-if="preset === 'email'"
-            class="flex flex-col gap-3"
-          >
+          <div v-else-if="preset === 'email'" class="flex flex-col gap-3">
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-email-to"
-                class="text-xs text-muted-foreground"
-              >To</Label>
+              <Label for="qr-email-to" class="text-xs text-muted-foreground">To</Label>
               <Input
                 id="qr-email-to"
                 v-model="emailTo"
@@ -723,10 +647,7 @@ async function downloadPng() {
               />
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-email-subject"
-                class="text-xs text-muted-foreground"
-              >Subject</Label>
+              <Label for="qr-email-subject" class="text-xs text-muted-foreground">Subject</Label>
               <Input
                 id="qr-email-subject"
                 v-model="emailSubject"
@@ -735,10 +656,7 @@ async function downloadPng() {
               />
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-email-body"
-                class="text-xs text-muted-foreground"
-              >Message</Label>
+              <Label for="qr-email-body" class="text-xs text-muted-foreground">Message</Label>
               <Textarea
                 id="qr-email-body"
                 v-model="emailBody"
@@ -748,15 +666,9 @@ async function downloadPng() {
             </div>
           </div>
 
-          <div
-            v-else-if="preset === 'sms'"
-            class="flex flex-col gap-3"
-          >
+          <div v-else-if="preset === 'sms'" class="flex flex-col gap-3">
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-sms-number"
-                class="text-xs text-muted-foreground"
-              >Phone number</Label>
+              <Label for="qr-sms-number" class="text-xs text-muted-foreground">Phone number</Label>
               <Input
                 id="qr-sms-number"
                 v-model="smsNumber"
@@ -766,10 +678,7 @@ async function downloadPng() {
               />
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-sms-message"
-                class="text-xs text-muted-foreground"
-              >Message</Label>
+              <Label for="qr-sms-message" class="text-xs text-muted-foreground">Message</Label>
               <Textarea
                 id="qr-sms-message"
                 v-model="smsMessage"
@@ -779,14 +688,8 @@ async function downloadPng() {
             </div>
           </div>
 
-          <div
-            v-else-if="preset === 'phone'"
-            class="flex flex-col gap-1.5"
-          >
-            <Label
-              for="qr-phone"
-              class="text-xs text-muted-foreground"
-            >Phone number</Label>
+          <div v-else-if="preset === 'phone'" class="flex flex-col gap-1.5">
+            <Label for="qr-phone" class="text-xs text-muted-foreground">Phone number</Label>
             <Input
               id="qr-phone"
               v-model="phoneNumber"
@@ -796,16 +699,10 @@ async function downloadPng() {
             />
           </div>
 
-          <div
-            v-else-if="preset === 'geo'"
-            class="flex flex-col gap-3"
-          >
+          <div v-else-if="preset === 'geo'" class="flex flex-col gap-3">
             <div class="grid grid-cols-2 gap-3">
               <div class="flex flex-col gap-1.5">
-                <Label
-                  for="qr-geo-lat"
-                  class="text-xs text-muted-foreground"
-                >Latitude</Label>
+                <Label for="qr-geo-lat" class="text-xs text-muted-foreground">Latitude</Label>
                 <Input
                   id="qr-geo-lat"
                   v-model="geoLat"
@@ -815,10 +712,7 @@ async function downloadPng() {
                 />
               </div>
               <div class="flex flex-col gap-1.5">
-                <Label
-                  for="qr-geo-lng"
-                  class="text-xs text-muted-foreground"
-                >Longitude</Label>
+                <Label for="qr-geo-lng" class="text-xs text-muted-foreground">Longitude</Label>
                 <Input
                   id="qr-geo-lng"
                   v-model="geoLng"
@@ -833,15 +727,9 @@ async function downloadPng() {
             </p>
           </div>
 
-          <div
-            v-else-if="preset === 'event'"
-            class="flex flex-col gap-3"
-          >
+          <div v-else-if="preset === 'event'" class="flex flex-col gap-3">
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-event-summary"
-                class="text-xs text-muted-foreground"
-              >Title</Label>
+              <Label for="qr-event-summary" class="text-xs text-muted-foreground">Title</Label>
               <Input
                 id="qr-event-summary"
                 v-model="eventSummary"
@@ -851,10 +739,7 @@ async function downloadPng() {
             </div>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div class="flex flex-col gap-1.5">
-                <Label
-                  for="qr-event-start"
-                  class="text-xs text-muted-foreground"
-                >Starts</Label>
+                <Label for="qr-event-start" class="text-xs text-muted-foreground">Starts</Label>
                 <Input
                   id="qr-event-start"
                   v-model="eventStart"
@@ -863,10 +748,7 @@ async function downloadPng() {
                 />
               </div>
               <div class="flex flex-col gap-1.5">
-                <Label
-                  for="qr-event-end"
-                  class="text-xs text-muted-foreground"
-                >Ends</Label>
+                <Label for="qr-event-end" class="text-xs text-muted-foreground">Ends</Label>
                 <Input
                   id="qr-event-end"
                   v-model="eventEnd"
@@ -876,10 +758,7 @@ async function downloadPng() {
               </div>
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-event-location"
-                class="text-xs text-muted-foreground"
-              >Location</Label>
+              <Label for="qr-event-location" class="text-xs text-muted-foreground">Location</Label>
               <Input
                 id="qr-event-location"
                 v-model="eventLocation"
@@ -888,10 +767,9 @@ async function downloadPng() {
               />
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label
-                for="qr-event-description"
-                class="text-xs text-muted-foreground"
-              >Description</Label>
+              <Label for="qr-event-description" class="text-xs text-muted-foreground"
+                >Description</Label
+              >
               <Textarea
                 id="qr-event-description"
                 v-model="eventDescription"
@@ -905,14 +783,8 @@ async function downloadPng() {
             </p>
           </div>
 
-          <div
-            v-else
-            class="flex flex-col gap-1.5"
-          >
-            <Label
-              for="qr-text"
-              class="text-xs text-muted-foreground"
-            >Text</Label>
+          <div v-else class="flex flex-col gap-1.5">
+            <Label for="qr-text" class="text-xs text-muted-foreground">Text</Label>
             <Textarea
               id="qr-text"
               v-model="textInput"
@@ -934,20 +806,9 @@ async function downloadPng() {
               Center logo
             </span>
             <div class="flex items-center gap-1">
-              <Button
-                v-if="hasLogo"
-                variant="ghost"
-                size="sm"
-                @click="clearLogo"
-              >
-                Remove
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                @click="logoInput?.click()"
-              >
-                {{ hasLogo ? 'Replace' : 'Add logo' }}
+              <Button v-if="hasLogo" variant="ghost" size="sm" @click="clearLogo"> Remove </Button>
+              <Button variant="ghost" size="sm" @click="logoInput?.click()">
+                {{ hasLogo ? "Replace" : "Add logo" }}
               </Button>
               <input
                 ref="logoInput"
@@ -955,31 +816,21 @@ async function downloadPng() {
                 class="hidden"
                 accept="image/*"
                 @change="onLogoPick"
-              >
+              />
             </div>
           </div>
 
-          <p
-            v-if="!hasLogo"
-            class="text-xs text-muted-foreground"
-          >
+          <p v-if="!hasLogo" class="text-xs text-muted-foreground">
             Drop an image here, or pick one. It is read on your device and inlined into the code:
             your files and inputs never leave your device.
           </p>
 
-          <div
-            v-else
-            class="flex flex-col gap-3"
-          >
+          <div v-else class="flex flex-col gap-3">
             <div class="flex items-center gap-3">
               <span
                 class="grid size-10 shrink-0 place-items-center rounded-[6px] bg-card p-1 shadow-[var(--sh-inset)]"
               >
-                <img
-                  :src="logoDataUrl"
-                  alt=""
-                  class="max-h-full max-w-full object-contain"
-                >
+                <img :src="logoDataUrl" alt="" class="max-h-full max-w-full object-contain" />
               </span>
               <span class="min-w-0 truncate text-xs text-muted-foreground">{{ logoName }}</span>
             </div>
@@ -1003,21 +854,14 @@ async function downloadPng() {
             </p>
           </div>
 
-          <p
-            v-if="logoError"
-            role="alert"
-            class="text-xs text-destructive"
-          >
+          <p v-if="logoError" role="alert" class="text-xs text-destructive">
             {{ logoError }}
           </p>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div class="flex min-w-0 flex-col gap-1.5">
-            <Label
-              for="qr-ecc"
-              class="text-xs text-muted-foreground"
-            >{{ eccSpec.label }}</Label>
+            <Label for="qr-ecc" class="text-xs text-muted-foreground">{{ eccSpec.label }}</Label>
             <Select
               :model-value="eccDisplayValue"
               :disabled="hasLogo"
@@ -1032,43 +876,30 @@ async function downloadPng() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="c in eccSpec.choices ?? []"
-                  :key="c.value"
-                  :value="c.value"
-                >
+                <SelectItem v-for="c in eccSpec.choices ?? []" :key="c.value" :value="c.value">
                   {{ c.label }}
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <OptionControl
-            v-model="margin"
-            :spec="marginSpec"
-          />
+          <OptionControl v-model="margin" :spec="marginSpec" />
           <div class="flex min-w-0 flex-col gap-1.5">
-            <Label
-              for="qr-fg"
-              class="text-xs text-muted-foreground"
-            >Foreground</Label>
+            <Label for="qr-fg" class="text-xs text-muted-foreground">Foreground</Label>
             <input
               id="qr-fg"
               v-model="color"
               type="color"
               class="h-8 w-full cursor-pointer rounded-[10px] border bg-card p-1"
-            >
+            />
           </div>
           <div class="flex min-w-0 flex-col gap-1.5">
-            <Label
-              for="qr-bg"
-              class="text-xs text-muted-foreground"
-            >Background</Label>
+            <Label for="qr-bg" class="text-xs text-muted-foreground">Background</Label>
             <input
               id="qr-bg"
               v-model="background"
               type="color"
               class="h-8 w-full cursor-pointer rounded-[10px] border bg-card p-1"
-            >
+            />
           </div>
         </div>
       </div>
@@ -1082,10 +913,7 @@ async function downloadPng() {
           <p class="font-medium text-destructive">
             {{ error.message }}
           </p>
-          <p
-            v-if="error.fix"
-            class="mt-1 text-muted-foreground"
-          >
+          <p v-if="error.fix" class="mt-1 text-muted-foreground">
             {{ error.fix }}
           </p>
         </div>
@@ -1096,43 +924,17 @@ async function downloadPng() {
           v-else
           class="qr-preview flex min-h-64 items-center justify-center rounded-[10px] bg-white p-4 shadow-[var(--sh-inset)]"
         >
-          <img
-            v-if="previewSrc"
-            :src="previewSrc"
-            alt="QR code preview"
-          >
+          <img v-if="previewSrc" :src="previewSrc" alt="QR code preview" />
         </div>
 
-        <p
-          v-for="w in warnings"
-          :key="w"
-          class="text-xs text-muted-foreground"
-        >
+        <p v-for="w in warnings" :key="w" class="text-xs text-muted-foreground">
           {{ w }}
         </p>
 
-        <div
-          v-if="svgOutput && !error"
-          class="flex flex-wrap items-center gap-2"
-        >
-          <CopyButton
-            :text="svgOutput"
-            label="Copy SVG"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            @click="downloadSvg"
-          >
-            Download SVG
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            @click="downloadPng"
-          >
-            Download PNG
-          </Button>
+        <div v-if="svgOutput && !error" class="flex flex-wrap items-center gap-2">
+          <CopyButton :text="svgOutput" label="Copy SVG" />
+          <Button variant="outline" size="sm" @click="downloadSvg"> Download SVG </Button>
+          <Button variant="outline" size="sm" @click="downloadPng"> Download PNG </Button>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
-import { ToolError, type ToolLogic } from '../types';
-import { words } from './wordlist';
+import { ToolError, type ToolLogic } from "../types";
+import { words } from "./wordlist";
 
 export interface PasswordOpts {
   /** 'password' | 'passphrase' */
@@ -20,12 +20,12 @@ export interface PasswordOpts {
 
 export type PasswordResult = Record<string, string>;
 
-export const LOWER = 'abcdefghijklmnopqrstuvwxyz';
-export const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-export const DIGITS = '0123456789';
-export const SYMBOLS = '!@#$%^&*()-_=+[]{}:;,.?/~';
+export const LOWER = "abcdefghijklmnopqrstuvwxyz";
+export const UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+export const DIGITS = "0123456789";
+export const SYMBOLS = "!@#$%^&*()-_=+[]{}:;,.?/~";
 /** Characters that are easy to confuse in most fonts: zero/O, one/l/I, pipe. */
-export const AMBIGUOUS_CHARS = '0O1lI|';
+export const AMBIGUOUS_CHARS = "0O1lI|";
 
 /**
  * FNV-1a 32-bit hash, used to turn an arbitrary seed string into xorshift128
@@ -81,14 +81,14 @@ function randomIndex(n: number, next: () => number): number {
 }
 
 function buildPool(opts: PasswordOpts): string {
-  let pool = '';
+  let pool = "";
   if (opts.lowercase) pool += LOWER;
   if (opts.uppercase) pool += UPPER;
   if (opts.digits) pool += DIGITS;
   if (opts.symbols) pool += SYMBOLS;
   if (opts.excludeAmbiguous) {
     const ambiguous = new Set(AMBIGUOUS_CHARS);
-    pool = [...pool].filter((c) => !ambiguous.has(c)).join('');
+    pool = [...pool].filter((c) => !ambiguous.has(c)).join("");
   }
   return pool;
 }
@@ -97,26 +97,26 @@ function generatePassword(opts: PasswordOpts): { value: string; poolSize: number
   const pool = buildPool(opts);
   if (!pool)
     throw new ToolError(
-      'no-charset',
-      'At least one character set must be enabled to generate a password.',
-      'Turn on lowercase, uppercase, digits, or symbols.',
+      "no-charset",
+      "At least one character set must be enabled to generate a password.",
+      "Turn on lowercase, uppercase, digits, or symbols.",
     );
 
   const length = Math.floor(opts.length);
   if (!Number.isFinite(length) || length < 8 || length > 128)
-    throw new ToolError('bad-length', 'Password length must be between 8 and 128.');
+    throw new ToolError("bad-length", "Password length must be between 8 and 128.");
 
-  const next = makeRng(opts.seed || '');
+  const next = makeRng(opts.seed || "");
   const chars = Array.from({ length }, () => pool[randomIndex(pool.length, next)] as string);
-  return { value: chars.join(''), poolSize: pool.length };
+  return { value: chars.join(""), poolSize: pool.length };
 }
 
 function generatePassphrase(opts: PasswordOpts): { value: string; wordCount: number } {
   const count = Math.floor(opts.words);
   if (!Number.isFinite(count) || count < 3 || count > 12)
-    throw new ToolError('bad-word-count', 'Word count must be between 3 and 12.');
+    throw new ToolError("bad-word-count", "Word count must be between 3 and 12.");
 
-  const next = makeRng(opts.seed || '');
+  const next = makeRng(opts.seed || "");
   const picked = Array.from(
     { length: count },
     () => words[randomIndex(words.length, next)] as string,
@@ -124,14 +124,14 @@ function generatePassphrase(opts: PasswordOpts): { value: string; wordCount: num
   const finalWords = opts.capitalize
     ? picked.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     : picked;
-  const separator = opts.separator ?? '-';
+  const separator = opts.separator ?? "-";
   return { value: finalWords.join(separator), wordCount: count };
 }
 
 /** Formats a large positive number: fixed for small, grouped for medium, exponential beyond. */
 function formatCount(n: number): string {
   if (n < 1000) return n.toFixed(1);
-  if (n < 1e21) return Math.round(n).toLocaleString('en-US');
+  if (n < 1e21) return Math.round(n).toLocaleString("en-US");
   return n.toExponential(2);
 }
 
@@ -144,16 +144,16 @@ const CENTURY = 100 * YEAR;
 
 /** Humanizes a crack-time duration in seconds, from "instant" up to centuries. */
 export function humanizeCrackTime(seconds: number): string {
-  if (!Number.isFinite(seconds)) return 'longer than the heat death of the universe';
-  if (seconds < 1) return 'instantly';
+  if (!Number.isFinite(seconds)) return "longer than the heat death of the universe";
+  if (seconds < 1) return "instantly";
 
   const ladder: [string, number][] = [
-    ['seconds', SECOND],
-    ['minutes', MINUTE],
-    ['hours', HOUR],
-    ['days', DAY],
-    ['years', YEAR],
-    ['centuries', CENTURY],
+    ["seconds", SECOND],
+    ["minutes", MINUTE],
+    ["hours", HOUR],
+    ["days", DAY],
+    ["years", YEAR],
+    ["centuries", CENTURY],
   ];
   let unit = ladder[0] as [string, number];
   for (const entry of ladder) {
@@ -168,24 +168,24 @@ function entropyBits(poolSize: number, count: number): number {
 }
 
 export function run(_input: undefined, opts: PasswordOpts): PasswordResult {
-  const mode = opts.mode === 'passphrase' ? 'passphrase' : 'password';
+  const mode = opts.mode === "passphrase" ? "passphrase" : "password";
 
-  if (mode === 'passphrase') {
+  if (mode === "passphrase") {
     const { value, wordCount } = generatePassphrase(opts);
     const bits = entropyBits(words.length, wordCount);
     const crackSeconds = Math.pow(2, bits) / 1e10;
     return {
       Passphrase: value,
       Entropy: `${bits.toFixed(1)} bits`,
-      'Crack time @ 10¹⁰/s': humanizeCrackTime(crackSeconds),
+      "Crack time @ 10¹⁰/s": humanizeCrackTime(crackSeconds),
     };
   }
 
   if (!opts.lowercase && !opts.uppercase && !opts.digits && !opts.symbols)
     throw new ToolError(
-      'no-charset',
-      'At least one character set must be enabled to generate a password.',
-      'Turn on lowercase, uppercase, digits, or symbols.',
+      "no-charset",
+      "At least one character set must be enabled to generate a password.",
+      "Turn on lowercase, uppercase, digits, or symbols.",
     );
 
   const { value, poolSize } = generatePassword(opts);
@@ -194,7 +194,7 @@ export function run(_input: undefined, opts: PasswordOpts): PasswordResult {
   return {
     Password: value,
     Entropy: `${bits.toFixed(1)} bits`,
-    'Crack time @ 10¹⁰/s': humanizeCrackTime(crackSeconds),
+    "Crack time @ 10¹⁰/s": humanizeCrackTime(crackSeconds),
   };
 }
 

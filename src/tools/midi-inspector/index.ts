@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * MIDI inspector logic.
@@ -26,8 +26,8 @@ export interface MidiOpts {
 /* ------------------------------------------------------------------ */
 
 export type MidiDivision =
-  | { kind: 'ticksPerQuarter'; ticksPerQuarter: number }
-  | { kind: 'smpte'; framesPerSecond: number; ticksPerFrame: number };
+  | { kind: "ticksPerQuarter"; ticksPerQuarter: number }
+  | { kind: "smpte"; framesPerSecond: number; ticksPerFrame: number };
 
 export interface MidiHeader {
   /** 0 single track, 1 several tracks played together, 2 independent patterns. */
@@ -44,43 +44,43 @@ interface EventBase {
 }
 
 export type ChannelEventKind =
-  | 'noteOn'
-  | 'noteOff'
-  | 'polyAftertouch'
-  | 'controlChange'
-  | 'programChange'
-  | 'channelAftertouch'
-  | 'pitchBend';
+  | "noteOn"
+  | "noteOff"
+  | "polyAftertouch"
+  | "controlChange"
+  | "programChange"
+  | "channelAftertouch"
+  | "pitchBend";
 
 /** A decoded channel voice message, shared by the file parser and the live decoder. */
 export type ChannelMessage =
-  | { kind: 'noteOn'; channel: number; note: number; velocity: number }
-  | { kind: 'noteOff'; channel: number; note: number; velocity: number }
-  | { kind: 'polyAftertouch'; channel: number; note: number; pressure: number }
-  | { kind: 'controlChange'; channel: number; controller: number; value: number }
-  | { kind: 'programChange'; channel: number; program: number }
-  | { kind: 'channelAftertouch'; channel: number; pressure: number }
-  | { kind: 'pitchBend'; channel: number; value: number };
+  | { kind: "noteOn"; channel: number; note: number; velocity: number }
+  | { kind: "noteOff"; channel: number; note: number; velocity: number }
+  | { kind: "polyAftertouch"; channel: number; note: number; pressure: number }
+  | { kind: "controlChange"; channel: number; controller: number; value: number }
+  | { kind: "programChange"; channel: number; program: number }
+  | { kind: "channelAftertouch"; channel: number; pressure: number }
+  | { kind: "pitchBend"; channel: number; value: number };
 
 export type MidiEvent = EventBase &
   (
     | ChannelMessage
-    | { kind: 'tempo'; microsecondsPerQuarter: number; bpm: number }
+    | { kind: "tempo"; microsecondsPerQuarter: number; bpm: number }
     | {
-        kind: 'timeSignature';
+        kind: "timeSignature";
         numerator: number;
         denominator: number;
         clocksPerClick: number;
         thirtySecondsPerQuarter: number;
       }
-    | { kind: 'keySignature'; sharpsFlats: number; minor: boolean; key: string }
-    | { kind: 'text'; metaType: number; label: string; text: string }
-    | { kind: 'sequenceNumber'; number: number }
-    | { kind: 'channelPrefix'; channel: number }
-    | { kind: 'portPrefix'; port: number }
-    | { kind: 'sysex'; byteLength: number }
-    | { kind: 'endOfTrack' }
-    | { kind: 'unknownMeta'; metaType: number; byteLength: number }
+    | { kind: "keySignature"; sharpsFlats: number; minor: boolean; key: string }
+    | { kind: "text"; metaType: number; label: string; text: string }
+    | { kind: "sequenceNumber"; number: number }
+    | { kind: "channelPrefix"; channel: number }
+    | { kind: "portPrefix"; port: number }
+    | { kind: "sysex"; byteLength: number }
+    | { kind: "endOfTrack" }
+    | { kind: "unknownMeta"; metaType: number; byteLength: number }
   );
 
 export interface MidiTrack {
@@ -116,9 +116,9 @@ export function readVarInt(
   for (let count = 0; count < 4; count++) {
     if (i >= end) {
       throw new ToolError(
-        'truncated',
-        'A variable length number runs past the end of the data.',
-        'The file looks cut off. Re-export or re-download it and try again.',
+        "truncated",
+        "A variable length number runs past the end of the data.",
+        "The file looks cut off. Re-export or re-download it and try again.",
       );
     }
     const b = bytes[i++] as number;
@@ -126,16 +126,16 @@ export function readVarInt(
     if ((b & 0x80) === 0) return { value, next: i };
   }
   throw new ToolError(
-    'bad-vlq',
-    'A variable length number is longer than four bytes, which SMF does not allow.',
-    'This is not a valid MIDI file, or it is damaged.',
+    "bad-vlq",
+    "A variable length number is longer than four bytes, which SMF does not allow.",
+    "This is not a valid MIDI file, or it is damaged.",
   );
 }
 
 /** Encode a number as an SMF variable-length quantity. The inverse of readVarInt. */
 export function writeVarInt(value: number): number[] {
   if (!Number.isInteger(value) || value < 0) {
-    throw new ToolError('bad-vlq', 'Only non-negative integers have a variable length encoding.');
+    throw new ToolError("bad-vlq", "Only non-negative integers have a variable length encoding.");
   }
   const out = [value & 0x7f];
   let v = Math.floor(value / 128);
@@ -150,7 +150,7 @@ export function writeVarInt(value: number): number[] {
 /* names                                                              */
 /* ------------------------------------------------------------------ */
 
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 /** Parse the middle-C octave option to a number, defaulting to the C4 = 60 convention. */
 export function middleCOctave(opts?: Partial<MidiOpts>): number {
@@ -169,49 +169,43 @@ export function noteName(note: number, middleC = 4): string {
   return `${name}${octave}`;
 }
 
-const MAJOR_SHARP = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
-const MAJOR_FLAT = ['C', 'F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
-const MINOR_SHARP = ['A', 'E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#'];
-const MINOR_FLAT = ['A', 'D', 'G', 'C', 'F', 'Bb', 'Eb', 'Ab'];
+const MAJOR_SHARP = ["C", "G", "D", "A", "E", "B", "F#", "C#"];
+const MAJOR_FLAT = ["C", "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"];
+const MINOR_SHARP = ["A", "E", "B", "F#", "C#", "G#", "D#", "A#"];
+const MINOR_FLAT = ["A", "D", "G", "C", "F", "Bb", "Eb", "Ab"];
 
 /** Turn the sharps/flats count and mode of an FF 59 key signature into a key name. */
 export function keySignatureName(sharpsFlats: number, minor: boolean): string {
   const n = Math.max(-7, Math.min(7, sharpsFlats | 0));
-  const table = minor
-    ? n >= 0
-      ? MINOR_SHARP
-      : MINOR_FLAT
-    : n >= 0
-      ? MAJOR_SHARP
-      : MAJOR_FLAT;
-  const root = table[Math.abs(n)] ?? '?';
-  return `${root} ${minor ? 'minor' : 'major'}`;
+  const table = minor ? (n >= 0 ? MINOR_SHARP : MINOR_FLAT) : n >= 0 ? MAJOR_SHARP : MAJOR_FLAT;
+  const root = table[Math.abs(n)] ?? "?";
+  return `${root} ${minor ? "minor" : "major"}`;
 }
 
 /** Common continuous-controller names for the frequently used numbers. */
 const CONTROLLER_NAMES: Record<number, string> = {
-  0: 'Bank Select MSB',
-  1: 'Modulation',
-  2: 'Breath',
-  4: 'Foot',
-  5: 'Portamento Time',
-  6: 'Data Entry MSB',
-  7: 'Channel Volume',
-  8: 'Balance',
-  10: 'Pan',
-  11: 'Expression',
-  32: 'Bank Select LSB',
-  64: 'Sustain Pedal',
-  65: 'Portamento',
-  66: 'Sostenuto',
-  67: 'Soft Pedal',
-  71: 'Resonance',
-  74: 'Cutoff',
-  91: 'Reverb Depth',
-  93: 'Chorus Depth',
-  120: 'All Sound Off',
-  121: 'Reset All Controllers',
-  123: 'All Notes Off',
+  0: "Bank Select MSB",
+  1: "Modulation",
+  2: "Breath",
+  4: "Foot",
+  5: "Portamento Time",
+  6: "Data Entry MSB",
+  7: "Channel Volume",
+  8: "Balance",
+  10: "Pan",
+  11: "Expression",
+  32: "Bank Select LSB",
+  64: "Sustain Pedal",
+  65: "Portamento",
+  66: "Sostenuto",
+  67: "Soft Pedal",
+  71: "Resonance",
+  74: "Cutoff",
+  91: "Reverb Depth",
+  93: "Chorus Depth",
+  120: "All Sound Off",
+  121: "Reset All Controllers",
+  123: "All Notes Off",
 };
 
 export function controllerName(controller: number): string {
@@ -219,15 +213,15 @@ export function controllerName(controller: number): string {
 }
 
 const TEXT_META_LABELS: Record<number, string> = {
-  0x01: 'Text',
-  0x02: 'Copyright',
-  0x03: 'Track Name',
-  0x04: 'Instrument Name',
-  0x05: 'Lyric',
-  0x06: 'Marker',
-  0x07: 'Cue Point',
-  0x08: 'Program Name',
-  0x09: 'Device Name',
+  0x01: "Text",
+  0x02: "Copyright",
+  0x03: "Track Name",
+  0x04: "Instrument Name",
+  0x05: "Lyric",
+  0x06: "Marker",
+  0x07: "Cue Point",
+  0x08: "Program Name",
+  0x09: "Device Name",
 };
 
 /* ------------------------------------------------------------------ */
@@ -250,21 +244,21 @@ export function decodeChannelMessage(
   const channel = status & 0x0f;
   switch (type) {
     case 0x80:
-      return { kind: 'noteOff', channel, note: data0, velocity: data1 };
+      return { kind: "noteOff", channel, note: data0, velocity: data1 };
     case 0x90:
       return data1 === 0
-        ? { kind: 'noteOff', channel, note: data0, velocity: 0 }
-        : { kind: 'noteOn', channel, note: data0, velocity: data1 };
+        ? { kind: "noteOff", channel, note: data0, velocity: 0 }
+        : { kind: "noteOn", channel, note: data0, velocity: data1 };
     case 0xa0:
-      return { kind: 'polyAftertouch', channel, note: data0, pressure: data1 };
+      return { kind: "polyAftertouch", channel, note: data0, pressure: data1 };
     case 0xb0:
-      return { kind: 'controlChange', channel, controller: data0, value: data1 };
+      return { kind: "controlChange", channel, controller: data0, value: data1 };
     case 0xc0:
-      return { kind: 'programChange', channel, program: data0 };
+      return { kind: "programChange", channel, program: data0 };
     case 0xd0:
-      return { kind: 'channelAftertouch', channel, pressure: data0 };
+      return { kind: "channelAftertouch", channel, pressure: data0 };
     case 0xe0:
-      return { kind: 'pitchBend', channel, value: ((data1 << 7) | data0) - 8192 };
+      return { kind: "pitchBend", channel, value: ((data1 << 7) | data0) - 8192 };
     default:
       return null;
   }
@@ -282,17 +276,17 @@ function channelDataLength(status: number): 1 | 2 {
 
 export type LiveMessage =
   | ChannelMessage
-  | { kind: 'sysex'; byteLength: number }
-  | { kind: 'songPosition'; position: number }
-  | { kind: 'songSelect'; song: number }
-  | { kind: 'clock' }
-  | { kind: 'start' }
-  | { kind: 'continue' }
-  | { kind: 'stop' }
-  | { kind: 'activeSensing' }
-  | { kind: 'systemReset' }
-  | { kind: 'tuneRequest' }
-  | { kind: 'unknown'; status: number };
+  | { kind: "sysex"; byteLength: number }
+  | { kind: "songPosition"; position: number }
+  | { kind: "songSelect"; song: number }
+  | { kind: "clock" }
+  | { kind: "start" }
+  | { kind: "continue" }
+  | { kind: "stop" }
+  | { kind: "activeSensing" }
+  | { kind: "systemReset" }
+  | { kind: "tuneRequest" }
+  | { kind: "unknown"; status: number };
 
 /**
  * Decode a single raw Web MIDI message (the `data` of a MIDIMessageEvent). Live
@@ -302,7 +296,7 @@ export type LiveMessage =
  * the wire, so they are handled here.
  */
 export function decodeLiveMessage(data: Uint8Array): LiveMessage {
-  if (data.length === 0) return { kind: 'unknown', status: -1 };
+  if (data.length === 0) return { kind: "unknown", status: -1 };
   const status = data[0] as number;
 
   if (status >= 0x80 && status <= 0xef) {
@@ -313,27 +307,27 @@ export function decodeLiveMessage(data: Uint8Array): LiveMessage {
   switch (status) {
     case 0xf0:
     case 0xf7:
-      return { kind: 'sysex', byteLength: data.length };
+      return { kind: "sysex", byteLength: data.length };
     case 0xf2:
-      return { kind: 'songPosition', position: ((data[2] ?? 0) << 7) | (data[1] ?? 0) };
+      return { kind: "songPosition", position: ((data[2] ?? 0) << 7) | (data[1] ?? 0) };
     case 0xf3:
-      return { kind: 'songSelect', song: data[1] ?? 0 };
+      return { kind: "songSelect", song: data[1] ?? 0 };
     case 0xf6:
-      return { kind: 'tuneRequest' };
+      return { kind: "tuneRequest" };
     case 0xf8:
-      return { kind: 'clock' };
+      return { kind: "clock" };
     case 0xfa:
-      return { kind: 'start' };
+      return { kind: "start" };
     case 0xfb:
-      return { kind: 'continue' };
+      return { kind: "continue" };
     case 0xfc:
-      return { kind: 'stop' };
+      return { kind: "stop" };
     case 0xfe:
-      return { kind: 'activeSensing' };
+      return { kind: "activeSensing" };
     case 0xff:
-      return { kind: 'systemReset' };
+      return { kind: "systemReset" };
     default:
-      return { kind: 'unknown', status };
+      return { kind: "unknown", status };
   }
 }
 
@@ -355,7 +349,7 @@ function u32(bytes: Uint8Array, pos: number): number {
 }
 
 function ascii(bytes: Uint8Array, pos: number, length: number): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < length; i++) out += String.fromCharCode(bytes[pos + i] ?? 0);
   return out;
 }
@@ -363,7 +357,7 @@ function ascii(bytes: Uint8Array, pos: number, length: number): string {
 /** Decode a meta text payload. Latin-1 avoids mojibake on the common ASCII text. */
 function decodeText(bytes: Uint8Array, start: number, length: number): string {
   try {
-    return new TextDecoder('latin1').decode(bytes.subarray(start, start + length));
+    return new TextDecoder("latin1").decode(bytes.subarray(start, start + length));
   } catch {
     return ascii(bytes, start, length);
   }
@@ -371,9 +365,9 @@ function decodeText(bytes: Uint8Array, start: number, length: number): string {
 
 function truncated(): ToolError {
   return new ToolError(
-    'truncated-track',
-    'A track event runs past the end of the file.',
-    'The file is cut off or damaged. Re-export it from the source and try again.',
+    "truncated-track",
+    "A track event runs past the end of the file.",
+    "The file is cut off or damaged. Re-export it from the source and try again.",
   );
 }
 
@@ -385,12 +379,17 @@ function parseDivision(raw: number): MidiDivision {
   if (raw & 0x8000) {
     const hi = (raw >> 8) & 0xff;
     const framesPerSecond = 256 - hi; // stored as a negative SMPTE frame rate
-    return { kind: 'smpte', framesPerSecond, ticksPerFrame: raw & 0xff };
+    return { kind: "smpte", framesPerSecond, ticksPerFrame: raw & 0xff };
   }
-  return { kind: 'ticksPerQuarter', ticksPerQuarter: raw & 0x7fff };
+  return { kind: "ticksPerQuarter", ticksPerQuarter: raw & 0x7fff };
 }
 
-function parseMeta(bytes: Uint8Array, pos: number, end: number, base: EventBase): {
+function parseMeta(
+  bytes: Uint8Array,
+  pos: number,
+  end: number,
+  base: EventBase,
+): {
   event: MidiEvent;
   next: number;
 } {
@@ -405,15 +404,15 @@ function parseMeta(bytes: Uint8Array, pos: number, end: number, base: EventBase)
 
   let event: MidiEvent;
   if (metaType === 0x2f) {
-    event = { ...base, kind: 'endOfTrack' };
+    event = { ...base, kind: "endOfTrack" };
   } else if (metaType === 0x51 && length === 3) {
     const microsecondsPerQuarter = (d(0) << 16) | (d(1) << 8) | d(2);
     const bpm = microsecondsPerQuarter > 0 ? 60000000 / microsecondsPerQuarter : 0;
-    event = { ...base, kind: 'tempo', microsecondsPerQuarter, bpm };
+    event = { ...base, kind: "tempo", microsecondsPerQuarter, bpm };
   } else if (metaType === 0x58 && length >= 4) {
     event = {
       ...base,
-      kind: 'timeSignature',
+      kind: "timeSignature",
       numerator: d(0),
       denominator: 2 ** d(1),
       clocksPerClick: d(2),
@@ -422,34 +421,35 @@ function parseMeta(bytes: Uint8Array, pos: number, end: number, base: EventBase)
   } else if (metaType === 0x59 && length >= 2) {
     const sharpsFlats = (d(0) << 24) >> 24; // sign-extend the signed byte
     const minor = d(1) === 1;
-    event = { ...base, kind: 'keySignature', sharpsFlats, minor, key: keySignatureName(sharpsFlats, minor) };
+    event = {
+      ...base,
+      kind: "keySignature",
+      sharpsFlats,
+      minor,
+      key: keySignatureName(sharpsFlats, minor),
+    };
   } else if (metaType === 0x00) {
-    event = { ...base, kind: 'sequenceNumber', number: length >= 2 ? (d(0) << 8) | d(1) : 0 };
+    event = { ...base, kind: "sequenceNumber", number: length >= 2 ? (d(0) << 8) | d(1) : 0 };
   } else if (metaType === 0x20 && length >= 1) {
-    event = { ...base, kind: 'channelPrefix', channel: d(0) };
+    event = { ...base, kind: "channelPrefix", channel: d(0) };
   } else if (metaType === 0x21 && length >= 1) {
-    event = { ...base, kind: 'portPrefix', port: d(0) };
+    event = { ...base, kind: "portPrefix", port: d(0) };
   } else if (metaType >= 0x01 && metaType <= 0x09) {
     event = {
       ...base,
-      kind: 'text',
+      kind: "text",
       metaType,
-      label: TEXT_META_LABELS[metaType] ?? 'Text',
+      label: TEXT_META_LABELS[metaType] ?? "Text",
       text: decodeText(bytes, dataStart, length),
     };
   } else {
-    event = { ...base, kind: 'unknownMeta', metaType, byteLength: length };
+    event = { ...base, kind: "unknownMeta", metaType, byteLength: length };
   }
 
   return { event, next: after };
 }
 
-function parseTrackEvents(
-  bytes: Uint8Array,
-  start: number,
-  end: number,
-  index: number,
-): MidiTrack {
+function parseTrackEvents(bytes: Uint8Array, start: number, end: number, index: number): MidiTrack {
   const events: MidiEvent[] = [];
   let pos = start;
   let tick = 0;
@@ -466,9 +466,9 @@ function parseTrackEvents(
     if (status < 0x80) {
       if (running === 0) {
         throw new ToolError(
-          'bad-running-status',
-          'A track uses running status before any status byte was seen.',
-          'This is not a valid MIDI file, or the track is damaged.',
+          "bad-running-status",
+          "A track uses running status before any status byte was seen.",
+          "This is not a valid MIDI file, or the track is damaged.",
         );
       }
       status = running;
@@ -482,7 +482,7 @@ function parseTrackEvents(
       running = 0;
       const meta = parseMeta(bytes, pos, end, base);
       pos = meta.next;
-      if (meta.event.kind === 'text' && meta.event.metaType === 0x03 && name === undefined) {
+      if (meta.event.kind === "text" && meta.event.metaType === 0x03 && name === undefined) {
         name = meta.event.text;
       }
       events.push(meta.event);
@@ -495,7 +495,7 @@ function parseTrackEvents(
       pos = n2;
       if (pos + length > end) throw truncated();
       pos += length;
-      events.push({ ...base, kind: 'sysex', byteLength: length });
+      events.push({ ...base, kind: "sysex", byteLength: length });
       continue;
     }
 
@@ -522,11 +522,11 @@ function parseTrackEvents(
  * on anything that is not a well-formed SMF.
  */
 export function parseMidi(bytes: Uint8Array): MidiFile {
-  if (bytes.length < 14 || ascii(bytes, 0, 4) !== 'MThd') {
+  if (bytes.length < 14 || ascii(bytes, 0, 4) !== "MThd") {
     throw new ToolError(
-      'not-midi',
+      "not-midi",
       'This is not a Standard MIDI File: it does not begin with the "MThd" header.',
-      'Pick a .mid or .midi file. Compressed .kar or .xmf files, and audio like .mp3 or .wav, are not MIDI files and cannot be read here.',
+      "Pick a .mid or .midi file. Compressed .kar or .xmf files, and audio like .mp3 or .wav, are not MIDI files and cannot be read here.",
     );
   }
 
@@ -550,7 +550,7 @@ export function parseMidi(bytes: Uint8Array): MidiFile {
     const chunkStart = pos + 8;
     const chunkEnd = chunkStart + length;
     if (chunkEnd > bytes.length) throw truncated();
-    if (id === 'MTrk') {
+    if (id === "MTrk") {
       tracks.push(parseTrackEvents(bytes, chunkStart, chunkEnd, index++));
     }
     // Unknown chunk types are skipped, as the SMF spec instructs.
@@ -575,7 +575,7 @@ export function tempoMap(file: MidiFile): TempoChange[] {
   const changes: TempoChange[] = [];
   for (const track of file.tracks) {
     for (const event of track.events) {
-      if (event.kind === 'tempo') {
+      if (event.kind === "tempo") {
         changes.push({
           tick: event.tick,
           microsecondsPerQuarter: event.microsecondsPerQuarter,
@@ -605,7 +605,7 @@ export function durationSeconds(file: MidiFile): number {
   const end = totalTicks(file);
   const { division } = file.header;
 
-  if (division.kind === 'smpte') {
+  if (division.kind === "smpte") {
     const ticksPerSecond = division.framesPerSecond * division.ticksPerFrame;
     return ticksPerSecond > 0 ? end / ticksPerSecond : 0;
   }
@@ -633,29 +633,29 @@ export function noteCount(file: MidiFile): number {
   let count = 0;
   for (const track of file.tracks) {
     for (const event of track.events) {
-      if (event.kind === 'noteOn') count++;
+      if (event.kind === "noteOn") count++;
     }
   }
   return count;
 }
 
 export function formatDivision(division: MidiDivision): string {
-  return division.kind === 'ticksPerQuarter'
+  return division.kind === "ticksPerQuarter"
     ? `${division.ticksPerQuarter} ticks per quarter note`
     : `SMPTE ${division.framesPerSecond} fps, ${division.ticksPerFrame} ticks per frame`;
 }
 
 const FORMAT_LABELS: Record<number, string> = {
-  0: 'single track',
-  1: 'multi track, one timeline',
-  2: 'multi track, independent patterns',
+  0: "single track",
+  1: "multi track, one timeline",
+  2: "multi track, independent patterns",
 };
 
 export function formatDuration(seconds: number): string {
   const total = Math.max(0, Math.round(seconds));
   const m = Math.floor(total / 60);
   const s = total % 60;
-  return `${m}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -667,18 +667,18 @@ export function formatDuration(seconds: number): string {
  * bespoke panel imports the parser and helpers directly for its richer view.
  */
 export function run(input: Uint8Array | string, opts: MidiOpts): Record<string, string> {
-  if (typeof input === 'string') {
-    if (input.trim() === '') {
+  if (typeof input === "string") {
+    if (input.trim() === "") {
       throw new ToolError(
-        'empty-input',
-        'No MIDI file loaded yet.',
-        'Drop a .mid or .midi file onto the panel above, or pick one with the file button.',
+        "empty-input",
+        "No MIDI file loaded yet.",
+        "Drop a .mid or .midi file onto the panel above, or pick one with the file button.",
       );
     }
     throw new ToolError(
-      'text-input',
-      'A MIDI file is binary, so pasted text cannot be inspected.',
-      'Drop the .mid or .midi file itself onto the panel above instead of pasting its contents.',
+      "text-input",
+      "A MIDI file is binary, so pasted text cannot be inspected.",
+      "Drop the .mid or .midi file itself onto the panel above instead of pasting its contents.",
     );
   }
 
@@ -691,17 +691,19 @@ export function run(input: Uint8Array | string, opts: MidiOpts): Record<string, 
   let keySig: string | undefined;
   for (const track of file.tracks) {
     for (const event of track.events) {
-      if (!timeSig && event.kind === 'timeSignature') {
+      if (!timeSig && event.kind === "timeSignature") {
         timeSig = `${event.numerator}/${event.denominator}`;
       }
-      if (!keySig && event.kind === 'keySignature') keySig = event.key;
+      if (!keySig && event.kind === "keySignature") keySig = event.key;
     }
   }
 
   const out: Record<string, string> = {
-    Format: `${file.header.format} (${FORMAT_LABELS[file.header.format] ?? 'unknown'})`,
+    Format: `${file.header.format} (${FORMAT_LABELS[file.header.format] ?? "unknown"})`,
     Tracks: `${file.tracks.length}${
-      file.tracks.length === file.header.trackCount ? '' : ` (header declares ${file.header.trackCount})`
+      file.tracks.length === file.header.trackCount
+        ? ""
+        : ` (header declares ${file.header.trackCount})`
     }`,
     Division: formatDivision(file.header.division),
     Notes: String(notes),
@@ -710,13 +712,13 @@ export function run(input: Uint8Array | string, opts: MidiOpts): Record<string, 
 
   out.Tempo = firstTempo
     ? `${Math.round(firstTempo.bpm)} BPM (${firstTempo.microsecondsPerQuarter} usec per quarter)`
-    : 'not set (defaults to 120 BPM)';
-  if (timeSig) out['Time signature'] = timeSig;
-  if (keySig) out['Key signature'] = keySig;
+    : "not set (defaults to 120 BPM)";
+  if (timeSig) out["Time signature"] = timeSig;
+  if (keySig) out["Key signature"] = keySig;
 
   const named = file.tracks.filter((t) => t.name);
   if (named.length > 0) {
-    out['Track names'] = named.map((t) => `${t.index + 1}. ${t.name}`).join('\n');
+    out["Track names"] = named.map((t) => `${t.index + 1}. ${t.name}`).join("\n");
   }
 
   // A short, scannable sample of the first track's events, using the note names.
@@ -725,25 +727,25 @@ export function run(input: Uint8Array | string, opts: MidiOpts): Record<string, 
     const lines = firstWithEvents.events.slice(0, 12).map((event) => {
       const at = `t${event.tick}`;
       switch (event.kind) {
-        case 'noteOn':
+        case "noteOn":
           return `${at}  note on   ${noteName(event.note, middleC)} vel ${event.velocity} ch ${event.channel + 1}`;
-        case 'noteOff':
+        case "noteOff":
           return `${at}  note off  ${noteName(event.note, middleC)} ch ${event.channel + 1}`;
-        case 'controlChange':
+        case "controlChange":
           return `${at}  cc        ${controllerName(event.controller)} = ${event.value} ch ${event.channel + 1}`;
-        case 'programChange':
+        case "programChange":
           return `${at}  program   ${event.program} ch ${event.channel + 1}`;
-        case 'pitchBend':
+        case "pitchBend":
           return `${at}  pitchbend ${event.value} ch ${event.channel + 1}`;
-        case 'tempo':
+        case "tempo":
           return `${at}  tempo     ${Math.round(event.bpm)} BPM`;
-        case 'timeSignature':
+        case "timeSignature":
           return `${at}  timesig   ${event.numerator}/${event.denominator}`;
-        case 'keySignature':
+        case "keySignature":
           return `${at}  keysig    ${event.key}`;
-        case 'text':
+        case "text":
           return `${at}  ${event.label.toLowerCase()}: ${event.text}`;
-        case 'endOfTrack':
+        case "endOfTrack":
           return `${at}  end of track`;
         default:
           return `${at}  ${event.kind}`;
@@ -752,7 +754,7 @@ export function run(input: Uint8Array | string, opts: MidiOpts): Record<string, 
     if (firstWithEvents.events.length > 12) {
       lines.push(`... ${firstWithEvents.events.length - 12} more events in this track`);
     }
-    out['First track events'] = lines.join('\n');
+    out["First track events"] = lines.join("\n");
   }
 
   return out;

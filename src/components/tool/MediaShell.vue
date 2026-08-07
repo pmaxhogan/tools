@@ -62,10 +62,10 @@
  * Rendering is inert on the server: no engine work happens until the component
  * is mounted in a browser.
  */
-import { computed, onMounted, onUnmounted, ref, shallowRef, useSlots } from 'vue';
-import { Check, X } from 'lucide-vue-next';
-import type { ToolMeta } from '@/tools/types';
-import { ToolError } from '@/tools/types';
+import { computed, onMounted, onUnmounted, ref, shallowRef, useSlots } from "vue";
+import { Check, X } from "lucide-vue-next";
+import type { ToolMeta } from "@/tools/types";
+import { ToolError } from "@/tools/types";
 import {
   MediaJobError,
   isEngineReady,
@@ -75,9 +75,9 @@ import {
   terminateEngine,
   type MediaBuildArgs,
   type MediaFile,
-} from '@/lib/ffmpeg';
-import { shouldAutoDownload, isMetered, onConnectionChange } from '@/lib/connection';
-import { Button } from '@/components/ui/button';
+} from "@/lib/ffmpeg";
+import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
+import { Button } from "@/components/ui/button";
 
 const props = withDefaults(
   defineProps<{
@@ -94,11 +94,11 @@ const props = withDefaults(
   {
     opts: () => ({}),
     multiple: false,
-    runLabel: 'Run',
-    inputLabel: 'File',
+    runLabel: "Run",
+    inputLabel: "File",
     hint: undefined,
     runDisabled: false,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -115,8 +115,8 @@ const slots = useSlots();
 /** False until mounted, which keeps every capability check off the server. */
 const supported = ref(false);
 
-type EngineState = 'idle' | 'loading' | 'ready';
-const engineState = ref<EngineState>('idle');
+type EngineState = "idle" | "loading" | "ready";
+const engineState = ref<EngineState>("idle");
 /** Sticky once the bytes have been fetched, so the copy can say "restart". */
 const engineDownloaded = ref(false);
 const downloadedBytes = ref(0);
@@ -152,7 +152,7 @@ interface OutputFile {
   name: string;
   size: number;
   url: string;
-  kind: 'video' | 'audio' | 'image' | 'other';
+  kind: "video" | "audio" | "image" | "other";
 }
 const outputs = shallowRef<OutputFile[]>([]);
 
@@ -164,7 +164,7 @@ const error = ref<{ message: string; fix?: string; log: string[] } | null>(null)
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -182,21 +182,21 @@ function formatTime(ms: number): string {
   const total = Math.max(0, Math.round(ms / 1000));
   const minutes = Math.floor(total / 60);
   const seconds = total % 60;
-  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
 const downloadLabel = computed(() => {
-  if (!downloadTotal.value) return 'Downloading media engine';
+  if (!downloadTotal.value) return "Downloading media engine";
   return `Downloading media engine (${megabytes(downloadedBytes.value)} of ${megabytes(downloadTotal.value)} MB)`;
 });
 
 const downloadPercent = computed(() =>
-  downloadTotal.value ? Math.min(100, (downloadedBytes.value / downloadTotal.value) * 100) : 0
+  downloadTotal.value ? Math.min(100, (downloadedBytes.value / downloadTotal.value) * 100) : 0,
 );
 
 const engineButtonLabel = computed(() => {
-  if (engineDownloaded.value) return 'Restart media engine';
-  return metered.value ? 'Load media engine (about 31 MB)' : 'Load media engine';
+  if (engineDownloaded.value) return "Restart media engine";
+  return metered.value ? "Load media engine (about 31 MB)" : "Load media engine";
 });
 
 const canRun = computed(
@@ -205,7 +205,7 @@ const canRun = computed(
     picked.value.length > 0 &&
     !running.value &&
     !cancelling.value &&
-    !props.runDisabled
+    !props.runDisabled,
 );
 
 const visibleLog = computed(() => logLines.value.slice(-30));
@@ -214,46 +214,46 @@ const visibleLog = computed(() => logLines.value.slice(-30));
 /* files                                                             */
 /* ---------------------------------------------------------------- */
 
-const VIDEO_EXT = ['mp4', 'webm', 'mov', 'm4v', 'mkv', 'ogv'];
-const AUDIO_EXT = ['mp3', 'wav', 'ogg', 'oga', 'm4a', 'aac', 'flac', 'opus'];
-const IMAGE_EXT = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'avif', 'bmp'];
+const VIDEO_EXT = ["mp4", "webm", "mov", "m4v", "mkv", "ogv"];
+const AUDIO_EXT = ["mp3", "wav", "ogg", "oga", "m4a", "aac", "flac", "opus"];
+const IMAGE_EXT = ["png", "jpg", "jpeg", "webp", "gif", "avif", "bmp"];
 
 const MIME: Record<string, string> = {
-  mp4: 'video/mp4',
-  m4v: 'video/mp4',
-  webm: 'video/webm',
-  mov: 'video/quicktime',
-  mkv: 'video/x-matroska',
-  ogv: 'video/ogg',
-  mp3: 'audio/mpeg',
-  wav: 'audio/wav',
-  ogg: 'audio/ogg',
-  oga: 'audio/ogg',
-  m4a: 'audio/mp4',
-  aac: 'audio/aac',
-  flac: 'audio/flac',
-  opus: 'audio/ogg',
-  png: 'image/png',
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  webp: 'image/webp',
-  gif: 'image/gif',
-  avif: 'image/avif',
-  bmp: 'image/bmp',
-  gz: 'application/gzip',
+  mp4: "video/mp4",
+  m4v: "video/mp4",
+  webm: "video/webm",
+  mov: "video/quicktime",
+  mkv: "video/x-matroska",
+  ogv: "video/ogg",
+  mp3: "audio/mpeg",
+  wav: "audio/wav",
+  ogg: "audio/ogg",
+  oga: "audio/ogg",
+  m4a: "audio/mp4",
+  aac: "audio/aac",
+  flac: "audio/flac",
+  opus: "audio/ogg",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+  avif: "image/avif",
+  bmp: "image/bmp",
+  gz: "application/gzip",
 };
 
 function extensionOf(name: string): string {
-  const dot = name.lastIndexOf('.');
-  return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
 }
 
-function kindOf(name: string): OutputFile['kind'] {
+function kindOf(name: string): OutputFile["kind"] {
   const ext = extensionOf(name);
-  if (VIDEO_EXT.includes(ext)) return 'video';
-  if (AUDIO_EXT.includes(ext)) return 'audio';
-  if (IMAGE_EXT.includes(ext)) return 'image';
-  return 'other';
+  if (VIDEO_EXT.includes(ext)) return "video";
+  if (AUDIO_EXT.includes(ext)) return "audio";
+  if (IMAGE_EXT.includes(ext)) return "image";
+  return "other";
 }
 
 /**
@@ -265,11 +265,11 @@ function safeNameFor(file: File, index: number): string {
   const ext = extensionOf(file.name);
   const base = file.name
     .slice(0, ext ? file.name.length - ext.length - 1 : undefined)
-    .replace(/[^A-Za-z0-9._-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replace(/[^A-Za-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
     .slice(0, 40);
-  const stem = base || `input${index === 0 ? '' : index}`;
-  return ext ? `${stem}.${ext.replace(/[^A-Za-z0-9]/g, '')}` : stem;
+  const stem = base || `input${index === 0 ? "" : index}`;
+  return ext ? `${stem}.${ext.replace(/[^A-Za-z0-9]/g, "")}` : stem;
 }
 
 function setFiles(list: File[]) {
@@ -286,8 +286,8 @@ function setFiles(list: File[]) {
   clearOutputs();
   error.value = null;
   emit(
-    'files',
-    picked.value.map(({ file }) => ({ name: file.name, size: file.size, file }))
+    "files",
+    picked.value.map(({ file }) => ({ name: file.name, size: file.size, file })),
   );
 }
 
@@ -302,15 +302,15 @@ function onPickFile(e: Event) {
   const files = Array.from(el.files ?? []);
   if (files.length) setFiles(files);
   // Reset so picking the same file again still fires a change event.
-  el.value = '';
+  el.value = "";
 }
 
 function removeFile(index: number) {
   picked.value = picked.value.filter((_, i) => i !== index);
   clearOutputs();
   emit(
-    'files',
-    picked.value.map(({ file }) => ({ name: file.name, size: file.size, file }))
+    "files",
+    picked.value.map(({ file }) => ({ name: file.name, size: file.size, file })),
   );
 }
 
@@ -325,17 +325,17 @@ function onDownload(loaded: number, total: number) {
 }
 
 async function loadEngine() {
-  if (engineState.value === 'loading') return;
+  if (engineState.value === "loading") return;
   // A manual press means the visitor chose to start it, so drop any hold.
   pendingAutoStart = false;
-  engineState.value = 'loading';
+  engineState.value = "loading";
   error.value = null;
   try {
     await getFFmpeg(undefined, onDownload);
-    engineState.value = 'ready';
+    engineState.value = "ready";
     engineDownloaded.value = true;
   } catch (e) {
-    engineState.value = 'idle';
+    engineState.value = "idle";
     setError(e);
   }
 }
@@ -346,7 +346,7 @@ async function loadEngine() {
  * start and remembers to auto-start later if the link turns unmetered.
  */
 function autoStartEngine() {
-  if (engineState.value !== 'idle') return;
+  if (engineState.value !== "idle") return;
   if (shouldAutoDownload()) {
     void loadEngine();
   } else {
@@ -378,13 +378,13 @@ async function run() {
   if (!canRun.value) return;
 
   const built = props.buildArgs({
-    inputName: picked.value[0]?.safeName ?? '',
+    inputName: picked.value[0]?.safeName ?? "",
     inputNames: picked.value.map((p) => p.safeName),
     files: picked.value.map(({ file }) => ({ name: file.name, size: file.size })),
     opts: props.opts,
   });
 
-  if ('error' in built) {
+  if ("error" in built) {
     error.value = { message: built.error, fix: built.fix, log: [] };
     return;
   }
@@ -400,13 +400,13 @@ async function run() {
   try {
     // Loading the engine inside the run is deliberate: pressing run after a
     // cancel, or on a page where the engine was never started, still works.
-    if (!isEngineReady()) engineState.value = 'loading';
+    if (!isEngineReady()) engineState.value = "loading";
 
     const inputs = await Promise.all(
       picked.value.map(async ({ file, safeName }) => ({
         name: safeName,
         data: new Uint8Array(await file.arrayBuffer()),
-      }))
+      })),
     );
 
     const produced = await runJob({
@@ -421,7 +421,7 @@ async function run() {
       },
     });
 
-    engineState.value = 'ready';
+    engineState.value = "ready";
     engineDownloaded.value = true;
     outputs.value = produced.map(({ name, data }) => ({
       name,
@@ -429,16 +429,16 @@ async function run() {
       kind: kindOf(name),
       url: URL.createObjectURL(
         new Blob([data.slice().buffer as ArrayBuffer], {
-          type: MIME[extensionOf(name)] ?? 'application/octet-stream',
-        })
+          type: MIME[extensionOf(name)] ?? "application/octet-stream",
+        }),
       ),
     }));
-    emit('complete', produced);
+    emit("complete", produced);
   } catch (e) {
     if (cancelling.value) {
       error.value = null;
     } else {
-      engineState.value = isEngineReady() ? 'ready' : 'idle';
+      engineState.value = isEngineReady() ? "ready" : "idle";
       setError(e);
       // A failure usually explains itself in the log, so open it.
       if (logLines.value.length) showLog.value = true;
@@ -458,13 +458,13 @@ async function cancel() {
   if (!running.value) return;
   cancelling.value = true;
   terminateEngine();
-  engineState.value = 'idle';
+  engineState.value = "idle";
   await loadEngine();
   cancelling.value = false;
 }
 
 function download(out: OutputFile) {
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = out.url;
   a.download = out.name;
   document.body.appendChild(a);
@@ -479,7 +479,7 @@ function download(out: OutputFile) {
 onMounted(() => {
   supported.value = isMediaSupported();
   if (isEngineReady()) {
-    engineState.value = 'ready';
+    engineState.value = "ready";
     engineDownloaded.value = true;
     return;
   }
@@ -509,12 +509,10 @@ onUnmounted(() => {
       role="status"
       class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
     >
-      <p class="font-medium text-muted-foreground">
-        Starting the media engine.
-      </p>
+      <p class="font-medium text-muted-foreground">Starting the media engine.</p>
       <p class="mt-1 text-muted-foreground">
-        {{ meta.name }} runs ffmpeg inside this tab, which needs WebAssembly. If this message
-        stays, your browser has WebAssembly turned off or is too old to run it.
+        {{ meta.name }} runs ffmpeg inside this tab, which needs WebAssembly. If this message stays,
+        your browser has WebAssembly turned off or is too old to run it.
       </p>
     </div>
 
@@ -531,13 +529,7 @@ onUnmounted(() => {
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             {{ inputLabel }}
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            @click="inputEl?.click()"
-          >
-            Open file…
-          </Button>
+          <Button variant="ghost" size="sm" @click="inputEl?.click()"> Open file… </Button>
           <input
             ref="inputEl"
             type="file"
@@ -545,13 +537,10 @@ onUnmounted(() => {
             :accept="accept"
             :multiple="multiple"
             @change="onPickFile"
-          >
+          />
         </div>
 
-        <div
-          v-if="picked.length"
-          class="flex flex-wrap gap-2 px-3 pt-2 pb-3"
-        >
+        <div v-if="picked.length" class="flex flex-wrap gap-2 px-3 pt-2 pb-3">
           <span
             v-for="(item, index) in picked"
             :key="item.safeName"
@@ -572,13 +561,10 @@ onUnmounted(() => {
           </span>
         </div>
 
-        <p
-          v-else
-          class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
-        >
+        <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
           {{
             hint ??
-              `Drop a file here or pick one to get started. Everything runs in this tab: your files and inputs never leave your device.`
+            `Drop a file here or pick one to get started. Everything runs in this tab: your files and inputs never leave your device.`
           }}
         </p>
       </div>
@@ -593,23 +579,16 @@ onUnmounted(() => {
         </span>
 
         <p class="text-sm text-muted-foreground">
-          This tool runs ffmpeg inside your browser. The engine is a one time download of about
-          31 MB, and your browser keeps it afterwards, so later visits start it straight from the
-          cache and work offline. Nothing is uploaded: your files and inputs never leave your
-          device.
+          This tool runs ffmpeg inside your browser. The engine is a one time download of about 31
+          MB, and your browser keeps it afterwards, so later visits start it straight from the cache
+          and work offline. Nothing is uploaded: your files and inputs never leave your device.
         </p>
 
-        <p
-          v-if="metered && engineState === 'idle'"
-          class="text-xs text-muted-foreground"
-        >
+        <p v-if="metered && engineState === 'idle'" class="text-xs text-muted-foreground">
           Your connection looks metered, so the engine waits for you to start it.
         </p>
 
-        <div
-          v-if="engineState === 'loading'"
-          class="flex flex-col gap-2"
-        >
+        <div v-if="engineState === 'loading'" class="flex flex-col gap-2">
           <div
             class="h-2 overflow-hidden rounded-full bg-background"
             role="progressbar"
@@ -639,10 +618,7 @@ onUnmounted(() => {
         </Button>
       </div>
 
-      <p
-        v-else
-        class="flex items-center gap-1.5 text-xs text-muted-foreground"
-      >
+      <p v-else class="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Check class="size-3.5 text-[var(--positive)]" />
         Engine ready. It stays loaded for as long as this page is open.
       </p>
@@ -654,19 +630,11 @@ onUnmounted(() => {
 
       <!-- Run controls -->
       <div class="flex flex-wrap items-center gap-2">
-        <Button
-          :disabled="!canRun"
-          @click="run"
-        >
-          {{ running ? 'Working…' : runLabel }}
+        <Button :disabled="!canRun" @click="run">
+          {{ running ? "Working…" : runLabel }}
         </Button>
-        <Button
-          v-if="running"
-          variant="outline"
-          :disabled="cancelling"
-          @click="cancel"
-        >
-          {{ cancelling ? 'Stopping…' : 'Cancel' }}
+        <Button v-if="running" variant="outline" :disabled="cancelling" @click="cancel">
+          {{ cancelling ? "Stopping…" : "Cancel" }}
         </Button>
         <span
           v-if="running && (ratio !== null || timeMs !== null)"
@@ -708,7 +676,7 @@ onUnmounted(() => {
         </summary>
         <pre
           class="mt-2 max-h-56 overflow-auto font-mono text-xs whitespace-pre-wrap break-all text-muted-foreground"
-        >{{ visibleLog.join('\n') }}</pre>
+          >{{ visibleLog.join("\n") }}</pre>
       </details>
 
       <!-- Errors -->
@@ -720,34 +688,24 @@ onUnmounted(() => {
         <p class="font-medium text-destructive">
           {{ error.message }}
         </p>
-        <p
-          v-if="error.fix"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="error.fix" class="mt-1 text-muted-foreground">
           {{ error.fix }}
         </p>
         <pre
           v-if="error.log.length"
           class="mt-2 max-h-40 overflow-auto font-mono text-xs whitespace-pre-wrap break-all text-muted-foreground"
-        >{{ error.log.join('\n') }}</pre>
+          >{{ error.log.join("\n") }}</pre>
       </div>
 
       <!-- Output -->
-      <div
-        v-if="outputs.length"
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      >
+      <div v-if="outputs.length" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
         <div class="px-3 pt-2">
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Output
           </span>
         </div>
         <div class="divide-y divide-border/60">
-          <div
-            v-for="out in outputs"
-            :key="out.name"
-            class="flex flex-col gap-3 px-3 py-3"
-          >
+          <div v-for="out in outputs" :key="out.name" class="flex flex-col gap-3 px-3 py-3">
             <div class="flex items-center justify-between gap-3">
               <div class="min-w-0">
                 <div class="truncate font-mono text-sm">
@@ -757,13 +715,7 @@ onUnmounted(() => {
                   {{ humanSize(out.size) }}
                 </div>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                @click="download(out)"
-              >
-                Download
-              </Button>
+              <Button size="sm" variant="outline" @click="download(out)"> Download </Button>
             </div>
 
             <video
@@ -773,18 +725,13 @@ onUnmounted(() => {
               playsinline
               class="max-h-[360px] w-full rounded-[8px] bg-background"
             />
-            <audio
-              v-else-if="out.kind === 'audio'"
-              :src="out.url"
-              controls
-              class="w-full"
-            />
+            <audio v-else-if="out.kind === 'audio'" :src="out.url" controls class="w-full" />
             <img
               v-else-if="out.kind === 'image'"
               :src="out.url"
               :alt="`Result: ${out.name}`"
               class="max-h-[360px] w-auto max-w-full self-start rounded-[8px]"
-            >
+            />
           </div>
         </div>
       </div>

@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue';
-import { ChevronLeft, ChevronRight, X } from 'lucide-vue-next';
-import type { ToolMeta } from '@/tools/types';
+import { computed, onUnmounted, ref } from "vue";
+import { ChevronLeft, ChevronRight, X } from "lucide-vue-next";
+import type { ToolMeta } from "@/tools/types";
 import {
   formatTimecode,
   frameName,
   isBurstError,
   parseTimeSpec,
   planBurst,
-} from '@/tools/video-frame-extractor/index';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
+} from "@/tools/video-frame-extractor/index";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 /**
  * Bespoke panel for the frame extractor. There is no pure transform that turns
@@ -57,7 +57,7 @@ interface CapturedFrame {
 const fileInput = ref<HTMLInputElement>();
 const videoEl = ref<HTMLVideoElement>();
 
-const fileName = ref('');
+const fileName = ref("");
 const videoUrl = ref<string | null>(null);
 const duration = ref(0);
 const currentTime = ref(0);
@@ -72,14 +72,14 @@ let nextFrameId = 1;
 
 // Numeric fields keep their raw text so a half typed "0." is never rewritten
 // under the cursor. The parsed value falls back only when it is actually used.
-const stepText = ref('0.033');
-const timeText = ref('');
+const stepText = ref("0.033");
+const timeText = ref("");
 const timeInvalid = ref(false);
 
-const burstCountText = ref(String(optionDefault('count', 1)));
-const burstInterval = ref(String(optionDefault('interval', '1')));
-const format = ref(String(optionDefault('format', 'png')));
-const quality = ref(Number(optionDefault('quality', 92)));
+const burstCountText = ref(String(optionDefault("count", 1)));
+const burstInterval = ref(String(optionDefault("interval", "1")));
+const format = ref(String(optionDefault("format", "png")));
+const quality = ref(Number(optionDefault("quality", 92)));
 
 const error = ref<{ message: string; fix?: string } | null>(null);
 
@@ -88,15 +88,15 @@ const error = ref<{ message: string; fix?: string } | null>(null);
 /* ---------------------------------------------------------------- */
 
 const MIME_FOR_FORMAT: Record<string, string> = {
-  png: 'image/png',
-  jpeg: 'image/jpeg',
-  webp: 'image/webp',
+  png: "image/png",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
 };
 
 const EXTENSION_FOR_MIME: Record<string, string> = {
-  'image/png': 'png',
-  'image/jpeg': 'jpg',
-  'image/webp': 'webp',
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
 };
 
 const hasVideo = computed(() => videoUrl.value !== null);
@@ -123,7 +123,7 @@ const assumedFps = computed(() => {
 
 const timecode = computed(() => formatTimecode(currentTime.value, assumedFps.value));
 const durationLabel = computed(() => formatTimecode(duration.value));
-const isLossless = computed(() => format.value === 'png');
+const isLossless = computed(() => format.value === "png");
 
 const burstPreview = computed(() => {
   const intervalSec = parseTimeSpec(burstInterval.value);
@@ -146,7 +146,7 @@ const totalCapturedBytes = computed(() => frames.value.reduce((sum, frame) => su
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -162,7 +162,7 @@ function clampTime(seconds: number): number {
 }
 
 function triggerDownload(url: string, name: string) {
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = name;
   document.body.appendChild(a);
@@ -194,7 +194,7 @@ function loadFile(file: File) {
   currentTime.value = 0;
   videoWidth.value = 0;
   videoHeight.value = 0;
-  timeText.value = '';
+  timeText.value = "";
   timeInvalid.value = false;
   fileName.value = file.name;
   videoUrl.value = URL.createObjectURL(file);
@@ -211,23 +211,23 @@ function onPickFile(e: Event) {
   const file = picker.files?.[0];
   if (file) loadFile(file);
   // Reset so picking the same file again still fires a change event.
-  picker.value = '';
+  picker.value = "";
 }
 
 function clearFile() {
   if (videoUrl.value) URL.revokeObjectURL(videoUrl.value);
   videoUrl.value = null;
   revokeFrames();
-  fileName.value = '';
+  fileName.value = "";
   duration.value = 0;
   currentTime.value = 0;
   videoWidth.value = 0;
   videoHeight.value = 0;
   decodeFailed.value = false;
   error.value = null;
-  timeText.value = '';
+  timeText.value = "";
   timeInvalid.value = false;
-  if (fileInput.value) fileInput.value.value = '';
+  if (fileInput.value) fileInput.value.value = "";
 }
 
 function onLoadedMetadata() {
@@ -247,8 +247,8 @@ function onTimeUpdate() {
 function onVideoError() {
   decodeFailed.value = true;
   error.value = {
-    message: 'This browser cannot play that file, so there is nothing to capture from.',
-    fix: 'Try an MP4 (H.264), WebM, or MOV file. Formats a browser cannot decode need a converter first.',
+    message: "This browser cannot play that file, so there is nothing to capture from.",
+    fix: "Try an MP4 (H.264), WebM, or MOV file. Formats a browser cannot decode need a converter first.",
   };
 }
 
@@ -275,12 +275,12 @@ function seekTo(target: number): Promise<void> {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      el.removeEventListener('seeked', finish);
+      el.removeEventListener("seeked", finish);
       currentTime.value = el.currentTime;
       resolve();
     };
     const timer = setTimeout(finish, 2000);
-    el.addEventListener('seeked', finish);
+    el.addEventListener("seeked", finish);
     el.currentTime = wanted;
   });
 }
@@ -305,7 +305,7 @@ async function goToTypedTime() {
 }
 
 function onTimeTextInput(value: unknown) {
-  timeText.value = String(value ?? '');
+  timeText.value = String(value ?? "");
   timeInvalid.value = false;
 }
 
@@ -329,25 +329,25 @@ async function captureCurrentFrame(index?: number): Promise<boolean> {
   const el = videoEl.value;
   if (!el || !el.videoWidth || !el.videoHeight) {
     error.value = {
-      message: 'The video has not decoded a frame yet, so there is nothing to capture.',
-      fix: 'Let the player load, then scrub to the moment you want and try again.',
+      message: "The video has not decoded a frame yet, so there is nothing to capture.",
+      fix: "Let the player load, then scrub to the moment you want and try again.",
     };
     return false;
   }
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = el.videoWidth;
   canvas.height = el.videoHeight;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) {
     error.value = {
-      message: 'This browser did not give the page a 2D canvas to draw the frame on.',
-      fix: 'Hardware acceleration or canvas support may be switched off. Try another browser.',
+      message: "This browser did not give the page a 2D canvas to draw the frame on.",
+      fix: "Hardware acceleration or canvas support may be switched off. Try another browser.",
     };
     return false;
   }
 
-  const type = MIME_FOR_FORMAT[format.value] ?? 'image/png';
+  const type = MIME_FOR_FORMAT[format.value] ?? "image/png";
   // undefined means the read itself was refused (a tainted or protected video),
   // null means the encoder declined the format. They need different advice.
   const blob = await (async (): Promise<Blob | null | undefined> => {
@@ -361,23 +361,23 @@ async function captureCurrentFrame(index?: number): Promise<boolean> {
 
   if (blob === undefined) {
     error.value = {
-      message: 'The browser refused to read pixels back from this video.',
-      fix: 'This happens with protected or DRM video. Use a file that is not encrypted.',
+      message: "The browser refused to read pixels back from this video.",
+      fix: "This happens with protected or DRM video. Use a file that is not encrypted.",
     };
     return false;
   }
 
   if (!blob) {
     error.value = {
-      message: 'This browser could not encode the frame in the selected format.',
-      fix: 'Choose PNG or JPEG, which every browser can write, and try again.',
+      message: "This browser could not encode the frame in the selected format.",
+      fix: "Choose PNG or JPEG, which every browser can write, and try again.",
     };
     return false;
   }
 
   // A browser may quietly fall back to PNG for a format it cannot write, so the
   // extension comes from what was actually produced.
-  const ext = EXTENSION_FOR_MIME[blob.type] ?? 'png';
+  const ext = EXTENSION_FOR_MIME[blob.type] ?? "png";
   const time = el.currentTime;
   frames.value = [
     ...frames.value,
@@ -415,7 +415,7 @@ async function captureBurst() {
   if (intervalSec === null) {
     error.value = {
       message: `"${burstInterval.value}" is not a readable interval.`,
-      fix: 'Give the gap between burst frames in seconds, such as 1 or 0.5.',
+      fix: "Give the gap between burst frames in seconds, such as 1 or 0.5.",
     };
     return;
   }
@@ -507,34 +507,18 @@ onUnmounted(() => {
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Video
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          @click="fileInput?.click()"
-        >
-          Open file…
-        </Button>
-        <input
-          ref="fileInput"
-          type="file"
-          class="hidden"
-          accept="video/*"
-          @change="onPickFile"
-        >
+        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
+        <input ref="fileInput" type="file" class="hidden" accept="video/*" @change="onPickFile" />
       </div>
 
-      <div
-        v-if="hasVideo"
-        class="px-3 pt-2 pb-3"
-      >
+      <div v-if="hasVideo" class="px-3 pt-2 pb-3">
         <span
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
           <span class="truncate font-medium">{{ fileName }}</span>
-          <span
-            v-if="videoWidth"
-            class="shrink-0 text-muted-foreground tabular-nums"
-          >{{ videoWidth }} x {{ videoHeight }}</span>
+          <span v-if="videoWidth" class="shrink-0 text-muted-foreground tabular-nums"
+            >{{ videoWidth }} x {{ videoHeight }}</span
+          >
           <button
             type="button"
             aria-label="Remove video"
@@ -546,10 +530,7 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <p
-        v-else
-        class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
-      >
+      <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
         Drop a video here to scrub through it and save frames at full resolution. Everything runs in
         this tab: your files and inputs never leave your device.
       </p>
@@ -564,19 +545,13 @@ onUnmounted(() => {
       <p class="font-medium text-destructive">
         {{ error.message }}
       </p>
-      <p
-        v-if="error.fix"
-        class="mt-1 text-muted-foreground"
-      >
+      <p v-if="error.fix" class="mt-1 text-muted-foreground">
         {{ error.fix }}
       </p>
     </div>
 
     <!-- Player and capture controls -->
-    <div
-      v-if="hasVideo"
-      class="flex flex-col gap-4"
-    >
+    <div v-if="hasVideo" class="flex flex-col gap-4">
       <div class="overflow-hidden rounded-[10px] bg-black shadow-[var(--sh-inset)]">
         <!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
         <video
@@ -630,10 +605,7 @@ onUnmounted(() => {
           </div>
 
           <div class="flex w-28 flex-col gap-1.5">
-            <Label
-              for="fx-step"
-              class="text-xs text-muted-foreground"
-            >Step (seconds)</Label>
+            <Label for="fx-step" class="text-xs text-muted-foreground">Step (seconds)</Label>
             <Input
               id="fx-step"
               type="number"
@@ -646,10 +618,7 @@ onUnmounted(() => {
           </div>
 
           <div class="flex w-44 flex-col gap-1.5">
-            <Label
-              for="fx-time"
-              class="text-xs text-muted-foreground"
-            >Go to time</Label>
+            <Label for="fx-time" class="text-xs text-muted-foreground">Go to time</Label>
             <Input
               id="fx-time"
               type="text"
@@ -663,27 +632,12 @@ onUnmounted(() => {
           </div>
 
           <div class="flex items-center gap-2 pb-0.5">
-            <Button
-              size="sm"
-              :disabled="busy"
-              @click="goToTypedTime"
-            >
-              Go
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              @click="useCurrentTime"
-            >
-              Use current
-            </Button>
+            <Button size="sm" :disabled="busy" @click="goToTypedTime"> Go </Button>
+            <Button variant="ghost" size="sm" @click="useCurrentTime"> Use current </Button>
           </div>
         </div>
 
-        <p
-          v-if="timeInvalid"
-          class="text-xs text-destructive"
-        >
+        <p v-if="timeInvalid" class="text-xs text-destructive">
           That is not a time this tool can read. Use seconds (12.5), mm:ss (01:12), or hh:mm:ss.mmm
           (00:01:12.500).
         </p>
@@ -702,31 +656,15 @@ onUnmounted(() => {
 
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-28 flex-col gap-1.5">
-            <Label
-              for="fx-format"
-              class="text-xs text-muted-foreground"
-            >Format</Label>
-            <Select
-              :model-value="format"
-              @update:model-value="(v) => (format = String(v))"
-            >
-              <SelectTrigger
-                id="fx-format"
-                size="sm"
-                class="w-full bg-card"
-              >
+            <Label for="fx-format" class="text-xs text-muted-foreground">Format</Label>
+            <Select :model-value="format" @update:model-value="(v) => (format = String(v))">
+              <SelectTrigger id="fx-format" size="sm" class="w-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="png">
-                  PNG
-                </SelectItem>
-                <SelectItem value="jpeg">
-                  JPEG
-                </SelectItem>
-                <SelectItem value="webp">
-                  WebP
-                </SelectItem>
+                <SelectItem value="png"> PNG </SelectItem>
+                <SelectItem value="jpeg"> JPEG </SelectItem>
+                <SelectItem value="webp"> WebP </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -736,7 +674,7 @@ onUnmounted(() => {
                  this is plain text plus an aria-label rather than a <label for>
                  pointing at something that cannot take focus. -->
             <span class="text-xs text-muted-foreground tabular-nums">
-              Quality: {{ isLossless ? 'lossless' : quality }}
+              Quality: {{ isLossless ? "lossless" : quality }}
             </span>
             <Slider
               aria-label="Capture quality"
@@ -753,10 +691,7 @@ onUnmounted(() => {
 
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-24 flex-col gap-1.5">
-            <Label
-              for="fx-count"
-              class="text-xs text-muted-foreground"
-            >Burst frames</Label>
+            <Label for="fx-count" class="text-xs text-muted-foreground">Burst frames</Label>
             <Input
               id="fx-count"
               type="number"
@@ -768,10 +703,7 @@ onUnmounted(() => {
             />
           </div>
           <div class="flex w-28 flex-col gap-1.5">
-            <Label
-              for="fx-interval"
-              class="text-xs text-muted-foreground"
-            >Interval (s)</Label>
+            <Label for="fx-interval" class="text-xs text-muted-foreground">Interval (s)</Label>
             <Input
               id="fx-interval"
               type="text"
@@ -781,11 +713,7 @@ onUnmounted(() => {
             />
           </div>
           <div class="flex flex-wrap items-center gap-2 pb-0.5">
-            <Button
-              size="sm"
-              :disabled="!canCapture || busy"
-              @click="captureOne"
-            >
+            <Button size="sm" :disabled="!canCapture || busy" @click="captureOne">
               Capture this frame
             </Button>
             <Button
@@ -799,21 +727,12 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <p
-          v-if="!burstPreview"
-          class="text-xs text-destructive"
-        >
+        <p v-if="!burstPreview" class="text-xs text-destructive">
           The interval must be a number of seconds, such as 1 or 0.5.
         </p>
-        <p
-          v-else-if="isBurstError(burstPreview)"
-          class="text-xs text-destructive"
-        >
+        <p v-else-if="isBurstError(burstPreview)" class="text-xs text-destructive">
           {{ burstPreview.error }}
-          <span
-            v-if="burstPreview.fix"
-            class="text-muted-foreground"
-          >{{ burstPreview.fix }}</span>
+          <span v-if="burstPreview.fix" class="text-muted-foreground">{{ burstPreview.fix }}</span>
         </p>
         <p class="text-xs text-muted-foreground">
           Captures are drawn at the video's own pixel size, so nothing is scaled down. A burst
@@ -829,30 +748,13 @@ onUnmounted(() => {
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Captured frames
-            <span
-              v-if="frames.length"
-              class="tabular-nums"
-            >({{ frames.length }}, {{ humanSize(totalCapturedBytes) }})</span>
+            <span v-if="frames.length" class="tabular-nums"
+              >({{ frames.length }}, {{ humanSize(totalCapturedBytes) }})</span
+            >
           </span>
-          <div
-            v-if="frames.length"
-            class="flex items-center gap-2"
-          >
-            <Button
-              size="sm"
-              :disabled="busy"
-              @click="downloadAll"
-            >
-              Download all
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              :disabled="busy"
-              @click="clearFrames"
-            >
-              Clear
-            </Button>
+          <div v-if="frames.length" class="flex items-center gap-2">
+            <Button size="sm" :disabled="busy" @click="downloadAll"> Download all </Button>
+            <Button variant="ghost" size="sm" :disabled="busy" @click="clearFrames"> Clear </Button>
           </div>
         </div>
 
@@ -863,10 +765,7 @@ onUnmounted(() => {
           No frames yet. Scrub to a moment and press "Capture this frame".
         </p>
 
-        <ul
-          v-else
-          class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3"
-        >
+        <ul v-else class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
           <li
             v-for="frame in frames"
             :key="frame.id"
@@ -882,7 +781,7 @@ onUnmounted(() => {
                 :src="frame.url"
                 :alt="`Frame captured at ${formatTimecode(frame.time)}`"
                 class="block h-auto w-full"
-              >
+              />
             </button>
             <div class="min-w-0">
               <div class="truncate font-mono text-xs tabular-nums">
@@ -896,12 +795,7 @@ onUnmounted(() => {
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                class="flex-1"
-                @click="downloadFrame(frame)"
-              >
+              <Button variant="outline" size="sm" class="flex-1" @click="downloadFrame(frame)">
                 Download
               </Button>
               <Button

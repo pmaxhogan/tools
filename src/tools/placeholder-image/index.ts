@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface PlaceholderOpts {
   width: number;
@@ -17,12 +17,12 @@ const HEX_COLOR_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 /** Validate & normalize a hex color option, naming the bad value on failure. */
 function validateHexColor(value: string, fieldLabel: string): string {
-  const v = (value ?? '').trim();
+  const v = (value ?? "").trim();
   if (!HEX_COLOR_RE.test(v))
     throw new ToolError(
-      'invalid-color',
+      "invalid-color",
       `"${value}" is not a valid hex color for ${fieldLabel}.`,
-      'Use a hex color like #e2e8f0 (6-digit) or #fff (3-digit).',
+      "Use a hex color like #e2e8f0 (6-digit) or #fff (3-digit).",
     );
   return v;
 }
@@ -32,7 +32,7 @@ function validateSize(value: number, fieldLabel: string): number {
   const n = Math.floor(value);
   if (!Number.isFinite(n) || n < MIN_SIZE || n > MAX_SIZE)
     throw new ToolError(
-      'invalid-size',
+      "invalid-size",
       `${fieldLabel} must be a whole number between ${MIN_SIZE} and ${MAX_SIZE}, got ${value}.`,
       `Choose a ${fieldLabel.toLowerCase()} between ${MIN_SIZE} and ${MAX_SIZE}.`,
     );
@@ -42,11 +42,11 @@ function validateSize(value: number, fieldLabel: string): number {
 /** Escape text for safe placement inside SVG element content. */
 function escapeXml(s: string): string {
   return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
 
 /** Build the SVG markup for the placeholder image. */
@@ -71,22 +71,22 @@ function buildSvg(
  * payload stays compact and readable, per the common data-URI-SVG technique.
  */
 export function encodeSvgForDataUri(svg: string): string {
-  const collapsed = svg.trim().replace(/\s+/g, ' ');
+  const collapsed = svg.trim().replace(/\s+/g, " ");
   return collapsed
-    .replace(/%/g, '%25')
-    .replace(/#/g, '%23')
-    .replace(/</g, '%3C')
-    .replace(/>/g, '%3E')
-    .replace(/"/g, '%22')
-    .replace(/ /g, '%20');
+    .replace(/%/g, "%25")
+    .replace(/#/g, "%23")
+    .replace(/</g, "%3C")
+    .replace(/>/g, "%3E")
+    .replace(/"/g, "%22")
+    .replace(/ /g, "%20");
 }
 
 export function run(_input: undefined, opts: PlaceholderOpts): PlaceholderResult {
-  const width = validateSize(opts.width ?? 600, 'Width');
-  const height = validateSize(opts.height ?? 400, 'Height');
-  const background = validateHexColor(opts.background || '#e2e8f0', 'background');
-  const foreground = validateHexColor(opts.foreground || '#64748b', 'foreground');
-  const label = (opts.label ?? '').trim() || `${width}×${height}`;
+  const width = validateSize(opts.width ?? 600, "Width");
+  const height = validateSize(opts.height ?? 400, "Height");
+  const background = validateHexColor(opts.background || "#e2e8f0", "background");
+  const foreground = validateHexColor(opts.foreground || "#64748b", "foreground");
+  const label = (opts.label ?? "").trim() || `${width}×${height}`;
 
   const svg = buildSvg(width, height, background, foreground, label);
   const dataUri = `data:image/svg+xml,${encodeSvgForDataUri(svg)}`;
@@ -94,10 +94,10 @@ export function run(_input: undefined, opts: PlaceholderOpts): PlaceholderResult
   const cssBackground = `background-image: url("${dataUri}");`;
 
   return {
-    'SVG markup': svg,
-    'Data URI': dataUri,
-    'HTML img tag': htmlImg,
-    'CSS background': cssBackground,
+    "SVG markup": svg,
+    "Data URI": dataUri,
+    "HTML img tag": htmlImg,
+    "CSS background": cssBackground,
   };
 }
 

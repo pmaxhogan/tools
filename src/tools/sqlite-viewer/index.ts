@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * SQLite browser logic.
@@ -59,7 +59,7 @@ export interface SqliteOpts {
 }
 
 /** The first sixteen bytes of every SQLite database file. */
-const SQLITE_MAGIC = 'SQLite format 3\0';
+const SQLITE_MAGIC = "SQLite format 3\0";
 
 const DEFAULT_MAX_ROWS = 100;
 const DEFAULT_MAX_CELL = 40;
@@ -92,18 +92,18 @@ export function safeIdent(name: string): string {
  * size rather than spraying bytes across the table.
  */
 export function formatCell(value: unknown, maxCell?: number): string {
-  if (value === null || value === undefined) return 'NULL';
+  if (value === null || value === undefined) return "NULL";
 
   if (value instanceof ArrayBuffer) {
-    return `<blob ${value.byteLength} ${value.byteLength === 1 ? 'byte' : 'bytes'}>`;
+    return `<blob ${value.byteLength} ${value.byteLength === 1 ? "byte" : "bytes"}>`;
   }
   if (ArrayBuffer.isView(value)) {
     const size = value.byteLength;
-    return `<blob ${size} ${size === 1 ? 'byte' : 'bytes'}>`;
+    return `<blob ${size} ${size === 1 ? "byte" : "bytes"}>`;
   }
 
-  const text = typeof value === 'string' ? value : String(value);
-  const flat = text.replace(/\r\n|\r|\n|\t/g, ' ');
+  const text = typeof value === "string" ? value : String(value);
+  const flat = text.replace(/\r\n|\r|\n|\t/g, " ");
   if (maxCell === undefined) return flat;
   return clip(flat, Math.max(4, Math.floor(maxCell)));
 }
@@ -155,9 +155,9 @@ export function introspect(db: SqlEngine): Introspection {
     );
   } catch (e) {
     throw new ToolError(
-      'unreadable-database',
+      "unreadable-database",
       `Could not read the schema of this database: ${errorText(e)}.`,
-      'The file may not be a SQLite database, it may be truncated, or it may be encrypted with something like SQLCipher, which this tool cannot decrypt.',
+      "The file may not be a SQLite database, it may be truncated, or it may be encrypted with something like SQLCipher, which this tool cannot decrypt.",
     );
   }
 
@@ -166,12 +166,12 @@ export function introspect(db: SqlEngine): Introspection {
   const indexes: string[] = [];
 
   for (const row of master) {
-    const kind = String(row[0] ?? '');
-    const name = String(row[1] ?? '');
-    if (name === '' || name.startsWith('sqlite_')) continue;
-    if (kind === 'table') tableNames.push(name);
-    else if (kind === 'view') views.push(name);
-    else if (kind === 'index') indexes.push(name);
+    const kind = String(row[0] ?? "");
+    const name = String(row[1] ?? "");
+    if (name === "" || name.startsWith("sqlite_")) continue;
+    if (kind === "table") tableNames.push(name);
+    else if (kind === "view") views.push(name);
+    else if (kind === "index") indexes.push(name);
   }
 
   const tables: TableInfo[] = tableNames.map((name) => {
@@ -190,8 +190,8 @@ export function introspect(db: SqlEngine): Introspection {
     let columns: ColumnInfo[];
     try {
       columns = rowsOf(db, `PRAGMA table_info(${ident})`).map((info) => ({
-        name: String(info[1] ?? ''),
-        type: String(info[2] ?? ''),
+        name: String(info[1] ?? ""),
+        type: String(info[2] ?? ""),
         notnull: Number(info[3] ?? 0) !== 0,
         pk: Number(info[5] ?? 0) !== 0,
       }));
@@ -202,7 +202,7 @@ export function introspect(db: SqlEngine): Introspection {
     return { name, rowCount, columns };
   });
 
-  const version = scalar(db, 'SELECT sqlite_version()');
+  const version = scalar(db, "SELECT sqlite_version()");
   return version === null
     ? { tables, views, indexes }
     : { tables, views, indexes, sqliteVersion: version };
@@ -221,7 +221,7 @@ export function renderRows(result: SqlExecResult, o: RenderOpts = {}): string {
   const values = result?.values ?? [];
 
   if (columns.length === 0) {
-    return 'This statement returned no columns.';
+    return "This statement returned no columns.";
   }
 
   const shown = values.slice(0, maxRows);
@@ -231,45 +231,45 @@ export function renderRows(result: SqlExecResult, o: RenderOpts = {}): string {
     const full = formatCell(value);
     const cut = clip(full, maxCell);
     if (cut !== full) shortened++;
-    return cut.replace(/\|/g, '\\|');
+    return cut.replace(/\|/g, "\\|");
   };
 
-  const header = columns.map((name) => clip(String(name), maxCell).replace(/\|/g, '\\|'));
+  const header = columns.map((name) => clip(String(name), maxCell).replace(/\|/g, "\\|"));
   const body = shown.map((row) => columns.map((_, i) => cell(row[i])));
 
   const widths = header.map((h, i) =>
-    Math.max(MIN_COL_WIDTH, h.length, ...body.map((row) => (row[i] ?? '').length)),
+    Math.max(MIN_COL_WIDTH, h.length, ...body.map((row) => (row[i] ?? "").length)),
   );
   const line = (cells: string[]): string =>
-    `| ${cells.map((c, i) => c.padEnd(widths[i] ?? 0)).join(' | ')} |`;
+    `| ${cells.map((c, i) => c.padEnd(widths[i] ?? 0)).join(" | ")} |`;
 
-  const rowWord = values.length === 1 ? 'row' : 'rows';
-  const colWord = columns.length === 1 ? 'column' : 'columns';
-  const out = [`${values.length} ${rowWord} x ${columns.length} ${colWord}`, ''];
+  const rowWord = values.length === 1 ? "row" : "rows";
+  const colWord = columns.length === 1 ? "column" : "columns";
+  const out = [`${values.length} ${rowWord} x ${columns.length} ${colWord}`, ""];
 
   out.push(line(header));
-  out.push(`| ${widths.map((w) => '-'.repeat(w)).join(' | ')} |`);
+  out.push(`| ${widths.map((w) => "-".repeat(w)).join(" | ")} |`);
   for (const row of body) out.push(line(row));
 
   if (shown.length < values.length) {
     const remaining = values.length - shown.length;
-    out.push(`... ${remaining} more ${remaining === 1 ? 'row' : 'rows'} (${values.length} total)`);
+    out.push(`... ${remaining} more ${remaining === 1 ? "row" : "rows"} (${values.length} total)`);
   }
   if (shortened > 0) {
     out.push(
-      `Note: ${shortened} ${shortened === 1 ? 'cell was' : 'cells were'} shortened to ${maxCell} characters.`,
+      `Note: ${shortened} ${shortened === 1 ? "cell was" : "cells were"} shortened to ${maxCell} characters.`,
     );
   }
 
-  return out.join('\n');
+  return out.join("\n");
 }
 
 /** One column line in the schema overview, e.g. `id  INTEGER  primary key, not null`. */
 function columnFlags(column: ColumnInfo): string {
   const flags: string[] = [];
-  if (column.pk) flags.push('primary key');
-  if (column.notnull) flags.push('not null');
-  return flags.join(', ');
+  if (column.pk) flags.push("primary key");
+  if (column.notnull) flags.push("not null");
+  return flags.join(", ");
 }
 
 /** An overview of the whole database: tables with row counts and columns. */
@@ -280,43 +280,43 @@ export function summarize(db: SqlEngine): string {
   if (info.sqliteVersion) out.push(`SQLite ${info.sqliteVersion}`);
 
   const counts = [
-    `${info.tables.length} ${info.tables.length === 1 ? 'table' : 'tables'}`,
-    `${info.views.length} ${info.views.length === 1 ? 'view' : 'views'}`,
-    `${info.indexes.length} ${info.indexes.length === 1 ? 'index' : 'indexes'}`,
+    `${info.tables.length} ${info.tables.length === 1 ? "table" : "tables"}`,
+    `${info.views.length} ${info.views.length === 1 ? "view" : "views"}`,
+    `${info.indexes.length} ${info.indexes.length === 1 ? "index" : "indexes"}`,
   ];
-  out.push(counts.join(', '));
-  out.push('');
+  out.push(counts.join(", "));
+  out.push("");
 
   if (info.tables.length === 0) {
-    out.push('This database has no tables of its own.');
+    out.push("This database has no tables of its own.");
   }
 
   for (const table of info.tables) {
     const rows =
       table.rowCount < 0
-        ? 'row count unavailable'
-        : `${table.rowCount} ${table.rowCount === 1 ? 'row' : 'rows'}`;
+        ? "row count unavailable"
+        : `${table.rowCount} ${table.rowCount === 1 ? "row" : "rows"}`;
     out.push(`${table.name} (${rows})`);
 
     if (table.columns.length === 0) {
-      out.push('  no columns reported');
+      out.push("  no columns reported");
     } else {
       const nameWidth = Math.max(...table.columns.map((c) => c.name.length));
-      const typeWidth = Math.max(...table.columns.map((c) => (c.type || '(untyped)').length));
+      const typeWidth = Math.max(...table.columns.map((c) => (c.type || "(untyped)").length));
       for (const column of table.columns) {
-        const type = column.type || '(untyped)';
+        const type = column.type || "(untyped)";
         const flags = columnFlags(column);
-        const line = `  ${column.name.padEnd(nameWidth)}  ${type.padEnd(typeWidth)}${flags ? `  ${flags}` : ''}`;
+        const line = `  ${column.name.padEnd(nameWidth)}  ${type.padEnd(typeWidth)}${flags ? `  ${flags}` : ""}`;
         out.push(line.trimEnd());
       }
     }
-    out.push('');
+    out.push("");
   }
 
-  if (info.views.length > 0) out.push(`Views: ${info.views.join(', ')}`);
-  if (info.indexes.length > 0) out.push(`Indexes: ${info.indexes.join(', ')}`);
+  if (info.views.length > 0) out.push(`Views: ${info.views.join(", ")}`);
+  if (info.indexes.length > 0) out.push(`Indexes: ${info.indexes.join(", ")}`);
 
-  return out.join('\n').trimEnd();
+  return out.join("\n").trimEnd();
 }
 
 /**
@@ -331,18 +331,18 @@ export function toCsv(result: SqlExecResult): string {
   const escape = (raw: string): string =>
     /[",\r\n]/.test(raw) ? `"${raw.replace(/"/g, '""')}"` : raw;
 
-  const lines = [columns.map((name) => escape(String(name))).join(',')];
+  const lines = [columns.map((name) => escape(String(name))).join(",")];
   for (const row of values) {
     lines.push(
       columns
         .map((_, i) => {
           const value = row[i];
-          return value === null || value === undefined ? '' : escape(formatCell(value));
+          return value === null || value === undefined ? "" : escape(formatCell(value));
         })
-        .join(','),
+        .join(","),
     );
   }
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -353,13 +353,13 @@ export function toCsv(result: SqlExecResult): string {
 export function describeHeader(bytes: Uint8Array): { looksLikeSqlite: boolean; found: string } {
   const head = bytes.subarray(0, 16);
 
-  let found = '';
+  let found = "";
   for (let i = 0; i < head.length; i++) {
     const byte = head[i] ?? 0;
     found +=
       byte >= 0x20 && byte <= 0x7e
         ? String.fromCharCode(byte)
-        : `\\x${byte.toString(16).padStart(2, '0')}`;
+        : `\\x${byte.toString(16).padStart(2, "0")}`;
   }
 
   let looksLikeSqlite = head.length === SQLITE_MAGIC.length;
@@ -367,7 +367,7 @@ export function describeHeader(bytes: Uint8Array): { looksLikeSqlite: boolean; f
     if (head[i] !== SQLITE_MAGIC.charCodeAt(i)) looksLikeSqlite = false;
   }
 
-  return { looksLikeSqlite, found: found || '(empty file)' };
+  return { looksLikeSqlite, found: found || "(empty file)" };
 }
 
 /**
@@ -381,33 +381,33 @@ export function run(input: Uint8Array | string, opts: SqliteOpts): Record<string
   if (input instanceof Uint8Array) {
     const head = describeHeader(input);
     return {
-      File: `${input.length} ${input.length === 1 ? 'byte' : 'bytes'} read.`,
+      File: `${input.length} ${input.length === 1 ? "byte" : "bytes"} read.`,
       Header: head.looksLikeSqlite
         ? 'Starts with "SQLite format 3", so this is a SQLite database file.'
         : `The first bytes are ${head.found}. A SQLite database starts with "SQLite format 3", so this file is either something else or encrypted.`,
-      'Open it above':
-        'The SQLite engine is a WebAssembly build that runs in the panel on this page. Drop the file there to list its tables, page through rows and run SQL against it.',
-      'Why the split':
-        'This function stays free of the engine so it can be tested and reused. It formats result sets and reads a schema from whatever database is handed to it, and the panel owns the engine.',
+      "Open it above":
+        "The SQLite engine is a WebAssembly build that runs in the panel on this page. Drop the file there to list its tables, page through rows and run SQL against it.",
+      "Why the split":
+        "This function stays free of the engine so it can be tested and reused. It formats result sets and reads a schema from whatever database is handed to it, and the panel owns the engine.",
     };
   }
 
-  const text = String(input ?? '').trim();
-  if (text === '') {
+  const text = String(input ?? "").trim();
+  if (text === "") {
     throw new ToolError(
-      'empty-input',
-      'No database loaded yet.',
-      'Drop a .db, .sqlite or .sqlite3 file onto the panel above, or pick one with the file button.',
+      "empty-input",
+      "No database loaded yet.",
+      "Drop a .db, .sqlite or .sqlite3 file onto the panel above, or pick one with the file button.",
     );
   }
 
   return {
-    'Your SQL': clip(text.replace(/\s+/g, ' '), 200),
-    'Nothing to run it against':
-      'A query needs a database. Load a .db, .sqlite or .sqlite3 file in the panel above, then paste this into the SQL box and press Run, or press Ctrl and Enter.',
-    'Rows at a time': `${maxRows} rows are shown per page; the prev and next buttons walk through the rest.`,
-    'Where it runs':
-      'SQLite is compiled to WebAssembly and runs inside this tab, so your files and inputs never leave your device.',
+    "Your SQL": clip(text.replace(/\s+/g, " "), 200),
+    "Nothing to run it against":
+      "A query needs a database. Load a .db, .sqlite or .sqlite3 file in the panel above, then paste this into the SQL box and press Run, or press Ctrl and Enter.",
+    "Rows at a time": `${maxRows} rows are shown per page; the prev and next buttons walk through the rest.`,
+    "Where it runs":
+      "SQLite is compiled to WebAssembly and runs inside this tab, so your files and inputs never leave your device.",
   };
 }
 

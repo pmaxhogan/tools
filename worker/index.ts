@@ -12,76 +12,76 @@
  * exception: /models/* files that were split at build time to fit under the
  * 25 MiB per asset cap are stitched back together here (see reassemble).
  */
-import { ToolError, type OptionSpec, type ToolMeta } from '../src/tools/types';
+import { ToolError, type OptionSpec, type ToolMeta } from "../src/tools/types";
 
-import { meta as baseConverterMeta } from '../src/tools/base-converter/meta';
-import { run as baseConverterRun } from '../src/tools/base-converter/index';
-import { meta as caseConverterMeta } from '../src/tools/case-converter/meta';
-import { run as caseConverterRun } from '../src/tools/case-converter/index';
-import { meta as cronParserMeta } from '../src/tools/cron-parser/meta';
-import { run as cronParserRun } from '../src/tools/cron-parser/index';
-import { meta as csvViewerMeta } from '../src/tools/csv-viewer/meta';
-import { run as csvViewerRun } from '../src/tools/csv-viewer/index';
-import { meta as dataFormatConverterMeta } from '../src/tools/data-format-converter/meta';
-import { run as dataFormatConverterRun } from '../src/tools/data-format-converter/index';
-import { meta as decodeAnythingMeta } from '../src/tools/decode-anything/meta';
-import { run as decodeAnythingRun } from '../src/tools/decode-anything/index';
-import { meta as diffCheckerMeta } from '../src/tools/diff-checker/meta';
-import { run as diffCheckerRun } from '../src/tools/diff-checker/index';
-import { meta as discordTimestampMeta } from '../src/tools/discord-timestamp/meta';
-import { run as discordTimestampRun } from '../src/tools/discord-timestamp/index';
-import { meta as durationCalculatorMeta } from '../src/tools/duration-calculator/meta';
-import { run as durationCalculatorRun } from '../src/tools/duration-calculator/index';
-import { meta as electromagneticSpectrumMeta } from '../src/tools/electromagnetic-spectrum/meta';
-import { run as electromagneticSpectrumRun } from '../src/tools/electromagnetic-spectrum/index';
-import { meta as emailHeaderAnalyzerMeta } from '../src/tools/email-header-analyzer/meta';
-import { run as emailHeaderAnalyzerRun } from '../src/tools/email-header-analyzer/index';
-import { meta as epochConverterMeta } from '../src/tools/epoch-converter/meta';
-import { run as epochConverterRun } from '../src/tools/epoch-converter/index';
-import { meta as escapeUnescapeMeta } from '../src/tools/escape-unescape/meta';
-import { run as escapeUnescapeRun } from '../src/tools/escape-unescape/index';
-import { meta as factorioBlueprintDecoderMeta } from '../src/tools/factorio-blueprint-decoder/meta';
-import { run as factorioBlueprintDecoderRun } from '../src/tools/factorio-blueprint-decoder/index';
-import { meta as figletMeta } from '../src/tools/figlet/meta';
-import { run as figletRun } from '../src/tools/figlet/index';
-import { meta as gamCommandBuilderMeta } from '../src/tools/gam-command-builder/meta';
-import { run as gamCommandBuilderRun } from '../src/tools/gam-command-builder/index';
-import { meta as hashGeneratorMeta } from '../src/tools/hash-generator/meta';
-import { run as hashGeneratorRun } from '../src/tools/hash-generator/index';
-import { meta as invisibleCharacterDetectorMeta } from '../src/tools/invisible-character-detector/meta';
-import { run as invisibleCharacterDetectorRun } from '../src/tools/invisible-character-detector/index';
-import { meta as jsonFormatterMeta } from '../src/tools/json-formatter/meta';
-import { run as jsonFormatterRun } from '../src/tools/json-formatter/index';
-import { meta as jsonSchemaValidatorMeta } from '../src/tools/json-schema-validator/meta';
-import { run as jsonSchemaValidatorRun } from '../src/tools/json-schema-validator/index';
-import { meta as jsonToTypescriptMeta } from '../src/tools/json-to-typescript/meta';
-import { run as jsonToTypescriptRun } from '../src/tools/json-to-typescript/index';
-import { meta as lineSorterMeta } from '../src/tools/line-sorter/meta';
-import { run as lineSorterRun } from '../src/tools/line-sorter/index';
-import { meta as mojibakeFixerMeta } from '../src/tools/mojibake-fixer/meta';
-import { run as mojibakeFixerRun } from '../src/tools/mojibake-fixer/index';
-import { meta as oauthScopeDecoderMeta } from '../src/tools/oauth-scope-decoder/meta';
-import { run as oauthScopeDecoderRun } from '../src/tools/oauth-scope-decoder/index';
-import { meta as placeholderImageMeta } from '../src/tools/placeholder-image/meta';
-import { run as placeholderImageRun } from '../src/tools/placeholder-image/index';
-import { meta as snowflakeDecoderMeta } from '../src/tools/snowflake-decoder/meta';
-import { run as snowflakeDecoderRun } from '../src/tools/snowflake-decoder/index';
-import { meta as smartctlAnalyzerMeta } from '../src/tools/smartctl-analyzer/meta';
-import { run as smartctlAnalyzerRun } from '../src/tools/smartctl-analyzer/index';
-import { meta as sqlFormatterMeta } from '../src/tools/sql-formatter/meta';
-import { run as sqlFormatterRun } from '../src/tools/sql-formatter/index';
-import { meta as subtitleEditorMeta } from '../src/tools/subtitle-editor/meta';
-import { run as subtitleEditorRun } from '../src/tools/subtitle-editor/index';
-import { meta as unicodePickerMeta } from '../src/tools/unicode-picker/meta';
-import { run as unicodePickerRun } from '../src/tools/unicode-picker/index';
-import { meta as urlParserMeta } from '../src/tools/url-parser/meta';
-import { run as urlParserRun } from '../src/tools/url-parser/index';
-import { meta as userAgentParserMeta } from '../src/tools/user-agent-parser/meta';
-import { run as userAgentParserRun } from '../src/tools/user-agent-parser/index';
-import { meta as uuidMeta } from '../src/tools/uuid/meta';
-import { run as uuidRun } from '../src/tools/uuid/index';
-import { meta as weekNumberMeta } from '../src/tools/week-number/meta';
-import { run as weekNumberRun } from '../src/tools/week-number/index';
+import { meta as baseConverterMeta } from "../src/tools/base-converter/meta";
+import { run as baseConverterRun } from "../src/tools/base-converter/index";
+import { meta as caseConverterMeta } from "../src/tools/case-converter/meta";
+import { run as caseConverterRun } from "../src/tools/case-converter/index";
+import { meta as cronParserMeta } from "../src/tools/cron-parser/meta";
+import { run as cronParserRun } from "../src/tools/cron-parser/index";
+import { meta as csvViewerMeta } from "../src/tools/csv-viewer/meta";
+import { run as csvViewerRun } from "../src/tools/csv-viewer/index";
+import { meta as dataFormatConverterMeta } from "../src/tools/data-format-converter/meta";
+import { run as dataFormatConverterRun } from "../src/tools/data-format-converter/index";
+import { meta as decodeAnythingMeta } from "../src/tools/decode-anything/meta";
+import { run as decodeAnythingRun } from "../src/tools/decode-anything/index";
+import { meta as diffCheckerMeta } from "../src/tools/diff-checker/meta";
+import { run as diffCheckerRun } from "../src/tools/diff-checker/index";
+import { meta as discordTimestampMeta } from "../src/tools/discord-timestamp/meta";
+import { run as discordTimestampRun } from "../src/tools/discord-timestamp/index";
+import { meta as durationCalculatorMeta } from "../src/tools/duration-calculator/meta";
+import { run as durationCalculatorRun } from "../src/tools/duration-calculator/index";
+import { meta as electromagneticSpectrumMeta } from "../src/tools/electromagnetic-spectrum/meta";
+import { run as electromagneticSpectrumRun } from "../src/tools/electromagnetic-spectrum/index";
+import { meta as emailHeaderAnalyzerMeta } from "../src/tools/email-header-analyzer/meta";
+import { run as emailHeaderAnalyzerRun } from "../src/tools/email-header-analyzer/index";
+import { meta as epochConverterMeta } from "../src/tools/epoch-converter/meta";
+import { run as epochConverterRun } from "../src/tools/epoch-converter/index";
+import { meta as escapeUnescapeMeta } from "../src/tools/escape-unescape/meta";
+import { run as escapeUnescapeRun } from "../src/tools/escape-unescape/index";
+import { meta as factorioBlueprintDecoderMeta } from "../src/tools/factorio-blueprint-decoder/meta";
+import { run as factorioBlueprintDecoderRun } from "../src/tools/factorio-blueprint-decoder/index";
+import { meta as figletMeta } from "../src/tools/figlet/meta";
+import { run as figletRun } from "../src/tools/figlet/index";
+import { meta as gamCommandBuilderMeta } from "../src/tools/gam-command-builder/meta";
+import { run as gamCommandBuilderRun } from "../src/tools/gam-command-builder/index";
+import { meta as hashGeneratorMeta } from "../src/tools/hash-generator/meta";
+import { run as hashGeneratorRun } from "../src/tools/hash-generator/index";
+import { meta as invisibleCharacterDetectorMeta } from "../src/tools/invisible-character-detector/meta";
+import { run as invisibleCharacterDetectorRun } from "../src/tools/invisible-character-detector/index";
+import { meta as jsonFormatterMeta } from "../src/tools/json-formatter/meta";
+import { run as jsonFormatterRun } from "../src/tools/json-formatter/index";
+import { meta as jsonSchemaValidatorMeta } from "../src/tools/json-schema-validator/meta";
+import { run as jsonSchemaValidatorRun } from "../src/tools/json-schema-validator/index";
+import { meta as jsonToTypescriptMeta } from "../src/tools/json-to-typescript/meta";
+import { run as jsonToTypescriptRun } from "../src/tools/json-to-typescript/index";
+import { meta as lineSorterMeta } from "../src/tools/line-sorter/meta";
+import { run as lineSorterRun } from "../src/tools/line-sorter/index";
+import { meta as mojibakeFixerMeta } from "../src/tools/mojibake-fixer/meta";
+import { run as mojibakeFixerRun } from "../src/tools/mojibake-fixer/index";
+import { meta as oauthScopeDecoderMeta } from "../src/tools/oauth-scope-decoder/meta";
+import { run as oauthScopeDecoderRun } from "../src/tools/oauth-scope-decoder/index";
+import { meta as placeholderImageMeta } from "../src/tools/placeholder-image/meta";
+import { run as placeholderImageRun } from "../src/tools/placeholder-image/index";
+import { meta as snowflakeDecoderMeta } from "../src/tools/snowflake-decoder/meta";
+import { run as snowflakeDecoderRun } from "../src/tools/snowflake-decoder/index";
+import { meta as smartctlAnalyzerMeta } from "../src/tools/smartctl-analyzer/meta";
+import { run as smartctlAnalyzerRun } from "../src/tools/smartctl-analyzer/index";
+import { meta as sqlFormatterMeta } from "../src/tools/sql-formatter/meta";
+import { run as sqlFormatterRun } from "../src/tools/sql-formatter/index";
+import { meta as subtitleEditorMeta } from "../src/tools/subtitle-editor/meta";
+import { run as subtitleEditorRun } from "../src/tools/subtitle-editor/index";
+import { meta as unicodePickerMeta } from "../src/tools/unicode-picker/meta";
+import { run as unicodePickerRun } from "../src/tools/unicode-picker/index";
+import { meta as urlParserMeta } from "../src/tools/url-parser/meta";
+import { run as urlParserRun } from "../src/tools/url-parser/index";
+import { meta as userAgentParserMeta } from "../src/tools/user-agent-parser/meta";
+import { run as userAgentParserRun } from "../src/tools/user-agent-parser/index";
+import { meta as uuidMeta } from "../src/tools/uuid/meta";
+import { run as uuidRun } from "../src/tools/uuid/index";
+import { meta as weekNumberMeta } from "../src/tools/week-number/meta";
+import { run as weekNumberRun } from "../src/tools/week-number/index";
 
 export interface Env {
   /** Static assets from the Astro build. The only binding this worker has. */
@@ -109,7 +109,7 @@ interface Endpoint {
 function expose<I, O, P>(
   meta: ToolMeta,
   run: (input: I, opts: P) => O | Promise<O>,
-  extras: Omit<Endpoint, 'meta' | 'run'> = {},
+  extras: Omit<Endpoint, "meta" | "run"> = {},
 ): Endpoint {
   return {
     meta,
@@ -127,113 +127,113 @@ function expose<I, O, P>(
  * static imports above cost the site nothing in page weight.
  */
 const ALL: Endpoint[] = [
-  expose(baseConverterMeta, baseConverterRun, { sample: '255', sampleQuery: 'inputBase=auto' }),
-  expose(caseConverterMeta, caseConverterRun, { sample: 'parseHTMLDocument' }),
-  expose(cronParserMeta, cronParserRun, { sample: '0 9 * * 1-5', sampleQuery: 'tz=UTC' }),
+  expose(baseConverterMeta, baseConverterRun, { sample: "255", sampleQuery: "inputBase=auto" }),
+  expose(caseConverterMeta, caseConverterRun, { sample: "parseHTMLDocument" }),
+  expose(cronParserMeta, cronParserRun, { sample: "0 9 * * 1-5", sampleQuery: "tz=UTC" }),
   expose(csvViewerMeta, csvViewerRun, {
-    sampleQuery: 'view=stats',
+    sampleQuery: "view=stats",
     sampleCommand: (base) =>
       `printf 'name,price\\nwidget,9.50\\ngadget,120\\n' | curl -X POST --data-binary @- "${base}/api/csv-viewer?view=stats"`,
   }),
   expose(dataFormatConverterMeta, dataFormatConverterRun, {
-    sampleQuery: 'from=auto&to=yaml',
+    sampleQuery: "from=auto&to=yaml",
     sampleCommand: (base) =>
       `printf '{"name":"Ada","tags":["a","b"]}' | curl -X POST --data-binary @- "${base}/api/data-format-converter?to=yaml"`,
   }),
   expose(decodeAnythingMeta, decodeAnythingRun, {
-    sample: 'eyJoZWxsbyI6IndvcmxkIn0=',
-    sampleQuery: 'maxDepth=10',
+    sample: "eyJoZWxsbyI6IndvcmxkIn0=",
+    sampleQuery: "maxDepth=10",
   }),
   expose(diffCheckerMeta, diffCheckerRun, {
-    sampleQuery: 'mode=lines',
+    sampleQuery: "mode=lines",
     sampleCommand: (base) =>
       `printf 'a\\nb\\n=====\\na\\nc\\n' | curl -X POST --data-binary @- "${base}/api/diff-checker?mode=lines"`,
   }),
-  expose(discordTimestampMeta, discordTimestampRun, { sample: '2026-08-06T21:00:00Z' }),
-  expose(durationCalculatorMeta, durationCalculatorRun, { sample: '1h 30m + 45m' }),
+  expose(discordTimestampMeta, discordTimestampRun, { sample: "2026-08-06T21:00:00Z" }),
+  expose(durationCalculatorMeta, durationCalculatorRun, { sample: "1h 30m + 45m" }),
   expose(electromagneticSpectrumMeta, electromagneticSpectrumRun, {
-    sampleQuery: 'query=2.45%20GHz',
+    sampleQuery: "query=2.45%20GHz",
   }),
   expose(emailHeaderAnalyzerMeta, emailHeaderAnalyzerRun, {
-    sampleQuery: 'section=hops',
+    sampleQuery: "section=hops",
     sampleCommand: (base) =>
       `curl -X POST --data-binary @headers.txt "${base}/api/email-header-analyzer?section=all"`,
   }),
   expose(epochConverterMeta, epochConverterRun, {
-    sample: '1754521200',
-    sampleQuery: 'tz=America/Chicago',
+    sample: "1754521200",
+    sampleQuery: "tz=America/Chicago",
   }),
   expose(escapeUnescapeMeta, escapeUnescapeRun, {
     sample: 'He said "hi"',
-    sampleQuery: 'format=json&direction=escape',
+    sampleQuery: "format=json&direction=escape",
   }),
   expose(factorioBlueprintDecoderMeta, factorioBlueprintDecoderRun, {
-    sampleQuery: 'operation=inspect',
+    sampleQuery: "operation=inspect",
     sampleCommand: (base) =>
       `printf '0eNqrVkrKKU0tKMrMK1GyqlbKTC...' | curl -X POST --data-binary @- "${base}/api/factorio-blueprint-decoder?operation=inspect"`,
   }),
-  expose(figletMeta, figletRun, { sample: 'hello', sampleQuery: 'font=Standard' }),
+  expose(figletMeta, figletRun, { sample: "hello", sampleQuery: "font=Standard" }),
   expose(gamCommandBuilderMeta, gamCommandBuilderRun, {
-    sample: 'suspend user',
-    sampleQuery: 'category=all',
+    sample: "suspend user",
+    sampleQuery: "category=all",
   }),
-  expose(hashGeneratorMeta, hashGeneratorRun, { sample: 'hello world' }),
+  expose(hashGeneratorMeta, hashGeneratorRun, { sample: "hello world" }),
   expose(invisibleCharacterDetectorMeta, invisibleCharacterDetectorRun, {
-    sample: 'hello​world',
-    sampleQuery: 'mode=report',
+    sample: "hello​world",
+    sampleQuery: "mode=report",
   }),
   expose(jsonFormatterMeta, jsonFormatterRun, {
     sample: '{"b":1,"a":2}',
-    sampleQuery: 'mode=format&indent=2',
+    sampleQuery: "mode=format&indent=2",
   }),
   expose(jsonSchemaValidatorMeta, jsonSchemaValidatorRun, {
-    sampleQuery: 'draft=2020-12',
+    sampleQuery: "draft=2020-12",
     sampleCommand: (base) =>
       `printf '{"schema":{"type":"object","required":["name"]},"data":{"age":3}}' | curl -X POST --data-binary @- "${base}/api/json-schema-validator"`,
   }),
   expose(jsonToTypescriptMeta, jsonToTypescriptRun, {
-    sampleQuery: 'target=typescript&rootName=User',
+    sampleQuery: "target=typescript&rootName=User",
     sampleCommand: (base) =>
       `printf '{"name":"Ada","langs":["ts"]}' | curl -X POST --data-binary @- "${base}/api/json-to-typescript?target=typescript&rootName=User"`,
   }),
   expose(lineSorterMeta, lineSorterRun, {
-    sampleQuery: 'operation=sort-az',
+    sampleQuery: "operation=sort-az",
     sampleCommand: (base) =>
       `printf 'banana\\napple\\ncherry\\n' | curl -X POST --data-binary @- "${base}/api/line-sorter?operation=sort-az"`,
   }),
-  expose(mojibakeFixerMeta, mojibakeFixerRun, { sample: 'donâ€™t', sampleQuery: 'chain=auto' }),
+  expose(mojibakeFixerMeta, mojibakeFixerRun, { sample: "donâ€™t", sampleQuery: "chain=auto" }),
   expose(oauthScopeDecoderMeta, oauthScopeDecoderRun, {
-    sample: 'repo delete_repo read:user',
-    sampleQuery: 'sort=risk',
+    sample: "repo delete_repo read:user",
+    sampleQuery: "sort=risk",
   }),
-  expose(placeholderImageMeta, placeholderImageRun, { sampleQuery: 'width=600&height=400' }),
+  expose(placeholderImageMeta, placeholderImageRun, { sampleQuery: "width=600&height=400" }),
   expose(snowflakeDecoderMeta, snowflakeDecoderRun, {
-    sample: '175928847299117063',
-    sampleQuery: 'platform=discord',
+    sample: "175928847299117063",
+    sampleQuery: "platform=discord",
   }),
   expose(smartctlAnalyzerMeta, smartctlAnalyzerRun, {
-    sampleQuery: 'detail=verdict',
+    sampleQuery: "detail=verdict",
     sampleCommand: (base) =>
       `smartctl -a /dev/sda | curl -X POST --data-binary @- "${base}/api/smartctl-analyzer"`,
   }),
   expose(sqlFormatterMeta, sqlFormatterRun, {
-    sampleQuery: 'dialect=postgresql&keywordCase=upper',
+    sampleQuery: "dialect=postgresql&keywordCase=upper",
     sampleCommand: (base) =>
       `printf 'select id,name from users where id=1' | curl -X POST --data-binary @- "${base}/api/sql-formatter?dialect=postgresql"`,
   }),
   expose(subtitleEditorMeta, subtitleEditorRun, {
-    sampleQuery: 'operation=shift&offset=%2B2.5',
+    sampleQuery: "operation=shift&offset=%2B2.5",
     sampleCommand: (base) =>
       `printf '1\\n00:00:01,000 --> 00:00:02,000\\nHello\\n' | curl -X POST --data-binary @- "${base}/api/subtitle-editor?operation=shift&offset=%2B2.5"`,
   }),
-  expose(unicodePickerMeta, unicodePickerRun, { sample: 'arrow', sampleQuery: 'category=arrows' }),
-  expose(urlParserMeta, urlParserRun, { sample: 'https://example.com/a/b?x=1&y=2#frag' }),
+  expose(unicodePickerMeta, unicodePickerRun, { sample: "arrow", sampleQuery: "category=arrows" }),
+  expose(urlParserMeta, urlParserRun, { sample: "https://example.com/a/b?x=1&y=2#frag" }),
   expose(userAgentParserMeta, userAgentParserRun, {
     sample:
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
   }),
-  expose(uuidMeta, uuidRun, { sampleQuery: 'version=v4&count=3' }),
-  expose(weekNumberMeta, weekNumberRun, { sample: '2026-08-06' }),
+  expose(uuidMeta, uuidRun, { sampleQuery: "version=v4&count=3" }),
+  expose(weekNumberMeta, weekNumberRun, { sample: "2026-08-06" }),
 ];
 
 const ENDPOINTS: Endpoint[] = ALL.filter((e) => e.meta.http);
@@ -244,13 +244,13 @@ const BY_SLUG: Map<string, Endpoint> = new Map(ENDPOINTS.map((e) => [e.meta.slug
  * Tools whose output changes between identical requests. Everything else is a
  * pure function of its input and is safe for shared caches.
  */
-const NON_DETERMINISTIC = new Set(['uuid-generator']);
+const NON_DETERMINISTIC = new Set(["uuid-generator"]);
 
 const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Max-Age': '86400',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Max-Age": "86400",
 };
 
 function withCharset(contentType: string): string {
@@ -264,54 +264,54 @@ function respond(body: string, status: number, contentType: string, cache: strin
     status,
     headers: {
       ...CORS,
-      'Content-Type': withCharset(contentType),
-      'Cache-Control': cache,
-      'X-Content-Type-Options': 'nosniff',
+      "Content-Type": withCharset(contentType),
+      "Cache-Control": cache,
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }
 
-function text(body: string, status = 200, cache = 'no-store'): Response {
-  return respond(body, status, 'text/plain', cache);
+function text(body: string, status = 200, cache = "no-store"): Response {
+  return respond(body, status, "text/plain", cache);
 }
 
-function json(value: unknown, status = 200, cache = 'no-store'): Response {
-  return respond(`${JSON.stringify(value, null, 2)}\n`, status, 'application/json', cache);
+function json(value: unknown, status = 200, cache = "no-store"): Response {
+  return respond(`${JSON.stringify(value, null, 2)}\n`, status, "application/json", cache);
 }
 
 /** Human-readable summary of one option, for the plain-text index. */
 function describeOption(o: OptionSpec): string {
-  if (o.kind === 'select') {
+  if (o.kind === "select") {
     const choices = o.choices.map((c) => c.value);
     const detail =
-      choices.length <= 6 ? `one of: ${choices.join(', ')}` : `${choices.length} choices`;
+      choices.length <= 6 ? `one of: ${choices.join(", ")}` : `${choices.length} choices`;
     return `${o.id}=${o.default} (${detail})`;
   }
-  if (o.kind === 'boolean') return `${o.id}=${o.default} (true or false)`;
-  if (o.kind === 'number' || o.kind === 'slider') {
+  if (o.kind === "boolean") return `${o.id}=${o.default} (true or false)`;
+  if (o.kind === "number" || o.kind === "slider") {
     const range =
       o.min !== undefined || o.max !== undefined
-        ? ` (${o.min ?? 'any'} to ${o.max ?? 'any'})`
-        : ' (number)';
+        ? ` (${o.min ?? "any"} to ${o.max ?? "any"})`
+        : " (number)";
     return `${o.id}=${o.default}${range}`;
   }
-  return `${o.id}=${o.default === '' ? '""' : o.default} (text)`;
+  return `${o.id}=${o.default === "" ? '""' : o.default} (text)`;
 }
 
 function sampleCommand(e: Endpoint, base: string): string {
   if (e.sampleCommand) return e.sampleCommand(base);
-  const method = e.meta.http?.method ?? 'GET';
-  const query = e.sampleQuery ? e.sampleQuery : '';
-  if (method === 'POST') {
+  const method = e.meta.http?.method ?? "GET";
+  const query = e.sampleQuery ? e.sampleQuery : "";
+  if (method === "POST") {
     const url = query ? `${base}/api/${e.meta.slug}?${query}` : `${base}/api/${e.meta.slug}`;
-    const body = (e.sample ?? '').replace(/'/g, `'\\''`);
+    const body = (e.sample ?? "").replace(/'/g, `'\\''`);
     return `curl -X POST --data-binary '${body}' "${url}"`;
   }
   const parts: string[] = [];
   if (e.sample !== undefined) parts.push(`input=${encodeURIComponent(e.sample)}`);
   if (query) parts.push(query);
   const url = parts.length
-    ? `${base}/api/${e.meta.slug}?${parts.join('&')}`
+    ? `${base}/api/${e.meta.slug}?${parts.join("&")}`
     : `${base}/api/${e.meta.slug}`;
   return `curl "${url}"`;
 }
@@ -329,54 +329,52 @@ function baseUrl(url: URL): string {
 /** The discoverability surface: `curl https://tools.maxhogan.dev/api`. */
 function indexBody(base: string): string {
   const lines: string[] = [
-    'tools.maxhogan.dev curl API',
-    '',
-    'Stateless and pure. Your input is never stored and never logged, and every',
-    'response is computed from the request alone. Same code as the web pages.',
-    '',
-    '  GET  /api                 this index',
+    "tools.maxhogan.dev curl API",
+    "",
+    "Stateless and pure. Your input is never stored and never logged, and every",
+    "response is computed from the request alone. Same code as the web pages.",
+    "",
+    "  GET  /api                 this index",
     '  GET  /api/<tool>          input comes from the "input" query param',
-    '  POST /api/<tool>          input is the raw request body',
-    '',
-    'Options are extra query params. Any option you leave out uses its default.',
-    'Errors return HTTP 400 and a JSON body with a code, a message, and a fix.',
-    '',
+    "  POST /api/<tool>          input is the raw request body",
+    "",
+    "Options are extra query params. Any option you leave out uses its default.",
+    "Errors return HTTP 400 and a JSON body with a code, a message, and a fix.",
+    "",
     `${ENDPOINTS.length} endpoints:`,
-    '',
+    "",
   ];
 
   for (const e of ENDPOINTS) {
-    const method = e.meta.http?.method ?? 'GET';
+    const method = e.meta.http?.method ?? "GET";
     lines.push(`${method} /api/${e.meta.slug}`);
     lines.push(`  ${e.meta.description}`);
     const options = e.meta.options ?? [];
     if (options.length) {
-      lines.push(`  options: ${options.map(describeOption).join(', ')}`);
+      lines.push(`  options: ${options.map(describeOption).join(", ")}`);
     }
     lines.push(`  ${sampleCommand(e, base)}`);
-    lines.push('');
+    lines.push("");
   }
 
-  lines.push('Source: https://github.com/pmaxhogan/tools (MIT).');
-  lines.push('');
-  return lines.join('\n');
+  lines.push("Source: https://github.com/pmaxhogan/tools (MIT).");
+  lines.push("");
+  return lines.join("\n");
 }
 
 function notFoundBody(slug: string, base: string): string {
-  const known = ENDPOINTS.map((e) => `  ${e.meta.http?.method ?? 'GET'} /api/${e.meta.slug}`);
+  const known = ENDPOINTS.map((e) => `  ${e.meta.http?.method ?? "GET"} /api/${e.meta.slug}`);
   return [
-    slug
-      ? `No API endpoint named "${slug}".`
-      : 'No API endpoint at that path.',
-    '',
-    'Some tools run only in the browser, so they have no endpoint here.',
-    'These are the ones you can curl:',
-    '',
+    slug ? `No API endpoint named "${slug}".` : "No API endpoint at that path.",
+    "",
+    "Some tools run only in the browser, so they have no endpoint here.",
+    "These are the ones you can curl:",
+    "",
     ...known,
-    '',
+    "",
     `Full index with examples: curl ${base}/api`,
-    '',
-  ].join('\n');
+    "",
+  ].join("\n");
 }
 
 /**
@@ -391,18 +389,18 @@ function readOptions(meta: ToolMeta, params: URLSearchParams): Options {
   for (const spec of specs) opts[spec.id] = spec.default;
 
   for (const [key, raw] of params) {
-    if (key === 'input') continue;
+    if (key === "input") continue;
     const spec = specs.find((s) => s.id === key);
     if (!spec) {
       opts[key] = raw;
       continue;
     }
-    if (spec.kind === 'number' || spec.kind === 'slider') {
+    if (spec.kind === "number" || spec.kind === "slider") {
       const n = Number(raw);
       opts[key] = Number.isFinite(n) ? n : spec.default;
-    } else if (spec.kind === 'boolean') {
+    } else if (spec.kind === "boolean") {
       const v = raw.trim().toLowerCase();
-      opts[key] = v === 'true' || v === '1' || v === 'yes' || v === '';
+      opts[key] = v === "true" || v === "1" || v === "yes" || v === "";
     } else {
       opts[key] = raw;
     }
@@ -411,11 +409,11 @@ function readOptions(meta: ToolMeta, params: URLSearchParams): Options {
 }
 
 function cacheFor(meta: ToolMeta): string {
-  if (NON_DETERMINISTIC.has(meta.slug)) return 'no-store';
+  if (NON_DETERMINISTIC.has(meta.slug)) return "no-store";
   // A cached POST response can legally be reused for a later GET on the same
   // URI, and the bodies differ, so POST endpoints stay uncached.
-  if (meta.http?.method === 'POST') return 'no-store';
-  return 'public, max-age=3600';
+  if (meta.http?.method === "POST") return "no-store";
+  return "public, max-age=3600";
 }
 
 async function handleTool(request: Request, url: URL, slug: string): Promise<Response> {
@@ -425,35 +423,35 @@ async function handleTool(request: Request, url: URL, slug: string): Promise<Res
   }
 
   const expected = endpoint.meta.http.method;
-  const method = request.method === 'HEAD' ? 'GET' : request.method;
+  const method = request.method === "HEAD" ? "GET" : request.method;
   if (method !== expected) {
     const body = [
       `/api/${slug} accepts ${expected}, not ${request.method}.`,
-      '',
-      expected === 'GET'
+      "",
+      expected === "GET"
         ? `Try: curl "${baseUrl(url)}/api/${slug}?input=..."`
         : `Try: curl -X POST --data-binary @file "${baseUrl(url)}/api/${slug}"`,
-      '',
-    ].join('\n');
+      "",
+    ].join("\n");
     return new Response(body, {
       status: 405,
       headers: {
         ...CORS,
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-store',
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
         Allow: `${expected}, OPTIONS`,
-        'X-Content-Type-Options': 'nosniff',
+        "X-Content-Type-Options": "nosniff",
       },
     });
   }
 
-  const input = expected === 'POST' ? await request.text() : (url.searchParams.get('input') ?? '');
+  const input = expected === "POST" ? await request.text() : (url.searchParams.get("input") ?? "");
   const opts = readOptions(endpoint.meta, url.searchParams);
   const cache = cacheFor(endpoint.meta);
 
   try {
     const result = await endpoint.run(input, opts);
-    if (typeof result === 'string') {
+    if (typeof result === "string") {
       return respond(result, 200, endpoint.meta.http.contentType, cache);
     }
     return json(result, 200, cache);
@@ -464,8 +462,8 @@ async function handleTool(request: Request, url: URL, slug: string): Promise<Res
     return json(
       {
         error: {
-          code: 'internal-error',
-          message: 'This tool failed to run on that input.',
+          code: "internal-error",
+          message: "This tool failed to run on that input.",
           fix: `Check the input and options against ${baseUrl(url)}/api, then try again.`,
         },
       },
@@ -511,10 +509,10 @@ const SAFE_PART_NAME = /^[A-Za-z0-9._-]+$/;
 function modelHeaders(totalBytes: number): Record<string, string> {
   return {
     ...CORS,
-    'Content-Type': 'application/octet-stream',
-    'Content-Length': String(totalBytes),
-    'Cache-Control': 'public, max-age=31536000, immutable',
-    'X-Content-Type-Options': 'nosniff',
+    "Content-Type": "application/octet-stream",
+    "Content-Length": String(totalBytes),
+    "Cache-Control": "public, max-age=31536000, immutable",
+    "X-Content-Type-Options": "nosniff",
   };
 }
 
@@ -549,11 +547,11 @@ async function handleModelAsset(
   const parts = manifest.parts ?? [];
   if (!parts.length || !parts.every((p) => SAFE_PART_NAME.test(p.name))) return direct;
 
-  const dir = url.pathname.slice(0, url.pathname.lastIndexOf('/') + 1);
+  const dir = url.pathname.slice(0, url.pathname.lastIndexOf("/") + 1);
   const partUrls = parts.map((p) => new URL(dir + p.name, url.origin).toString());
   const headers = modelHeaders(manifest.totalBytes);
 
-  if (request.method === 'HEAD') return new Response(null, { status: 200, headers });
+  if (request.method === "HEAD") return new Response(null, { status: 200, headers });
 
   // FixedLengthStream is what keeps Content-Length on a streamed body, and it
   // errors if the parts do not add up to totalBytes, which is a free check
@@ -583,36 +581,36 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
-    const isApi = path === '/api' || path === '/api/' || path.startsWith('/api/');
+    const isApi = path === "/api" || path === "/api/" || path.startsWith("/api/");
     if (!isApi) {
       if (
-        path.startsWith('/models/') &&
-        (request.method === 'GET' || request.method === 'HEAD') &&
-        !path.includes('..')
+        path.startsWith("/models/") &&
+        (request.method === "GET" || request.method === "HEAD") &&
+        !path.includes("..")
       ) {
         return handleModelAsset(request, url, env, ctx);
       }
       return env.ASSETS.fetch(request);
     }
 
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: { ...CORS, 'Cache-Control': 'no-store' } });
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: { ...CORS, "Cache-Control": "no-store" } });
     }
 
-    if (path === '/api' || path === '/api/') {
-      return text(indexBody(baseUrl(url)), 200, 'public, max-age=3600');
+    if (path === "/api" || path === "/api/") {
+      return text(indexBody(baseUrl(url)), 200, "public, max-age=3600");
     }
 
-    let slug = path.slice('/api/'.length).replace(/\/+$/, '');
+    let slug = path.slice("/api/".length).replace(/\/+$/, "");
     try {
       slug = decodeURIComponent(slug);
     } catch {
       // A malformed escape sequence just means no such tool.
     }
 
-    if (slug.includes('/')) return text(notFoundBody(slug, baseUrl(url)), 404);
+    if (slug.includes("/")) return text(notFoundBody(slug, baseUrl(url)), 404);
 
-    if (request.method !== 'GET' && request.method !== 'HEAD' && request.method !== 'POST') {
+    if (request.method !== "GET" && request.method !== "HEAD" && request.method !== "POST") {
       return text(`/api/${slug} accepts GET, POST and OPTIONS only.`, 405);
     }
 

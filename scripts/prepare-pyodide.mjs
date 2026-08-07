@@ -36,7 +36,7 @@
  * they are fetched once from the version-matched CDN distribution and verified
  * against the lock's own sha256 before staging. No dependencies beyond builtins.
  */
-import { createHash } from 'node:crypto';
+import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -45,9 +45,9 @@ import {
   rmSync,
   statSync,
   writeFileSync,
-} from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+} from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 /** Cloudflare's hard per-asset limit. Asserted, never expected to trigger. */
 const ASSET_MAX_BYTES = 25 * 1024 * 1024;
@@ -60,11 +60,11 @@ const ATTEMPTS = 3;
  */
 const STAGE_VERSION = 1;
 
-const root = fileURLToPath(new URL('../', import.meta.url));
-const publicDir = join(root, 'public');
-const outDir = join(publicDir, 'pyodide');
-const pkgDir = join(root, 'node_modules', 'pyodide');
-const manifestPath = join(outDir, 'manifest.json');
+const root = fileURLToPath(new URL("../", import.meta.url));
+const publicDir = join(root, "public");
+const outDir = join(publicDir, "pyodide");
+const pkgDir = join(root, "node_modules", "pyodide");
+const manifestPath = join(outDir, "manifest.json");
 
 function fail(message) {
   console.error(`prepare-pyodide: ${message}`);
@@ -72,15 +72,15 @@ function fail(message) {
 }
 
 function sha256(buffer) {
-  return createHash('sha256').update(buffer).digest('hex');
+  return createHash("sha256").update(buffer).digest("hex");
 }
 
 if (!existsSync(pkgDir)) {
-  fail('node_modules/pyodide is missing. Run npm install so the runtime is present.');
+  fail("node_modules/pyodide is missing. Run npm install so the runtime is present.");
 }
 
-const pyodideVersion = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8')).version;
-const lock = JSON.parse(readFileSync(join(pkgDir, 'pyodide-lock.json'), 'utf8'));
+const pyodideVersion = JSON.parse(readFileSync(join(pkgDir, "package.json"), "utf8")).version;
+const lock = JSON.parse(readFileSync(join(pkgDir, "pyodide-lock.json"), "utf8"));
 
 /** The lock is the source of truth for the wheel names, deps and hashes. */
 function wheelEntry(name) {
@@ -90,8 +90,8 @@ function wheelEntry(name) {
   return { file: p.file_name, sha256: p.sha256 };
 }
 
-const jinja = wheelEntry('jinja2');
-const markupsafe = wheelEntry('markupsafe');
+const jinja = wheelEntry("jinja2");
+const markupsafe = wheelEntry("markupsafe");
 
 /** Version-matched CDN distribution. Fetched at build time only, never at runtime. */
 const cdnBase = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
@@ -102,14 +102,14 @@ const cdnBase = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
  * against the lock's sha256 before it is allowed to stage.
  */
 const ENTRIES = [
-  { source: 'pkg', from: 'pyodide.mjs' },
-  { source: 'pkg', from: 'pyodide.asm.mjs' },
-  { source: 'pkg', from: 'pyodide.asm.wasm' },
-  { source: 'pkg', from: 'python_stdlib.zip' },
-  { source: 'pkg', from: 'pyodide-lock.json' },
-  { source: 'cdn', from: cdnBase + jinja.file, file: jinja.file, sha256: jinja.sha256 },
+  { source: "pkg", from: "pyodide.mjs" },
+  { source: "pkg", from: "pyodide.asm.mjs" },
+  { source: "pkg", from: "pyodide.asm.wasm" },
+  { source: "pkg", from: "python_stdlib.zip" },
+  { source: "pkg", from: "pyodide-lock.json" },
+  { source: "cdn", from: cdnBase + jinja.file, file: jinja.file, sha256: jinja.sha256 },
   {
-    source: 'cdn',
+    source: "cdn",
     from: cdnBase + markupsafe.file,
     file: markupsafe.file,
     sha256: markupsafe.sha256,
@@ -118,16 +118,14 @@ const ENTRIES = [
 
 /** Every entry's destination basename under public/pyodide/. */
 function destName(entry) {
-  return entry.source === 'pkg' ? entry.from : entry.file;
+  return entry.source === "pkg" ? entry.from : entry.file;
 }
 
 /**
  * Fingerprint of the staging plan. Any change to the version, the wheel names,
  * their hashes or the entry list invalidates an already-staged tree.
  */
-const entriesHash = sha256(
-  Buffer.from(JSON.stringify({ pyodideVersion, ENTRIES })),
-).slice(0, 16);
+const entriesHash = sha256(Buffer.from(JSON.stringify({ pyodideVersion, ENTRIES }))).slice(0, 16);
 
 /** True when public/pyodide/ already holds exactly this manifest, bytes included. */
 function isStaged(previous) {
@@ -143,7 +141,7 @@ function isStaged(previous) {
 
 async function download(url, attempt = 1) {
   try {
-    const res = await fetch(url, { redirect: 'follow' });
+    const res = await fetch(url, { redirect: "follow" });
     if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
     return Buffer.from(await res.arrayBuffer());
   } catch (err) {
@@ -161,9 +159,10 @@ async function download(url, attempt = 1) {
 
 /** Resolves one entry to a verified Buffer, from node_modules or the CDN. */
 async function resolveEntry(entry) {
-  if (entry.source === 'pkg') {
+  if (entry.source === "pkg") {
     const path = join(pkgDir, entry.from);
-    if (!existsSync(path)) fail(`missing ${path}. Reinstall pyodide so every dist file is present.`);
+    if (!existsSync(path))
+      fail(`missing ${path}. Reinstall pyodide so every dist file is present.`);
     return readFileSync(path);
   }
 
@@ -179,7 +178,7 @@ async function resolveEntry(entry) {
   if (actual !== entry.sha256) {
     fail(
       `${entry.from} hashed ${actual}, expected ${entry.sha256} (from pyodide-lock.json). ` +
-        'Refusing to stage a wheel that does not match its pin.',
+        "Refusing to stage a wheel that does not match its pin.",
     );
   }
   return buffer;
@@ -188,7 +187,7 @@ async function resolveEntry(entry) {
 let previous = null;
 if (existsSync(manifestPath)) {
   try {
-    previous = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    previous = JSON.parse(readFileSync(manifestPath, "utf8"));
   } catch {
     previous = null;
   }
@@ -208,7 +207,7 @@ const staged = [];
 let downloaded = 0;
 for (const entry of ENTRIES) {
   const buffer = await resolveEntry(entry);
-  if (entry.source === 'cdn') downloaded += buffer.length;
+  if (entry.source === "cdn") downloaded += buffer.length;
   const name = destName(entry);
   if (buffer.length > ASSET_MAX_BYTES) {
     fail(`${name} is ${buffer.length} bytes, over the ${ASSET_MAX_BYTES} byte asset cap.`);
@@ -220,7 +219,7 @@ for (const entry of ENTRIES) {
 
 // Remove any stale files a previous, differently shaped staging left behind, so
 // dist/pyodide only ever contains the current set.
-const keep = new Set(['manifest.json', ...staged.map((f) => f.name)]);
+const keep = new Set(["manifest.json", ...staged.map((f) => f.name)]);
 for (const name of readdirSync(outDir)) {
   if (!keep.has(name)) rmSync(join(outDir, name));
 }
@@ -239,7 +238,7 @@ writeFileSync(
 const tooBig = readdirSync(outDir).filter(
   (name) => statSync(join(outDir, name)).size > ASSET_MAX_BYTES,
 );
-if (tooBig.length) fail(`these staged files exceed the 25 MiB asset cap: ${tooBig.join(', ')}`);
+if (tooBig.length) fail(`these staged files exceed the 25 MiB asset cap: ${tooBig.join(", ")}`);
 
 console.log(
   `prepare-pyodide: staged ${staged.length} files for pyodide ${pyodideVersion}, ` +

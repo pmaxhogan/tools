@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, shallowRef } from 'vue';
-import { CircleAlert, FileMusic, Music4, Radio, Trash2, X } from 'lucide-vue-next';
-import type { ToolMeta } from '@/tools/types';
-import { ToolError } from '@/tools/types';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import CopyButton from '@/components/tool/CopyButton.vue';
+import { computed, onUnmounted, ref, shallowRef } from "vue";
+import { CircleAlert, FileMusic, Music4, Radio, Trash2, X } from "lucide-vue-next";
+import type { ToolMeta } from "@/tools/types";
+import { ToolError } from "@/tools/types";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import CopyButton from "@/components/tool/CopyButton.vue";
 import {
   controllerName,
   decodeLiveMessage,
@@ -21,7 +21,7 @@ import {
   type LiveMessage,
   type MidiEvent,
   type MidiFile,
-} from '@/tools/midi-inspector/index';
+} from "@/tools/midi-inspector/index";
 
 /**
  * Bespoke panel for the MIDI inspector. Two surfaces on the same pure core:
@@ -62,25 +62,25 @@ interface MidiNavigator {
   requestMIDIAccess?: (options?: { sysex?: boolean }) => Promise<MidiAccessLike>;
 }
 
-const midiSupported = typeof navigator !== 'undefined' && 'requestMIDIAccess' in navigator;
+const midiSupported = typeof navigator !== "undefined" && "requestMIDIAccess" in navigator;
 
 /* ---------------------------------------------------------------- */
 /* mode                                                              */
 /* ---------------------------------------------------------------- */
 
-const mode = ref<'file' | 'live'>('file');
+const mode = ref<"file" | "live">("file");
 
 /* ================================================================ */
 /* FILE mode                                                        */
 /* ================================================================ */
 
-const fileName = ref('');
+const fileName = ref("");
 const fileSize = ref(0);
 const file = shallowRef<MidiFile | null>(null);
 const fileError = ref<{ message: string; fix?: string } | null>(null);
 const dragging = ref(false);
 const fileInput = ref<HTMLInputElement>();
-const middleC = ref('4');
+const middleC = ref("4");
 const selectedTrack = ref(0);
 
 /** How many event rows to render before the list is cut off, to keep it snappy. */
@@ -89,7 +89,7 @@ const MAX_EVENT_ROWS = 800;
 function humanSize(bytes: number): string {
   const n = Math.max(0, Math.round(bytes));
   if (n < 1024) return `${n} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = n / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -117,7 +117,7 @@ async function readFile(picked: File) {
     if (selectedTrack.value < 0) selectedTrack.value = 0;
   } catch (e) {
     file.value = null;
-    fileName.value = '';
+    fileName.value = "";
     fileSize.value = 0;
     fileError.value = toToolError(e);
   }
@@ -134,16 +134,16 @@ function onPickFile(e: Event) {
   const picked = picker.files?.[0];
   if (!picked) return;
   void readFile(picked).then(() => {
-    picker.value = '';
+    picker.value = "";
   });
 }
 
 function clearFile() {
   file.value = null;
-  fileName.value = '';
+  fileName.value = "";
   fileSize.value = 0;
   fileError.value = null;
-  if (fileInput.value) fileInput.value.value = '';
+  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* derived summary ------------------------------------------------- */
@@ -151,37 +151,39 @@ function clearFile() {
 const octave = computed(() => middleCOctave({ middleC: middleC.value }));
 
 const FORMAT_LABELS: Record<number, string> = {
-  0: 'single track',
-  1: 'multi track, one timeline',
-  2: 'multi track, independent patterns',
+  0: "single track",
+  1: "multi track, one timeline",
+  2: "multi track, independent patterns",
 };
 
 const summary = computed(() => {
   const f = file.value;
   if (!f) return null;
   const firstTempo = tempoMap(f)[0];
-  let timeSig = '';
-  let keySig = '';
+  let timeSig = "";
+  let keySig = "";
   for (const track of f.tracks) {
     for (const event of track.events) {
-      if (!timeSig && event.kind === 'timeSignature') {
+      if (!timeSig && event.kind === "timeSignature") {
         timeSig = `${event.numerator}/${event.denominator}`;
       }
-      if (!keySig && event.kind === 'keySignature') keySig = event.key;
+      if (!keySig && event.kind === "keySignature") keySig = event.key;
     }
   }
   return {
     format: `${f.header.format}`,
-    formatLabel: FORMAT_LABELS[f.header.format] ?? 'unknown',
+    formatLabel: FORMAT_LABELS[f.header.format] ?? "unknown",
     trackCount: f.tracks.length,
     declared: f.header.trackCount,
     division: formatDivision(f.header.division),
     notes: noteCount(f),
     duration: formatDuration(durationSeconds(f)),
-    tempo: firstTempo ? `${Math.round(firstTempo.bpm)} BPM` : 'not set',
-    tempoDetail: firstTempo ? `${firstTempo.microsecondsPerQuarter} usec/quarter` : 'defaults to 120 BPM',
-    timeSig: timeSig || '-',
-    keySig: keySig || '-',
+    tempo: firstTempo ? `${Math.round(firstTempo.bpm)} BPM` : "not set",
+    tempoDetail: firstTempo
+      ? `${firstTempo.microsecondsPerQuarter} usec/quarter`
+      : "defaults to 120 BPM",
+    timeSig: timeSig || "-",
+    keySig: keySig || "-",
     isFormat2: f.header.format === 2,
   };
 });
@@ -191,39 +193,39 @@ const activeTrack = computed(() => tracks.value[selectedTrack.value] ?? null);
 
 /** Turn a decoded event into one readable line. Presentation only; decoding is in logic. */
 function eventLine(event: MidiEvent): string {
-  const ch = 'channel' in event ? ` ch ${event.channel + 1}` : '';
+  const ch = "channel" in event ? ` ch ${event.channel + 1}` : "";
   switch (event.kind) {
-    case 'noteOn':
+    case "noteOn":
       return `note on   ${noteName(event.note, octave.value)}  vel ${event.velocity}${ch}`;
-    case 'noteOff':
+    case "noteOff":
       return `note off  ${noteName(event.note, octave.value)}${ch}`;
-    case 'polyAftertouch':
+    case "polyAftertouch":
       return `aftertouch ${noteName(event.note, octave.value)} ${event.pressure}${ch}`;
-    case 'controlChange':
+    case "controlChange":
       return `cc        ${controllerName(event.controller)} = ${event.value}${ch}`;
-    case 'programChange':
+    case "programChange":
       return `program   ${event.program}${ch}`;
-    case 'channelAftertouch':
+    case "channelAftertouch":
       return `pressure  ${event.pressure}${ch}`;
-    case 'pitchBend':
+    case "pitchBend":
       return `pitchbend ${event.value}${ch}`;
-    case 'tempo':
+    case "tempo":
       return `tempo     ${Math.round(event.bpm)} BPM`;
-    case 'timeSignature':
+    case "timeSignature":
       return `timesig   ${event.numerator}/${event.denominator}`;
-    case 'keySignature':
+    case "keySignature":
       return `keysig    ${event.key}`;
-    case 'text':
+    case "text":
       return `${event.label.toLowerCase()}: ${event.text}`;
-    case 'sequenceNumber':
+    case "sequenceNumber":
       return `sequence  ${event.number}`;
-    case 'channelPrefix':
+    case "channelPrefix":
       return `channel prefix ${event.channel + 1}`;
-    case 'portPrefix':
+    case "portPrefix":
       return `port prefix ${event.port}`;
-    case 'sysex':
+    case "sysex":
       return `sysex     ${event.byteLength} bytes`;
-    case 'endOfTrack':
+    case "endOfTrack":
       return `end of track`;
     default:
       return `meta ${event.metaType} (${event.byteLength} bytes)`;
@@ -255,8 +257,8 @@ const hiddenEventCount = computed(() => {
 /** The whole selected track as copyable text. */
 const eventListText = computed(() => {
   const track = activeTrack.value;
-  if (!track) return '';
-  return track.events.map((event) => `t${event.tick}\t${eventLine(event)}`).join('\n');
+  if (!track) return "";
+  return track.events.map((event) => `t${event.tick}\t${eventLine(event)}`).join("\n");
 });
 
 /* ================================================================ */
@@ -282,7 +284,7 @@ interface LogRow {
   time: string;
   device: string;
   text: string;
-  kind: 'note' | 'other';
+  kind: "note" | "other";
 }
 
 // Plain array, not reactive: a busy controller sends faster than the screen
@@ -312,49 +314,58 @@ const logEmpty = computed(() => visibleRows.value.length === 0);
 
 function clock(): string {
   const now = new Date();
-  const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
   return `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.${pad(now.getMilliseconds(), 3)}`;
 }
 
-function liveLine(message: LiveMessage): { text: string; kind: LogRow['kind'] } {
-  const ch = 'channel' in message ? ` ch ${message.channel + 1}` : '';
+function liveLine(message: LiveMessage): { text: string; kind: LogRow["kind"] } {
+  const ch = "channel" in message ? ` ch ${message.channel + 1}` : "";
   switch (message.kind) {
-    case 'noteOn':
-      return { text: `note on   ${noteName(message.note)}  vel ${message.velocity}${ch}`, kind: 'note' };
-    case 'noteOff':
-      return { text: `note off  ${noteName(message.note)}${ch}`, kind: 'note' };
-    case 'polyAftertouch':
-      return { text: `aftertouch ${noteName(message.note)} ${message.pressure}${ch}`, kind: 'other' };
-    case 'controlChange':
-      return { text: `cc        ${controllerName(message.controller)} = ${message.value}${ch}`, kind: 'other' };
-    case 'programChange':
-      return { text: `program   ${message.program}${ch}`, kind: 'other' };
-    case 'channelAftertouch':
-      return { text: `pressure  ${message.pressure}${ch}`, kind: 'other' };
-    case 'pitchBend':
-      return { text: `pitchbend ${message.value}${ch}`, kind: 'other' };
-    case 'sysex':
-      return { text: `sysex     ${message.byteLength} bytes`, kind: 'other' };
-    case 'songPosition':
-      return { text: `song position ${message.position}`, kind: 'other' };
-    case 'songSelect':
-      return { text: `song select ${message.song}`, kind: 'other' };
-    case 'clock':
-      return { text: `clock`, kind: 'other' };
-    case 'start':
-      return { text: `start`, kind: 'other' };
-    case 'continue':
-      return { text: `continue`, kind: 'other' };
-    case 'stop':
-      return { text: `stop`, kind: 'other' };
-    case 'activeSensing':
-      return { text: `active sensing`, kind: 'other' };
-    case 'systemReset':
-      return { text: `system reset`, kind: 'other' };
-    case 'tuneRequest':
-      return { text: `tune request`, kind: 'other' };
+    case "noteOn":
+      return {
+        text: `note on   ${noteName(message.note)}  vel ${message.velocity}${ch}`,
+        kind: "note",
+      };
+    case "noteOff":
+      return { text: `note off  ${noteName(message.note)}${ch}`, kind: "note" };
+    case "polyAftertouch":
+      return {
+        text: `aftertouch ${noteName(message.note)} ${message.pressure}${ch}`,
+        kind: "other",
+      };
+    case "controlChange":
+      return {
+        text: `cc        ${controllerName(message.controller)} = ${message.value}${ch}`,
+        kind: "other",
+      };
+    case "programChange":
+      return { text: `program   ${message.program}${ch}`, kind: "other" };
+    case "channelAftertouch":
+      return { text: `pressure  ${message.pressure}${ch}`, kind: "other" };
+    case "pitchBend":
+      return { text: `pitchbend ${message.value}${ch}`, kind: "other" };
+    case "sysex":
+      return { text: `sysex     ${message.byteLength} bytes`, kind: "other" };
+    case "songPosition":
+      return { text: `song position ${message.position}`, kind: "other" };
+    case "songSelect":
+      return { text: `song select ${message.song}`, kind: "other" };
+    case "clock":
+      return { text: `clock`, kind: "other" };
+    case "start":
+      return { text: `start`, kind: "other" };
+    case "continue":
+      return { text: `continue`, kind: "other" };
+    case "stop":
+      return { text: `stop`, kind: "other" };
+    case "activeSensing":
+      return { text: `active sensing`, kind: "other" };
+    case "systemReset":
+      return { text: `system reset`, kind: "other" };
+    case "tuneRequest":
+      return { text: `tune request`, kind: "other" };
     default:
-      return { text: `unknown status ${message.status}`, kind: 'other' };
+      return { text: `unknown status ${message.status}`, kind: "other" };
   }
 }
 
@@ -364,16 +375,23 @@ const showClock = ref(false);
 function handleMessage(deviceName: string, event: MidiMessageEventLike) {
   const data = event.data instanceof Uint8Array ? event.data : Uint8Array.from(event.data ?? []);
   const message = decodeLiveMessage(data);
-  if (!showClock.value && (message.kind === 'clock' || message.kind === 'activeSensing')) return;
+  if (!showClock.value && (message.kind === "clock" || message.kind === "activeSensing")) return;
 
   const line = liveLine(message);
   rowKey += 1;
-  logStore.push({ key: rowKey, time: clock(), device: deviceName, text: line.text, kind: line.kind });
+  logStore.push({
+    key: rowKey,
+    time: clock(),
+    device: deviceName,
+    text: line.text,
+    kind: line.kind,
+  });
   if (logStore.length > MAX_LOG) logStore.splice(0, logStore.length - MAX_LOG);
   scheduleRender();
 
-  if (playback.value && message.kind === 'noteOn') startTone(message.channel, message.note, message.velocity);
-  if (playback.value && message.kind === 'noteOff') stopTone(message.channel, message.note);
+  if (playback.value && message.kind === "noteOn")
+    startTone(message.channel, message.note, message.velocity);
+  if (playback.value && message.kind === "noteOff") stopTone(message.channel, message.note);
 }
 
 function refreshDevices() {
@@ -381,8 +399,8 @@ function refreshDevices() {
   if (!current) return;
   const list: DeviceInfo[] = [];
   for (const input of current.inputs.values()) {
-    list.push({ id: input.id, name: input.name || input.manufacturer || 'MIDI input' });
-    input.onmidimessage = (event) => handleMessage(input.name || 'MIDI input', event);
+    list.push({ id: input.id, name: input.name || input.manufacturer || "MIDI input" });
+    input.onmidimessage = (event) => handleMessage(input.name || "MIDI input", event);
   }
   devices.value = list;
 }
@@ -399,8 +417,8 @@ async function grantAccess() {
     refreshDevices();
   } catch (e) {
     liveError.value =
-      e instanceof Error && e.name === 'SecurityError'
-        ? 'MIDI access was denied. Allow it in the browser prompt, or check the site permissions and try again.'
+      e instanceof Error && e.name === "SecurityError"
+        ? "MIDI access was denied. Allow it in the browser prompt, or check the site permissions and try again."
         : `Could not start Web MIDI: ${e instanceof Error ? e.message : String(e)}.`;
   } finally {
     requesting.value = false;
@@ -415,7 +433,7 @@ function clearLog() {
 /** The live log as copyable text, newest last. */
 const logText = computed(() => {
   void revision.value;
-  return logStore.map((row) => `${row.time}\t${row.device}\t${row.text}`).join('\n');
+  return logStore.map((row) => `${row.time}\t${row.device}\t${row.text}`).join("\n");
 });
 
 /* Web Audio playback --------------------------------------------- */
@@ -433,7 +451,7 @@ function startTone(channel: number, note: number, velocity: number) {
   const freq = 440 * 2 ** ((note - 69) / 12);
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type = 'triangle';
+  osc.type = "triangle";
   osc.frequency.value = freq;
   const level = Math.min(0.3, (velocity / 127) * 0.3);
   const now = audioCtx.currentTime;
@@ -475,7 +493,7 @@ async function onTogglePlayback(next: boolean) {
   if (next) {
     // Created inside the user gesture so the autoplay policy does not suspend it.
     audioCtx ??= new AudioContext();
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    if (audioCtx.state === "suspended") await audioCtx.resume();
   } else {
     stopAllTones();
   }
@@ -510,10 +528,7 @@ onUnmounted(() => {
         :variant="mode === 'file' ? 'default' : 'ghost'"
         @click="mode = 'file'"
       >
-        <FileMusic
-          class="size-4"
-          aria-hidden="true"
-        />
+        <FileMusic class="size-4" aria-hidden="true" />
         MIDI file
       </Button>
       <Button
@@ -523,10 +538,7 @@ onUnmounted(() => {
         :variant="mode === 'live' ? 'default' : 'ghost'"
         @click="mode = 'live'"
       >
-        <Radio
-          class="size-4"
-          aria-hidden="true"
-        />
+        <Radio class="size-4" aria-hidden="true" />
         Live monitor
       </Button>
     </div>
@@ -550,26 +562,17 @@ onUnmounted(() => {
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             MIDI file
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            @click="fileInput?.click()"
-          >
-            Open a .mid file…
-          </Button>
+          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open a .mid file… </Button>
           <input
             ref="fileInput"
             type="file"
             accept=".mid,.midi,audio/midi,audio/x-midi"
             class="hidden"
             @change="onPickFile"
-          >
+          />
         </div>
 
-        <div
-          v-if="file"
-          class="px-3 pt-2 pb-3"
-        >
+        <div v-if="file" class="px-3 pt-2 pb-3">
           <span
             class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
@@ -585,13 +588,10 @@ onUnmounted(() => {
             </button>
           </span>
         </div>
-        <div
-          v-else
-          class="px-3 pt-1 pb-3"
-        >
+        <div v-else class="px-3 pt-1 pb-3">
           <p class="text-sm text-muted-foreground">
-            Drop a .mid or .midi file here, or use the button above. The file is parsed in this
-            tab: your files and inputs never leave your device.
+            Drop a .mid or .midi file here, or use the button above. The file is parsed in this tab:
+            your files and inputs never leave your device.
           </p>
         </div>
       </div>
@@ -605,30 +605,22 @@ onUnmounted(() => {
         <p class="font-medium text-destructive">
           {{ fileError.message }}
         </p>
-        <p
-          v-if="fileError.fix"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="fileError.fix" class="mt-1 text-muted-foreground">
           {{ fileError.fix }}
         </p>
       </div>
 
       <!-- Empty helper -->
-      <p
-        v-if="!file && !fileError"
-        class="text-sm text-muted-foreground"
-      >
-        Load a Standard MIDI File to see its header, tracks, tempo and event list. Nothing plays
-        or uploads: this reads the bytes and shows you what is inside.
+      <p v-if="!file && !fileError" class="text-sm text-muted-foreground">
+        Load a Standard MIDI File to see its header, tracks, tempo and event list. Nothing plays or
+        uploads: this reads the bytes and shows you what is inside.
       </p>
 
       <!-- Summary -->
       <template v-if="file && summary">
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
-            <div class="text-xs text-muted-foreground">
-              Format
-            </div>
+            <div class="text-xs text-muted-foreground">Format</div>
             <div class="font-mono text-lg tabular-nums">
               {{ summary.format }}
             </div>
@@ -637,9 +629,7 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
-            <div class="text-xs text-muted-foreground">
-              Tracks
-            </div>
+            <div class="text-xs text-muted-foreground">Tracks</div>
             <div class="font-mono text-lg tabular-nums">
               {{ summary.trackCount }}
             </div>
@@ -651,31 +641,22 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
-            <div class="text-xs text-muted-foreground">
-              Notes
-            </div>
+            <div class="text-xs text-muted-foreground">Notes</div>
             <div class="font-mono text-lg tabular-nums">
               {{ summary.notes }}
             </div>
           </div>
           <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
-            <div class="text-xs text-muted-foreground">
-              Duration
-            </div>
+            <div class="text-xs text-muted-foreground">Duration</div>
             <div class="font-mono text-lg tabular-nums">
               {{ summary.duration }}
             </div>
-            <div
-              v-if="summary.isFormat2"
-              class="text-xs text-muted-foreground"
-            >
+            <div v-if="summary.isFormat2" class="text-xs text-muted-foreground">
               approx (format 2)
             </div>
           </div>
           <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
-            <div class="text-xs text-muted-foreground">
-              Tempo
-            </div>
+            <div class="text-xs text-muted-foreground">Tempo</div>
             <div class="font-mono text-lg tabular-nums">
               {{ summary.tempo }}
             </div>
@@ -684,9 +665,7 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
-            <div class="text-xs text-muted-foreground">
-              Time / key
-            </div>
+            <div class="text-xs text-muted-foreground">Time / key</div>
             <div class="font-mono text-lg tabular-nums">
               {{ summary.timeSig }}
             </div>
@@ -699,24 +678,15 @@ onUnmounted(() => {
         <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span>{{ summary.division }}</span>
           <span class="flex items-center gap-2">
-            <Label
-              for="midi-octave"
-              class="text-xs text-muted-foreground"
-            >Middle C</Label>
+            <Label for="midi-octave" class="text-xs text-muted-foreground">Middle C</Label>
             <select
               id="midi-octave"
               v-model="middleC"
               class="rounded-[8px] border bg-card px-2 py-1 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <option value="3">
-                C3 = 60
-              </option>
-              <option value="4">
-                C4 = 60
-              </option>
-              <option value="5">
-                C5 = 60
-              </option>
+              <option value="3">C3 = 60</option>
+              <option value="4">C4 = 60</option>
+              <option value="5">C5 = 60</option>
             </select>
           </span>
         </div>
@@ -750,19 +720,14 @@ onUnmounted(() => {
               <span class="font-mono text-sm">
                 {{ activeTrack?.name || `Track ${selectedTrack + 1}` }}
               </span>
-              <CopyButton
-                :text="eventListText"
-                label="Copy events"
-              />
+              <CopyButton :text="eventListText" label="Copy events" />
             </div>
-            <div class="max-h-[28rem] overflow-auto rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
+            <div
+              class="max-h-[28rem] overflow-auto rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
+            >
               <table class="w-full border-collapse text-xs">
                 <tbody class="divide-y divide-border/60">
-                  <tr
-                    v-for="row in eventRows"
-                    :key="row.key"
-                    class="align-top hover:bg-card/70"
-                  >
+                  <tr v-for="row in eventRows" :key="row.key" class="align-top hover:bg-card/70">
                     <td class="px-3 py-1 text-right font-mono text-muted-foreground tabular-nums">
                       {{ row.tick }}
                     </td>
@@ -771,20 +736,14 @@ onUnmounted(() => {
                     </td>
                   </tr>
                   <tr v-if="eventRows.length === 0">
-                    <td
-                      colspan="2"
-                      class="px-3 py-6 text-center text-sm text-muted-foreground"
-                    >
+                    <td colspan="2" class="px-3 py-6 text-center text-sm text-muted-foreground">
                       This track has no events.
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <p
-              v-if="hiddenEventCount > 0"
-              class="text-xs text-muted-foreground"
-            >
+            <p v-if="hiddenEventCount > 0" class="text-xs text-muted-foreground">
               Showing the first {{ MAX_EVENT_ROWS }} events. {{ hiddenEventCount }} more are in the
               copied list.
             </p>
@@ -805,14 +764,9 @@ onUnmounted(() => {
         v-if="!midiSupported"
         class="flex items-start gap-3 rounded-[10px] bg-secondary px-4 py-3 shadow-[var(--sh-inset)]"
       >
-        <CircleAlert
-          class="mt-0.5 size-5 shrink-0 text-muted-foreground"
-          aria-hidden="true"
-        />
+        <CircleAlert class="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
         <div class="text-sm">
-          <p class="font-medium">
-            This browser does not expose the Web MIDI API.
-          </p>
+          <p class="font-medium">This browser does not expose the Web MIDI API.</p>
           <p class="mt-1 text-muted-foreground">
             The live monitor needs Web MIDI, which Chromium browsers like Chrome and Edge support,
             and Firefox behind a flag. The MIDI file inspector on the other tab works here without
@@ -823,43 +777,26 @@ onUnmounted(() => {
 
       <template v-else>
         <div class="flex flex-wrap items-center gap-3">
-          <Button
-            v-if="!access"
-            :disabled="requesting"
-            @click="grantAccess"
-          >
-            <Music4
-              class="size-4"
-              aria-hidden="true"
-            />
-            {{ requesting ? 'Waiting for permission…' : 'Connect MIDI devices' }}
+          <Button v-if="!access" :disabled="requesting" @click="grantAccess">
+            <Music4 class="size-4" aria-hidden="true" />
+            {{ requesting ? "Waiting for permission…" : "Connect MIDI devices" }}
           </Button>
 
           <template v-else>
             <span class="text-sm text-muted-foreground">
               {{ devices.length }}
-              {{ devices.length === 1 ? 'input connected' : 'inputs connected' }}
+              {{ devices.length === 1 ? "input connected" : "inputs connected" }}
             </span>
             <label class="flex cursor-pointer items-center gap-2 text-sm">
-              <Switch
-                :model-value="playback"
-                @update:model-value="onTogglePlayback"
-              />
+              <Switch :model-value="playback" @update:model-value="onTogglePlayback" />
               Play notes
             </label>
             <label class="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
               <Switch v-model="showClock" />
               Show clock
             </label>
-            <CopyButton
-              :text="logText"
-              label="Copy log"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              @click="clearLog"
-            >
+            <CopyButton :text="logText" label="Copy log" />
+            <Button variant="outline" size="sm" @click="clearLog">
               <Trash2 class="size-3.5" />
               Clear
             </Button>
@@ -875,10 +812,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Device chips -->
-        <div
-          v-if="access"
-          class="flex flex-wrap gap-2"
-        >
+        <div v-if="access" class="flex flex-wrap gap-2">
           <span
             v-for="device in devices"
             :key="device.id"
@@ -887,10 +821,7 @@ onUnmounted(() => {
             <Radio class="size-3" />
             {{ device.name }}
           </span>
-          <span
-            v-if="devices.length === 0"
-            class="text-sm text-muted-foreground"
-          >
+          <span v-if="devices.length === 0" class="text-sm text-muted-foreground">
             No input devices found. Plug in a MIDI keyboard or interface, and it will appear here.
           </span>
         </div>
@@ -900,17 +831,11 @@ onUnmounted(() => {
           v-if="access"
           class="max-h-[26rem] overflow-auto rounded-[10px] bg-secondary p-3 font-mono text-xs shadow-[var(--sh-inset)]"
         >
-          <p
-            v-if="logEmpty"
-            class="text-muted-foreground"
-          >
+          <p v-if="logEmpty" class="text-muted-foreground">
             Play a note on a connected device to see messages here.
           </p>
           <template v-else>
-            <p
-              v-if="hiddenLogCount > 0"
-              class="mb-1 text-muted-foreground"
-            >
+            <p v-if="hiddenLogCount > 0" class="mb-1 text-muted-foreground">
               {{ hiddenLogCount }} earlier messages scrolled off.
             </p>
             <div
@@ -920,7 +845,9 @@ onUnmounted(() => {
               :class="row.kind === 'note' ? 'text-foreground' : 'text-muted-foreground'"
             >
               <span class="shrink-0 tabular-nums text-muted-foreground">{{ row.time }}</span>
-              <span class="shrink-0 truncate text-muted-foreground max-w-[8rem]">{{ row.device }}</span>
+              <span class="shrink-0 truncate text-muted-foreground max-w-[8rem]">{{
+                row.device
+              }}</span>
               <span class="break-words whitespace-pre-wrap">{{ row.text }}</span>
             </div>
           </template>

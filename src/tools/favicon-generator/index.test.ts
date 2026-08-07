@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { ToolError } from '../types';
-import { buildIco, buildLinkTags, buildManifest, readPngSize, run } from './index';
+import { describe, expect, it } from "vitest";
+import { ToolError } from "../types";
+import { buildIco, buildLinkTags, buildManifest, readPngSize, run } from "./index";
 
 /** Real 8x8 RGBA PNG (75 bytes), produced with node zlib and inlined. */
 const PNG_8x8 = new Uint8Array([
@@ -20,11 +20,11 @@ const PNG_16x8 = new Uint8Array([
 
 /** Real 256x256 RGBA PNG (334 bytes), base64 to keep the fixture readable. */
 const PNG_256 = decodeBase64(
-  'iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAABFUlEQVR42u3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAA' +
-    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBPAAB2ClDBAAAAABJRU5ErkJggg==',
+  "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAABFUlEQVR42u3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAA" +
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBPAAB2ClDBAAAAABJRU5ErkJggg==",
 );
 
 function decodeBase64(b64: string): Uint8Array {
@@ -32,7 +32,7 @@ function decodeBase64(b64: string): Uint8Array {
   return Uint8Array.from(binary, (c) => c.charCodeAt(0));
 }
 
-const OPTS = { appName: 'My App', themeColor: '#5B4BD6', bgColor: '#ffffff' };
+const OPTS = { appName: "My App", themeColor: "#5B4BD6", bgColor: "#ffffff" };
 
 const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 
@@ -57,28 +57,28 @@ function parseIco(ico: Uint8Array) {
   return { reserved: view.getUint16(0, true), type: view.getUint16(2, true), count, entries };
 }
 
-describe('favicon-generator: readPngSize', () => {
-  it('reads dimensions out of the IHDR', () => {
+describe("favicon-generator: readPngSize", () => {
+  it("reads dimensions out of the IHDR", () => {
     expect(readPngSize(PNG_8x8)).toEqual({ width: 8, height: 8 });
     expect(readPngSize(PNG_16x8)).toEqual({ width: 16, height: 8 });
     expect(readPngSize(PNG_256)).toEqual({ width: 256, height: 256 });
   });
 
-  it('rejects bytes without the PNG signature', () => {
+  it("rejects bytes without the PNG signature", () => {
     const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16, 74, 70, 73, 70, 0]);
     expect(() => readPngSize(jpeg)).toThrowError(ToolError);
     try {
       readPngSize(jpeg);
     } catch (e) {
-      expect((e as ToolError).code).toBe('invalid-png');
+      expect((e as ToolError).code).toBe("invalid-png");
     }
   });
 
-  it('rejects a truncated PNG', () => {
+  it("rejects a truncated PNG", () => {
     expect(() => readPngSize(PNG_8x8.subarray(0, 20))).toThrowError(/truncated/);
   });
 
-  it('rejects a header whose first chunk is not IHDR', () => {
+  it("rejects a header whose first chunk is not IHDR", () => {
     const broken = PNG_8x8.slice();
     broken[12] = 73;
     broken[13] = 69;
@@ -87,15 +87,15 @@ describe('favicon-generator: readPngSize', () => {
     expect(() => readPngSize(broken)).toThrowError(/IHDR/);
   });
 
-  it('rejects zero dimensions', () => {
+  it("rejects zero dimensions", () => {
     const zeroed = PNG_8x8.slice();
     zeroed[19] = 0; // width low byte -> width 0
     expect(() => readPngSize(zeroed)).toThrowError(/zero/);
   });
 });
 
-describe('favicon-generator: buildIco', () => {
-  it('writes an ICONDIR with the reserved/type/count header', () => {
+describe("favicon-generator: buildIco", () => {
+  it("writes an ICONDIR with the reserved/type/count header", () => {
     const ico = buildIco([{ size: 32, png: PNG_8x8 }]);
     expect([...ico.subarray(0, 4)]).toEqual([0x00, 0x00, 0x01, 0x00]);
     const parsed = parseIco(ico);
@@ -104,7 +104,7 @@ describe('favicon-generator: buildIco', () => {
     expect(parsed.count).toBe(1);
   });
 
-  it('points every entry at exactly its own PNG blob', () => {
+  it("points every entry at exactly its own PNG blob", () => {
     const images = [
       { size: 16, png: PNG_8x8 },
       { size: 32, png: PNG_16x8 },
@@ -134,7 +134,7 @@ describe('favicon-generator: buildIco', () => {
     expect(expectedOffset).toBe(ico.length);
   });
 
-  it('encodes 16 and 32 literally but 256 as a zero byte', () => {
+  it("encodes 16 and 32 literally but 256 as a zero byte", () => {
     const parsed = parseIco(
       buildIco([
         { size: 16, png: PNG_8x8 },
@@ -146,57 +146,57 @@ describe('favicon-generator: buildIco', () => {
     expect(parsed.entries.map((e) => e.heightByte)).toEqual([16, 32, 0]);
   });
 
-  it('rejects sizes above 256', () => {
+  it("rejects sizes above 256", () => {
     expect(() => buildIco([{ size: 512, png: PNG_8x8 }])).toThrowError(ToolError);
     try {
       buildIco([{ size: 512, png: PNG_8x8 }]);
     } catch (e) {
-      expect((e as ToolError).code).toBe('too-large-for-ico');
+      expect((e as ToolError).code).toBe("too-large-for-ico");
       expect((e as ToolError).fix).toMatch(/standalone PNG/);
     }
   });
 
-  it('rejects nonsense sizes', () => {
+  it("rejects nonsense sizes", () => {
     try {
       buildIco([{ size: 0, png: PNG_8x8 }]);
-      throw new Error('should have thrown');
+      throw new Error("should have thrown");
     } catch (e) {
-      expect((e as ToolError).code).toBe('invalid-ico-size');
+      expect((e as ToolError).code).toBe("invalid-ico-size");
     }
   });
 
-  it('rejects an empty image list', () => {
+  it("rejects an empty image list", () => {
     try {
       buildIco([]);
-      throw new Error('should have thrown');
+      throw new Error("should have thrown");
     } catch (e) {
-      expect((e as ToolError).code).toBe('no-images');
+      expect((e as ToolError).code).toBe("no-images");
     }
   });
 });
 
-describe('favicon-generator: buildManifest and buildLinkTags', () => {
-  it('emits parseable manifest JSON with two icon entries', () => {
+describe("favicon-generator: buildManifest and buildLinkTags", () => {
+  it("emits parseable manifest JSON with two icon entries", () => {
     const parsed = JSON.parse(
       buildManifest({
-        name: 'Acme Dashboard',
-        shortName: 'Acme',
-        themeColor: '#5b4bd6',
-        bgColor: '#ffffff',
+        name: "Acme Dashboard",
+        shortName: "Acme",
+        themeColor: "#5b4bd6",
+        bgColor: "#ffffff",
       }),
     );
-    expect(parsed.name).toBe('Acme Dashboard');
-    expect(parsed.short_name).toBe('Acme');
-    expect(parsed.display).toBe('standalone');
-    expect(parsed.theme_color).toBe('#5b4bd6');
-    expect(parsed.background_color).toBe('#ffffff');
+    expect(parsed.name).toBe("Acme Dashboard");
+    expect(parsed.short_name).toBe("Acme");
+    expect(parsed.display).toBe("standalone");
+    expect(parsed.theme_color).toBe("#5b4bd6");
+    expect(parsed.background_color).toBe("#ffffff");
     expect(parsed.icons).toHaveLength(2);
-    expect(parsed.icons.map((i: { sizes: string }) => i.sizes)).toEqual(['192x192', '512x512']);
-    expect(parsed.icons.every((i: { type: string }) => i.type === 'image/png')).toBe(true);
+    expect(parsed.icons.map((i: { sizes: string }) => i.sizes)).toEqual(["192x192", "512x512"]);
+    expect(parsed.icons.every((i: { type: string }) => i.type === "image/png")).toBe(true);
   });
 
-  it('emits the ico, png, apple touch, manifest and theme-color tags', () => {
-    const tags = buildLinkTags({ themeColor: '#5b4bd6' });
+  it("emits the ico, png, apple touch, manifest and theme-color tags", () => {
+    const tags = buildLinkTags({ themeColor: "#5b4bd6" });
     expect(tags).toContain('rel="manifest"');
     expect(tags).toContain('href="/favicon.ico"');
     expect(tags).toContain('sizes="180x180"');
@@ -207,27 +207,27 @@ describe('favicon-generator: buildManifest and buildLinkTags', () => {
   });
 });
 
-describe('favicon-generator: run', () => {
-  it('produces every expected row for a good square source', async () => {
+describe("favicon-generator: run", () => {
+  it("produces every expected row for a good square source", async () => {
     const out = await run(PNG_256, OPTS);
     expect(Object.keys(out)).toEqual([
-      'Source',
-      'favicon.ico',
-      'site.webmanifest',
-      'Link tags',
-      'Next step',
+      "Source",
+      "favicon.ico",
+      "site.webmanifest",
+      "Link tags",
+      "Next step",
     ]);
-    expect(out.Source).toBe('256 x 256 PNG, 334 bytes');
+    expect(out.Source).toBe("256 x 256 PNG, 334 bytes");
     expect(out.Warning).toBeUndefined();
-    expect(out['Next step']).toMatch(/editor panel/);
+    expect(out["Next step"]).toMatch(/editor panel/);
   });
 
-  it('returns an ico data URL that decodes back to a real ICO', async () => {
+  it("returns an ico data URL that decodes back to a real ICO", async () => {
     const out = await run(PNG_256, OPTS);
-    const url = out['favicon.ico']!;
-    expect(url.startsWith('data:image/x-icon;base64,')).toBe(true);
+    const url = out["favicon.ico"]!;
+    expect(url.startsWith("data:image/x-icon;base64,")).toBe(true);
 
-    const ico = decodeBase64(url.slice('data:image/x-icon;base64,'.length));
+    const ico = decodeBase64(url.slice("data:image/x-icon;base64,".length));
     expect([...ico.subarray(0, 4)]).toEqual([0x00, 0x00, 0x01, 0x00]);
 
     const parsed = parseIco(ico);
@@ -239,60 +239,60 @@ describe('favicon-generator: run', () => {
     expect([...blob]).toEqual([...PNG_256]);
   });
 
-  it('threads the options through the manifest and link tags', async () => {
+  it("threads the options through the manifest and link tags", async () => {
     const out = await run(PNG_256, {
-      appName: 'Acme',
-      themeColor: '5B4BD6',
-      bgColor: '#FFF',
+      appName: "Acme",
+      themeColor: "5B4BD6",
+      bgColor: "#FFF",
     });
-    const manifest = JSON.parse(out['site.webmanifest']!);
-    expect(manifest.name).toBe('Acme');
-    expect(manifest.short_name).toBe('Acme');
-    expect(manifest.theme_color).toBe('#5b4bd6');
-    expect(manifest.background_color).toBe('#fff');
-    expect(out['Link tags']).toContain('content="#5b4bd6"');
+    const manifest = JSON.parse(out["site.webmanifest"]!);
+    expect(manifest.name).toBe("Acme");
+    expect(manifest.short_name).toBe("Acme");
+    expect(manifest.theme_color).toBe("#5b4bd6");
+    expect(manifest.background_color).toBe("#fff");
+    expect(out["Link tags"]).toContain('content="#5b4bd6"');
   });
 
-  it('warns about a non-square source but still generates files', async () => {
+  it("warns about a non-square source but still generates files", async () => {
     const out = await run(PNG_16x8, OPTS);
     expect(out.Warning).toMatch(/not square/);
-    expect(out.Source).toBe('16 x 8 PNG, 78 bytes');
-    expect(out['favicon.ico']).toMatch(/^data:image\/x-icon;base64,/);
+    expect(out.Source).toBe("16 x 8 PNG, 78 bytes");
+    expect(out["favicon.ico"]).toMatch(/^data:image\/x-icon;base64,/);
   });
 
-  it('warns about a small source', async () => {
+  it("warns about a small source", async () => {
     const out = await run(PNG_8x8, OPTS);
     expect(out.Warning).toMatch(/8 pixels on its short side/);
     expect(out.Warning).not.toMatch(/not square/);
   });
 
-  it('rejects non-PNG bytes with png-only', async () => {
+  it("rejects non-PNG bytes with png-only", async () => {
     const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16, 74, 70, 73, 70, 0, 1]);
     await expect(run(jpeg, OPTS)).rejects.toThrowError(ToolError);
-    await expect(run(jpeg, OPTS)).rejects.toMatchObject({ code: 'png-only' });
+    await expect(run(jpeg, OPTS)).rejects.toMatchObject({ code: "png-only" });
   });
 
-  it('rejects text input with not-an-image', async () => {
-    await expect(run('hello world', OPTS)).rejects.toMatchObject({ code: 'not-an-image' });
+  it("rejects text input with not-an-image", async () => {
+    await expect(run("hello world", OPTS)).rejects.toMatchObject({ code: "not-an-image" });
   });
 
-  it('rejects empty input', async () => {
-    await expect(run('', OPTS)).rejects.toMatchObject({ code: 'empty-input' });
-    await expect(run(new Uint8Array(0), OPTS)).rejects.toMatchObject({ code: 'empty-input' });
+  it("rejects empty input", async () => {
+    await expect(run("", OPTS)).rejects.toMatchObject({ code: "empty-input" });
+    await expect(run(new Uint8Array(0), OPTS)).rejects.toMatchObject({ code: "empty-input" });
   });
 
-  it('rejects nonsense colors', async () => {
-    await expect(run(PNG_256, { ...OPTS, themeColor: 'blurple' })).rejects.toMatchObject({
-      code: 'bad-color',
+  it("rejects nonsense colors", async () => {
+    await expect(run(PNG_256, { ...OPTS, themeColor: "blurple" })).rejects.toMatchObject({
+      code: "bad-color",
     });
-    await expect(run(PNG_256, { ...OPTS, bgColor: '#12345' })).rejects.toMatchObject({
-      code: 'bad-color',
+    await expect(run(PNG_256, { ...OPTS, bgColor: "#12345" })).rejects.toMatchObject({
+      code: "bad-color",
     });
   });
 
-  it('surfaces a corrupt PNG header as invalid-png', async () => {
+  it("surfaces a corrupt PNG header as invalid-png", async () => {
     await expect(run(PNG_8x8.subarray(0, 18), OPTS)).rejects.toMatchObject({
-      code: 'invalid-png',
+      code: "invalid-png",
     });
   });
 });

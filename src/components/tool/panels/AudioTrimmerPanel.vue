@@ -8,22 +8,22 @@
  * includes the `File` object itself, so this panel builds the preview object
  * URL straight from that event instead of owning any file selection UI.
  */
-import { computed, onUnmounted, ref } from 'vue';
-import type { ToolMeta } from '@/tools/types';
-import type { MediaBuildArgs } from '@/lib/ffmpeg';
-import { buildTrimArgs, parseTimeSpec, type AudioFormat } from '@/tools/audio-trimmer/index';
-import MediaShell from '../MediaShell.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { computed, onUnmounted, ref } from "vue";
+import type { ToolMeta } from "@/tools/types";
+import type { MediaBuildArgs } from "@/lib/ffmpeg";
+import { buildTrimArgs, parseTimeSpec, type AudioFormat } from "@/tools/audio-trimmer/index";
+import MediaShell from "../MediaShell.vue";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -31,19 +31,19 @@ defineProps<{ meta: ToolMeta }>();
 /* option state                                                      */
 /* ---------------------------------------------------------------- */
 
-const start = ref('');
-const end = ref('');
+const start = ref("");
+const end = ref("");
 const fadeIn = ref(0);
 const fadeOut = ref(0);
 const normalize = ref(false);
-const format = ref<AudioFormat>('same');
+const format = ref<AudioFormat>("same");
 
 const FORMAT_CHOICES: { value: AudioFormat; label: string }[] = [
-  { value: 'same', label: 'Same as source' },
-  { value: 'mp3', label: 'MP3' },
-  { value: 'm4a', label: 'M4A (AAC)' },
-  { value: 'wav', label: 'WAV' },
-  { value: 'ogg', label: 'OGG (Vorbis)' },
+  { value: "same", label: "Same as source" },
+  { value: "mp3", label: "MP3" },
+  { value: "m4a", label: "M4A (AAC)" },
+  { value: "wav", label: "WAV" },
+  { value: "ogg", label: "OGG (Vorbis)" },
 ];
 
 /* ---------------------------------------------------------------- */
@@ -51,14 +51,14 @@ const FORMAT_CHOICES: { value: AudioFormat; label: string }[] = [
 /* ---------------------------------------------------------------- */
 
 const previewUrl = ref<string | null>(null);
-const previewName = ref('');
+const previewName = ref("");
 const duration = ref<number | null>(null);
 const audioEl = ref<HTMLAudioElement>();
 
 function revokePreview() {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = null;
-  previewName.value = '';
+  previewName.value = "";
   duration.value = null;
 }
 
@@ -85,19 +85,19 @@ function formatDuration(sec: number): string {
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
-  const ss = String(s).padStart(2, '0');
-  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
 }
 
 const endPlaceholder = computed(() =>
-  duration.value !== null ? `Full length (${formatDuration(duration.value)})` : 'End of file'
+  duration.value !== null ? `Full length (${formatDuration(duration.value)})` : "End of file",
 );
 
-function useCurrentTime(target: 'start' | 'end') {
+function useCurrentTime(target: "start" | "end") {
   const el = audioEl.value;
   if (!el) return;
   const t = el.currentTime.toFixed(2);
-  if (target === 'start') start.value = t;
+  if (target === "start") start.value = t;
   else end.value = t;
 }
 
@@ -115,7 +115,7 @@ const opts = computed(() => ({
   durationSec: duration.value,
 }));
 
-const TIME_HELP = 'Use seconds like 12.5, mm:ss like 1:23, or hh:mm:ss.mmm like 01:23:45.678.';
+const TIME_HELP = "Use seconds like 12.5, mm:ss like 1:23, or hh:mm:ss.mmm like 01:23:45.678.";
 
 const buildArgs: MediaBuildArgs = (ctx) => {
   const o = ctx.opts as {
@@ -151,7 +151,7 @@ const buildArgs: MediaBuildArgs = (ctx) => {
     format: o.format,
   });
 
-  if ('error' in built) return { error: built.error, fix: built.fix };
+  if ("error" in built) return { error: built.error, fix: built.fix };
   return built;
 };
 
@@ -187,7 +187,8 @@ onUnmounted(revokePreview);
             @loadedmetadata="onPreviewLoadedMetadata"
           />
           <p class="text-xs text-muted-foreground tabular-nums">
-            {{ previewName }}<template v-if="duration !== null">
+            {{ previewName
+            }}<template v-if="duration !== null">
               &nbsp;&middot; {{ formatDuration(duration) }}
             </template>
           </p>
@@ -200,10 +201,7 @@ onUnmounted(revokePreview);
           </span>
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-36 flex-col gap-1.5">
-              <Label
-                for="trim-start"
-                class="text-xs text-muted-foreground"
-              >Start</Label>
+              <Label for="trim-start" class="text-xs text-muted-foreground">Start</Label>
               <Input
                 id="trim-start"
                 :model-value="start"
@@ -223,10 +221,7 @@ onUnmounted(revokePreview);
           </div>
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-36 flex-col gap-1.5">
-              <Label
-                for="trim-end"
-                class="text-xs text-muted-foreground"
-              >End</Label>
+              <Label for="trim-end" class="text-xs text-muted-foreground">End</Label>
               <Input
                 id="trim-end"
                 :model-value="end"
@@ -245,8 +240,8 @@ onUnmounted(revokePreview);
             </Button>
           </div>
           <p class="text-xs text-muted-foreground">
-            Leave either field blank to keep the start or the end of the file as is. Times
-            accept plain seconds, mm:ss, or hh:mm:ss.mmm.
+            Leave either field blank to keep the start or the end of the file as is. Times accept
+            plain seconds, mm:ss, or hh:mm:ss.mmm.
           </p>
         </div>
 
@@ -257,10 +252,7 @@ onUnmounted(revokePreview);
           </span>
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-28 flex-col gap-1.5">
-              <Label
-                for="fade-in"
-                class="text-xs text-muted-foreground"
-              >Fade in (sec)</Label>
+              <Label for="fade-in" class="text-xs text-muted-foreground">Fade in (sec)</Label>
               <Input
                 id="fade-in"
                 type="number"
@@ -273,10 +265,7 @@ onUnmounted(revokePreview);
               />
             </div>
             <div class="flex w-28 flex-col gap-1.5">
-              <Label
-                for="fade-out"
-                class="text-xs text-muted-foreground"
-              >Fade out (sec)</Label>
+              <Label for="fade-out" class="text-xs text-muted-foreground">Fade out (sec)</Label>
               <Input
                 id="fade-out"
                 type="number"
@@ -303,25 +292,17 @@ onUnmounted(revokePreview);
                 :model-value="normalize"
                 @update:model-value="(v) => (normalize = Boolean(v))"
               />
-              <Label
-                for="normalize"
-                class="text-xs text-muted-foreground"
-              >Normalize loudness</Label>
+              <Label for="normalize" class="text-xs text-muted-foreground"
+                >Normalize loudness</Label
+              >
             </div>
             <div class="flex w-44 flex-col gap-1.5">
-              <Label
-                for="output-format"
-                class="text-xs text-muted-foreground"
-              >Format</Label>
+              <Label for="output-format" class="text-xs text-muted-foreground">Format</Label>
               <Select
                 :model-value="format"
                 @update:model-value="(v) => (format = v as AudioFormat)"
               >
-                <SelectTrigger
-                  id="output-format"
-                  size="sm"
-                  class="w-full bg-card"
-                >
+                <SelectTrigger id="output-format" size="sm" class="w-full bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -342,10 +323,10 @@ onUnmounted(revokePreview);
 
     <template #notes>
       <p class="text-xs text-muted-foreground">
-        Normalize targets minus 16 LUFS integrated loudness, the level streaming platforms use,
-        so the trimmed clip is not noticeably quieter or louder than everything else. Fade in
-        and fade out are both in seconds and are measured from the start and end of the trimmed
-        clip, not the original file.
+        Normalize targets minus 16 LUFS integrated loudness, the level streaming platforms use, so
+        the trimmed clip is not noticeably quieter or louder than everything else. Fade in and fade
+        out are both in seconds and are measured from the start and end of the trimmed clip, not the
+        original file.
       </p>
     </template>
   </MediaShell>

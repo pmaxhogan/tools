@@ -15,13 +15,13 @@ export interface FragmentState {
 }
 
 export function readFragment(): FragmentState {
-  const hash = window.location.hash.replace(/^#/, '');
+  const hash = window.location.hash.replace(/^#/, "");
   if (!hash) return { opts: {} };
   const params = new URLSearchParams(hash);
   const opts: Record<string, string> = {};
   let input: string | undefined;
   for (const [k, v] of params) {
-    if (k === 'i') input = v;
+    if (k === "i") input = v;
     else opts[k] = v;
   }
   return { input, opts };
@@ -29,9 +29,9 @@ export function readFragment(): FragmentState {
 
 export function writeFragment(state: FragmentState): void {
   const params = new URLSearchParams();
-  if (state.input && state.input.length <= MAX_FRAGMENT_INPUT) params.set('i', state.input);
+  if (state.input && state.input.length <= MAX_FRAGMENT_INPUT) params.set("i", state.input);
   for (const [k, v] of Object.entries(state.opts)) params.set(k, v);
   const next = params.toString();
   // replaceState keeps back-button behavior sane while typing.
-  history.replaceState(null, '', next ? `#${next}` : window.location.pathname);
+  history.replaceState(null, "", next ? `#${next}` : window.location.pathname);
 }

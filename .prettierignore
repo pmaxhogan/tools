@@ -1,0 +1,11 @@
+# Generated build output and vendored engine bundles. Never hand-formatted.
+dist/
+dist-worker-check/
+.astro/
+.wrangler/
+node_modules/
+package-lock.json
+public/ffmpeg/
+public/models/
+public/pyodide/
+public/tesseract/

@@ -64,10 +64,10 @@
  * PanelHost gates unsupported browsers through CapabilityGate first (the tool
  * declares `requires: ['fs-access']`).
  */
-import { computed, onMounted, ref, shallowRef } from 'vue';
-import { Download, FolderOpen, RotateCw, TriangleAlert } from 'lucide-vue-next';
-import type { ToolMeta } from '@/tools/types';
-import { ToolError } from '@/tools/types';
+import { computed, onMounted, ref, shallowRef } from "vue";
+import { Download, FolderOpen, RotateCw, TriangleAlert } from "lucide-vue-next";
+import type { ToolMeta } from "@/tools/types";
+import { ToolError } from "@/tools/types";
 import {
   executeWriteOps,
   isFsAccessSupported,
@@ -82,16 +82,16 @@ import {
   type FsScan,
   type WriteOp,
   type WritePlan,
-} from '@/lib/fs-access';
-import { Button } from '@/components/ui/button';
+} from "@/lib/fs-access";
+import { Button } from "@/components/ui/button";
 
 const props = withDefaults(
   defineProps<{
     meta: ToolMeta;
-    mode: 'read' | 'readwrite';
+    mode: "read" | "readwrite";
     scanOnPick?: boolean;
   }>(),
-  { scanOnPick: true }
+  { scanOnPick: true },
 );
 
 const emit = defineEmits<{
@@ -133,7 +133,7 @@ let resolveConfirm: ((ok: boolean) => void) | null = null;
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB', 'TB'];
+  const units = ["KB", "MB", "GB", "TB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -149,19 +149,19 @@ function plural(count: number, one: string, many: string): string {
 
 const summary = computed(() => {
   const current = scan.value;
-  if (!current) return '';
-  const parts = [plural(current.fileCount, 'file', 'files'), humanSize(current.totalBytes)];
+  if (!current) return "";
+  const parts = [plural(current.fileCount, "file", "files"), humanSize(current.totalBytes)];
   if (current.directories.length) {
-    parts.splice(1, 0, plural(current.directories.length, 'folder', 'folders'));
+    parts.splice(1, 0, plural(current.directories.length, "folder", "folders"));
   }
-  return parts.join(' · ');
+  return parts.join(" · ");
 });
 
 /** One change, in a line a person can check. */
 function describeOp(op: WriteOp): string {
-  if (op.op === 'rename') return `Rename  ${op.from}  ->  ${op.to}`;
-  if (op.op === 'writeFile') {
-    const size = typeof op.data === 'string' ? op.data.length : op.data.byteLength;
+  if (op.op === "rename") return `Rename  ${op.from}  ->  ${op.to}`;
+  if (op.op === "writeFile") {
+    const size = typeof op.data === "string" ? op.data.length : op.data.byteLength;
     return `Write   ${op.path}  (${humanSize(size)})`;
   }
   return `Delete  ${op.path}`;
@@ -173,9 +173,9 @@ const pendingCounts = computed(() => {
   const counts = { rename: 0, writeFile: 0, delete: 0 };
   for (const op of plan.ops) counts[op.op] += 1;
   const out: string[] = [];
-  if (counts.rename) out.push(plural(counts.rename, 'rename', 'renames'));
-  if (counts.writeFile) out.push(plural(counts.writeFile, 'file written', 'files written'));
-  if (counts.delete) out.push(plural(counts.delete, 'deletion', 'deletions'));
+  if (counts.rename) out.push(plural(counts.rename, "rename", "renames"));
+  if (counts.writeFile) out.push(plural(counts.writeFile, "file written", "files written"));
+  if (counts.delete) out.push(plural(counts.delete, "deletion", "deletions"));
   return out;
 });
 
@@ -185,14 +185,14 @@ const pendingExtra = computed(() => Math.max(0, (pending.value?.ops.length ?? 0)
 
 const resultLine = computed(() => {
   const result = lastResult.value;
-  if (!result) return '';
+  if (!result) return "";
   const applied = result.dryRun
-    ? `${plural(result.done.length, 'change', 'changes')} checked, nothing written`
-    : `${plural(result.done.length, 'change', 'changes')} applied`;
+    ? `${plural(result.done.length, "change", "changes")} checked, nothing written`
+    : `${plural(result.done.length, "change", "changes")} applied`;
   const skipped = result.failed.length
-    ? `, ${plural(result.failed.length, 'change', 'changes')} skipped`
-    : '';
-  const stopped = result.stopped ? ', stopped early' : '';
+    ? `, ${plural(result.failed.length, "change", "changes")} skipped`
+    : "";
+  const stopped = result.stopped ? ", stopped early" : "";
   return `${applied}${skipped}${stopped}.`;
 });
 
@@ -219,7 +219,7 @@ async function pick() {
     dir.value = picked;
     scan.value = null;
     lastResult.value = null;
-    emit('picked', picked);
+    emit("picked", picked);
     if (props.scanOnPick) await rescan();
   } catch (e) {
     setError(e);
@@ -242,7 +242,7 @@ async function rescan() {
       },
     });
     scan.value = result;
-    emit('scan', result);
+    emit("scan", result);
   } catch (e) {
     setError(e);
   } finally {
@@ -277,13 +277,13 @@ function clear() {
  * executes exactly what was shown, rather than planning a second time.
  */
 function confirmWrites(ops: WriteOp[]): Promise<boolean> {
-  if (props.mode !== 'readwrite') {
+  if (props.mode !== "readwrite") {
     setError(
       new ToolError(
-        'fs-read-only',
-        'This tool opened the folder for reading only, so it cannot change it.',
-        'Reload the page and choose the folder again.'
-      )
+        "fs-read-only",
+        "This tool opened the folder for reading only, so it cannot change it.",
+        "Reload the page and choose the folder again.",
+      ),
     );
     return Promise.resolve(false);
   }
@@ -333,7 +333,7 @@ function acceptWrites() {
  */
 async function applyWrites(
   ops: WriteOp[],
-  opts: ExecuteOptions = {}
+  opts: ExecuteOptions = {},
 ): Promise<ExecuteResult | null> {
   const ok = await confirmWrites(ops);
   const plan = approved.value;
@@ -373,13 +373,11 @@ async function applyWrites(
  */
 function downloadManifest() {
   const manifest =
-    pending.value?.undoManifest ??
-    approved.value?.undoManifest ??
-    lastResult.value?.undoManifest;
+    pending.value?.undoManifest ?? approved.value?.undoManifest ?? lastResult.value?.undoManifest;
   if (!manifest) return;
-  const blob = new Blob([undoManifestToJson(manifest)], { type: 'application/json' });
+  const blob = new Blob([undoManifestToJson(manifest)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = undoManifestFileName(manifest);
   document.body.appendChild(a);
@@ -406,12 +404,10 @@ onMounted(() => {
       role="status"
       class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
     >
-      <p class="font-medium text-muted-foreground">
-        Checking folder access.
-      </p>
+      <p class="font-medium text-muted-foreground">Checking folder access.</p>
       <p class="mt-1 text-muted-foreground">
-        {{ meta.name }} opens a folder in place, which needs the File System Access API.
-        It is available in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop.
+        {{ meta.name }} opens a folder in place, which needs the File System Access API. It is
+        available in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop.
       </p>
     </div>
 
@@ -423,9 +419,9 @@ onMounted(() => {
       >
         <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" />
         <p class="text-muted-foreground">
-          This tool can change the folder you pick: it renames, writes and deletes files in
-          place. Nothing happens until you review the exact list of changes and confirm, and
-          you can download an undo file first.
+          This tool can change the folder you pick: it renames, writes and deletes files in place.
+          Nothing happens until you review the exact list of changes and confirm, and you can
+          download an undo file first.
         </p>
       </div>
 
@@ -446,48 +442,27 @@ onMounted(() => {
               <RotateCw class="size-3.5" />
               Rescan
             </Button>
-            <Button
-              v-if="dir"
-              variant="ghost"
-              size="sm"
-              :disabled="busy"
-              @click="clear"
-            >
+            <Button v-if="dir" variant="ghost" size="sm" :disabled="busy" @click="clear">
               Clear
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              :disabled="scanning || busy"
-              @click="pick"
-            >
+            <Button variant="ghost" size="sm" :disabled="scanning || busy" @click="pick">
               <FolderOpen class="size-3.5" />
-              {{ dir ? 'Choose another folder' : 'Choose a folder' }}
+              {{ dir ? "Choose another folder" : "Choose a folder" }}
             </Button>
           </div>
         </div>
 
-        <div
-          v-if="dir"
-          class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-3 pt-2 pb-3"
-        >
+        <div v-if="dir" class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-3 pt-2 pb-3">
           <span class="font-mono text-sm font-medium">{{ dir.name }}</span>
-          <span
-            v-if="summary"
-            class="text-xs text-muted-foreground tabular-nums"
-          >{{ summary }}</span>
-          <span
-            v-else-if="!scanning"
-            class="text-xs text-muted-foreground"
-          >not scanned yet</span>
+          <span v-if="summary" class="text-xs text-muted-foreground tabular-nums">{{
+            summary
+          }}</span>
+          <span v-else-if="!scanning" class="text-xs text-muted-foreground">not scanned yet</span>
         </div>
 
-        <p
-          v-else
-          class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
-        >
-          Pick a folder to get started. Nothing is uploaded and nothing is copied anywhere:
-          the folder is opened in place, in this tab.
+        <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
+          Pick a folder to get started. Nothing is uploaded and nothing is copied anywhere: the
+          folder is opened in place, in this tab.
         </p>
       </div>
 
@@ -498,40 +473,20 @@ onMounted(() => {
       </p>
 
       <!-- Scan progress -->
-      <div
-        v-if="scanning"
-        class="flex flex-wrap items-center gap-3"
-      >
-        <span
-          role="status"
-          class="font-mono text-xs text-muted-foreground tabular-nums"
-        >
+      <div v-if="scanning" class="flex flex-wrap items-center gap-3">
+        <span role="status" class="font-mono text-xs text-muted-foreground tabular-nums">
           Reading folder… {{ scanCount.toLocaleString() }} items
         </span>
-        <Button
-          variant="outline"
-          size="sm"
-          @click="stopScan"
-        >
-          Stop
-        </Button>
+        <Button variant="outline" size="sm" @click="stopScan"> Stop </Button>
       </div>
 
       <!-- Truncation notes -->
-      <p
-        v-if="scan?.truncated"
-        role="status"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-if="scan?.truncated" role="status" class="text-xs text-muted-foreground">
         This folder holds more than the scan limit, so only the first
-        {{ scan.entries.length.toLocaleString() }} files were read. Work on a smaller folder
-        for a complete result.
+        {{ scan.entries.length.toLocaleString() }} files were read. Work on a smaller folder for a
+        complete result.
       </p>
-      <p
-        v-if="scan?.depthCapped"
-        role="status"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-if="scan?.depthCapped" role="status" class="text-xs text-muted-foreground">
         Some folders were nested deeper than 64 levels and were left alone.
       </p>
 
@@ -547,10 +502,7 @@ onMounted(() => {
         :confirm-writes="confirmWrites"
         :apply-writes="applyWrites"
       />
-      <slot
-        v-else-if="!dir"
-        name="empty"
-      />
+      <slot v-else-if="!dir" name="empty" />
 
       <!-- Confirm panel: the one door every write goes through -->
       <div
@@ -561,13 +513,10 @@ onMounted(() => {
       >
         <div>
           <p class="text-sm font-medium">
-            Review {{ plural(pending.ops.length, 'change', 'changes') }} to {{ dir?.name }}
+            Review {{ plural(pending.ops.length, "change", "changes") }} to {{ dir?.name }}
           </p>
-          <p
-            v-if="pendingCounts.length"
-            class="mt-1 text-xs text-muted-foreground"
-          >
-            {{ pendingCounts.join(', ') }}.
+          <p v-if="pendingCounts.length" class="mt-1 text-xs text-muted-foreground">
+            {{ pendingCounts.join(", ") }}.
           </p>
         </div>
 
@@ -576,59 +525,32 @@ onMounted(() => {
           class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
         >
           <p class="font-medium text-destructive">
-            {{ plural(pending.conflicts.length, 'change', 'changes') }} will be skipped.
+            {{ plural(pending.conflicts.length, "change", "changes") }} will be skipped.
           </p>
           <ul class="mt-1 list-disc pl-4 text-xs text-muted-foreground">
-            <li
-              v-for="issue in pending.conflicts.slice(0, 5)"
-              :key="issue.index"
-            >
+            <li v-for="issue in pending.conflicts.slice(0, 5)" :key="issue.index">
               {{ issue.reason }}
             </li>
           </ul>
         </div>
 
-        <div
-          v-if="pending.irreversible.length"
-          class="text-xs text-muted-foreground"
-        >
-          <p
-            v-for="note in pending.undoManifest.notes"
-            :key="note"
-          >
+        <div v-if="pending.irreversible.length" class="text-xs text-muted-foreground">
+          <p v-for="note in pending.undoManifest.notes" :key="note">
             {{ note }}
           </p>
         </div>
 
         <pre
           class="max-h-56 overflow-auto rounded-[8px] bg-background p-2 font-mono text-xs whitespace-pre text-muted-foreground"
-        >{{ pendingPreview.join('\n') }}</pre>
-        <p
-          v-if="pendingExtra"
-          class="text-xs text-muted-foreground"
-        >
-          and {{ plural(pendingExtra, 'more change', 'more changes') }}.
+          >{{ pendingPreview.join("\n") }}</pre>
+        <p v-if="pendingExtra" class="text-xs text-muted-foreground">
+          and {{ plural(pendingExtra, "more change", "more changes") }}.
         </p>
 
         <div class="flex flex-wrap items-center gap-2">
-          <Button
-            size="sm"
-            @click="acceptWrites"
-          >
-            Confirm and apply
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            @click="cancelWrites"
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            @click="downloadManifest"
-          >
+          <Button size="sm" @click="acceptWrites"> Confirm and apply </Button>
+          <Button variant="outline" size="sm" @click="cancelWrites"> Cancel </Button>
+          <Button variant="ghost" size="sm" @click="downloadManifest">
             <Download class="size-3.5" />
             Download undo file
           </Button>
@@ -640,10 +562,7 @@ onMounted(() => {
       </div>
 
       <!-- Write progress -->
-      <div
-        v-if="busy"
-        class="flex flex-col gap-2"
-      >
+      <div v-if="busy" class="flex flex-col gap-2">
         <div
           class="h-2 overflow-hidden rounded-full bg-secondary"
           role="progressbar"
@@ -671,23 +590,12 @@ onMounted(() => {
         <p class="font-medium">
           {{ resultLine }}
         </p>
-        <ul
-          v-if="lastResult.failed.length"
-          class="list-disc pl-4 text-xs text-muted-foreground"
-        >
-          <li
-            v-for="(failure, i) in lastResult.failed.slice(0, 10)"
-            :key="i"
-          >
+        <ul v-if="lastResult.failed.length" class="list-disc pl-4 text-xs text-muted-foreground">
+          <li v-for="(failure, i) in lastResult.failed.slice(0, 10)" :key="i">
             {{ describeOp(failure.op) }}: {{ failure.error }}
           </li>
         </ul>
-        <Button
-          class="self-start"
-          variant="ghost"
-          size="sm"
-          @click="downloadManifest"
-        >
+        <Button class="self-start" variant="ghost" size="sm" @click="downloadManifest">
           <Download class="size-3.5" />
           Download undo file
         </Button>
@@ -702,10 +610,7 @@ onMounted(() => {
         <p class="font-medium text-destructive">
           {{ error.message }}
         </p>
-        <p
-          v-if="error.fix"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="error.fix" class="mt-1 text-muted-foreground">
           {{ error.fix }}
         </p>
       </div>

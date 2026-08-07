@@ -6,11 +6,11 @@ the plan for all 168 tools.
 
 ## The three binding documents
 
-| Doc | Governs |
-|---|---|
-| `PROJECT.md` | rules (server policy, data handling, SEO, architecture rule 27), phases, definition of done |
-| `DESIGN.md` | tokens, spacing, focus/motion, and the copy rules (NO em/en dashes in prose, exact privacy claim wording) |
-| `.claude/tool-authoring.md` | the contract for a tool's logic layer (files, purity, tests, meta shape) |
+| Doc                         | Governs                                                                                                   |
+| --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `PROJECT.md`                | rules (server policy, data handling, SEO, architecture rule 27), phases, definition of done               |
+| `DESIGN.md`                 | tokens, spacing, focus/motion, and the copy rules (NO em/en dashes in prose, exact privacy claim wording) |
+| `.claude/tool-authoring.md` | the contract for a tool's logic layer (files, purity, tests, meta shape)                                  |
 
 ## Architecture
 

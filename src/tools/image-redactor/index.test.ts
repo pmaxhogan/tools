@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { ToolError } from '../types';
+import { describe, expect, it } from "vitest";
+import { ToolError } from "../types";
 import {
   applyPixelateRect,
   applySolidRect,
@@ -10,7 +10,7 @@ import {
   sniffImageFormat,
   suggestExportName,
   type Rect,
-} from './index';
+} from "./index";
 
 /* ------------------------------------------------------------------ */
 /* fixtures                                                            */
@@ -67,20 +67,20 @@ const H = 8;
 /* normalizeRect                                                       */
 /* ------------------------------------------------------------------ */
 
-describe('normalizeRect', () => {
-  it('sorts a top left to bottom right drag unchanged', () => {
+describe("normalizeRect", () => {
+  it("sorts a top left to bottom right drag unchanged", () => {
     expect(normalizeRect({ x1: 2, y1: 3, x2: 6, y2: 9 })).toEqual({ x: 2, y: 3, w: 4, h: 6 });
   });
 
-  it('sorts a drag made upward and to the left', () => {
+  it("sorts a drag made upward and to the left", () => {
     expect(normalizeRect({ x1: 6, y1: 9, x2: 2, y2: 3 })).toEqual({ x: 2, y: 3, w: 4, h: 6 });
   });
 
-  it('sorts a drag that is negative on one axis only', () => {
+  it("sorts a drag that is negative on one axis only", () => {
     expect(normalizeRect({ x1: 6, y1: 3, x2: 2, y2: 9 })).toEqual({ x: 2, y: 3, w: 4, h: 6 });
   });
 
-  it('clamps a drag that starts outside the image to the image bounds', () => {
+  it("clamps a drag that starts outside the image to the image bounds", () => {
     expect(normalizeRect({ x1: -20, y1: -5, x2: 40, y2: 40 }, 16, 10)).toEqual({
       x: 0,
       y: 0,
@@ -89,7 +89,7 @@ describe('normalizeRect', () => {
     });
   });
 
-  it('rounds fractional pointer coordinates to whole pixels', () => {
+  it("rounds fractional pointer coordinates to whole pixels", () => {
     expect(normalizeRect({ x1: 1.4, y1: 2.6, x2: 5.5, y2: 8.2 })).toEqual({
       x: 1,
       y: 3,
@@ -98,7 +98,7 @@ describe('normalizeRect', () => {
     });
   });
 
-  it('returns a zero size rectangle for a click without a drag', () => {
+  it("returns a zero size rectangle for a click without a drag", () => {
     expect(normalizeRect({ x1: 4, y1: 4, x2: 4, y2: 4 })).toEqual({ x: 4, y: 4, w: 0, h: 0 });
   });
 });
@@ -107,16 +107,16 @@ describe('normalizeRect', () => {
 /* clampRect                                                           */
 /* ------------------------------------------------------------------ */
 
-describe('clampRect', () => {
-  it('trims a rectangle that hangs off the right and bottom edges', () => {
+describe("clampRect", () => {
+  it("trims a rectangle that hangs off the right and bottom edges", () => {
     expect(clampRect({ x: 6, y: 6, w: 10, h: 10 }, W, H)).toEqual({ x: 6, y: 6, w: 2, h: 2 });
   });
 
-  it('returns null when the rectangle misses the image entirely', () => {
+  it("returns null when the rectangle misses the image entirely", () => {
     expect(clampRect({ x: 20, y: 20, w: 4, h: 4 }, W, H)).toBeNull();
   });
 
-  it('returns null for a zero size rectangle', () => {
+  it("returns null for a zero size rectangle", () => {
     expect(clampRect({ x: 2, y: 2, w: 0, h: 5 }, W, H)).toBeNull();
   });
 });
@@ -125,8 +125,8 @@ describe('clampRect', () => {
 /* applySolidRect                                                      */
 /* ------------------------------------------------------------------ */
 
-describe('applySolidRect', () => {
-  it('replaces every pixel in the rectangle with the color and leaves the rest alone', () => {
+describe("applySolidRect", () => {
+  it("replaces every pixel in the rectangle with the color and leaves the rest alone", () => {
     const pristine = checkerboard(W, H);
     const data = new Uint8ClampedArray(pristine);
     const rect = { x: 2, y: 1, w: 3, h: 4 };
@@ -142,14 +142,14 @@ describe('applySolidRect', () => {
     expectOutsideUntouched(data, pristine, W, H, rect);
   });
 
-  it('destroys the original values rather than covering them', () => {
+  it("destroys the original values rather than covering them", () => {
     const data = checkerboard(W, H);
     applySolidRect(data, W, H, { x: 0, y: 0, w: W, h: H }, [0, 0, 0]);
     // Not one red or blue sample survives anywhere in the buffer.
     expect(Array.from(data).some((v, i) => i % 4 !== 3 && v !== 0)).toBe(false);
   });
 
-  it('writes white when white is chosen and forces alpha opaque', () => {
+  it("writes white when white is chosen and forces alpha opaque", () => {
     const data = checkerboard(W, H);
     // Make the target region fully transparent first.
     for (let y = 0; y < 2; y++) {
@@ -160,7 +160,7 @@ describe('applySolidRect', () => {
     expect(pixelAt(data, W, 1, 1)).toEqual([255, 255, 255, 255]);
   });
 
-  it('clamps a rectangle that runs past the edge instead of writing out of bounds', () => {
+  it("clamps a rectangle that runs past the edge instead of writing out of bounds", () => {
     const pristine = checkerboard(W, H);
     const data = new Uint8ClampedArray(pristine);
 
@@ -171,7 +171,7 @@ describe('applySolidRect', () => {
     expect(data.length).toBe(W * H * 4);
   });
 
-  it('is a no-op for a rectangle entirely outside the image', () => {
+  it("is a no-op for a rectangle entirely outside the image", () => {
     const pristine = checkerboard(W, H);
     const data = new Uint8ClampedArray(pristine);
 
@@ -179,7 +179,7 @@ describe('applySolidRect', () => {
     expect(Array.from(data)).toEqual(Array.from(pristine));
   });
 
-  it('defaults to black when no color is passed', () => {
+  it("defaults to black when no color is passed", () => {
     const data = checkerboard(W, H);
     applySolidRect(data, W, H, { x: 1, y: 1, w: 2, h: 2 });
     expect(pixelAt(data, W, 1, 1)).toEqual([0, 0, 0, 255]);
@@ -190,8 +190,8 @@ describe('applySolidRect', () => {
 /* applyPixelateRect                                                   */
 /* ------------------------------------------------------------------ */
 
-describe('applyPixelateRect', () => {
-  it('makes each block uniform and leaves the rest of the image alone', () => {
+describe("applyPixelateRect", () => {
+  it("makes each block uniform and leaves the rest of the image alone", () => {
     const pristine = checkerboard(W, H);
     const data = new Uint8ClampedArray(pristine);
     const rect = { x: 0, y: 0, w: 4, h: 4 };
@@ -210,7 +210,7 @@ describe('applyPixelateRect', () => {
     expectOutsideUntouched(data, pristine, W, H, rect);
   });
 
-  it('averages the four channels of a block', () => {
+  it("averages the four channels of a block", () => {
     const pristine = checkerboard(W, H);
     const data = new Uint8ClampedArray(pristine);
 
@@ -220,7 +220,7 @@ describe('applyPixelateRect', () => {
     expect(pixelAt(data, W, 0, 0)).toEqual([128, 0, 128, 201]);
   });
 
-  it('clips an edge block to the rectangle instead of sampling past it', () => {
+  it("clips an edge block to the rectangle instead of sampling past it", () => {
     const pristine = checkerboard(W, H);
     const data = new Uint8ClampedArray(pristine);
     const rect = { x: 0, y: 0, w: 3, h: 3 };
@@ -236,7 +236,7 @@ describe('applyPixelateRect', () => {
     expectOutsideUntouched(data, pristine, W, H, rect);
   });
 
-  it('collapses the whole rectangle to one color when the block is bigger than the rect', () => {
+  it("collapses the whole rectangle to one color when the block is bigger than the rect", () => {
     const pristine = checkerboard(W, H);
     const data = new Uint8ClampedArray(pristine);
     const rect = { x: 1, y: 1, w: 3, h: 3 };
@@ -250,7 +250,7 @@ describe('applyPixelateRect', () => {
     expectOutsideUntouched(data, pristine, W, H, rect);
   });
 
-  it('treats a block size below one as a single pixel block, leaving pixels unchanged', () => {
+  it("treats a block size below one as a single pixel block, leaving pixels unchanged", () => {
     const pristine = checkerboard(W, H);
     const data = new Uint8ClampedArray(pristine);
 
@@ -259,7 +259,7 @@ describe('applyPixelateRect', () => {
     expect(Array.from(data)).toEqual(Array.from(pristine));
   });
 
-  it('clamps a rectangle that runs past the edge', () => {
+  it("clamps a rectangle that runs past the edge", () => {
     const pristine = checkerboard(W, H);
     const data = new Uint8ClampedArray(pristine);
 
@@ -269,7 +269,7 @@ describe('applyPixelateRect', () => {
     expectOutsideUntouched(data, pristine, W, H, { x: 5, y: 5, w: 3, h: 3 });
   });
 
-  it('is a no-op for a rectangle entirely outside the image', () => {
+  it("is a no-op for a rectangle entirely outside the image", () => {
     const pristine = checkerboard(W, H);
     const data = new Uint8ClampedArray(pristine);
 
@@ -282,10 +282,10 @@ describe('applyPixelateRect', () => {
 /* applyPixelateRect randomness                                        */
 /* ------------------------------------------------------------------ */
 
-describe('applyPixelateRect seeded randomness', () => {
+describe("applyPixelateRect seeded randomness", () => {
   const rect = { x: 0, y: 0, w: 6, h: 6 };
 
-  it('is byte identical to a plain block average at strength 0', () => {
+  it("is byte identical to a plain block average at strength 0", () => {
     const plain = checkerboard(W, H);
     const perturbed = new Uint8ClampedArray(plain);
 
@@ -295,7 +295,7 @@ describe('applyPixelateRect seeded randomness', () => {
     expect(Array.from(perturbed)).toEqual(Array.from(plain));
   });
 
-  it('is byte identical to a plain block average when no perturbation options are passed', () => {
+  it("is byte identical to a plain block average when no perturbation options are passed", () => {
     const plain = checkerboard(W, H);
     const bare = new Uint8ClampedArray(plain);
 
@@ -305,7 +305,7 @@ describe('applyPixelateRect seeded randomness', () => {
     expect(Array.from(bare)).toEqual(Array.from(plain));
   });
 
-  it('produces the same output every time for the same seed and strength', () => {
+  it("produces the same output every time for the same seed and strength", () => {
     const a = checkerboard(W, H);
     const b = checkerboard(W, H);
 
@@ -315,7 +315,7 @@ describe('applyPixelateRect seeded randomness', () => {
     expect(Array.from(a)).toEqual(Array.from(b));
   });
 
-  it('diverges from the plain average once strength is above 0', () => {
+  it("diverges from the plain average once strength is above 0", () => {
     const plain = checkerboard(W, H);
     const perturbed = new Uint8ClampedArray(plain);
 
@@ -325,7 +325,7 @@ describe('applyPixelateRect seeded randomness', () => {
     expect(Array.from(perturbed)).not.toEqual(Array.from(plain));
   });
 
-  it('produces different output for different seeds at the same strength', () => {
+  it("produces different output for different seeds at the same strength", () => {
     const a = checkerboard(W, H);
     const b = checkerboard(W, H);
 
@@ -335,7 +335,7 @@ describe('applyPixelateRect seeded randomness', () => {
     expect(Array.from(a)).not.toEqual(Array.from(b));
   });
 
-  it('keeps every channel within the 0 to 255 byte range even at strength 1', () => {
+  it("keeps every channel within the 0 to 255 byte range even at strength 1", () => {
     const data = checkerboard(W, H);
     applyPixelateRect(data, W, H, { x: 0, y: 0, w: 8, h: 8 }, 2, { seed: 99, strength: 1 });
     for (const v of Array.from(data)) {
@@ -344,7 +344,7 @@ describe('applyPixelateRect seeded randomness', () => {
     }
   });
 
-  it('leaves pixels outside the rectangle untouched with perturbation on', () => {
+  it("leaves pixels outside the rectangle untouched with perturbation on", () => {
     const pristine = checkerboard(W, H);
     const data = new Uint8ClampedArray(pristine);
     const innerRect = { x: 1, y: 1, w: 3, h: 3 };
@@ -359,8 +359,8 @@ describe('applyPixelateRect seeded randomness', () => {
 /* mulberry32                                                          */
 /* ------------------------------------------------------------------ */
 
-describe('mulberry32', () => {
-  it('produces the same sequence for the same seed', () => {
+describe("mulberry32", () => {
+  it("produces the same sequence for the same seed", () => {
     const a = mulberry32(1234);
     const b = mulberry32(1234);
     const seqA = Array.from({ length: 5 }, () => a());
@@ -368,7 +368,7 @@ describe('mulberry32', () => {
     expect(seqA).toEqual(seqB);
   });
 
-  it('produces a different sequence for a different seed', () => {
+  it("produces a different sequence for a different seed", () => {
     const a = mulberry32(1234);
     const b = mulberry32(5678);
     const seqA = Array.from({ length: 5 }, () => a());
@@ -376,7 +376,7 @@ describe('mulberry32', () => {
     expect(seqA).not.toEqual(seqB);
   });
 
-  it('stays within the unit interval', () => {
+  it("stays within the unit interval", () => {
     const next = mulberry32(0);
     for (let i = 0; i < 50; i++) {
       const v = next();
@@ -390,15 +390,15 @@ describe('mulberry32', () => {
 /* ordering                                                            */
 /* ------------------------------------------------------------------ */
 
-describe('overlapping regions', () => {
-  it('applies regions in list order, so a later solid wins over an earlier pixelate', () => {
+describe("overlapping regions", () => {
+  it("applies regions in list order, so a later solid wins over an earlier pixelate", () => {
     const data = checkerboard(W, H);
     applyPixelateRect(data, W, H, { x: 0, y: 0, w: 4, h: 4 }, 2);
     applySolidRect(data, W, H, { x: 2, y: 2, w: 4, h: 4 }, [0, 0, 0]);
     expect(pixelAt(data, W, 3, 3)).toEqual([0, 0, 0, 255]);
   });
 
-  it('applies regions in list order, so a later pixelate averages the earlier solid', () => {
+  it("applies regions in list order, so a later pixelate averages the earlier solid", () => {
     const data = checkerboard(W, H);
     applySolidRect(data, W, H, { x: 0, y: 0, w: 4, h: 4 }, [255, 255, 255]);
     applyPixelateRect(data, W, H, { x: 0, y: 0, w: 4, h: 4 }, 4);
@@ -410,37 +410,37 @@ describe('overlapping regions', () => {
 /* suggestExportName                                                   */
 /* ------------------------------------------------------------------ */
 
-describe('suggestExportName', () => {
-  it('adds the redacted suffix and keeps the png extension', () => {
-    expect(suggestExportName('shot.png')).toBe('shot-redacted.png');
+describe("suggestExportName", () => {
+  it("adds the redacted suffix and keeps the png extension", () => {
+    expect(suggestExportName("shot.png")).toBe("shot-redacted.png");
   });
 
-  it('uses a jpg extension when exporting as JPEG', () => {
-    expect(suggestExportName('shot.png', 'jpeg')).toBe('shot-redacted.jpg');
+  it("uses a jpg extension when exporting as JPEG", () => {
+    expect(suggestExportName("shot.png", "jpeg")).toBe("shot-redacted.jpg");
   });
 
-  it('falls back to a generic stem when there is no filename', () => {
-    expect(suggestExportName('')).toBe('image-redacted.png');
-    expect(suggestExportName('   ')).toBe('image-redacted.png');
+  it("falls back to a generic stem when there is no filename", () => {
+    expect(suggestExportName("")).toBe("image-redacted.png");
+    expect(suggestExportName("   ")).toBe("image-redacted.png");
   });
 
-  it('does not stack the suffix when re-redacting its own output', () => {
-    expect(suggestExportName('shot-redacted.png')).toBe('shot-redacted.png');
+  it("does not stack the suffix when re-redacting its own output", () => {
+    expect(suggestExportName("shot-redacted.png")).toBe("shot-redacted.png");
   });
 
-  it('keeps dots inside the name and drops any directory part', () => {
-    expect(suggestExportName('Screen Shot 2026.08.06.png')).toBe(
-      'Screen Shot 2026.08.06-redacted.png',
+  it("keeps dots inside the name and drops any directory part", () => {
+    expect(suggestExportName("Screen Shot 2026.08.06.png")).toBe(
+      "Screen Shot 2026.08.06-redacted.png",
     );
-    expect(suggestExportName('C:\\Users\\me\\shot.jpeg', 'jpeg')).toBe('shot-redacted.jpg');
+    expect(suggestExportName("C:\\Users\\me\\shot.jpeg", "jpeg")).toBe("shot-redacted.jpg");
   });
 
-  it('handles a dotfile style name with no extension', () => {
-    expect(suggestExportName('screenshot')).toBe('screenshot-redacted.png');
+  it("handles a dotfile style name with no extension", () => {
+    expect(suggestExportName("screenshot")).toBe("screenshot-redacted.png");
   });
 
-  it('falls back to png for an unknown format', () => {
-    expect(suggestExportName('shot.webp', 'webp')).toBe('shot-redacted.png');
+  it("falls back to png for an unknown format", () => {
+    expect(suggestExportName("shot.webp", "webp")).toBe("shot-redacted.png");
   });
 });
 
@@ -448,16 +448,16 @@ describe('suggestExportName', () => {
 /* sniffImageFormat                                                    */
 /* ------------------------------------------------------------------ */
 
-describe('sniffImageFormat', () => {
-  it('names the common containers from their magic bytes', () => {
-    expect(sniffImageFormat(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10]))).toBe('PNG');
-    expect(sniffImageFormat(new Uint8Array([0xff, 0xd8, 0xff, 0xe0]))).toBe('JPEG');
-    expect(sniffImageFormat(new Uint8Array([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]))).toBe('GIF');
-    expect(sniffImageFormat(new Uint8Array([0x42, 0x4d, 0, 0]))).toBe('BMP');
+describe("sniffImageFormat", () => {
+  it("names the common containers from their magic bytes", () => {
+    expect(sniffImageFormat(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10]))).toBe("PNG");
+    expect(sniffImageFormat(new Uint8Array([0xff, 0xd8, 0xff, 0xe0]))).toBe("JPEG");
+    expect(sniffImageFormat(new Uint8Array([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]))).toBe("GIF");
+    expect(sniffImageFormat(new Uint8Array([0x42, 0x4d, 0, 0]))).toBe("BMP");
   });
 
-  it('reports unknown for bytes it does not recognize', () => {
-    expect(sniffImageFormat(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]))).toBe('unknown');
+  it("reports unknown for bytes it does not recognize", () => {
+    expect(sniffImageFormat(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]))).toBe("unknown");
   });
 });
 
@@ -465,50 +465,50 @@ describe('sniffImageFormat', () => {
 /* run                                                                 */
 /* ------------------------------------------------------------------ */
 
-describe('run', () => {
-  it('reports what was loaded and how to drive the panel', () => {
+describe("run", () => {
+  it("reports what was loaded and how to drive the panel", () => {
     const png = new Uint8Array(2048);
     png.set([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10], 0);
 
     const rows = run(png, {});
 
-    expect(rows.Loaded).toBe('PNG image, 2.0 KB.');
-    expect(rows.Mode).toContain('Solid fill, black');
-    expect(rows['How to use']).toContain('drag a rectangle');
-    expect(rows.Privacy).toContain('your files and inputs never leave your device');
+    expect(rows.Loaded).toBe("PNG image, 2.0 KB.");
+    expect(rows.Mode).toContain("Solid fill, black");
+    expect(rows["How to use"]).toContain("drag a rectangle");
+    expect(rows.Privacy).toContain("your files and inputs never leave your device");
   });
 
-  it('warns that pixelate is the weaker choice when pixelate is selected', () => {
+  it("warns that pixelate is the weaker choice when pixelate is selected", () => {
     const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]);
-    const rows = run(jpeg, { mode: 'pixelate', blockSize: 20 });
-    expect(rows.Mode).toContain('20 px blocks');
-    expect(rows.Mode).toContain('solid fill is the safer choice');
+    const rows = run(jpeg, { mode: "pixelate", blockSize: 20 });
+    expect(rows.Mode).toContain("20 px blocks");
+    expect(rows.Mode).toContain("solid fill is the safer choice");
   });
 
-  it('explains that the export is re-encoded and carries no metadata', () => {
-    const rows = run(new Uint8Array([0x42, 0x4d, 1, 2]), { format: 'jpeg' });
-    expect(rows.Export).toContain('re-encoded from the canvas');
-    expect(rows.Export).toContain('screenshot-redacted.jpg');
+  it("explains that the export is re-encoded and carries no metadata", () => {
+    const rows = run(new Uint8Array([0x42, 0x4d, 1, 2]), { format: "jpeg" });
+    expect(rows.Export).toContain("re-encoded from the canvas");
+    expect(rows.Export).toContain("screenshot-redacted.jpg");
   });
 
-  it('tells a text paste that this tool wants an image', () => {
-    const rows = run('hello', {});
-    expect(rows.Input).toContain('This tool redacts images');
-    expect(rows['Why solid']).toContain('Solid fill is the default');
+  it("tells a text paste that this tool wants an image", () => {
+    const rows = run("hello", {});
+    expect(rows.Input).toContain("This tool redacts images");
+    expect(rows["Why solid"]).toContain("Solid fill is the default");
   });
 
-  it('handles an empty string as no image loaded yet', () => {
-    const rows = run('', {});
-    expect(rows.Input).toBe('No image loaded yet.');
+  it("handles an empty string as no image loaded yet", () => {
+    const rows = run("", {});
+    expect(rows.Input).toBe("No image loaded yet.");
   });
 
-  it('throws a ToolError for an empty file', () => {
+  it("throws a ToolError for an empty file", () => {
     expect(() => run(new Uint8Array(0), {})).toThrow(ToolError);
     try {
       run(new Uint8Array(0), {});
     } catch (e) {
-      expect((e as ToolError).code).toBe('empty-file');
-      expect((e as ToolError).fix).toContain('screenshot');
+      expect((e as ToolError).code).toBe("empty-file");
+      expect((e as ToolError).fix).toContain("screenshot");
     }
   });
 });

@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import type { OptionSpec } from '@/tools/types';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
+import type { OptionSpec } from "@/tools/types";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 defineProps<{ spec: OptionSpec; modelValue: unknown }>();
-const emit = defineEmits<{ 'update:modelValue': [value: unknown] }>();
+const emit = defineEmits<{ "update:modelValue": [value: unknown] }>();
 
 function set(v: unknown) {
-  emit('update:modelValue', v);
+  emit("update:modelValue", v);
 }
 </script>
 
@@ -26,7 +26,8 @@ function set(v: unknown) {
       :for="spec.id"
       class="text-xs text-muted-foreground"
       :class="spec.kind === 'boolean' ? 'w-fit cursor-pointer' : undefined"
-    >{{ spec.label }}</Label>
+      >{{ spec.label }}</Label
+    >
 
     <Select
       v-if="spec.kind === 'select'"
@@ -42,11 +43,7 @@ function set(v: unknown) {
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem
-          v-for="c in spec.choices"
-          :key="c.value"
-          :value="c.value"
-        >
+        <SelectItem v-for="c in spec.choices" :key="c.value" :value="c.value">
           {{ c.label }}
         </SelectItem>
       </SelectContent>
@@ -73,10 +70,7 @@ function set(v: unknown) {
       @update:model-value="set(Number($event))"
     />
 
-    <div
-      v-else-if="spec.kind === 'slider'"
-      class="flex items-center gap-3"
-    >
+    <div v-else-if="spec.kind === 'slider'" class="flex items-center gap-3">
       <Slider
         :id="spec.id"
         :model-value="[Number(modelValue)]"

@@ -18,9 +18,9 @@
  * renders a plan, runs two commands, and checks the result against the cap.
  * Nothing touches the DOM until the component is mounted in a browser.
  */
-import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue';
-import { Check, X } from 'lucide-vue-next';
-import { ToolError, type ToolMeta } from '@/tools/types';
+import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
+import { Check, X } from "lucide-vue-next";
+import { ToolError, type ToolMeta } from "@/tools/types";
 import {
   MediaJobError,
   getFFmpeg,
@@ -28,7 +28,7 @@ import {
   isMediaSupported,
   runJob,
   terminateEngine,
-} from '@/lib/ffmpeg';
+} from "@/lib/ffmpeg";
 import {
   MAX_CAP_MB,
   OVERHEAD_FLOOR_BYTES,
@@ -44,18 +44,18 @@ import {
   resolveFps,
   resolveMaxHeight,
   type CompressionPlan,
-} from '@/tools/discord-video-compressor/index';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+} from "@/tools/discord-video-compressor/index";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -67,7 +67,7 @@ defineProps<{ meta: ToolMeta }>();
 const supported = ref(false);
 
 const file = shallowRef<File | null>(null);
-const safeName = ref('');
+const safeName = ref("");
 const fileInput = ref<HTMLInputElement>();
 const dragging = ref(false);
 
@@ -76,14 +76,14 @@ const durationSec = ref<number | null>(null);
 const sourceWidth = ref(0);
 const sourceHeight = ref(0);
 
-const cap = ref('10');
-const customMB = ref('');
-const maxHeight = ref('0');
+const cap = ref("10");
+const customMB = ref("");
+const maxHeight = ref("0");
 const keepFps = ref(true);
 const keepAudio = ref(true);
 
-type EngineState = 'idle' | 'loading' | 'ready';
-const engineState = ref<EngineState>('idle');
+type EngineState = "idle" | "loading" | "ready";
+const engineState = ref<EngineState>("idle");
 const engineDownloaded = ref(false);
 const downloadedBytes = ref(0);
 const downloadTotal = ref(0);
@@ -115,7 +115,7 @@ const error = ref<{ message: string; fix?: string; log: string[] } | null>(null)
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -131,20 +131,20 @@ function megabytes(bytes: number): string {
 
 function formatTime(ms: number): string {
   const total = Math.max(0, Math.round(ms / 1000));
-  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
 }
 
 const downloadLabel = computed(() => {
-  if (!downloadTotal.value) return 'Downloading media engine';
+  if (!downloadTotal.value) return "Downloading media engine";
   return `Downloading media engine (${megabytes(downloadedBytes.value)} of ${megabytes(downloadTotal.value)} MB)`;
 });
 
 const downloadPercent = computed(() =>
-  downloadTotal.value ? Math.min(100, (downloadedBytes.value / downloadTotal.value) * 100) : 0
+  downloadTotal.value ? Math.min(100, (downloadedBytes.value / downloadTotal.value) * 100) : 0,
 );
 
 const engineButtonLabel = computed(() =>
-  engineDownloaded.value ? 'Restart media engine' : 'Load media engine'
+  engineDownloaded.value ? "Restart media engine" : "Load media engine",
 );
 
 /* ---------------------------------------------------------------- */
@@ -173,7 +173,7 @@ const capState = computed<CapState>(() => {
 });
 
 const targetBytes = computed(() =>
-  capState.value.mb === null ? 0 : megabytesToBytes(capState.value.mb)
+  capState.value.mb === null ? 0 : megabytesToBytes(capState.value.mb),
 );
 
 const plan = computed<CompressionPlan | null>(() => {
@@ -199,16 +199,18 @@ const usableBytes = computed(() => {
 });
 
 const alreadyUnderCap = computed(
-  () => file.value !== null && usableBytes.value !== null && file.value.size <= usableBytes.value
+  () => file.value !== null && usableBytes.value !== null && file.value.size <= usableBytes.value,
 );
 
-const compressButtonLabel = computed(() => (alreadyUnderCap.value ? 'Compress anyway' : 'Compress'));
+const compressButtonLabel = computed(() =>
+  alreadyUnderCap.value ? "Compress anyway" : "Compress",
+);
 
 const heightCap = computed(() => resolveMaxHeight({ maxHeight: maxHeight.value }));
 const fpsCap = computed(() => resolveFps({ keepFps: keepFps.value }));
 
 const outputName = computed(() =>
-  outputNameFor(file.value?.name ?? 'video.mp4', capState.value.mb ?? 10)
+  outputNameFor(file.value?.name ?? "video.mp4", capState.value.mb ?? 10),
 );
 
 const canRun = computed(
@@ -218,7 +220,7 @@ const canRun = computed(
     plan.value !== null &&
     plan.value.feasible &&
     !running.value &&
-    !cancelling.value
+    !cancelling.value,
 );
 
 /** Pass 1 is the cheaper half, so it takes the smaller share of the bar. */
@@ -253,14 +255,14 @@ const verdict = computed(() => {
  * while everything else collapses to a safe ASCII name.
  */
 function safeNameFor(name: string): string {
-  const dot = name.lastIndexOf('.');
-  const ext = dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
+  const dot = name.lastIndexOf(".");
+  const ext = dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
   const stem =
     (dot > 0 ? name.slice(0, dot) : name)
-      .replace(/[^A-Za-z0-9._-]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 40) || 'input';
-  return ext ? `${stem}.${ext.replace(/[^A-Za-z0-9]/g, '')}` : stem;
+      .replace(/[^A-Za-z0-9._-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "input";
+  return ext ? `${stem}.${ext.replace(/[^A-Za-z0-9]/g, "")}` : stem;
 }
 
 /**
@@ -275,8 +277,8 @@ function probe(picked: File) {
   sourceHeight.value = 0;
 
   const url = URL.createObjectURL(picked);
-  const el = document.createElement('video');
-  el.preload = 'metadata';
+  const el = document.createElement("video");
+  el.preload = "metadata";
   el.muted = true;
 
   const finish = () => {
@@ -302,8 +304,8 @@ function probe(picked: File) {
 
     if (durationSec.value === null) {
       error.value = {
-        message: 'This browser could not read the length of that video.',
-        fix: 'Some streamed WebM files carry no duration. Remux it to MP4 first, or use a different copy of the clip.',
+        message: "This browser could not read the length of that video.",
+        fix: "Some streamed WebM files carry no duration. Remux it to MP4 first, or use a different copy of the clip.",
         log: [],
       };
     }
@@ -312,8 +314,8 @@ function probe(picked: File) {
 
   el.onerror = () => {
     error.value = {
-      message: 'This browser cannot read that file as a video.',
-      fix: 'Pick an MP4, MOV, WebM, or MKV file. The encoder still handles formats the preview cannot.',
+      message: "This browser cannot read that file as a video.",
+      fix: "Pick an MP4, MOV, WebM, or MKV file. The encoder still handles formats the preview cannot.",
       log: [],
     };
     finish();
@@ -343,13 +345,13 @@ function onPickFile(e: Event) {
   const picked = picker.files?.[0];
   if (picked) setFile(picked);
   // Reset so picking the same file again still fires a change event.
-  picker.value = '';
+  picker.value = "";
 }
 
 function clearFile() {
   clearResult();
   file.value = null;
-  safeName.value = '';
+  safeName.value = "";
   durationSec.value = null;
   sourceWidth.value = 0;
   sourceHeight.value = 0;
@@ -368,15 +370,15 @@ function onDownload(loaded: number, total: number) {
 }
 
 async function loadEngine() {
-  if (engineState.value === 'loading') return;
-  engineState.value = 'loading';
+  if (engineState.value === "loading") return;
+  engineState.value = "loading";
   error.value = null;
   try {
     await getFFmpeg(undefined, onDownload);
-    engineState.value = 'ready';
+    engineState.value = "ready";
     engineDownloaded.value = true;
   } catch (e) {
-    engineState.value = 'idle';
+    engineState.value = "idle";
     setError(e);
   }
 }
@@ -415,7 +417,7 @@ async function clearPassLog() {
   if (!isEngineReady()) return;
   try {
     const ffmpeg = await getFFmpeg();
-    for (const name of ['ffmpeg2pass-0.log', 'ffmpeg2pass-0.log.mbtree']) {
+    for (const name of ["ffmpeg2pass-0.log", "ffmpeg2pass-0.log.mbtree"]) {
       try {
         await ffmpeg.deleteFile(name);
       } catch {
@@ -450,7 +452,7 @@ async function compress() {
   };
 
   try {
-    if (!isEngineReady()) engineState.value = 'loading';
+    if (!isEngineReady()) engineState.value = "loading";
 
     // Both jobs get the same bytes: runJob copies them in and deletes the file
     // it wrote once the job is done, so pass 2 needs its own copy of the input.
@@ -478,7 +480,7 @@ async function compress() {
       onProgress,
     });
 
-    engineState.value = 'ready';
+    engineState.value = "ready";
     engineDownloaded.value = true;
 
     const out = produced[0]!;
@@ -487,7 +489,7 @@ async function compress() {
       size: out.data.byteLength,
       capBytes: targetBytes.value,
       url: URL.createObjectURL(
-        new Blob([out.data.slice().buffer as ArrayBuffer], { type: 'video/mp4' })
+        new Blob([out.data.slice().buffer as ArrayBuffer], { type: "video/mp4" }),
       ),
     };
     await clearPassLog();
@@ -495,7 +497,7 @@ async function compress() {
     if (cancelling.value) {
       error.value = null;
     } else {
-      engineState.value = isEngineReady() ? 'ready' : 'idle';
+      engineState.value = isEngineReady() ? "ready" : "idle";
       setError(e);
       if (logLines.value.length) showLog.value = true;
     }
@@ -515,7 +517,7 @@ async function cancel() {
   if (!running.value) return;
   cancelling.value = true;
   terminateEngine();
-  engineState.value = 'idle';
+  engineState.value = "idle";
   await loadEngine();
   cancelling.value = false;
 }
@@ -523,7 +525,7 @@ async function cancel() {
 function download() {
   const out = result.value;
   if (!out) return;
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = out.url;
   a.download = out.name;
   document.body.appendChild(a);
@@ -538,7 +540,7 @@ function download() {
 onMounted(() => {
   supported.value = isMediaSupported();
   if (isEngineReady()) {
-    engineState.value = 'ready';
+    engineState.value = "ready";
     engineDownloaded.value = true;
   }
 });
@@ -554,9 +556,7 @@ onUnmounted(clearResult);
       role="status"
       class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
     >
-      <p class="font-medium text-muted-foreground">
-        Starting the media engine.
-      </p>
+      <p class="font-medium text-muted-foreground">Starting the media engine.</p>
       <p class="mt-1 text-muted-foreground">
         {{ meta.name }} runs ffmpeg inside this tab, which needs WebAssembly. If this message stays,
         your browser has WebAssembly turned off or is too old to run it.
@@ -576,26 +576,11 @@ onUnmounted(clearResult);
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Video
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            @click="fileInput?.click()"
-          >
-            Open file…
-          </Button>
-          <input
-            ref="fileInput"
-            type="file"
-            class="hidden"
-            accept="video/*"
-            @change="onPickFile"
-          >
+          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
+          <input ref="fileInput" type="file" class="hidden" accept="video/*" @change="onPickFile" />
         </div>
 
-        <div
-          v-if="file"
-          class="flex flex-wrap items-center gap-2 px-3 pt-2 pb-3"
-        >
+        <div v-if="file" class="flex flex-wrap items-center gap-2 px-3 pt-2 pb-3">
           <span
             class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
@@ -621,10 +606,7 @@ onUnmounted(clearResult);
           </span>
         </div>
 
-        <p
-          v-else
-          class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
-        >
+        <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
           Drop a video here or pick one to get started. Everything runs in this tab: your files and
           inputs never leave your device.
         </p>
@@ -639,16 +621,12 @@ onUnmounted(clearResult);
           Media engine
         </span>
         <p class="text-sm text-muted-foreground">
-          This tool runs ffmpeg inside your browser. The engine is a one time download of about
-          31 MB, and your browser keeps it afterwards, so later visits start it straight from the
-          cache and work offline. Nothing is uploaded: your files and inputs never leave your
-          device.
+          This tool runs ffmpeg inside your browser. The engine is a one time download of about 31
+          MB, and your browser keeps it afterwards, so later visits start it straight from the cache
+          and work offline. Nothing is uploaded: your files and inputs never leave your device.
         </p>
 
-        <div
-          v-if="engineState === 'loading'"
-          class="flex flex-col gap-2"
-        >
+        <div v-if="engineState === 'loading'" class="flex flex-col gap-2">
           <div
             class="h-2 overflow-hidden rounded-full bg-background"
             role="progressbar"
@@ -678,10 +656,7 @@ onUnmounted(clearResult);
         </Button>
       </div>
 
-      <p
-        v-else
-        class="flex items-center gap-1.5 text-xs text-muted-foreground"
-      >
+      <p v-else class="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Check class="size-3.5 text-[var(--positive)]" />
         Engine ready. It stays loaded for as long as this page is open.
       </p>
@@ -693,40 +668,21 @@ onUnmounted(clearResult);
         </span>
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-48 flex-col gap-1.5">
-            <Label
-              for="dc-cap"
-              class="text-xs text-muted-foreground"
-            >Size cap</Label>
-            <Select
-              :model-value="cap"
-              @update:model-value="(v) => (cap = String(v))"
-            >
-              <SelectTrigger
-                id="dc-cap"
-                size="sm"
-                class="w-full bg-card"
-              >
+            <Label for="dc-cap" class="text-xs text-muted-foreground">Size cap</Label>
+            <Select :model-value="cap" @update:model-value="(v) => (cap = String(v))">
+              <SelectTrigger id="dc-cap" size="sm" class="w-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="10">
-                  10 MB (free tier)
-                </SelectItem>
-                <SelectItem value="50">
-                  50 MB (Nitro Basic)
-                </SelectItem>
-                <SelectItem value="500">
-                  500 MB (Nitro)
-                </SelectItem>
+                <SelectItem value="10"> 10 MB (free tier) </SelectItem>
+                <SelectItem value="50"> 50 MB (Nitro Basic) </SelectItem>
+                <SelectItem value="500"> 500 MB (Nitro) </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div class="flex w-40 flex-col gap-1.5">
-            <Label
-              for="dc-custom"
-              class="text-xs text-muted-foreground"
-            >Custom cap in MB</Label>
+            <Label for="dc-custom" class="text-xs text-muted-foreground">Custom cap in MB</Label>
             <Input
               id="dc-custom"
               :model-value="customMB"
@@ -738,34 +694,16 @@ onUnmounted(clearResult);
           </div>
 
           <div class="flex w-40 flex-col gap-1.5">
-            <Label
-              for="dc-height"
-              class="text-xs text-muted-foreground"
-            >Resolution</Label>
-            <Select
-              :model-value="maxHeight"
-              @update:model-value="(v) => (maxHeight = String(v))"
-            >
-              <SelectTrigger
-                id="dc-height"
-                size="sm"
-                class="w-full bg-card"
-              >
+            <Label for="dc-height" class="text-xs text-muted-foreground">Resolution</Label>
+            <Select :model-value="maxHeight" @update:model-value="(v) => (maxHeight = String(v))">
+              <SelectTrigger id="dc-height" size="sm" class="w-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">
-                  Keep the source height
-                </SelectItem>
-                <SelectItem value="1080">
-                  Cap at 1080p
-                </SelectItem>
-                <SelectItem value="720">
-                  Cap at 720p
-                </SelectItem>
-                <SelectItem value="480">
-                  Cap at 480p
-                </SelectItem>
+                <SelectItem value="0"> Keep the source height </SelectItem>
+                <SelectItem value="1080"> Cap at 1080p </SelectItem>
+                <SelectItem value="720"> Cap at 720p </SelectItem>
+                <SelectItem value="480"> Cap at 480p </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -778,10 +716,9 @@ onUnmounted(clearResult);
               :model-value="keepFps"
               @update:model-value="(v) => (keepFps = Boolean(v))"
             />
-            <Label
-              for="dc-fps"
-              class="text-xs text-muted-foreground"
-            >Keep the source frame rate</Label>
+            <Label for="dc-fps" class="text-xs text-muted-foreground"
+              >Keep the source frame rate</Label
+            >
           </div>
           <div class="flex items-center gap-2">
             <Switch
@@ -789,10 +726,7 @@ onUnmounted(clearResult);
               :model-value="keepAudio"
               @update:model-value="(v) => (keepAudio = Boolean(v))"
             />
-            <Label
-              for="dc-audio"
-              class="text-xs text-muted-foreground"
-            >Keep the audio track</Label>
+            <Label for="dc-audio" class="text-xs text-muted-foreground">Keep the audio track</Label>
           </div>
         </div>
 
@@ -809,20 +743,14 @@ onUnmounted(clearResult);
           <p class="font-medium text-destructive">
             {{ capState.issue.message }}
           </p>
-          <p
-            v-if="capState.issue.fix"
-            class="mt-1 text-muted-foreground"
-          >
+          <p v-if="capState.issue.fix" class="mt-1 text-muted-foreground">
             {{ capState.issue.fix }}
           </p>
         </div>
       </div>
 
       <!-- The plan -->
-      <div
-        v-if="plan"
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      >
+      <div v-if="plan" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
         <div class="px-3 pt-2">
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Plan
@@ -830,33 +758,23 @@ onUnmounted(clearResult);
         </div>
         <dl class="grid grid-cols-2 gap-x-4 gap-y-3 px-3 pt-2 pb-3 sm:grid-cols-4">
           <div>
-            <dt class="text-xs text-muted-foreground">
-              Size cap
-            </dt>
+            <dt class="text-xs text-muted-foreground">Size cap</dt>
             <dd class="font-mono text-sm tabular-nums">
               {{ formatMegabytes(targetBytes) }}
             </dd>
           </div>
           <div>
-            <dt class="text-xs text-muted-foreground">
-              Video bitrate
-            </dt>
+            <dt class="text-xs text-muted-foreground">Video bitrate</dt>
+            <dd class="font-mono text-sm tabular-nums">{{ plan.videoKbps }} kbps</dd>
+          </div>
+          <div>
+            <dt class="text-xs text-muted-foreground">Audio bitrate</dt>
             <dd class="font-mono text-sm tabular-nums">
-              {{ plan.videoKbps }} kbps
+              {{ plan.audioKbps > 0 ? `${plan.audioKbps} kbps` : "silent" }}
             </dd>
           </div>
           <div>
-            <dt class="text-xs text-muted-foreground">
-              Audio bitrate
-            </dt>
-            <dd class="font-mono text-sm tabular-nums">
-              {{ plan.audioKbps > 0 ? `${plan.audioKbps} kbps` : 'silent' }}
-            </dd>
-          </div>
-          <div>
-            <dt class="text-xs text-muted-foreground">
-              Estimated result
-            </dt>
+            <dt class="text-xs text-muted-foreground">Estimated result</dt>
             <dd class="font-mono text-sm tabular-nums">
               {{ formatMegabytes(plan.estimatedBytes) }}
             </dd>
@@ -879,28 +797,17 @@ onUnmounted(clearResult);
         </p>
       </div>
 
-      <p
-        v-else-if="file && !probing && durationSec === null"
-        class="text-sm text-muted-foreground"
-      >
+      <p v-else-if="file && !probing && durationSec === null" class="text-sm text-muted-foreground">
         The plan needs the length of the clip, which could not be read from this file.
       </p>
 
       <!-- Run controls -->
       <div class="flex flex-wrap items-center gap-2">
-        <Button
-          :disabled="!canRun"
-          @click="compress"
-        >
+        <Button :disabled="!canRun" @click="compress">
           {{ running ? `Pass ${activePass} of 2…` : compressButtonLabel }}
         </Button>
-        <Button
-          v-if="running"
-          variant="outline"
-          :disabled="cancelling"
-          @click="cancel"
-        >
-          {{ cancelling ? 'Stopping…' : 'Cancel' }}
+        <Button v-if="running" variant="outline" :disabled="cancelling" @click="cancel">
+          {{ cancelling ? "Stopping…" : "Cancel" }}
         </Button>
         <span
           v-if="running && (overallPercent !== null || jobTimeMs !== null)"
@@ -946,7 +853,7 @@ onUnmounted(clearResult);
         </summary>
         <pre
           class="mt-2 max-h-56 overflow-auto font-mono text-xs whitespace-pre-wrap break-all text-muted-foreground"
-        >{{ logLines.slice(-30).join('\n') }}</pre>
+          >{{ logLines.slice(-30).join("\n") }}</pre>
       </details>
 
       <!-- Errors -->
@@ -958,23 +865,17 @@ onUnmounted(clearResult);
         <p class="font-medium text-destructive">
           {{ error.message }}
         </p>
-        <p
-          v-if="error.fix"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="error.fix" class="mt-1 text-muted-foreground">
           {{ error.fix }}
         </p>
         <pre
           v-if="error.log.length"
           class="mt-2 max-h-40 overflow-auto font-mono text-xs whitespace-pre-wrap break-all text-muted-foreground"
-        >{{ error.log.join('\n') }}</pre>
+          >{{ error.log.join("\n") }}</pre>
       </div>
 
       <!-- Output -->
-      <div
-        v-if="result"
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      >
+      <div v-if="result" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
         <div class="px-3 pt-2">
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Result
@@ -990,13 +891,7 @@ onUnmounted(clearResult);
                 {{ formatMegabytes(result.size) }}
               </div>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              @click="download"
-            >
-              Download
-            </Button>
+            <Button size="sm" variant="outline" @click="download"> Download </Button>
           </div>
 
           <p
@@ -1004,10 +899,9 @@ onUnmounted(clearResult);
             class="text-sm"
             :class="verdict.fits ? 'text-muted-foreground' : 'text-destructive'"
           >
-            <Check
-              v-if="verdict.fits"
-              class="mr-1 inline size-3.5 text-[var(--positive)]"
-            />{{ verdict.text }}
+            <Check v-if="verdict.fits" class="mr-1 inline size-3.5 text-[var(--positive)]" />{{
+              verdict.text
+            }}
           </p>
 
           <video

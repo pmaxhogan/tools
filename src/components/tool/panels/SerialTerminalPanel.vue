@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
-import { Download, Plug, Send, Trash2, Usb } from 'lucide-vue-next';
-import { ToolError, type ToolMeta } from '@/tools/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import { Download, Plug, Send, Trash2, Usb } from "lucide-vue-next";
+import { ToolError, type ToolMeta } from "@/tools/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   LineAssembler,
   autoDetectBaudHint,
@@ -21,7 +21,7 @@ import {
   timestamp,
   type LineEnding,
   type SendMode,
-} from '@/tools/serial-terminal/index';
+} from "@/tools/serial-terminal/index";
 
 /**
  * Bespoke panel for the serial terminal. The Web Serial API only exists in a
@@ -49,7 +49,7 @@ interface SerialOpenOptions {
   baudRate: number;
   dataBits?: number;
   stopBits?: number;
-  parity?: 'none' | 'even' | 'odd';
+  parity?: "none" | "even" | "odd";
 }
 
 interface SerialPortLike extends EventTarget {
@@ -95,10 +95,10 @@ const BAUD_RATES = [9600, 19200, 38400, 57600, 74880, 115200, 230400, 460800, 92
 /* port settings                                                     */
 /* ---------------------------------------------------------------- */
 
-const baudRate = ref('115200');
-const dataBits = ref('8');
-const stopBits = ref('1');
-const parity = ref('none');
+const baudRate = ref("115200");
+const dataBits = ref("8");
+const stopBits = ref("1");
+const parity = ref("none");
 const dtr = ref(true);
 const rts = ref(false);
 
@@ -130,7 +130,7 @@ interface LogRow {
   key: number;
   time: string;
   text: string;
-  kind: 'rx' | 'tx' | 'note';
+  kind: "rx" | "tx" | "note";
 }
 
 /**
@@ -145,7 +145,7 @@ let liveRow: LogRow | null = null;
 const revision = ref(0);
 let frame: number | null = null;
 
-const view = ref<'text' | 'hex'>('text');
+const view = ref<"text" | "hex">("text");
 const showTimestamps = ref(true);
 
 let assembler = new LineAssembler();
@@ -166,7 +166,7 @@ function trim(store: LogRow[]) {
   if (store.length > MAX_LINES) store.splice(0, store.length - MAX_LINES);
 }
 
-function pushRow(store: LogRow[], text: string, kind: LogRow['kind'], time: string) {
+function pushRow(store: LogRow[], text: string, kind: LogRow["kind"], time: string) {
   rowKey += 1;
   store.push({ key: rowKey, time, text, kind });
   trim(store);
@@ -175,22 +175,22 @@ function pushRow(store: LogRow[], text: string, kind: LogRow['kind'], time: stri
 /** A status line that belongs in both views, such as "port opened". */
 function note(text: string) {
   const time = timestamp(Date.now());
-  pushRow(textStore, text, 'note', time);
-  pushRow(hexStore, text, 'note', time);
+  pushRow(textStore, text, "note", time);
+  pushRow(hexStore, text, "note", time);
   scheduleRender();
 }
 
 const visibleRows = computed<LogRow[]>(() => {
   void revision.value;
-  const store = view.value === 'hex' ? hexStore : textStore;
+  const store = view.value === "hex" ? hexStore : textStore;
   const rows = store.slice(-MAX_RENDER);
-  if (view.value === 'text' && liveRow) rows.push(liveRow);
+  if (view.value === "text" && liveRow) rows.push(liveRow);
   return rows;
 });
 
 const hiddenRowCount = computed(() => {
   void revision.value;
-  const store = view.value === 'hex' ? hexStore : textStore;
+  const store = view.value === "hex" ? hexStore : textStore;
   return Math.max(0, store.length - MAX_RENDER);
 });
 
@@ -198,7 +198,7 @@ const isEmpty = computed(() => visibleRows.value.length === 0);
 
 /** Sent rows carry a chevron so an echo is never mistaken for device output. */
 function rowBody(row: LogRow): string {
-  return row.kind === 'tx' ? `> ${row.text}` : row.text;
+  return row.kind === "tx" ? `> ${row.text}` : row.text;
 }
 
 /* ---------------------------------------------------------------- */
@@ -223,12 +223,11 @@ function handleChunk(chunk: Uint8Array) {
 
   const dump = formatHexDump(chunk, hexOffset);
   hexOffset += chunk.length;
-  for (const line of dump.split('\n')) pushRow(hexStore, line, 'rx', time);
+  for (const line of dump.split("\n")) pushRow(hexStore, line, "rx", time);
 
   const { lines, replaceLast } = assembler.push(chunk);
-  for (const line of lines) pushRow(textStore, line, 'rx', time);
-  liveRow =
-    replaceLast === undefined ? null : { key: -1, time, text: replaceLast, kind: 'rx' };
+  for (const line of lines) pushRow(textStore, line, "rx", time);
+  liveRow = replaceLast === undefined ? null : { key: -1, time, text: replaceLast, kind: "rx" };
 
   scheduleRender();
 }
@@ -237,7 +236,7 @@ function handleChunk(chunk: Uint8Array) {
 function flushAssembler() {
   const tail = assembler.flush();
   const time = timestamp(Date.now());
-  for (const line of tail.lines) pushRow(textStore, line, 'rx', time);
+  for (const line of tail.lines) pushRow(textStore, line, "rx", time);
   liveRow = null;
   scheduleRender();
 }
@@ -274,44 +273,44 @@ function clearError() {
 }
 
 function describeOpenError(err: unknown): { title: string; detail: string } {
-  const name = err instanceof DOMException ? err.name : '';
+  const name = err instanceof DOMException ? err.name : "";
   const message = err instanceof Error ? err.message : String(err);
 
-  if (name === 'InvalidStateError') {
+  if (name === "InvalidStateError") {
     return {
-      title: 'That port is already open.',
+      title: "That port is already open.",
       detail:
-        'Another tab on this site already has it open. Disconnect there first, or reload this page and try again.',
+        "Another tab on this site already has it open. Disconnect there first, or reload this page and try again.",
     };
   }
-  if (name === 'NetworkError') {
+  if (name === "NetworkError") {
     return {
-      title: 'The browser could not open that port.',
+      title: "The browser could not open that port.",
       detail:
-        'A serial port can only be held by one program at a time. The Arduino IDE, PlatformIO, a screen or minicom session, or another browser tab is probably holding it. Close that, then click Connect again.',
+        "A serial port can only be held by one program at a time. The Arduino IDE, PlatformIO, a screen or minicom session, or another browser tab is probably holding it. Close that, then click Connect again.",
     };
   }
-  if (name === 'SecurityError') {
+  if (name === "SecurityError") {
     return {
-      title: 'This page is not allowed to use Web Serial.',
+      title: "This page is not allowed to use Web Serial.",
       detail:
-        'Web Serial only works over a secure connection and outside a restricted frame. Open the page directly over HTTPS and try again.',
+        "Web Serial only works over a secure connection and outside a restricted frame. Open the page directly over HTTPS and try again.",
     };
   }
   return {
-    title: 'Could not open the port.',
+    title: "Could not open the port.",
     detail:
       message ||
-      'The port was picked but would not open. Check that the cable carries data, that the USB serial driver is installed, and that nothing else is holding the port.',
+      "The port was picked but would not open. Check that the cable carries data, that the USB serial driver is installed, and that nothing else is holding the port.",
   };
 }
 
 function portLabel(p: SerialPortLike): string {
   const info = p.getInfo?.() ?? {};
-  const hex4 = (n: number) => `0x${n.toString(16).toUpperCase().padStart(4, '0')}`;
-  if (info.usbVendorId === undefined) return 'Serial port';
+  const hex4 = (n: number) => `0x${n.toString(16).toUpperCase().padStart(4, "0")}`;
+  if (info.usbVendorId === undefined) return "Serial port";
   return `USB device ${hex4(info.usbVendorId)}${
-    info.usbProductId === undefined ? '' : `:${hex4(info.usbProductId)}`
+    info.usbProductId === undefined ? "" : `:${hex4(info.usbProductId)}`
   }`;
 }
 
@@ -388,7 +387,7 @@ async function applySignals() {
   try {
     await target.setSignals({ dataTerminalReady: dtr.value, requestToSend: rts.value });
   } catch {
-    note('This port would not accept a DTR or RTS change.');
+    note("This port would not accept a DTR or RTS change.");
   }
 }
 
@@ -400,7 +399,7 @@ async function openPort(target: SerialPortLike) {
       baudRate: Number(baudRate.value),
       dataBits: Number(dataBits.value),
       stopBits: Number(stopBits.value),
-      parity: parity.value as 'none' | 'even' | 'odd',
+      parity: parity.value as "none" | "even" | "odd",
     });
     port.value = target;
     lastPort = target;
@@ -408,7 +407,7 @@ async function openPort(target: SerialPortLike) {
     resetSession();
     await applySignals();
     note(
-      `Connected at ${baudRate.value} baud, ${dataBits.value}${parity.value === 'none' ? 'N' : parity.value === 'even' ? 'E' : 'O'}${stopBits.value}.`,
+      `Connected at ${baudRate.value} baud, ${dataBits.value}${parity.value === "none" ? "N" : parity.value === "even" ? "E" : "O"}${stopBits.value}.`,
     );
     keepReading = true;
     readLoopDone = readLoop(target);
@@ -430,7 +429,7 @@ async function connect() {
     picked = await api.requestPort();
   } catch (err) {
     // NotFoundError just means the chooser was dismissed. That is not a fault.
-    if (err instanceof DOMException && err.name === 'NotFoundError') return;
+    if (err instanceof DOMException && err.name === "NotFoundError") return;
     const described = describeOpenError(err);
     setError(described.title, described.detail);
     return;
@@ -442,7 +441,7 @@ async function connect() {
 
 async function disconnect() {
   await teardown(true);
-  note('Disconnected. The port is free for other programs again.');
+  note("Disconnected. The port is free for other programs again.");
 }
 
 async function reconnect() {
@@ -459,8 +458,8 @@ function handlePortDisconnect(event: Event) {
   void teardown(false).then(() => {
     canReconnect.value = true;
     setError(
-      'The device was unplugged.',
-      'Plug it back in, then click Reconnect. The log above is kept.',
+      "The device was unplugged.",
+      "Plug it back in, then click Reconnect. The log above is kept.",
     );
   });
 }
@@ -474,9 +473,9 @@ function handlePortConnect(event: Event) {
 /* sending                                                           */
 /* ---------------------------------------------------------------- */
 
-const sendText = ref('');
-const sendMode = ref<SendMode>('text');
-const lineEnding = ref<LineEnding>('lf');
+const sendText = ref("");
+const sendMode = ref<SendMode>("text");
+const lineEnding = ref<LineEnding>("lf");
 const sendError = ref<{ message: string; fix?: string } | null>(null);
 
 const history: string[] = [];
@@ -496,7 +495,7 @@ function recallHistory(step: number) {
   const next = historyIndex + step;
   if (next < 0) {
     historyIndex = -1;
-    sendText.value = '';
+    sendText.value = "";
     return;
   }
   historyIndex = Math.min(next, history.length - 1);
@@ -505,7 +504,7 @@ function recallHistory(step: number) {
 
 async function writeBytes(bytes: Uint8Array) {
   const target = port.value;
-  if (!target?.writable) throw new Error('The port is not open for writing.');
+  if (!target?.writable) throw new Error("The port is not open for writing.");
   const writer = target.writable.getWriter();
   try {
     await writer.write(bytes);
@@ -517,7 +516,7 @@ async function writeBytes(bytes: Uint8Array) {
 }
 
 function hexOf(bytes: Uint8Array): string {
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(' ');
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(" ");
 }
 
 async function send() {
@@ -541,19 +540,19 @@ async function send() {
   } catch (err) {
     sendError.value = {
       message: err instanceof Error ? err.message : String(err),
-      fix: 'Check that the device is still plugged in, then connect again.',
+      fix: "Check that the device is still plugged in, then connect again.",
     };
     return;
   }
 
   txBytes.value += bytes.length;
   const time = timestamp(Date.now());
-  pushRow(textStore, sendMode.value === 'hex' ? hexOf(bytes) : typed, 'tx', time);
-  for (const line of formatHexDump(bytes, 0).split('\n')) pushRow(hexStore, line, 'tx', time);
+  pushRow(textStore, sendMode.value === "hex" ? hexOf(bytes) : typed, "tx", time);
+  for (const line of formatHexDump(bytes, 0).split("\n")) pushRow(hexStore, line, "tx", time);
   scheduleRender();
 
   pushHistory(typed);
-  sendText.value = '';
+  sendText.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -561,15 +560,13 @@ async function send() {
 /* ---------------------------------------------------------------- */
 
 function downloadLog() {
-  const store = view.value === 'hex' ? hexStore : textStore;
-  const rows = liveRow && view.value === 'text' ? [...store, liveRow] : store;
-  const body = rows
-    .map((r) => `${r.time} ${rowBody(r)}`)
-    .join('\n');
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const blob = new Blob([`${body}\n`], { type: 'text/plain' });
+  const store = view.value === "hex" ? hexStore : textStore;
+  const rows = liveRow && view.value === "text" ? [...store, liveRow] : store;
+  const body = rows.map((r) => `${r.time} ${rowBody(r)}`).join("\n");
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const blob = new Blob([`${body}\n`], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = `serial-log-${stamp}.txt`;
   document.body.appendChild(a);
@@ -609,14 +606,14 @@ watch([dtr, rts], () => {
 onMounted(() => {
   const api = serialApi();
   if (!api) return;
-  api.addEventListener('disconnect', handlePortDisconnect);
-  api.addEventListener('connect', handlePortConnect);
+  api.addEventListener("disconnect", handlePortDisconnect);
+  api.addEventListener("connect", handlePortConnect);
 });
 
 onUnmounted(() => {
   const api = serialApi();
-  api?.removeEventListener('disconnect', handlePortDisconnect);
-  api?.removeEventListener('connect', handlePortConnect);
+  api?.removeEventListener("disconnect", handlePortDisconnect);
+  api?.removeEventListener("connect", handlePortConnect);
   if (frame !== null) cancelAnimationFrame(frame);
   void teardown(true);
 });
@@ -627,26 +624,11 @@ onUnmounted(() => {
     <!-- connection -->
     <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
       <div class="flex flex-wrap items-center gap-3">
-        <Button
-          v-if="!connected"
-          size="lg"
-          :disabled="connecting"
-          @click="connect"
-        >
-          <Usb
-            class="size-4"
-            aria-hidden="true"
-          />
-          {{ connecting ? 'Waiting for the browser…' : 'Connect a device' }}
+        <Button v-if="!connected" size="lg" :disabled="connecting" @click="connect">
+          <Usb class="size-4" aria-hidden="true" />
+          {{ connecting ? "Waiting for the browser…" : "Connect a device" }}
         </Button>
-        <Button
-          v-else
-          size="lg"
-          variant="secondary"
-          @click="disconnect"
-        >
-          Disconnect
-        </Button>
+        <Button v-else size="lg" variant="secondary" @click="disconnect"> Disconnect </Button>
 
         <Button
           v-if="!connected && canReconnect"
@@ -654,44 +636,24 @@ onUnmounted(() => {
           :disabled="connecting"
           @click="reconnect"
         >
-          <Plug
-            class="size-4"
-            aria-hidden="true"
-          />
+          <Plug class="size-4" aria-hidden="true" />
           Reconnect
         </Button>
 
-        <span
-          v-if="connected && port"
-          class="text-sm text-muted-foreground"
-        >
+        <span v-if="connected && port" class="text-sm text-muted-foreground">
           {{ portLabel(port) }} at {{ baudRate }} baud
         </span>
       </div>
 
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div class="flex min-w-0 flex-col gap-1.5">
-          <Label
-            for="serial-baud"
-            class="text-xs text-muted-foreground"
-          >Baud rate</Label>
-          <Select
-            v-model="baudRate"
-            :disabled="connected"
-          >
-            <SelectTrigger
-              id="serial-baud"
-              size="sm"
-              class="w-full"
-            >
+          <Label for="serial-baud" class="text-xs text-muted-foreground">Baud rate</Label>
+          <Select v-model="baudRate" :disabled="connected">
+            <SelectTrigger id="serial-baud" size="sm" class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="rate in BAUD_RATES"
-                :key="rate"
-                :value="String(rate)"
-              >
+              <SelectItem v-for="rate in BAUD_RATES" :key="rate" :value="String(rate)">
                 {{ rate }}
               </SelectItem>
             </SelectContent>
@@ -699,25 +661,17 @@ onUnmounted(() => {
         </div>
 
         <div class="flex min-w-0 flex-col gap-1.5">
-          <Label
-            for="serial-dtr"
-            class="w-fit cursor-pointer text-xs text-muted-foreground"
-          >DTR</Label>
-          <Switch
-            id="serial-dtr"
-            v-model="dtr"
-          />
+          <Label for="serial-dtr" class="w-fit cursor-pointer text-xs text-muted-foreground"
+            >DTR</Label
+          >
+          <Switch id="serial-dtr" v-model="dtr" />
         </div>
 
         <div class="flex min-w-0 flex-col gap-1.5">
-          <Label
-            for="serial-rts"
-            class="w-fit cursor-pointer text-xs text-muted-foreground"
-          >RTS</Label>
-          <Switch
-            id="serial-rts"
-            v-model="rts"
-          />
+          <Label for="serial-rts" class="w-fit cursor-pointer text-xs text-muted-foreground"
+            >RTS</Label
+          >
+          <Switch id="serial-rts" v-model="rts" />
         </div>
       </div>
 
@@ -727,85 +681,41 @@ onUnmounted(() => {
         </summary>
         <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div class="flex min-w-0 flex-col gap-1.5">
-            <Label
-              for="serial-databits"
-              class="text-xs text-muted-foreground"
-            >Data bits</Label>
-            <Select
-              v-model="dataBits"
-              :disabled="connected"
-            >
-              <SelectTrigger
-                id="serial-databits"
-                size="sm"
-                class="w-full bg-card"
-              >
+            <Label for="serial-databits" class="text-xs text-muted-foreground">Data bits</Label>
+            <Select v-model="dataBits" :disabled="connected">
+              <SelectTrigger id="serial-databits" size="sm" class="w-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="7">
-                  7
-                </SelectItem>
-                <SelectItem value="8">
-                  8
-                </SelectItem>
+                <SelectItem value="7"> 7 </SelectItem>
+                <SelectItem value="8"> 8 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div class="flex min-w-0 flex-col gap-1.5">
-            <Label
-              for="serial-stopbits"
-              class="text-xs text-muted-foreground"
-            >Stop bits</Label>
-            <Select
-              v-model="stopBits"
-              :disabled="connected"
-            >
-              <SelectTrigger
-                id="serial-stopbits"
-                size="sm"
-                class="w-full bg-card"
-              >
+            <Label for="serial-stopbits" class="text-xs text-muted-foreground">Stop bits</Label>
+            <Select v-model="stopBits" :disabled="connected">
+              <SelectTrigger id="serial-stopbits" size="sm" class="w-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">
-                  1
-                </SelectItem>
-                <SelectItem value="2">
-                  2
-                </SelectItem>
+                <SelectItem value="1"> 1 </SelectItem>
+                <SelectItem value="2"> 2 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div class="flex min-w-0 flex-col gap-1.5">
-            <Label
-              for="serial-parity"
-              class="text-xs text-muted-foreground"
-            >Parity</Label>
-            <Select
-              v-model="parity"
-              :disabled="connected"
-            >
-              <SelectTrigger
-                id="serial-parity"
-                size="sm"
-                class="w-full bg-card"
-              >
+            <Label for="serial-parity" class="text-xs text-muted-foreground">Parity</Label>
+            <Select v-model="parity" :disabled="connected">
+              <SelectTrigger id="serial-parity" size="sm" class="w-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">
-                  None
-                </SelectItem>
-                <SelectItem value="even">
-                  Even
-                </SelectItem>
-                <SelectItem value="odd">
-                  Odd
-                </SelectItem>
+                <SelectItem value="none"> None </SelectItem>
+                <SelectItem value="even"> Even </SelectItem>
+                <SelectItem value="odd"> Odd </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -817,8 +727,8 @@ onUnmounted(() => {
       </details>
 
       <p class="text-xs text-muted-foreground">
-        Everything runs in this tab: your files and inputs never leave your device. A serial port can
-        only be held by one program at a time, so close the Arduino IDE, PlatformIO or a screen
+        Everything runs in this tab: your files and inputs never leave your device. A serial port
+        can only be held by one program at a time, so close the Arduino IDE, PlatformIO or a screen
         session before connecting here. Many boards reset when DTR or RTS changes, which is the auto
         reset circuit doing its job.
       </p>
@@ -831,10 +741,7 @@ onUnmounted(() => {
         <p class="font-medium text-destructive">
           {{ errorTitle }}
         </p>
-        <p
-          v-if="errorDetail"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="errorDetail" class="mt-1 text-muted-foreground">
           {{ errorDetail }}
         </p>
       </div>
@@ -844,62 +751,32 @@ onUnmounted(() => {
     <div class="flex flex-col gap-3 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
       <div class="flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2">
-          <Label
-            for="serial-view"
-            class="text-xs text-muted-foreground"
-          >View</Label>
+          <Label for="serial-view" class="text-xs text-muted-foreground">View</Label>
           <Select v-model="view">
-            <SelectTrigger
-              id="serial-view"
-              size="sm"
-              class="w-28"
-            >
+            <SelectTrigger id="serial-view" size="sm" class="w-28">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="text">
-                Text
-              </SelectItem>
-              <SelectItem value="hex">
-                Hex
-              </SelectItem>
+              <SelectItem value="text"> Text </SelectItem>
+              <SelectItem value="hex"> Hex </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div class="flex items-center gap-2">
-          <Switch
-            id="serial-timestamps"
-            v-model="showTimestamps"
-          />
-          <Label
-            for="serial-timestamps"
-            class="cursor-pointer text-xs text-muted-foreground"
-          >Timestamps</Label>
+          <Switch id="serial-timestamps" v-model="showTimestamps" />
+          <Label for="serial-timestamps" class="cursor-pointer text-xs text-muted-foreground"
+            >Timestamps</Label
+          >
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          @click="clearLog"
-        >
-          <Trash2
-            class="size-3.5"
-            aria-hidden="true"
-          />
+        <Button variant="ghost" size="sm" @click="clearLog">
+          <Trash2 class="size-3.5" aria-hidden="true" />
           Clear
         </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="isEmpty"
-          @click="downloadLog"
-        >
-          <Download
-            class="size-3.5"
-            aria-hidden="true"
-          />
+        <Button variant="outline" size="sm" :disabled="isEmpty" @click="downloadLog">
+          <Download class="size-3.5" aria-hidden="true" />
           Download log
         </Button>
 
@@ -916,10 +793,7 @@ onUnmounted(() => {
         {{ baudHint }}
       </div>
 
-      <p
-        v-if="hiddenRowCount"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-if="hiddenRowCount" class="text-xs text-muted-foreground">
         Showing the most recent {{ MAX_RENDER }} rows. {{ hiddenRowCount }} older rows are still in
         the download, and anything past {{ MAX_LINES }} rows is dropped.
       </p>
@@ -932,14 +806,11 @@ onUnmounted(() => {
         aria-label="Serial output"
         @scroll="onLogScroll"
       >
-        <p
-          v-if="isEmpty"
-          class="py-6 text-center text-sm text-muted-foreground"
-        >
+        <p v-if="isEmpty" class="py-6 text-center text-sm text-muted-foreground">
           {{
             connected
-              ? 'Connected. Nothing has arrived yet: press the reset button on the board, or send it something.'
-              : 'Not connected. Click Connect a device and pick your board.'
+              ? "Connected. Nothing has arrived yet: press the reset button on the board, or send it something."
+              : "Not connected. Click Connect a device and pick your board."
           }}
         </p>
 
@@ -949,20 +820,20 @@ onUnmounted(() => {
           class="font-mono text-xs leading-[1.5]"
           :class="[
             view === 'hex' ? 'whitespace-pre' : 'whitespace-pre-wrap break-all',
-            row.kind === 'tx' ? 'text-primary' : row.kind === 'note' ? 'text-muted-foreground italic' : '',
+            row.kind === 'tx'
+              ? 'text-primary'
+              : row.kind === 'note'
+                ? 'text-muted-foreground italic'
+                : '',
           ]"
         >
-          <span
-            v-if="showTimestamps"
-            class="text-muted-foreground select-none"
-          >{{ row.time }} </span>{{ rowBody(row) }}
+          <span v-if="showTimestamps" class="text-muted-foreground select-none"
+            >{{ row.time }} </span
+          >{{ rowBody(row) }}
         </div>
       </div>
 
-      <p
-        v-if="!stickToBottom"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-if="!stickToBottom" class="text-xs text-muted-foreground">
         Scrolled up, so the view is held still. Scroll back to the bottom to follow the live output
         again.
       </p>
@@ -972,10 +843,7 @@ onUnmounted(() => {
     <div class="flex flex-col gap-3 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
       <div class="flex flex-wrap items-end gap-3">
         <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
-          <Label
-            for="serial-send"
-            class="text-xs text-muted-foreground"
-          >Send</Label>
+          <Label for="serial-send" class="text-xs text-muted-foreground">Send</Label>
           <Input
             id="serial-send"
             v-model="sendText"
@@ -991,77 +859,48 @@ onUnmounted(() => {
         </div>
 
         <div class="flex min-w-0 flex-col gap-1.5">
-          <Label
-            for="serial-mode"
-            class="text-xs text-muted-foreground"
-          >Mode</Label>
+          <Label for="serial-mode" class="text-xs text-muted-foreground">Mode</Label>
           <Select v-model="sendMode">
-            <SelectTrigger
-              id="serial-mode"
-              size="sm"
-              class="w-24"
-            >
+            <SelectTrigger id="serial-mode" size="sm" class="w-24">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="text">
-                Text
-              </SelectItem>
-              <SelectItem value="hex">
-                Hex
-              </SelectItem>
+              <SelectItem value="text"> Text </SelectItem>
+              <SelectItem value="hex"> Hex </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div class="flex min-w-0 flex-col gap-1.5">
-          <Label
-            for="serial-ending"
-            class="text-xs text-muted-foreground"
-          >Line ending</Label>
+          <Label for="serial-ending" class="text-xs text-muted-foreground">Line ending</Label>
           <Select v-model="lineEnding">
-            <SelectTrigger
-              id="serial-ending"
-              size="sm"
-              class="w-32"
-            >
+            <SelectTrigger id="serial-ending" size="sm" class="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">
-                None
-              </SelectItem>
-              <SelectItem value="lf">
-                Newline (LF)
-              </SelectItem>
-              <SelectItem value="crlf">
-                CR and LF
-              </SelectItem>
-              <SelectItem value="cr">
-                Carriage return
-              </SelectItem>
+              <SelectItem value="none"> None </SelectItem>
+              <SelectItem value="lf"> Newline (LF) </SelectItem>
+              <SelectItem value="crlf"> CR and LF </SelectItem>
+              <SelectItem value="cr"> Carriage return </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <Button
-          :disabled="!connected"
-          @click="send"
-        >
-          <Send
-            class="size-4"
-            aria-hidden="true"
-          />
+        <Button :disabled="!connected" @click="send">
+          <Send class="size-4" aria-hidden="true" />
           Send
         </Button>
       </div>
 
       <p class="text-xs text-muted-foreground">
-        Press <kbd class="rounded-[8px] border bg-secondary px-1.5 py-0.5 font-mono text-[11px]">Enter</kbd>
+        Press
+        <kbd class="rounded-[8px] border bg-secondary px-1.5 py-0.5 font-mono text-[11px]"
+          >Enter</kbd
+        >
         to send and
         <kbd class="rounded-[8px] border bg-secondary px-1.5 py-0.5 font-mono text-[11px]">↑</kbd>
-        to walk back through the last {{ HISTORY_LIMIT }} things you sent. That history lives in this
-        tab's memory only and is gone when you close it.
+        to walk back through the last {{ HISTORY_LIMIT }} things you sent. That history lives in
+        this tab's memory only and is gone when you close it.
       </p>
 
       <div
@@ -1072,10 +911,7 @@ onUnmounted(() => {
         <p class="font-medium text-destructive">
           {{ sendError.message }}
         </p>
-        <p
-          v-if="sendError.fix"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="sendError.fix" class="mt-1 text-muted-foreground">
           {{ sendError.fix }}
         </p>
       </div>

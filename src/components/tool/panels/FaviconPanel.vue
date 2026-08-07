@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
-import { ToolError, type ToolMeta } from '@/tools/types';
-import { buildIco, buildLinkTags, buildManifest } from '@/tools/favicon-generator/index';
-import { readFragment, writeFragment } from '@/lib/fragment';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import CopyButton from '../CopyButton.vue';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import { ToolError, type ToolMeta } from "@/tools/types";
+import { buildIco, buildLinkTags, buildManifest } from "@/tools/favicon-generator/index";
+import { readFragment, writeFragment } from "@/lib/fragment";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import CopyButton from "../CopyButton.vue";
 
 /**
  * Bespoke panel for the favicon generator. The pure logic layer can only pack
@@ -55,31 +55,31 @@ function optionDefault(id: string, fallback: string): string {
 
 /** Expand and lowercase a 3 or 6 digit hex value, or null when it is not one. */
 function parseHex(raw: string): string | null {
-  const body = raw.trim().replace(/^#/, '');
+  const body = raw.trim().replace(/^#/, "");
   if (/^[0-9a-fA-F]{3}$/.test(body)) {
     return `#${body
-      .split('')
+      .split("")
       .map((c) => c + c)
-      .join('')}`.toLowerCase();
+      .join("")}`.toLowerCase();
   }
   if (/^[0-9a-fA-F]{6}$/.test(body)) return `#${body.toLowerCase()}`;
   return null;
 }
 
-const appName = ref(optionDefault('appName', 'My App'));
+const appName = ref(optionDefault("appName", "My App"));
 
 // The picker refs always hold a valid #rrggbb value so the manifest is never
 // written with junk. The text refs hold exactly what was typed.
-const themeColor = ref(parseHex(optionDefault('themeColor', '#5B4BD6')) ?? '#5b4bd6');
-const themeText = ref(optionDefault('themeColor', '#5B4BD6'));
-const bgColor = ref(parseHex(optionDefault('bgColor', '#ffffff')) ?? '#ffffff');
-const bgText = ref(optionDefault('bgColor', '#ffffff'));
+const themeColor = ref(parseHex(optionDefault("themeColor", "#5B4BD6")) ?? "#5b4bd6");
+const themeText = ref(optionDefault("themeColor", "#5B4BD6"));
+const bgColor = ref(parseHex(optionDefault("bgColor", "#ffffff")) ?? "#ffffff");
+const bgText = ref(optionDefault("bgColor", "#ffffff"));
 
 const cropSquare = ref(false);
 /** Set once from the source dimensions, then left to the user. */
 const cropTouched = ref(false);
 
-const fileName = ref('');
+const fileName = ref("");
 const sourceUrl = ref<string | null>(null);
 const sourceWidth = ref(0);
 const sourceHeight = ref(0);
@@ -119,8 +119,8 @@ const notices = computed(() => {
 
 const manifestText = computed(() =>
   buildManifest({
-    name: appName.value.trim() || 'My App',
-    shortName: appName.value.trim() || 'My App',
+    name: appName.value.trim() || "My App",
+    shortName: appName.value.trim() || "My App",
     themeColor: themeColor.value,
     bgColor: bgColor.value,
   }),
@@ -137,23 +137,23 @@ function blobFor(size: number): Blob | null {
 }
 
 const manifestBlob = computed(
-  () => new Blob([manifestText.value], { type: 'application/manifest+json' }),
+  () => new Blob([manifestText.value], { type: "application/manifest+json" }),
 );
 
 /** The buttons listed one per file, in the order a site needs them. */
 const files = computed<OutFile[]>(() => {
   if (!icoBlob.value) return [];
-  const out: OutFile[] = [{ name: 'favicon.ico', blob: icoBlob.value, note: '16, 32 and 48' }];
+  const out: OutFile[] = [{ name: "favicon.ico", blob: icoBlob.value, note: "16, 32 and 48" }];
   const pairs: [number, string, string][] = [
-    [180, 'apple-touch-icon.png', 'iOS home screen'],
-    [192, 'icon-192.png', 'manifest'],
-    [512, 'icon-512.png', 'manifest'],
+    [180, "apple-touch-icon.png", "iOS home screen"],
+    [192, "icon-192.png", "manifest"],
+    [512, "icon-512.png", "manifest"],
   ];
   for (const [size, name, note] of pairs) {
     const blob = blobFor(size);
     if (blob) out.push({ name, blob, note });
   }
-  out.push({ name: 'site.webmanifest', blob: manifestBlob.value, note: 'web manifest' });
+  out.push({ name: "site.webmanifest", blob: manifestBlob.value, note: "web manifest" });
   return out;
 });
 
@@ -166,7 +166,7 @@ const extraFiles = computed<OutFile[]>(() => {
   const out: OutFile[] = [];
   for (const size of [16, 32]) {
     const blob = blobFor(size);
-    if (blob) out.push({ name: `favicon-${size}x${size}.png`, blob, note: 'link tag' });
+    if (blob) out.push({ name: `favicon-${size}x${size}.png`, blob, note: "link tag" });
   }
   return out;
 });
@@ -190,19 +190,19 @@ function decodedHeight(image: Decoded): number {
 }
 
 function makeCanvas(size: number): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) {
     throw new ToolError(
-      'no-canvas',
-      'This browser refused to hand back a 2D drawing context.',
-      'Turn off any canvas blocking extension, or try the same image in another browser.',
+      "no-canvas",
+      "This browser refused to hand back a 2D drawing context.",
+      "Turn off any canvas blocking extension, or try the same image in another browser.",
     );
   }
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  ctx.imageSmoothingQuality = "high";
   return { canvas, ctx };
 }
 
@@ -213,12 +213,12 @@ function canvasToPng(canvas: HTMLCanvasElement): Promise<Blob> {
       else
         reject(
           new ToolError(
-            'encode-failed',
-            'The browser could not encode a PNG from the resized image.',
-            'Try a smaller source image, or re-export it and drop it in again.',
+            "encode-failed",
+            "The browser could not encode a PNG from the resized image.",
+            "Try a smaller source image, or re-export it and drop it in again.",
           ),
         );
-    }, 'image/png');
+    }, "image/png");
   });
 }
 
@@ -295,7 +295,7 @@ async function generate() {
     releaseRasters();
     rasters.value = next;
     // A fresh ArrayBuffer keeps the Blob independent of the Uint8Array view.
-    icoBlob.value = new Blob([ico.slice().buffer as ArrayBuffer], { type: 'image/x-icon' });
+    icoBlob.value = new Blob([ico.slice().buffer as ArrayBuffer], { type: "image/x-icon" });
     error.value = null;
   } catch (e) {
     releaseRasters();
@@ -331,7 +331,7 @@ function releaseSource() {
   source.value = null;
   sourceWidth.value = 0;
   sourceHeight.value = 0;
-  fileName.value = '';
+  fileName.value = "";
 }
 
 async function loadFile(file: File) {
@@ -339,10 +339,10 @@ async function loadFile(file: File) {
   releaseSource();
   error.value = null;
 
-  if (file.type && !file.type.startsWith('image/')) {
+  if (file.type && !file.type.startsWith("image/")) {
     error.value = {
       message: `"${file.name}" is a ${file.type} file, not an image.`,
-      fix: 'Pick a PNG, JPEG, WebP, GIF or SVG file and drop it in again.',
+      fix: "Pick a PNG, JPEG, WebP, GIF or SVG file and drop it in again.",
     };
     return;
   }
@@ -357,9 +357,9 @@ async function loadFile(file: File) {
     const h = decodedHeight(image);
     if (!w || !h) {
       throw new ToolError(
-        'no-dimensions',
-        'That image decoded with no pixel dimensions.',
-        'SVG files need a width and height (or a viewBox) on the root svg element. Add one and try again.',
+        "no-dimensions",
+        "That image decoded with no pixel dimensions.",
+        "SVG files need a width and height (or a viewBox) on the root svg element. Add one and try again.",
       );
     }
     source.value = image;
@@ -374,8 +374,8 @@ async function loadFile(file: File) {
       e instanceof ToolError
         ? { message: e.message, fix: e.fix }
         : {
-            message: 'The browser could not decode that image.',
-            fix: 'Re-export it as PNG, JPEG or WebP, then drop it in again.',
+            message: "The browser could not decode that image.",
+            fix: "Re-export it as PNG, JPEG or WebP, then drop it in again.",
           };
     busy.value = false;
     return;
@@ -396,7 +396,7 @@ function onPickFile(e: Event) {
   if (!file) return;
   loadFile(file).then(() => {
     // Reset so picking the same file again still fires a change event.
-    picker.value = '';
+    picker.value = "";
   });
 }
 
@@ -404,7 +404,7 @@ function reset() {
   releaseRasters();
   releaseSource();
   error.value = null;
-  if (fileInput.value) fileInput.value.value = '';
+  if (fileInput.value) fileInput.value.value = "";
 }
 
 function onCropChange(value: boolean) {
@@ -437,7 +437,7 @@ function onBgText(value: string) {
 
 function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -496,7 +496,7 @@ onMounted(() => {
     }
   }
   if (frag.opts.crop !== undefined) {
-    cropSquare.value = frag.opts.crop === 'true';
+    cropSquare.value = frag.opts.crop === "true";
     cropTouched.value = true;
   }
   mounted.value = true;
@@ -518,47 +518,24 @@ onUnmounted(() => {
       @drop.prevent="onDrop"
     >
       <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">Source image</span>
+        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+          >Source image</span
+        >
         <div class="flex items-center gap-1">
-          <Button
-            v-if="hasSource"
-            variant="ghost"
-            size="sm"
-            @click="reset"
-          >
-            Clear
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            @click="fileInput?.click()"
-          >
-            Open image
-          </Button>
-          <input
-            ref="fileInput"
-            type="file"
-            class="hidden"
-            accept="image/*"
-            @change="onPickFile"
-          >
+          <Button v-if="hasSource" variant="ghost" size="sm" @click="reset"> Clear </Button>
+          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open image </Button>
+          <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
         </div>
       </div>
 
-      <div
-        v-if="!hasSource"
-        class="px-3 pt-2 pb-6 text-center"
-      >
+      <div v-if="!hasSource" class="px-3 pt-2 pb-6 text-center">
         <p class="text-sm text-muted-foreground">
           Drop a square image here, or pick one. PNG, JPEG, WebP, GIF and SVG all work, and your
           files and inputs never leave your device.
         </p>
       </div>
 
-      <div
-        v-else
-        class="flex flex-wrap items-center gap-4 px-3 pt-3 pb-4"
-      >
+      <div v-else class="flex flex-wrap items-center gap-4 px-3 pt-3 pb-4">
         <div
           class="grid size-20 shrink-0 place-items-center rounded-[6px] bg-background p-1.5 shadow-[var(--sh-inset)]"
         >
@@ -566,7 +543,7 @@ onUnmounted(() => {
             :src="sourceUrl ?? ''"
             alt="Source image preview"
             class="max-h-full max-w-full object-contain"
-          >
+          />
         </div>
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-medium">
@@ -583,34 +560,19 @@ onUnmounted(() => {
       v-if="notices.length"
       class="flex flex-col gap-1.5 rounded-[10px] border border-border bg-secondary px-3 py-2.5 text-sm shadow-[var(--sh-inset)]"
     >
-      <p
-        v-for="notice in notices"
-        :key="notice"
-        class="text-muted-foreground"
-      >
+      <p v-for="notice in notices" :key="notice" class="text-muted-foreground">
         {{ notice }}
       </p>
     </div>
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div class="flex min-w-0 flex-col gap-1.5">
-        <Label
-          for="favicon-app-name"
-          class="text-xs text-muted-foreground"
-        >App name</Label>
-        <Input
-          id="favicon-app-name"
-          v-model="appName"
-          placeholder="My App"
-          class="h-9"
-        />
+        <Label for="favicon-app-name" class="text-xs text-muted-foreground">App name</Label>
+        <Input id="favicon-app-name" v-model="appName" placeholder="My App" class="h-9" />
       </div>
 
       <div class="flex min-w-0 flex-col gap-1.5">
-        <Label
-          for="favicon-theme-color"
-          class="text-xs text-muted-foreground"
-        >Theme color</Label>
+        <Label for="favicon-theme-color" class="text-xs text-muted-foreground">Theme color</Label>
         <div
           class="flex h-9 items-center gap-2 rounded-[10px] border border-input bg-transparent px-2 focus-within:ring-3 focus-within:ring-ring/50"
         >
@@ -621,7 +583,7 @@ onUnmounted(() => {
             class="size-6 shrink-0 cursor-pointer rounded-[6px] border-0 bg-transparent p-0 outline-none"
             :value="themeColor"
             @input="onThemePicker(($event.target as HTMLInputElement).value)"
-          >
+          />
           <input
             type="text"
             aria-label="Theme color hex value"
@@ -630,15 +592,12 @@ onUnmounted(() => {
             class="min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
             :value="themeText"
             @input="onThemeText(($event.target as HTMLInputElement).value)"
-          >
+          />
         </div>
       </div>
 
       <div class="flex min-w-0 flex-col gap-1.5">
-        <Label
-          for="favicon-bg-color"
-          class="text-xs text-muted-foreground"
-        >Background color</Label>
+        <Label for="favicon-bg-color" class="text-xs text-muted-foreground">Background color</Label>
         <div
           class="flex h-9 items-center gap-2 rounded-[10px] border border-input bg-transparent px-2 focus-within:ring-3 focus-within:ring-ring/50"
         >
@@ -649,7 +608,7 @@ onUnmounted(() => {
             class="size-6 shrink-0 cursor-pointer rounded-[6px] border-0 bg-transparent p-0 outline-none"
             :value="bgColor"
             @input="onBgPicker(($event.target as HTMLInputElement).value)"
-          >
+          />
           <input
             type="text"
             aria-label="Background color hex value"
@@ -658,15 +617,14 @@ onUnmounted(() => {
             class="min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
             :value="bgText"
             @input="onBgText(($event.target as HTMLInputElement).value)"
-          >
+          />
         </div>
       </div>
 
       <div class="flex min-w-0 flex-col gap-1.5">
-        <Label
-          for="favicon-crop"
-          class="text-xs text-muted-foreground"
-        >Center crop to square</Label>
+        <Label for="favicon-crop" class="text-xs text-muted-foreground"
+          >Center crop to square</Label
+        >
         <div class="flex h-9 items-center">
           <Switch
             id="favicon-crop"
@@ -685,25 +643,20 @@ onUnmounted(() => {
       <p class="font-medium text-destructive">
         {{ error.message }}
       </p>
-      <p
-        v-if="error.fix"
-        class="mt-1 text-muted-foreground"
-      >
+      <p v-if="error.fix" class="mt-1 text-muted-foreground">
         {{ error.fix }}
       </p>
     </div>
 
-    <p
-      v-if="busy"
-      class="text-sm text-muted-foreground"
-      aria-live="polite"
-    >
+    <p v-if="busy" class="text-sm text-muted-foreground" aria-live="polite">
       Rendering the icon sizes.
     </p>
 
     <template v-if="rasters.length && !error">
       <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">Preview</span>
+        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+          >Preview</span
+        >
         <div class="flex flex-wrap gap-3">
           <div
             v-for="raster in rasters"
@@ -718,8 +671,11 @@ onUnmounted(() => {
               <img
                 :src="raster.url"
                 :alt="`Icon rendered at ${raster.size} pixels`"
-                :style="{ width: `${previewWidth(raster.size)}px`, height: `${previewWidth(raster.size)}px` }"
-              >
+                :style="{
+                  width: `${previewWidth(raster.size)}px`,
+                  height: `${previewWidth(raster.size)}px`,
+                }"
+              />
             </div>
             <span class="font-mono text-[11px] text-muted-foreground tabular-nums">
               {{ raster.size }} px
@@ -729,7 +685,9 @@ onUnmounted(() => {
       </div>
 
       <div class="flex flex-col gap-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">Files</span>
+        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+          >Files</span
+        >
         <div class="flex flex-wrap items-center gap-2">
           <Button
             v-for="file in files"
@@ -740,12 +698,8 @@ onUnmounted(() => {
           >
             {{ file.name }}
           </Button>
-          <Button
-            size="sm"
-            :disabled="downloadingAll"
-            @click="downloadAll"
-          >
-            {{ downloadingAll ? 'Saving files' : 'Download all' }}
+          <Button size="sm" :disabled="downloadingAll" @click="downloadAll">
+            {{ downloadingAll ? "Saving files" : "Download all" }}
           </Button>
         </div>
         <p class="text-xs text-muted-foreground">
@@ -756,24 +710,26 @@ onUnmounted(() => {
 
       <div class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
         <div class="flex items-center justify-between px-3 pt-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">Link tags</span>
-          <CopyButton
-            :text="linkTags"
-            label="Copy"
-          />
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+            >Link tags</span
+          >
+          <CopyButton :text="linkTags" label="Copy" />
         </div>
-        <pre class="max-h-72 overflow-auto px-3 pt-1 pb-3 font-mono text-xs whitespace-pre">{{ linkTags }}</pre>
+        <pre class="max-h-72 overflow-auto px-3 pt-1 pb-3 font-mono text-xs whitespace-pre">{{
+          linkTags
+        }}</pre>
       </div>
 
       <div class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
         <div class="flex items-center justify-between px-3 pt-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">site.webmanifest</span>
-          <CopyButton
-            :text="manifestText"
-            label="Copy"
-          />
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+            >site.webmanifest</span
+          >
+          <CopyButton :text="manifestText" label="Copy" />
         </div>
-        <pre class="max-h-72 overflow-auto px-3 pt-1 pb-3 font-mono text-xs whitespace-pre">{{ manifestText }}</pre>
+        <pre class="max-h-72 overflow-auto px-3 pt-1 pb-3 font-mono text-xs whitespace-pre">{{
+          manifestText
+        }}</pre>
       </div>
 
       <p class="text-xs text-muted-foreground">

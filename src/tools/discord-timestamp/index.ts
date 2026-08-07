@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface DiscordTimestampResult {
   [label: string]: string;
@@ -19,29 +19,29 @@ function parse(raw: string): Date {
     const ms = Math.abs(n) >= 1e12 ? n : n * 1000;
     const d = new Date(ms);
     if (isNaN(d.getTime()))
-      throw new ToolError('out-of-range', `"${s}" is outside the representable date range.`);
+      throw new ToolError("out-of-range", `"${s}" is outside the representable date range.`);
     return d;
   }
 
   const d = new Date(s);
   if (isNaN(d.getTime()))
     throw new ToolError(
-      'unparseable-date',
+      "unparseable-date",
       `Could not parse "${s}" as a date.`,
-      'Use a unix timestamp in seconds (1754521200), milliseconds (1754521200000), or an ISO 8601 date like 2026-08-06T21:00:00Z. Leave blank for now.',
+      "Use a unix timestamp in seconds (1754521200), milliseconds (1754521200000), or an ISO 8601 date like 2026-08-06T21:00:00Z. Leave blank for now.",
     );
   return d;
 }
 
 /** The seven Discord timestamp styles, in the order Discord documents them. */
 const STYLES: { code: string; label: string }[] = [
-  { code: 't', label: 'short time (e.g. 9:41 PM)' },
-  { code: 'T', label: 'long time' },
-  { code: 'd', label: 'short date' },
-  { code: 'D', label: 'long date' },
-  { code: 'f', label: 'short date/time (default)' },
-  { code: 'F', label: 'long date/time' },
-  { code: 'R', label: 'relative (e.g. in 2 hours)' },
+  { code: "t", label: "short time (e.g. 9:41 PM)" },
+  { code: "T", label: "long time" },
+  { code: "d", label: "short date" },
+  { code: "D", label: "long date" },
+  { code: "f", label: "short date/time (default)" },
+  { code: "F", label: "long date/time" },
+  { code: "R", label: "relative (e.g. in 2 hours)" },
 ];
 
 function tag(seconds: number, code: string): string {
@@ -50,7 +50,7 @@ function tag(seconds: number, code: string): string {
 
 function fmt(d: Date): DiscordTimestampResult {
   const seconds = Math.floor(d.getTime() / 1000);
-  const out: DiscordTimestampResult = { 'Unix seconds': String(seconds) };
+  const out: DiscordTimestampResult = { "Unix seconds": String(seconds) };
   for (const { code, label } of STYLES) {
     out[`${tag(seconds, code)} (${label})`] = tag(seconds, code);
   }
@@ -59,7 +59,7 @@ function fmt(d: Date): DiscordTimestampResult {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: Record<string, unknown>): DiscordTimestampResult {
-  return fmt(parse(input ?? ''));
+  return fmt(parse(input ?? ""));
 }
 
 export default { run } satisfies ToolLogic<string, DiscordTimestampResult, Record<string, unknown>>;

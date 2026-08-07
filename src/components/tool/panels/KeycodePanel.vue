@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
-import type { ToolMeta } from '@/tools/types';
-import { run } from '@/tools/keycode/index';
-import OutputView from '../OutputView.vue';
+import { onMounted, onUnmounted, ref } from "vue";
+import type { ToolMeta } from "@/tools/types";
+import { run } from "@/tools/keycode/index";
+import OutputView from "../OutputView.vue";
 
 /**
  * Bespoke panel for the keycode tool: a live "press any key" capture
@@ -28,14 +28,14 @@ const history = ref<HistoryEntry[]>([]);
 
 /** Renders " " as "Space"; every other key renders as-is. */
 function keyLabel(key: string): string {
-  return key === ' ' ? 'Space' : key;
+  return key === " " ? "Space" : key;
 }
 
 /** Keys that would scroll or move focus if left to the browser default. */
-const NAV_KEYS = new Set(['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+const NAV_KEYS = new Set(["Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
 function shouldPreventDefault(e: KeyboardEvent): boolean {
-  return e.key === ' ' || NAV_KEYS.has(e.key);
+  return e.key === " " || NAV_KEYS.has(e.key);
 }
 
 function pushHistory(entry: HistoryEntry) {
@@ -78,8 +78,8 @@ function selectHistory(entry: HistoryEntry) {
   currentId.value = entry.id;
 }
 
-onMounted(() => window.addEventListener('keydown', handleKeyDown));
-onUnmounted(() => window.removeEventListener('keydown', handleKeyDown));
+onMounted(() => window.addEventListener("keydown", handleKeyDown));
+onUnmounted(() => window.removeEventListener("keydown", handleKeyDown));
 </script>
 
 <template>
@@ -89,36 +89,30 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown));
       aria-live="polite"
     >
       <template v-if="currentLabel === null">
-        <p class="text-muted-foreground">
-          Press any key
-        </p>
+        <p class="text-muted-foreground">Press any key</p>
       </template>
       <template v-else>
         <kbd
           class="rounded-[8px] border bg-secondary px-6 py-4 font-mono text-4xl leading-none font-semibold shadow-[var(--sh-sm)]"
-        >{{ currentLabel }}</kbd>
+          >{{ currentLabel }}</kbd
+        >
         <p class="font-mono text-sm text-muted-foreground">
           {{ currentCode }}
         </p>
       </template>
     </div>
 
-    <div
-      v-if="history.length"
-      class="flex flex-col gap-2"
-    >
-      <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">Recent keys</span>
+    <div v-if="history.length" class="flex flex-col gap-2">
+      <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+        >Recent keys</span
+      >
       <div class="flex flex-wrap gap-2">
         <button
           v-for="entry in history"
           :key="entry.id"
           type="button"
           class="rounded-[8px] border px-3 py-1.5 font-mono text-sm transition-colors"
-          :class="
-            entry.id === currentId
-              ? 'border-ring bg-accent'
-              : 'bg-secondary hover:bg-accent'
-          "
+          :class="entry.id === currentId ? 'border-ring bg-accent' : 'bg-secondary hover:bg-accent'"
           :title="entry.output['Event summary']"
           :aria-pressed="entry.id === currentId"
           @click="selectHistory(entry)"
@@ -128,15 +122,9 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeyDown));
       </div>
     </div>
 
-    <OutputView
-      v-if="output !== null"
-      :output="output"
-    />
+    <OutputView v-if="output !== null" :output="output" />
 
-    <p
-      v-if="output !== null"
-      class="text-xs text-muted-foreground"
-    >
+    <p v-if="output !== null" class="text-xs text-muted-foreground">
       keyCode and which are deprecated legacy values, shown here for compatibility work only.
     </p>
   </div>

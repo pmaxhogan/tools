@@ -15,35 +15,30 @@
  * hash at a time, hands the results back to `groupByHash`, and turns the
  * chosen deletions into a confirmed write batch.
  */
-import { ToolError, type ToolLogic } from '../types';
-import { MAX_HASH_BYTES } from '@/lib/fs-access';
-import type { FsFileEntry, FsScan, WriteOp } from '@/lib/fs-access';
+import { ToolError, type ToolLogic } from "../types";
+import { MAX_HASH_BYTES } from "@/lib/fs-access";
+import type { FsFileEntry, FsScan, WriteOp } from "@/lib/fs-access";
 
 /* ------------------------------------------------------------------ *
  * types
  * ------------------------------------------------------------------ */
 
 /** Which file in a group survives when the rest are deleted. */
-export type KeepStrategy =
-  | 'first-alpha'
-  | 'shortest-path'
-  | 'newest'
-  | 'oldest'
-  | 'shallowest';
+export type KeepStrategy = "first-alpha" | "shortest-path" | "newest" | "oldest" | "shallowest";
 
 /** The strategies, in the order a picker should offer them. */
 export const KEEP_STRATEGIES: { value: KeepStrategy; label: string }[] = [
-  { value: 'first-alpha', label: 'First by path (A to Z)' },
-  { value: 'shortest-path', label: 'Shortest path' },
-  { value: 'newest', label: 'Newest file' },
-  { value: 'oldest', label: 'Oldest file' },
-  { value: 'shallowest', label: 'Closest to the top folder' },
+  { value: "first-alpha", label: "First by path (A to Z)" },
+  { value: "shortest-path", label: "Shortest path" },
+  { value: "newest", label: "Newest file" },
+  { value: "oldest", label: "Oldest file" },
+  { value: "shallowest", label: "Closest to the top folder" },
 ];
 
 const STRATEGY_SET = new Set<string>(KEEP_STRATEGIES.map((s) => s.value));
 
 /** The sentinel hash used for the zero byte group, which is never hashed. */
-export const EMPTY_FILE_HASH = 'zero-bytes';
+export const EMPTY_FILE_HASH = "zero-bytes";
 
 /**
  * Every empty file is byte for byte identical to every other empty file, which
@@ -51,7 +46,7 @@ export const EMPTY_FILE_HASH = 'zero-bytes';
  * own group, with this note, and no suggested deletion.
  */
 export const EMPTY_FILE_NOTE =
-  'Every empty file is technically identical to every other empty file. They take up no space, so deleting them reclaims nothing. Keep or remove them on their own merits.';
+  "Every empty file is technically identical to every other empty file. They take up no space, so deleting them reclaims nothing. Keep or remove them on their own merits.";
 
 /** A set of files that hold exactly the same bytes. */
 export interface DuplicateGroup {
@@ -129,7 +124,7 @@ export interface DuplicateFinderOpts {
 export function humanBytes(bytes: number): string {
   const n = Math.max(0, Math.round(bytes));
   if (n < 1024) return `${n} B`;
-  const units = ['KB', 'MB', 'GB', 'TB', 'PB'];
+  const units = ["KB", "MB", "GB", "TB", "PB"];
   let value = n / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -145,8 +140,8 @@ function byPath(a: FsFileEntry, b: FsFileEntry): number {
 
 /** How many segments deep a path sits. `a.txt` is 1, `a/b.txt` is 2. */
 export function pathDepth(path: string): number {
-  return String(path ?? '')
-    .split('/')
+  return String(path ?? "")
+    .split("/")
     .filter(Boolean).length;
 }
 
@@ -291,19 +286,19 @@ export function groupByHash(hashedFiles: HashedFile[]): DuplicateGroup[] {
 
   for (const item of hashedFiles ?? []) {
     const entry = item?.entry;
-    const hash = typeof item?.hash === 'string' ? item.hash.trim().toLowerCase() : '';
+    const hash = typeof item?.hash === "string" ? item.hash.trim().toLowerCase() : "";
     if (!entry || !entry.path) {
       throw new ToolError(
-        'missing-entry',
-        'A hashed result came back without the file it belongs to.',
-        'Pass one { entry, hash } pair per hashed file, using the entries from planHashing.',
+        "missing-entry",
+        "A hashed result came back without the file it belongs to.",
+        "Pass one { entry, hash } pair per hashed file, using the entries from planHashing.",
       );
     }
     if (!hash) {
       throw new ToolError(
-        'missing-hash',
+        "missing-hash",
         `No hash was given for "${entry.path}".`,
-        'Hash every candidate before grouping, and leave out any file whose hash failed rather than passing an empty string.',
+        "Hash every candidate before grouping, and leave out any file whose hash failed rather than passing an empty string.",
       );
     }
     const group = byHash.get(hash) ?? new Map<string, FsFileEntry>();
@@ -332,9 +327,9 @@ export function groupByHash(hashedFiles: HashedFile[]): DuplicateGroup[] {
 function assertStrategy(keepStrategy: KeepStrategy): void {
   if (!STRATEGY_SET.has(keepStrategy)) {
     throw new ToolError(
-      'unknown-keep-strategy',
+      "unknown-keep-strategy",
       `"${String(keepStrategy)}" is not a way of choosing which copy to keep.`,
-      `Use one of: ${KEEP_STRATEGIES.map((s) => s.value).join(', ')}.`,
+      `Use one of: ${KEEP_STRATEGIES.map((s) => s.value).join(", ")}.`,
     );
   }
 }
@@ -352,25 +347,23 @@ export function chooseKeeper(group: DuplicateGroup, keepStrategy: KeepStrategy):
   const files = group?.files ?? [];
   if (files.length < 2) {
     throw new ToolError(
-      'not-a-duplicate-group',
-      'A duplicate group needs at least two files before one of them can be kept.',
-      'Only pass groups that groupByHash returned, which always hold two or more files.',
+      "not-a-duplicate-group",
+      "A duplicate group needs at least two files before one of them can be kept.",
+      "Only pass groups that groupByHash returned, which always hold two or more files.",
     );
   }
 
   const ranked = [...files].sort((a, b) => {
     switch (keepStrategy) {
-      case 'shortest-path':
+      case "shortest-path":
         return a.path.length - b.path.length || byPath(a, b);
-      case 'newest':
+      case "newest":
         return b.lastModified - a.lastModified || byPath(a, b);
-      case 'oldest':
+      case "oldest":
         return a.lastModified - b.lastModified || byPath(a, b);
-      case 'shallowest':
+      case "shallowest":
         return (
-          pathDepth(a.path) - pathDepth(b.path) ||
-          a.path.length - b.path.length ||
-          byPath(a, b)
+          pathDepth(a.path) - pathDepth(b.path) || a.path.length - b.path.length || byPath(a, b)
         );
       default:
         return byPath(a, b);
@@ -392,7 +385,7 @@ export function chooseDeletions(group: DuplicateGroup, keepStrategy: KeepStrateg
   const keeper = chooseKeeper(group, keepStrategy);
   return group.files
     .filter((file) => file.path !== keeper.path)
-    .map((file) => ({ op: 'delete', path: file.path }));
+    .map((file) => ({ op: "delete", path: file.path }));
 }
 
 /**
@@ -439,21 +432,21 @@ export function summarize(groups: DuplicateGroup[]): DuplicateSummary {
  * ------------------------------------------------------------------ */
 
 const USAGE_ROWS: Record<string, string> = {
-  'How this works':
-    'Choose a folder and the tool walks it once, then compares sizes. Only files that share a size with another file get read and hashed, because two files cannot hold the same bytes unless they hold the same number of bytes. A folder of several thousand files usually leaves a few dozen worth reading.',
-  'Why it is fast':
-    'The scan reads names, sizes and timestamps, never contents. Hashing is the expensive part, so it runs on the short list of same size candidates rather than on the whole folder.',
-  'What counts as identical':
-    'A SHA-256 digest of the file contents. Names, extensions and timestamps are ignored, so two copies of the same photo match even when one is called IMG_0421.jpg and the other Copy of holiday.jpg.',
-  'Very large files':
-    'Anything past 256 MB is reported as a size match that was not verified. Hashing in a browser has to hold the whole file in memory at once, so the tool says so instead of freezing the tab.',
-  'Empty files':
-    'Zero byte files are listed on their own. They are all identical to each other, and deleting them frees nothing, so the tool never suggests removing them.',
+  "How this works":
+    "Choose a folder and the tool walks it once, then compares sizes. Only files that share a size with another file get read and hashed, because two files cannot hold the same bytes unless they hold the same number of bytes. A folder of several thousand files usually leaves a few dozen worth reading.",
+  "Why it is fast":
+    "The scan reads names, sizes and timestamps, never contents. Hashing is the expensive part, so it runs on the short list of same size candidates rather than on the whole folder.",
+  "What counts as identical":
+    "A SHA-256 digest of the file contents. Names, extensions and timestamps are ignored, so two copies of the same photo match even when one is called IMG_0421.jpg and the other Copy of holiday.jpg.",
+  "Very large files":
+    "Anything past 256 MB is reported as a size match that was not verified. Hashing in a browser has to hold the whole file in memory at once, so the tool says so instead of freezing the tab.",
+  "Empty files":
+    "Zero byte files are listed on their own. They are all identical to each other, and deleting them frees nothing, so the tool never suggests removing them.",
   Deleting:
-    'Nothing is deleted until you pick which copy to keep in each group and confirm. Deletion is permanent: it frees the bytes, and the undo file records what went, not the contents.',
+    "Nothing is deleted until you pick which copy to keep in each group and confirm. Deletion is permanent: it frees the bytes, and the undo file records what went, not the contents.",
   Browsers:
-    'Opening a folder in place needs the File System Access API, which Chromium browsers such as Chrome, Edge, Brave and Opera ship on desktop. Firefox and Safari do not support it yet.',
-  Privacy: 'Everything runs in this tab: your files and inputs never leave your device.',
+    "Opening a folder in place needs the File System Access API, which Chromium browsers such as Chrome, Edge, Brave and Opera ship on desktop. Firefox and Safari do not support it yet.",
+  Privacy: "Everything runs in this tab: your files and inputs never leave your device.",
 };
 
 /**
@@ -464,7 +457,7 @@ const USAGE_ROWS: Record<string, string> = {
  */
 export function run(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _input: string = '',
+  _input: string = "",
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _opts: DuplicateFinderOpts = {},
 ): Record<string, string> {

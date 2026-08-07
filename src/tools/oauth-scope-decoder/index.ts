@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 import {
   BY_PATTERN,
   BY_PATTERN_LOWER,
@@ -7,7 +7,7 @@ import {
   RESOURCE_PREFIXES,
   type Risk,
   type ScopeEntry,
-} from './data';
+} from "./data";
 
 export interface ScopeOpts {
   /** 'risk' sorts most permissive first; 'input' keeps the order you pasted. */
@@ -20,7 +20,7 @@ export interface ScopeOpts {
 export type ScopeResult = Record<string, string>;
 
 const RISK_ORDER: Record<Risk, number> = { low: 0, moderate: 1, high: 2, critical: 3 };
-const RISK_NAMES: Risk[] = ['critical', 'high', 'moderate', 'low'];
+const RISK_NAMES: Risk[] = ["critical", "high", "moderate", "low"];
 
 /** One decoded scope, whether it was found in the catalog or guessed at. */
 export interface Decoded {
@@ -37,8 +37,8 @@ export interface Decoded {
 
 /** base64url to a UTF-8 string. Throws on anything that is not valid base64url. */
 function decodeBase64Url(segment: string): string {
-  const padded = segment.replace(/-/g, '+').replace(/_/g, '/');
-  const full = padded + '='.repeat((4 - (padded.length % 4)) % 4);
+  const padded = segment.replace(/-/g, "+").replace(/_/g, "/");
+  const full = padded + "=".repeat((4 - (padded.length % 4)) % 4);
   const binary = atob(full);
   const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
   return new TextDecoder().decode(bytes);
@@ -53,7 +53,7 @@ function parseJsonSegment(segment: string): Record<string, unknown> | null {
   }
   try {
     const parsed: unknown = JSON.parse(text);
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed))
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
       return parsed as Record<string, unknown>;
   } catch {
     /* not JSON */
@@ -67,17 +67,17 @@ function parseJsonSegment(segment: string): Record<string, unknown> | null {
  * scope strings like `files.content.read` out of this branch.
  */
 function asJwtPayload(token: string): Record<string, unknown> | null {
-  const parts = token.split('.');
+  const parts = token.split(".");
   if (parts.length !== 3) return null;
   if (!/^[A-Za-z0-9_-]+$/.test(parts[0]) || !/^[A-Za-z0-9_-]+$/.test(parts[1])) return null;
   const header = parseJsonSegment(parts[0]);
-  if (!header || typeof header.alg !== 'string') return null;
+  if (!header || typeof header.alg !== "string") return null;
   const payload = parseJsonSegment(parts[1]);
   if (!payload)
     throw new ToolError(
-      'bad-token',
-      'That looks like a JWT, but its payload is not readable JSON.',
-      'Copy the whole token, including all three dot separated parts.',
+      "bad-token",
+      "That looks like a JWT, but its payload is not readable JSON.",
+      "Copy the whole token, including all three dot separated parts.",
     );
   return payload;
 }
@@ -85,12 +85,12 @@ function asJwtPayload(token: string): Record<string, unknown> | null {
 /** Pull scopes out of a decoded JWT payload: `scope`, `scp` or `scopes`. */
 function scopesFromPayload(payload: Record<string, unknown>): string[] {
   const claim = payload.scope ?? payload.scp ?? payload.scopes;
-  if (typeof claim === 'string') return splitList(claim);
-  if (Array.isArray(claim)) return claim.filter((c): c is string => typeof c === 'string');
+  if (typeof claim === "string") return splitList(claim);
+  if (Array.isArray(claim)) return claim.filter((c): c is string => typeof c === "string");
   throw new ToolError(
-    'no-scope-claim',
-    'That token decoded cleanly but has no scope, scp or scopes claim in its payload.',
-    'Paste the scope list itself, or a token issued with scopes attached.',
+    "no-scope-claim",
+    "That token decoded cleanly but has no scope, scp or scopes claim in its payload.",
+    "Paste the scope list itself, or a token issued with scopes attached.",
   );
 }
 
@@ -102,12 +102,12 @@ function scopesFromUrl(raw: string): string[] | null {
   } catch {
     return null;
   }
-  const fromQuery = url.searchParams.get('scope');
+  const fromQuery = url.searchParams.get("scope");
   if (fromQuery) return splitList(fromQuery);
 
-  const hash = url.hash.startsWith('#') ? url.hash.slice(1) : url.hash;
+  const hash = url.hash.startsWith("#") ? url.hash.slice(1) : url.hash;
   if (hash) {
-    const fromHash = new URLSearchParams(hash).get('scope');
+    const fromHash = new URLSearchParams(hash).get("scope");
     if (fromHash) return splitList(fromHash);
   }
   return null;
@@ -117,7 +117,7 @@ function scopesFromUrl(raw: string): string[] | null {
 function splitList(raw: string): string[] {
   return raw
     .split(/[\s,]+/)
-    .map((t) => t.replace(/^["'[\]{}]+|["'[\]{}]+$/g, '').trim())
+    .map((t) => t.replace(/^["'[\]{}]+|["'[\]{}]+$/g, "").trim())
     .filter(Boolean);
 }
 
@@ -126,16 +126,16 @@ function splitList(raw: string): string[] {
  * with first-seen order preserved.
  */
 export function extractScopes(input: string): string[] {
-  const raw = (input ?? '').trim();
+  const raw = (input ?? "").trim();
   if (!raw)
     throw new ToolError(
-      'empty-input',
-      'There is nothing to decode.',
-      'Paste a scope list, an OAuth consent URL, or an access token that carries scopes.',
+      "empty-input",
+      "There is nothing to decode.",
+      "Paste a scope list, an OAuth consent URL, or an access token that carries scopes.",
     );
 
   let tokens: string[] | null = null;
-  const single = raw.replace(/^Bearer\s+/i, '').trim();
+  const single = raw.replace(/^Bearer\s+/i, "").trim();
   const isOneToken = !/\s/.test(single);
 
   if (isOneToken) {
@@ -162,9 +162,9 @@ export function extractScopes(input: string): string[] {
 
   if (!out.length)
     throw new ToolError(
-      'empty-input',
-      'No scopes were found in that input.',
-      'Paste a scope list, an OAuth consent URL, or an access token that carries scopes.',
+      "empty-input",
+      "No scopes were found in that input.",
+      "Paste a scope list, an OAuth consent URL, or an access token that carries scopes.",
     );
 
   return out;
@@ -214,34 +214,34 @@ export function guessUnknown(scope: string): { risk: Risk; suggests: string; why
   const isRead = /read|view|list|get|readonly|read_only|\.ro\b/.test(s);
 
   const parts: string[] = [];
-  if (isAdmin) parts.push('administrative control rather than access to your own data');
-  if (isDelete) parts.push('the ability to delete things');
-  if (isWrite && !isDelete) parts.push('writing or changing data, not only reading it');
-  if (isRead && !isWrite && !isDelete) parts.push('reading data without changing it');
-  if (wide) parts.push('a scope that spans every record rather than only yours');
-  if (!parts.length) parts.push('access whose breadth the name does not make clear');
+  if (isAdmin) parts.push("administrative control rather than access to your own data");
+  if (isDelete) parts.push("the ability to delete things");
+  if (isWrite && !isDelete) parts.push("writing or changing data, not only reading it");
+  if (isRead && !isWrite && !isDelete) parts.push("reading data without changing it");
+  if (wide) parts.push("a scope that spans every record rather than only yours");
+  if (!parts.length) parts.push("access whose breadth the name does not make clear");
 
   let level = 1; // moderate by default
   if (isRead && !isWrite && !isDelete && !isAdmin) level = 0;
   if (isWrite) level = 1;
   if (isDelete || isAdmin) level = 2;
   if (wide) level = Math.min(3, level + 1);
-  const risk = (['low', 'moderate', 'high', 'critical'] as Risk[])[level];
+  const risk = (["low", "moderate", "high", "critical"] as Risk[])[level];
 
   const whyBits: string[] = [];
   if (wide)
     whyBits.push(
-      'the .All suffix or wildcard usually means every record in the account, not only yours',
+      "the .All suffix or wildcard usually means every record in the account, not only yours",
     );
-  if (isAdmin) whyBits.push('admin in a scope name usually means it acts on other people too');
-  if (isDelete) whyBits.push('deletion is rarely reversible');
+  if (isAdmin) whyBits.push("admin in a scope name usually means it acts on other people too");
+  if (isDelete) whyBits.push("deletion is rarely reversible");
   if (!whyBits.length)
-    whyBits.push('the risk shown is inferred from the words in the name and could be wrong');
+    whyBits.push("the risk shown is inferred from the words in the name and could be wrong");
 
-  const why = whyBits.join('; ');
+  const why = whyBits.join("; ");
   return {
     risk,
-    suggests: parts.join(', '),
+    suggests: parts.join(", "),
     why: `${why.charAt(0).toUpperCase()}${why.slice(1)}.`,
   };
 }
@@ -261,7 +261,7 @@ export function decode(scope: string): Decoded {
   const g = guessUnknown(scope);
   return {
     scope,
-    provider: 'Unrecognized',
+    provider: "Unrecognized",
     plainEnglish: `Not in the catalog. The name suggests ${g.suggests}.`,
     risk: g.risk,
     riskWhy: g.why,
@@ -272,14 +272,14 @@ export function decode(scope: string): Decoded {
 // ---------------------------------------------------------------- output
 
 function plural(n: number, word: string): string {
-  return `${n} ${word}${n === 1 ? '' : 's'}`;
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
 }
 
 function breakdown(rows: Decoded[]): string {
-  const counts = RISK_NAMES.map((r) => [r, rows.filter((d) => d.risk === r).length] as const).filter(
-    ([, n]) => n > 0,
-  );
-  return counts.map(([r, n]) => `${n} ${r}`).join(', ');
+  const counts = RISK_NAMES.map(
+    (r) => [r, rows.filter((d) => d.risk === r).length] as const,
+  ).filter(([, n]) => n > 0);
+  return counts.map(([r, n]) => `${n} ${r}`).join(", ");
 }
 
 function providerSummary(rows: Decoded[]): string {
@@ -288,16 +288,16 @@ function providerSummary(rows: Decoded[]): string {
     if (d.guess) continue;
     counts.set(d.provider, (counts.get(d.provider) ?? 0) + 1);
   }
-  if (!counts.size) return 'no provider recognized';
+  if (!counts.size) return "no provider recognized";
   return [...counts.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([p]) => p)
-    .join(', ');
+    .join(", ");
 }
 
 function advice(rows: Decoded[]): string {
   const scopes = rows.map((d) => d.scope.toLowerCase());
-  const lines = ['Risk here describes what a scope permits, not a claim that this app misuses it.'];
+  const lines = ["Risk here describes what a scope permits, not a claim that this app misuses it."];
 
   const offline = scopes.filter((s) => /offline[._]access|refresh_token/.test(s));
   if (offline.length)
@@ -316,41 +316,41 @@ function advice(rows: Decoded[]): string {
   );
   if (canWrite && canDelete)
     lines.push(
-      'This list pairs write access with the ability to delete, so a mistake or a compromise removes data rather than just exposing it.',
+      "This list pairs write access with the ability to delete, so a mistake or a compromise removes data rather than just exposing it.",
     );
 
   if (rows.some((d) => /(^|[._:/-])admin/i.test(d.scope) || /admin/i.test(d.provider)))
     lines.push(
-      'Scopes with admin in the name act on the whole workspace or organization, including people who never saw this consent screen.',
+      "Scopes with admin in the name act on the whole workspace or organization, including people who never saw this consent screen.",
     );
 
-  const criticals = rows.filter((d) => d.risk === 'critical').length;
+  const criticals = rows.filter((d) => d.risk === "critical").length;
   if (criticals)
     lines.push(
-      `${plural(criticals, 'scope')} here ${criticals === 1 ? 'is' : 'are'} wide enough that granting ${criticals === 1 ? 'it' : 'them'} is close to handing over the account, so grant ${criticals === 1 ? 'it' : 'them'} only to software you would trust with everything.`,
+      `${plural(criticals, "scope")} here ${criticals === 1 ? "is" : "are"} wide enough that granting ${criticals === 1 ? "it" : "them"} is close to handing over the account, so grant ${criticals === 1 ? "it" : "them"} only to software you would trust with everything.`,
     );
 
   const guesses = rows.filter((d) => d.guess).length;
   if (guesses)
     lines.push(
-      `${plural(guesses, 'scope')} ${guesses === 1 ? 'is' : 'are'} not in the catalog, so ${guesses === 1 ? 'that row is an informed guess' : 'those rows are informed guesses'}. ${guesses === 1 ? 'Check it' : 'Check those'} against the official documentation for that provider before deciding.`,
+      `${plural(guesses, "scope")} ${guesses === 1 ? "is" : "are"} not in the catalog, so ${guesses === 1 ? "that row is an informed guess" : "those rows are informed guesses"}. ${guesses === 1 ? "Check it" : "Check those"} against the official documentation for that provider before deciding.`,
     );
 
   if (lines.length === 1)
     lines.push(
-      'Nothing on this list stands out. It is still worth checking that every scope matches something the app actually needs.',
+      "Nothing on this list stands out. It is still worth checking that every scope matches something the app actually needs.",
     );
 
-  return lines.join(' ');
+  return lines.join(" ");
 }
 
 export function run(input: string, opts: ScopeOpts): ScopeResult {
   const scopes = extractScopes(input);
   const rows = scopes.map(decode);
 
-  const sortMode = String(opts?.sort ?? 'risk');
+  const sortMode = String(opts?.sort ?? "risk");
   const ordered =
-    sortMode === 'input'
+    sortMode === "input"
       ? rows
       : rows
           .map((d, i) => ({ d, i }))
@@ -358,23 +358,24 @@ export function run(input: string, opts: ScopeOpts): ScopeResult {
           .map((x) => x.d);
 
   const hideLow = opts?.hideLow === true;
-  const shown = hideLow ? ordered.filter((d) => d.risk !== 'low') : ordered;
+  const shown = hideLow ? ordered.filter((d) => d.risk !== "low") : ordered;
   const hidden = ordered.length - shown.length;
 
-  const overall = RISK_NAMES.find((r) => rows.some((d) => d.risk === r)) ?? 'low';
+  const overall = RISK_NAMES.find((r) => rows.some((d) => d.risk === r)) ?? "low";
 
   const out: ScopeResult = {};
-  let summary = `${plural(rows.length, 'scope')} · ${providerSummary(rows)} · overall risk: ${overall} (${breakdown(rows)})`;
-  if (hidden > 0) summary += ` ${plural(hidden, 'low risk row')} hidden; the counts above still include them.`;
-  out['Access summary'] = summary;
+  let summary = `${plural(rows.length, "scope")} · ${providerSummary(rows)} · overall risk: ${overall} (${breakdown(rows)})`;
+  if (hidden > 0)
+    summary += ` ${plural(hidden, "low risk row")} hidden; the counts above still include them.`;
+  out["Access summary"] = summary;
 
   for (const d of shown) {
-    const lead = d.guess ? '' : `${d.provider} · `;
+    const lead = d.guess ? "" : `${d.provider} · `;
     out[d.scope] =
-      `${lead}${d.plainEnglish} (risk: ${d.risk}${d.guess ? ', a guess' : ''}) ${d.riskWhy}`;
+      `${lead}${d.plainEnglish} (risk: ${d.risk}${d.guess ? ", a guess" : ""}) ${d.riskWhy}`;
   }
 
-  out['Things to check'] = advice(rows);
+  out["Things to check"] = advice(rows);
   return out;
 }
 

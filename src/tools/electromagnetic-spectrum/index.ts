@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 import {
   AXIS_MAX_HZ,
   AXIS_MIN_HZ,
@@ -9,7 +9,7 @@ import {
   IONIZING_EV,
   WIEN_B,
   type Band,
-} from './data';
+} from "./data";
 
 /**
  * Electromagnetic Spectrum: the pure logic layer.
@@ -139,7 +139,7 @@ export function wavelengthNmToRgb(nm: number): Rgb | null {
 
 /** "#rrggbb" for an Rgb triple. */
 export function rgbToHex({ r, g, b }: Rgb): string {
-  const h = (n: number): string => n.toString(16).padStart(2, '0');
+  const h = (n: number): string => n.toString(16).padStart(2, "0");
   return `#${h(r)}${h(g)}${h(b)}`;
 }
 
@@ -231,7 +231,7 @@ export function bandPathAt(freqHz: number): Band[] {
 
 /** A "Radio > VHF > FM broadcast" style string for a band path. */
 export function bandPathLabel(path: Band[]): string {
-  return path.map((b) => b.name).join(' > ');
+  return path.map((b) => b.name).join(" > ");
 }
 
 /**
@@ -277,7 +277,7 @@ export function maxDepth(bands: Band[] = BANDS): number {
 
 /** Round to a small number of significant figures for display. */
 function sig(n: number, figs = 4): string {
-  if (n === 0) return '0';
+  if (n === 0) return "0";
   const rounded = Number(n.toPrecision(figs));
   // Keep plain decimal for human ranges, scientific for the extremes.
   if (Math.abs(rounded) >= 1e-4 && Math.abs(rounded) < 1e7) {
@@ -292,15 +292,15 @@ interface Scale {
 }
 
 const FREQ_SCALES: Scale[] = [
-  { factor: 1e24, prefix: 'YHz' },
-  { factor: 1e21, prefix: 'ZHz' },
-  { factor: 1e18, prefix: 'EHz' },
-  { factor: 1e15, prefix: 'PHz' },
-  { factor: 1e12, prefix: 'THz' },
-  { factor: 1e9, prefix: 'GHz' },
-  { factor: 1e6, prefix: 'MHz' },
-  { factor: 1e3, prefix: 'kHz' },
-  { factor: 1, prefix: 'Hz' },
+  { factor: 1e24, prefix: "YHz" },
+  { factor: 1e21, prefix: "ZHz" },
+  { factor: 1e18, prefix: "EHz" },
+  { factor: 1e15, prefix: "PHz" },
+  { factor: 1e12, prefix: "THz" },
+  { factor: 1e9, prefix: "GHz" },
+  { factor: 1e6, prefix: "MHz" },
+  { factor: 1e3, prefix: "kHz" },
+  { factor: 1, prefix: "Hz" },
 ];
 
 /** Frequency with an SI prefix, for example "2.45 GHz" or "545.1 THz". */
@@ -312,13 +312,13 @@ export function formatFrequency(freqHz: number): string {
 }
 
 const LENGTH_SCALES: Scale[] = [
-  { factor: 1e3, prefix: 'km' },
-  { factor: 1, prefix: 'm' },
-  { factor: 1e-2, prefix: 'cm' },
-  { factor: 1e-3, prefix: 'mm' },
-  { factor: 1e-6, prefix: 'um' },
-  { factor: 1e-9, prefix: 'nm' },
-  { factor: 1e-12, prefix: 'pm' },
+  { factor: 1e3, prefix: "km" },
+  { factor: 1, prefix: "m" },
+  { factor: 1e-2, prefix: "cm" },
+  { factor: 1e-3, prefix: "mm" },
+  { factor: 1e-6, prefix: "um" },
+  { factor: 1e-9, prefix: "nm" },
+  { factor: 1e-12, prefix: "pm" },
 ];
 
 /** Wavelength with a sensible metric unit, for example "550 nm" or "12.24 cm". */
@@ -330,12 +330,12 @@ export function formatWavelength(meters: number): string {
 }
 
 const EV_SCALES: Scale[] = [
-  { factor: 1e9, prefix: 'GeV' },
-  { factor: 1e6, prefix: 'MeV' },
-  { factor: 1e3, prefix: 'keV' },
-  { factor: 1, prefix: 'eV' },
-  { factor: 1e-3, prefix: 'meV' },
-  { factor: 1e-6, prefix: 'ueV' },
+  { factor: 1e9, prefix: "GeV" },
+  { factor: 1e6, prefix: "MeV" },
+  { factor: 1e3, prefix: "keV" },
+  { factor: 1, prefix: "eV" },
+  { factor: 1e-3, prefix: "meV" },
+  { factor: 1e-6, prefix: "ueV" },
 ];
 
 /** Photon energy with an SI prefix on electronvolts. */
@@ -349,7 +349,7 @@ export function formatEnergyEv(ev: number): string {
 /** Temperature in kelvin, grouped with thousands separators. */
 export function formatKelvin(k: number): string {
   if (k >= 1e6 || k < 1e-2) return `${k.toExponential(3)} K`;
-  return `${Number(k.toPrecision(4)).toLocaleString('en-US')} K`;
+  return `${Number(k.toPrecision(4)).toLocaleString("en-US")} K`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -365,12 +365,12 @@ const SI_PREFIX: Record<string, number> = {
   p: 1e-12,
   n: 1e-9,
   u: 1e-6,
-  'µ': 1e-6, // micro sign
-  'μ': 1e-6, // Greek small mu
+  µ: 1e-6, // micro sign
+  μ: 1e-6, // Greek small mu
   m: 1e-3,
   c: 1e-2,
   d: 1e-1,
-  '': 1,
+  "": 1,
   da: 1e1,
   h: 1e2,
   k: 1e3,
@@ -390,7 +390,7 @@ const WORD_LENGTH: Record<string, number> = {
   microns: 1e-6,
   angstrom: 1e-10,
   angstroms: 1e-10,
-  'å': 1e-10, // a-ring
+  å: 1e-10, // a-ring
   mile: 1609.344,
   miles: 1609.344,
   mi: 1609.344,
@@ -408,7 +408,7 @@ const WORD_LENGTH: Record<string, number> = {
 };
 
 const PARSE_FIX =
-  'Enter a frequency (2.45 GHz, 100 MHz, 1e15 Hz), a wavelength (550 nm, 21 cm, 1 m, 1 mile), or a photon energy (1 eV, 10 keV, 2 MeV). Energy prefixes are case sensitive: meV is milli, MeV is mega.';
+  "Enter a frequency (2.45 GHz, 100 MHz, 1e15 Hz), a wavelength (550 nm, 21 cm, 1 m, 1 mile), or a photon energy (1 eV, 10 keV, 2 MeV). Energy prefixes are case sensitive: meV is milli, MeV is mega.";
 
 /** Split a leading signed number (with optional exponent) from a unit tail. */
 function splitNumberUnit(text: string): { value: number; unit: string } | null {
@@ -419,7 +419,7 @@ function splitNumberUnit(text: string): { value: number; unit: string } | null {
   return { value, unit: match[2]!.trim() };
 }
 
-type Quantity = 'frequency' | 'wavelength' | 'energyEv' | 'energyJoule';
+type Quantity = "frequency" | "wavelength" | "energyEv" | "energyJoule";
 
 interface ResolvedUnit {
   quantity: Quantity;
@@ -434,17 +434,17 @@ interface ResolvedUnit {
 
 /** Resolve a unit string to a quantity kind and a multiplier to that base. */
 function resolveUnit(unit: string): ResolvedUnit | null {
-  if (unit === '') return { quantity: 'frequency', factor: 1 };
+  if (unit === "") return { quantity: "frequency", factor: 1 };
 
   const lower = unit.toLowerCase();
-  if (lower in WORD_LENGTH) return { quantity: 'wavelength', factor: WORD_LENGTH[lower]! };
+  if (lower in WORD_LENGTH) return { quantity: "wavelength", factor: WORD_LENGTH[lower]! };
 
   // Base suffixes, longest first so "hz" and "ev" win before the bare "m".
   const bases: { suffix: string; quantity: Quantity }[] = [
-    { suffix: 'hz', quantity: 'frequency' },
-    { suffix: 'ev', quantity: 'energyEv' },
-    { suffix: 'j', quantity: 'energyJoule' },
-    { suffix: 'm', quantity: 'wavelength' },
+    { suffix: "hz", quantity: "frequency" },
+    { suffix: "ev", quantity: "energyEv" },
+    { suffix: "j", quantity: "energyJoule" },
+    { suffix: "m", quantity: "wavelength" },
   ];
 
   for (const base of bases) {
@@ -459,7 +459,7 @@ function resolveUnit(unit: string): ResolvedUnit | null {
     if (prefixRaw in SI_PREFIX) {
       const strict = SI_PREFIX[prefixRaw]!;
       const alt =
-        base.quantity === 'frequency' && foldedKey !== prefixRaw && foldedFactor !== undefined
+        base.quantity === "frequency" && foldedKey !== prefixRaw && foldedFactor !== undefined
           ? foldedFactor
           : undefined;
       return { quantity: base.quantity, factor: strict, altFactor: alt };
@@ -467,8 +467,8 @@ function resolveUnit(unit: string): ResolvedUnit | null {
 
     // Prefix not a strict SI prefix. For frequency, accept a case-folded prefix
     // outright ("100 mhZ"); for anything else this is an unknown unit.
-    if (base.quantity === 'frequency' && foldedFactor !== undefined) {
-      return { quantity: 'frequency', factor: foldedFactor };
+    if (base.quantity === "frequency" && foldedFactor !== undefined) {
+      return { quantity: "frequency", factor: foldedFactor };
     }
     return null;
   }
@@ -481,34 +481,34 @@ function resolveUnit(unit: string): ResolvedUnit | null {
  * ToolError with an actionable fix hint for anything it cannot read.
  */
 export function parseJump(input: string): number {
-  const text = String(input ?? '').trim();
+  const text = String(input ?? "").trim();
   if (!text) {
-    throw new ToolError('empty-input', 'Enter something to jump to.', PARSE_FIX);
+    throw new ToolError("empty-input", "Enter something to jump to.", PARSE_FIX);
   }
 
   const split = splitNumberUnit(text);
   if (!split) {
-    throw new ToolError('invalid-number', `Could not read a number in "${text}".`, PARSE_FIX);
+    throw new ToolError("invalid-number", `Could not read a number in "${text}".`, PARSE_FIX);
   }
 
   const resolved = resolveUnit(split.unit);
   if (!resolved) {
-    throw new ToolError('unknown-unit', `Unknown unit "${split.unit}".`, PARSE_FIX);
+    throw new ToolError("unknown-unit", `Unknown unit "${split.unit}".`, PARSE_FIX);
   }
 
   let magnitude = split.value * resolved.factor;
   if (!(magnitude > 0)) {
     throw new ToolError(
-      'non-positive',
-      'The value must be a positive number.',
-      'Frequency, wavelength and energy are all positive quantities.',
+      "non-positive",
+      "The value must be a positive number.",
+      "Frequency, wavelength and energy are all positive quantities.",
     );
   }
 
   // For frequency, if the strict SI reading falls off the modeled axis but a
   // case-folded prefix lands on it, take the folded reading ("100 mhz" is MHz).
   if (
-    resolved.quantity === 'frequency' &&
+    resolved.quantity === "frequency" &&
     resolved.altFactor !== undefined &&
     (magnitude < AXIS_MIN_HZ || magnitude > AXIS_MAX_HZ)
   ) {
@@ -518,22 +518,22 @@ export function parseJump(input: string): number {
 
   let freqHz: number;
   switch (resolved.quantity) {
-    case 'frequency':
+    case "frequency":
       freqHz = magnitude;
       break;
-    case 'wavelength':
+    case "wavelength":
       freqHz = wavelengthToFrequency(magnitude);
       break;
-    case 'energyEv':
+    case "energyEv":
       freqHz = energyEvToFrequency(magnitude);
       break;
-    case 'energyJoule':
+    case "energyJoule":
       freqHz = energyJoulesToFrequency(magnitude);
       break;
   }
 
   if (!Number.isFinite(freqHz) || freqHz <= 0) {
-    throw new ToolError('out-of-range', 'That value does not map to a real frequency.', PARSE_FIX);
+    throw new ToolError("out-of-range", "That value does not map to a real frequency.", PARSE_FIX);
   }
 
   return freqHz;
@@ -569,7 +569,7 @@ export function describeFrequency(freqHz: number): Readout {
     ionizing: isIonizing(freqHz),
     colorHex: frequencyToColorHex(freqHz),
     path,
-    pathLabel: bandPathLabel(path) || 'Outside the modeled bands',
+    pathLabel: bandPathLabel(path) || "Outside the modeled bands",
     uses: usesAt(freqHz),
   };
 }
@@ -579,12 +579,12 @@ export function readoutRows(r: Readout): Record<string, string> {
   return {
     Frequency: formatFrequency(r.frequencyHz),
     Wavelength: formatWavelength(r.wavelengthM),
-    'Photon energy': formatEnergyEv(r.energyEv),
-    'Black-body peak': formatKelvin(r.blackbodyKelvin),
+    "Photon energy": formatEnergyEv(r.energyEv),
+    "Black-body peak": formatKelvin(r.blackbodyKelvin),
     Band: r.pathLabel,
-    Ionizing: r.ionizing ? 'Yes (approximate, at or above 10 eV)' : 'No',
-    Color: r.colorHex ?? 'Not in the visible band',
-    'Common uses': r.uses.length ? r.uses.join(', ') : 'None listed',
+    Ionizing: r.ionizing ? "Yes (approximate, at or above 10 eV)" : "No",
+    Color: r.colorHex ?? "Not in the visible band",
+    "Common uses": r.uses.length ? r.uses.join(", ") : "None listed",
   };
 }
 
@@ -602,9 +602,9 @@ export interface SpectrumOpts {
  */
 export function run(input: unknown, opts: SpectrumOpts = {}): Record<string, string> {
   const raw =
-    (typeof opts.query === 'string' && opts.query.trim()) ||
-    (typeof input === 'string' && input.trim()) ||
-    '550 nm';
+    (typeof opts.query === "string" && opts.query.trim()) ||
+    (typeof input === "string" && input.trim()) ||
+    "550 nm";
   const freqHz = parseJump(raw);
   return readoutRows(describeFrequency(freqHz));
 }

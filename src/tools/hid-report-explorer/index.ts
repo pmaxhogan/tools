@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * HID report descriptor parser and report decoder.
@@ -21,228 +21,228 @@ import { ToolError, type ToolLogic } from '../types';
  * ------------------------------------------------------------------ */
 
 const USAGE_PAGES: Record<number, string> = {
-  0x00: 'Undefined',
-  0x01: 'Generic Desktop',
-  0x02: 'Simulation Controls',
-  0x03: 'VR Controls',
-  0x04: 'Sport Controls',
-  0x05: 'Game Controls',
-  0x06: 'Generic Device Controls',
-  0x07: 'Keyboard/Keypad',
-  0x08: 'LED',
-  0x09: 'Button',
-  0x0a: 'Ordinal',
-  0x0b: 'Telephony Device',
-  0x0c: 'Consumer',
-  0x0d: 'Digitizers',
-  0x0e: 'Haptics',
-  0x0f: 'Physical Input Device',
-  0x10: 'Unicode',
-  0x11: 'SoC',
-  0x12: 'Eye and Head Trackers',
-  0x14: 'Auxiliary Display',
-  0x20: 'Sensors',
-  0x40: 'Medical Instrument',
-  0x41: 'Braille Display',
-  0x59: 'Lighting and Illumination',
-  0x80: 'Monitor',
-  0x84: 'Power Device',
-  0x85: 'Battery System',
-  0x8c: 'Barcode Scanner',
-  0x8d: 'Weighing Device',
-  0x8e: 'Magnetic Stripe Reader',
-  0x90: 'Camera Control',
-  0x91: 'Arcade',
-  0x92: 'Gaming Device',
-  0xf1d0: 'FIDO Alliance',
+  0x00: "Undefined",
+  0x01: "Generic Desktop",
+  0x02: "Simulation Controls",
+  0x03: "VR Controls",
+  0x04: "Sport Controls",
+  0x05: "Game Controls",
+  0x06: "Generic Device Controls",
+  0x07: "Keyboard/Keypad",
+  0x08: "LED",
+  0x09: "Button",
+  0x0a: "Ordinal",
+  0x0b: "Telephony Device",
+  0x0c: "Consumer",
+  0x0d: "Digitizers",
+  0x0e: "Haptics",
+  0x0f: "Physical Input Device",
+  0x10: "Unicode",
+  0x11: "SoC",
+  0x12: "Eye and Head Trackers",
+  0x14: "Auxiliary Display",
+  0x20: "Sensors",
+  0x40: "Medical Instrument",
+  0x41: "Braille Display",
+  0x59: "Lighting and Illumination",
+  0x80: "Monitor",
+  0x84: "Power Device",
+  0x85: "Battery System",
+  0x8c: "Barcode Scanner",
+  0x8d: "Weighing Device",
+  0x8e: "Magnetic Stripe Reader",
+  0x90: "Camera Control",
+  0x91: "Arcade",
+  0x92: "Gaming Device",
+  0xf1d0: "FIDO Alliance",
 };
 
 const GENERIC_DESKTOP_USAGES: Record<number, string> = {
-  0x01: 'Pointer',
-  0x02: 'Mouse',
-  0x04: 'Joystick',
-  0x05: 'Game Pad',
-  0x06: 'Keyboard',
-  0x07: 'Keypad',
-  0x08: 'Multi-axis Controller',
-  0x09: 'Tablet PC System Controls',
-  0x30: 'X',
-  0x31: 'Y',
-  0x32: 'Z',
-  0x33: 'Rx',
-  0x34: 'Ry',
-  0x35: 'Rz',
-  0x36: 'Slider',
-  0x37: 'Dial',
-  0x38: 'Wheel',
-  0x39: 'Hat switch',
-  0x3a: 'Counted Buffer',
-  0x3b: 'Byte Count',
-  0x3c: 'Motion Wakeup',
-  0x3d: 'Start',
-  0x3e: 'Select',
-  0x40: 'Vx',
-  0x41: 'Vy',
-  0x42: 'Vz',
-  0x43: 'Vbrx',
-  0x44: 'Vbry',
-  0x45: 'Vbrz',
-  0x46: 'Vno',
-  0x48: 'Resolution Multiplier',
-  0x80: 'System Control',
-  0x81: 'System Power Down',
-  0x82: 'System Sleep',
-  0x83: 'System Wake Up',
-  0x84: 'System Context Menu',
-  0x85: 'System Main Menu',
-  0x90: 'D-pad Up',
-  0x91: 'D-pad Down',
-  0x92: 'D-pad Right',
-  0x93: 'D-pad Left',
+  0x01: "Pointer",
+  0x02: "Mouse",
+  0x04: "Joystick",
+  0x05: "Game Pad",
+  0x06: "Keyboard",
+  0x07: "Keypad",
+  0x08: "Multi-axis Controller",
+  0x09: "Tablet PC System Controls",
+  0x30: "X",
+  0x31: "Y",
+  0x32: "Z",
+  0x33: "Rx",
+  0x34: "Ry",
+  0x35: "Rz",
+  0x36: "Slider",
+  0x37: "Dial",
+  0x38: "Wheel",
+  0x39: "Hat switch",
+  0x3a: "Counted Buffer",
+  0x3b: "Byte Count",
+  0x3c: "Motion Wakeup",
+  0x3d: "Start",
+  0x3e: "Select",
+  0x40: "Vx",
+  0x41: "Vy",
+  0x42: "Vz",
+  0x43: "Vbrx",
+  0x44: "Vbry",
+  0x45: "Vbrz",
+  0x46: "Vno",
+  0x48: "Resolution Multiplier",
+  0x80: "System Control",
+  0x81: "System Power Down",
+  0x82: "System Sleep",
+  0x83: "System Wake Up",
+  0x84: "System Context Menu",
+  0x85: "System Main Menu",
+  0x90: "D-pad Up",
+  0x91: "D-pad Down",
+  0x92: "D-pad Right",
+  0x93: "D-pad Left",
 };
 
 const KEYBOARD_USAGES: Record<number, string> = {
-  0x00: 'No event',
-  0x01: 'Error roll over',
-  0x02: 'POST fail',
-  0x03: 'Error undefined',
-  0x28: 'Enter',
-  0x29: 'Escape',
-  0x2a: 'Backspace',
-  0x2b: 'Tab',
-  0x2c: 'Space',
-  0x2d: '-',
-  0x2e: '=',
-  0x2f: '[',
-  0x30: ']',
-  0x31: '\\',
-  0x32: 'Non-US #',
-  0x33: ';',
+  0x00: "No event",
+  0x01: "Error roll over",
+  0x02: "POST fail",
+  0x03: "Error undefined",
+  0x28: "Enter",
+  0x29: "Escape",
+  0x2a: "Backspace",
+  0x2b: "Tab",
+  0x2c: "Space",
+  0x2d: "-",
+  0x2e: "=",
+  0x2f: "[",
+  0x30: "]",
+  0x31: "\\",
+  0x32: "Non-US #",
+  0x33: ";",
   0x34: "'",
-  0x35: '`',
-  0x36: ',',
-  0x37: '.',
-  0x38: '/',
-  0x39: 'Caps Lock',
-  0x46: 'Print Screen',
-  0x47: 'Scroll Lock',
-  0x48: 'Pause',
-  0x49: 'Insert',
-  0x4a: 'Home',
-  0x4b: 'Page Up',
-  0x4c: 'Delete',
-  0x4d: 'End',
-  0x4e: 'Page Down',
-  0x4f: 'Right Arrow',
-  0x50: 'Left Arrow',
-  0x51: 'Down Arrow',
-  0x52: 'Up Arrow',
-  0x53: 'Num Lock',
-  0x54: 'Keypad /',
-  0x55: 'Keypad *',
-  0x56: 'Keypad -',
-  0x57: 'Keypad +',
-  0x58: 'Keypad Enter',
-  0x62: 'Keypad 0',
-  0x63: 'Keypad .',
-  0x65: 'Application',
-  0x66: 'Power',
-  0xe0: 'Left Control',
-  0xe1: 'Left Shift',
-  0xe2: 'Left Alt',
-  0xe3: 'Left GUI',
-  0xe4: 'Right Control',
-  0xe5: 'Right Shift',
-  0xe6: 'Right Alt',
-  0xe7: 'Right GUI',
+  0x35: "`",
+  0x36: ",",
+  0x37: ".",
+  0x38: "/",
+  0x39: "Caps Lock",
+  0x46: "Print Screen",
+  0x47: "Scroll Lock",
+  0x48: "Pause",
+  0x49: "Insert",
+  0x4a: "Home",
+  0x4b: "Page Up",
+  0x4c: "Delete",
+  0x4d: "End",
+  0x4e: "Page Down",
+  0x4f: "Right Arrow",
+  0x50: "Left Arrow",
+  0x51: "Down Arrow",
+  0x52: "Up Arrow",
+  0x53: "Num Lock",
+  0x54: "Keypad /",
+  0x55: "Keypad *",
+  0x56: "Keypad -",
+  0x57: "Keypad +",
+  0x58: "Keypad Enter",
+  0x62: "Keypad 0",
+  0x63: "Keypad .",
+  0x65: "Application",
+  0x66: "Power",
+  0xe0: "Left Control",
+  0xe1: "Left Shift",
+  0xe2: "Left Alt",
+  0xe3: "Left GUI",
+  0xe4: "Right Control",
+  0xe5: "Right Shift",
+  0xe6: "Right Alt",
+  0xe7: "Right GUI",
 };
 
 const LED_USAGES: Record<number, string> = {
-  0x01: 'Num Lock',
-  0x02: 'Caps Lock',
-  0x03: 'Scroll Lock',
-  0x04: 'Compose',
-  0x05: 'Kana',
-  0x06: 'Power',
-  0x07: 'Shift',
-  0x09: 'Mute',
-  0x4b: 'Generic Indicator',
+  0x01: "Num Lock",
+  0x02: "Caps Lock",
+  0x03: "Scroll Lock",
+  0x04: "Compose",
+  0x05: "Kana",
+  0x06: "Power",
+  0x07: "Shift",
+  0x09: "Mute",
+  0x4b: "Generic Indicator",
 };
 
 const CONSUMER_USAGES: Record<number, string> = {
-  0x01: 'Consumer Control',
-  0x02: 'Numeric Key Pad',
-  0x30: 'Power',
-  0x34: 'Sleep',
-  0x40: 'Menu',
-  0x8a: 'Email Reader',
-  0x8c: 'Cellular Phone',
-  0xb0: 'Play',
-  0xb1: 'Pause',
-  0xb2: 'Record',
-  0xb3: 'Fast Forward',
-  0xb4: 'Rewind',
-  0xb5: 'Scan Next Track',
-  0xb6: 'Scan Previous Track',
-  0xb7: 'Stop',
-  0xb8: 'Eject',
-  0xcd: 'Play/Pause',
-  0xe0: 'Volume',
-  0xe2: 'Mute',
-  0xe5: 'Bass Boost',
-  0xe9: 'Volume Increment',
-  0xea: 'Volume Decrement',
-  0x183: 'AL Consumer Control Configuration',
-  0x18a: 'AL Email Reader',
-  0x192: 'AL Calculator',
-  0x194: 'AL Local Machine Browser',
-  0x196: 'AL Internet Browser',
-  0x1a6: 'AL Integrated Help Center',
-  0x201: 'AC New',
-  0x203: 'AC Close',
-  0x207: 'AC Save',
-  0x208: 'AC Print',
-  0x21a: 'AC Undo',
-  0x21b: 'AC Copy',
-  0x21c: 'AC Cut',
-  0x21d: 'AC Paste',
-  0x221: 'AC Search',
-  0x223: 'AC Home',
-  0x224: 'AC Back',
-  0x225: 'AC Forward',
-  0x226: 'AC Stop',
-  0x227: 'AC Refresh',
-  0x22a: 'AC Bookmarks',
-  0x22d: 'AC Zoom In',
-  0x22e: 'AC Zoom Out',
+  0x01: "Consumer Control",
+  0x02: "Numeric Key Pad",
+  0x30: "Power",
+  0x34: "Sleep",
+  0x40: "Menu",
+  0x8a: "Email Reader",
+  0x8c: "Cellular Phone",
+  0xb0: "Play",
+  0xb1: "Pause",
+  0xb2: "Record",
+  0xb3: "Fast Forward",
+  0xb4: "Rewind",
+  0xb5: "Scan Next Track",
+  0xb6: "Scan Previous Track",
+  0xb7: "Stop",
+  0xb8: "Eject",
+  0xcd: "Play/Pause",
+  0xe0: "Volume",
+  0xe2: "Mute",
+  0xe5: "Bass Boost",
+  0xe9: "Volume Increment",
+  0xea: "Volume Decrement",
+  0x183: "AL Consumer Control Configuration",
+  0x18a: "AL Email Reader",
+  0x192: "AL Calculator",
+  0x194: "AL Local Machine Browser",
+  0x196: "AL Internet Browser",
+  0x1a6: "AL Integrated Help Center",
+  0x201: "AC New",
+  0x203: "AC Close",
+  0x207: "AC Save",
+  0x208: "AC Print",
+  0x21a: "AC Undo",
+  0x21b: "AC Copy",
+  0x21c: "AC Cut",
+  0x21d: "AC Paste",
+  0x221: "AC Search",
+  0x223: "AC Home",
+  0x224: "AC Back",
+  0x225: "AC Forward",
+  0x226: "AC Stop",
+  0x227: "AC Refresh",
+  0x22a: "AC Bookmarks",
+  0x22d: "AC Zoom In",
+  0x22e: "AC Zoom Out",
 };
 
 const DIGITIZER_USAGES: Record<number, string> = {
-  0x01: 'Digitizer',
-  0x02: 'Pen',
-  0x04: 'Touch Screen',
-  0x05: 'Touch Pad',
-  0x20: 'Stylus',
-  0x22: 'Finger',
-  0x30: 'Tip Pressure',
-  0x31: 'Barrel Pressure',
-  0x32: 'In Range',
-  0x33: 'Touch',
-  0x37: 'Data Valid',
-  0x38: 'Transducer Index',
-  0x42: 'Tip Switch',
-  0x44: 'Barrel Switch',
-  0x45: 'Eraser',
-  0x47: 'Confidence',
-  0x48: 'Width',
-  0x49: 'Height',
-  0x51: 'Contact Identifier',
-  0x54: 'Contact Count',
-  0x55: 'Contact Count Maximum',
+  0x01: "Digitizer",
+  0x02: "Pen",
+  0x04: "Touch Screen",
+  0x05: "Touch Pad",
+  0x20: "Stylus",
+  0x22: "Finger",
+  0x30: "Tip Pressure",
+  0x31: "Barrel Pressure",
+  0x32: "In Range",
+  0x33: "Touch",
+  0x37: "Data Valid",
+  0x38: "Transducer Index",
+  0x42: "Tip Switch",
+  0x44: "Barrel Switch",
+  0x45: "Eraser",
+  0x47: "Confidence",
+  0x48: "Width",
+  0x49: "Height",
+  0x51: "Contact Identifier",
+  0x54: "Contact Count",
+  0x55: "Contact Count Maximum",
 };
 
 function hex4(n: number): string {
-  return n.toString(16).toUpperCase().padStart(4, '0');
+  return n.toString(16).toUpperCase().padStart(4, "0");
 }
 
 /** Human name for a usage page number, including the vendor ranges. */
@@ -257,7 +257,7 @@ export function usagePageName(page: number): string {
 function keyboardUsageName(usage: number): string | undefined {
   if (usage >= 0x04 && usage <= 0x1d) return String.fromCharCode(65 + usage - 0x04);
   if (usage >= 0x1e && usage <= 0x26) return String(usage - 0x1d);
-  if (usage === 0x27) return '0';
+  if (usage === 0x27) return "0";
   if (usage >= 0x3a && usage <= 0x45) return `F${usage - 0x39}`;
   if (usage >= 0x59 && usage <= 0x61) return `Keypad ${usage - 0x58}`;
   return KEYBOARD_USAGES[usage];
@@ -277,10 +277,10 @@ export function usageName(page: number, usage: number): string {
       name = LED_USAGES[usage];
       break;
     case 0x09:
-      name = usage === 0 ? 'No button' : `Button ${usage}`;
+      name = usage === 0 ? "No button" : `Button ${usage}`;
       break;
     case 0x0a:
-      name = usage === 0 ? 'Ordinal' : `Instance ${usage}`;
+      name = usage === 0 ? "Ordinal" : `Instance ${usage}`;
       break;
     case 0x0c:
       name = CONSUMER_USAGES[usage];
@@ -304,64 +304,65 @@ export function fullUsageName(page: number, usage: number): string {
  * ------------------------------------------------------------------ */
 
 const MAIN_TAGS: Record<number, string> = {
-  0x8: 'Input',
-  0x9: 'Output',
-  0xa: 'Collection',
-  0xb: 'Feature',
-  0xc: 'End Collection',
+  0x8: "Input",
+  0x9: "Output",
+  0xa: "Collection",
+  0xb: "Feature",
+  0xc: "End Collection",
 };
 
 const GLOBAL_TAGS: Record<number, string> = {
-  0x0: 'Usage Page',
-  0x1: 'Logical Minimum',
-  0x2: 'Logical Maximum',
-  0x3: 'Physical Minimum',
-  0x4: 'Physical Maximum',
-  0x5: 'Unit Exponent',
-  0x6: 'Unit',
-  0x7: 'Report Size',
-  0x8: 'Report ID',
-  0x9: 'Report Count',
-  0xa: 'Push',
-  0xb: 'Pop',
+  0x0: "Usage Page",
+  0x1: "Logical Minimum",
+  0x2: "Logical Maximum",
+  0x3: "Physical Minimum",
+  0x4: "Physical Maximum",
+  0x5: "Unit Exponent",
+  0x6: "Unit",
+  0x7: "Report Size",
+  0x8: "Report ID",
+  0x9: "Report Count",
+  0xa: "Push",
+  0xb: "Pop",
 };
 
 const LOCAL_TAGS: Record<number, string> = {
-  0x0: 'Usage',
-  0x1: 'Usage Minimum',
-  0x2: 'Usage Maximum',
-  0x3: 'Designator Index',
-  0x4: 'Designator Minimum',
-  0x5: 'Designator Maximum',
-  0x7: 'String Index',
-  0x8: 'String Minimum',
-  0x9: 'String Maximum',
-  0xa: 'Delimiter',
+  0x0: "Usage",
+  0x1: "Usage Minimum",
+  0x2: "Usage Maximum",
+  0x3: "Designator Index",
+  0x4: "Designator Minimum",
+  0x5: "Designator Maximum",
+  0x7: "String Index",
+  0x8: "String Minimum",
+  0x9: "String Maximum",
+  0xa: "Delimiter",
 };
 
 const COLLECTION_TYPES: Record<number, string> = {
-  0x00: 'Physical',
-  0x01: 'Application',
-  0x02: 'Logical',
-  0x03: 'Report',
-  0x04: 'Named Array',
-  0x05: 'Usage Switch',
-  0x06: 'Usage Modifier',
+  0x00: "Physical",
+  0x01: "Application",
+  0x02: "Logical",
+  0x03: "Report",
+  0x04: "Named Array",
+  0x05: "Usage Switch",
+  0x06: "Usage Modifier",
 };
 
 /** Human name for a Collection item's type byte. */
 export function collectionTypeName(type: number): string {
   const known = COLLECTION_TYPES[type];
   if (known) return known;
-  if (type >= 0x80 && type <= 0xff) return `Vendor defined (0x${type.toString(16).toUpperCase().padStart(2, '0')})`;
-  return `Reserved (0x${type.toString(16).toUpperCase().padStart(2, '0')})`;
+  if (type >= 0x80 && type <= 0xff)
+    return `Vendor defined (0x${type.toString(16).toUpperCase().padStart(2, "0")})`;
+  return `Reserved (0x${type.toString(16).toUpperCase().padStart(2, "0")})`;
 }
 
 /* ------------------------------------------------------------------ *
  * public shapes
  * ------------------------------------------------------------------ */
 
-export type ItemType = 'Main' | 'Global' | 'Local' | 'Reserved';
+export type ItemType = "Main" | "Global" | "Local" | "Reserved";
 
 /** One parsed short (or long) item from the descriptor byte stream. */
 export interface DescriptorItem {
@@ -384,7 +385,7 @@ export interface DescriptorItem {
   description: string;
 }
 
-export type ReportKind = 'input' | 'output' | 'feature';
+export type ReportKind = "input" | "output" | "feature";
 
 /** One decodable slice of a report. Variable controls get one each. */
 export interface ReportField {
@@ -476,7 +477,9 @@ function freshGlobals(): GlobalState {
   };
 }
 
-type LocalUsage = { kind: 'usage'; page: number; id: number } | { kind: 'range'; page: number; min: number; max: number };
+type LocalUsage =
+  | { kind: "usage"; page: number; id: number }
+  | { kind: "range"; page: number; min: number; max: number };
 
 interface LocalState {
   usages: LocalUsage[];
@@ -498,21 +501,21 @@ function resolveUsage(value: number, size: number, page: number): { page: number
 
 function mainFlagNames(value: number, allowVolatile: boolean): string[] {
   const flags = [
-    value & 0x01 ? 'Constant' : 'Data',
-    value & 0x02 ? 'Variable' : 'Array',
-    value & 0x04 ? 'Relative' : 'Absolute',
+    value & 0x01 ? "Constant" : "Data",
+    value & 0x02 ? "Variable" : "Array",
+    value & 0x04 ? "Relative" : "Absolute",
   ];
-  if (value & 0x08) flags.push('Wrap');
-  if (value & 0x10) flags.push('Non Linear');
-  if (value & 0x20) flags.push('No Preferred State');
-  if (value & 0x40) flags.push('Null State');
-  if (allowVolatile && value & 0x80) flags.push('Volatile');
-  if (value & 0x100) flags.push('Buffered Bytes');
+  if (value & 0x08) flags.push("Wrap");
+  if (value & 0x10) flags.push("Non Linear");
+  if (value & 0x20) flags.push("No Preferred State");
+  if (value & 0x40) flags.push("Null State");
+  if (allowVolatile && value & 0x80) flags.push("Volatile");
+  if (value & 0x100) flags.push("Buffered Bytes");
   return flags;
 }
 
 const TRUNCATED_FIX =
-  'The descriptor is cut short. Paste the complete byte dump, including every data byte the last item declares.';
+  "The descriptor is cut short. Paste the complete byte dump, including every data byte the last item declares.";
 
 interface LayoutBuilder {
   layouts: Map<string, ReportLayout>;
@@ -534,11 +537,14 @@ function orderedLayouts(builder: LayoutBuilder): ReportLayout[] {
 }
 
 /** Expands the local usage list to exactly `count` entries, repeating the last. */
-function resolveUsageList(locals: LocalState, count: number): ({ page: number; id: number } | undefined)[] {
+function resolveUsageList(
+  locals: LocalState,
+  count: number,
+): ({ page: number; id: number } | undefined)[] {
   const out: ({ page: number; id: number } | undefined)[] = [];
   for (const entry of locals.usages) {
     if (out.length >= count) break;
-    if (entry.kind === 'usage') {
+    if (entry.kind === "usage") {
       out.push({ page: entry.page, id: entry.id });
     } else {
       for (let id = entry.min; id <= entry.max && out.length < count; id++) {
@@ -581,7 +587,7 @@ function pushMainFields(
   if (isConstant) {
     layout.fields.push({
       ...base,
-      name: 'Padding',
+      name: "Padding",
       usagePage: page,
       usagePageName: usagePageName(page),
       bitOffset: start,
@@ -637,7 +643,7 @@ function pushMainFields(
  */
 export function parseReportDescriptor(bytes: Uint8Array): ParsedDescriptor {
   const items: DescriptorItem[] = [];
-  const applications: ParsedDescriptor['applications'] = [];
+  const applications: ParsedDescriptor["applications"] = [];
   const builder: LayoutBuilder = { layouts: new Map(), order: [] };
 
   let globals = freshGlobals();
@@ -656,7 +662,7 @@ export function parseReportDescriptor(bytes: Uint8Array): ParsedDescriptor {
     if (prefix === 0xfe) {
       if (i + 1 >= bytes.length) {
         throw new ToolError(
-          'truncated-descriptor',
+          "truncated-descriptor",
           `The long item at offset ${offset} is missing its length and tag bytes.`,
           TRUNCATED_FIX,
         );
@@ -666,7 +672,7 @@ export function parseReportDescriptor(bytes: Uint8Array): ParsedDescriptor {
       const end = i + 2 + dataSize;
       if (end > bytes.length) {
         throw new ToolError(
-          'truncated-descriptor',
+          "truncated-descriptor",
           `The long item at offset ${offset} declares ${dataSize} data bytes but only ${bytes.length - (i + 2)} remain.`,
           TRUNCATED_FIX,
         );
@@ -674,14 +680,14 @@ export function parseReportDescriptor(bytes: Uint8Array): ParsedDescriptor {
       items.push({
         offset,
         bytes: Array.from(bytes.subarray(offset, end)),
-        type: 'Reserved',
+        type: "Reserved",
         tag: 0xf,
-        tagName: 'Long Item',
+        tagName: "Long Item",
         size: dataSize,
         value: 0,
         signedValue: 0,
         depth,
-        description: `Long Item (tag 0x${longTag.toString(16).toUpperCase().padStart(2, '0')}, ${dataSize} data bytes)`,
+        description: `Long Item (tag 0x${longTag.toString(16).toUpperCase().padStart(2, "0")}, ${dataSize} data bytes)`,
       });
       i = end;
       continue;
@@ -694,7 +700,7 @@ export function parseReportDescriptor(bytes: Uint8Array): ParsedDescriptor {
     const end = i + size;
     if (end > bytes.length) {
       throw new ToolError(
-        'truncated-descriptor',
+        "truncated-descriptor",
         `The item at offset ${offset} declares ${size} data bytes but only ${bytes.length - i} remain.`,
         TRUNCATED_FIX,
       );
@@ -705,35 +711,35 @@ export function parseReportDescriptor(bytes: Uint8Array): ParsedDescriptor {
     const signedValue = readSigned(dataBytes);
     i = end;
 
-    const type: ItemType = (['Main', 'Global', 'Local', 'Reserved'] as const)[typeCode] as ItemType;
+    const type: ItemType = (["Main", "Global", "Local", "Reserved"] as const)[typeCode] as ItemType;
     let tagName: string;
     let description: string;
     let itemDepth = depth;
 
-    if (type === 'Main') {
+    if (type === "Main") {
       tagName = MAIN_TAGS[tag] ?? `Reserved main tag ${tag}`;
       if (tag === 0x8 || tag === 0x9 || tag === 0xb) {
-        const kind: ReportKind = tag === 0x8 ? 'input' : tag === 0x9 ? 'output' : 'feature';
-        description = `${tagName} (${mainFlagNames(value, tag !== 0x8).join(', ')})`;
+        const kind: ReportKind = tag === 0x8 ? "input" : tag === 0x9 ? "output" : "feature";
+        description = `${tagName} (${mainFlagNames(value, tag !== 0x8).join(", ")})`;
         pushMainFields(builder, kind, value, globals, locals);
       } else if (tag === 0xa) {
         description = `Collection (${collectionTypeName(value)})`;
         if (value === 0x01) {
-          const first = locals.usages.find((u) => u.kind === 'usage');
-          const page = first && first.kind === 'usage' ? first.page : globals.usagePage;
-          const id = first && first.kind === 'usage' ? first.id : 0;
+          const first = locals.usages.find((u) => u.kind === "usage");
+          const page = first && first.kind === "usage" ? first.page : globals.usagePage;
+          const id = first && first.kind === "usage" ? first.id : 0;
           applications.push({ usagePage: page, usage: id, name: fullUsageName(page, id) });
         }
         depth += 1;
       } else if (tag === 0xc) {
         depth = Math.max(0, depth - 1);
         itemDepth = depth;
-        description = 'End Collection';
+        description = "End Collection";
       } else {
         description = `${tagName} (0x${value.toString(16).toUpperCase()})`;
       }
       locals = freshLocals();
-    } else if (type === 'Global') {
+    } else if (type === "Global") {
       tagName = GLOBAL_TAGS[tag] ?? `Reserved global tag ${tag}`;
       switch (tag) {
         case 0x0:
@@ -779,23 +785,23 @@ export function parseReportDescriptor(bytes: Uint8Array): ParsedDescriptor {
           break;
         case 0xa:
           globalStack.push({ ...globals });
-          description = 'Push';
+          description = "Push";
           break;
         case 0xb: {
           const popped = globalStack.pop();
           if (popped) globals = popped;
-          description = 'Pop';
+          description = "Pop";
           break;
         }
         default:
           description = `${tagName} (${value})`;
       }
-    } else if (type === 'Local') {
+    } else if (type === "Local") {
       tagName = LOCAL_TAGS[tag] ?? `Reserved local tag ${tag}`;
       switch (tag) {
         case 0x0: {
           const u = resolveUsage(value, size, globals.usagePage);
-          locals.usages.push({ kind: 'usage', page: u.page, id: u.id });
+          locals.usages.push({ kind: "usage", page: u.page, id: u.id });
           description = `Usage (${usageName(u.page, u.id)})`;
           break;
         }
@@ -811,14 +817,14 @@ export function parseReportDescriptor(bytes: Uint8Array): ParsedDescriptor {
           locals.usageMaximum = u;
           const min = locals.pendingMinimum;
           if (min && u.id >= min.id) {
-            locals.usages.push({ kind: 'range', page: min.page, min: min.id, max: u.id });
+            locals.usages.push({ kind: "range", page: min.page, min: min.id, max: u.id });
           }
           locals.pendingMinimum = undefined;
           description = `Usage Maximum (${usageName(u.page, u.id)})`;
           break;
         }
         case 0xa:
-          description = `Delimiter (${value === 1 ? 'open' : 'close'})`;
+          description = `Delimiter (${value === 1 ? "open" : "close"})`;
           break;
         default:
           description = `${tagName} (${value})`;
@@ -919,7 +925,7 @@ function pushCollectionItemFields(
   if (item.isConstant) {
     layout.fields.push({
       ...base,
-      name: 'Padding',
+      name: "Padding",
       usagePage: fallbackPage,
       usagePageName: usagePageName(fallbackPage),
       bitOffset: start,
@@ -928,8 +934,14 @@ function pushCollectionItemFields(
       isArray: item.isArray === true,
     });
   } else if (item.isArray) {
-    const min = item.usageMinimum !== undefined ? splitExtendedUsage(item.usageMinimum, fallbackPage) : undefined;
-    const max = item.usageMaximum !== undefined ? splitExtendedUsage(item.usageMaximum, fallbackPage) : undefined;
+    const min =
+      item.usageMinimum !== undefined
+        ? splitExtendedUsage(item.usageMinimum, fallbackPage)
+        : undefined;
+    const max =
+      item.usageMaximum !== undefined
+        ? splitExtendedUsage(item.usageMaximum, fallbackPage)
+        : undefined;
     const page = min?.page ?? fallbackPage;
     layout.fields.push({
       ...base,
@@ -948,7 +960,8 @@ function pushCollectionItemFields(
     if (item.isRange && item.usageMinimum !== undefined && item.usageMaximum !== undefined) {
       const min = splitExtendedUsage(item.usageMinimum, fallbackPage);
       const max = splitExtendedUsage(item.usageMaximum, fallbackPage);
-      for (let id = min.id; id <= max.id && list.length < count; id++) list.push({ page: min.page, id });
+      for (let id = min.id; id <= max.id && list.length < count; id++)
+        list.push({ page: min.page, id });
     }
     for (const raw of item.usages ?? []) {
       if (list.length >= count) break;
@@ -978,9 +991,9 @@ function pushCollectionItemFields(
 function walkCollection(builder: LayoutBuilder, collection: HidCollectionInfo): void {
   const page = collection.usagePage ?? 0;
   const groups: [ReportKind, HidReportInfo[] | undefined][] = [
-    ['input', collection.inputReports],
-    ['output', collection.outputReports],
-    ['feature', collection.featureReports],
+    ["input", collection.inputReports],
+    ["output", collection.outputReports],
+    ["feature", collection.featureReports],
   ];
   for (const [kind, reports] of groups) {
     for (const report of reports ?? []) {
@@ -1007,15 +1020,17 @@ export function layoutsFromCollections(collections: HidCollectionInfo[]): Report
 }
 
 /** The layout of one WebHID report on its own, used by the tree renderer. */
-export function layoutFromReport(kind: ReportKind, report: HidReportInfo, fallbackPage: number): ReportLayout {
+export function layoutFromReport(
+  kind: ReportKind,
+  report: HidReportInfo,
+  fallbackPage: number,
+): ReportLayout {
   const builder: LayoutBuilder = { layouts: new Map(), order: [] };
   const reportId = report.reportId ?? 0;
   for (const item of report.items ?? []) {
     pushCollectionItemFields(builder, kind, reportId, item, fallbackPage);
   }
-  return (
-    orderedLayouts(builder)[0] ?? { kind, reportId, fields: [], totalBits: 0, totalBytes: 0 }
-  );
+  return orderedLayouts(builder)[0] ?? { kind, reportId, fields: [], totalBits: 0, totalBytes: 0 };
 }
 
 /* ------------------------------------------------------------------ *
@@ -1058,7 +1073,7 @@ export function extractBits(data: Uint8Array, bitOffset: number, bitSize: number
 
 function displayValue(field: ReportField, value: number): string {
   if (field.logicalMinimum === 0 && field.logicalMaximum === 1) {
-    return `${value} (${value ? 'on' : 'off'})`;
+    return `${value} (${value ? "on" : "off"})`;
   }
   return String(value);
 }
@@ -1094,7 +1109,7 @@ export function decodeInputReport(layout: ReportLayout, data: Uint8Array): Decod
         if (raw !== 0) values.push(raw);
       }
       const names = values.map((code) => usageName(field.usagePage, code));
-      return { ...common, values, names, display: names.length ? names.join(', ') : '(none)' };
+      return { ...common, values, names, display: names.length ? names.join(", ") : "(none)" };
     }
 
     if (field.count > 1) {
@@ -1115,7 +1130,7 @@ export function decodeInputReport(layout: ReportLayout, data: Uint8Array): Decod
  * ------------------------------------------------------------------ */
 
 function lsbFirstBits(byte: number): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < 8; i++) out += (byte >> i) & 1;
   return out;
 }
@@ -1126,65 +1141,72 @@ function lsbFirstBits(byte: number): string {
  * straight off the line.
  */
 export function formatReportHex(data: Uint8Array): string {
-  if (data.length === 0) return '(empty report)';
+  if (data.length === 0) return "(empty report)";
   const lines: string[] = [];
   for (let start = 0; start < data.length; start += 8) {
     const chunk = data.subarray(start, Math.min(start + 8, data.length));
-    const hexLine = Array.from(chunk, (b) => b.toString(16).toUpperCase().padStart(2, '0').padEnd(8)).join(' ');
-    const bitLine = Array.from(chunk, lsbFirstBits).join(' ');
+    const hexLine = Array.from(chunk, (b) =>
+      b.toString(16).toUpperCase().padStart(2, "0").padEnd(8),
+    ).join(" ");
+    const bitLine = Array.from(chunk, lsbFirstBits).join(" ");
     lines.push(`${hex4(start)}  ${hexLine.trimEnd()}`);
     lines.push(`      ${bitLine}`);
   }
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /** One aligned line describing a field's position, size and range. */
 export function formatFieldLine(field: ReportField): string {
   const position = `bit ${field.bitOffset}`.padEnd(10);
-  const size = (field.count > 1 ? `${field.bitSize}x${field.count} bits` : `${field.bitSize} bits`).padEnd(12);
+  const size = (
+    field.count > 1 ? `${field.bitSize}x${field.count} bits` : `${field.bitSize} bits`
+  ).padEnd(12);
   const name = field.name.padEnd(26);
   const range = `logical ${field.logicalMinimum}..${field.logicalMaximum}`;
   const flags: string[] = [];
-  if (field.isArray) flags.push('array');
-  if (field.isRelative) flags.push('relative');
-  if (field.isConstant) flags.push('constant');
-  if (field.isSigned) flags.push('signed');
-  return `${position}${size}${name}${range}${flags.length ? `  [${flags.join(', ')}]` : ''}`.trimEnd();
+  if (field.isArray) flags.push("array");
+  if (field.isRelative) flags.push("relative");
+  if (field.isConstant) flags.push("constant");
+  if (field.isSigned) flags.push("signed");
+  return `${position}${size}${name}${range}${flags.length ? `  [${flags.join(", ")}]` : ""}`.trimEnd();
 }
 
 const KIND_LABELS: Record<ReportKind, string> = {
-  input: 'Input',
-  output: 'Output',
-  feature: 'Feature',
+  input: "Input",
+  output: "Output",
+  feature: "Feature",
 };
 
 /** Header line for one report layout, e.g. "Input report, ID 3, 4 bytes". */
 export function formatLayoutHeader(layout: ReportLayout): string {
-  const id = layout.reportId === 0 ? 'no report ID' : `ID ${layout.reportId}`;
+  const id = layout.reportId === 0 ? "no report ID" : `ID ${layout.reportId}`;
   return `${KIND_LABELS[layout.kind]} report, ${id}, ${layout.totalBytes} bytes (${layout.totalBits} bits)`;
 }
 
 /** The whole computed layout as an indented text block. */
 export function formatReportLayouts(layouts: ReportLayout[]): string {
-  if (layouts.length === 0) return 'No input, output or feature reports were declared.';
+  if (layouts.length === 0) return "No input, output or feature reports were declared.";
   const blocks = layouts.map((layout) => {
-    const lines = [formatLayoutHeader(layout), ...layout.fields.map((f) => `  ${formatFieldLine(f)}`)];
-    return lines.join('\n');
+    const lines = [
+      formatLayoutHeader(layout),
+      ...layout.fields.map((f) => `  ${formatFieldLine(f)}`),
+    ];
+    return lines.join("\n");
   });
-  return blocks.join('\n\n');
+  return blocks.join("\n\n");
 }
 
 /** The item stream as an indented tree, optionally with the raw bytes. */
 export function formatDescriptorTree(items: DescriptorItem[], showBytes = true): string {
-  if (items.length === 0) return 'The descriptor contains no items.';
+  if (items.length === 0) return "The descriptor contains no items.";
   return items
     .map((item) => {
-      const indent = '  '.repeat(item.depth);
+      const indent = "  ".repeat(item.depth);
       if (!showBytes) return `${indent}${item.description}`;
-      const raw = item.bytes.map((b) => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+      const raw = item.bytes.map((b) => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
       return `${raw.padEnd(15)}${indent}${item.description}`;
     })
-    .join('\n');
+    .join("\n");
 }
 
 /**
@@ -1195,20 +1217,22 @@ export function describeCollectionTree(collections: HidCollectionInfo[]): string
   const lines: string[] = [];
 
   const walk = (collection: HidCollectionInfo, depth: number) => {
-    const indent = '  '.repeat(depth);
+    const indent = "  ".repeat(depth);
     const page = collection.usagePage ?? 0;
     const usage = collection.usage ?? 0;
-    lines.push(`${indent}${collectionTypeName(collection.type ?? 0)} collection: ${fullUsageName(page, usage)}`);
+    lines.push(
+      `${indent}${collectionTypeName(collection.type ?? 0)} collection: ${fullUsageName(page, usage)}`,
+    );
 
     const groups: [ReportKind, HidReportInfo[] | undefined][] = [
-      ['input', collection.inputReports],
-      ['output', collection.outputReports],
-      ['feature', collection.featureReports],
+      ["input", collection.inputReports],
+      ["output", collection.outputReports],
+      ["feature", collection.featureReports],
     ];
     for (const [kind, reports] of groups) {
       for (const report of reports ?? []) {
         const reportId = report.reportId ?? 0;
-        const id = reportId === 0 ? 'no report ID' : `ID ${reportId}`;
+        const id = reportId === 0 ? "no report ID" : `ID ${reportId}`;
         const layout = layoutFromReport(kind, report, page);
         lines.push(`${indent}  ${KIND_LABELS[kind]} report, ${id}, ${layout.totalBytes} bytes`);
         for (const field of layout.fields) lines.push(`${indent}    ${formatFieldLine(field)}`);
@@ -1219,7 +1243,7 @@ export function describeCollectionTree(collections: HidCollectionInfo[]): string
   };
 
   for (const collection of collections) walk(collection, 0);
-  return lines.length ? lines.join('\n') : 'The device reported no collections.';
+  return lines.length ? lines.join("\n") : "The device reported no collections.";
 }
 
 /* ------------------------------------------------------------------ *
@@ -1235,31 +1259,32 @@ const HEX_FIX =
  * hex string.
  */
 export function parseHexBytes(text: string): Uint8Array {
-  const withoutComments = text.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+  const withoutComments = text.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/[^\n]*/g, " ");
 
   // A C or Rust array literal: keep only what is between the braces so the
   // declaration ("static const uint8_t desc[] =") never reaches the tokenizer.
-  const open = withoutComments.indexOf('{');
-  const close = withoutComments.lastIndexOf('}');
-  const body = open !== -1 && close > open ? withoutComments.slice(open + 1, close) : withoutComments;
+  const open = withoutComments.indexOf("{");
+  const close = withoutComments.lastIndexOf("}");
+  const body =
+    open !== -1 && close > open ? withoutComments.slice(open + 1, close) : withoutComments;
 
   const stripped = body
     // Offset columns from hexdump style output, e.g. "0000: 05 01".
-    .replace(/^[ \t]*[0-9a-fA-F]{4,8}:[ \t]*/gm, '')
-    .replace(/[{}[\]();]/g, ' ')
-    .replace(/\\x/gi, ' ')
-    .replace(/0x/gi, ' ')
-    .replace(/[,:]/g, ' ');
+    .replace(/^[ \t]*[0-9a-fA-F]{4,8}:[ \t]*/gm, "")
+    .replace(/[{}[\]();]/g, " ")
+    .replace(/\\x/gi, " ")
+    .replace(/0x/gi, " ")
+    .replace(/[,:]/g, " ");
 
   const tokens = stripped.split(/\s+/).filter((t) => t.length > 0);
   if (tokens.length === 0) {
-    throw new ToolError('no-bytes', 'No hex bytes were found in the input.', HEX_FIX);
+    throw new ToolError("no-bytes", "No hex bytes were found in the input.", HEX_FIX);
   }
 
   const bytes: number[] = [];
   for (const token of tokens) {
     if (!/^[0-9a-fA-F]+$/.test(token)) {
-      throw new ToolError('invalid-hex', `"${token}" is not a hex byte.`, HEX_FIX);
+      throw new ToolError("invalid-hex", `"${token}" is not a hex byte.`, HEX_FIX);
     }
     if (token.length <= 2) {
       bytes.push(parseInt(token, 16));
@@ -1267,7 +1292,7 @@ export function parseHexBytes(text: string): Uint8Array {
     }
     if (token.length % 2 !== 0) {
       throw new ToolError(
-        'invalid-hex',
+        "invalid-hex",
         `"${token}" has an odd number of hex digits, so it cannot be split into whole bytes.`,
         HEX_FIX,
       );
@@ -1284,22 +1309,22 @@ export function parseHexBytes(text: string): Uint8Array {
 
 export interface HidOpts {
   /** Which sections to include in the output. */
-  view?: 'both' | 'tree' | 'layout';
+  view?: "both" | "tree" | "layout";
   /** Print each item's raw bytes beside the tree. */
   showBytes?: boolean;
   [key: string]: unknown;
 }
 
 const NO_INPUT_ROWS: Record<string, string> = {
-  'Live capture':
-    'Click Connect a device in the panel above, pick a device from the browser prompt, and every report it sends is decoded here field by field.',
-  'Browser support':
-    'Live capture needs WebHID, which only Chromium browsers ship on desktop today. Chrome, Edge, Brave, Arc and Opera work. Firefox and Safari do not.',
-  'Blocked devices':
-    'Keyboards and other devices on protected usage pages are hidden from the device chooser by the browser itself, so they cannot be captured here.',
-  'No device handy':
+  "Live capture":
+    "Click Connect a device in the panel above, pick a device from the browser prompt, and every report it sends is decoded here field by field.",
+  "Browser support":
+    "Live capture needs WebHID, which only Chromium browsers ship on desktop today. Chrome, Edge, Brave, Arc and Opera work. Firefox and Safari do not.",
+  "Blocked devices":
+    "Keyboards and other devices on protected usage pages are hidden from the device chooser by the browser itself, so they cannot be captured here.",
+  "No device handy":
     'Paste a report descriptor hex dump instead. Bytes like "05 01 09 02 A1 01" or a C array with 0x prefixes both work, and the full item tree plus the computed report layout comes back.',
-  Privacy: 'Everything is parsed in this tab: your files and inputs never leave your device.',
+  Privacy: "Everything is parsed in this tab: your files and inputs never leave your device.",
 };
 
 /**
@@ -1308,27 +1333,31 @@ const NO_INPUT_ROWS: Record<string, string> = {
  */
 export function run(input: string | Uint8Array, opts: HidOpts = {}): Record<string, string> {
   const bytes =
-    input instanceof Uint8Array ? input : typeof input === 'string' && input.trim() ? parseHexBytes(input) : null;
+    input instanceof Uint8Array
+      ? input
+      : typeof input === "string" && input.trim()
+        ? parseHexBytes(input)
+        : null;
 
   if (bytes === null) return { ...NO_INPUT_ROWS };
 
   if (bytes.length === 0) {
-    throw new ToolError('no-bytes', 'No hex bytes were found in the input.', HEX_FIX);
+    throw new ToolError("no-bytes", "No hex bytes were found in the input.", HEX_FIX);
   }
 
   const parsed = parseReportDescriptor(bytes);
-  const view = opts.view ?? 'both';
+  const view = opts.view ?? "both";
   const showBytes = opts.showBytes ?? true;
 
   const apps = parsed.applications.length
-    ? parsed.applications.map((a) => a.name).join(', ')
-    : 'none declared';
+    ? parsed.applications.map((a) => a.name).join(", ")
+    : "none declared";
   const out: Record<string, string> = {
-    Summary: `${parsed.byteLength} bytes, ${parsed.items.length} items, ${parsed.reports.length} report layouts. Application collections: ${apps}. Report IDs: ${parsed.usesReportIds ? 'yes' : 'no'}.`,
+    Summary: `${parsed.byteLength} bytes, ${parsed.items.length} items, ${parsed.reports.length} report layouts. Application collections: ${apps}. Report IDs: ${parsed.usesReportIds ? "yes" : "no"}.`,
   };
 
-  if (view !== 'layout') out['Descriptor tree'] = formatDescriptorTree(parsed.items, showBytes);
-  if (view !== 'tree') out['Report layout'] = formatReportLayouts(parsed.reports);
+  if (view !== "layout") out["Descriptor tree"] = formatDescriptorTree(parsed.items, showBytes);
+  if (view !== "tree") out["Report layout"] = formatReportLayouts(parsed.reports);
 
   return out;
 }

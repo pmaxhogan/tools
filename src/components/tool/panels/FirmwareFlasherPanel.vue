@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, shallowRef } from 'vue';
-import { AlertTriangle, CheckCircle2, Eraser, Loader2, Usb, X, Zap } from 'lucide-vue-next';
+import { computed, onUnmounted, ref, shallowRef } from "vue";
+import { AlertTriangle, CheckCircle2, Eraser, Loader2, Usb, X, Zap } from "lucide-vue-next";
 // Type-only import: esptool-js ships ESM with extensionless internal imports
 // that Node cannot resolve during the SSR build, so the runtime values are
 // pulled in with a dynamic import inside the connect handler instead.
-import type { ESPLoader, Transport } from 'esptool-js';
-import type { ToolMeta } from '@/tools/types';
-import { ToolError } from '@/tools/types';
+import type { ESPLoader, Transport } from "esptool-js";
+import type { ToolMeta } from "@/tools/types";
+import { ToolError } from "@/tools/types";
 import {
   CHIP_LABELS,
   chipKeyFromName,
@@ -16,18 +16,18 @@ import {
   validateFirmware,
   type ChipKey,
   type FlashRegion,
-} from '@/tools/firmware-flasher/index';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+} from "@/tools/firmware-flasher/index";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 /**
  * Bespoke panel for the firmware flasher. The pure layer in
@@ -65,17 +65,17 @@ type TransportDevice = ConstructorParameters<typeof Transport>[0];
 /* ---------------------------------------------------------------- */
 
 const HANDSHAKE_BAUD = 115200;
-const FLASH_BAUDS = ['115200', '230400', '460800', '921600'];
+const FLASH_BAUDS = ["115200", "230400", "460800", "921600"];
 
-const baud = ref('460800');
+const baud = ref("460800");
 const eraseAll = ref(false);
 
 /* ---------------------------------------------------------------- */
 /* files                                                             */
 /* ---------------------------------------------------------------- */
 
-type Mode = 'single' | 'advanced';
-const mode = ref<Mode>('single');
+type Mode = "single" | "advanced";
+const mode = ref<Mode>("single");
 
 /**
  * A chosen firmware file. `offset` is the hex text shown in the advanced
@@ -100,7 +100,7 @@ let fileId = 0;
  * board is identified the detected chip takes over, so this is only a best
  * guess for seeding the advanced editor and previewing the single file offset.
  */
-const presetChip = ref<ChipKey>('esp32');
+const presetChip = ref<ChipKey>("esp32");
 
 const fileError = ref<string | null>(null);
 const dragOver = ref(false);
@@ -130,13 +130,13 @@ async function addFiles(list: FileList | File[]) {
       fileError.value = `Could not read ${file.name}.`;
     }
   }
-  if (mode.value === 'single' && files.value.length > 1) mode.value = 'advanced';
+  if (mode.value === "single" && files.value.length > 1) mode.value = "advanced";
 }
 
 function onPick(event: Event) {
   const input = event.target as HTMLInputElement;
   if (input.files) void addFiles(input.files);
-  input.value = '';
+  input.value = "";
 }
 
 function onDrop(event: DragEvent) {
@@ -158,16 +158,16 @@ function formatSize(bytes: number): string {
 /* connection and flashing state                                     */
 /* ---------------------------------------------------------------- */
 
-type Stage = 'idle' | 'connecting' | 'confirm' | 'flashing' | 'erasing' | 'done';
-const stage = ref<Stage>('idle');
+type Stage = "idle" | "connecting" | "confirm" | "flashing" | "erasing" | "done";
+const stage = ref<Stage>("idle");
 
 const transport = shallowRef<Transport | null>(null);
 const esploader = shallowRef<ESPLoader | null>(null);
 
-const chipName = ref('');
+const chipName = ref("");
 const chipKey = ref<ChipKey | null>(null);
-const chipMac = ref('');
-const chipFeatures = ref('');
+const chipMac = ref("");
+const chipFeatures = ref("");
 
 const errorTitle = ref<string | null>(null);
 const errorDetail = ref<string | null>(null);
@@ -175,13 +175,13 @@ const showManualReset = ref(false);
 const canFallback = ref(false);
 
 const warnings = ref<string[]>([]);
-const doneMessage = ref('');
+const doneMessage = ref("");
 
 /** The regions that will actually be written, computed from the detected chip. */
 const plan = ref<{ region: FlashRegion; entry: FileEntry }[]>([]);
 
 const busy = computed(
-  () => stage.value === 'connecting' || stage.value === 'flashing' || stage.value === 'erasing',
+  () => stage.value === "connecting" || stage.value === "flashing" || stage.value === "erasing",
 );
 
 const overallProgress = computed(() => {
@@ -220,7 +220,7 @@ const terminal = {
     if (log.value.length > 400) log.value.splice(0, log.value.length - 400);
   },
   write(data: string) {
-    if (log.value.length === 0) log.value.push('');
+    if (log.value.length === 0) log.value.push("");
     log.value[log.value.length - 1] += data;
   },
 };
@@ -238,15 +238,15 @@ const terminal = {
  */
 function buildPlan(chip: ChipKey): { region: FlashRegion; entry: FileEntry }[] {
   if (files.value.length === 0) {
-    throw new ToolError('no-files', 'No firmware files were added.', 'Add at least one .bin file.');
+    throw new ToolError("no-files", "No firmware files were added.", "Add at least one .bin file.");
   }
 
-  if (mode.value === 'single') {
+  if (mode.value === "single") {
     const entry = files.value[0] as FileEntry;
     return [{ region: { address: defaultOffsetsFor(chip).app, name: entry.name }, entry }];
   }
 
-  const table = files.value.map((f) => `${f.offset.trim()} ${f.name}`).join('\n');
+  const table = files.value.map((f) => `${f.offset.trim()} ${f.name}`).join("\n");
   const sizes = files.value.map((f) => f.size);
   const regions = parseFlashLayout(table, sizes);
   return regions.map((region, index) => ({ region, entry: files.value[index] as FileEntry }));
@@ -271,13 +271,13 @@ async function identify(flashBaud: number): Promise<boolean> {
     device = await api.requestPort();
   } catch (err) {
     // A dismissed chooser is not a fault.
-    if (err instanceof DOMException && err.name === 'NotFoundError') return false;
-    setError('Could not open the port chooser.', err instanceof Error ? err.message : String(err));
+    if (err instanceof DOMException && err.name === "NotFoundError") return false;
+    setError("Could not open the port chooser.", err instanceof Error ? err.message : String(err));
     return false;
   }
 
   try {
-    const esptool = await import('esptool-js');
+    const esptool = await import("esptool-js");
     const t = new esptool.Transport(device as TransportDevice, false);
     const loader = new esptool.ESPLoader({ transport: t, baudrate: flashBaud, terminal });
     transport.value = t;
@@ -292,13 +292,13 @@ async function identify(flashBaud: number): Promise<boolean> {
     try {
       chipMac.value = await loader.chip.readMac(loader);
     } catch {
-      chipMac.value = '';
+      chipMac.value = "";
     }
     try {
       const feats = await loader.chip.getChipFeatures(loader);
-      chipFeatures.value = feats.join(', ');
+      chipFeatures.value = feats.join(", ");
     } catch {
-      chipFeatures.value = '';
+      chipFeatures.value = "";
     }
     return true;
   } catch (err) {
@@ -313,18 +313,18 @@ async function identify(flashBaud: number): Promise<boolean> {
 /** The main button: identify the board, then stop for an explicit confirmation. */
 async function connectAndFlash() {
   clearError();
-  doneMessage.value = '';
+  doneMessage.value = "";
   warnings.value = [];
   fileError.value = null;
   if (files.value.length === 0) {
-    fileError.value = 'Add at least one .bin file before flashing.';
+    fileError.value = "Add at least one .bin file before flashing.";
     return;
   }
 
-  stage.value = 'connecting';
+  stage.value = "connecting";
   const ok = await identify(Number(baud.value));
   if (!ok) {
-    stage.value = 'idle';
+    stage.value = "idle";
     return;
   }
 
@@ -333,9 +333,9 @@ async function connectAndFlash() {
     const chip = chipKey.value;
     if (!chip) {
       throw new ToolError(
-        'unknown-chip',
+        "unknown-chip",
         `The connected board reports "${chipName.value}", which is not an ESP32 family or ESP8266 chip this tool can flash.`,
-        'This tool flashes the ESP32, ESP32-S2, ESP32-S3, ESP32-C3 and ESP8266 only.',
+        "This tool flashes the ESP32, ESP32-S2, ESP32-S3, ESP32-C3 and ESP8266 only.",
       );
     }
     const built = buildPlan(chip);
@@ -346,16 +346,16 @@ async function connectAndFlash() {
     }
     plan.value = built;
     warnings.value = collected;
-    stage.value = 'confirm';
+    stage.value = "confirm";
   } catch (err) {
     await teardown();
     if (err instanceof ToolError) {
-      setError(err.message, err.fix ?? '');
+      setError(err.message, err.fix ?? "");
     } else {
       const human = humanFlashError(err);
       setError(human.title, human.detail);
     }
-    stage.value = 'idle';
+    stage.value = "idle";
   }
 }
 
@@ -372,15 +372,15 @@ async function confirmFlash() {
     item.entry.written = 0;
     item.entry.total = item.entry.bytes.length;
   }
-  stage.value = 'flashing';
+  stage.value = "flashing";
   clearError();
 
   try {
     await loader.writeFlash({
       fileArray: plan.value.map((p) => ({ data: p.entry.bytes, address: p.region.address })),
-      flashSize: 'keep',
-      flashMode: 'keep',
-      flashFreq: 'keep',
+      flashSize: "keep",
+      flashMode: "keep",
+      flashFreq: "keep",
       eraseAll: eraseAll.value,
       compress: true,
       reportProgress: (fileIndex: number, written: number, total: number) => {
@@ -393,18 +393,18 @@ async function confirmFlash() {
     });
 
     try {
-      await loader.after('hard_reset');
+      await loader.after("hard_reset");
     } catch {
       // A reset failure is not a flash failure: the bytes are already written.
     }
 
-    doneMessage.value = `Flashed ${plan.value.length} file${plan.value.length === 1 ? '' : 's'} to the ${CHIP_LABELS[chipKey.value ?? 'esp32']}. The board has been reset and is running the new firmware.`;
-    stage.value = 'done';
+    doneMessage.value = `Flashed ${plan.value.length} file${plan.value.length === 1 ? "" : "s"} to the ${CHIP_LABELS[chipKey.value ?? "esp32"]}. The board has been reset and is running the new firmware.`;
+    stage.value = "done";
   } catch (err) {
     const human = humanFlashError(err);
     setError(human.title, human.detail, true);
     canFallback.value = Number(baud.value) > HANDSHAKE_BAUD;
-    stage.value = 'idle';
+    stage.value = "idle";
   } finally {
     await teardown();
   }
@@ -412,7 +412,7 @@ async function confirmFlash() {
 
 async function cancelConfirm() {
   await teardown();
-  stage.value = 'idle';
+  stage.value = "idle";
   plan.value = [];
 }
 
@@ -422,35 +422,36 @@ async function cancelConfirm() {
 
 async function eraseOnly() {
   clearError();
-  doneMessage.value = '';
+  doneMessage.value = "";
   warnings.value = [];
-  stage.value = 'erasing';
+  stage.value = "erasing";
 
   const ok = await identify(Number(baud.value));
   if (!ok) {
-    stage.value = 'idle';
+    stage.value = "idle";
     return;
   }
 
   const loader = esploader.value;
   if (!loader) {
-    stage.value = 'idle';
+    stage.value = "idle";
     return;
   }
 
   try {
     await loader.eraseFlash();
     try {
-      await loader.after('hard_reset');
+      await loader.after("hard_reset");
     } catch {
       // See confirmFlash: a reset failure does not undo the erase.
     }
-    doneMessage.value = 'The whole flash was erased. The board is blank until you flash firmware to it.';
-    stage.value = 'done';
+    doneMessage.value =
+      "The whole flash was erased. The board is blank until you flash firmware to it.";
+    stage.value = "done";
   } catch (err) {
     const human = humanFlashError(err);
     setError(human.title, human.detail, true);
-    stage.value = 'idle';
+    stage.value = "idle";
   } finally {
     await teardown();
   }
@@ -484,8 +485,8 @@ async function teardown() {
 }
 
 function reset() {
-  stage.value = 'idle';
-  doneMessage.value = '';
+  stage.value = "idle";
+  doneMessage.value = "";
   clearError();
   plan.value = [];
   for (const f of files.value) {
@@ -503,9 +504,7 @@ onUnmounted(() => {
   <div class="flex flex-col gap-4">
     <!-- honesty card -->
     <div class="rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
-      <h3 class="text-[17px] font-semibold leading-[1.35]">
-        Before you flash
-      </h3>
+      <h3 class="text-[17px] font-semibold leading-[1.35]">Before you flash</h3>
       <ul class="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
         <li>
           This flashes ESP32, ESP32-S2, ESP32-S3, ESP32-C3 and ESP8266 boards only. A Raspberry Pi
@@ -529,28 +528,14 @@ onUnmounted(() => {
       <div class="flex flex-wrap items-center gap-3">
         <Label class="text-sm font-medium">Firmware files</Label>
         <div class="ml-auto flex items-center gap-2">
-          <Label
-            for="ff-mode"
-            class="text-xs text-muted-foreground"
-          >Mode</Label>
-          <Select
-            v-model="mode"
-            :disabled="busy"
-          >
-            <SelectTrigger
-              id="ff-mode"
-              size="sm"
-              class="w-40"
-            >
+          <Label for="ff-mode" class="text-xs text-muted-foreground">Mode</Label>
+          <Select v-model="mode" :disabled="busy">
+            <SelectTrigger id="ff-mode" size="sm" class="w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="single">
-                Single file
-              </SelectItem>
-              <SelectItem value="advanced">
-                Offset table
-              </SelectItem>
+              <SelectItem value="single"> Single file </SelectItem>
+              <SelectItem value="advanced"> Offset table </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -570,39 +555,32 @@ onUnmounted(() => {
           class="sr-only"
           :disabled="busy"
           @change="onPick"
-        >
+        />
         <span class="font-medium text-foreground">Drop .bin files here, or click to choose</span>
-        <span>Single file mode flashes one build at the chip's app offset. Switch to the offset
-          table to flash a bootloader, partition table and app together.</span>
+        <span
+          >Single file mode flashes one build at the chip's app offset. Switch to the offset table
+          to flash a bootloader, partition table and app together.</span
+        >
       </label>
 
-      <p
-        v-if="fileError"
-        role="alert"
-        class="text-sm text-destructive"
-      >
+      <p v-if="fileError" role="alert" class="text-sm text-destructive">
         {{ fileError }}
       </p>
 
-      <div
-        v-if="files.length"
-        class="flex flex-col gap-2"
-      >
+      <div v-if="files.length" class="flex flex-col gap-2">
         <div
           v-for="entry in files"
           :key="entry.id"
           class="flex flex-wrap items-center gap-3 rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]"
         >
           <span class="min-w-0 flex-1 truncate font-mono text-xs">{{ entry.name }}</span>
-          <span class="text-xs text-muted-foreground tabular-nums">{{ formatSize(entry.size) }}</span>
-          <div
-            v-if="mode === 'advanced'"
-            class="flex items-center gap-1.5"
-          >
-            <Label
-              :for="`ff-offset-${entry.id}`"
-              class="text-xs text-muted-foreground"
-            >Offset</Label>
+          <span class="text-xs text-muted-foreground tabular-nums">{{
+            formatSize(entry.size)
+          }}</span>
+          <div v-if="mode === 'advanced'" class="flex items-center gap-1.5">
+            <Label :for="`ff-offset-${entry.id}`" class="text-xs text-muted-foreground"
+              >Offset</Label
+            >
             <Input
               :id="`ff-offset-${entry.id}`"
               v-model="entry.offset"
@@ -620,16 +598,10 @@ onUnmounted(() => {
             aria-label="Remove file"
             @click="removeFile(entry.id)"
           >
-            <X
-              class="size-3.5"
-              aria-hidden="true"
-            />
+            <X class="size-3.5" aria-hidden="true" />
           </Button>
         </div>
-        <p
-          v-if="mode === 'single' && files.length === 1"
-          class="text-xs text-muted-foreground"
-        >
+        <p v-if="mode === 'single' && files.length === 1" class="text-xs text-muted-foreground">
           This file will be written at the application offset for the chip once the board is
           identified, 0x10000 on the ESP32 line and 0x0 on the ESP8266.
         </p>
@@ -640,27 +612,13 @@ onUnmounted(() => {
     <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
       <div class="flex flex-wrap items-end gap-4">
         <div class="flex min-w-0 flex-col gap-1.5">
-          <Label
-            for="ff-baud"
-            class="text-xs text-muted-foreground"
-          >Flash baud</Label>
-          <Select
-            v-model="baud"
-            :disabled="busy"
-          >
-            <SelectTrigger
-              id="ff-baud"
-              size="sm"
-              class="w-32"
-            >
+          <Label for="ff-baud" class="text-xs text-muted-foreground">Flash baud</Label>
+          <Select v-model="baud" :disabled="busy">
+            <SelectTrigger id="ff-baud" size="sm" class="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="rate in FLASH_BAUDS"
-                :key="rate"
-                :value="rate"
-              >
+              <SelectItem v-for="rate in FLASH_BAUDS" :key="rate" :value="rate">
                 {{ rate }}
               </SelectItem>
             </SelectContent>
@@ -668,15 +626,10 @@ onUnmounted(() => {
         </div>
 
         <div class="flex items-center gap-2 pb-1.5">
-          <Switch
-            id="ff-erase"
-            v-model="eraseAll"
-            :disabled="busy"
-          />
-          <Label
-            for="ff-erase"
-            class="cursor-pointer text-xs text-muted-foreground"
-          >Erase whole flash first</Label>
+          <Switch id="ff-erase" v-model="eraseAll" :disabled="busy" />
+          <Label for="ff-erase" class="cursor-pointer text-xs text-muted-foreground"
+            >Erase whole flash first</Label
+          >
         </div>
       </div>
 
@@ -693,28 +646,13 @@ onUnmounted(() => {
           :disabled="busy || files.length === 0 || stage === 'confirm'"
           @click="connectAndFlash"
         >
-          <Loader2
-            v-if="stage === 'connecting'"
-            class="size-4 animate-spin"
-            aria-hidden="true"
-          />
-          <Usb
-            v-else
-            class="size-4"
-            aria-hidden="true"
-          />
-          {{ stage === 'connecting' ? 'Connecting…' : 'Connect and flash' }}
+          <Loader2 v-if="stage === 'connecting'" class="size-4 animate-spin" aria-hidden="true" />
+          <Usb v-else class="size-4" aria-hidden="true" />
+          {{ stage === "connecting" ? "Connecting…" : "Connect and flash" }}
         </Button>
 
-        <Button
-          variant="outline"
-          :disabled="busy || stage === 'confirm'"
-          @click="eraseOnly"
-        >
-          <Eraser
-            class="size-4"
-            aria-hidden="true"
-          />
+        <Button variant="outline" :disabled="busy || stage === 'confirm'" @click="eraseOnly">
+          <Eraser class="size-4" aria-hidden="true" />
           Just erase flash
         </Button>
       </div>
@@ -727,27 +665,19 @@ onUnmounted(() => {
       class="rounded-[18px] border border-destructive/50 bg-destructive/5 p-5 shadow-[var(--sh-sm)] sm:p-6"
     >
       <div class="flex items-start gap-2">
-        <AlertTriangle
-          class="mt-0.5 size-4 shrink-0 text-destructive"
-          aria-hidden="true"
-        />
+        <AlertTriangle class="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
         <div class="min-w-0">
           <p class="font-medium text-destructive">
             {{ errorTitle }}
           </p>
-          <p
-            v-if="errorDetail"
-            class="mt-1 text-sm text-muted-foreground"
-          >
+          <p v-if="errorDetail" class="mt-1 text-sm text-muted-foreground">
             {{ errorDetail }}
           </p>
           <div
             v-if="showManualReset"
             class="mt-3 rounded-[10px] bg-secondary px-3 py-2 text-sm text-muted-foreground shadow-[var(--sh-inset)]"
           >
-            <p class="font-medium text-foreground">
-              Manual download mode
-            </p>
+            <p class="font-medium text-foreground">Manual download mode</p>
             <p class="mt-1">
               Hold the BOOT button down, tap and release EN or RST, then release BOOT. The board is
               now waiting for a flash. Click Connect and flash again.
@@ -774,33 +704,24 @@ onUnmounted(() => {
       class="rounded-[18px] border border-primary/40 bg-card p-5 shadow-[var(--sh-md)] sm:p-6"
     >
       <div class="flex items-start gap-2">
-        <Zap
-          class="mt-0.5 size-5 shrink-0 text-primary"
-          aria-hidden="true"
-        />
+        <Zap class="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
         <div class="min-w-0 flex-1">
-          <h3
-            id="ff-confirm-title"
-            class="text-[17px] font-semibold leading-[1.35]"
-          >
+          <h3 id="ff-confirm-title" class="text-[17px] font-semibold leading-[1.35]">
             Confirm the flash
           </h3>
           <p class="mt-1 text-sm text-muted-foreground">
-            Detected {{ chipName }}<span v-if="chipMac">, MAC {{ chipMac }}</span>. Check the layout
-            below before writing. Flashing the wrong offsets can stop the board from booting.
+            Detected {{ chipName }}<span v-if="chipMac">, MAC {{ chipMac }}</span
+            >. Check the layout below before writing. Flashing the wrong offsets can stop the board
+            from booting.
           </p>
 
           <dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-            <dt class="text-muted-foreground">
-              Chip
-            </dt>
+            <dt class="text-muted-foreground">Chip</dt>
             <dd class="font-mono">
               {{ chipKey ? CHIP_LABELS[chipKey] : chipName }}
             </dd>
             <template v-if="chipFeatures">
-              <dt class="text-muted-foreground">
-                Features
-              </dt>
+              <dt class="text-muted-foreground">Features</dt>
               <dd class="font-mono text-xs">
                 {{ chipFeatures }}
               </dd>
@@ -816,9 +737,13 @@ onUnmounted(() => {
               :key="item.entry.id"
               class="flex flex-wrap items-center gap-x-3 rounded-[10px] bg-secondary px-3 py-2 font-mono text-xs shadow-[var(--sh-inset)]"
             >
-              <span class="text-primary">0x{{ item.region.address.toString(16).padStart(4, '0') }}</span>
+              <span class="text-primary"
+                >0x{{ item.region.address.toString(16).padStart(4, "0") }}</span
+              >
               <span class="min-w-0 flex-1 truncate">{{ item.entry.name }}</span>
-              <span class="text-muted-foreground tabular-nums">{{ formatSize(item.entry.size) }}</span>
+              <span class="text-muted-foreground tabular-nums">{{
+                formatSize(item.entry.size)
+              }}</span>
             </div>
           </div>
 
@@ -830,37 +755,23 @@ onUnmounted(() => {
             calibration, will be wiped before writing.
           </div>
 
-          <ul
-            v-if="warnings.length"
-            class="mt-3 flex flex-col gap-1.5"
-          >
+          <ul v-if="warnings.length" class="mt-3 flex flex-col gap-1.5">
             <li
               v-for="(w, i) in warnings"
               :key="i"
               class="flex items-start gap-2 rounded-[10px] bg-secondary px-3 py-2 text-sm text-muted-foreground shadow-[var(--sh-inset)]"
             >
-              <AlertTriangle
-                class="mt-0.5 size-3.5 shrink-0"
-                aria-hidden="true"
-              />
+              <AlertTriangle class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
               <span>{{ w }}</span>
             </li>
           </ul>
 
           <div class="mt-4 flex flex-wrap gap-3">
             <Button @click="confirmFlash">
-              <Zap
-                class="size-4"
-                aria-hidden="true"
-              />
+              <Zap class="size-4" aria-hidden="true" />
               Flash now
             </Button>
-            <Button
-              variant="ghost"
-              @click="cancelConfirm"
-            >
-              Cancel
-            </Button>
+            <Button variant="ghost" @click="cancelConfirm"> Cancel </Button>
           </div>
         </div>
       </div>
@@ -872,12 +783,11 @@ onUnmounted(() => {
       class="flex flex-col gap-3 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6"
     >
       <div class="flex items-center gap-2">
-        <Loader2
-          class="size-4 animate-spin text-primary"
-          aria-hidden="true"
-        />
+        <Loader2 class="size-4 animate-spin text-primary" aria-hidden="true" />
         <span class="text-sm font-medium">Writing to the board. Do not unplug it.</span>
-        <span class="ml-auto text-sm text-muted-foreground tabular-nums">{{ overallProgress }}%</span>
+        <span class="ml-auto text-sm text-muted-foreground tabular-nums"
+          >{{ overallProgress }}%</span
+        >
       </div>
 
       <div
@@ -893,11 +803,7 @@ onUnmounted(() => {
         />
       </div>
 
-      <div
-        v-for="item in plan"
-        :key="item.entry.id"
-        class="flex flex-col gap-1"
-      >
+      <div v-for="item in plan" :key="item.entry.id" class="flex flex-col gap-1">
         <div class="flex items-center gap-2 text-xs text-muted-foreground">
           <span class="font-mono text-primary">0x{{ item.region.address.toString(16) }}</span>
           <span class="min-w-0 flex-1 truncate font-mono">{{ item.entry.name }}</span>
@@ -908,7 +814,9 @@ onUnmounted(() => {
         <div class="h-1.5 overflow-hidden rounded-full bg-secondary">
           <div
             class="h-full rounded-full bg-primary/70 transition-[width] duration-150"
-            :style="{ width: `${item.entry.total ? (item.entry.written / item.entry.total) * 100 : 0}%` }"
+            :style="{
+              width: `${item.entry.total ? (item.entry.written / item.entry.total) * 100 : 0}%`,
+            }"
           />
         </div>
       </div>
@@ -919,11 +827,10 @@ onUnmounted(() => {
       v-if="stage === 'erasing'"
       class="flex items-center gap-2 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6"
     >
-      <Loader2
-        class="size-4 animate-spin text-primary"
-        aria-hidden="true"
-      />
-      <span class="text-sm font-medium">Erasing the flash. This can take a while on a large chip.</span>
+      <Loader2 class="size-4 animate-spin text-primary" aria-hidden="true" />
+      <span class="text-sm font-medium"
+        >Erasing the flash. This can take a while on a large chip.</span
+      >
     </div>
 
     <!-- done -->
@@ -932,25 +839,13 @@ onUnmounted(() => {
       class="rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6"
     >
       <div class="flex items-start gap-2">
-        <CheckCircle2
-          class="mt-0.5 size-5 shrink-0 text-[var(--positive)]"
-          aria-hidden="true"
-        />
+        <CheckCircle2 class="mt-0.5 size-5 shrink-0 text-[var(--positive)]" aria-hidden="true" />
         <div class="min-w-0">
-          <p class="font-medium">
-            Done.
-          </p>
+          <p class="font-medium">Done.</p>
           <p class="mt-1 text-sm text-muted-foreground">
             {{ doneMessage }}
           </p>
-          <Button
-            variant="outline"
-            size="sm"
-            class="mt-3"
-            @click="reset"
-          >
-            Flash another
-          </Button>
+          <Button variant="outline" size="sm" class="mt-3" @click="reset"> Flash another </Button>
         </div>
       </div>
     </div>
@@ -960,10 +855,10 @@ onUnmounted(() => {
       v-if="log.length"
       class="rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6"
     >
-      <summary class="cursor-pointer text-sm text-muted-foreground">
-        esptool output
-      </summary>
-      <pre class="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-[10px] bg-secondary px-3 py-2 font-mono text-xs shadow-[var(--sh-inset)]">{{ log.join('\n') }}</pre>
+      <summary class="cursor-pointer text-sm text-muted-foreground">esptool output</summary>
+      <pre
+        class="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-[10px] bg-secondary px-3 py-2 font-mono text-xs shadow-[var(--sh-inset)]"
+        >{{ log.join("\n") }}</pre>
     </details>
   </div>
 </template>

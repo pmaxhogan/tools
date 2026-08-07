@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface WeekNumberOpts {
   [key: string]: unknown;
@@ -10,7 +10,7 @@ export interface WeekNumberResult {
 
 const DAY_MS = 86_400_000;
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 /**
  * Matches an ISO 8601 calendar date, optionally followed by a time and/or
@@ -24,7 +24,7 @@ const ISO_DATE_RE =
 
 /** Parse input into a UTC midnight Date for the target calendar day. */
 function parseDate(raw: string): Date {
-  const s = (raw ?? '').trim();
+  const s = (raw ?? "").trim();
 
   if (!s) {
     const now = new Date();
@@ -34,9 +34,9 @@ function parseDate(raw: string): Date {
   const m = ISO_DATE_RE.exec(s);
   if (!m) {
     throw new ToolError(
-      'unparseable-date',
+      "unparseable-date",
       `Could not parse "${s}" as a date.`,
-      'Use an ISO 8601 date like 2026-08-06, or a full datetime like 2026-08-06T21:00:00Z. Leave empty for today.',
+      "Use an ISO 8601 date like 2026-08-06, or a full datetime like 2026-08-06T21:00:00Z. Leave empty for today.",
     );
   }
 
@@ -47,9 +47,9 @@ function parseDate(raw: string): Date {
 
   if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) {
     throw new ToolError(
-      'invalid-date',
+      "invalid-date",
       `"${s}" is not a real calendar date.`,
-      'Check the month (01-12) and day (01-31) values, e.g. 2026-08-06.',
+      "Check the month (01-12) and day (01-31) values, e.g. 2026-08-06.",
     );
   }
 
@@ -112,13 +112,13 @@ function format(d: Date): WeekNumberResult {
   const sunday = new Date(monday.getTime() + 6 * DAY_MS);
 
   return {
-    'ISO week': `W${String(week).padStart(2, '0')}`,
-    'ISO week-year': String(year),
-    'Day of year': String(doy),
-    'Day of week': `${DAY_NAMES[d.getUTCDay()]} (${isoDayNumber(d)})`,
+    "ISO week": `W${String(week).padStart(2, "0")}`,
+    "ISO week-year": String(year),
+    "Day of year": String(doy),
+    "Day of week": `${DAY_NAMES[d.getUTCDay()]} (${isoDayNumber(d)})`,
     Quarter: `Q${quarter}`,
-    'Days remaining in year': String(remaining),
-    'Week range': `${isoDateStr(monday)} - ${isoDateStr(sunday)}`,
+    "Days remaining in year": String(remaining),
+    "Week range": `${isoDateStr(monday)} - ${isoDateStr(sunday)}`,
   };
 }
 

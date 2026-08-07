@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface DurationResult {
   [label: string]: string;
@@ -68,7 +68,7 @@ function parseTerm(rawText: string): number | null {
   const text = rawText.trim();
   if (!text) return null;
 
-  const noSpace = text.replace(/\s+/g, '');
+  const noSpace = text.replace(/\s+/g, "");
 
   // Clock forms: hh:mm or hh:mm:ss (minutes/seconds 0-59).
   const clockMatch = /^(\d+):([0-5]?\d)(?::([0-5]?\d(?:\.\d+)?))?$/.exec(noSpace);
@@ -85,7 +85,7 @@ function parseTerm(rawText: string): number | null {
   }
 
   // Unit shorthand, possibly composite ("2h 30m").
-  const compact = text.replace(/\s+/g, ' ').trim();
+  const compact = text.replace(/\s+/g, " ").trim();
   return parseUnitComposite(compact);
 }
 
@@ -104,13 +104,13 @@ function evaluateExpression(expr: string): number {
     if (!text) continue;
     found = true;
 
-    const sign = signStr === '-' ? -1 : 1;
+    const sign = signStr === "-" ? -1 : 1;
     const ms = parseTerm(text);
     if (ms === null) {
       const leadingWs = rawGroup.length - rawGroup.trimStart().length;
       const position = m.index + (signStr ? signStr.length : 0) + leadingWs + 1;
       throw new ToolError(
-        'unparseable-token',
+        "unparseable-token",
         `Could not parse duration "${text}" at position ${position}.`,
         FIX_EXAMPLE,
       );
@@ -119,7 +119,7 @@ function evaluateExpression(expr: string): number {
   }
 
   if (!found) {
-    throw new ToolError('unparseable-token', `Could not parse duration "${trimmed}".`, FIX_EXAMPLE);
+    throw new ToolError("unparseable-token", `Could not parse duration "${trimmed}".`, FIX_EXAMPLE);
   }
 
   return total;
@@ -155,36 +155,36 @@ function evaluateInput(raw: string): number {
 }
 
 function formatClock(ms: number): string {
-  const sign = ms < 0 ? '-' : '';
+  const sign = ms < 0 ? "-" : "";
   const totalSeconds = Math.floor(Math.abs(ms) / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  return `${sign}${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 function humanizeDuration(ms: number): string {
-  const sign = ms < 0 ? '-' : '';
+  const sign = ms < 0 ? "-" : "";
   const totalMinutes = Math.floor(Math.abs(ms) / 60_000);
   const days = Math.floor(totalMinutes / 1440);
   const hours = Math.floor((totalMinutes % 1440) / 60);
   const minutes = totalMinutes % 60;
 
   const parts: string[] = [];
-  if (days) parts.push(`${days} day${days === 1 ? '' : 's'}`);
-  if (hours) parts.push(`${hours} hour${hours === 1 ? '' : 's'}`);
-  if (minutes || parts.length === 0) parts.push(`${minutes} minute${minutes === 1 ? '' : 's'}`);
+  if (days) parts.push(`${days} day${days === 1 ? "" : "s"}`);
+  if (hours) parts.push(`${hours} hour${hours === 1 ? "" : "s"}`);
+  if (minutes || parts.length === 0) parts.push(`${minutes} minute${minutes === 1 ? "" : "s"}`);
 
-  return sign + parts.join(' ');
+  return sign + parts.join(" ");
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: Record<string, unknown>): DurationResult {
-  const raw = input ?? '';
+  const raw = input ?? "";
   if (!raw.trim()) {
     throw new ToolError(
-      'empty-input',
-      'Enter a duration expression to calculate.',
+      "empty-input",
+      "Enter a duration expression to calculate.",
       'e.g. "1:30:00 + 45m" or "90m"',
     );
   }
@@ -192,11 +192,11 @@ export function run(input: string, _opts: Record<string, unknown>): DurationResu
   const totalMs = evaluateInput(raw);
 
   return {
-    'Total (hh:mm:ss)': formatClock(totalMs),
-    'Days hours minutes': humanizeDuration(totalMs),
-    'Total seconds': String(Number((totalMs / 1000).toFixed(3))),
-    'Total minutes': (totalMs / 60_000).toFixed(2),
-    'Total hours': (totalMs / 3_600_000).toFixed(3),
+    "Total (hh:mm:ss)": formatClock(totalMs),
+    "Days hours minutes": humanizeDuration(totalMs),
+    "Total seconds": String(Number((totalMs / 1000).toFixed(3))),
+    "Total minutes": (totalMs / 60_000).toFixed(2),
+    "Total hours": (totalMs / 3_600_000).toFixed(3),
   };
 }
 

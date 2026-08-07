@@ -1,11 +1,11 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 import {
   ATA_ATTRIBUTES,
   NVME_CRITICAL_WARNING_BITS,
   NVME_DATA_UNIT_BYTES,
   NVME_FIELDS,
   type AtaAttributeInfo,
-} from './data';
+} from "./data";
 
 export interface SmartOpts {
   /** 'verdict' (default) or 'full' to append every parsed attribute. */
@@ -13,7 +13,7 @@ export interface SmartOpts {
   [key: string]: unknown;
 }
 
-export type SmartKind = 'ata' | 'nvme';
+export type SmartKind = "ata" | "nvme";
 
 /** One row of the ATA SMART attribute table, from either column layout. */
 export interface AtaAttrRow {
@@ -58,35 +58,35 @@ export interface SmartReport {
 }
 
 interface Finding {
-  severity: 'fail' | 'watch';
+  severity: "fail" | "watch";
   /** Short clause used to build the headline. */
   reason: string;
   /** Full explanatory line for the findings list. */
   line: string;
 }
 
-export type Verdict = 'HEALTHY' | 'WATCH' | 'FAILING';
+export type Verdict = "HEALTHY" | "WATCH" | "FAILING";
 
 /* ------------------------------------------------------------------ utils */
 
 function fmtInt(n: number): string {
   const neg = n < 0;
   const s = Math.abs(Math.trunc(n)).toString();
-  const grouped = s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const grouped = s.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return neg ? `-${grouped}` : grouped;
 }
 
 /** First integer in a string, commas tolerated. Null when there is none. */
 function firstInt(s: string): number | null {
-  const m = /-?\d[\d,]*/.exec(s ?? '');
+  const m = /-?\d[\d,]*/.exec(s ?? "");
   if (!m) return null;
-  const n = Number(m[0].replace(/,/g, ''));
+  const n = Number(m[0].replace(/,/g, ""));
   return Number.isFinite(n) ? n : null;
 }
 
 /** Parses "0x04" as hex and "1,234" / "34 Celsius" / "3%" as decimal. */
 function parseValue(s: string): number | null {
-  const t = (s ?? '').trim();
+  const t = (s ?? "").trim();
   if (/^0x[0-9a-f]+$/i.test(t)) return parseInt(t.slice(2), 16);
   return firstInt(t);
 }
@@ -103,16 +103,16 @@ function pick(text: string, re: RegExp): string | undefined {
 function normalizeKey(label: string): string {
   return label
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
 function hoursToSpan(hours: number): string {
   const years = Math.floor(hours / 8760);
   const days = Math.floor((hours - years * 8760) / 24);
   if (years > 0)
-    return `${years} ${plural(years, 'year', 'years')}, ${days} ${plural(days, 'day', 'days')}`;
-  return `${days} ${plural(days, 'day', 'days')}`;
+    return `${years} ${plural(years, "year", "years")}, ${days} ${plural(days, "day", "days")}`;
+  return `${days} ${plural(days, "day", "days")}`;
 }
 
 function bytesToTb(bytes: number): string {
@@ -150,27 +150,27 @@ export function parseAtaAttributes(lines: string[]): AtaAttrRow[] {
     const trimmed = line.trim();
     if (!trimmed) break;
     // The -x legend hangs off the flag column with pipe characters.
-    if (trimmed.startsWith('|')) continue;
+    if (trimmed.startsWith("|")) continue;
 
     const m = ROW_RE.exec(line);
     if (!m) break;
 
-    const rest = (m[7] ?? '').trim();
+    const rest = (m[7] ?? "").trim();
     const tokens = rest ? rest.split(/\s+/) : [];
 
     let type: string | null = null;
     let updated: string | null = null;
-    let whenFailed = '-';
-    let raw = '';
+    let whenFailed = "-";
+    let raw = "";
 
     if (tokens.length && /^(Pre-fail|Old_age)$/i.test(tokens[0])) {
       type = tokens[0];
       updated = tokens[1] ?? null;
-      whenFailed = tokens[2] ?? '-';
-      raw = tokens.slice(3).join(' ');
+      whenFailed = tokens[2] ?? "-";
+      raw = tokens.slice(3).join(" ");
     } else if (tokens.length) {
       whenFailed = tokens[0];
-      raw = tokens.slice(1).join(' ');
+      raw = tokens.slice(1).join(" ");
     }
 
     rows.push({
@@ -182,7 +182,7 @@ export function parseAtaAttributes(lines: string[]): AtaAttrRow[] {
       thresh: /^\d+$/.test(m[6]) ? Number(m[6]) : null,
       type,
       updated,
-      whenFailed: whenFailed || '-',
+      whenFailed: whenFailed || "-",
       raw,
       rawInt: firstInt(raw),
     });
@@ -206,7 +206,7 @@ export function parseNvmeHealth(lines: string[]): Record<string, string> {
 }
 
 function parseSelfTest(lines: string[]): SelfTestInfo {
-  const joined = lines.join('\n');
+  const joined = lines.join("\n");
   if (/No self-tests have been logged|No Self-tests Logged/i.test(joined)) return { logged: false };
 
   const row = lines.find((l) => /^#\s*\d+\s+\S/.test(l.trim()));
@@ -214,7 +214,7 @@ function parseSelfTest(lines: string[]): SelfTestInfo {
 
   const cells = row
     .trim()
-    .replace(/^#\s*\d+\s+/, '')
+    .replace(/^#\s*\d+\s+/, "")
     .split(/\s{2,}/)
     .map((c) => c.trim())
     .filter(Boolean);
@@ -241,13 +241,13 @@ export function parseSmart(text: string): SmartReport {
     /NVMe Version:/i.test(text) ||
     /\/dev\/nvme/i.test(text);
 
-  const kind: SmartKind = attrs.length > 0 ? 'ata' : nvmeHinted ? 'nvme' : 'ata';
+  const kind: SmartKind = attrs.length > 0 ? "ata" : nvmeHinted ? "nvme" : "ata";
 
   if (attrs.length === 0 && Object.keys(nvme).length === 0)
     throw new ToolError(
-      'no-smart-data',
-      'This looks like smartctl output, but it has no SMART attribute table and no NVMe health section.',
-      'Run `smartctl -a /dev/sda` (or `smartctl -a /dev/nvme0`) as root and paste the whole output, not just the information section.',
+      "no-smart-data",
+      "This looks like smartctl output, but it has no SMART attribute table and no NVMe health section.",
+      "Run `smartctl -a /dev/sda` (or `smartctl -a /dev/nvme0`) as root and paste the whole output, not just the information section.",
     );
 
   return {
@@ -269,7 +269,7 @@ export function parseSmart(text: string): SmartReport {
     selfTest: parseSelfTest(lines),
     errorCount: /No Errors Logged/i.test(text)
       ? 0
-      : (firstInt(pick(text, /ATA Error Count:\s*(\d+)/i) ?? '') ?? undefined),
+      : (firstInt(pick(text, /ATA Error Count:\s*(\d+)/i) ?? "") ?? undefined),
   };
 }
 
@@ -298,7 +298,7 @@ function failedPast(row: AtaAttrRow): boolean {
 }
 
 function temperatureOf(report: SmartReport): number | null {
-  if (report.kind === 'nvme') return parseValue(report.nvme.temperature ?? '');
+  if (report.kind === "nvme") return parseValue(report.nvme.temperature ?? "");
   return rawOf(report, 194) ?? rawOf(report, 190);
 }
 
@@ -320,14 +320,14 @@ export function decodeCriticalWarning(mask: number): { label: string; meaning: s
 function ataFindings(report: SmartReport): Finding[] {
   const found: Finding[] = [];
   const say = (row: AtaAttrRow, advice: string): string => {
-    const meaning = info(row)?.meaning ?? '';
-    return `${row.id} ${row.name}: ${advice}${meaning ? ` ${meaning}` : ''}`;
+    const meaning = info(row)?.meaning ?? "";
+    return `${row.id} ${row.name}: ${advice}${meaning ? ` ${meaning}` : ""}`;
   };
 
   if (report.health && /FAIL/i.test(report.health))
     found.push({
-      severity: 'fail',
-      reason: 'The drive reports its own overall health self-assessment as FAILED.',
+      severity: "fail",
+      reason: "The drive reports its own overall health self-assessment as FAILED.",
       line: `Overall health: the drive answered ${report.health} to the self-assessment. That is the drive itself telling you it expects to fail, and it is the single strongest signal SMART can give.`,
     });
 
@@ -336,14 +336,14 @@ function ataFindings(report: SmartReport): Finding[] {
   if (realloc && reallocRaw > 0) {
     const many = reallocRaw > 50;
     found.push({
-      severity: many ? 'fail' : 'watch',
-      reason: `${fmtInt(reallocRaw)} ${plural(reallocRaw, 'sector has', 'sectors have')} already been reallocated.`,
+      severity: many ? "fail" : "watch",
+      reason: `${fmtInt(reallocRaw)} ${plural(reallocRaw, "sector has", "sectors have")} already been reallocated.`,
       line: say(
         realloc,
-        `${fmtInt(reallocRaw)} ${plural(reallocRaw, 'sector has', 'sectors have')} been remapped to spares.${
+        `${fmtInt(reallocRaw)} ${plural(reallocRaw, "sector has", "sectors have")} been remapped to spares.${
           many
-            ? ' At this scale the surface is failing rather than settling, and counts like this normally keep climbing.'
-            : ' Re-run this check in a week and compare the two counts.'
+            ? " At this scale the surface is failing rather than settling, and counts like this normally keep climbing."
+            : " Re-run this check in a week and compare the two counts."
         }`,
       ),
     });
@@ -353,11 +353,11 @@ function ataFindings(report: SmartReport): Finding[] {
   const pendingRaw = pending?.rawInt ?? 0;
   if (pending && pendingRaw > 0)
     found.push({
-      severity: 'fail',
-      reason: `${fmtInt(pendingRaw)} ${plural(pendingRaw, 'sector is', 'sectors are')} unreadable right now.`,
+      severity: "fail",
+      reason: `${fmtInt(pendingRaw)} ${plural(pendingRaw, "sector is", "sectors are")} unreadable right now.`,
       line: say(
         pending,
-        `${fmtInt(pendingRaw)} ${plural(pendingRaw, 'sector is', 'sectors are')} unreadable right now and waiting to be remapped. Whatever lives in those sectors is already gone unless you have a backup.`,
+        `${fmtInt(pendingRaw)} ${plural(pendingRaw, "sector is", "sectors are")} unreadable right now and waiting to be remapped. Whatever lives in those sectors is already gone unless you have a backup.`,
       ),
     });
 
@@ -365,11 +365,11 @@ function ataFindings(report: SmartReport): Finding[] {
   const offlineRaw = offline?.rawInt ?? 0;
   if (offline && offlineRaw > 0)
     found.push({
-      severity: 'fail',
-      reason: `${fmtInt(offlineRaw)} ${plural(offlineRaw, 'sector', 'sectors')} failed the offline surface scan.`,
+      severity: "fail",
+      reason: `${fmtInt(offlineRaw)} ${plural(offlineRaw, "sector", "sectors")} failed the offline surface scan.`,
       line: say(
         offline,
-        `${fmtInt(offlineRaw)} ${plural(offlineRaw, 'sector', 'sectors')} failed the offline surface scan the drive runs on itself and could not be recovered.`,
+        `${fmtInt(offlineRaw)} ${plural(offlineRaw, "sector", "sectors")} failed the offline surface scan the drive runs on itself and could not be recovered.`,
       ),
     });
 
@@ -378,20 +378,20 @@ function ataFindings(report: SmartReport): Finding[] {
     if (!meta?.isCritical) continue;
     if (failedNow(row))
       found.push({
-        severity: 'fail',
+        severity: "fail",
         reason: `Attribute ${row.id} ${row.name} is flagged as failing now.`,
         line: say(
           row,
-          `smartctl marks this attribute as FAILING NOW, meaning the normalized value ${row.value} has dropped to or below the manufacturer threshold ${row.thresh ?? '(none)'}.`,
+          `smartctl marks this attribute as FAILING NOW, meaning the normalized value ${row.value} has dropped to or below the manufacturer threshold ${row.thresh ?? "(none)"}.`,
         ),
       });
     else if (failedPast(row))
       found.push({
-        severity: 'watch',
+        severity: "watch",
         reason: `Attribute ${row.id} ${row.name} failed its threshold at some point in the past.`,
         line: say(
           row,
-          'smartctl marks this attribute as having failed in the past. It has recovered above the threshold, but the drive has been in trouble before.',
+          "smartctl marks this attribute as having failed in the past. It has recovered above the threshold, but the drive has been in trouble before.",
         ),
       });
   }
@@ -402,11 +402,11 @@ function ataFindings(report: SmartReport): Finding[] {
   const crcRaw = crc?.rawInt ?? 0;
   if (crc && crcRaw > 0)
     found.push({
-      severity: 'watch',
-      reason: `${fmtInt(crcRaw)} CRC ${plural(crcRaw, 'error', 'errors')} on the SATA link, which points at the cable.`,
+      severity: "watch",
+      reason: `${fmtInt(crcRaw)} CRC ${plural(crcRaw, "error", "errors")} on the SATA link, which points at the cable.`,
       line: say(
         crc,
-        `${fmtInt(crcRaw)} ${plural(crcRaw, 'transfer was', 'transfers were')} corrupted between the drive and the controller. Reseat the SATA data cable at both ends, try a different cable and a different port, and check the power connector. Replacing the drive over this attribute alone is usually a wasted drive.`,
+        `${fmtInt(crcRaw)} ${plural(crcRaw, "transfer was", "transfers were")} corrupted between the drive and the controller. Reseat the SATA data cable at both ends, try a different cable and a different port, and check the power connector. Replacing the drive over this attribute alone is usually a wasted drive.`,
       ),
     });
 
@@ -419,19 +419,19 @@ function ataFindings(report: SmartReport): Finding[] {
 
     const advice =
       row.id === 187
-        ? `${fmtInt(n)} ${plural(n, 'read', 'reads')} could not be corrected by the built in error correction.`
+        ? `${fmtInt(n)} ${plural(n, "read", "reads")} could not be corrected by the built in error correction.`
         : row.id === 188
-          ? `${fmtInt(n)} ${plural(n, 'command', 'commands')} timed out. Rule out the cable and the power supply before you condemn the drive.`
+          ? `${fmtInt(n)} ${plural(n, "command", "commands")} timed out. Rule out the cable and the power supply before you condemn the drive.`
           : row.id === 184
-            ? `${fmtInt(n)} end to end ${plural(n, 'error', 'errors')} recorded between the cache and the media.`
+            ? `${fmtInt(n)} end to end ${plural(n, "error", "errors")} recorded between the cache and the media.`
             : row.id === 10
-              ? `${fmtInt(n)} spin ${plural(n, 'retry', 'retries')} recorded.`
+              ? `${fmtInt(n)} spin ${plural(n, "retry", "retries")} recorded.`
               : row.id === 196
-                ? `${fmtInt(n)} remap ${plural(n, 'event', 'events')} recorded. Compare this against attribute 5, because a gap means some remaps did not succeed.`
+                ? `${fmtInt(n)} remap ${plural(n, "event", "events")} recorded. Compare this against attribute 5, because a gap means some remaps did not succeed.`
                 : `Raw value ${fmtInt(n)}, where zero is the healthy reading.`;
 
     found.push({
-      severity: 'watch',
+      severity: "watch",
       reason: `Attribute ${row.id} ${row.name} is not zero.`,
       line: say(row, advice),
     });
@@ -445,57 +445,57 @@ function nvmeFindings(report: SmartReport): Finding[] {
 
   if (report.health && /FAIL/i.test(report.health))
     found.push({
-      severity: 'fail',
-      reason: 'The controller reports its own overall health self-assessment as FAILED.',
+      severity: "fail",
+      reason: "The controller reports its own overall health self-assessment as FAILED.",
       line: `Overall health: the controller answered ${report.health} to the self-assessment.`,
     });
 
-  const warn = nvmeNum(report, 'critical_warning');
+  const warn = nvmeNum(report, "critical_warning");
   if (warn !== null && warn !== 0) {
     const bits = decodeCriticalWarning(warn);
     const labels = bits.length
-      ? bits.map((b) => b.label.toLowerCase()).join(', ')
-      : 'an unknown fault';
+      ? bits.map((b) => b.label.toLowerCase()).join(", ")
+      : "an unknown fault";
     found.push({
-      severity: 'fail',
+      severity: "fail",
       reason: `The controller has raised a critical warning (${labels}).`,
       line: `Critical Warning: ${report.nvme.critical_warning}. ${
         bits.length
-          ? bits.map((b) => `${b.label}. ${b.meaning}`).join(' ')
-          : 'The controller set a bit this decoder does not recognise, which still means it believes something is wrong.'
+          ? bits.map((b) => `${b.label}. ${b.meaning}`).join(" ")
+          : "The controller set a bit this decoder does not recognise, which still means it believes something is wrong."
       }`,
     });
   }
 
-  const media = nvmeNum(report, 'media_and_data_integrity_errors');
+  const media = nvmeNum(report, "media_and_data_integrity_errors");
   if (media !== null && media > 0)
     found.push({
-      severity: 'fail',
-      reason: `${fmtInt(media)} media and data integrity ${plural(media, 'error', 'errors')} recorded.`,
+      severity: "fail",
+      reason: `${fmtInt(media)} media and data integrity ${plural(media, "error", "errors")} recorded.`,
       line: `Media and Data Integrity Errors: ${fmtInt(media)}. ${NVME_FIELDS.media_and_data_integrity_errors.meaning}`,
     });
 
-  const spare = nvmeNum(report, 'available_spare');
-  const spareThreshold = nvmeNum(report, 'available_spare_threshold');
+  const spare = nvmeNum(report, "available_spare");
+  const spareThreshold = nvmeNum(report, "available_spare_threshold");
   if (spare !== null && spareThreshold !== null && spare <= spareThreshold)
     found.push({
-      severity: 'fail',
+      severity: "fail",
       reason: `Spare flash capacity is down to ${spare}%, at or under the ${spareThreshold}% threshold.`,
       line: `Available Spare: ${spare}% against a threshold of ${spareThreshold}%. ${NVME_FIELDS.available_spare.meaning}`,
     });
 
-  const used = nvmeNum(report, 'percentage_used');
+  const used = nvmeNum(report, "percentage_used");
   if (used !== null && used >= 90)
     found.push({
-      severity: 'watch',
+      severity: "watch",
       reason: `${used}% of the rated write endurance has been consumed.`,
       line: `Percentage Used: ${used}%. ${NVME_FIELDS.percentage_used.meaning}`,
     });
 
-  const unsafe = nvmeNum(report, 'unsafe_shutdowns');
+  const unsafe = nvmeNum(report, "unsafe_shutdowns");
   if (unsafe !== null && unsafe > 100)
     found.push({
-      severity: 'watch',
+      severity: "watch",
       reason: `${fmtInt(unsafe)} unsafe shutdowns recorded.`,
       line: `Unsafe Shutdowns: ${fmtInt(unsafe)}. ${NVME_FIELDS.unsafe_shutdowns.meaning}`,
     });
@@ -506,71 +506,71 @@ function nvmeFindings(report: SmartReport): Finding[] {
 function temperatureFinding(report: SmartReport): Finding | null {
   const temp = temperatureOf(report);
   if (temp === null) return null;
-  const limit = report.kind === 'nvme' ? 70 : 55;
+  const limit = report.kind === "nvme" ? 70 : 55;
   if (temp <= limit) return null;
   return {
-    severity: 'watch',
+    severity: "watch",
     reason: `The drive is running at ${temp} C, above the ${limit} C comfort limit.`,
     line: `Temperature: ${temp} C, above the ${limit} C mark where sustained heat starts costing you drive life. Improve airflow, add or reseat a heatsink, and move the drive away from anything else that runs hot.`,
   };
 }
 
 export function analyze(report: SmartReport): { verdict: Verdict; findings: Finding[] } {
-  const findings = report.kind === 'nvme' ? nvmeFindings(report) : ataFindings(report);
+  const findings = report.kind === "nvme" ? nvmeFindings(report) : ataFindings(report);
   const temp = temperatureFinding(report);
   if (temp) findings.push(temp);
 
-  const verdict: Verdict = findings.some((f) => f.severity === 'fail')
-    ? 'FAILING'
+  const verdict: Verdict = findings.some((f) => f.severity === "fail")
+    ? "FAILING"
     : findings.length
-      ? 'WATCH'
-      : 'HEALTHY';
+      ? "WATCH"
+      : "HEALTHY";
 
   return { verdict, findings };
 }
 
 function headline(verdict: Verdict, findings: Finding[], report: SmartReport): string {
-  if (verdict === 'FAILING') {
+  if (verdict === "FAILING") {
     const reasons = findings
-      .filter((f) => f.severity === 'fail')
+      .filter((f) => f.severity === "fail")
       .slice(0, 2)
       .map((f) => f.reason)
-      .join(' ');
+      .join(" ");
     return `Back up now, then plan to replace this drive. ${reasons}`;
   }
-  if (verdict === 'WATCH') {
+  if (verdict === "WATCH") {
     const reasons = findings
       .slice(0, 2)
       .map((f) => f.reason)
-      .join(' ');
+      .join(" ");
     return `Nothing here says the drive is dying, but something is worth watching. ${reasons}`;
   }
-  const health = report.health ? ` The drive self-assessment says ${report.health}.` : '';
+  const health = report.health ? ` The drive self-assessment says ${report.health}.` : "";
   return `Nothing in this report is off its healthy reading.${health} Re-run this check in a month and compare, because a single snapshot cannot show a trend.`;
 }
 
 /* ---------------------------------------------------------------- sections */
 
 function driveSection(report: SmartReport): string[] {
-  const out: string[] = ['Drive'];
+  const out: string[] = ["Drive"];
   const add = (label: string, value?: string): void => {
     if (value) out.push(`  ${label}: ${value}`);
   };
-  add('Interface', report.kind === 'nvme' ? 'NVMe' : 'ATA / SATA');
-  add('Model', report.model);
-  add('Family', report.family);
-  add('Serial', report.serial);
-  add('Firmware', report.firmware);
-  add('Capacity', report.capacity);
-  add('Rotation', report.rotation);
-  add('Reported health', report.health);
+  add("Interface", report.kind === "nvme" ? "NVMe" : "ATA / SATA");
+  add("Model", report.model);
+  add("Family", report.family);
+  add("Serial", report.serial);
+  add("Firmware", report.firmware);
+  add("Capacity", report.capacity);
+  add("Rotation", report.rotation);
+  add("Reported health", report.health);
   return out;
 }
 
 function lifeSection(report: SmartReport): string[] {
-  const out: string[] = ['Drive life'];
+  const out: string[] = ["Drive life"];
 
-  if (report.kind === 'ata') {
+  if (report.kind === "ata") {
     const poh = attr(report, 9);
     if (poh && poh.rawInt !== null) {
       const raw = poh.rawInt;
@@ -590,9 +590,9 @@ function lifeSection(report: SmartReport): string[] {
       const row = attr(report, id);
       if (!row) continue;
       const meta = info(row);
-      if (!meta || meta.direction !== 'higher-better') continue;
+      if (!meta || meta.direction !== "higher-better") continue;
       out.push(
-        `  Flash wear (${row.id} ${row.name}): normalized value ${row.value} of 100, threshold ${row.thresh ?? 'not set'}. Higher is better on this attribute. ${meta.meaning}`,
+        `  Flash wear (${row.id} ${row.name}): normalized value ${row.value} of 100, threshold ${row.thresh ?? "not set"}. Higher is better on this attribute. ${meta.meaning}`,
       );
     }
 
@@ -600,7 +600,7 @@ function lifeSection(report: SmartReport): string[] {
     if (written && written.rawInt !== null) {
       const gib = /(\d[\d,]*)\s*GiB/i.exec(written.raw);
       if (gib) {
-        const bytes = Number(gib[1].replace(/,/g, '')) * 1024 ** 3;
+        const bytes = Number(gib[1].replace(/,/g, "")) * 1024 ** 3;
         out.push(
           `  Host writes (241 ${written.name}): ${bytesToTb(bytes)}, taken from the GiB figure the drive reported.`,
         );
@@ -612,91 +612,91 @@ function lifeSection(report: SmartReport): string[] {
       }
     }
   } else {
-    const poh = nvmeNum(report, 'power_on_hours');
+    const poh = nvmeNum(report, "power_on_hours");
     if (poh !== null) out.push(`  Power on time: ${fmtInt(poh)} hours, about ${hoursToSpan(poh)}.`);
-    const cycles = nvmeNum(report, 'power_cycles');
+    const cycles = nvmeNum(report, "power_cycles");
     if (cycles !== null) out.push(`  Power cycles: ${fmtInt(cycles)}.`);
 
-    const used = nvmeNum(report, 'percentage_used');
+    const used = nvmeNum(report, "percentage_used");
     if (used !== null)
       out.push(
         `  Endurance used: ${used}% of the rated write life, so roughly ${100 - used}% is left. This is a vendor estimate of consumed write endurance, not a countdown to failure: 100% means the warranty endurance is used up, and values above 100% are allowed.`,
       );
 
-    const spare = nvmeNum(report, 'available_spare');
-    const spareThreshold = nvmeNum(report, 'available_spare_threshold');
+    const spare = nvmeNum(report, "available_spare");
+    const spareThreshold = nvmeNum(report, "available_spare_threshold");
     if (spare !== null)
       out.push(
-        `  Available spare: ${spare}%${spareThreshold !== null ? ` against a ${spareThreshold}% warning threshold` : ''}.`,
+        `  Available spare: ${spare}%${spareThreshold !== null ? ` against a ${spareThreshold}% warning threshold` : ""}.`,
       );
 
-    const dw = nvmeNum(report, 'data_units_written');
+    const dw = nvmeNum(report, "data_units_written");
     if (dw !== null)
       out.push(
         `  Host writes: ${fmtInt(dw)} data units, which is exactly ${bytesToTb(dw * NVME_DATA_UNIT_BYTES)} because one NVMe data unit is 512,000 bytes.`,
       );
-    const dr = nvmeNum(report, 'data_units_read');
+    const dr = nvmeNum(report, "data_units_read");
     if (dr !== null)
       out.push(
         `  Host reads: ${fmtInt(dr)} data units, which is ${bytesToTb(dr * NVME_DATA_UNIT_BYTES)}.`,
       );
 
-    const unsafe = nvmeNum(report, 'unsafe_shutdowns');
+    const unsafe = nvmeNum(report, "unsafe_shutdowns");
     if (unsafe !== null) out.push(`  Unsafe shutdowns: ${fmtInt(unsafe)}.`);
   }
 
   const temp = temperatureOf(report);
   if (temp !== null) out.push(`  Temperature: ${temp} C.`);
 
-  if (out.length === 1) out.push('  Nothing in this report carries usable lifetime counters.');
+  if (out.length === 1) out.push("  Nothing in this report carries usable lifetime counters.");
   return out;
 }
 
 function selfTestSection(report: SmartReport): string[] {
-  const out: string[] = ['Self-test'];
+  const out: string[] = ["Self-test"];
   const st = report.selfTest;
-  const dev = report.kind === 'nvme' ? '/dev/nvme0' : '/dev/sdX';
+  const dev = report.kind === "nvme" ? "/dev/nvme0" : "/dev/sdX";
   if (!st.logged) {
     out.push(
       `  No self-tests have been logged. Run "smartctl -t short ${dev}" and check back in a couple of minutes, because a self-test exercises the media directly and can catch problems the attribute counters have not reached yet.`,
     );
   } else {
     const at =
-      st.lifetimeHours !== undefined ? ` at ${fmtInt(st.lifetimeHours)} power on hours` : '';
+      st.lifetimeHours !== undefined ? ` at ${fmtInt(st.lifetimeHours)} power on hours` : "";
     out.push(
-      `  Last test: ${st.description ?? 'unknown test'}, ${st.status ?? 'unknown result'}${at}.`,
+      `  Last test: ${st.description ?? "unknown test"}, ${st.status ?? "unknown result"}${at}.`,
     );
   }
 
-  const entries = nvmeNum(report, 'error_information_log_entries');
-  if (report.kind === 'nvme') {
+  const entries = nvmeNum(report, "error_information_log_entries");
+  if (report.kind === "nvme") {
     if (entries !== null)
       out.push(
-        `  Error log: ${fmtInt(entries)} ${plural(entries, 'entry', 'entries')}. ${NVME_FIELDS.error_information_log_entries.meaning}`,
+        `  Error log: ${fmtInt(entries)} ${plural(entries, "entry", "entries")}. ${NVME_FIELDS.error_information_log_entries.meaning}`,
       );
   } else if (report.errorCount !== undefined) {
     out.push(
       report.errorCount === 0
-        ? '  Error log: no errors logged.'
-        : `  Error log: ${fmtInt(report.errorCount)} ${plural(report.errorCount, 'entry', 'entries')}. Read the full log with "smartctl -l error ${dev}" to see what the drive actually complained about.`,
+        ? "  Error log: no errors logged."
+        : `  Error log: ${fmtInt(report.errorCount)} ${plural(report.errorCount, "entry", "entries")}. Read the full log with "smartctl -l error ${dev}" to see what the drive actually complained about.`,
     );
   }
   return out;
 }
 
 function fullSection(report: SmartReport): string[] {
-  const out: string[] = ['All parsed values'];
+  const out: string[] = ["All parsed values"];
 
   for (const row of report.attrs) {
     const meta = info(row);
-    const when = row.whenFailed === '-' ? 'never failed' : `when failed: ${row.whenFailed}`;
+    const when = row.whenFailed === "-" ? "never failed" : `when failed: ${row.whenFailed}`;
     out.push(
-      `  ${row.id} ${row.name}: raw ${row.raw || '(empty)'}, value ${row.value}, worst ${row.worst}, threshold ${row.thresh ?? 'not set'}${row.type ? `, ${row.type}` : ''}, ${when}.`,
+      `  ${row.id} ${row.name}: raw ${row.raw || "(empty)"}, value ${row.value}, worst ${row.worst}, threshold ${row.thresh ?? "not set"}${row.type ? `, ${row.type}` : ""}, ${when}.`,
     );
     out.push(
       `      ${
         meta
-          ? `${meta.meaning}${meta.alsoKnownAs ? ` Also known as ${meta.alsoKnownAs}.` : ''}`
+          ? `${meta.meaning}${meta.alsoKnownAs ? ` Also known as ${meta.alsoKnownAs}.` : ""}`
           : `Vendor-specific attribute. smartctl has no standard meaning for id ${row.id}, so the raw value is only comparable against this same drive over time.`
       }`,
     );
@@ -706,36 +706,36 @@ function fullSection(report: SmartReport): string[] {
     const meta = NVME_FIELDS[key];
     out.push(`  ${meta ? meta.label : key}: ${value}`);
     out.push(
-      `      ${meta ? meta.meaning : 'Vendor-specific NVMe field. smartctl printed it verbatim from the controller log.'}`,
+      `      ${meta ? meta.meaning : "Vendor-specific NVMe field. smartctl printed it verbatim from the controller log."}`,
     );
   }
 
-  if (out.length === 1) out.push('  Nothing was parsed from this report.');
+  if (out.length === 1) out.push("  Nothing was parsed from this report.");
   return out;
 }
 
 /* -------------------------------------------------------------------- run */
 
 export function run(input: string, opts: SmartOpts): string {
-  const text = input ?? '';
+  const text = input ?? "";
   if (!text.trim())
     throw new ToolError(
-      'empty-input',
-      'Paste some smartctl output to decode.',
-      'Run `smartctl -a /dev/sda` (or `smartctl -a /dev/nvme0`) as root and paste the whole output here.',
+      "empty-input",
+      "Paste some smartctl output to decode.",
+      "Run `smartctl -a /dev/sda` (or `smartctl -a /dev/nvme0`) as root and paste the whole output here.",
     );
 
   if (!looksLikeSmartctl(text))
     throw new ToolError(
-      'not-smartctl',
-      'This does not look like smartctl output. None of the section headers smartctl prints are present.',
-      'Run `smartctl -a /dev/sda` (or `smartctl -a /dev/nvme0`) as root and paste the whole output, headers included.',
+      "not-smartctl",
+      "This does not look like smartctl output. None of the section headers smartctl prints are present.",
+      "Run `smartctl -a /dev/sda` (or `smartctl -a /dev/nvme0`) as root and paste the whole output, headers included.",
     );
 
-  const detail = String(opts?.detail ?? 'verdict').trim() || 'verdict';
-  if (detail !== 'verdict' && detail !== 'full')
+  const detail = String(opts?.detail ?? "verdict").trim() || "verdict";
+  if (detail !== "verdict" && detail !== "full")
     throw new ToolError(
-      'unknown-detail',
+      "unknown-detail",
       `Unknown detail level "${detail}".`,
       'Use "verdict" for the summary or "full" to list every parsed attribute.',
     );
@@ -749,28 +749,28 @@ export function run(input: string, opts: SmartOpts): string {
   blocks.push(driveSection(report));
 
   if (findings.length) {
-    const list = ['Findings'];
+    const list = ["Findings"];
     for (const f of findings) list.push(`  ${f.line}`);
     blocks.push(list);
   } else {
     blocks.push([
-      'Findings',
-      '  Nothing in this report is off its healthy reading, so there is nothing to explain here.',
+      "Findings",
+      "  Nothing in this report is off its healthy reading, so there is nothing to explain here.",
     ]);
   }
 
   blocks.push(lifeSection(report));
   blocks.push(selfTestSection(report));
 
-  if (detail === 'full') blocks.push(fullSection(report));
+  if (detail === "full") blocks.push(fullSection(report));
 
   blocks.push([
-    'Worth knowing',
-    '  SMART predicts only some failures. Fleet studies keep finding that a large share of drives die with every one of these counters still reading zero, and plenty of drives with a handful of reallocated sectors run for years. A clean report is not a promise, and a scary one is not a death certificate.',
-    '  Keep backups either way, and re-run this check on a schedule so you can compare snapshots instead of guessing from one.',
+    "Worth knowing",
+    "  SMART predicts only some failures. Fleet studies keep finding that a large share of drives die with every one of these counters still reading zero, and plenty of drives with a handful of reallocated sectors run for years. A clean report is not a promise, and a scary one is not a death certificate.",
+    "  Keep backups either way, and re-run this check on a schedule so you can compare snapshots instead of guessing from one.",
   ]);
 
-  return blocks.map((b) => b.join('\n')).join('\n\n');
+  return blocks.map((b) => b.join("\n")).join("\n\n");
 }
 
 export default { run } satisfies ToolLogic<string, string, SmartOpts>;

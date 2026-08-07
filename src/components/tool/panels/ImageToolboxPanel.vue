@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, shallowRef } from 'vue';
-import { X } from 'lucide-vue-next';
-import { ToolError, type ToolMeta } from '@/tools/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
+import { computed, onUnmounted, ref, shallowRef } from "vue";
+import { X } from "lucide-vue-next";
+import { ToolError, type ToolMeta } from "@/tools/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import CopyButton from '../CopyButton.vue';
+} from "@/components/ui/select";
+import CopyButton from "../CopyButton.vue";
 
 /**
  * Bespoke panel for the image toolbox. The generic ToolShell can render the
@@ -28,7 +28,7 @@ import CopyButton from '../CopyButton.vue';
  */
 defineProps<{ meta: ToolMeta }>();
 
-type ImageLogic = typeof import('@/tools/image-toolbox/index');
+type ImageLogic = typeof import("@/tools/image-toolbox/index");
 
 /**
  * The logic module pulls in an EXIF parser, so it is loaded on the first file
@@ -36,7 +36,7 @@ type ImageLogic = typeof import('@/tools/image-toolbox/index');
  */
 let logicPromise: Promise<ImageLogic> | null = null;
 function loadLogic(): Promise<ImageLogic> {
-  logicPromise ??= import('@/tools/image-toolbox/index');
+  logicPromise ??= import("@/tools/image-toolbox/index");
   return logicPromise;
 }
 
@@ -44,11 +44,11 @@ function loadLogic(): Promise<ImageLogic> {
 /* state                                                             */
 /* ---------------------------------------------------------------- */
 
-const fileName = ref('');
+const fileName = ref("");
 const originalBytes = shallowRef<Uint8Array | null>(null);
 const originalSize = ref(0);
 /** Sniffed from the bytes, not from file.type, which browsers often leave blank. */
-const originalMime = ref('');
+const originalMime = ref("");
 
 /** Object URL for the file as dropped. Kept so "reset edits" can go back to it. */
 const originalUrl = ref<string | null>(null);
@@ -78,20 +78,18 @@ const cropSurface = ref<HTMLElement>();
 const cropStart = ref<{ x: number; y: number } | null>(null);
 const cropDragging = ref(false);
 
-const format = ref('image/png');
+const format = ref("image/png");
 const quality = ref(85);
 const exportedSize = ref<number | null>(null);
-const exportedName = ref('');
+const exportedName = ref("");
 
 const hasFile = computed(() => originalBytes.value !== null);
 const canEdit = computed(() => sourceImg.value !== null && sourceWidth.value > 0);
 const analysisRows = computed(() => Object.entries(analysis.value ?? {}));
-const allRowsText = computed(() =>
-  analysisRows.value.map(([k, v]) => `${k}: ${v}`).join('\n')
-);
+const allRowsText = computed(() => analysisRows.value.map(([k, v]) => `${k}: ${v}`).join("\n"));
 
 const strippable = computed(
-  () => originalMime.value === 'image/jpeg' || originalMime.value === 'image/png'
+  () => originalMime.value === "image/jpeg" || originalMime.value === "image/png",
 );
 
 const cropPixels = computed(() => {
@@ -104,7 +102,7 @@ const cropPixels = computed(() => {
 });
 
 const aspect = computed(() =>
-  sourceHeight.value > 0 ? sourceWidth.value / sourceHeight.value : 1
+  sourceHeight.value > 0 ? sourceWidth.value / sourceHeight.value : 1,
 );
 
 /* ---------------------------------------------------------------- */
@@ -112,16 +110,16 @@ const aspect = computed(() =>
 /* ---------------------------------------------------------------- */
 
 const EXTENSIONS: Record<string, string> = {
-  'image/png': 'png',
-  'image/jpeg': 'jpg',
-  'image/webp': 'webp',
-  'image/gif': 'gif',
-  'image/bmp': 'bmp',
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/bmp": "bmp",
 };
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -133,15 +131,15 @@ function humanSize(bytes: number): string {
 
 function sniffMime(b: Uint8Array): string {
   if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) {
-    return 'image/png';
+    return "image/png";
   }
-  if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg';
-  return '';
+  if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";
+  return "";
 }
 
 function baseName(name: string): string {
-  const dot = name.lastIndexOf('.');
-  return dot > 0 ? name.slice(0, dot) : name || 'image';
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(0, dot) : name || "image";
 }
 
 function clamp01(n: number): number {
@@ -159,7 +157,7 @@ function revoke(url: string | null) {
 }
 
 function triggerDownload(url: string, name: string) {
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = name;
   document.body.appendChild(a);
@@ -230,7 +228,7 @@ async function readFile(file: File) {
     crop.value = null;
     cropMode.value = false;
     exportedSize.value = null;
-    exportedName.value = '';
+    exportedName.value = "";
     edited.value = false;
 
     // Preview and analysis are independent: a browser can often decode a file
@@ -253,7 +251,7 @@ function onPickFile(e: Event) {
   if (!file) return;
   readFile(file).then(() => {
     // Reset so picking the same file again still fires a change event.
-    picker.value = '';
+    picker.value = "";
   });
 }
 
@@ -264,8 +262,8 @@ function clearFile() {
   previewUrl.value = null;
   originalBytes.value = null;
   originalSize.value = 0;
-  originalMime.value = '';
-  fileName.value = '';
+  originalMime.value = "";
+  fileName.value = "";
   sourceImg.value = null;
   sourceWidth.value = 0;
   sourceHeight.value = 0;
@@ -275,9 +273,9 @@ function clearFile() {
   crop.value = null;
   cropMode.value = false;
   exportedSize.value = null;
-  exportedName.value = '';
+  exportedName.value = "";
   edited.value = false;
-  if (fileInput.value) fileInput.value.value = '';
+  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -383,17 +381,17 @@ function drawRegion(
   sh: number,
   dw: number,
   dh: number,
-  background?: string
+  background?: string,
 ): HTMLCanvasElement | null {
   const img = sourceImg.value;
   if (!img) return null;
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = dw;
   canvas.height = dh;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  ctx.imageSmoothingQuality = "high";
   if (background) {
     ctx.fillStyle = background;
     ctx.fillRect(0, 0, dw, dh);
@@ -418,7 +416,7 @@ async function applyCrop() {
     const canvas = drawRegion(sx, sy, sw, sh, sw, sh);
     if (!canvas) return;
     // PNG for the intermediate so repeated crops never stack lossy generations.
-    const blob = await canvasToBlob(canvas, 'image/png');
+    const blob = await canvasToBlob(canvas, "image/png");
     if (!blob) return;
     const url = URL.createObjectURL(blob);
     revoke(previewUrl.value !== originalUrl.value ? previewUrl.value : null);
@@ -427,7 +425,7 @@ async function applyCrop() {
     cropMode.value = false;
     edited.value = true;
     exportedSize.value = null;
-    exportedName.value = '';
+    exportedName.value = "";
     await loadSource(url);
   } finally {
     busy.value = false;
@@ -442,7 +440,7 @@ function resetEdits() {
   cropMode.value = false;
   edited.value = false;
   exportedSize.value = null;
-  exportedName.value = '';
+  exportedName.value = "";
   loadSource(originalUrl.value);
 }
 
@@ -453,7 +451,7 @@ async function downloadExport() {
     const width = toDimension(targetWidth.value);
     const height = toDimension(targetHeight.value);
     // JPEG has no alpha channel, so transparency would otherwise turn black.
-    const background = format.value === 'image/jpeg' ? '#ffffff' : undefined;
+    const background = format.value === "image/jpeg" ? "#ffffff" : undefined;
     const canvas = drawRegion(
       0,
       0,
@@ -461,24 +459,24 @@ async function downloadExport() {
       sourceHeight.value,
       width,
       height,
-      background
+      background,
     );
     if (!canvas) return;
     const blob = await canvasToBlob(
       canvas,
       format.value,
-      format.value === 'image/png' ? undefined : quality.value / 100
+      format.value === "image/png" ? undefined : quality.value / 100,
     );
     if (!blob) {
       error.value = {
-        message: 'This browser could not encode the image in the selected format.',
-        fix: 'Choose PNG or JPEG, which every browser supports, and try again.',
+        message: "This browser could not encode the image in the selected format.",
+        fix: "Choose PNG or JPEG, which every browser supports, and try again.",
       };
       return;
     }
     // Browsers may fall back to PNG for a format they cannot write, so the
     // extension and the size readout both come from what was actually produced.
-    const ext = EXTENSIONS[blob.type] ?? 'png';
+    const ext = EXTENSIONS[blob.type] ?? "png";
     const name = `image-${width}x${height}.${ext}`;
     exportedSize.value = blob.size;
     exportedName.value = name;
@@ -497,7 +495,7 @@ async function downloadStripped() {
   try {
     const { stripExif } = await loadLogic();
     const result = stripExif(bytes);
-    const ext = EXTENSIONS[originalMime.value] ?? 'bin';
+    const ext = EXTENSIONS[originalMime.value] ?? "bin";
     // .slice() copies into a buffer that is exactly the stripped bytes, which
     // also keeps TypeScript happy about ArrayBufferLike versus ArrayBuffer.
     const blob = new Blob([result.bytes.slice().buffer as ArrayBuffer], {
@@ -534,26 +532,11 @@ onUnmounted(() => {
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Image
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          @click="fileInput?.click()"
-        >
-          Open file…
-        </Button>
-        <input
-          ref="fileInput"
-          type="file"
-          class="hidden"
-          accept="image/*"
-          @change="onPickFile"
-        >
+        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
+        <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
       </div>
 
-      <div
-        v-if="hasFile"
-        class="px-3 pt-2 pb-3"
-      >
+      <div v-if="hasFile" class="px-3 pt-2 pb-3">
         <span
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
@@ -570,10 +553,7 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <p
-        v-else
-        class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
-      >
+      <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
         Drop an image here to read what is inside it, then resize, crop, convert, or remove its
         metadata. Everything runs in this tab: your files and inputs never leave your device.
       </p>
@@ -588,27 +568,18 @@ onUnmounted(() => {
       <p class="font-medium text-destructive">
         {{ error.message }}
       </p>
-      <p
-        v-if="error.fix"
-        class="mt-1 text-muted-foreground"
-      >
+      <p v-if="error.fix" class="mt-1 text-muted-foreground">
         {{ error.fix }}
       </p>
     </div>
 
     <!-- Analysis -->
-    <div
-      v-if="analysisRows.length"
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-    >
+    <div v-if="analysisRows.length" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
       <div class="flex items-center justify-between px-3 pt-2">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Analysis
         </span>
-        <CopyButton
-          :text="allRowsText"
-          label="Copy"
-        />
+        <CopyButton :text="allRowsText" label="Copy" />
       </div>
       <div class="divide-y divide-border/60">
         <div
@@ -630,22 +601,12 @@ onUnmounted(() => {
     </div>
 
     <!-- Editor -->
-    <div
-      v-if="hasFile"
-      class="flex flex-col gap-4"
-    >
+    <div v-if="hasFile" class="flex flex-col gap-4">
       <div class="flex items-center justify-between gap-3">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Editor
         </span>
-        <Button
-          v-if="edited"
-          variant="ghost"
-          size="sm"
-          @click="resetEdits"
-        >
-          Reset edits
-        </Button>
+        <Button v-if="edited" variant="ghost" size="sm" @click="resetEdits"> Reset edits </Button>
       </div>
 
       <p
@@ -673,7 +634,7 @@ onUnmounted(() => {
               draggable="false"
               class="block h-auto max-h-[360px] min-h-[200px] w-auto max-w-full rounded-[10px] select-none"
               @dragstart.prevent
-            >
+            />
             <template v-if="crop">
               <!-- Four shaded strips dim everything outside the crop marquee. -->
               <div
@@ -733,10 +694,7 @@ onUnmounted(() => {
           </span>
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-24 flex-col gap-1.5">
-              <Label
-                for="img-width"
-                class="text-xs text-muted-foreground"
-              >Width</Label>
+              <Label for="img-width" class="text-xs text-muted-foreground">Width</Label>
               <Input
                 id="img-width"
                 type="number"
@@ -747,10 +705,7 @@ onUnmounted(() => {
               />
             </div>
             <div class="flex w-24 flex-col gap-1.5">
-              <Label
-                for="img-height"
-                class="text-xs text-muted-foreground"
-              >Height</Label>
+              <Label for="img-height" class="text-xs text-muted-foreground">Height</Label>
               <Input
                 id="img-height"
                 type="number"
@@ -766,34 +721,13 @@ onUnmounted(() => {
                 :model-value="lockAspect"
                 @update:model-value="(v) => (lockAspect = Boolean(v))"
               />
-              <Label
-                for="img-lock"
-                class="text-xs text-muted-foreground"
-              >Lock aspect ratio</Label>
+              <Label for="img-lock" class="text-xs text-muted-foreground">Lock aspect ratio</Label>
             </div>
           </div>
           <div class="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              @click="scaleBy(25)"
-            >
-              25%
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              @click="scaleBy(50)"
-            >
-              50%
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              @click="scaleBy(75)"
-            >
-              75%
-            </Button>
+            <Button variant="outline" size="sm" @click="scaleBy(25)"> 25% </Button>
+            <Button variant="outline" size="sm" @click="scaleBy(50)"> 50% </Button>
+            <Button variant="outline" size="sm" @click="scaleBy(75)"> 75% </Button>
             <Button
               variant="outline"
               size="sm"
@@ -830,34 +764,14 @@ onUnmounted(() => {
             Crop
           </span>
           <div class="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              :aria-pressed="cropMode"
-              @click="toggleCrop"
-            >
-              {{ cropMode ? 'Crop mode on' : 'Crop mode off' }}
+            <Button variant="outline" size="sm" :aria-pressed="cropMode" @click="toggleCrop">
+              {{ cropMode ? "Crop mode on" : "Crop mode off" }}
             </Button>
-            <Button
-              v-if="cropMode"
-              size="sm"
-              :disabled="!crop || busy"
-              @click="applyCrop"
-            >
+            <Button v-if="cropMode" size="sm" :disabled="!crop || busy" @click="applyCrop">
               Apply crop
             </Button>
-            <Button
-              v-if="cropMode"
-              variant="ghost"
-              size="sm"
-              @click="cancelCrop"
-            >
-              Cancel
-            </Button>
-            <span
-              v-if="cropPixels"
-              class="font-mono text-xs text-muted-foreground tabular-nums"
-            >
+            <Button v-if="cropMode" variant="ghost" size="sm" @click="cancelCrop"> Cancel </Button>
+            <span v-if="cropPixels" class="font-mono text-xs text-muted-foreground tabular-nums">
               Selection: {{ cropPixels.w }} x {{ cropPixels.h }} px
             </span>
           </div>
@@ -874,31 +788,15 @@ onUnmounted(() => {
           </span>
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-32 flex-col gap-1.5">
-              <Label
-                for="img-format"
-                class="text-xs text-muted-foreground"
-              >Format</Label>
-              <Select
-                :model-value="format"
-                @update:model-value="(v) => (format = String(v))"
-              >
-                <SelectTrigger
-                  id="img-format"
-                  size="sm"
-                  class="w-full bg-card"
-                >
+              <Label for="img-format" class="text-xs text-muted-foreground">Format</Label>
+              <Select :model-value="format" @update:model-value="(v) => (format = String(v))">
+                <SelectTrigger id="img-format" size="sm" class="w-full bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="image/png">
-                    PNG
-                  </SelectItem>
-                  <SelectItem value="image/jpeg">
-                    JPEG
-                  </SelectItem>
-                  <SelectItem value="image/webp">
-                    WebP
-                  </SelectItem>
+                  <SelectItem value="image/png"> PNG </SelectItem>
+                  <SelectItem value="image/jpeg"> JPEG </SelectItem>
+                  <SelectItem value="image/webp"> WebP </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -907,7 +805,7 @@ onUnmounted(() => {
                    so this is plain text plus an aria-label rather than a
                    <label for> pointing at something that cannot take focus. -->
               <span class="text-xs text-muted-foreground tabular-nums">
-                Quality: {{ format === 'image/png' ? 'lossless' : quality }}
+                Quality: {{ format === "image/png" ? "lossless" : quality }}
               </span>
               <Slider
                 aria-label="Export quality"
@@ -923,13 +821,7 @@ onUnmounted(() => {
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              :disabled="busy"
-              @click="downloadExport"
-            >
-              Download
-            </Button>
+            <Button size="sm" :disabled="busy" @click="downloadExport"> Download </Button>
             <Button
               variant="outline"
               size="sm"

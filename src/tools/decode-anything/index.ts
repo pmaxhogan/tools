@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface DecodeOpts {
   /** How many nested decode steps to follow. 1 to 20, default 10. */
@@ -15,39 +15,39 @@ export interface DecodeOpts {
 interface BinaryFormat {
   name: string;
   /** Compression algorithm DecompressionStream can undo, when applicable. */
-  decompress?: 'gzip' | 'deflate';
+  decompress?: "gzip" | "deflate";
 }
 
 type Value =
-  | { kind: 'text'; text: string }
-  | { kind: 'bytes'; bytes: Uint8Array; format: BinaryFormat | null };
+  | { kind: "text"; text: string }
+  | { kind: "bytes"; bytes: Uint8Array; format: BinaryFormat | null };
 
 function textValue(text: string): Value {
-  return { kind: 'text', text };
+  return { kind: "text", text };
 }
 
 function bytesValue(bytes: Uint8Array): Value {
-  return { kind: 'bytes', bytes, format: identify(bytes) };
+  return { kind: "bytes", bytes, format: identify(bytes) };
 }
 
 /** Identity key for the cycle guard. Bounded so huge values stay cheap. */
 function keyOf(v: Value): string {
-  if (v.kind === 'text') return `t:${v.text.length}:${v.text.slice(0, 4096)}`;
-  return `b:${v.bytes.length}:${toHex(v.bytes.subarray(0, 512), '')}`;
+  if (v.kind === "text") return `t:${v.text.length}:${v.text.slice(0, 4096)}`;
+  return `b:${v.bytes.length}:${toHex(v.bytes.subarray(0, 512), "")}`;
 }
 
 /* ------------------------------------------------------------------ */
 /* byte helpers                                                        */
 /* ------------------------------------------------------------------ */
 
-const B64_STD = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const B64_STD = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const B64_LOOKUP: Record<string, number> = {};
 for (let i = 0; i < B64_STD.length; i++) B64_LOOKUP[B64_STD[i] as string] = i;
-B64_LOOKUP['-'] = 62;
-B64_LOOKUP['_'] = 63;
+B64_LOOKUP["-"] = 62;
+B64_LOOKUP["_"] = 63;
 
 function base64ToBytes(raw: string): Uint8Array | null {
-  const core = raw.replace(/=+$/, '');
+  const core = raw.replace(/=+$/, "");
   if (core.length % 4 === 1) return null;
   const out = new Uint8Array(Math.floor((core.length * 3) / 4));
   let acc = 0;
@@ -72,9 +72,9 @@ function hexToBytes(hex: string): Uint8Array {
   return out;
 }
 
-function toHex(bytes: Uint8Array, sep = ' '): string {
+function toHex(bytes: Uint8Array, sep = " "): string {
   const parts: string[] = [];
-  for (const b of bytes) parts.push(b.toString(16).padStart(2, '0'));
+  for (const b of bytes) parts.push(b.toString(16).padStart(2, "0"));
   return parts.join(sep);
 }
 
@@ -86,7 +86,7 @@ function hexHead(bytes: Uint8Array, count = 16): string {
 /** Strict UTF-8 decode. Returns null when the bytes are not valid UTF-8. */
 function utf8(bytes: Uint8Array): string | null {
   try {
-    const s = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    const s = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     return s.charCodeAt(0) === 0xfeff ? s.slice(1) : s;
   } catch {
     return null;
@@ -116,15 +116,19 @@ function asReadableText(bytes: Uint8Array): string | null {
 
 function identify(b: Uint8Array): BinaryFormat | null {
   const has = (...sig: number[]) => b.length >= sig.length && sig.every((x, i) => b[i] === x);
-  if (has(0x1f, 0x8b)) return { name: 'gzip archive', decompress: 'gzip' };
-  if (b.length >= 2 && ((b[0] as number) & 0x0f) === 8 && (((b[0] as number) << 8) | (b[1] as number)) % 31 === 0)
-    return { name: 'zlib stream', decompress: 'deflate' };
+  if (has(0x1f, 0x8b)) return { name: "gzip archive", decompress: "gzip" };
+  if (
+    b.length >= 2 &&
+    ((b[0] as number) & 0x0f) === 8 &&
+    (((b[0] as number) << 8) | (b[1] as number)) % 31 === 0
+  )
+    return { name: "zlib stream", decompress: "deflate" };
   if (has(0x50, 0x4b, 0x03, 0x04) || has(0x50, 0x4b, 0x05, 0x06) || has(0x50, 0x4b, 0x07, 0x08))
-    return { name: 'ZIP archive' };
-  if (has(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)) return { name: 'PNG image' };
-  if (has(0xff, 0xd8, 0xff)) return { name: 'JPEG image' };
-  if (has(0x25, 0x50, 0x44, 0x46)) return { name: 'PDF document' };
-  if (has(0x47, 0x49, 0x46, 0x38)) return { name: 'GIF image' };
+    return { name: "ZIP archive" };
+  if (has(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)) return { name: "PNG image" };
+  if (has(0xff, 0xd8, 0xff)) return { name: "JPEG image" };
+  if (has(0x25, 0x50, 0x44, 0x46)) return { name: "PDF document" };
+  if (has(0x47, 0x49, 0x46, 0x38)) return { name: "GIF image" };
   if (
     has(0x52, 0x49, 0x46, 0x46) &&
     b.length >= 12 &&
@@ -133,13 +137,13 @@ function identify(b: Uint8Array): BinaryFormat | null {
     b[10] === 0x42 &&
     b[11] === 0x50
   )
-    return { name: 'WebP image' };
-  if (has(0x7f, 0x45, 0x4c, 0x46)) return { name: 'ELF binary' };
-  if (has(0xca, 0xfe, 0xba, 0xbe)) return { name: 'Java class file' };
-  if (has(0x00, 0x61, 0x73, 0x6d)) return { name: 'WebAssembly module' };
-  if (has(0x49, 0x44, 0x33)) return { name: 'MP3 audio with ID3 tag' };
-  if (has(0x4f, 0x67, 0x67, 0x53)) return { name: 'Ogg container' };
-  if (has(0x42, 0x4d)) return { name: 'BMP image' };
+    return { name: "WebP image" };
+  if (has(0x7f, 0x45, 0x4c, 0x46)) return { name: "ELF binary" };
+  if (has(0xca, 0xfe, 0xba, 0xbe)) return { name: "Java class file" };
+  if (has(0x00, 0x61, 0x73, 0x6d)) return { name: "WebAssembly module" };
+  if (has(0x49, 0x44, 0x33)) return { name: "MP3 audio with ID3 tag" };
+  if (has(0x4f, 0x67, 0x67, 0x53)) return { name: "Ogg container" };
+  if (has(0x42, 0x4d)) return { name: "BMP image" };
   return null;
 }
 
@@ -165,7 +169,7 @@ async function collect(readable: ReadableStream<Uint8Array>): Promise<Uint8Array
 }
 
 /** Never throws: returns null when the stream rejects the bytes. */
-async function inflate(bytes: Uint8Array, algo: 'gzip' | 'deflate'): Promise<Uint8Array | null> {
+async function inflate(bytes: Uint8Array, algo: "gzip" | "deflate"): Promise<Uint8Array | null> {
   try {
     const stream = new DecompressionStream(algo);
     const writer = stream.writable.getWriter();
@@ -190,25 +194,25 @@ const SANE_MS_MAX = SANE_SECONDS_MAX * 1000;
 
 function iso(ms: number): string {
   const d = new Date(ms);
-  return isNaN(d.getTime()) ? 'out of range' : d.toISOString();
+  return isNaN(d.getTime()) ? "out of range" : d.toISOString();
 }
 
 function relative(ms: number): string {
   const deltaSec = Math.round((ms - Date.now()) / 1000);
   const abs = Math.abs(deltaSec);
   const units: [Intl.RelativeTimeFormatUnit, number][] = [
-    ['year', 31536000],
-    ['month', 2592000],
-    ['day', 86400],
-    ['hour', 3600],
-    ['minute', 60],
-    ['second', 1],
+    ["year", 31536000],
+    ["month", 2592000],
+    ["day", 86400],
+    ["hour", 3600],
+    ["minute", 60],
+    ["second", 1],
   ];
-  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
   for (const [unit, secs] of units) {
-    if (abs >= secs || unit === 'second') return rtf.format(Math.trunc(deltaSec / secs), unit);
+    if (abs >= secs || unit === "second") return rtf.format(Math.trunc(deltaSec / secs), unit);
   }
-  return 'now';
+  return "now";
 }
 
 function stamp(ms: number): string {
@@ -264,10 +268,10 @@ const MAX_JSON_LEAVES = 25;
 
 function parseJson(s: string): unknown {
   const t = s.trim();
-  if (!(t.startsWith('{') || t.startsWith('['))) return undefined;
+  if (!(t.startsWith("{") || t.startsWith("["))) return undefined;
   try {
     const parsed: unknown = JSON.parse(t);
-    return typeof parsed === 'object' && parsed !== null ? parsed : undefined;
+    return typeof parsed === "object" && parsed !== null ? parsed : undefined;
   } catch {
     return undefined;
   }
@@ -276,26 +280,27 @@ function parseJson(s: string): unknown {
 function describeJson(parsed: unknown): string {
   if (Array.isArray(parsed)) return `JSON (array, ${parsed.length} items)`;
   const keys = Object.keys(parsed as Record<string, unknown>);
-  return `JSON (object, ${keys.length} ${keys.length === 1 ? 'key' : 'keys'})`;
+  return `JSON (object, ${keys.length} ${keys.length === 1 ? "key" : "keys"})`;
 }
 
-type Leaf = { path: string; kind: 'string'; value: string } | { path: string; kind: 'number'; value: number };
+type Leaf =
+  { path: string; kind: "string"; value: string } | { path: string; kind: "number"; value: number };
 
 function collectLeaves(node: unknown, path: string, out: Leaf[]): void {
   if (out.length >= MAX_JSON_LEAVES * 4) return;
-  if (typeof node === 'string') {
-    out.push({ path, kind: 'string', value: node });
+  if (typeof node === "string") {
+    out.push({ path, kind: "string", value: node });
     return;
   }
-  if (typeof node === 'number') {
-    out.push({ path, kind: 'number', value: node });
+  if (typeof node === "number") {
+    out.push({ path, kind: "number", value: node });
     return;
   }
   if (Array.isArray(node)) {
     node.forEach((child, i) => collectLeaves(child, `${path}[${i}]`, out));
     return;
   }
-  if (typeof node === 'object' && node !== null) {
+  if (typeof node === "object" && node !== null) {
     for (const [k, v] of Object.entries(node)) {
       const safe = /^[A-Za-z_$][\w$]*$/.test(k) ? `.${k}` : `[${JSON.stringify(k)}]`;
       collectLeaves(v, `${path}${safe}`, out);
@@ -303,7 +308,8 @@ function collectLeaves(node: unknown, path: string, out: Leaf[]): void {
   }
 }
 
-const KEY_HINT_SNAKE = /(^|[_\-.])(id|ts|time|timestamp|date|created|updated|expires|expiry|exp|iat|nbf|at|epoch|since|until|seen|stamp)$/i;
+const KEY_HINT_SNAKE =
+  /(^|[_\-.])(id|ts|time|timestamp|date|created|updated|expires|expiry|exp|iat|nbf|at|epoch|since|until|seen|stamp)$/i;
 const KEY_HINT_CAMEL = /[a-z](Id|Ts|Time|Timestamp|Date|At|Epoch|Stamp)$/;
 
 /** Does the last path segment suggest the value is a time or an identifier? */
@@ -317,13 +323,13 @@ function keyHintsAtTimeOrId(path: string): boolean {
 /** Recurse into the string and number leaves of a parsed JSON document. */
 async function jsonLeafSteps(parsed: unknown, ctx: Ctx, includeNumbers = true): Promise<Step[]> {
   const leaves: Leaf[] = [];
-  collectLeaves(parsed, '$', leaves);
+  collectLeaves(parsed, "$", leaves);
 
   const steps: Step[] = [];
   for (const leaf of leaves) {
     if (steps.length >= MAX_JSON_LEAVES) break;
 
-    if (leaf.kind === 'number') {
+    if (leaf.kind === "number") {
       if (!includeNumbers) continue;
       const n = leaf.value;
       if (!Number.isInteger(n)) continue;
@@ -369,9 +375,9 @@ async function jsonLeafSteps(parsed: unknown, ctx: Ctx, includeNumbers = true): 
 /* ------------------------------------------------------------------ */
 
 const jwtDetector: Detector = async (v, ctx) => {
-  if (v.kind !== 'text') return null;
+  if (v.kind !== "text") return null;
   const s = v.text.trim();
-  const parts = s.split('.');
+  const parts = s.split(".");
   if (parts.length !== 3) return null;
   const [h, p, sig] = parts as [string, string, string];
   if (!h || !p) return null;
@@ -388,18 +394,18 @@ const jwtDetector: Detector = async (v, ctx) => {
   const header = parseJson(headerText);
   const payload = parseJson(payloadText);
   if (header === undefined || Array.isArray(header)) return null;
-  const alg = (header as Record<string, unknown>)['alg'];
-  if (typeof alg !== 'string') return null;
+  const alg = (header as Record<string, unknown>)["alg"];
+  if (typeof alg !== "string") return null;
 
-  const notes = [
-    'The signature is never checked here, so treat the contents as unverified.',
-  ];
-  if (alg.toLowerCase() === 'none')
-    notes.push('The header declares alg "none", which means the token is unsigned. Do not trust it.');
-  if (!sig) notes.push('The signature segment is empty.');
+  const notes = ["The signature is never checked here, so treat the contents as unverified."];
+  if (alg.toLowerCase() === "none")
+    notes.push(
+      'The header declares alg "none", which means the token is unsigned. Do not trust it.',
+    );
+  if (!sig) notes.push("The signature segment is empty.");
 
   const headerStep: Step = {
-    title: 'header',
+    title: "header",
     always: true,
     notes: [],
     body: JSON.stringify(header, null, 2),
@@ -411,37 +417,34 @@ const jwtDetector: Detector = async (v, ctx) => {
   if (payload !== undefined && !Array.isArray(payload)) {
     const claims = payload as Record<string, unknown>;
     const times: [string, string][] = [
-      ['iat', 'issued at'],
-      ['nbf', 'not valid before'],
-      ['exp', 'expires'],
-      ['auth_time', 'authenticated at'],
+      ["iat", "issued at"],
+      ["nbf", "not valid before"],
+      ["exp", "expires"],
+      ["auth_time", "authenticated at"],
     ];
     for (const [key, label] of times) {
       const raw = claims[key];
-      if (typeof raw !== 'number' || !Number.isFinite(raw)) continue;
+      if (typeof raw !== "number" || !Number.isFinite(raw)) continue;
       const ms = raw > 1e11 ? raw : raw * 1000;
-      let suffix = '';
-      if (key === 'exp') suffix = ms < now ? ' (expired)' : ' (still valid)';
-      if (key === 'nbf') suffix = ms > now ? ' (not valid yet)' : '';
+      let suffix = "";
+      if (key === "exp") suffix = ms < now ? " (expired)" : " (still valid)";
+      if (key === "nbf") suffix = ms > now ? " (not valid yet)" : "";
       claimNotes.push(`${key} (${label}): ${raw} = ${iso(ms)}${suffix}`);
     }
   }
 
   const payloadStep: Step = {
-    title: 'payload',
+    title: "payload",
     always: true,
     notes: claimNotes,
-    body:
-      payload === undefined
-        ? payloadText
-        : JSON.stringify(payload, null, 2),
+    body: payload === undefined ? payloadText : JSON.stringify(payload, null, 2),
     children: payload === undefined ? [] : await jsonLeafSteps(payload, ctx, false),
   };
 
   const sigBytes = sig ? base64ToBytes(sig) : new Uint8Array(0);
   const sigStep: Step = {
-    title: 'signature',
-    notes: ['Not verified.'],
+    title: "signature",
+    notes: ["Not verified."],
     body: sigBytes ? `${sigBytes.length} bytes: ${hexHead(sigBytes, 12)}` : sig,
     always: true,
     children: [],
@@ -449,24 +452,24 @@ const jwtDetector: Detector = async (v, ctx) => {
 
   return {
     title: `JWT (alg ${alg}, 3 segments)`,
-    chain: 'JWT',
+    chain: "JWT",
     notes,
     children: [headerStep, payloadStep, sigStep],
   };
 };
 
 const dataUrlDetector: Detector = (v) => {
-  if (v.kind !== 'text') return null;
+  if (v.kind !== "text") return null;
   const s = v.text.trim();
   const m = /^data:([^,]*),([\s\S]*)$/.exec(s);
   if (!m) return null;
   const meta = m[1] as string;
   const payload = m[2] as string;
   const isBase64 = /;base64$/i.test(meta);
-  const mediaType = meta.replace(/;base64$/i, '') || 'text/plain;charset=US-ASCII';
+  const mediaType = meta.replace(/;base64$/i, "") || "text/plain;charset=US-ASCII";
 
   const decodePayload = (): Uint8Array | null => {
-    if (isBase64) return base64ToBytes(payload.replace(/\s+/g, ''));
+    if (isBase64) return base64ToBytes(payload.replace(/\s+/g, ""));
     try {
       return new TextEncoder().encode(decodeURIComponent(payload));
     } catch {
@@ -478,19 +481,19 @@ const dataUrlDetector: Detector = (v) => {
 
   const text = asReadableText(bytes);
   return {
-    title: `data URL (${mediaType}, ${isBase64 ? 'base64' : 'percent-encoded'}, ${bytes.length} bytes)`,
-    chain: 'data URL',
+    title: `data URL (${mediaType}, ${isBase64 ? "base64" : "percent-encoded"}, ${bytes.length} bytes)`,
+    chain: "data URL",
     produced: text !== null ? textValue(text) : bytesValue(bytes),
   };
 };
 
 const jsonDetector: Detector = async (v, ctx) => {
-  if (v.kind !== 'text') return null;
+  if (v.kind !== "text") return null;
   const parsed = parseJson(v.text);
   if (parsed === undefined) return null;
   return {
     title: describeJson(parsed),
-    chain: 'JSON',
+    chain: "JSON",
     always: true,
     body: JSON.stringify(parsed, null, 2),
     children: await jsonLeafSteps(parsed, ctx),
@@ -498,7 +501,7 @@ const jsonDetector: Detector = async (v, ctx) => {
 };
 
 const urlEncodedDetector: Detector = (v) => {
-  if (v.kind !== 'text') return null;
+  if (v.kind !== "text") return null;
   const s = v.text.trim();
   const matches = s.match(/%[0-9a-fA-F]{2}/g);
   if (!matches || matches.length === 0) return null;
@@ -513,11 +516,13 @@ const urlEncodedDetector: Detector = (v) => {
   if (decoded === s) return null;
   if (printableRatio(decoded) < 0.9) return null;
   const notes: string[] = [];
-  if (s.includes('+'))
-    notes.push('The input contains "+" characters, which form encoding treats as spaces. They were left as is.');
+  if (s.includes("+"))
+    notes.push(
+      'The input contains "+" characters, which form encoding treats as spaces. They were left as is.',
+    );
   return {
     title: `URL-encoded (${matches.length} escapes)`,
-    chain: 'URL-encoded',
+    chain: "URL-encoded",
     notes,
     produced: textValue(decoded),
   };
@@ -526,26 +531,29 @@ const urlEncodedDetector: Detector = (v) => {
 const UUID_RE = /^([0-9a-f]{8})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{4})-([0-9a-f]{12})$/i;
 
 const uuidDetector: Detector = (v) => {
-  if (v.kind !== 'text') return null;
-  const s = v.text.trim().replace(/^urn:uuid:/i, '').replace(/^\{|\}$/g, '');
+  if (v.kind !== "text") return null;
+  const s = v.text
+    .trim()
+    .replace(/^urn:uuid:/i, "")
+    .replace(/^\{|\}$/g, "");
   const m = UUID_RE.exec(s);
   if (!m) return null;
   const [, timeLow, timeMid, timeHi, clockSeq, node] = m as unknown as string[];
   const hex = (timeLow + timeMid + timeHi + clockSeq + node).toLowerCase();
 
-  if (hex === '0'.repeat(32)) {
-    return { title: 'UUID (nil UUID, all zero bits)', chain: 'UUID', children: [] };
+  if (hex === "0".repeat(32)) {
+    return { title: "UUID (nil UUID, all zero bits)", chain: "UUID", children: [] };
   }
-  if (hex === 'f'.repeat(32)) {
-    return { title: 'UUID (max UUID, all one bits)', chain: 'UUID', children: [] };
+  if (hex === "f".repeat(32)) {
+    return { title: "UUID (max UUID, all one bits)", chain: "UUID", children: [] };
   }
 
   const version = parseInt((timeHi as string)[0] as string, 16);
   const variantNibble = parseInt((clockSeq as string)[0] as string, 16);
-  let variant = 'reserved';
-  if (variantNibble >> 3 === 0) variant = 'NCS (legacy Apollo)';
-  else if (variantNibble >> 2 === 0b10) variant = 'RFC 4122 / RFC 9562';
-  else if (variantNibble >> 1 === 0b110) variant = 'Microsoft GUID';
+  let variant = "reserved";
+  if (variantNibble >> 3 === 0) variant = "NCS (legacy Apollo)";
+  else if (variantNibble >> 2 === 0b10) variant = "RFC 4122 / RFC 9562";
+  else if (variantNibble >> 1 === 0b110) variant = "Microsoft GUID";
 
   const lines = [`Variant: ${variant}`];
   if (version === 1) {
@@ -555,7 +563,7 @@ const uuidDetector: Detector = (v) => {
       BigInt(parseInt(timeLow as string, 16));
     const ms = Number(ticks / 10000n) - 12219292800000;
     lines.push(`Version 1 timestamp: ${stamp(ms)}`);
-    lines.push(`Node (MAC or random): ${(node as string).match(/../g)?.join(':')}`);
+    lines.push(`Node (MAC or random): ${(node as string).match(/../g)?.join(":")}`);
   } else if (version === 6) {
     const ticks =
       (BigInt(parseInt(timeLow as string, 16)) << 28n) |
@@ -567,55 +575,62 @@ const uuidDetector: Detector = (v) => {
     const ms = parseInt(hex.slice(0, 12), 16);
     lines.push(`Version 7 timestamp: ${stamp(ms)}`);
   } else if (version === 4) {
-    lines.push('Version 4 is random, so it carries no timestamp or machine identity.');
+    lines.push("Version 4 is random, so it carries no timestamp or machine identity.");
   } else if (version === 3 || version === 5) {
     lines.push(
-      `Version ${version} is a ${version === 3 ? 'MD5' : 'SHA-1'} hash of a namespace and a name, which cannot be reversed.`,
+      `Version ${version} is a ${version === 3 ? "MD5" : "SHA-1"} hash of a namespace and a name, which cannot be reversed.`,
     );
   }
 
   return {
-    title: `UUID version ${Number.isNaN(version) ? '?' : version}`,
-    chain: 'UUID',
-    body: lines.join('\n'),
+    title: `UUID version ${Number.isNaN(version) ? "?" : version}`,
+    chain: "UUID",
+    body: lines.join("\n"),
     always: true,
     children: [],
   };
 };
 
-const MAC_RE = /^([0-9a-f]{2})([:-])([0-9a-f]{2})\2([0-9a-f]{2})\2([0-9a-f]{2})\2([0-9a-f]{2})\2([0-9a-f]{2})$/i;
+const MAC_RE =
+  /^([0-9a-f]{2})([:-])([0-9a-f]{2})\2([0-9a-f]{2})\2([0-9a-f]{2})\2([0-9a-f]{2})\2([0-9a-f]{2})$/i;
 const MAC_DOT_RE = /^([0-9a-f]{4})\.([0-9a-f]{4})\.([0-9a-f]{4})$/i;
 
 function macBody(hex: string): string {
   const pairs = hex.match(/../g) as string[];
   const first = parseInt(pairs[0] as string, 16);
   const lines = [
-    `Normalized: ${pairs.join(':')}`,
-    `OUI (vendor prefix): ${pairs.slice(0, 3).join(':')}`,
-    `Device part: ${pairs.slice(3).join(':')}`,
-    first & 0b1 ? 'Multicast address' : 'Unicast address',
+    `Normalized: ${pairs.join(":")}`,
+    `OUI (vendor prefix): ${pairs.slice(0, 3).join(":")}`,
+    `Device part: ${pairs.slice(3).join(":")}`,
+    first & 0b1 ? "Multicast address" : "Unicast address",
     first & 0b10
-      ? 'Locally administered, so the OUI is not a registered vendor'
-      : 'Globally unique, so the OUI belongs to a registered vendor',
+      ? "Locally administered, so the OUI is not a registered vendor"
+      : "Globally unique, so the OUI belongs to a registered vendor",
   ];
-  if (hex === 'ffffffffffff') lines.push('This is the broadcast address.');
-  return lines.join('\n');
+  if (hex === "ffffffffffff") lines.push("This is the broadcast address.");
+  return lines.join("\n");
 }
 
 const macDetector: Detector = (v) => {
-  if (v.kind !== 'text') return null;
+  if (v.kind !== "text") return null;
   const s = v.text.trim();
   const m = MAC_RE.exec(s);
   if (m) {
-    const hex = [m[1], m[3], m[4], m[5], m[6], m[7]].join('').toLowerCase();
-    return { title: 'MAC address (EUI-48)', chain: 'MAC address', body: macBody(hex), always: true, children: [] };
+    const hex = [m[1], m[3], m[4], m[5], m[6], m[7]].join("").toLowerCase();
+    return {
+      title: "MAC address (EUI-48)",
+      chain: "MAC address",
+      body: macBody(hex),
+      always: true,
+      children: [],
+    };
   }
   const d = MAC_DOT_RE.exec(s);
   if (d) {
-    const hex = [d[1], d[2], d[3]].join('').toLowerCase();
+    const hex = [d[1], d[2], d[3]].join("").toLowerCase();
     return {
-      title: 'MAC address (EUI-48, Cisco dotted form)',
-      chain: 'MAC address',
+      title: "MAC address (EUI-48, Cisco dotted form)",
+      chain: "MAC address",
       body: macBody(hex),
       always: true,
       children: [],
@@ -628,11 +643,11 @@ const DISCORD_EPOCH = 1420070400000;
 const TWITTER_EPOCH = 1288834974657;
 
 function ipv4FromInt(n: number): string {
-  return [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff].join('.');
+  return [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff].join(".");
 }
 
 const numericDetector: Detector = (v, ctx) => {
-  if (v.kind !== 'text') return null;
+  if (v.kind !== "text") return null;
   if (ctx.skipNumeric) return null;
   const s = v.text.trim();
   if (!/^\d+$/.test(s)) return null;
@@ -640,15 +655,17 @@ const numericDetector: Detector = (v, ctx) => {
 
   const alsoPossible: string[] = [];
   const ipCandidate =
-    digits <= 10 && Number(s) >= 16777216 && Number(s) <= 4294967295 ? ipv4FromInt(Number(s)) : null;
+    digits <= 10 && Number(s) >= 16777216 && Number(s) <= 4294967295
+      ? ipv4FromInt(Number(s))
+      : null;
 
   // Unix milliseconds.
   if (digits === 13) {
     const ms = Number(s);
     if (ms >= SANE_MS_MIN && ms <= SANE_MS_MAX) {
       return {
-        title: 'Unix timestamp (milliseconds)',
-        chain: 'unix timestamp',
+        title: "Unix timestamp (milliseconds)",
+        chain: "unix timestamp",
         body: `${stamp(ms)}\nAs seconds it would be ${iso(ms * 1000)}, which is far outside any plausible range.`,
         always: true,
         children: [],
@@ -660,10 +677,11 @@ const numericDetector: Detector = (v, ctx) => {
   if (digits === 10) {
     const sec = Number(s);
     if (sec >= SANE_SECONDS_MIN && sec <= SANE_SECONDS_MAX) {
-      if (ipCandidate) alsoPossible.push(`Also possible: an IPv4 address stored as an integer, ${ipCandidate}.`);
+      if (ipCandidate)
+        alsoPossible.push(`Also possible: an IPv4 address stored as an integer, ${ipCandidate}.`);
       return {
-        title: 'Unix timestamp (seconds)',
-        chain: 'unix timestamp',
+        title: "Unix timestamp (seconds)",
+        chain: "unix timestamp",
         body: stamp(sec * 1000),
         always: true,
         notes: alsoPossible,
@@ -693,11 +711,11 @@ const numericDetector: Detector = (v, ctx) => {
 
     return {
       title: `Snowflake ID (${digits} digits)`,
-      chain: 'snowflake ID',
-      body: lines.join('\n'),
+      chain: "snowflake ID",
+      body: lines.join("\n"),
       always: true,
       notes: [
-        'Snowflake IDs carry no marker for which service issued them, so each reading below is an assumption.',
+        "Snowflake IDs carry no marker for which service issued them, so each reading below is an assumption.",
       ],
       children: [],
     };
@@ -705,9 +723,9 @@ const numericDetector: Detector = (v, ctx) => {
 
   if (ipCandidate) {
     return {
-      title: 'IPv4 address stored as an integer',
-      chain: 'IPv4 integer',
-      body: `${ipCandidate}\nHex: 0x${Number(s).toString(16).padStart(8, '0')}`,
+      title: "IPv4 address stored as an integer",
+      chain: "IPv4 integer",
+      body: `${ipCandidate}\nHex: 0x${Number(s).toString(16).padStart(8, "0")}`,
       always: true,
       children: [],
     };
@@ -717,7 +735,7 @@ const numericDetector: Detector = (v, ctx) => {
 };
 
 const quotedPrintableDetector: Detector = (v) => {
-  if (v.kind !== 'text') return null;
+  if (v.kind !== "text") return null;
   const s = v.text;
   const escapes = s.match(/=[0-9A-F]{2}/g);
   const softBreaks = /=\r?\n/.test(s);
@@ -725,14 +743,15 @@ const quotedPrintableDetector: Detector = (v) => {
   // Query strings look like "a=42&b=43"; real quoted-printable has a soft line
   // break or an escape whose hex digits include a letter (=C3, =3D, =20 ...).
   const strong =
-    softBreaks || (escapes ?? []).some((e) => /[A-F]/.test(e.slice(1)) || e === '=3D' || e === '=20');
+    softBreaks ||
+    (escapes ?? []).some((e) => /[A-F]/.test(e.slice(1)) || e === "=3D" || e === "=20");
   if (!strong) return null;
 
-  const unfolded = s.replace(/=\r?\n/g, '');
+  const unfolded = s.replace(/=\r?\n/g, "");
   const bytes: number[] = [];
   for (let i = 0; i < unfolded.length; i++) {
     const ch = unfolded[i] as string;
-    if (ch === '=' && /^[0-9A-Fa-f]{2}$/.test(unfolded.slice(i + 1, i + 3))) {
+    if (ch === "=" && /^[0-9A-Fa-f]{2}$/.test(unfolded.slice(i + 1, i + 3))) {
       bytes.push(parseInt(unfolded.slice(i + 1, i + 3), 16));
       i += 2;
     } else {
@@ -744,8 +763,8 @@ const quotedPrintableDetector: Detector = (v) => {
   if (printableRatio(decoded) < 0.9) return null;
 
   return {
-    title: `Quoted-printable (${escapes?.length ?? 0} escapes${softBreaks ? ', soft line breaks' : ''})`,
-    chain: 'quoted-printable',
+    title: `Quoted-printable (${escapes?.length ?? 0} escapes${softBreaks ? ", soft line breaks" : ""})`,
+    chain: "quoted-printable",
     produced: textValue(decoded),
   };
 };
@@ -753,16 +772,17 @@ const quotedPrintableDetector: Detector = (v) => {
 /** Shared tail for base64 and hex: turn bytes into the next value, or decline. */
 function bytesToValue(bytes: Uint8Array): { value: Value; detail: string } | null {
   const text = asReadableText(bytes);
-  if (text !== null) return { value: textValue(text), detail: `${bytes.length} bytes of UTF-8 text` };
+  if (text !== null)
+    return { value: textValue(text), detail: `${bytes.length} bytes of UTF-8 text` };
   const format = identify(bytes);
   if (format) return { value: bytesValue(bytes), detail: `${bytes.length} bytes, ${format.name}` };
   return null;
 }
 
 const hexDetector: Detector = (v) => {
-  if (v.kind !== 'text') return null;
-  const raw = v.text.trim().replace(/^0x/i, '');
-  const compact = raw.replace(/[\s:-]/g, '');
+  if (v.kind !== "text") return null;
+  const raw = v.text.trim().replace(/^0x/i, "");
+  const compact = raw.replace(/[\s:-]/g, "");
   if (compact.length < 8 || compact.length % 2 !== 0) return null;
   if (!/^[0-9a-fA-F]+$/.test(compact)) return null;
 
@@ -773,15 +793,18 @@ const hexDetector: Detector = (v) => {
   }
   return {
     title: `Hex bytes (${compact.length} hex digits -> ${next.detail})`,
-    chain: 'hex',
+    chain: "hex",
     produced: next.value,
   };
 };
 
 /** Aside for hex-shaped input that decodes to nothing recognisable. */
 function hexAside(v: Value, ctx: Ctx): void {
-  if (v.kind !== 'text') return;
-  const compact = v.text.trim().replace(/^0x/i, '').replace(/[\s:-]/g, '');
+  if (v.kind !== "text") return;
+  const compact = v.text
+    .trim()
+    .replace(/^0x/i, "")
+    .replace(/[\s:-]/g, "");
   if (compact.length < 8 || compact.length % 2 !== 0) return;
   if (!/^[0-9a-fA-F]+$/.test(compact)) return;
   const bytes = hexToBytes(compact.toLowerCase());
@@ -790,7 +813,7 @@ function hexAside(v: Value, ctx: Ctx): void {
   );
   if (compact.length === 12)
     ctx.asides.push(
-      `Also possible: a MAC address written without separators, ${(compact.toLowerCase().match(/../g) as string[]).join(':')}.`,
+      `Also possible: a MAC address written without separators, ${(compact.toLowerCase().match(/../g) as string[]).join(":")}.`,
     );
 }
 
@@ -798,7 +821,7 @@ const BASE64_SHAPE = /^([A-Za-z0-9+/]+|[A-Za-z0-9_-]+)(={0,2})$/;
 
 function base64Candidate(text: string): { core: string; urlSafe: boolean; padded: boolean } | null {
   let s = text.trim();
-  if (/\n/.test(s) && !/[^\sA-Za-z0-9+/=_-]/.test(s)) s = s.replace(/\s+/g, '');
+  if (/\n/.test(s) && !/[^\sA-Za-z0-9+/=_-]/.test(s)) s = s.replace(/\s+/g, "");
   if (s.length < 8) return null;
   const m = BASE64_SHAPE.exec(s);
   if (!m) return null;
@@ -814,7 +837,7 @@ function base64Candidate(text: string): { core: string; urlSafe: boolean; padded
 }
 
 const base64Detector: Detector = (v) => {
-  if (v.kind !== 'text') return null;
+  if (v.kind !== "text") return null;
   const cand = base64Candidate(v.text);
   if (!cand) return null;
   const bytes = base64ToBytes(cand.core);
@@ -822,11 +845,11 @@ const base64Detector: Detector = (v) => {
 
   const next = bytesToValue(bytes);
   if (!next) return null;
-  if (next.value.kind === 'text' && next.value.text === v.text.trim()) return null;
+  if (next.value.kind === "text" && next.value.text === v.text.trim()) return null;
 
   // Short unpadded tokens are usually ordinary words that happen to sit in the
   // base64 alphabet, so demand a structural signal before claiming a decode.
-  if (next.value.kind === 'text') {
+  if (next.value.kind === "text") {
     const decoded = next.value.text;
     const strong =
       cand.padded ||
@@ -836,7 +859,7 @@ const base64Detector: Detector = (v) => {
     if (!strong) return null;
   }
 
-  const label = cand.urlSafe ? 'base64url' : 'base64';
+  const label = cand.urlSafe ? "base64url" : "base64";
   return {
     title: `${label} (${cand.core.length} chars -> ${next.detail})`,
     chain: label,
@@ -845,19 +868,21 @@ const base64Detector: Detector = (v) => {
 };
 
 const binaryDetector: Detector = async (v) => {
-  if (v.kind !== 'bytes') return null;
+  if (v.kind !== "bytes") return null;
   const format = v.format;
   if (!format?.decompress) return null;
   const out = await inflate(v.bytes, format.decompress);
   if (!out) {
     return {
       title: `${format.name} (${v.bytes.length} bytes)`,
-      notes: ['The header matches this format but the data would not decompress, so it may be truncated or mislabeled.'],
+      notes: [
+        "The header matches this format but the data would not decompress, so it may be truncated or mislabeled.",
+      ],
       children: [],
     };
   }
   const next = bytesToValue(out);
-  const chain = format.decompress === 'gzip' ? 'gzip' : 'zlib';
+  const chain = format.decompress === "gzip" ? "gzip" : "zlib";
   return {
     title: `${chain} (${v.bytes.length} bytes -> ${out.length} bytes)`,
     chain,
@@ -884,8 +909,8 @@ const DETECTORS: Detector[] = [
 /* ------------------------------------------------------------------ */
 
 function display(v: Value): string {
-  if (v.kind === 'text') return v.text;
-  const name = v.format ? v.format.name : 'unknown format';
+  if (v.kind === "text") return v.text;
+  const name = v.format ? v.format.name : "unknown format";
   return `binary: ${name} (${v.bytes.length} bytes)\nhex: ${hexHead(v.bytes)}`;
 }
 
@@ -902,7 +927,7 @@ async function expand(value: Value, ctx: Ctx): Promise<{ children: Step[]; notes
         children: [
           {
             title: `Depth limit reached (maxDepth is ${ctx.maxDepth}).`,
-            notes: ['There is more to unwrap here. Raise the maxDepth option to keep going.'],
+            notes: ["There is more to unwrap here. Raise the maxDepth option to keep going."],
             children: [],
           },
         ],
@@ -922,7 +947,9 @@ async function expand(value: Value, ctx: Ctx): Promise<{ children: Step[]; notes
     if (hit.produced) {
       const key = keyOf(hit.produced);
       if (local.seen.has(key)) {
-        step.notes.push('Decoding this again produces a value already seen, so this branch stops here.');
+        step.notes.push(
+          "Decoding this again produces a value already seen, so this branch stops here.",
+        );
         step.body ??= display(hit.produced);
       } else {
         const nextSeen = new Set(local.seen);
@@ -956,12 +983,13 @@ const INTERMEDIATE_BODY_MAX = 240;
 function bodyLines(body: string, isFinal: boolean): string[] {
   const limit = isFinal ? FINAL_BODY_MAX : INTERMEDIATE_BODY_MAX;
   let text = body;
-  if (text.length > limit) text = `${text.slice(0, limit)}\n... (${body.length - limit} more characters)`;
-  return text.split('\n');
+  if (text.length > limit)
+    text = `${text.slice(0, limit)}\n... (${body.length - limit} more characters)`;
+  return text.split("\n");
 }
 
 function pad(n: number): string {
-  return ' '.repeat(n);
+  return " ".repeat(n);
 }
 
 function render(steps: Step[], indent: number, showIntermediates: boolean, out: string[]): void {
@@ -992,12 +1020,12 @@ function chainOf(steps: Step[]): string[] {
 /* ------------------------------------------------------------------ */
 
 export async function run(input: string, opts: DecodeOpts = {}): Promise<string> {
-  const raw = typeof input === 'string' ? input : '';
-  if (raw.trim() === '')
+  const raw = typeof input === "string" ? input : "";
+  if (raw.trim() === "")
     throw new ToolError(
-      'empty-input',
-      'Enter something to decode.',
-      'Paste a token, a base64 blob, a JWT, a hex dump, an ID, or a timestamp.',
+      "empty-input",
+      "Enter something to decode.",
+      "Paste a token, a base64 blob, a JWT, a hex dump, an ID, or a timestamp.",
     );
 
   const rawDepth = Number(opts.maxDepth);
@@ -1014,18 +1042,18 @@ export async function run(input: string, opts: DecodeOpts = {}): Promise<string>
 
   const chain = chainOf(children);
   const lines: string[] = [];
-  lines.push(`Chain: ${chain.length ? chain.join(' -> ') : 'none detected'}`);
-  lines.push('');
+  lines.push(`Chain: ${chain.length ? chain.join(" -> ") : "none detected"}`);
+  lines.push("");
   lines.push(`Input (${raw.trim().length} characters)`);
   if (children.length === 0 || showIntermediates) {
     for (const line of bodyLines(raw.trim(), children.length === 0)) lines.push(pad(2) + line);
   }
   for (const note of notes) lines.push(pad(2) + note);
   render(children, 2, showIntermediates, lines);
-  lines.push('');
-  lines.push('Nothing more to decode.');
+  lines.push("");
+  lines.push("Nothing more to decode.");
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 export default { run } satisfies ToolLogic<string, string, DecodeOpts>;

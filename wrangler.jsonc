@@ -10,17 +10,17 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    "run_worker_first": ["/api", "/api/*"]
+    "run_worker_first": ["/api", "/api/*"],
   },
   "routes": [
     {
       "pattern": "tools.maxhogan.dev",
-      "custom_domain": true
-    }
+      "custom_domain": true,
+    },
   ],
   // No user content is ever logged (PROJECT.md rule 2), and there is nothing
   // stateful to observe.
   "observability": {
-    "enabled": false
-  }
+    "enabled": false,
+  },
 }

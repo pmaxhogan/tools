@@ -18,18 +18,18 @@
  * only owns the browser work. Nothing touches a browser API until the
  * component is mounted, so it renders inert on the server.
  */
-import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue';
-import { X } from 'lucide-vue-next';
-import { ToolError, type ToolMeta } from '@/tools/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
+import { X } from "lucide-vue-next";
+import { ToolError, type ToolMeta } from "@/tools/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 defineProps<{ meta: ToolMeta }>();
 
-type TrimLogic = typeof import('@/tools/video-trimmer/index');
-type TrimPlan = import('@/tools/video-trimmer/index').TrimPlan;
-type TrimPlanError = import('@/tools/video-trimmer/index').TrimPlanError;
+type TrimLogic = typeof import("@/tools/video-trimmer/index");
+type TrimPlan = import("@/tools/video-trimmer/index").TrimPlan;
+type TrimPlanError = import("@/tools/video-trimmer/index").TrimPlanError;
 
 /** captureStream is not in the DOM typings, and Firefox uses a prefix. */
 type CapturableVideo = HTMLVideoElement & {
@@ -51,14 +51,14 @@ const videoEl = ref<HTMLVideoElement>();
 const fileInput = ref<HTMLInputElement>();
 const dragging = ref(false);
 
-const fileName = ref('');
+const fileName = ref("");
 const fileSize = ref(0);
 const sourceUrl = ref<string | null>(null);
 const duration = ref(0);
 const decodeFailed = ref(false);
 
-const startSpec = ref('0');
-const endSpec = ref('');
+const startSpec = ref("0");
+const endSpec = ref("");
 const fps = ref(30);
 /** Mirrors the element's currentTime so the readout and the buttons stay live. */
 const playhead = ref(0);
@@ -69,7 +69,7 @@ const wentHidden = ref(false);
 
 const outputUrl = ref<string | null>(null);
 const outputSize = ref(0);
-const outputName = ref('');
+const outputName = ref("");
 
 const error = ref<{ message: string; fix?: string } | null>(null);
 
@@ -106,18 +106,18 @@ const planResult = computed<TrimPlan | TrimPlanError | null>(() => {
 
 const plan = computed<TrimPlan | null>(() => {
   const result = planResult.value;
-  return result && !('error' in result) ? result : null;
+  return result && !("error" in result) ? result : null;
 });
 
 const rangeError = computed<TrimPlanError | null>(() => {
   const result = planResult.value;
-  return result && 'error' in result ? result : null;
+  return result && "error" in result ? result : null;
 });
 
 const canTrim = computed(() => ready.value && plan.value !== null && !recording.value);
 
 function clock(seconds: number): string {
-  return logic.value ? logic.value.formatSeconds(seconds) : '0:00.000';
+  return logic.value ? logic.value.formatSeconds(seconds) : "0:00.000";
 }
 
 const progressPercent = computed(() => Math.round(captureProgress.value * 100));
@@ -128,7 +128,7 @@ const progressPercent = computed(() => Math.round(captureProgress.value * 100));
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -139,9 +139,9 @@ function humanSize(bytes: number): string {
 }
 
 function baseName(name: string): string {
-  const dot = name.lastIndexOf('.');
+  const dot = name.lastIndexOf(".");
   const stem = dot > 0 ? name.slice(0, dot) : name;
-  return stem || 'video';
+  return stem || "video";
 }
 
 function revoke(url: string | null) {
@@ -168,7 +168,7 @@ function clearOutput() {
   revoke(outputUrl.value);
   outputUrl.value = null;
   outputSize.value = 0;
-  outputName.value = '';
+  outputName.value = "";
   wentHidden.value = false;
   captureProgress.value = 0;
 }
@@ -180,8 +180,8 @@ function loadFile(file: File) {
   decodeFailed.value = false;
   duration.value = 0;
   playhead.value = 0;
-  startSpec.value = '0';
-  endSpec.value = '';
+  startSpec.value = "0";
+  endSpec.value = "";
   fileName.value = file.name;
   fileSize.value = file.size;
   sourceUrl.value = URL.createObjectURL(file);
@@ -198,20 +198,20 @@ function onPickFile(e: Event) {
   const file = picker.files?.[0];
   if (file) loadFile(file);
   // Reset so picking the same file again still fires a change event.
-  picker.value = '';
+  picker.value = "";
 }
 
 function clearFile() {
   revoke(sourceUrl.value);
   sourceUrl.value = null;
   clearOutput();
-  fileName.value = '';
+  fileName.value = "";
   fileSize.value = 0;
   duration.value = 0;
   playhead.value = 0;
   decodeFailed.value = false;
   error.value = null;
-  if (fileInput.value) fileInput.value.value = '';
+  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -250,11 +250,11 @@ function seekTo(seconds: number): Promise<void> {
   if (Math.abs(video.currentTime - target) < 0.0001) return Promise.resolve();
   return new Promise((resolve) => {
     const done = () => {
-      video.removeEventListener('seeked', done);
+      video.removeEventListener("seeked", done);
       playhead.value = video.currentTime;
       resolve();
     };
-    video.addEventListener('seeked', done);
+    video.addEventListener("seeked", done);
     video.currentTime = target;
   });
 }
@@ -292,7 +292,7 @@ function setFps(value: unknown) {
 
 function captureStreamOf(video: CapturableVideo): MediaStream | null {
   const capture = video.captureStream ?? video.mozCaptureStream;
-  if (typeof capture !== 'function') return null;
+  if (typeof capture !== "function") return null;
   return capture.call(video);
 }
 
@@ -308,13 +308,13 @@ function playUntil(video: HTMLVideoElement, start: number, end: number): Promise
     const finish = () => {
       if (finished) return;
       finished = true;
-      video.removeEventListener('ended', finish);
+      video.removeEventListener("ended", finish);
       video.pause();
       resolve();
     };
 
     function schedule() {
-      if (typeof video.requestVideoFrameCallback === 'function') {
+      if (typeof video.requestVideoFrameCallback === "function") {
         video.requestVideoFrameCallback(() => tick());
       } else {
         requestAnimationFrame(() => tick());
@@ -334,7 +334,7 @@ function playUntil(video: HTMLVideoElement, start: number, end: number): Promise
       schedule();
     }
 
-    video.addEventListener('ended', finish);
+    video.addEventListener("ended", finish);
     schedule();
   });
 }
@@ -348,12 +348,12 @@ async function trim() {
   const currentPlan = plan.value;
   if (!video || !currentPlan || !logic.value || recording.value) return;
 
-  if (typeof MediaRecorder === 'undefined') {
+  if (typeof MediaRecorder === "undefined") {
     setError(
       new ToolError(
-        'no-recorder',
-        'This browser does not support MediaRecorder, which the trimmer uses to write the trimmed clip.',
-        'Use a current version of Chrome, Edge, Firefox, or Safari.',
+        "no-recorder",
+        "This browser does not support MediaRecorder, which the trimmer uses to write the trimmed clip.",
+        "Use a current version of Chrome, Edge, Firefox, or Safari.",
       ),
     );
     return;
@@ -363,9 +363,9 @@ async function trim() {
   if (!mimeType) {
     setError(
       new ToolError(
-        'no-webm-encoder',
-        'This browser cannot record WebM video, so there is no format to write the trimmed clip in.',
-        'Use a current version of Chrome, Edge, or Firefox, where WebM recording is built in.',
+        "no-webm-encoder",
+        "This browser cannot record WebM video, so there is no format to write the trimmed clip in.",
+        "Use a current version of Chrome, Edge, or Firefox, where WebM recording is built in.",
       ),
     );
     return;
@@ -378,7 +378,7 @@ async function trim() {
   error.value = null;
   recording.value = true;
   stopRequested = false;
-  document.addEventListener('visibilitychange', onVisibilityChange);
+  document.addEventListener("visibilitychange", onVisibilityChange);
   if (document.hidden) wentHidden.value = true;
 
   let stream: MediaStream | null = null;
@@ -396,9 +396,9 @@ async function trim() {
     stream = captureStreamOf(video);
     if (!stream) {
       throw new ToolError(
-        'no-capture',
-        'This browser will not let a video element be captured, so the clip cannot be recorded.',
-        'Use a current version of Chrome, Edge, or Firefox.',
+        "no-capture",
+        "This browser will not let a video element be captured, so the clip cannot be recorded.",
+        "Use a current version of Chrome, Edge, or Firefox.",
       );
     }
 
@@ -414,7 +414,7 @@ async function trim() {
       if (e.data && e.data.size > 0) chunks.push(e.data);
     };
     recorder.onerror = () => {
-      recorderError = 'The recorder stopped with an error part way through the clip.';
+      recorderError = "The recorder stopped with an error part way through the clip.";
       stopRequested = true;
     };
 
@@ -425,17 +425,17 @@ async function trim() {
     recorder.start();
     await video.play();
     await playUntil(video, from, to);
-    if (recorder.state !== 'inactive') recorder.stop();
+    if (recorder.state !== "inactive") recorder.stop();
     await stopped;
 
-    if (recorderError) throw new ToolError('recorder-failed', recorderError);
+    if (recorderError) throw new ToolError("recorder-failed", recorderError);
 
     const blob = new Blob(chunks, { type: mimeType });
     if (blob.size === 0) {
       throw new ToolError(
-        'empty-output',
-        'The recording came back empty, so there is nothing to download.',
-        'Keep this tab in front while the clip plays through, then trim again.',
+        "empty-output",
+        "The recording came back empty, so there is nothing to download.",
+        "Keep this tab in front while the clip plays through, then trim again.",
       );
     }
 
@@ -447,7 +447,7 @@ async function trim() {
     setError(e);
   } finally {
     stream?.getTracks().forEach((track) => track.stop());
-    document.removeEventListener('visibilitychange', onVisibilityChange);
+    document.removeEventListener("visibilitychange", onVisibilityChange);
     video.muted = wasMuted;
     recording.value = false;
     stopRequested = false;
@@ -460,7 +460,7 @@ function cancelTrim() {
 
 function download() {
   if (!outputUrl.value) return;
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = outputUrl.value;
   a.download = outputName.value;
   document.body.appendChild(a);
@@ -475,15 +475,15 @@ function download() {
 onMounted(async () => {
   // The frame math lives in the logic layer, so the panel loads it rather than
   // reimplementing it. It is tiny and has no dependencies.
-  logic.value = await import('@/tools/video-trimmer/index');
+  logic.value = await import("@/tools/video-trimmer/index");
 });
 
 onUnmounted(() => {
   stopRequested = true;
   revoke(sourceUrl.value);
   revoke(outputUrl.value);
-  if (typeof document !== 'undefined') {
-    document.removeEventListener('visibilitychange', onVisibilityChange);
+  if (typeof document !== "undefined") {
+    document.removeEventListener("visibilitychange", onVisibilityChange);
   }
 });
 </script>
@@ -502,26 +502,11 @@ onUnmounted(() => {
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Video
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          @click="fileInput?.click()"
-        >
-          Open file…
-        </Button>
-        <input
-          ref="fileInput"
-          type="file"
-          class="hidden"
-          accept="video/*"
-          @change="onPickFile"
-        >
+        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
+        <input ref="fileInput" type="file" class="hidden" accept="video/*" @change="onPickFile" />
       </div>
 
-      <div
-        v-if="hasFile"
-        class="px-3 pt-2 pb-3"
-      >
+      <div v-if="hasFile" class="px-3 pt-2 pb-3">
         <span
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
@@ -538,10 +523,7 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <p
-        v-else
-        class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
-      >
+      <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
         Drop a video here to cut a range out of it. Everything runs in this tab: your files and
         inputs never leave your device.
       </p>
@@ -556,10 +538,7 @@ onUnmounted(() => {
       <p class="font-medium text-destructive">
         {{ error.message }}
       </p>
-      <p
-        v-if="error.fix"
-        class="mt-1 text-muted-foreground"
-      >
+      <p v-if="error.fix" class="mt-1 text-muted-foreground">
         {{ error.fix }}
       </p>
     </div>
@@ -587,10 +566,7 @@ onUnmounted(() => {
           This browser cannot decode this file, so it cannot be trimmed here. Try an MP4, WebM, or
           MOV recorded by a common camera or screen recorder.
         </p>
-        <p
-          v-else
-          class="font-mono text-xs text-muted-foreground tabular-nums"
-        >
+        <p v-else class="font-mono text-xs text-muted-foreground tabular-nums">
           Playhead {{ clock(playhead) }} of {{ clock(duration) }}
         </p>
       </div>
@@ -603,10 +579,7 @@ onUnmounted(() => {
 
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-36 flex-col gap-1.5">
-            <Label
-              for="trim-start"
-              class="text-xs text-muted-foreground"
-            >Start</Label>
+            <Label for="trim-start" class="text-xs text-muted-foreground">Start</Label>
             <Input
               id="trim-start"
               v-model="startSpec"
@@ -626,10 +599,7 @@ onUnmounted(() => {
           </Button>
 
           <div class="flex w-36 flex-col gap-1.5">
-            <Label
-              for="trim-end"
-              class="text-xs text-muted-foreground"
-            >End</Label>
+            <Label for="trim-end" class="text-xs text-muted-foreground">End</Label>
             <Input
               id="trim-end"
               v-model="endSpec"
@@ -649,10 +619,7 @@ onUnmounted(() => {
           </Button>
 
           <div class="flex w-28 flex-col gap-1.5">
-            <Label
-              for="trim-fps"
-              class="text-xs text-muted-foreground"
-            >Frame rate</Label>
+            <Label for="trim-fps" class="text-xs text-muted-foreground">Frame rate</Label>
             <Input
               id="trim-fps"
               type="number"
@@ -694,17 +661,11 @@ onUnmounted(() => {
           class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
         >
           <span class="font-medium text-destructive">{{ rangeError.error }}</span>
-          <span
-            v-if="rangeError.fix"
-            class="mt-1 block text-muted-foreground"
-          >{{
+          <span v-if="rangeError.fix" class="mt-1 block text-muted-foreground">{{
             rangeError.fix
           }}</span>
         </p>
-        <p
-          v-else-if="plan"
-          class="font-mono text-xs text-muted-foreground tabular-nums"
-        >
+        <p v-else-if="plan" class="font-mono text-xs text-muted-foreground tabular-nums">
           Frames {{ plan.startFrame }} to {{ plan.endFrame - 1 }} ({{ plan.frameCount }} frames),
           {{ clock(plan.outDurationSec) }} out.
         </p>
@@ -712,23 +673,11 @@ onUnmounted(() => {
 
       <!-- Trim -->
       <div class="flex flex-wrap items-center gap-2">
-        <Button
-          :disabled="!canTrim"
-          @click="trim"
-        >
-          {{ recording ? 'Recording…' : 'Trim' }}
+        <Button :disabled="!canTrim" @click="trim">
+          {{ recording ? "Recording…" : "Trim" }}
         </Button>
-        <Button
-          v-if="recording"
-          variant="outline"
-          @click="cancelTrim"
-        >
-          Stop early
-        </Button>
-        <span
-          v-if="recording"
-          class="font-mono text-xs text-muted-foreground tabular-nums"
-        >
+        <Button v-if="recording" variant="outline" @click="cancelTrim"> Stop early </Button>
+        <span v-if="recording" class="font-mono text-xs text-muted-foreground tabular-nums">
           {{ progressPercent }}%
         </span>
       </div>
@@ -748,10 +697,7 @@ onUnmounted(() => {
         />
       </div>
 
-      <p
-        v-if="recording"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-if="recording" class="text-xs text-muted-foreground">
         The clip plays through once while it records, so this takes about as long as the range
         itself. Keep this tab in front: browsers throttle a hidden tab, which can drop frames from
         the recording.
@@ -767,10 +713,7 @@ onUnmounted(() => {
       </p>
 
       <!-- Output -->
-      <div
-        v-if="outputUrl"
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      >
+      <div v-if="outputUrl" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
         <div class="px-3 pt-2">
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Output
@@ -786,13 +729,7 @@ onUnmounted(() => {
                 {{ humanSize(outputSize) }} from {{ humanSize(fileSize) }} of source
               </div>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              @click="download"
-            >
-              Download
-            </Button>
+            <Button size="sm" variant="outline" @click="download"> Download </Button>
           </div>
           <video
             :src="outputUrl"

@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
-import { Check, X } from 'lucide-vue-next';
-import { ToolError, type ToolMeta } from '@/tools/types';
-import { shouldAutoDownload, isMetered, onConnectionChange } from '@/lib/connection';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import { Check, X } from "lucide-vue-next";
+import { ToolError, type ToolMeta } from "@/tools/types";
+import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 /**
  * Bespoke panel for Transcriber.
@@ -75,8 +75,8 @@ import {
  */
 defineProps<{ meta: ToolMeta }>();
 
-type TranscriberLogic = typeof import('@/tools/audio-transcriber/index');
-type Transformers = typeof import('@huggingface/transformers');
+type TranscriberLogic = typeof import("@/tools/audio-transcriber/index");
+type Transformers = typeof import("@huggingface/transformers");
 
 /** The pipeline surface this panel actually touches. */
 interface AsrPipeline {
@@ -112,34 +112,34 @@ const STRIDE_SECONDS = 5;
 const LONG_FILE_SECONDS = 30 * 60;
 
 const MODELS = [
-  { id: 'whisper-tiny', label: 'Tiny, 43 MB, fastest', size: 'about 43 MB' },
-  { id: 'whisper-base', label: 'Base, 78 MB, more accurate', size: 'about 78 MB' },
+  { id: "whisper-tiny", label: "Tiny, 43 MB, fastest", size: "about 43 MB" },
+  { id: "whisper-base", label: "Base, 78 MB, more accurate", size: "about 78 MB" },
 ];
 
 const LANGUAGES = [
-  { value: 'auto', label: 'Detect automatically' },
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-  { value: 'it', label: 'Italian' },
-  { value: 'pt', label: 'Portuguese' },
-  { value: 'nl', label: 'Dutch' },
-  { value: 'ja', label: 'Japanese' },
-  { value: 'ko', label: 'Korean' },
-  { value: 'zh', label: 'Chinese' },
-  { value: 'ru', label: 'Russian' },
-  { value: 'pl', label: 'Polish' },
-  { value: 'tr', label: 'Turkish' },
-  { value: 'ar', label: 'Arabic' },
-  { value: 'hi', label: 'Hindi' },
+  { value: "auto", label: "Detect automatically" },
+  { value: "en", label: "English" },
+  { value: "es", label: "Spanish" },
+  { value: "fr", label: "French" },
+  { value: "de", label: "German" },
+  { value: "it", label: "Italian" },
+  { value: "pt", label: "Portuguese" },
+  { value: "nl", label: "Dutch" },
+  { value: "ja", label: "Japanese" },
+  { value: "ko", label: "Korean" },
+  { value: "zh", label: "Chinese" },
+  { value: "ru", label: "Russian" },
+  { value: "pl", label: "Polish" },
+  { value: "tr", label: "Turkish" },
+  { value: "ar", label: "Arabic" },
+  { value: "hi", label: "Hindi" },
 ];
 
 const MIME_FOR_FORMAT: Record<string, string> = {
-  text: 'text/plain',
-  srt: 'text/plain',
-  vtt: 'text/vtt',
-  json: 'application/json',
+  text: "text/plain",
+  srt: "text/plain",
+  vtt: "text/vtt",
+  json: "application/json",
 };
 
 /* ---------------------------------------------------------------- */
@@ -149,23 +149,23 @@ const MIME_FOR_FORMAT: Record<string, string> = {
 const logic = shallowRef<TranscriberLogic | null>(null);
 let logicPromise: Promise<TranscriberLogic> | null = null;
 function loadLogic(): Promise<TranscriberLogic> {
-  logicPromise ??= import('@/tools/audio-transcriber/index');
+  logicPromise ??= import("@/tools/audio-transcriber/index");
   return logicPromise;
 }
 
 /** Module handles live outside the reactive system: they are large and opaque. */
 let transformers: Transformers | null = null;
 let asr: AsrPipeline | null = null;
-let loadedModel = '';
+let loadedModel = "";
 let envConfigured = false;
 
-const model = ref('whisper-tiny');
-const format = ref('text');
-const language = ref('auto');
+const model = ref("whisper-tiny");
+const format = ref("text");
+const language = ref("auto");
 const timestamps = ref(true);
 
-type EngineStage = 'idle' | 'downloading' | 'starting' | 'ready';
-const engineStage = ref<EngineStage>('idle');
+type EngineStage = "idle" | "downloading" | "starting" | "ready";
+const engineStage = ref<EngineStage>("idle");
 const downloadedBytes = ref(0);
 const downloadTotal = ref(0);
 
@@ -175,7 +175,7 @@ const metered = ref(false);
 let pendingAutoStart = false;
 let stopConnectionWatch: () => void = () => {};
 
-const fileName = ref('');
+const fileName = ref("");
 const fileSize = ref(0);
 const dragging = ref(false);
 const fileInput = ref<HTMLInputElement>();
@@ -186,7 +186,7 @@ const duration = ref(0);
 const running = ref(false);
 const progress = ref(0);
 const elapsed = ref(0);
-const live = ref('');
+const live = ref("");
 const chunks = shallowRef<TranscriptRow[]>([]);
 const copied = ref(false);
 
@@ -203,7 +203,7 @@ let copiedTimer = 0;
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -222,39 +222,37 @@ function clockLabel(seconds: number): string {
   const hours = Math.floor(total / 3600);
   const minutes = Math.floor(total / 60) % 60;
   const secs = total % 60;
-  const mm = String(minutes).padStart(hours > 0 ? 2 : 1, '0');
+  const mm = String(minutes).padStart(hours > 0 ? 2 : 1, "0");
   return hours > 0
-    ? `${hours}:${mm}:${String(secs).padStart(2, '0')}`
-    : `${mm}:${String(secs).padStart(2, '0')}`;
+    ? `${hours}:${mm}:${String(secs).padStart(2, "0")}`
+    : `${mm}:${String(secs).padStart(2, "0")}`;
 }
 
 function baseName(name: string): string {
-  const dot = name.lastIndexOf('.');
+  const dot = name.lastIndexOf(".");
   const stem = dot > 0 ? name.slice(0, dot) : name;
-  return stem || 'transcript';
+  return stem || "transcript";
 }
 
 const currentModel = computed(() => MODELS.find((m) => m.id === model.value) ?? MODELS[0]!);
 
-const supported = computed(() => typeof WebAssembly !== 'undefined');
+const supported = computed(() => typeof WebAssembly !== "undefined");
 
 const downloadPercent = computed(() =>
-  downloadTotal.value > 0
-    ? Math.min(100, (downloadedBytes.value / downloadTotal.value) * 100)
-    : 0,
+  downloadTotal.value > 0 ? Math.min(100, (downloadedBytes.value / downloadTotal.value) * 100) : 0,
 );
 
 const downloadLabel = computed(() => {
-  if (engineStage.value === 'starting') return 'Starting the speech engine';
+  if (engineStage.value === "starting") return "Starting the speech engine";
   // A model already in Cache Storage reports no byte progress at all, so the
   // neutral wording covers both a warm cache and the first moments of a cold one.
-  if (downloadTotal.value === 0) return 'Preparing the speech model';
+  if (downloadTotal.value === 0) return "Preparing the speech model";
   return `Downloading the speech model (${megabytes(downloadedBytes.value)} of ${megabytes(downloadTotal.value)} MB)`;
 });
 
 /** Width of the load bar. A run with no byte counts shows a stub rather than nothing. */
 const engineBarWidth = computed(() => {
-  if (engineStage.value === 'starting') return 100;
+  if (engineStage.value === "starting") return 100;
   return downloadTotal.value > 0 ? downloadPercent.value : 8;
 });
 
@@ -263,7 +261,7 @@ const engineButtonLabel = computed(() => `Load speech model (${currentModel.valu
 
 const transcript = computed(() => {
   const mod = logic.value;
-  if (!mod || chunks.value.length === 0) return '';
+  if (!mod || chunks.value.length === 0) return "";
   return mod.formatTranscript(chunks.value, {
     format: format.value,
     timestamps: timestamps.value,
@@ -272,12 +270,12 @@ const transcript = computed(() => {
 
 const downloadName = computed(() => {
   const mod = logic.value;
-  const ext = mod ? mod.extensionFor(format.value) : 'txt';
+  const ext = mod ? mod.extensionFor(format.value) : "txt";
   return `${baseName(fileName.value)}.${ext}`;
 });
 
 const canTranscribe = computed(
-  () => engineStage.value === 'ready' && audio.value !== null && !running.value && !decoding.value,
+  () => engineStage.value === "ready" && audio.value !== null && !running.value && !decoding.value,
 );
 
 const tooLong = computed(() => duration.value > LONG_FILE_SECONDS);
@@ -288,11 +286,11 @@ const tooLong = computed(() => duration.value > LONG_FILE_SECONDS);
 
 function describe(e: unknown, fallback: { message: string; fix?: string }) {
   if (e instanceof ToolError) return { message: e.message, fix: e.fix };
-  const text = e instanceof Error ? e.message : String(e ?? '');
+  const text = e instanceof Error ? e.message : String(e ?? "");
   if (/memory|allocat|Aborted|RangeError|array buffer/i.test(text)) {
     return {
-      message: 'The browser ran out of memory partway through the transcription.',
-      fix: 'Split the recording into shorter pieces with the Audio Trimmer, close other tabs, and use the tiny model rather than base.',
+      message: "The browser ran out of memory partway through the transcription.",
+      fix: "Split the recording into shorter pieces with the Audio Trimmer, close other tabs, and use the tiny model rather than base.",
     };
   }
   if (text) return { message: `${fallback.message} ${text}`, fix: fallback.fix };
@@ -309,16 +307,16 @@ function configureEnvironment(t: Transformers) {
   // Every weight comes from this origin. Nothing is fetched from a third party.
   env.allowRemoteModels = false;
   env.allowLocalModels = true;
-  env.localModelPath = '/models/';
+  env.localModelPath = "/models/";
   const wasm = env.backends?.onnx?.wasm;
-  if (wasm) wasm.wasmPaths = '/models/ort/';
+  if (wasm) wasm.wasmPaths = "/models/ort/";
   envConfigured = true;
 }
 
 async function disposePipeline() {
   const previous = asr;
   asr = null;
-  loadedModel = '';
+  loadedModel = "";
   try {
     await previous?.dispose?.();
   } catch {
@@ -327,17 +325,17 @@ async function disposePipeline() {
 }
 
 async function loadModel() {
-  if (engineStage.value === 'downloading' || engineStage.value === 'starting') return;
+  if (engineStage.value === "downloading" || engineStage.value === "starting") return;
   // A manual press means the visitor chose to start it, so drop any hold.
   pendingAutoStart = false;
   const wanted = model.value;
   error.value = null;
-  engineStage.value = 'downloading';
+  engineStage.value = "downloading";
   downloadedBytes.value = 0;
   downloadTotal.value = 0;
 
   try {
-    transformers ??= await import('@huggingface/transformers');
+    transformers ??= await import("@huggingface/transformers");
     const t = transformers;
     configureEnvironment(t);
 
@@ -349,12 +347,12 @@ async function loadModel() {
 
       const onProgress = (raw: unknown) => {
         const info = (raw ?? {}) as ModelProgress;
-        if (info.status === 'progress_total') {
+        if (info.status === "progress_total") {
           sawAggregate = true;
           downloadedBytes.value = info.loaded ?? 0;
           downloadTotal.value = info.total ?? 0;
-        } else if (info.status === 'progress' && !sawAggregate) {
-          if (!info.file || typeof info.total !== 'number') return;
+        } else if (info.status === "progress" && !sawAggregate) {
+          if (!info.file || typeof info.total !== "number") return;
           perFile.set(info.file, { loaded: info.loaded ?? 0, total: info.total });
           let loaded = 0;
           let total = 0;
@@ -369,13 +367,13 @@ async function loadModel() {
         // arrives and report nothing, so the bar would sit at 100 percent
         // looking frozen. Name that phase instead.
         if (downloadTotal.value > 0 && downloadedBytes.value >= downloadTotal.value) {
-          engineStage.value = 'starting';
+          engineStage.value = "starting";
         }
       };
 
-      const created = await t.pipeline('automatic-speech-recognition', wanted, {
-        device: 'wasm',
-        dtype: 'q8',
+      const created = await t.pipeline("automatic-speech-recognition", wanted, {
+        device: "wasm",
+        dtype: "q8",
         progress_callback: onProgress,
       });
       // Downloads take tens of seconds, which is long enough for someone to
@@ -384,20 +382,20 @@ async function loadModel() {
       // would quietly run the model that is no longer on screen.
       if (model.value !== wanted) {
         await (created as unknown as AsrPipeline).dispose?.();
-        engineStage.value = 'idle';
+        engineStage.value = "idle";
         return;
       }
       asr = created as unknown as AsrPipeline;
       loadedModel = wanted;
     }
 
-    engineStage.value = 'ready';
+    engineStage.value = "ready";
   } catch (e) {
-    engineStage.value = 'idle';
+    engineStage.value = "idle";
     await disposePipeline();
     error.value = describe(e, {
-      message: 'The speech model could not be loaded.',
-      fix: 'Check your connection and press the button again. The model is a one time download of tens of megabytes, so a flaky link can interrupt it.',
+      message: "The speech model could not be loaded.",
+      fix: "Check your connection and press the button again. The model is a one time download of tens of megabytes, so a flaky link can interrupt it.",
     });
   }
 }
@@ -408,7 +406,7 @@ async function loadModel() {
  * start and remembers to auto-start later if the link turns unmetered.
  */
 function autoStartModel() {
-  if (engineStage.value !== 'idle') return;
+  if (engineStage.value !== "idle") return;
   if (shouldAutoDownload()) {
     void loadModel();
   } else {
@@ -420,7 +418,7 @@ function autoStartModel() {
 /** A different model is a different pipeline, so the loaded one is thrown away. */
 watch(model, () => {
   if (running.value) return;
-  engineStage.value = 'idle';
+  engineStage.value = "idle";
   downloadedBytes.value = 0;
   downloadTotal.value = 0;
   void disposePipeline();
@@ -497,7 +495,7 @@ async function decodeTo16kMono(bytes: Uint8Array): Promise<Float32Array> {
 
 function resetResult() {
   chunks.value = [];
-  live.value = '';
+  live.value = "";
   progress.value = 0;
   elapsed.value = 0;
 }
@@ -523,8 +521,8 @@ async function readFile(file: File) {
   } catch (e) {
     audio.value = null;
     error.value = describe(e, {
-      message: 'This browser could not decode that file as audio.',
-      fix: 'Whisper reads the audio track, so a video file works as long as the browser can decode it. Try WAV, MP3, M4A, FLAC, OGG, or MP4, or convert the file with the Video Converter first.',
+      message: "This browser could not decode that file as audio.",
+      fix: "Whisper reads the audio track, so a video file works as long as the browser can decode it. Try WAV, MP3, M4A, FLAC, OGG, or MP4, or convert the file with the Video Converter first.",
     });
   } finally {
     decoding.value = false;
@@ -543,18 +541,18 @@ function onPickFile(e: Event) {
   if (!file) return;
   void readFile(file).then(() => {
     // Reset so picking the same file again still fires a change event.
-    picker.value = '';
+    picker.value = "";
   });
 }
 
 function clearFile() {
   audio.value = null;
   duration.value = 0;
-  fileName.value = '';
+  fileName.value = "";
   fileSize.value = 0;
   error.value = null;
   resetResult();
-  if (fileInput.value) fileInput.value.value = '';
+  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -577,7 +575,7 @@ function windowCount(sampleCount: number): number {
 function timePrecision(pipe: AsrPipeline): number {
   const chunkLength = pipe.processor?.feature_extractor?.config?.chunk_length;
   const positions = pipe.model?.config?.max_source_positions;
-  if (typeof chunkLength === 'number' && typeof positions === 'number' && positions > 0) {
+  if (typeof chunkLength === "number" && typeof positions === "number" && positions > 0) {
     return chunkLength / positions;
   }
   return 0.02;
@@ -621,10 +619,10 @@ async function transcribe() {
       chunk_length_s: CHUNK_SECONDS,
       stride_length_s: STRIDE_SECONDS,
       return_timestamps: true,
-      task: 'transcribe',
+      task: "transcribe",
       // Omitted rather than set to null when automatic: the pipeline treats a
       // missing language as "detect it".
-      ...(language.value === 'auto' ? {} : { language: language.value }),
+      ...(language.value === "auto" ? {} : { language: language.value }),
       streamer,
     });
 
@@ -639,8 +637,8 @@ async function transcribe() {
     progress.value = 100;
   } catch (e) {
     error.value = describe(e, {
-      message: 'The transcription stopped before it finished.',
-      fix: 'Try the tiny model, a shorter file, or reload the page and load the model again.',
+      message: "The transcription stopped before it finished.",
+      fix: "Try the tiny model, a shorter file, or reload the page and load the model again.",
     });
   } finally {
     running.value = false;
@@ -662,17 +660,17 @@ async function copyTranscript() {
     copiedTimer = window.setTimeout(() => (copied.value = false), 1500);
   } catch (e) {
     error.value = describe(e, {
-      message: 'This browser refused clipboard access.',
-      fix: 'Select the transcript and copy it by hand, or use the download button.',
+      message: "This browser refused clipboard access.",
+      fix: "Select the transcript and copy it by hand, or use the download button.",
     });
   }
 }
 
 function downloadTranscript() {
   if (!transcript.value) return;
-  const type = MIME_FOR_FORMAT[format.value] ?? 'text/plain';
+  const type = MIME_FOR_FORMAT[format.value] ?? "text/plain";
   const url = URL.createObjectURL(new Blob([transcript.value], { type: `${type};charset=utf-8` }));
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = downloadName.value;
   document.body.appendChild(a);
@@ -703,7 +701,7 @@ onUnmounted(() => {
   window.clearInterval(elapsedTimer);
   window.clearTimeout(copiedTimer);
   void disposePipeline();
-  if (audioCtx && audioCtx.state !== 'closed') {
+  if (audioCtx && audioCtx.state !== "closed") {
     audioCtx.close().catch(() => {
       // Closing a context the browser already tore down is not an error worth showing.
     });
@@ -720,9 +718,7 @@ onUnmounted(() => {
       role="status"
       class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
     >
-      <p class="font-medium text-muted-foreground">
-        This browser cannot run the speech model.
-      </p>
+      <p class="font-medium text-muted-foreground">This browser cannot run the speech model.</p>
       <p class="mt-1 text-muted-foreground">
         Transcriber runs Whisper inside this tab, which needs WebAssembly. Use a current version of
         Chrome, Edge, Firefox, or Safari.
@@ -742,12 +738,7 @@ onUnmounted(() => {
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Audio or video
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            :disabled="running"
-            @click="fileInput?.click()"
-          >
+          <Button variant="ghost" size="sm" :disabled="running" @click="fileInput?.click()">
             Open file…
           </Button>
           <input
@@ -756,13 +747,10 @@ onUnmounted(() => {
             class="hidden"
             accept="audio/*,video/*"
             @change="onPickFile"
-          >
+          />
         </div>
 
-        <div
-          v-if="fileName"
-          class="px-3 pt-2 pb-3"
-        >
+        <div v-if="fileName" class="px-3 pt-2 pb-3">
           <span
             class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
@@ -770,14 +758,10 @@ onUnmounted(() => {
             <span class="shrink-0 text-muted-foreground tabular-nums">
               {{ humanSize(fileSize) }}
             </span>
-            <span
-              v-if="decoding"
-              class="shrink-0 text-muted-foreground"
-            >decoding…</span>
-            <span
-              v-else-if="duration > 0"
-              class="shrink-0 text-muted-foreground tabular-nums"
-            >{{ clockLabel(duration) }}</span>
+            <span v-if="decoding" class="shrink-0 text-muted-foreground">decoding…</span>
+            <span v-else-if="duration > 0" class="shrink-0 text-muted-foreground tabular-nums">{{
+              clockLabel(duration)
+            }}</span>
             <button
               v-if="!running"
               type="button"
@@ -790,10 +774,7 @@ onUnmounted(() => {
           </span>
         </div>
 
-        <p
-          v-else
-          class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
-        >
+        <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
           Drop an audio or video file here to turn its speech into text. Whisper reads the audio
           track, so a screen recording works as well as a voice memo. Everything runs in this tab:
           your files and inputs never leave your device.
@@ -811,22 +792,16 @@ onUnmounted(() => {
 
         <p class="text-sm text-muted-foreground">
           The model is downloaded once, {{ currentModel.size }} for the
-          {{ model === 'whisper-tiny' ? 'tiny' : 'base' }} version, and your browser keeps it
+          {{ model === "whisper-tiny" ? "tiny" : "base" }} version, and your browser keeps it
           afterwards, so later visits start it from the cache and work offline. It downloads
           automatically the first time, except on a metered connection.
         </p>
 
-        <p
-          v-if="metered && engineStage === 'idle'"
-          class="text-xs text-muted-foreground"
-        >
+        <p v-if="metered && engineStage === 'idle'" class="text-xs text-muted-foreground">
           Your connection looks metered, so the model waits for you to start it.
         </p>
 
-        <div
-          v-if="engineStage !== 'idle'"
-          class="flex flex-col gap-2"
-        >
+        <div v-if="engineStage !== 'idle'" class="flex flex-col gap-2">
           <div
             class="h-2 overflow-hidden rounded-full bg-background"
             role="progressbar"
@@ -845,20 +820,12 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <Button
-          v-else
-          class="self-start"
-          size="sm"
-          @click="loadModel"
-        >
+        <Button v-else class="self-start" size="sm" @click="loadModel">
           {{ engineButtonLabel }}
         </Button>
       </div>
 
-      <p
-        v-else
-        class="flex items-center gap-1.5 text-xs text-muted-foreground"
-      >
+      <p v-else class="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Check class="size-3.5 text-[var(--positive)]" />
         Speech model ready. It stays loaded for as long as this page is open.
       </p>
@@ -868,28 +835,13 @@ onUnmounted(() => {
         class="flex flex-wrap items-end gap-4 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
       >
         <div class="flex w-52 flex-col gap-1.5">
-          <Label
-            for="asr-model"
-            class="text-xs text-muted-foreground"
-          >Model</Label>
-          <Select
-            :model-value="model"
-            @update:model-value="(v) => (model = String(v))"
-          >
-            <SelectTrigger
-              id="asr-model"
-              size="sm"
-              class="w-full bg-card"
-              :disabled="running"
-            >
+          <Label for="asr-model" class="text-xs text-muted-foreground">Model</Label>
+          <Select :model-value="model" @update:model-value="(v) => (model = String(v))">
+            <SelectTrigger id="asr-model" size="sm" class="w-full bg-card" :disabled="running">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="item in MODELS"
-                :key="item.id"
-                :value="item.id"
-              >
+              <SelectItem v-for="item in MODELS" :key="item.id" :value="item.id">
                 {{ item.label }}
               </SelectItem>
             </SelectContent>
@@ -897,28 +849,13 @@ onUnmounted(() => {
         </div>
 
         <div class="flex w-44 flex-col gap-1.5">
-          <Label
-            for="asr-language"
-            class="text-xs text-muted-foreground"
-          >Language</Label>
-          <Select
-            :model-value="language"
-            @update:model-value="(v) => (language = String(v))"
-          >
-            <SelectTrigger
-              id="asr-language"
-              size="sm"
-              class="w-full bg-card"
-              :disabled="running"
-            >
+          <Label for="asr-language" class="text-xs text-muted-foreground">Language</Label>
+          <Select :model-value="language" @update:model-value="(v) => (language = String(v))">
+            <SelectTrigger id="asr-language" size="sm" class="w-full bg-card" :disabled="running">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="item in LANGUAGES"
-                :key="item.value"
-                :value="item.value"
-              >
+              <SelectItem v-for="item in LANGUAGES" :key="item.value" :value="item.value">
                 {{ item.label }}
               </SelectItem>
             </SelectContent>
@@ -926,34 +863,16 @@ onUnmounted(() => {
         </div>
 
         <div class="flex w-40 flex-col gap-1.5">
-          <Label
-            for="asr-format"
-            class="text-xs text-muted-foreground"
-          >Output format</Label>
-          <Select
-            :model-value="format"
-            @update:model-value="(v) => (format = String(v))"
-          >
-            <SelectTrigger
-              id="asr-format"
-              size="sm"
-              class="w-full bg-card"
-            >
+          <Label for="asr-format" class="text-xs text-muted-foreground">Output format</Label>
+          <Select :model-value="format" @update:model-value="(v) => (format = String(v))">
+            <SelectTrigger id="asr-format" size="sm" class="w-full bg-card">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="text">
-                Plain text
-              </SelectItem>
-              <SelectItem value="srt">
-                SRT subtitles
-              </SelectItem>
-              <SelectItem value="vtt">
-                WebVTT subtitles
-              </SelectItem>
-              <SelectItem value="json">
-                JSON with timings
-              </SelectItem>
+              <SelectItem value="text"> Plain text </SelectItem>
+              <SelectItem value="srt"> SRT subtitles </SelectItem>
+              <SelectItem value="vtt"> WebVTT subtitles </SelectItem>
+              <SelectItem value="json"> JSON with timings </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -965,37 +884,24 @@ onUnmounted(() => {
             :disabled="format !== 'text'"
             @update:model-value="(v) => (timestamps = Boolean(v))"
           />
-          <Label
-            for="asr-timestamps"
-            class="text-xs text-muted-foreground"
-          >Timestamps in plain text</Label>
+          <Label for="asr-timestamps" class="text-xs text-muted-foreground"
+            >Timestamps in plain text</Label
+          >
         </div>
       </div>
 
       <!-- Run controls -->
       <div class="flex flex-wrap items-center gap-3">
-        <Button
-          :disabled="!canTranscribe"
-          @click="transcribe"
-        >
-          {{ running ? 'Transcribing…' : 'Transcribe' }}
+        <Button :disabled="!canTranscribe" @click="transcribe">
+          {{ running ? "Transcribing…" : "Transcribe" }}
         </Button>
-        <span
-          v-if="running"
-          class="font-mono text-xs text-muted-foreground tabular-nums"
-        >
+        <span v-if="running" class="font-mono text-xs text-muted-foreground tabular-nums">
           {{ progress }}% · {{ clockLabel(elapsed) }} elapsed
         </span>
-        <span
-          v-else-if="engineStage !== 'ready'"
-          class="text-xs text-muted-foreground"
-        >
+        <span v-else-if="engineStage !== 'ready'" class="text-xs text-muted-foreground">
           Load the speech model first.
         </span>
-        <span
-          v-else-if="!audio"
-          class="text-xs text-muted-foreground"
-        >
+        <span v-else-if="!audio" class="text-xs text-muted-foreground">
           Add a file to transcribe.
         </span>
       </div>
@@ -1024,19 +930,13 @@ onUnmounted(() => {
         <p class="font-medium text-destructive">
           {{ error.message }}
         </p>
-        <p
-          v-if="error.fix"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="error.fix" class="mt-1 text-muted-foreground">
           {{ error.fix }}
         </p>
       </div>
 
       <!-- Live text while the model works -->
-      <div
-        v-if="running"
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      >
+      <div v-if="running" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
         <div class="px-3 pt-2">
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Coming through now
@@ -1044,38 +944,27 @@ onUnmounted(() => {
         </div>
         <pre
           class="max-h-56 overflow-auto px-3 py-2 font-mono text-xs whitespace-pre-wrap text-muted-foreground"
-        >{{ live || 'Listening to the first window…' }}</pre>
+          >{{ live || "Listening to the first window…" }}</pre>
       </div>
 
       <!-- Output -->
-      <div
-        v-if="transcript"
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      >
+      <div v-if="transcript" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
         <div class="flex items-center justify-between gap-2 px-3 pt-2">
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Transcript
           </span>
           <div class="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              @click="copyTranscript"
-            >
-              {{ copied ? 'Copied' : 'Copy' }}
+            <Button variant="ghost" size="sm" @click="copyTranscript">
+              {{ copied ? "Copied" : "Copy" }}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              @click="downloadTranscript"
-            >
+            <Button variant="outline" size="sm" @click="downloadTranscript">
               Download {{ downloadName }}
             </Button>
           </div>
         </div>
-        <pre
-          class="max-h-[420px] overflow-auto px-3 py-2 font-mono text-sm whitespace-pre-wrap"
-        >{{ transcript }}</pre>
+        <pre class="max-h-[420px] overflow-auto px-3 py-2 font-mono text-sm whitespace-pre-wrap">{{
+          transcript
+        }}</pre>
       </div>
 
       <div
@@ -1090,20 +979,20 @@ onUnmounted(() => {
       <!-- Notes -->
       <div class="flex flex-col gap-1.5 text-xs text-muted-foreground">
         <p v-if="tooLong">
-          This file is {{ clockLabel(duration) }} long. Whisper runs one 30 second window at a
-          time, so expect this to take longer than the recording itself, and expect the tab to hold
-          the whole thing in memory while it works. Trimming it into shorter pieces first is
-          usually faster and safer.
+          This file is {{ clockLabel(duration) }} long. Whisper runs one 30 second window at a time,
+          so expect this to take longer than the recording itself, and expect the tab to hold the
+          whole thing in memory while it works. Trimming it into shorter pieces first is usually
+          faster and safer.
         </p>
         <p>
           Audio is resampled to 16 kHz mono, which is what Whisper was trained on, then read in 30
-          second windows with a 5 second overlap so words on a seam survive. Timings are accurate
-          to about a second.
+          second windows with a 5 second overlap so words on a seam survive. Timings are accurate to
+          about a second.
         </p>
         <p>
           Inference runs in WebAssembly, which is roughly real time with the tiny model on a laptop
-          and slower with base. The model files come from this site and the transcription happens
-          in your tab: your files and inputs never leave your device.
+          and slower with base. The model files come from this site and the transcription happens in
+          your tab: your files and inputs never leave your device.
         </p>
       </div>
     </template>

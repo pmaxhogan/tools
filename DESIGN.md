@@ -24,6 +24,7 @@ anchors that are known to pass AA (light: `#5B4BD6` on white; dark: `#8A79F5`
 with the dark foreground).
 
 **Core rule: elevation is expressed differently per theme.**
+
 - Light: shadow does the lifting. Borders are hairline, nearly invisible.
 - Dark: shadows are useless on a dark field, so elevation is surface-lightness
   steps (bg to surface to surface-2) reinforced by a border lighter than the
@@ -34,18 +35,18 @@ with the dark foreground).
 Defined in `global.css` on `:root` (light) and `.dark`. Key mappings to the
 shadcn variable set:
 
-| Token | Light | Dark | Used for |
-|---|---|---|---|
-| `--background` | `#F6F4F1` warm paper | `#141311` warm charcoal | page field |
-| `--card` | `#FFFFFF` | `#1D1B18` | raised cards, panes |
-| `--popover` | `#FFFFFF` | `#252220` | menus, palette (highest layer) |
-| `--secondary` / `--muted` | `#F0EDE8` | `#252220` | inset wells, secondary fills |
-| `--accent` | `#F3F0EB` | `#2B2825` | hover fills for ghost controls |
-| `--primary` | `#5B4BD6` violet | `#8A79F5` lifted violet | primary actions, links, active |
-| `--border` | `#E7E2DA` | `#302C27` | hairlines |
-| `--input` | `#D8D1C6` | `#403A33` | input rest-state border |
-| `--ring` | `#5B4BD6` | `#8A79F5` | focus ring |
-| `--positive` | `#2F7D5B` | `#63C79B` | copied / success states |
+| Token                     | Light                | Dark                    | Used for                       |
+| ------------------------- | -------------------- | ----------------------- | ------------------------------ |
+| `--background`            | `#F6F4F1` warm paper | `#141311` warm charcoal | page field                     |
+| `--card`                  | `#FFFFFF`            | `#1D1B18`               | raised cards, panes            |
+| `--popover`               | `#FFFFFF`            | `#252220`               | menus, palette (highest layer) |
+| `--secondary` / `--muted` | `#F0EDE8`            | `#252220`               | inset wells, secondary fills   |
+| `--accent`                | `#F3F0EB`            | `#2B2825`               | hover fills for ghost controls |
+| `--primary`               | `#5B4BD6` violet     | `#8A79F5` lifted violet | primary actions, links, active |
+| `--border`                | `#E7E2DA`            | `#302C27`               | hairlines                      |
+| `--input`                 | `#D8D1C6`            | `#403A33`               | input rest-state border        |
+| `--ring`                  | `#5B4BD6`            | `#8A79F5`               | focus ring                     |
+| `--positive`              | `#2F7D5B`            | `#63C79B`               | copied / success states        |
 
 Never pure `#fff` as a page background; white is reserved for raised surfaces
 so cards read as lifted. Violet is the brand color and the only saturated hue in
@@ -57,17 +58,17 @@ bolder-brand direction above, but the warm neutrals still own the field.
 Defined on `:root` and `.dark` in `global.css`, safe for any panel or island to
 consume:
 
-| Token | Purpose |
-|---|---|
-| `--primary-hover` / `--primary-active` | solid-violet hover and pressed steps |
-| `--brand-2` | the second, lighter violet stop for gradients |
-| `--brand-accent` | a brighter violet reserved for glows |
-| `--grad-brand` | the standard two-stop violet gradient (buttons, active toggles, slider fill, logo mark) |
-| `--grad-brand-strong` | a slightly deeper variant for hover on gradient surfaces |
-| `--grad-brand-soft` | a low-saturation violet gradient for soft fills |
-| `--brand-glow` | radial glow for hero backgrounds (`bg-[image:var(--brand-glow)]`) |
-| `--brand-band` | vertical wash for tool-page header bands |
-| `--brand-hairline` | translucent violet for hover borders, rings, and slider outline |
+| Token                                  | Purpose                                                                                 |
+| -------------------------------------- | --------------------------------------------------------------------------------------- |
+| `--primary-hover` / `--primary-active` | solid-violet hover and pressed steps                                                    |
+| `--brand-2`                            | the second, lighter violet stop for gradients                                           |
+| `--brand-accent`                       | a brighter violet reserved for glows                                                    |
+| `--grad-brand`                         | the standard two-stop violet gradient (buttons, active toggles, slider fill, logo mark) |
+| `--grad-brand-strong`                  | a slightly deeper variant for hover on gradient surfaces                                |
+| `--grad-brand-soft`                    | a low-saturation violet gradient for soft fills                                         |
+| `--brand-glow`                         | radial glow for hero backgrounds (`bg-[image:var(--brand-glow)]`)                       |
+| `--brand-band`                         | vertical wash for tool-page header bands                                                |
+| `--brand-hairline`                     | translucent violet for hover borders, rings, and slider outline                         |
 
 Usage in Tailwind is via arbitrary values, e.g. `bg-[image:var(--grad-brand)]`,
 `ring-[color:var(--brand-hairline)]`; none are mapped as `--color-*` utilities.
@@ -76,15 +77,15 @@ Usage in Tailwind is via arbitrary values, e.g. `bg-[image:var(--grad-brand)]`,
 
 Geist (text) and Geist Mono (values), self-hosted, variable weight.
 
-| Role | Size/leading | Weight | Notes |
-|---|---|---|---|
-| display | 36/1.12, -0.022em | 600 | tool title on its page |
-| h2 | 22/1.27, -0.014em | 600 | section headings |
-| h3 | 17/1.35 | 600 | card titles, FAQ questions |
-| body | 15/1.6 | 400 | default UI and prose |
-| small | 13.5/1.5 | 400 | descriptions, meta |
-| micro | 12/1.35, +0.04em, uppercase | 600 | eyebrow/category labels |
-| mono | 14/1.5 | 450 | values, timestamps, code |
+| Role    | Size/leading                | Weight | Notes                      |
+| ------- | --------------------------- | ------ | -------------------------- |
+| display | 36/1.12, -0.022em           | 600    | tool title on its page     |
+| h2      | 22/1.27, -0.014em           | 600    | section headings           |
+| h3      | 17/1.35                     | 600    | card titles, FAQ questions |
+| body    | 15/1.6                      | 400    | default UI and prose       |
+| small   | 13.5/1.5                    | 400    | descriptions, meta         |
+| micro   | 12/1.35, +0.04em, uppercase | 600    | eyebrow/category labels    |
+| mono    | 14/1.5                      | 450    | values, timestamps, code   |
 
 Prose measure capped at 68ch. Anything numeric that updates live gets
 `font-variant-numeric: tabular-nums`.
@@ -105,7 +106,7 @@ Prose measure capped at 68ch. Anything numeric that updates live gets
 ## Focus and motion
 
 - `:focus-visible` only. One rule everywhere: `outline: 2px solid var(--ring);
-  outline-offset: 2px` plus a soft `--accent-soft` halo. Composite controls
+outline-offset: 2px` plus a soft `--accent-soft` halo. Composite controls
   move the ring to the wrapper via `:focus-within`.
 - Motion: 120ms ease-out for color, 160ms `cubic-bezier(.2,.7,.3,1)` for
   transform/shadow. Card hover lift is translateY(-2px) plus one shadow step.

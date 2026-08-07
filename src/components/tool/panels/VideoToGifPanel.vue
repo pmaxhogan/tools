@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { computed, onUnmounted, reactive, ref } from 'vue';
-import type { ToolMeta } from '@/tools/types';
-import type { MediaBuildContext, MediaBuildResult } from '@/lib/ffmpeg';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { computed, onUnmounted, reactive, ref } from "vue";
+import type { ToolMeta } from "@/tools/types";
+import type { MediaBuildContext, MediaBuildResult } from "@/lib/ffmpeg";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import MediaShell from '../MediaShell.vue';
+} from "@/components/ui/select";
+import MediaShell from "../MediaShell.vue";
 import {
   FRAME_WARNING_THRESHOLD,
   buildGifArgs,
@@ -21,7 +21,7 @@ import {
   parseTimeSpec,
   type GifDither,
   type GifPaletteMode,
-} from '@/tools/video-to-gif/index';
+} from "@/tools/video-to-gif/index";
 
 /**
  * Bespoke panel for Video to GIF.
@@ -37,12 +37,12 @@ import {
 defineProps<{ meta: ToolMeta }>();
 
 const opts = reactive({
-  start: '',
-  end: '',
+  start: "",
+  end: "",
   fps: 12,
   width: 480,
-  palette: 'global' as GifPaletteMode,
-  dither: 'sierra2_4a' as GifDither,
+  palette: "global" as GifPaletteMode,
+  dither: "sierra2_4a" as GifDither,
   loop: true,
 });
 
@@ -74,11 +74,11 @@ function onPreviewLoadedMetadata() {
   duration.value = Number.isFinite(d) && (d as number) > 0 ? (d as number) : null;
 }
 
-function useCurrentTime(target: 'start' | 'end') {
+function useCurrentTime(target: "start" | "end") {
   const el = videoEl.value;
   if (!el) return;
   const t = el.currentTime.toFixed(1);
-  if (target === 'start') opts.start = t;
+  if (target === "start") opts.start = t;
   else opts.end = t;
 }
 
@@ -91,15 +91,15 @@ onUnmounted(revokePreview);
 const startSec = computed(() => (opts.start.trim() ? parseTimeSpec(opts.start) : null));
 const endSec = computed(() => (opts.end.trim() ? parseTimeSpec(opts.end) : null));
 
-const startInvalid = computed(() => opts.start.trim() !== '' && startSec.value === null);
-const endInvalid = computed(() => opts.end.trim() !== '' && endSec.value === null);
+const startInvalid = computed(() => opts.start.trim() !== "" && startSec.value === null);
+const endInvalid = computed(() => opts.end.trim() !== "" && endSec.value === null);
 
 const windowBackwards = computed(
   () =>
     endSec.value !== null &&
     !startInvalid.value &&
     !endInvalid.value &&
-    endSec.value <= (startSec.value ?? 0)
+    endSec.value <= (startSec.value ?? 0),
 );
 
 /**
@@ -115,21 +115,21 @@ const frames = computed(() =>
         startSec: startSec.value,
         endSec: endSec.value,
         durationSec: duration.value,
-      })
+      }),
 );
 
 const frameWarning = computed(
-  () => frames.value !== null && frames.value > FRAME_WARNING_THRESHOLD
+  () => frames.value !== null && frames.value > FRAME_WARNING_THRESHOLD,
 );
 
 /** Emptying the number box leaves NaN, which must not reach the readout. */
-const fpsLabel = computed(() => (Number.isFinite(opts.fps) ? String(opts.fps) : '?'));
+const fpsLabel = computed(() => (Number.isFinite(opts.fps) ? String(opts.fps) : "?"));
 
 const frameLine = computed(() => {
   if (frames.value === null) {
     return `Set an end time to see the frame count. At ${fpsLabel.value} frames per second, every second of video is ${fpsLabel.value} frames.`;
   }
-  const count = frames.value.toLocaleString('en-US');
+  const count = frames.value.toLocaleString("en-US");
   if (frameWarning.value) {
     return `About ${count} frames. That is over ${FRAME_WARNING_THRESHOLD}, so this will be slow to encode and large to share. Shorten the range, lower the frame rate, or reduce the width.`;
   }
@@ -142,17 +142,17 @@ const frameLine = computed(() => {
 
 function readText(source: Record<string, unknown>, key: string): string {
   const value = source[key];
-  return typeof value === 'string' ? value.trim() : '';
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function buildArgs(ctx: MediaBuildContext): MediaBuildResult {
-  const startText = readText(ctx.opts, 'start');
+  const startText = readText(ctx.opts, "start");
   const start = startText ? parseTimeSpec(startText) : null;
   if (startText && start === null) {
     return { error: `The start time "${startText}" is not a timestamp.`, fix: TIME_FIX };
   }
 
-  const endText = readText(ctx.opts, 'end');
+  const endText = readText(ctx.opts, "end");
   const end = endText ? parseTimeSpec(endText) : null;
   if (endText && end === null) {
     return { error: `The end time "${endText}" is not a timestamp.`, fix: TIME_FIX };
@@ -164,8 +164,9 @@ function buildArgs(ctx: MediaBuildContext): MediaBuildResult {
     endSec: end,
     fps: Number(ctx.opts.fps),
     width: Number(ctx.opts.width),
-    paletteMode: ctx.opts.palette === 'perframe' ? 'perframe' : 'global',
-    dither: ctx.opts.dither === 'bayer' ? 'bayer' : ctx.opts.dither === 'none' ? 'none' : 'sierra2_4a',
+    paletteMode: ctx.opts.palette === "perframe" ? "perframe" : "global",
+    dither:
+      ctx.opts.dither === "bayer" ? "bayer" : ctx.opts.dither === "none" ? "none" : "sierra2_4a",
     loop: Boolean(ctx.opts.loop),
   });
 }
@@ -174,7 +175,7 @@ function buildArgs(ctx: MediaBuildContext): MediaBuildResult {
 /* control binding                                                   */
 /* ---------------------------------------------------------------- */
 
-function setNumber(key: 'fps' | 'width', value: unknown) {
+function setNumber(key: "fps" | "width", value: unknown) {
   const n = Number(value);
   // An emptied box stays NaN on purpose: buildGifArgs then explains the range
   // instead of the panel silently substituting a value nobody chose.
@@ -220,10 +221,7 @@ function setNumber(key: 'fps' | 'width', value: unknown) {
           </span>
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-32 flex-col gap-1.5">
-              <Label
-                for="gif-start"
-                class="text-xs text-muted-foreground"
-              >Start</Label>
+              <Label for="gif-start" class="text-xs text-muted-foreground">Start</Label>
               <Input
                 id="gif-start"
                 v-model="opts.start"
@@ -244,10 +242,7 @@ function setNumber(key: 'fps' | 'width', value: unknown) {
           </div>
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-32 flex-col gap-1.5">
-              <Label
-                for="gif-end"
-                class="text-xs text-muted-foreground"
-              >End</Label>
+              <Label for="gif-end" class="text-xs text-muted-foreground">End</Label>
               <Input
                 id="gif-end"
                 v-model="opts.end"
@@ -270,17 +265,11 @@ function setNumber(key: 'fps' | 'width', value: unknown) {
             Seconds ("12.5"), mm:ss ("1:20"), or hh:mm:ss ("0:01:20.500"). Leave a box empty to
             start at the first frame or run to the end of the clip.
           </p>
-          <p
-            v-if="startInvalid || endInvalid"
-            class="text-xs text-destructive"
-          >
-            {{ startInvalid ? 'The start time' : 'The end time' }} is not a timestamp this tool can
+          <p v-if="startInvalid || endInvalid" class="text-xs text-destructive">
+            {{ startInvalid ? "The start time" : "The end time" }} is not a timestamp this tool can
             read.
           </p>
-          <p
-            v-else-if="windowBackwards"
-            class="text-xs text-destructive"
-          >
+          <p v-else-if="windowBackwards" class="text-xs text-destructive">
             The end time has to come after the start time.
           </p>
         </div>
@@ -292,10 +281,7 @@ function setNumber(key: 'fps' | 'width', value: unknown) {
           </span>
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-32 flex-col gap-1.5">
-              <Label
-                for="gif-fps"
-                class="text-xs text-muted-foreground"
-              >Frames per second</Label>
+              <Label for="gif-fps" class="text-xs text-muted-foreground">Frames per second</Label>
               <Input
                 id="gif-fps"
                 type="number"
@@ -307,10 +293,7 @@ function setNumber(key: 'fps' | 'width', value: unknown) {
               />
             </div>
             <div class="flex w-32 flex-col gap-1.5">
-              <Label
-                for="gif-width"
-                class="text-xs text-muted-foreground"
-              >Width in pixels</Label>
+              <Label for="gif-width" class="text-xs text-muted-foreground">Width in pixels</Label>
               <Input
                 id="gif-width"
                 type="number"
@@ -328,10 +311,7 @@ function setNumber(key: 'fps' | 'width', value: unknown) {
                 :model-value="opts.loop"
                 @update:model-value="(v) => (opts.loop = Boolean(v))"
               />
-              <Label
-                for="gif-loop"
-                class="text-xs text-muted-foreground"
-              >Loop forever</Label>
+              <Label for="gif-loop" class="text-xs text-muted-foreground">Loop forever</Label>
             </div>
           </div>
           <p
@@ -349,57 +329,33 @@ function setNumber(key: 'fps' | 'width', value: unknown) {
           </span>
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex w-56 flex-col gap-1.5">
-              <Label
-                for="gif-palette"
-                class="text-xs text-muted-foreground"
-              >Palette</Label>
+              <Label for="gif-palette" class="text-xs text-muted-foreground">Palette</Label>
               <Select
                 :model-value="opts.palette"
                 @update:model-value="(v) => (opts.palette = String(v) as GifPaletteMode)"
               >
-                <SelectTrigger
-                  id="gif-palette"
-                  size="sm"
-                  class="w-full bg-card"
-                >
+                <SelectTrigger id="gif-palette" size="sm" class="w-full bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="global">
-                    One palette for the whole clip
-                  </SelectItem>
-                  <SelectItem value="perframe">
-                    A new palette on every frame
-                  </SelectItem>
+                  <SelectItem value="global"> One palette for the whole clip </SelectItem>
+                  <SelectItem value="perframe"> A new palette on every frame </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div class="flex w-56 flex-col gap-1.5">
-              <Label
-                for="gif-dither"
-                class="text-xs text-muted-foreground"
-              >Dithering</Label>
+              <Label for="gif-dither" class="text-xs text-muted-foreground">Dithering</Label>
               <Select
                 :model-value="opts.dither"
                 @update:model-value="(v) => (opts.dither = String(v) as GifDither)"
               >
-                <SelectTrigger
-                  id="gif-dither"
-                  size="sm"
-                  class="w-full bg-card"
-                >
+                <SelectTrigger id="gif-dither" size="sm" class="w-full bg-card">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sierra2_4a">
-                    Sierra2 4a (smooth gradients)
-                  </SelectItem>
-                  <SelectItem value="bayer">
-                    Bayer (patterned, smaller file)
-                  </SelectItem>
-                  <SelectItem value="none">
-                    None (flat bands, sharpest text)
-                  </SelectItem>
+                  <SelectItem value="sierra2_4a"> Sierra2 4a (smooth gradients) </SelectItem>
+                  <SelectItem value="bayer"> Bayer (patterned, smaller file) </SelectItem>
+                  <SelectItem value="none"> None (flat bands, sharpest text) </SelectItem>
                 </SelectContent>
               </Select>
             </div>

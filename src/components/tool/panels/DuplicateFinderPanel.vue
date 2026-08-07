@@ -20,11 +20,11 @@
  * strategies and the suggested deletions all come from the pure logic layer in
  * src/tools/duplicate-finder/index.ts; this file renders what it returns.
  */
-import { computed, onBeforeUnmount, ref, shallowRef } from 'vue';
-import { Search, Trash2, TriangleAlert } from 'lucide-vue-next';
-import type { ToolMeta } from '@/tools/types';
-import { ToolError } from '@/tools/types';
-import FsShell from '../FsShell.vue';
+import { computed, onBeforeUnmount, ref, shallowRef } from "vue";
+import { Search, Trash2, TriangleAlert } from "lucide-vue-next";
+import type { ToolMeta } from "@/tools/types";
+import { ToolError } from "@/tools/types";
+import FsShell from "../FsShell.vue";
 import {
   hashFile,
   readFileBytes,
@@ -33,24 +33,24 @@ import {
   type FsFileEntry,
   type FsScan,
   type WriteOp,
-} from '@/lib/fs-access';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+} from "@/lib/fs-access";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 defineProps<{ meta: ToolMeta }>();
 
-type DupeLogic = typeof import('@/tools/duplicate-finder/index');
-type DuplicateGroup = import('@/tools/duplicate-finder/index').DuplicateGroup;
-type HashPlan = import('@/tools/duplicate-finder/index').HashPlan;
-type KeepStrategy = import('@/tools/duplicate-finder/index').KeepStrategy;
+type DupeLogic = typeof import("@/tools/duplicate-finder/index");
+type DuplicateGroup = import("@/tools/duplicate-finder/index").DuplicateGroup;
+type HashPlan = import("@/tools/duplicate-finder/index").HashPlan;
+type KeepStrategy = import("@/tools/duplicate-finder/index").KeepStrategy;
 
 /** The slot props FsShell hands its controls slot. */
 interface FsSlot {
@@ -65,7 +65,7 @@ interface FsSlot {
 /** Loaded on the first scan rather than on page load, then cached. */
 let logicPromise: Promise<DupeLogic> | null = null;
 function loadLogic(): Promise<DupeLogic> {
-  logicPromise ??= import('@/tools/duplicate-finder/index');
+  logicPromise ??= import("@/tools/duplicate-finder/index");
   return logicPromise;
 }
 
@@ -89,7 +89,7 @@ const hasSearched = ref(false);
 /** Candidates whose hash failed, usually a file that moved mid run. */
 const failedHashes = ref<{ path: string; reason: string }[]>([]);
 
-const keepStrategy = ref<KeepStrategy>('shallowest');
+const keepStrategy = ref<KeepStrategy>("shallowest");
 /** Keeper paths a person chose by hand, keyed by group hash. */
 const keeperOverrides = ref<Record<string, string>>({});
 /** Group hashes ticked for deletion. Nothing is ticked by default. */
@@ -106,11 +106,11 @@ const reclaimed = ref<{ files: number; bytes: number; failed: number } | null>(n
 const error = ref<{ message: string; fix?: string } | null>(null);
 
 const KEEP_CHOICES: { value: KeepStrategy; label: string }[] = [
-  { value: 'shallowest', label: 'Closest to the top folder' },
-  { value: 'first-alpha', label: 'First by path (A to Z)' },
-  { value: 'shortest-path', label: 'Shortest path' },
-  { value: 'newest', label: 'Newest file' },
-  { value: 'oldest', label: 'Oldest file' },
+  { value: "shallowest", label: "Closest to the top folder" },
+  { value: "first-alpha", label: "First by path (A to Z)" },
+  { value: "shortest-path", label: "Shortest path" },
+  { value: "newest", label: "Newest file" },
+  { value: "oldest", label: "Oldest file" },
 ];
 
 /* ---------------------------------------------------------------- */
@@ -120,7 +120,7 @@ const KEEP_CHOICES: { value: KeepStrategy; label: string }[] = [
 function humanSize(bytes: number): string {
   const n = Math.max(0, Math.round(bytes));
   if (n < 1024) return `${n} B`;
-  const units = ['KB', 'MB', 'GB', 'TB'];
+  const units = ["KB", "MB", "GB", "TB"];
   let value = n / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -135,11 +135,11 @@ function plural(count: number, one: string, many: string): string {
 }
 
 function modifiedOn(entry: FsFileEntry): string {
-  if (!entry.lastModified) return 'date unknown';
+  if (!entry.lastModified) return "date unknown";
   return new Date(entry.lastModified).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 
@@ -157,21 +157,21 @@ function setError(e: unknown) {
 /* ---------------------------------------------------------------- */
 
 const IMAGE_TYPES: Record<string, string> = {
-  png: 'image/png',
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  gif: 'image/gif',
-  webp: 'image/webp',
-  avif: 'image/avif',
-  bmp: 'image/bmp',
-  svg: 'image/svg+xml',
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  avif: "image/avif",
+  bmp: "image/bmp",
+  svg: "image/svg+xml",
 };
 
 const THUMB_MAX_BYTES = 8 * 1024 * 1024;
 const THUMB_LIMIT = 60;
 
 function imageType(path: string): string | null {
-  const dot = path.lastIndexOf('.');
+  const dot = path.lastIndexOf(".");
   if (dot < 0) return null;
   return IMAGE_TYPES[path.slice(dot + 1).toLowerCase()] ?? null;
 }
@@ -255,7 +255,7 @@ async function onScan(next: FsScan) {
 const planLine = computed(() => {
   const mod = logic.value;
   const current = plan.value;
-  if (!mod || !current) return '';
+  if (!mod || !current) return "";
   return mod.describePlan(current);
 });
 
@@ -332,8 +332,8 @@ const realGroups = computed(() =>
   groups.value.filter((group) => group.hash !== logic.value?.EMPTY_FILE_HASH),
 );
 
-const emptyGroup = computed(() =>
-  groups.value.find((group) => group.hash === logic.value?.EMPTY_FILE_HASH) ?? null,
+const emptyGroup = computed(
+  () => groups.value.find((group) => group.hash === logic.value?.EMPTY_FILE_HASH) ?? null,
 );
 
 const visibleGroups = computed(() =>
@@ -347,11 +347,11 @@ function keeperPath(group: DuplicateGroup): string {
   const override = keeperOverrides.value[group.hash];
   if (override && group.files.some((file) => file.path === override)) return override;
   const mod = logic.value;
-  if (!mod) return group.files[0]?.path ?? '';
+  if (!mod) return group.files[0]?.path ?? "";
   try {
     return mod.chooseKeeper(group, keepStrategy.value).path;
   } catch {
-    return group.files[0]?.path ?? '';
+    return group.files[0]?.path ?? "";
   }
 }
 
@@ -402,7 +402,7 @@ const deletionOps = computed<WriteOp[]>(() => {
     const override = keeperOverrides.value[group.hash];
     if (override && group.files.some((file) => file.path === override)) {
       for (const file of group.files) {
-        if (file.path !== override) ops.push({ op: 'delete', path: file.path });
+        if (file.path !== override) ops.push({ op: "delete", path: file.path });
       }
     } else {
       try {
@@ -422,7 +422,7 @@ const deletionBytes = computed(() => {
   }
   let total = 0;
   for (const op of deletionOps.value) {
-    if (op.op === 'delete') total += sizes.get(op.path) ?? 0;
+    if (op.op === "delete") total += sizes.get(op.path) ?? 0;
   }
   return total;
 });
@@ -446,7 +446,7 @@ async function deleteChosen(slot: FsSlot) {
   let bytes = 0;
   let files = 0;
   for (const op of result.done) {
-    if (op.op !== 'delete') continue;
+    if (op.op !== "delete") continue;
     files += 1;
     bytes += sizes.get(op.path) ?? 0;
   }
@@ -464,18 +464,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <FsShell
-    :meta="meta"
-    mode="readwrite"
-    @scan="onScan"
-  >
+  <FsShell :meta="meta" mode="readwrite" @scan="onScan">
     <template #empty>
       <p class="text-sm text-muted-foreground">
-        Pick a folder and this looks for files that hold exactly the same bytes anywhere inside
-        it, whatever they are called. It reads names and sizes first, then hashes only the files
-        that share a size with another file, because two files cannot hold the same contents
-        unless they hold the same number of bytes. Nothing is deleted until you choose which copy
-        to keep and confirm.
+        Pick a folder and this looks for files that hold exactly the same bytes anywhere inside it,
+        whatever they are called. It reads names and sizes first, then hashes only the files that
+        share a size with another file, because two files cannot hold the same contents unless they
+        hold the same number of bytes. Nothing is deleted until you choose which copy to keep and
+        confirm.
       </p>
     </template>
 
@@ -500,20 +496,10 @@ onBeforeUnmount(() => {
             <Search class="size-3.5" />
             Find duplicates
           </Button>
-          <Button
-            v-if="hashing"
-            variant="outline"
-            size="sm"
-            @click="stopHashing"
-          >
-            Stop
-          </Button>
+          <Button v-if="hashing" variant="outline" size="sm" @click="stopHashing"> Stop </Button>
         </div>
 
-        <div
-          v-if="hashing"
-          class="flex flex-col gap-2"
-        >
+        <div v-if="hashing" class="flex flex-col gap-2">
           <div
             class="h-2 overflow-hidden rounded-full bg-card"
             role="progressbar"
@@ -532,13 +518,10 @@ onBeforeUnmount(() => {
           </p>
         </div>
 
-        <p
-          v-if="plan.unreadable.length"
-          class="text-xs text-muted-foreground"
-        >
-          {{ plural(plan.unreadable.length, 'file', 'files') }} could not be opened during the
-          scan, so nothing is known about their contents. They are left out of every group rather
-          than treated as empty.
+        <p v-if="plan.unreadable.length" class="text-xs text-muted-foreground">
+          {{ plural(plan.unreadable.length, "file", "files") }} could not be opened during the scan,
+          so nothing is known about their contents. They are left out of every group rather than
+          treated as empty.
         </p>
       </div>
 
@@ -549,10 +532,10 @@ onBeforeUnmount(() => {
           class="flex flex-wrap items-baseline gap-x-4 gap-y-1 rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]"
         >
           <span class="text-sm font-medium">
-            {{ plural(summary.groupCount, 'set of duplicates', 'sets of duplicates') }}
+            {{ plural(summary.groupCount, "set of duplicates", "sets of duplicates") }}
           </span>
           <span class="text-sm text-muted-foreground tabular-nums">
-            {{ plural(summary.duplicateFiles, 'extra copy', 'extra copies') }}
+            {{ plural(summary.duplicateFiles, "extra copy", "extra copies") }}
           </span>
           <span class="text-sm text-muted-foreground tabular-nums">
             {{ summary.reclaimableHuman }} reclaimable
@@ -564,9 +547,8 @@ onBeforeUnmount(() => {
           role="status"
           class="rounded-[10px] bg-secondary px-3 py-2 text-sm text-muted-foreground shadow-[var(--sh-inset)]"
         >
-          No two files in this folder hold the same bytes. Every candidate that shared a size
-          turned out to have different contents, which is exactly what a size collision usually
-          is.
+          No two files in this folder hold the same bytes. Every candidate that shared a size turned
+          out to have different contents, which is exactly what a size collision usually is.
         </p>
 
         <!-- Keep rule and view options -->
@@ -575,19 +557,9 @@ onBeforeUnmount(() => {
           class="flex flex-wrap items-end gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
         >
           <div class="flex w-56 flex-col gap-1.5">
-            <Label
-              for="dupe-keep"
-              class="text-xs text-muted-foreground"
-            >Keep which copy</Label>
-            <Select
-              :model-value="keepStrategy"
-              @update:model-value="onStrategyChange"
-            >
-              <SelectTrigger
-                id="dupe-keep"
-                size="sm"
-                class="w-full bg-card"
-              >
+            <Label for="dupe-keep" class="text-xs text-muted-foreground">Keep which copy</Label>
+            <Select :model-value="keepStrategy" @update:model-value="onStrategyChange">
+              <SelectTrigger id="dupe-keep" size="sm" class="w-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -602,26 +574,10 @@ onBeforeUnmount(() => {
             </Select>
           </div>
           <div class="flex flex-wrap items-center gap-2 pb-0.5">
-            <Button
-              variant="outline"
-              size="sm"
-              @click="chooseAll"
-            >
-              Tick every set
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              @click="chooseNone"
-            >
-              Clear ticks
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              @click="togglePreviews(fs.handle)"
-            >
-              {{ showPreviews ? 'Hide previews' : 'Show image previews' }}
+            <Button variant="outline" size="sm" @click="chooseAll"> Tick every set </Button>
+            <Button variant="ghost" size="sm" @click="chooseNone"> Clear ticks </Button>
+            <Button variant="ghost" size="sm" @click="togglePreviews(fs.handle)">
+              {{ showPreviews ? "Hide previews" : "Show image previews" }}
             </Button>
           </div>
         </div>
@@ -636,9 +592,8 @@ onBeforeUnmount(() => {
           <div class="flex flex-wrap items-start justify-between gap-2">
             <div class="min-w-0">
               <p class="text-sm font-medium tabular-nums">
-                {{ plural(group.files.length, 'copy', 'copies') }} ·
-                {{ humanSize(group.size) }} each ·
-                {{ humanSize(group.wastedBytes) }} wasted
+                {{ plural(group.files.length, "copy", "copies") }} ·
+                {{ humanSize(group.size) }} each · {{ humanSize(group.wastedBytes) }} wasted
               </p>
               <p class="truncate font-mono text-xs text-muted-foreground">
                 sha256 {{ shortHash(group.hash) }}
@@ -650,10 +605,7 @@ onBeforeUnmount(() => {
                 :model-value="isChosen(group)"
                 @update:model-value="(v) => toggleGroup(group, Boolean(v))"
               />
-              <Label
-                :for="`dupe-pick-${group.hash}`"
-                class="text-xs text-muted-foreground"
-              >
+              <Label :for="`dupe-pick-${group.hash}`" class="text-xs text-muted-foreground">
                 Delete the other {{ group.files.length - 1 }} in this set
               </Label>
             </div>
@@ -664,11 +616,7 @@ onBeforeUnmount(() => {
               v-for="file in group.files"
               :key="file.path"
               class="flex items-center gap-2 rounded-[6px] px-1 py-1"
-              :class="
-                isChosen(group) && file.path !== keeperPath(group)
-                  ? 'bg-destructive/5'
-                  : ''
-              "
+              :class="isChosen(group) && file.path !== keeperPath(group) ? 'bg-destructive/5' : ''"
             >
               <input
                 :id="`keep-${group.hash}-${file.path}`"
@@ -678,14 +626,14 @@ onBeforeUnmount(() => {
                 :value="file.path"
                 :checked="keeperPath(group) === file.path"
                 @change="setKeeper(group, file.path)"
-              >
+              />
               <img
                 v-if="showPreviews && thumbs.get(file.path)"
                 :src="thumbs.get(file.path)"
                 :alt="`Preview of ${file.path}`"
                 class="size-8 shrink-0 rounded-[4px] border object-cover"
                 loading="lazy"
-              >
+              />
               <label
                 :for="`keep-${group.hash}-${file.path}`"
                 class="min-w-0 flex-1 cursor-pointer truncate font-mono text-xs"
@@ -704,7 +652,7 @@ onBeforeUnmount(() => {
                     : 'text-muted-foreground'
                 "
               >
-                {{ keeperPath(group) === file.path ? 'keep' : 'delete' }}
+                {{ keeperPath(group) === file.path ? "keep" : "delete" }}
               </span>
             </li>
           </ul>
@@ -714,11 +662,7 @@ onBeforeUnmount(() => {
           v-if="!showAllGroups && realGroups.length > visibleGroups.length"
           class="flex justify-center"
         >
-          <Button
-            variant="outline"
-            size="sm"
-            @click="showAllGroups = true"
-          >
+          <Button variant="outline" size="sm" @click="showAllGroups = true">
             Show all {{ realGroups.length.toLocaleString() }} sets
           </Button>
         </div>
@@ -729,7 +673,7 @@ onBeforeUnmount(() => {
           class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]"
         >
           <p class="text-sm font-medium">
-            {{ plural(emptyGroup.files.length, 'empty file', 'empty files') }}
+            {{ plural(emptyGroup.files.length, "empty file", "empty files") }}
           </p>
           <p class="mt-1 text-xs text-muted-foreground">
             {{ emptyGroup.note }}
@@ -743,11 +687,8 @@ onBeforeUnmount(() => {
               {{ file.path }}
             </li>
           </ul>
-          <p
-            v-if="emptyGroup.files.length > 20"
-            class="mt-1 text-xs text-muted-foreground"
-          >
-            and {{ plural(emptyGroup.files.length - 20, 'more', 'more') }}.
+          <p v-if="emptyGroup.files.length > 20" class="mt-1 text-xs text-muted-foreground">
+            and {{ plural(emptyGroup.files.length - 20, "more", "more") }}.
           </p>
         </div>
 
@@ -757,7 +698,7 @@ onBeforeUnmount(() => {
           class="rounded-[10px] border border-[var(--input)] bg-secondary px-3 py-2"
         >
           <p class="text-sm font-medium">
-            {{ plural(plan.sizeOnlyGroups.length, 'set matched', 'sets matched') }} by size only
+            {{ plural(plan.sizeOnlyGroups.length, "set matched", "sets matched") }} by size only
           </p>
           <p class="mt-1 text-xs text-muted-foreground">
             These files are past the 256 MB hashing limit, so their contents were never compared.
@@ -771,24 +712,18 @@ onBeforeUnmount(() => {
               class="font-mono text-xs text-muted-foreground"
             >
               {{ humanSize(sizeGroup[0]?.size ?? 0) }}:
-              {{ sizeGroup.map((f) => f.path).join(', ') }}
+              {{ sizeGroup.map((f) => f.path).join(", ") }}
             </li>
           </ul>
         </div>
 
         <!-- Hashes that failed -->
-        <div
-          v-if="failedHashes.length"
-          class="rounded-[10px] bg-secondary px-3 py-2"
-        >
+        <div v-if="failedHashes.length" class="rounded-[10px] bg-secondary px-3 py-2">
           <p class="text-sm font-medium">
-            {{ plural(failedHashes.length, 'file', 'files') }} could not be read
+            {{ plural(failedHashes.length, "file", "files") }} could not be read
           </p>
           <ul class="mt-1 list-disc pl-4 text-xs text-muted-foreground">
-            <li
-              v-for="failure in failedHashes.slice(0, 8)"
-              :key="failure.path"
-            >
+            <li v-for="failure in failedHashes.slice(0, 8)" :key="failure.path">
               {{ failure.path }}: {{ failure.reason }}
             </li>
           </ul>
@@ -802,16 +737,13 @@ onBeforeUnmount(() => {
           <div class="flex gap-2">
             <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" />
             <div class="text-sm">
-              <p class="font-medium text-destructive">
-                Deleting cannot be undone.
-              </p>
+              <p class="font-medium text-destructive">Deleting cannot be undone.</p>
               <p class="mt-1 text-muted-foreground">
-                This removes {{ plural(deletionOps.length, 'file', 'files') }} and frees about
-                {{ humanSize(deletionBytes) }}. The bytes are gone at that point: the undo file
-                you can download on the next screen only records which paths were deleted, it
-                does not hold their contents and cannot bring them back. Files removed this way
-                do not go to the recycle bin or trash. Read the list on the confirm screen before
-                you accept it.
+                This removes {{ plural(deletionOps.length, "file", "files") }} and frees about
+                {{ humanSize(deletionBytes) }}. The bytes are gone at that point: the undo file you
+                can download on the next screen only records which paths were deleted, it does not
+                hold their contents and cannot bring them back. Files removed this way do not go to
+                the recycle bin or trash. Read the list on the confirm screen before you accept it.
               </p>
             </div>
           </div>
@@ -822,10 +754,7 @@ onBeforeUnmount(() => {
               :model-value="acknowledged"
               @update:model-value="(v) => (acknowledged = Boolean(v))"
             />
-            <Label
-              for="dupe-ack"
-              class="text-sm"
-            >
+            <Label for="dupe-ack" class="text-sm">
               I understand these files cannot be recovered.
             </Label>
           </div>
@@ -838,7 +767,7 @@ onBeforeUnmount(() => {
             @click="deleteChosen(fs as unknown as FsSlot)"
           >
             <Trash2 class="size-3.5" />
-            Delete {{ plural(deletionOps.length, 'duplicate', 'duplicates') }}
+            Delete {{ plural(deletionOps.length, "duplicate", "duplicates") }}
           </Button>
         </div>
       </template>
@@ -850,23 +779,16 @@ onBeforeUnmount(() => {
         class="rounded-[10px] bg-secondary px-3 py-2 text-sm shadow-[var(--sh-inset)]"
       >
         <p class="font-medium">
-          {{ plural(reclaimed.files, 'file deleted', 'files deleted') }},
+          {{ plural(reclaimed.files, "file deleted", "files deleted") }},
           {{ humanSize(reclaimed.bytes) }} reclaimed.
         </p>
-        <p
-          v-if="reclaimed.failed"
-          class="mt-1 text-xs text-muted-foreground"
-        >
-          {{ plural(reclaimed.failed, 'file', 'files') }} could not be deleted and were left
-          alone. The folder has been scanned again, so run the search once more to see what is
-          left.
+        <p v-if="reclaimed.failed" class="mt-1 text-xs text-muted-foreground">
+          {{ plural(reclaimed.failed, "file", "files") }} could not be deleted and were left alone.
+          The folder has been scanned again, so run the search once more to see what is left.
         </p>
-        <p
-          v-else
-          class="mt-1 text-xs text-muted-foreground"
-        >
-          The folder has been scanned again. Run the search once more if you want to check what
-          is left.
+        <p v-else class="mt-1 text-xs text-muted-foreground">
+          The folder has been scanned again. Run the search once more if you want to check what is
+          left.
         </p>
       </div>
 
@@ -879,10 +801,7 @@ onBeforeUnmount(() => {
         <p class="font-medium text-destructive">
           {{ error.message }}
         </p>
-        <p
-          v-if="error.fix"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="error.fix" class="mt-1 text-muted-foreground">
           {{ error.fix }}
         </p>
       </div>

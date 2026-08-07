@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface UuidOpts {
   version: string; // 'v4' | 'v7'
@@ -19,7 +19,7 @@ function bytes(n: number): Uint8Array {
 }
 
 function hex(b: Uint8Array): string {
-  return [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  return [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 
 function format(b: Uint8Array): string {
@@ -49,11 +49,11 @@ export function v7(now = Date.now()): string {
 export function run(_input: undefined, opts: UuidOpts): string {
   const count = Math.floor(opts.count);
   if (!Number.isFinite(count) || count < 1 || count > 1000)
-    throw new ToolError('bad-count', 'Count must be between 1 and 1000.');
+    throw new ToolError("bad-count", "Count must be between 1 and 1000.");
 
-  const gen = opts.version === 'v7' ? v7 : v4;
+  const gen = opts.version === "v7" ? v7 : v4;
   const out = Array.from({ length: count }, () => gen());
-  return (opts.uppercase ? out.map((u) => u.toUpperCase()) : out).join('\n');
+  return (opts.uppercase ? out.map((u) => u.toUpperCase()) : out).join("\n");
 }
 
 export default { run } satisfies ToolLogic<undefined, string, UuidOpts>;

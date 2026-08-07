@@ -1,8 +1,8 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro';
-import SiteHeader from '@/components/SiteHeader.astro';
-import ShareReceiver from '@/components/ShareReceiver.vue';
-import { tools } from '@/tools/registry';
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import ShareReceiver from "@/components/ShareReceiver.vue";
+import { tools } from "@/tools/registry";
 
 /**
  * Landing page for the PWA share target. The manifest points its share action
@@ -13,18 +13,18 @@ import { tools } from '@/tools/registry';
  * bundle stays small. Names and descriptions come from each tool's meta.
  */
 const routable = new Set([
-  'image-redactor',
-  'image-toolbox',
-  'image-to-text',
-  'audio-spectrogram',
-  'audio-trimmer',
-  'video-converter',
-  'video-to-gif',
-  'json-formatter',
-  'data-format-converter',
-  'case-converter',
-  'url-parser',
-  'file-type-identifier',
+  "image-redactor",
+  "image-toolbox",
+  "image-to-text",
+  "audio-spectrogram",
+  "audio-trimmer",
+  "video-converter",
+  "video-to-gif",
+  "json-formatter",
+  "data-format-converter",
+  "case-converter",
+  "url-parser",
+  "file-type-identifier",
 ]);
 
 const catalog = tools

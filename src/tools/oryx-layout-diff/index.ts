@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 import {
   KEYCODE_NAMES,
   MOD_NAMES,
@@ -7,18 +7,18 @@ import {
   MOONLANDER_POSITIONS,
   NONE_TOKENS,
   TRANSPARENT_TOKENS,
-} from './data';
+} from "./data";
 
 /** The line that splits keymap.c A from keymap.c B in the single input box. */
-export const SEPARATOR = '=====';
+export const SEPARATOR = "=====";
 
 /** A Moonlander LAYOUT macro takes exactly this many keycodes. */
 export const MOONLANDER_KEY_COUNT = 72;
 
 /** Canonical spelling every transparent alias collapses to before comparing. */
-const CANONICAL_TRANSPARENT = 'KC_TRANSPARENT';
+const CANONICAL_TRANSPARENT = "KC_TRANSPARENT";
 /** Canonical spelling every "does nothing" alias collapses to. */
-const CANONICAL_NONE = 'KC_NO';
+const CANONICAL_NONE = "KC_NO";
 
 export interface OryxOpts {
   /** List every key, not just the changed ones. */
@@ -39,23 +39,23 @@ export interface OryxOpts {
  * layer names.
  */
 export function stripComments(source: string): string {
-  let out = '';
+  let out = "";
   let i = 0;
   const n = source.length;
   while (i < n) {
     const ch = source[i];
-    const next = i + 1 < n ? source[i + 1] : '';
+    const next = i + 1 < n ? source[i + 1] : "";
 
-    if (ch === '/' && next === '*') {
-      const end = source.indexOf('*/', i + 2);
-      out += ' ';
+    if (ch === "/" && next === "*") {
+      const end = source.indexOf("*/", i + 2);
+      out += " ";
       i = end === -1 ? n : end + 2;
       continue;
     }
-    if (ch === '/' && next === '/') {
+    if (ch === "/" && next === "/") {
       let j = i;
-      while (j < n && source[j] !== '\n') j++;
-      out += ' ';
+      while (j < n && source[j] !== "\n") j++;
+      out += " ";
       i = j;
       continue;
     }
@@ -64,8 +64,8 @@ export function stripComments(source: string): string {
       out += ch;
       let j = i + 1;
       while (j < n) {
-        if (source[j] === '\\') {
-          out += source[j] + (j + 1 < n ? source[j + 1] : '');
+        if (source[j] === "\\") {
+          out += source[j] + (j + 1 < n ? source[j + 1] : "");
           j += 2;
           continue;
         }
@@ -91,24 +91,24 @@ export function stripComments(source: string): string {
 export function splitTopLevel(body: string): string[] {
   const parts: string[] = [];
   let depth = 0;
-  let current = '';
+  let current = "";
   for (let i = 0; i < body.length; i++) {
     const ch = body[i];
-    if (ch === '(' || ch === '[' || ch === '{') depth++;
-    else if (ch === ')' || ch === ']' || ch === '}') depth--;
+    if (ch === "(" || ch === "[" || ch === "{") depth++;
+    else if (ch === ")" || ch === "]" || ch === "}") depth--;
 
-    if (ch === ',' && depth === 0) {
+    if (ch === "," && depth === 0) {
       parts.push(current);
-      current = '';
+      current = "";
       continue;
     }
     current += ch;
   }
   parts.push(current);
 
-  const cleaned = parts.map((part) => part.replace(/\s+/g, ' ').trim());
+  const cleaned = parts.map((part) => part.replace(/\s+/g, " ").trim());
   // A trailing comma before the closing paren yields one empty tail token.
-  while (cleaned.length > 0 && cleaned[cleaned.length - 1] === '') cleaned.pop();
+  while (cleaned.length > 0 && cleaned[cleaned.length - 1] === "") cleaned.pop();
   return cleaned;
 }
 
@@ -116,8 +116,8 @@ export function splitTopLevel(body: string): string[] {
 function matchParen(source: string, open: number): number {
   let depth = 0;
   for (let i = open; i < source.length; i++) {
-    if (source[i] === '(') depth++;
-    else if (source[i] === ')') {
+    if (source[i] === "(") depth++;
+    else if (source[i] === ")") {
       depth--;
       if (depth === 0) return i;
     }
@@ -155,7 +155,7 @@ function parseLayerEnum(source: string, macroKeys: string[]): string[] {
   const candidates: { name: string; body: string }[] = [];
   let match: RegExpExecArray | null;
   while ((match = re.exec(source)) !== null) {
-    candidates.push({ name: match[1] ?? '', body: match[2] });
+    candidates.push({ name: match[1] ?? "", body: match[2] });
   }
 
   const identifierKeys = macroKeys.filter((key) => !/^\d+$/.test(key));
@@ -163,9 +163,9 @@ function parseLayerEnum(source: string, macroKeys: string[]): string[] {
   const parseBody = (body: string): string[] => {
     const names: string[] = [];
     let nextIndex = 0;
-    for (const raw of body.split(',')) {
+    for (const raw of body.split(",")) {
       const entry = raw.trim();
-      if (entry === '') continue;
+      if (entry === "") continue;
       const assign = /^([A-Za-z_]\w*)\s*=\s*(\d+)$/.exec(entry);
       const plain = /^([A-Za-z_]\w*)$/.exec(entry);
       if (assign) {
@@ -206,7 +206,7 @@ function parseLayerEnum(source: string, macroKeys: string[]): string[] {
 
 /** Collapse alias spellings so equal bindings compare equal across sides. */
 export function canonicalToken(token: string): string {
-  const bare = token.replace(/\s+/g, '');
+  const bare = token.replace(/\s+/g, "");
   if (TRANSPARENT_TOKENS.includes(bare)) return CANONICAL_TRANSPARENT;
   if (NONE_TOKENS.includes(bare)) return CANONICAL_NONE;
   return bare;
@@ -235,9 +235,9 @@ export function parseKeymap(source: string, side: string): ParsedKeymap {
 
   if (found.length === 0) {
     throw new ToolError(
-      'no-layers',
+      "no-layers",
       `Layout ${side} has no layer definitions in it.`,
-      'Paste the whole keymap.c from the Download Source zip. The tool looks for lines like [0] = LAYOUT( or [BASE] = LAYOUT_moonlander(.',
+      "Paste the whole keymap.c from the Download Source zip. The tool looks for lines like [0] = LAYOUT( or [BASE] = LAYOUT_moonlander(.",
     );
   }
 
@@ -292,12 +292,12 @@ function layerRef(arg: string, layerNames: string[]): string {
 /** Readable name for a modifier constant, including OR-ed combinations. */
 function modName(arg: string): string {
   return arg
-    .split('|')
+    .split("|")
     .map((part) => {
       const key = part.trim();
       return MOD_NAMES[key] ?? key;
     })
-    .join('+');
+    .join("+");
 }
 
 /**
@@ -306,50 +306,50 @@ function modName(arg: string): string {
  * so custom Oryx macros stay recognisable.
  */
 export function displayKeycode(token: string, layerNames: string[] = []): string {
-  const text = token.replace(/\s+/g, ' ').trim();
-  if (text === '') return '(empty)';
+  const text = token.replace(/\s+/g, " ").trim();
+  if (text === "") return "(empty)";
 
   const canonical = canonicalToken(text);
-  if (canonical === CANONICAL_TRANSPARENT) return 'transparent';
-  if (canonical === CANONICAL_NONE) return 'none';
+  if (canonical === CANONICAL_TRANSPARENT) return "transparent";
+  if (canonical === CANONICAL_NONE) return "none";
 
   const call = /^([A-Za-z_]\w*)\s*\((.*)\)$/s.exec(text);
   if (call) {
     const name = call[1];
     const args = splitTopLevel(call[2]);
-    const arg0 = args[0] ?? '';
-    const arg1 = args[1] ?? '';
+    const arg0 = args[0] ?? "";
+    const arg1 = args[1] ?? "";
 
-    if (name === 'LT' && args.length === 2) {
+    if (name === "LT" && args.length === 2) {
       return `LT ${layerRef(arg0, layerNames)} / ${displayKeycode(arg1, layerNames)}`;
     }
-    if (name === 'MT' && args.length === 2) {
+    if (name === "MT" && args.length === 2) {
       return `${modName(arg0)}-tap / ${displayKeycode(arg1, layerNames)}`;
     }
     if (MOD_TAP_ALIASES[name] && args.length === 1) {
       return `${MOD_TAP_ALIASES[name]}-tap / ${displayKeycode(arg0, layerNames)}`;
     }
-    if (name === 'LM' && args.length === 2) {
+    if (name === "LM" && args.length === 2) {
       return `LM ${layerRef(arg0, layerNames)} + ${modName(arg1)}`;
     }
-    if (['MO', 'TO', 'TG', 'OSL', 'DF', 'TT'].includes(name) && args.length === 1) {
+    if (["MO", "TO", "TG", "OSL", "DF", "TT"].includes(name) && args.length === 1) {
       return `${name} ${layerRef(arg0, layerNames)}`;
     }
-    if (name === 'OSM' && args.length === 1) {
+    if (name === "OSM" && args.length === 1) {
       return `One-shot ${modName(arg0)}`;
     }
-    if (name === 'TD' && args.length === 1) {
+    if (name === "TD" && args.length === 1) {
       return `Tap dance ${arg0.trim()}`;
     }
     if (MOD_WRAPPERS[name] && args.length === 1) {
       return `${MOD_WRAPPERS[name]}+${displayKeycode(arg0, layerNames)}`;
     }
-    return `${name}(${args.join(', ')})`;
+    return `${name}(${args.join(", ")})`;
   }
 
   const known = KEYCODE_NAMES[text];
   if (known !== undefined) return known;
-  if (text.startsWith('KC_') && text.length > 3) return text.slice(3);
+  if (text.startsWith("KC_") && text.length > 3) return text.slice(3);
   return text;
 }
 
@@ -502,7 +502,7 @@ interface Matching {
   pairs: { label: string; a: ParsedLayer; b: ParsedLayer }[];
   onlyA: ParsedLayer[];
   onlyB: ParsedLayer[];
-  matchedBy: 'name' | 'index';
+  matchedBy: "name" | "index";
 }
 
 function matchLayers(a: ParsedLayer[], b: ParsedLayer[]): Matching {
@@ -523,7 +523,7 @@ function matchLayers(a: ParsedLayer[], b: ParsedLayer[]): Matching {
       pairs,
       onlyA: a.filter((layer) => !namesB.has(layer.name)),
       onlyB: b.filter((layer) => !namesA.has(layer.name)),
-      matchedBy: 'name',
+      matchedBy: "name",
     };
   }
 
@@ -535,7 +535,7 @@ function matchLayers(a: ParsedLayer[], b: ParsedLayer[]): Matching {
     const label = a[i].name === b[i].name ? a[i].name : `${a[i].name} vs ${b[i].name}`;
     pairs.push({ label, a: a[i], b: b[i] });
   }
-  return { pairs, onlyA: a.slice(count), onlyB: b.slice(count), matchedBy: 'index' };
+  return { pairs, onlyA: a.slice(count), onlyB: b.slice(count), matchedBy: "index" };
 }
 
 /* ------------------------------------------------------------------ *
@@ -546,12 +546,12 @@ function matchLayers(a: ParsedLayer[], b: ParsedLayer[]): Matching {
 const POSITION_WIDTH = 41;
 
 function pad(text: string): string {
-  return text.length >= POSITION_WIDTH ? `${text}  ` : text.padEnd(POSITION_WIDTH, ' ');
+  return text.length >= POSITION_WIDTH ? `${text}  ` : text.padEnd(POSITION_WIDTH, " ");
 }
 
 function layerList(layers: ParsedLayer[]): string {
-  if (layers.length === 0) return 'none';
-  return layers.map((layer) => layer.name).join(', ');
+  if (layers.length === 0) return "none";
+  return layers.map((layer) => layer.name).join(", ");
 }
 
 function plural(count: number, one: string, many: string): string {
@@ -566,44 +566,46 @@ function renderReport(
   opts: OryxOpts,
 ): string {
   const out: string[] = [];
-  out.push('Oryx layout diff: Moonlander keymap.c A vs keymap.c B');
-  out.push('');
-  out.push(`Layout A: ${plural(a.layers.length, 'layer', 'layers')} (${layerList(a.layers)})`);
-  out.push(`Layout B: ${plural(b.layers.length, 'layer', 'layers')} (${layerList(b.layers)})`);
+  out.push("Oryx layout diff: Moonlander keymap.c A vs keymap.c B");
+  out.push("");
+  out.push(`Layout A: ${plural(a.layers.length, "layer", "layers")} (${layerList(a.layers)})`);
+  out.push(`Layout B: ${plural(b.layers.length, "layer", "layers")} (${layerList(b.layers)})`);
   out.push(`Layers only in B: ${layerList(matching.onlyB)}`);
   out.push(`Layers only in A: ${layerList(matching.onlyA)}`);
   out.push(
-    matching.matchedBy === 'name'
-      ? 'Layers matched by name.'
-      : 'The two files share no layer names, so layers were matched by their order in the file.',
+    matching.matchedBy === "name"
+      ? "Layers matched by name."
+      : "The two files share no layer names, so layers were matched by their order in the file.",
   );
-  out.push('');
+  out.push("");
   out.push(
-    'Positions follow the Moonlander physical layout. Rows run 1 to 5 from the top, columns are counted from the outer edge of each hand inward, so col 1 is the outer pinky column on both hands. Thumb 1 is the large thumb key.',
+    "Positions follow the Moonlander physical layout. Rows run 1 to 5 from the top, columns are counted from the outer edge of each hand inward, so col 1 is the outer pinky column on both hands. Thumb 1 is the large thumb key.",
   );
 
   const warnings = [...a.warnings, ...b.warnings];
   if (warnings.length > 0) {
-    out.push('');
-    out.push('Warnings');
+    out.push("");
+    out.push("Warnings");
     for (const warning of warnings) out.push(`  ${warning}`);
   }
 
   for (const result of results) {
     const { diff, rows } = result;
-    out.push('');
-    const suffix = diff.note ? ` (${diff.note})` : '';
+    out.push("");
+    const suffix = diff.note ? ` (${diff.note})` : "";
     if (diff.changes.length === 0) {
-      out.push(`Layer ${diff.name}: no changes, ${plural(diff.compared, 'key', 'keys')} identical${suffix}`);
+      out.push(
+        `Layer ${diff.name}: no changes, ${plural(diff.compared, "key", "keys")} identical${suffix}`,
+      );
     } else {
       out.push(
-        `Layer ${diff.name}: ${plural(diff.changes.length, 'changed key', 'changed keys')}, ${diff.unchanged} unchanged${suffix}`,
+        `Layer ${diff.name}: ${plural(diff.changes.length, "changed key", "changed keys")}, ${diff.unchanged} unchanged${suffix}`,
       );
     }
 
     const shown = opts.showUnchanged ? rows : rows.filter((row) => row.changed);
     for (const row of shown) {
-      const marker = opts.showUnchanged ? (row.changed ? '* ' : '  ') : '';
+      const marker = opts.showUnchanged ? (row.changed ? "* " : "  ") : "";
       if (row.changed) {
         out.push(`  ${marker}${pad(row.position)}${row.oldName} -> ${row.newName}`);
       } else {
@@ -613,33 +615,35 @@ function renderReport(
   }
 
   for (const layer of matching.onlyB) {
-    out.push('');
+    out.push("");
     out.push(
-      `Layer ${layer.name}: only in layout B, ${plural(layer.tokens.length, 'key', 'keys')}, nothing to compare it against.`,
+      `Layer ${layer.name}: only in layout B, ${plural(layer.tokens.length, "key", "keys")}, nothing to compare it against.`,
     );
   }
   for (const layer of matching.onlyA) {
-    out.push('');
+    out.push("");
     out.push(
-      `Layer ${layer.name}: only in layout A, ${plural(layer.tokens.length, 'key', 'keys')}, nothing to compare it against.`,
+      `Layer ${layer.name}: only in layout A, ${plural(layer.tokens.length, "key", "keys")}, nothing to compare it against.`,
     );
   }
 
   const totalChanged = results.reduce((sum, result) => sum + result.diff.changes.length, 0);
-  out.push('');
-  out.push('Summary');
+  out.push("");
+  out.push("Summary");
   out.push(`  Total changed keys: ${totalChanged}`);
   for (const result of results) {
     out.push(`    ${result.diff.name}: ${result.diff.changes.length}`);
   }
 
   const moves = results.flatMap((result) =>
-    result.diff.moved.map((move) => `    ${move.name}: ${move.from} -> ${move.to} (layer ${result.diff.name})`),
+    result.diff.moved.map(
+      (move) => `    ${move.name}: ${move.from} -> ${move.to} (layer ${result.diff.name})`,
+    ),
   );
-  out.push(`  Moved bindings: ${moves.length === 0 ? 'none' : ''}`.trimEnd());
+  out.push(`  Moved bindings: ${moves.length === 0 ? "none" : ""}`.trimEnd());
   for (const line of moves) out.push(line);
 
-  return out.join('\n');
+  return out.join("\n");
 }
 
 function csvCell(value: string): string {
@@ -654,16 +658,21 @@ function renderCsv(
 ): string {
   const out: string[] = [];
   for (const warning of [...a.warnings, ...b.warnings]) out.push(`# ${warning}`);
-  out.push('position,layer,old,new');
+  out.push("position,layer,old,new");
   for (const result of results) {
     const shown = opts.showUnchanged ? result.rows : result.rows.filter((row) => row.changed);
     for (const row of shown) {
       out.push(
-        [csvCell(row.position), csvCell(result.diff.name), csvCell(row.oldName), csvCell(row.newName)].join(','),
+        [
+          csvCell(row.position),
+          csvCell(result.diff.name),
+          csvCell(row.oldName),
+          csvCell(row.newName),
+        ].join(","),
       );
     }
   }
-  return out.join('\n');
+  return out.join("\n");
 }
 
 /* ------------------------------------------------------------------ *
@@ -671,52 +680,58 @@ function renderCsv(
  * ------------------------------------------------------------------ */
 
 function splitSides(input: string): [string, string] {
-  const lines = input.split('\n');
-  const idx = lines.findIndex((line) => line.replace(/\r$/, '') === SEPARATOR);
+  const lines = input.split("\n");
+  const idx = lines.findIndex((line) => line.replace(/\r$/, "") === SEPARATOR);
   if (idx === -1) {
     throw new ToolError(
-      'missing-separator',
-      'Could not find the ===== separator line between the two keymap.c files.',
-      'Paste the first keymap.c, then a line with just =====, then the second keymap.c.',
+      "missing-separator",
+      "Could not find the ===== separator line between the two keymap.c files.",
+      "Paste the first keymap.c, then a line with just =====, then the second keymap.c.",
     );
   }
-  return [lines.slice(0, idx).join('\n'), lines.slice(idx + 1).join('\n')];
+  return [lines.slice(0, idx).join("\n"), lines.slice(idx + 1).join("\n")];
 }
 
 export function run(input: string, opts: OryxOpts): string {
-  const text = input ?? '';
-  if (text.trim() === '') {
+  const text = input ?? "";
+  if (text.trim() === "") {
     throw new ToolError(
-      'empty-input',
-      'Nothing to compare.',
-      'Paste the keymap.c from one Download Source zip, a line with just =====, then the keymap.c from the other.',
+      "empty-input",
+      "Nothing to compare.",
+      "Paste the keymap.c from one Download Source zip, a line with just =====, then the keymap.c from the other.",
     );
   }
 
   const [rawA, rawB] = splitSides(text);
-  if (rawA.trim() === '' || rawB.trim() === '') {
-    const side = rawA.trim() === '' ? 'A (above the ===== line)' : 'B (below the ===== line)';
+  if (rawA.trim() === "" || rawB.trim() === "") {
+    const side = rawA.trim() === "" ? "A (above the ===== line)" : "B (below the ===== line)";
     throw new ToolError(
-      'empty-side',
+      "empty-side",
       `Only one keymap.c was given: side ${side} is empty.`,
-      'A diff needs both revisions. Paste the older keymap.c above the ===== line and the newer one below it.',
+      "A diff needs both revisions. Paste the older keymap.c above the ===== line and the newer one below it.",
     );
   }
 
-  const format = opts.format || 'report';
-  if (format !== 'report' && format !== 'csv') {
-    throw new ToolError('unknown-format', `Unknown format "${String(opts.format)}".`, 'Pick report or csv.');
+  const format = opts.format || "report";
+  if (format !== "report" && format !== "csv") {
+    throw new ToolError(
+      "unknown-format",
+      `Unknown format "${String(opts.format)}".`,
+      "Pick report or csv.",
+    );
   }
 
-  const a = parseKeymap(rawA, 'A');
-  const b = parseKeymap(rawB, 'B');
+  const a = parseKeymap(rawA, "A");
+  const b = parseKeymap(rawB, "B");
 
   const matching = matchLayers(a.layers, b.layers);
   const results = matching.pairs.map((pair) =>
     diffLayerPair(pair.a, pair.b, pair.label, a.layerNames, b.layerNames),
   );
 
-  return format === 'csv' ? renderCsv(a, b, results, opts) : renderReport(a, b, matching, results, opts);
+  return format === "csv"
+    ? renderCsv(a, b, results, opts)
+    : renderReport(a, b, matching, results, opts);
 }
 
 export default { run } satisfies ToolLogic<string, string, OryxOpts>;

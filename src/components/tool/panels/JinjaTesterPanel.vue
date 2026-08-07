@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { ToolError, type ToolMeta } from '@/tools/types';
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { ToolError, type ToolMeta } from "@/tools/types";
 import {
   buildRenderProgram,
   extractResult,
   formatError,
   parseStatesInput,
   type TemplateError,
-} from '@/tools/jinja-template-tester/index';
-import { shouldAutoDownload, isMetered, onConnectionChange } from '@/lib/connection';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import CopyButton from '../CopyButton.vue';
+} from "@/tools/jinja-template-tester/index";
+import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import CopyButton from "../CopyButton.vue";
 
 /**
  * Bespoke panel for the Jinja Template Tester.
@@ -38,12 +38,12 @@ defineProps<{ meta: ToolMeta }>();
 
 /* Pyodide's own package types are installed, so the loader and instance are
  * fully typed even though the module is imported from a runtime URL. */
-type PyodideModule = typeof import('pyodide');
-type PyodideAPI = Awaited<ReturnType<PyodideModule['loadPyodide']>>;
+type PyodideModule = typeof import("pyodide");
+type PyodideAPI = Awaited<ReturnType<PyodideModule["loadPyodide"]>>;
 
-const PYODIDE_DIR = '/pyodide/';
+const PYODIDE_DIR = "/pyodide/";
 const MANIFEST_URL = `${PYODIDE_DIR}manifest.json`;
-const CACHE_PREFIX = 'pyodide-';
+const CACHE_PREFIX = "pyodide-";
 
 interface PyodideManifest {
   pyodideVersion: string;
@@ -91,8 +91,8 @@ const supported = ref(false);
 const templateText = ref(DEFAULT_TEMPLATE);
 const stateText = ref(DEFAULT_STATE);
 
-type EngineState = 'idle' | 'loading' | 'starting' | 'ready' | 'error';
-const engineState = ref<EngineState>('idle');
+type EngineState = "idle" | "loading" | "starting" | "ready" | "error";
+const engineState = ref<EngineState>("idle");
 const engineError = ref<{ message: string; fix?: string } | null>(null);
 
 const downloadedBytes = ref(0);
@@ -104,7 +104,7 @@ const metered = ref(false);
 let pendingAutoStart = false;
 let stopConnectionWatch: () => void = () => {};
 
-const output = ref('');
+const output = ref("");
 const renderError = ref<TemplateError | null>(null);
 const stateError = ref<{ message: string; fix?: string } | null>(null);
 
@@ -132,13 +132,13 @@ const downloadPercent = computed(() => {
 });
 
 const engineButtonLabel = computed(() => {
-  if (engineState.value === 'error') return 'Try loading the engine again';
+  if (engineState.value === "error") return "Try loading the engine again";
   return metered.value
     ? `Load the template engine (about ${approxMb.value} MB)`
-    : 'Load the template engine';
+    : "Load the template engine";
 });
 
-const ready = computed(() => engineState.value === 'ready');
+const ready = computed(() => engineState.value === "ready");
 
 /* ---------------------------------------------------------------- */
 /* engine download                                                  */
@@ -150,7 +150,7 @@ const ready = computed(() => engineState.value === 'ready');
  * Storage is unavailable, which happens in some private browsing modes.
  */
 async function openVersionCache(version: string): Promise<Cache | null> {
-  if (typeof caches === 'undefined') return null;
+  if (typeof caches === "undefined") return null;
   const name = `${CACHE_PREFIX}${version}`;
   try {
     const keys = await caches.keys();
@@ -164,7 +164,10 @@ async function openVersionCache(version: string): Promise<Cache | null> {
 }
 
 /** Streams a response body, reporting each chunk so the byte counter is live. */
-async function readWithProgress(response: Response, onChunk: (bytes: number) => void): Promise<void> {
+async function readWithProgress(
+  response: Response,
+  onChunk: (bytes: number) => void,
+): Promise<void> {
   if (!response.body) {
     const buffer = await response.arrayBuffer();
     onChunk(buffer.byteLength);
@@ -191,7 +194,7 @@ async function prefetchEngine(manifest: PyodideManifest): Promise<void> {
   };
 
   for (const file of manifest.files) {
-    if (file.name === 'manifest.json') continue;
+    if (file.name === "manifest.json") continue;
     const url = `${PYODIDE_DIR}${file.name}`;
     if (cache) {
       try {
@@ -207,9 +210,9 @@ async function prefetchEngine(manifest: PyodideManifest): Promise<void> {
     const response = await fetch(url);
     if (!response.ok) {
       throw new ToolError(
-        'engine-download',
+        "engine-download",
         `The template engine could not be downloaded (${response.status} on ${file.name}).`,
-        'Check your connection and try loading the engine again.',
+        "Check your connection and try loading the engine again.",
       );
     }
     if (cache) {
@@ -225,16 +228,16 @@ async function prefetchEngine(manifest: PyodideManifest): Promise<void> {
 }
 
 async function startEngine(): Promise<void> {
-  engineState.value = 'loading';
+  engineState.value = "loading";
   engineError.value = null;
   downloadedBytes.value = 0;
 
   const manifestRes = await fetch(MANIFEST_URL);
   if (!manifestRes.ok) {
     throw new ToolError(
-      'engine-missing',
-      'The template engine files are not available on this server.',
-      'Reload the page. If it keeps failing, the site build did not publish the engine.',
+      "engine-missing",
+      "The template engine files are not available on this server.",
+      "Reload the page. If it keeps failing, the site build did not publish the engine.",
     );
   }
   const manifest = (await manifestRes.json()) as PyodideManifest;
@@ -242,10 +245,10 @@ async function startEngine(): Promise<void> {
 
   await prefetchEngine(manifest);
 
-  engineState.value = 'starting';
+  engineState.value = "starting";
   const mod = (await import(/* @vite-ignore */ `${PYODIDE_DIR}pyodide.mjs`)) as PyodideModule;
   const instance = await mod.loadPyodide({ indexURL: PYODIDE_DIR });
-  await instance.loadPackage('jinja2');
+  await instance.loadPackage("jinja2");
 
   // Make now() and the timestamp filters use the visitor's own time zone, the
   // way a Home Assistant instance uses its configured zone.
@@ -261,11 +264,11 @@ async function startEngine(): Promise<void> {
   }
 
   pyodide = instance;
-  engineState.value = 'ready';
+  engineState.value = "ready";
 }
 
 function loadEngine(): void {
-  if (!supported.value || engineState.value === 'loading' || engineState.value === 'starting') {
+  if (!supported.value || engineState.value === "loading" || engineState.value === "starting") {
     return;
   }
   // A press (or the automatic start) commits to the download, so drop any hold.
@@ -275,15 +278,15 @@ function loadEngine(): void {
       scheduleRender(0);
     })
     .catch((err: unknown) => {
-      engineState.value = 'error';
+      engineState.value = "error";
       pyodide = null;
       loadPromise = null;
       engineError.value =
         err instanceof ToolError
           ? { message: err.message, fix: err.fix }
           : {
-              message: 'The template engine failed to start in this browser.',
-              fix: 'Reload the page and try again. A current version of Chrome, Edge, Firefox, or Safari is required.',
+              message: "The template engine failed to start in this browser.",
+              fix: "Reload the page and try again. A current version of Chrome, Edge, Firefox, or Safari is required.",
             };
     });
 }
@@ -349,7 +352,7 @@ watch([templateText, stateText], () => scheduleRender());
  * start and remembers to auto-start later if the link turns unmetered.
  */
 function autoStartEngine(): void {
-  if (engineState.value !== 'idle') return;
+  if (engineState.value !== "idle") return;
   if (shouldAutoDownload()) {
     loadEngine();
   } else {
@@ -360,7 +363,9 @@ function autoStartEngine(): void {
 
 onMounted(() => {
   supported.value =
-    typeof WebAssembly !== 'undefined' && typeof URL !== 'undefined' && typeof fetch !== 'undefined';
+    typeof WebAssembly !== "undefined" &&
+    typeof URL !== "undefined" &&
+    typeof fetch !== "undefined";
   if (!supported.value) return;
   metered.value = isMetered();
   autoStartEngine();
@@ -388,16 +393,16 @@ onUnmounted(() => {
 /* ---------------------------------------------------------------- */
 
 const stubbedFunctions = [
-  ['states("entity.id")', 'the state string, or None when the entity is not in your sample'],
-  ['states.sensor.kitchen', 'the state object: .state, .attributes, .name, .entity_id'],
-  ['is_state("entity.id", "on")', 'True when the sampled state matches'],
-  ['state_attr("entity.id", "attr")', 'an attribute value from your sample, or None'],
-  ['is_state_attr("entity.id", "attr", v)', 'True when the sampled attribute matches'],
-  ['has_value("entity.id")', 'True unless the state is unknown or unavailable'],
-  ['now(), utcnow()', 'the real current time, in your browser time zone'],
-  ['as_timestamp, as_datetime, as_local', 'the Home Assistant time helpers'],
-  ['timedelta, strptime', 'from the Python datetime module'],
-  ['float, int, timestamp_custom filters', 'the common Home Assistant filters'],
+  ['states("entity.id")', "the state string, or None when the entity is not in your sample"],
+  ["states.sensor.kitchen", "the state object: .state, .attributes, .name, .entity_id"],
+  ['is_state("entity.id", "on")', "True when the sampled state matches"],
+  ['state_attr("entity.id", "attr")', "an attribute value from your sample, or None"],
+  ['is_state_attr("entity.id", "attr", v)', "True when the sampled attribute matches"],
+  ['has_value("entity.id")', "True unless the state is unknown or unavailable"],
+  ["now(), utcnow()", "the real current time, in your browser time zone"],
+  ["as_timestamp, as_datetime, as_local", "the Home Assistant time helpers"],
+  ["timedelta, strptime", "from the Python datetime module"],
+  ["float, int, timestamp_custom filters", "the common Home Assistant filters"],
 ];
 </script>
 
@@ -449,10 +454,7 @@ const stubbedFunctions = [
       <p class="font-medium text-destructive">
         {{ stateError.message }}
       </p>
-      <p
-        v-if="stateError.fix"
-        class="mt-1 text-muted-foreground"
-      >
+      <p v-if="stateError.fix" class="mt-1 text-muted-foreground">
         {{ stateError.fix }}
       </p>
     </div>
@@ -484,8 +486,14 @@ const stubbedFunctions = [
         class="flex flex-col gap-2"
       >
         <div class="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{{ engineState === 'starting' ? 'Starting Python and loading jinja2…' : 'Downloading the engine…' }}</span>
-          <span class="tabular-nums">{{ engineState === 'starting' ? '' : `${downloadPercent}%` }}</span>
+          <span>{{
+            engineState === "starting"
+              ? "Starting Python and loading jinja2…"
+              : "Downloading the engine…"
+          }}</span>
+          <span class="tabular-nums">{{
+            engineState === "starting" ? "" : `${downloadPercent}%`
+          }}</span>
         </div>
         <div class="h-1.5 overflow-hidden rounded-full bg-card">
           <div
@@ -495,17 +503,11 @@ const stubbedFunctions = [
         </div>
       </div>
 
-      <p
-        v-if="metered && engineState === 'idle'"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-if="metered && engineState === 'idle'" class="text-xs text-muted-foreground">
         Your connection looks metered, so the engine waits for you to start it.
       </p>
 
-      <p
-        v-if="!supported"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-if="!supported" class="text-xs text-muted-foreground">
         This browser cannot run the template engine. A current version of Chrome, Edge, Firefox, or
         Safari is required.
       </p>
@@ -518,28 +520,19 @@ const stubbedFunctions = [
         <p class="font-medium text-destructive">
           {{ engineError.message }}
         </p>
-        <p
-          v-if="engineError.fix"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="engineError.fix" class="mt-1 text-muted-foreground">
           {{ engineError.fix }}
         </p>
       </div>
     </div>
 
     <!-- Output -->
-    <div
-      v-if="ready"
-      class="flex flex-col gap-1.5"
-    >
+    <div v-if="ready" class="flex flex-col gap-1.5">
       <div class="flex items-center justify-between">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Rendered output
         </span>
-        <CopyButton
-          :text="output"
-          label="Copy"
-        />
+        <CopyButton :text="output" label="Copy" />
       </div>
 
       <div
@@ -548,10 +541,9 @@ const stubbedFunctions = [
         class="rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-3 text-sm shadow-[var(--sh-inset)]"
       >
         <p class="font-medium text-destructive">
-          <span
-            v-if="renderError.line !== null"
-            class="font-mono"
-          >Line {{ renderError.line }}: </span>{{ renderError.message }}
+          <span v-if="renderError.line !== null" class="font-mono"
+            >Line {{ renderError.line }}: </span
+          >{{ renderError.message }}
         </p>
         <p class="mt-1 font-mono text-xs text-muted-foreground">
           {{ renderError.errorType }}
@@ -561,7 +553,7 @@ const stubbedFunctions = [
       <pre
         v-else
         class="max-h-96 overflow-auto rounded-[10px] bg-secondary px-3 py-3 font-mono text-sm whitespace-pre-wrap shadow-[var(--sh-inset)]"
-      >{{ output === '' ? '(empty output)' : output }}</pre>
+        >{{ output === "" ? "(empty output)" : output }}</pre>
     </div>
 
     <!-- Reference -->

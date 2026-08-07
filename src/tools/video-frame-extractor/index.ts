@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * Frame Extractor logic.
@@ -48,7 +48,7 @@ export interface BurstRequest {
 /* ------------------------------------------------------------------ */
 
 function pad(value: number, width: number): string {
-  return String(Math.trunc(value)).padStart(width, '0');
+  return String(Math.trunc(value)).padStart(width, "0");
 }
 
 /** Milliseconds are the finest unit this tool ever quotes, so times snap to them. */
@@ -70,11 +70,11 @@ function roundMs(seconds: number): number {
  * is an error (run) or simply an input the field is not finished with (panel).
  */
 export function parseTimeSpec(raw: string): number | null {
-  if (typeof raw !== 'string') return null;
-  const text = raw.trim().replace(',', '.');
+  if (typeof raw !== "string") return null;
+  const text = raw.trim().replace(",", ".");
   if (!text) return null;
 
-  const parts = text.split(':');
+  const parts = text.split(":");
   if (parts.length > 3) return null;
 
   const values: number[] = [];
@@ -115,7 +115,7 @@ export function formatTimecode(seconds: number, fps?: number): string {
   const h = (totalMinutes - m) / 60;
 
   const base = `${pad(h, 2)}:${pad(m, 2)}:${pad(s, 2)}.${pad(ms, 3)}`;
-  if (typeof fps !== 'number' || !Number.isFinite(fps) || fps <= 0) return base;
+  if (typeof fps !== "number" || !Number.isFinite(fps) || fps <= 0) return base;
 
   // ms is always below 1000, so the frame index can never reach fps itself.
   const frame = Math.floor((ms / 1000) * fps);
@@ -128,19 +128,19 @@ export function formatTimecode(seconds: number, fps?: number): string {
 
 /** Lowercase, hyphenated, filesystem safe, and never empty. */
 function sanitizeBase(name: string): string {
-  const withoutExtension = name.replace(/\.[a-z0-9]{1,8}$/i, '');
+  const withoutExtension = name.replace(/\.[a-z0-9]{1,8}$/i, "");
   const slug = withoutExtension
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
     .slice(0, 48)
-    .replace(/-+$/g, '');
-  return slug || 'video';
+    .replace(/-+$/g, "");
+  return slug || "video";
 }
 
 function sanitizeExtension(ext: string): string {
-  const cleaned = ext.toLowerCase().replace(/[^a-z0-9]/g, '');
-  return cleaned || 'png';
+  const cleaned = ext.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return cleaned || "png";
 }
 
 /** "00m12s500", or "01h02m03s400" once the time passes an hour. */
@@ -164,11 +164,11 @@ function stampFor(timeSec: number): string {
  * capture order. "My Video.mp4" at 12.5 seconds becomes
  * "my-video-00m12s500.png".
  */
-export function frameName(videoName: string, timeSec: number, index?: number, ext = 'png'): string {
-  const base = sanitizeBase(typeof videoName === 'string' ? videoName : '');
+export function frameName(videoName: string, timeSec: number, index?: number, ext = "png"): string {
+  const base = sanitizeBase(typeof videoName === "string" ? videoName : "");
   const stamp = stampFor(timeSec);
   const suffix =
-    typeof index === 'number' && Number.isFinite(index) ? `-${pad(Math.max(0, index), 2)}` : '';
+    typeof index === "number" && Number.isFinite(index) ? `-${pad(Math.max(0, index), 2)}` : "";
   return `${base}-${stamp}${suffix}.${sanitizeExtension(ext)}`;
 }
 
@@ -178,7 +178,7 @@ export function frameName(videoName: string, timeSec: number, index?: number, ex
 
 /** True when a burst result is the failure branch. */
 export function isBurstError(result: BurstPlan | BurstError): result is BurstError {
-  return 'error' in result;
+  return "error" in result;
 }
 
 /**
@@ -194,34 +194,34 @@ export function planBurst(request: BurstRequest): BurstPlan | BurstError {
 
   if (!Number.isFinite(startSec) || startSec < 0) {
     return {
-      error: 'The start time must be zero or a positive number of seconds.',
-      fix: 'Enter a time like 0, 12.5, or 00:00:12.500.',
+      error: "The start time must be zero or a positive number of seconds.",
+      fix: "Enter a time like 0, 12.5, or 00:00:12.500.",
     };
   }
   if (!Number.isFinite(count) || !Number.isInteger(count) || count < 1) {
     return {
-      error: 'The frame count must be a whole number of at least 1.',
-      fix: 'Set the count anywhere from 1 to 30.',
+      error: "The frame count must be a whole number of at least 1.",
+      fix: "Set the count anywhere from 1 to 30.",
     };
   }
   if (count > 30) {
     return {
-      error: 'A single burst captures at most 30 frames.',
-      fix: 'Lower the count to 30 or fewer, then run a second burst from where the first ended.',
+      error: "A single burst captures at most 30 frames.",
+      fix: "Lower the count to 30 or fewer, then run a second burst from where the first ended.",
     };
   }
   // A single frame has nothing to space, so a blank interval is not a problem there.
   if (count > 1 && (!Number.isFinite(intervalSec) || intervalSec <= 0)) {
     return {
-      error: 'The interval between burst frames must be greater than zero.',
-      fix: 'Try 1 for one frame a second, or 0.5 for two.',
+      error: "The interval between burst frames must be greater than zero.",
+      fix: "Try 1 for one frame a second, or 0.5 for two.",
     };
   }
 
   const knownDuration = Number.isFinite(durationSec) && durationSec > 0;
   if (knownDuration && startSec >= durationSec) {
     return {
-      error: 'The start time is at or past the end of the video.',
+      error: "The start time is at or past the end of the video.",
       fix: `Pick a start time before ${formatTimecode(durationSec)}.`,
     };
   }
@@ -233,7 +233,7 @@ export function planBurst(request: BurstRequest): BurstPlan | BurstError {
   const last = times[times.length - 1]!;
   if (knownDuration && last > durationSec) {
     return {
-      error: 'The burst would run past the end of the video.',
+      error: "The burst would run past the end of the video.",
       fix: `The video ends at ${formatTimecode(durationSec)}. Lower the frame count or the interval so the last frame lands before that.`,
     };
   }
@@ -246,23 +246,23 @@ export function planBurst(request: BurstRequest): BurstPlan | BurstError {
 /* ------------------------------------------------------------------ */
 
 const FORMAT_LABELS: Record<string, string> = {
-  png: 'PNG',
-  jpeg: 'JPEG',
-  webp: 'WebP',
+  png: "PNG",
+  jpeg: "JPEG",
+  webp: "WebP",
 };
 
 const FORMAT_EXTENSIONS: Record<string, string> = {
-  png: 'png',
-  jpeg: 'jpg',
-  webp: 'webp',
+  png: "png",
+  jpeg: "jpg",
+  webp: "webp",
 };
 
 function describeInput(input: Uint8Array | string): string {
   if (input instanceof Uint8Array) {
-    return `${input.length.toLocaleString('en-US')} bytes of video, which only a media decoder can turn into pictures.`;
+    return `${input.length.toLocaleString("en-US")} bytes of video, which only a media decoder can turn into pictures.`;
   }
   const text = input.trim();
-  if (!text) return 'Nothing yet. The panel takes the video, not this field.';
+  if (!text) return "Nothing yet. The panel takes the video, not this field.";
   return `Read as a start time: ${text}`;
 }
 
@@ -276,27 +276,27 @@ export function run(
   input: Uint8Array | string,
   opts: FrameExtractorOpts = {},
 ): FrameExtractorResult {
-  const typed = typeof input === 'string' ? input.trim() : '';
+  const typed = typeof input === "string" ? input.trim() : "";
   let startSec = 0;
   if (typed) {
     const parsed = parseTimeSpec(typed);
     if (parsed === null) {
       throw new ToolError(
-        'invalid-time',
+        "invalid-time",
         `"${typed}" is not a time this tool can read.`,
-        'Use seconds (12.5), mm:ss (01:12), or hh:mm:ss.mmm (00:01:12.500).',
+        "Use seconds (12.5), mm:ss (01:12), or hh:mm:ss.mmm (00:01:12.500).",
       );
     }
     startSec = parsed;
   }
 
-  const rawInterval = String(opts.interval ?? '1');
+  const rawInterval = String(opts.interval ?? "1");
   const intervalSec = parseTimeSpec(rawInterval);
   if (intervalSec === null) {
     throw new ToolError(
-      'invalid-interval',
+      "invalid-interval",
       `"${rawInterval}" is not a readable interval.`,
-      'Give the gap between burst frames in seconds, such as 1 or 0.5.',
+      "Give the gap between burst frames in seconds, such as 1 or 0.5.",
     );
   }
 
@@ -308,34 +308,34 @@ export function run(
     durationSec: Number.POSITIVE_INFINITY,
   });
   if (isBurstError(plan)) {
-    throw new ToolError('invalid-burst', plan.error, plan.fix);
+    throw new ToolError("invalid-burst", plan.error, plan.fix);
   }
 
-  const format = String(opts.format ?? 'png').toLowerCase();
-  const label = FORMAT_LABELS[format] ?? 'PNG';
-  const ext = FORMAT_EXTENSIONS[format] ?? 'png';
+  const format = String(opts.format ?? "png").toLowerCase();
+  const label = FORMAT_LABELS[format] ?? "PNG";
+  const ext = FORMAT_EXTENSIONS[format] ?? "png";
   const quality = Number(opts.quality ?? 92);
   const multiple = plan.times.length > 1;
 
   return {
-    'How to use':
+    "How to use":
       'Drop a video onto the panel above, scrub to the moment you want, then press "Capture this frame". Frames land in a strip below the player, each one downloadable on its own.',
     Input: describeInput(input),
-    'Start time': formatTimecode(startSec),
-    'Burst plan': multiple
-      ? `${plan.times.length} frames, ${intervalSec} s apart: ${plan.times.map((t) => formatTimecode(t)).join(', ')}`
+    "Start time": formatTimecode(startSec),
+    "Burst plan": multiple
+      ? `${plan.times.length} frames, ${intervalSec} s apart: ${plan.times.map((t) => formatTimecode(t)).join(", ")}`
       : `1 frame at ${formatTimecode(startSec)}`,
-    'File names': plan.times
-      .map((t, i) => frameName('video', t, multiple ? i + 1 : undefined, ext))
-      .join(', '),
+    "File names": plan.times
+      .map((t, i) => frameName("video", t, multiple ? i + 1 : undefined, ext))
+      .join(", "),
     Format:
-      format === 'png'
-        ? 'PNG, lossless, so the quality setting is ignored'
+      format === "png"
+        ? "PNG, lossless, so the quality setting is ignored"
         : `${label} at quality ${quality}`,
     Resolution:
       "Every capture is drawn at the video's own pixel size, so a 4K source gives 4K frames.",
-    'Seeking precision':
-      'Browsers seek to the nearest decodable frame, so a capture can land a few milliseconds either side of the time you asked for.',
+    "Seeking precision":
+      "Browsers seek to the nearest decodable frame, so a capture can land a few milliseconds either side of the time you asked for.",
   };
 }
 

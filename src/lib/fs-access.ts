@@ -63,7 +63,7 @@
  * Everything is guarded for server side rendering: no top level DOM access,
  * and no work happens at import time.
  */
-import { ToolError } from '@/tools/types';
+import { ToolError } from "@/tools/types";
 
 /* ------------------------------------------------------------------ */
 /* handle types                                                        */
@@ -100,7 +100,7 @@ export interface FsWritable {
  * `isDirectory` guards, which test for the methods instead.
  */
 export interface FsFileHandle {
-  readonly kind: 'file' | 'directory';
+  readonly kind: "file" | "directory";
   readonly name: string;
   getFile(): Promise<FsFileLike>;
   createWritable(options?: { keepExistingData?: boolean }): Promise<FsWritable>;
@@ -110,7 +110,7 @@ export interface FsFileHandle {
 
 /** A directory handle. */
 export interface FsDirectoryHandle {
-  readonly kind: 'file' | 'directory';
+  readonly kind: "file" | "directory";
   readonly name: string;
   entries(): AsyncIterable<[string, FsFileHandle | FsDirectoryHandle]>;
   getFileHandle(name: string, options?: { create?: boolean }): Promise<FsFileHandle>;
@@ -119,17 +119,17 @@ export interface FsDirectoryHandle {
 }
 
 /** Permission state, mirroring `PermissionStatus.state`. */
-export type FsPermissionState = 'granted' | 'denied' | 'prompt';
+export type FsPermissionState = "granted" | "denied" | "prompt";
 
 /** The permission pair Chromium puts on every handle. Neither is in lib.dom. */
 interface PermissionCapable {
-  queryPermission?(descriptor: { mode: 'read' | 'readwrite' }): Promise<FsPermissionState>;
-  requestPermission?(descriptor: { mode: 'read' | 'readwrite' }): Promise<FsPermissionState>;
+  queryPermission?(descriptor: { mode: "read" | "readwrite" }): Promise<FsPermissionState>;
+  requestPermission?(descriptor: { mode: "read" | "readwrite" }): Promise<FsPermissionState>;
 }
 
 interface DirectoryPickerWindow {
   showDirectoryPicker(options?: {
-    mode?: 'read' | 'readwrite';
+    mode?: "read" | "readwrite";
     id?: string;
     startIn?: string;
   }): Promise<FsDirectoryHandle>;
@@ -145,13 +145,13 @@ export interface DirectoryHandleWrapper {
   /** The folder's own name, for display. Not part of any entry path. */
   name: string;
   /** The mode it was picked with. */
-  mode: 'read' | 'readwrite';
+  mode: "read" | "readwrite";
   /**
    * Re-checks permission, prompting when the browser has dropped it (which it
    * does between sessions, and after a long idle). Must be called from a user
    * gesture when it might prompt.
    */
-  ensurePermission(mode?: 'read' | 'readwrite'): Promise<boolean>;
+  ensurePermission(mode?: "read" | "readwrite"): Promise<boolean>;
 }
 
 /** Anything the read and write helpers accept in place of a directory handle. */
@@ -163,7 +163,7 @@ export type FsDirectoryRef = FsDirectoryHandle | DirectoryHandleWrapper;
 
 /** One entry in a scanned folder. Plain data: no handle, JSON round trips. */
 export interface FsEntry {
-  kind: 'file' | 'directory';
+  kind: "file" | "directory";
   /** Base name including extension, e.g. "notes.txt". */
   name: string;
   /** Path relative to the scanned root, forward slash separated, no leading slash. */
@@ -171,14 +171,14 @@ export interface FsEntry {
 }
 
 export interface FsFileEntry extends FsEntry {
-  kind: 'file';
+  kind: "file";
   size: number;
   /** Epoch milliseconds, straight from the File object. */
   lastModified: number;
 }
 
 export interface FsDirEntry extends FsEntry {
-  kind: 'directory';
+  kind: "directory";
 }
 
 /**
@@ -205,9 +205,9 @@ export interface FsScan {
 
 /** A change to make to the folder. Plain data, produced by pure logic. */
 export type WriteOp =
-  | { op: 'rename'; from: string; to: string }
-  | { op: 'writeFile'; path: string; data: Uint8Array | string }
-  | { op: 'delete'; path: string };
+  | { op: "rename"; from: string; to: string }
+  | { op: "writeFile"; path: string; data: Uint8Array | string }
+  | { op: "delete"; path: string };
 
 /* ------------------------------------------------------------------ */
 /* limits                                                              */
@@ -248,13 +248,13 @@ const PROGRESS_EVERY = 250;
  * chose, which is the one thing a folder tool must never do.
  */
 export function normalizePath(path: string): string {
-  const raw = String(path ?? '').replace(/\\/g, '/');
-  const parts = raw.split('/').filter((part) => part !== '' && part !== '.');
+  const raw = String(path ?? "").replace(/\\/g, "/");
+  const parts = raw.split("/").filter((part) => part !== "" && part !== ".");
 
   for (const part of parts) {
-    if (part === '..') {
+    if (part === "..") {
       throw new ToolError(
-        'fs-path-escape',
+        "fs-path-escape",
         `The path "${path}" points outside the chosen folder.`,
         'Paths must stay inside the folder you picked. Remove the ".." segment.',
       );
@@ -263,13 +263,13 @@ export function normalizePath(path: string): string {
 
   if (parts.length === 0) {
     throw new ToolError(
-      'fs-path-empty',
-      'A path is required, but an empty one was given.',
+      "fs-path-empty",
+      "A path is required, but an empty one was given.",
       'Use a path relative to the chosen folder, such as "photos/img.jpg".',
     );
   }
 
-  return parts.join('/');
+  return parts.join("/");
 }
 
 /** True when `path` is usable as a relative path inside the chosen folder. */
@@ -285,35 +285,35 @@ export function isSafeRelativePath(path: string): boolean {
 /** Join path segments, skipping empties. Does not normalize `..`. */
 export function joinPath(...parts: string[]): string {
   return parts
-    .map((part) => String(part ?? '').replace(/\\/g, '/'))
-    .flatMap((part) => part.split('/'))
-    .filter((part) => part !== '')
-    .join('/');
+    .map((part) => String(part ?? "").replace(/\\/g, "/"))
+    .flatMap((part) => part.split("/"))
+    .filter((part) => part !== "")
+    .join("/");
 }
 
 /** The last segment of a path, e.g. `a/b/c.txt` gives `c.txt`. */
 export function baseName(path: string): string {
-  const parts = String(path ?? '')
-    .replace(/\\/g, '/')
-    .split('/')
+  const parts = String(path ?? "")
+    .replace(/\\/g, "/")
+    .split("/")
     .filter(Boolean);
-  return parts.length ? (parts[parts.length - 1] as string) : '';
+  return parts.length ? (parts[parts.length - 1] as string) : "";
 }
 
 /** Everything before the last segment, or `''` for a path at the root. */
 export function parentPath(path: string): string {
-  const parts = String(path ?? '')
-    .replace(/\\/g, '/')
-    .split('/')
+  const parts = String(path ?? "")
+    .replace(/\\/g, "/")
+    .split("/")
     .filter(Boolean);
-  return parts.slice(0, -1).join('/');
+  return parts.slice(0, -1).join("/");
 }
 
 /** The extension without its dot, lowercased. `''` when there is none. */
 export function extensionOf(path: string): string {
   const name = baseName(path);
-  const dot = name.lastIndexOf('.');
-  return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
 }
 
 /* ------------------------------------------------------------------ */
@@ -326,12 +326,12 @@ export function extensionOf(path: string): string {
  * API, which today means Firefox and Safari.
  */
 export function isFsAccessSupported(): boolean {
-  return typeof window !== 'undefined' && 'showDirectoryPicker' in window;
+  return typeof window !== "undefined" && "showDirectoryPicker" in window;
 }
 
 /** Unwrap whichever of the two directory shapes a caller passed. */
 export function toDirectoryHandle(ref: FsDirectoryRef): FsDirectoryHandle {
-  return 'handle' in ref ? ref.handle : ref;
+  return "handle" in ref ? ref.handle : ref;
 }
 
 /**
@@ -344,18 +344,18 @@ export function toDirectoryHandle(ref: FsDirectoryRef): FsDirectoryHandle {
  */
 export async function ensurePermission(
   ref: FsDirectoryRef,
-  mode: 'read' | 'readwrite' = 'read',
+  mode: "read" | "readwrite" = "read",
 ): Promise<boolean> {
   const handle = toDirectoryHandle(ref) as FsDirectoryHandle & PermissionCapable;
   // A browser without the permission methods, and every injected test double,
   // is treated as already granted: the picker itself is the grant there.
-  if (typeof handle.queryPermission !== 'function') return true;
+  if (typeof handle.queryPermission !== "function") return true;
 
   const current = await handle.queryPermission({ mode });
-  if (current === 'granted') return true;
-  if (typeof handle.requestPermission !== 'function') return false;
+  if (current === "granted") return true;
+  if (typeof handle.requestPermission !== "function") return false;
 
-  return (await handle.requestPermission({ mode })) === 'granted';
+  return (await handle.requestPermission({ mode })) === "granted";
 }
 
 /**
@@ -369,13 +369,13 @@ export async function ensurePermission(
  * from a timer or a promise continuation.
  */
 export async function pickDirectory(
-  mode: 'read' | 'readwrite' = 'read',
+  mode: "read" | "readwrite" = "read",
 ): Promise<DirectoryHandleWrapper | null> {
   if (!isFsAccessSupported()) {
     throw new ToolError(
-      'fs-unsupported',
-      'This browser cannot open a folder in place.',
-      'The File System Access API ships in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop. Firefox and Safari do not support it yet.',
+      "fs-unsupported",
+      "This browser cannot open a folder in place.",
+      "The File System Access API ships in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop. Firefox and Safari do not support it yet.",
     );
   }
 
@@ -383,14 +383,14 @@ export async function pickDirectory(
 
   let handle: FsDirectoryHandle;
   try {
-    handle = await picker({ mode, id: 'tools-folder', startIn: 'documents' });
+    handle = await picker({ mode, id: "tools-folder", startIn: "documents" });
   } catch (error) {
     // AbortError is the visitor closing the dialog. Everything else is real.
-    if (error instanceof Error && error.name === 'AbortError') return null;
+    if (error instanceof Error && error.name === "AbortError") return null;
     throw new ToolError(
-      'fs-picker-failed',
-      error instanceof Error ? error.message : 'The folder picker could not be opened.',
-      'Try again, and pick a normal folder rather than a system location the browser blocks.',
+      "fs-picker-failed",
+      error instanceof Error ? error.message : "The folder picker could not be opened.",
+      "Try again, and pick a normal folder rather than a system location the browser blocks.",
     );
   }
 
@@ -398,14 +398,14 @@ export async function pickDirectory(
     handle,
     name: handle.name,
     mode,
-    ensurePermission: (next: 'read' | 'readwrite' = mode) => ensurePermission(handle, next),
+    ensurePermission: (next: "read" | "readwrite" = mode) => ensurePermission(handle, next),
   };
 
   if (!(await wrapper.ensurePermission(mode))) {
     throw new ToolError(
-      'fs-permission-denied',
-      `Permission to ${mode === 'readwrite' ? 'change' : 'read'} that folder was refused.`,
-      'Pick the folder again and allow access, or choose a different folder.',
+      "fs-permission-denied",
+      `Permission to ${mode === "readwrite" ? "change" : "read"} that folder was refused.`,
+      "Pick the folder again and allow access, or choose a different folder.",
     );
   }
 
@@ -432,15 +432,13 @@ export interface ScanOptions {
 }
 
 /** True for a handle that behaves like a directory. */
-export function isDirectory(
-  handle: FsFileHandle | FsDirectoryHandle,
-): handle is FsDirectoryHandle {
-  return 'entries' in handle && typeof handle.entries === 'function';
+export function isDirectory(handle: FsFileHandle | FsDirectoryHandle): handle is FsDirectoryHandle {
+  return "entries" in handle && typeof handle.entries === "function";
 }
 
 /** True for a handle that behaves like a file. */
 export function isFile(handle: FsFileHandle | FsDirectoryHandle): handle is FsFileHandle {
-  return 'getFile' in handle && typeof handle.getFile === 'function';
+  return "getFile" in handle && typeof handle.getFile === "function";
 }
 
 /**
@@ -465,7 +463,7 @@ export async function scanDirectory(ref: FsDirectoryRef, opts: ScanOptions = {})
   let seen = 0;
 
   const queue: { handle: FsDirectoryHandle; path: string; depth: number }[] = [
-    { handle: root, path: '', depth: 0 },
+    { handle: root, path: "", depth: 0 },
   ];
 
   while (queue.length > 0) {
@@ -495,7 +493,7 @@ export async function scanDirectory(ref: FsDirectoryRef, opts: ScanOptions = {})
         seen += 1;
 
         if (isDirectory(handle)) {
-          directories.push({ kind: 'directory', name, path });
+          directories.push({ kind: "directory", name, path });
           if (current.depth + 1 >= MAX_DEPTH) {
             depthCapped = true;
           } else {
@@ -505,7 +503,7 @@ export async function scanDirectory(ref: FsDirectoryRef, opts: ScanOptions = {})
           try {
             const file = await handle.getFile();
             entries.push({
-              kind: 'file',
+              kind: "file",
               name,
               path,
               size: file.size,
@@ -515,7 +513,7 @@ export async function scanDirectory(ref: FsDirectoryRef, opts: ScanOptions = {})
           } catch {
             // A file that vanished or is locked mid walk is recorded with what
             // is known rather than dropped, so a rename plan still sees it.
-            entries.push({ kind: 'file', name, path, size: 0, lastModified: 0 });
+            entries.push({ kind: "file", name, path, size: 0, lastModified: 0 });
           }
         }
 
@@ -556,9 +554,9 @@ async function directoryAt(
   path: string,
   create = false,
 ): Promise<FsDirectoryHandle> {
-  if (path === '') return root;
+  if (path === "") return root;
   let handle = root;
-  for (const segment of path.split('/')) {
+  for (const segment of path.split("/")) {
     handle = await handle.getDirectoryHandle(segment, { create });
   }
   return handle;
@@ -578,9 +576,9 @@ async function fileAt(
 function missingFileError(path: string, error: unknown): ToolError {
   const reason = error instanceof Error ? error.message : String(error);
   return new ToolError(
-    'fs-read-failed',
+    "fs-read-failed",
     `Could not read "${path}": ${reason}.`,
-    'The file may have been moved or renamed since the folder was scanned. Rescan the folder and try again.',
+    "The file may have been moved or renamed since the folder was scanned. Rescan the folder and try again.",
   );
 }
 
@@ -610,7 +608,7 @@ export async function statFile(ref: FsDirectoryRef, path: string): Promise<FsFil
     const handle = await fileAt(root, clean);
     const file = await handle.getFile();
     return {
-      kind: 'file',
+      kind: "file",
       name: baseName(clean),
       path: clean,
       size: file.size,
@@ -626,7 +624,7 @@ export async function statFile(ref: FsDirectoryRef, path: string): Promise<FsFil
 /* hashing                                                             */
 /* ------------------------------------------------------------------ */
 
-export type HashAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
+export type HashAlgorithm = "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512";
 
 /** The slice of WebCrypto used here, injectable so tests do not need one. */
 export interface SubtleLike {
@@ -637,9 +635,9 @@ function defaultSubtle(): SubtleLike {
   const subtle = globalThis.crypto?.subtle as SubtleLike | undefined;
   if (!subtle) {
     throw new ToolError(
-      'fs-no-crypto',
-      'This browser does not expose WebCrypto on this page.',
-      'WebCrypto is only available over a secure connection. Open the page over https.',
+      "fs-no-crypto",
+      "This browser does not expose WebCrypto on this page.",
+      "WebCrypto is only available over a secure connection. Open the page over https.",
     );
   }
   return subtle;
@@ -648,15 +646,15 @@ function defaultSubtle(): SubtleLike {
 /** Lowercase hex of a digest. */
 export function toHex(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-  let out = '';
-  for (const byte of bytes) out += byte.toString(16).padStart(2, '0');
+  let out = "";
+  for (const byte of bytes) out += byte.toString(16).padStart(2, "0");
   return out;
 }
 
 /** Hash bytes already in memory. */
 export async function hashBytes(
   bytes: Uint8Array,
-  algo: HashAlgorithm = 'SHA-256',
+  algo: HashAlgorithm = "SHA-256",
   subtle: SubtleLike = defaultSubtle(),
 ): Promise<string> {
   return toHex(await subtle.digest(algo, bytes));
@@ -674,15 +672,15 @@ export async function hashBytes(
 export async function hashFile(
   ref: FsDirectoryRef,
   path: string,
-  algo: HashAlgorithm = 'SHA-256',
+  algo: HashAlgorithm = "SHA-256",
   subtle: SubtleLike = defaultSubtle(),
 ): Promise<string> {
   const info = await statFile(ref, path);
   if (info.size > MAX_HASH_BYTES) {
     throw new ToolError(
-      'fs-file-too-large',
+      "fs-file-too-large",
       `"${path}" is ${Math.round(info.size / (1024 * 1024))} MB, past the ${MAX_HASH_BYTES / (1024 * 1024)} MB hashing limit.`,
-      'Browser hashing has to hold the whole file in memory at once. Compare files this large by size and name instead.',
+      "Browser hashing has to hold the whole file in memory at once. Compare files this large by size and name instead.",
     );
   }
   return hashBytes(await readFileBytes(ref, path), algo, subtle);
@@ -739,18 +737,18 @@ export interface PlanOptions {
 
 function normalizeOp(op: WriteOp): WriteOp {
   switch (op.op) {
-    case 'rename':
-      return { op: 'rename', from: normalizePath(op.from), to: normalizePath(op.to) };
-    case 'writeFile':
-      return { op: 'writeFile', path: normalizePath(op.path), data: op.data };
-    case 'delete':
-      return { op: 'delete', path: normalizePath(op.path) };
+    case "rename":
+      return { op: "rename", from: normalizePath(op.from), to: normalizePath(op.to) };
+    case "writeFile":
+      return { op: "writeFile", path: normalizePath(op.path), data: op.data };
+    case "delete":
+      return { op: "delete", path: normalizePath(op.path) };
     default: {
       const unknown = op as { op?: unknown };
       throw new ToolError(
-        'fs-unknown-op',
+        "fs-unknown-op",
         `"${String(unknown.op)}" is not a change this tool knows how to make.`,
-        'Valid operations are rename, writeFile and delete.',
+        "Valid operations are rename, writeFile and delete.",
       );
     }
   }
@@ -767,11 +765,11 @@ function normalizeOp(op: WriteOp): WriteOp {
  */
 function reverseOp(op: WriteOp, targetExisted: boolean): WriteOp | null {
   switch (op.op) {
-    case 'rename':
-      return { op: 'rename', from: op.to, to: op.from };
-    case 'writeFile':
-      return targetExisted ? null : { op: 'delete', path: op.path };
-    case 'delete':
+    case "rename":
+      return { op: "rename", from: op.to, to: op.from };
+    case "writeFile":
+      return targetExisted ? null : { op: "delete", path: op.path };
+    case "delete":
       return null;
   }
 }
@@ -803,9 +801,9 @@ export function planWrites(ops: WriteOp[], opts: PlanOptions = {}): WritePlan {
   const notes: string[] = [];
 
   list.forEach((op, index) => {
-    if (op.op === 'rename') {
+    if (op.op === "rename") {
       if (op.from === op.to) {
-        conflicts.push({ op, index, reason: 'The new name is the same as the old one.' });
+        conflicts.push({ op, index, reason: "The new name is the same as the old one." });
         return;
       }
       if (known && !existing.has(op.from)) {
@@ -830,7 +828,7 @@ export function planWrites(ops: WriteOp[], opts: PlanOptions = {}): WritePlan {
       return;
     }
 
-    if (op.op === 'writeFile') {
+    if (op.op === "writeFile") {
       const targetExisted = existing.has(op.path);
       if (targetExisted) {
         irreversible.push({
@@ -857,19 +855,19 @@ export function planWrites(ops: WriteOp[], opts: PlanOptions = {}): WritePlan {
     existing.delete(op.path);
   });
 
-  if (irreversible.some((issue) => issue.op.op === 'delete')) {
+  if (irreversible.some((issue) => issue.op.op === "delete")) {
     notes.push(
-      'Deleted files are not in this manifest. Nothing here restores them, so check your backups first.',
+      "Deleted files are not in this manifest. Nothing here restores them, so check your backups first.",
     );
   }
-  if (irreversible.some((issue) => issue.op.op === 'writeFile')) {
+  if (irreversible.some((issue) => issue.op.op === "writeFile")) {
     notes.push(
-      'Some files were overwritten. Their earlier contents are not in this manifest, so those changes cannot be reversed.',
+      "Some files were overwritten. Their earlier contents are not in this manifest, so those changes cannot be reversed.",
     );
   }
   if (conflicts.length > 0) {
     notes.push(
-      `${conflicts.length} ${conflicts.length === 1 ? 'change was' : 'changes were'} skipped because of a conflict, so nothing was recorded to undo for ${conflicts.length === 1 ? 'it' : 'them'}.`,
+      `${conflicts.length} ${conflicts.length === 1 ? "change was" : "changes were"} skipped because of a conflict, so nothing was recorded to undo for ${conflicts.length === 1 ? "it" : "them"}.`,
     );
   }
 
@@ -882,8 +880,8 @@ export function planWrites(ops: WriteOp[], opts: PlanOptions = {}): WritePlan {
     irreversible,
     undoManifest: {
       version: 1,
-      tool: opts.tool ?? 'folder tool',
-      root: opts.root ?? opts.scan?.rootName ?? '',
+      tool: opts.tool ?? "folder tool",
+      root: opts.root ?? opts.scan?.rootName ?? "",
       createdAt: (opts.now ?? new Date()).toISOString(),
       ops: undo,
       notes,
@@ -901,19 +899,19 @@ export function runnableOps(plan: WritePlan): WriteOp[] {
 /* manifest serialization (pure)                                       */
 /* ------------------------------------------------------------------ */
 
-const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /** Base64 without `btoa`, so the manifest serializes in a test runner too. */
 export function bytesToBase64(bytes: Uint8Array): string {
-  let out = '';
+  let out = "";
   for (let i = 0; i < bytes.length; i += 3) {
     const a = bytes[i] as number;
     const b = bytes[i + 1];
     const c = bytes[i + 2];
     out += B64[a >> 2];
     out += B64[((a & 3) << 4) | ((b ?? 0) >> 4)];
-    out += b === undefined ? '=' : B64[((b & 15) << 2) | ((c ?? 0) >> 6)];
-    out += c === undefined ? '=' : B64[c & 63];
+    out += b === undefined ? "=" : B64[((b & 15) << 2) | ((c ?? 0) >> 6)];
+    out += c === undefined ? "=" : B64[c & 63];
   }
   return out;
 }
@@ -927,7 +925,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
  */
 export function undoManifestToJson(manifest: UndoManifest): string {
   const ops = manifest.ops.map((op) =>
-    op.op === 'writeFile' && op.data instanceof Uint8Array
+    op.op === "writeFile" && op.data instanceof Uint8Array
       ? { op: op.op, path: op.path, data: { $base64: bytesToBase64(op.data) } }
       : op,
   );
@@ -939,9 +937,9 @@ export function undoManifestFileName(manifest: UndoManifest): string {
   const slug =
     manifest.root
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 40) || 'folder';
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "folder";
   const day = manifest.createdAt.slice(0, 10);
   return `undo-${slug}-${day}.json`;
 }
@@ -995,7 +993,7 @@ async function nameExists(dir: FsDirectoryHandle, name: string): Promise<boolean
 }
 
 async function writeBytes(handle: FsFileHandle, data: Uint8Array | string): Promise<number> {
-  const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+  const bytes = typeof data === "string" ? new TextEncoder().encode(data) : data;
   const writable = await handle.createWritable();
   try {
     await writable.write(bytes);
@@ -1026,7 +1024,7 @@ async function performRename(root: FsDirectoryHandle, from: string, to: string):
     throw new Error(`"${to}" already exists, so the rename was skipped rather than overwriting it`);
   }
 
-  if (typeof source.move === 'function') {
+  if (typeof source.move === "function") {
     if (parentPath(from) === parentPath(to)) await source.move(toName);
     else await source.move(toDir, toName);
     return;
@@ -1048,11 +1046,11 @@ async function performRename(root: FsDirectoryHandle, from: string, to: string):
 }
 
 async function performOp(root: FsDirectoryHandle, op: WriteOp): Promise<void> {
-  if (op.op === 'rename') {
+  if (op.op === "rename") {
     await performRename(root, op.from, op.to);
     return;
   }
-  if (op.op === 'writeFile') {
+  if (op.op === "writeFile") {
     const dir = await directoryAt(root, parentPath(op.path), true);
     const handle = await dir.getFileHandle(baseName(op.path), { create: true });
     await writeBytes(handle, op.data);
@@ -1082,11 +1080,11 @@ export async function executeWriteOps(
   const root = toDirectoryHandle(ref);
   const dryRun = opts.dryRun === true;
 
-  if (!dryRun && !(await ensurePermission(ref, 'readwrite'))) {
+  if (!dryRun && !(await ensurePermission(ref, "readwrite"))) {
     throw new ToolError(
-      'fs-permission-denied',
-      'Permission to change that folder was refused.',
-      'Choose the folder again and allow changes when the browser asks.',
+      "fs-permission-denied",
+      "Permission to change that folder was refused.",
+      "Choose the folder again and allow changes when the browser asks.",
     );
   }
 

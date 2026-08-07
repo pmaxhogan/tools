@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { Input } from '@/components/ui/input';
-import { highlightHtml, searchTools, type SearchTool } from '@/lib/search';
-import { iconFor } from '@/lib/tool-icons';
+import { computed, ref } from "vue";
+import { Input } from "@/components/ui/input";
+import { highlightHtml, searchTools, type SearchTool } from "@/lib/search";
+import { iconFor } from "@/lib/tool-icons";
 
 /**
  * Homepage tool grid: search + category-grouped cards. Server-rendered at
@@ -11,7 +11,7 @@ import { iconFor } from '@/lib/tool-icons';
 export type GridTool = SearchTool & { icon?: string };
 
 const props = defineProps<{ tools: GridTool[] }>();
-const query = ref('');
+const query = ref("");
 
 const filtered = computed(() => searchTools(props.tools, query.value).map((r) => r.tool));
 
@@ -39,26 +39,16 @@ const grouped = computed(() => {
       <kbd class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">Ctrl K</kbd>
     </div>
 
-    <p
-      v-if="filtered.length === 0"
-      class="mt-10 text-center text-muted-foreground"
-    >
+    <p v-if="filtered.length === 0" class="mt-10 text-center text-muted-foreground">
       No tools match "{{ query }}" yet. Try a different word, or check the full list on GitHub.
     </p>
 
-    <section
-      v-for="[category, items] in grouped"
-      :key="category"
-      class="mt-10"
-    >
+    <section v-for="[category, items] in grouped" :key="category" class="mt-10">
       <h2 class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
         {{ category }}
       </h2>
       <ul class="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <li
-          v-for="t in items"
-          :key="t.slug"
-        >
+        <li v-for="t in items" :key="t.slug">
           <a
             :href="`/${t.slug}`"
             class="tool-card flex h-full gap-3 rounded-[14px] border bg-card p-5 shadow-[var(--sh-sm)]"
@@ -67,17 +57,16 @@ const grouped = computed(() => {
               class="tool-tile grid size-9 shrink-0 place-items-center rounded-[10px]"
               aria-hidden="true"
             >
-              <component
-                :is="iconFor(t.icon)"
-                class="size-[18px]"
-                :stroke-width="2"
-              />
+              <component :is="iconFor(t.icon)" class="size-[18px]" :stroke-width="2" />
             </span>
             <span class="min-w-0">
-              <!-- eslint-disable-next-line vue/no-v-html, vue/max-attributes-per-line -- highlightHtml escapes its input -->
+              <!-- eslint-disable vue/no-v-html -- highlightHtml escapes its input, so the marked-up output is safe -->
               <span class="block font-semibold" v-html="highlightHtml(t.name, query)" />
-              <!-- eslint-disable-next-line vue/no-v-html, vue/max-attributes-per-line -- highlightHtml escapes its input -->
-              <span class="mt-1 block text-sm text-muted-foreground" v-html="highlightHtml(t.description, query)" />
+              <span
+                class="mt-1 block text-sm text-muted-foreground"
+                v-html="highlightHtml(t.description, query)"
+              />
+              <!-- eslint-enable vue/no-v-html -->
             </span>
           </a>
         </li>

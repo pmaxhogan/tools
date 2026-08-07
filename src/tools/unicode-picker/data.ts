@@ -31,16 +31,16 @@ export interface UnicodeCategory {
 
 /** Every category present in ENTRIES, in display order. */
 export const CATEGORIES: readonly UnicodeCategory[] = [
-  { id: 'arrows', label: 'Arrows' },
-  { id: 'math', label: 'Maths & logic' },
-  { id: 'greek', label: 'Greek letters' },
-  { id: 'currency', label: 'Currency' },
-  { id: 'punctuation', label: 'Punctuation & dashes' },
-  { id: 'box', label: 'Box drawing' },
-  { id: 'superscript', label: 'Superscript & subscript' },
-  { id: 'symbols', label: 'Checks, stars & bullets' },
-  { id: 'legal', label: 'Legal & editorial' },
-  { id: 'invisible', label: 'Invisible characters' },
+  { id: "arrows", label: "Arrows" },
+  { id: "math", label: "Maths & logic" },
+  { id: "greek", label: "Greek letters" },
+  { id: "currency", label: "Currency" },
+  { id: "punctuation", label: "Punctuation & dashes" },
+  { id: "box", label: "Box drawing" },
+  { id: "superscript", label: "Superscript & subscript" },
+  { id: "symbols", label: "Checks, stars & bullets" },
+  { id: "legal", label: "Legal & editorial" },
+  { id: "invisible", label: "Invisible characters" },
 ];
 
 // One line per character keeps this generated table readable and diffable.

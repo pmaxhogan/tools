@@ -19,8 +19,8 @@
  * The engine is a module level singleton. Two callers share one worker, one
  * wasm instance, and one in memory filesystem, so jobs are serialized.
  */
-import type { FFmpeg } from '@ffmpeg/ffmpeg';
-import { ToolError } from '@/tools/types';
+import type { FFmpeg } from "@ffmpeg/ffmpeg";
+import { ToolError } from "@/tools/types";
 
 /* ------------------------------------------------------------------ */
 /* public types                                                        */
@@ -74,8 +74,7 @@ export interface MediaBuildContext {
 
 /** Either a runnable command, or the reason this option combination cannot run. */
 export type MediaBuildResult =
-  | { args: string[]; outputs: string[] }
-  | { error: string; fix?: string };
+  { args: string[]; outputs: string[] } | { error: string; fix?: string };
 
 /** The function a media tool panel passes to `MediaShell` as `buildArgs`. */
 export type MediaBuildArgs = (ctx: MediaBuildContext) => MediaBuildResult;
@@ -87,7 +86,7 @@ export class MediaJobError extends ToolError {
 
   constructor(code: string, message: string, fix: string | undefined, log: string[]) {
     super(code, message, fix);
-    this.name = 'MediaJobError';
+    this.name = "MediaJobError";
     this.log = log;
   }
 }
@@ -102,9 +101,9 @@ interface CoreManifest {
   wasmBytes: number;
 }
 
-const MANIFEST_URL = '/ffmpeg/manifest.json';
-const CORE_JS_URL = '/ffmpeg/ffmpeg-core.js';
-const CACHE_PREFIX = 'ffmpeg-core-';
+const MANIFEST_URL = "/ffmpeg/manifest.json";
+const CORE_JS_URL = "/ffmpeg/ffmpeg-core.js";
+const CACHE_PREFIX = "ffmpeg-core-";
 /** How many log lines to keep for error reports and the UI log tail. */
 const LOG_TAIL_MAX = 200;
 /** How many of those travel with a MediaJobError. */
@@ -140,10 +139,10 @@ let jobChain: Promise<unknown> = Promise.resolve();
  */
 export function isMediaSupported(): boolean {
   return (
-    typeof WebAssembly !== 'undefined' &&
-    typeof Worker !== 'undefined' &&
-    typeof URL !== 'undefined' &&
-    typeof URL.createObjectURL === 'function'
+    typeof WebAssembly !== "undefined" &&
+    typeof Worker !== "undefined" &&
+    typeof URL !== "undefined" &&
+    typeof URL.createObjectURL === "function"
   );
 }
 
@@ -176,12 +175,12 @@ function pushLog(line: string): void {
  * Storage is unavailable or refuses, which happens in private browsing modes.
  */
 async function openCoreCache(version: string): Promise<Cache | null> {
-  if (typeof caches === 'undefined') return null;
+  if (typeof caches === "undefined") return null;
   const name = `${CACHE_PREFIX}${version}`;
   try {
     const keys = await caches.keys();
     await Promise.all(
-      keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== name).map((k) => caches.delete(k))
+      keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== name).map((k) => caches.delete(k)),
     );
     return await caches.open(name);
   } catch {
@@ -196,7 +195,7 @@ async function openCoreCache(version: string): Promise<Cache | null> {
  */
 async function readWithProgress(
   response: Response,
-  onChunk: (bytes: number) => void
+  onChunk: (bytes: number) => void,
 ): Promise<Uint8Array[]> {
   if (!response.body) {
     const buffer = new Uint8Array(await response.arrayBuffer());
@@ -220,7 +219,7 @@ async function readWithProgress(
 async function fetchPart(
   url: string,
   cache: Cache | null,
-  onChunk: (bytes: number) => void
+  onChunk: (bytes: number) => void,
 ): Promise<Uint8Array[]> {
   if (cache) {
     try {
@@ -233,9 +232,9 @@ async function fetchPart(
   const response = await fetch(url);
   if (!response.ok) {
     throw new ToolError(
-      'media-engine-download',
+      "media-engine-download",
       `The media engine could not be downloaded (${response.status} on ${url}).`,
-      'Check your connection and try loading the engine again.'
+      "Check your connection and try loading the engine again.",
     );
   }
   if (cache) {
@@ -251,9 +250,9 @@ async function loadManifest(): Promise<CoreManifest> {
   const response = await fetch(MANIFEST_URL);
   if (!response.ok) {
     throw new ToolError(
-      'media-engine-missing',
-      'The media engine files are not available on this server.',
-      'Reload the page. If it keeps failing, the site build did not publish the engine.'
+      "media-engine-missing",
+      "The media engine files are not available on this server.",
+      "Reload the page. If it keeps failing, the site build did not publish the engine.",
     );
   }
   manifest = (await response.json()) as CoreManifest;
@@ -276,19 +275,19 @@ async function downloadWasm(core: CoreManifest): Promise<Uint8Array> {
 
   const parts = await Promise.all(
     Array.from({ length: core.wasmParts }, (_, i) =>
-      fetchPart(`/ffmpeg/ffmpeg-core.wasm.part${i}`, cache, onChunk)
-    )
+      fetchPart(`/ffmpeg/ffmpeg-core.wasm.part${i}`, cache, onChunk),
+    ),
   );
 
   const total = parts.reduce(
     (sum, chunks) => sum + chunks.reduce((n, c) => n + c.byteLength, 0),
-    0
+    0,
   );
   if (total !== core.wasmBytes) {
     throw new ToolError(
-      'media-engine-corrupt',
-      'The media engine downloaded incompletely.',
-      'Reload the page and load the engine again.'
+      "media-engine-corrupt",
+      "The media engine downloaded incompletely.",
+      "Reload the page and load the engine again.",
     );
   }
 
@@ -315,9 +314,9 @@ async function createEngine(): Promise<FFmpeg> {
     fetch(CORE_JS_URL).then((r) => {
       if (!r.ok) {
         throw new ToolError(
-          'media-engine-missing',
-          'The media engine loader could not be downloaded.',
-          'Reload the page and try again.'
+          "media-engine-missing",
+          "The media engine loader could not be downloaded.",
+          "Reload the page and try again.",
         );
       }
       return r.text();
@@ -327,23 +326,23 @@ async function createEngine(): Promise<FFmpeg> {
 
   // ffmpeg only accepts URLs, so both pieces become blob URLs. The wasm blob
   // carries application/wasm so the core can use instantiateStreaming.
-  const coreURL = URL.createObjectURL(new Blob([coreSource], { type: 'text/javascript' }));
+  const coreURL = URL.createObjectURL(new Blob([coreSource], { type: "text/javascript" }));
   const wasmURL = URL.createObjectURL(
-    new Blob([wasm.buffer as ArrayBuffer], { type: 'application/wasm' })
+    new Blob([wasm.buffer as ArrayBuffer], { type: "application/wasm" }),
   );
 
   try {
     // Imported here rather than at module scope: the package resolves to a
     // throwing stub under node, and this keeps it out of the page bundle until
     // a visitor actually asks for the engine.
-    const { FFmpeg } = await import('@ffmpeg/ffmpeg');
+    const { FFmpeg } = await import("@ffmpeg/ffmpeg");
     const instance = new FFmpeg();
 
-    instance.on('log', ({ message }) => {
+    instance.on("log", ({ message }) => {
       pushLog(message);
       emitProgress(message);
     });
-    instance.on('progress', ({ progress, time }) => {
+    instance.on("progress", ({ progress, time }) => {
       // The 0.12 ratio is only meaningful when input and output durations
       // match, so anything outside a sane range is reported as unknown.
       lastRatio =
@@ -352,7 +351,7 @@ async function createEngine(): Promise<FFmpeg> {
           : null;
       // ffmpeg reports the output position in microseconds.
       lastTimeMs = Number.isFinite(time) && time >= 0 ? time / 1000 : null;
-      emitProgress('');
+      emitProgress("");
     });
 
     await instance.load({ coreURL, wasmURL });
@@ -375,13 +374,13 @@ async function createEngine(): Promise<FFmpeg> {
  */
 export async function getFFmpeg(
   onProgress?: MediaProgressHandler,
-  onDownload?: MediaDownloadHandler
+  onDownload?: MediaDownloadHandler,
 ): Promise<FFmpeg> {
   if (!isMediaSupported()) {
     throw new ToolError(
-      'media-unsupported',
-      'This browser cannot run the media engine.',
-      'Use a current version of Chrome, Edge, Firefox, or Safari.'
+      "media-unsupported",
+      "This browser cannot run the media engine.",
+      "Use a current version of Chrome, Edge, Firefox, or Safari.",
     );
   }
 
@@ -401,7 +400,7 @@ export async function getFFmpeg(
     // A failed load must not poison the singleton: the next attempt retries.
     loadPromise = null;
     engine = null;
-    throw toMediaError(error, 'media-engine-load', 'The media engine failed to start.');
+    throw toMediaError(error, "media-engine-load", "The media engine failed to start.");
   }
 }
 
@@ -448,7 +447,7 @@ function toMediaError(error: unknown, code: string, fallback: string): MediaJobE
 export function runJob(options: MediaJobOptions): Promise<MediaFile[]> {
   const run = jobChain.then(
     () => executeJob(options),
-    () => executeJob(options)
+    () => executeJob(options),
   );
   // Keep the chain alive even when a job throws, without an unhandled rejection.
   jobChain = run.catch(() => undefined);
@@ -474,10 +473,10 @@ async function executeJob(options: MediaJobOptions): Promise<MediaFile[]> {
     const code = await ffmpeg.exec(options.args);
     if (code !== 0) {
       throw new MediaJobError(
-        'ffmpeg-failed',
+        "ffmpeg-failed",
         `ffmpeg stopped with exit code ${code}.`,
-        'Check the log below: it names the stream or option ffmpeg rejected.',
-        getLogTail(LOG_TAIL_ON_ERROR)
+        "Check the log below: it names the stream or option ffmpeg rejected.",
+        getLogTail(LOG_TAIL_ON_ERROR),
       );
     }
 
@@ -488,25 +487,25 @@ async function executeJob(options: MediaJobOptions): Promise<MediaFile[]> {
         data = await ffmpeg.readFile(name);
       } catch {
         throw new MediaJobError(
-          'ffmpeg-no-output',
+          "ffmpeg-no-output",
           `ffmpeg finished but produced no ${name}.`,
-          'Check the log below: the run may have skipped every frame.',
-          getLogTail(LOG_TAIL_ON_ERROR)
+          "Check the log below: the run may have skipped every frame.",
+          getLogTail(LOG_TAIL_ON_ERROR),
         );
       }
-      if (typeof data === 'string') {
+      if (typeof data === "string") {
         throw new MediaJobError(
-          'ffmpeg-no-output',
+          "ffmpeg-no-output",
           `ffmpeg returned ${name} as text rather than bytes.`,
           undefined,
-          getLogTail(LOG_TAIL_ON_ERROR)
+          getLogTail(LOG_TAIL_ON_ERROR),
         );
       }
       results.push({ name, data });
     }
     return results;
   } catch (error) {
-    throw toMediaError(error, 'ffmpeg-failed', 'The media job failed.');
+    throw toMediaError(error, "ffmpeg-failed", "The media job failed.");
   } finally {
     // Cleanup runs even after a failure or a terminate, so the next job starts
     // on an empty filesystem. Every delete is independent: a file that was

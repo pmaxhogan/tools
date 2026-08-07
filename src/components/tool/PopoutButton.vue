@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
-import { PictureInPicture2 } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
-import { findPopoutRoot, isPopoutSupported, popOut, type PopoutHandle } from '@/lib/popout';
+import { onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
+import { PictureInPicture2 } from "lucide-vue-next";
+import { Button } from "@/components/ui/button";
+import { findPopoutRoot, isPopoutSupported, popOut, type PopoutHandle } from "@/lib/popout";
 
 /**
  * Floats the tool panel in an always-on-top window (Document
@@ -44,7 +44,7 @@ async function toggle() {
   }
   const root = findPopoutRoot();
   if (!root) {
-    console.warn('[popout] No [data-popout-root] element found on this page.');
+    console.warn("[popout] No [data-popout-root] element found on this page.");
     return;
   }
   handle.value = await popOut(root, {
@@ -67,6 +67,6 @@ async function toggle() {
     @click="toggle"
   >
     <PictureInPicture2 />
-    {{ handle ? 'Bring it back' : 'Pop out' }}
+    {{ handle ? "Bring it back" : "Pop out" }}
   </Button>
 </template>

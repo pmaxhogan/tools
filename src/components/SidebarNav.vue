@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { highlightHtml, searchTools, type SearchTool } from '@/lib/search';
-import { iconFor } from '@/lib/tool-icons';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { highlightHtml, searchTools, type SearchTool } from "@/lib/search";
+import { iconFor } from "@/lib/tool-icons";
 
 /**
  * Interactive island for the sidebar: live search over the tool list with
@@ -13,7 +13,7 @@ export type SidebarTool = SearchTool & { icon?: string };
 
 const props = defineProps<{ tools: SidebarTool[]; currentSlug: string }>();
 
-const query = ref('');
+const query = ref("");
 const activeIndex = ref(-1);
 const currentPath = ref(props.currentSlug);
 const inputEl = ref<HTMLInputElement | null>(null);
@@ -24,8 +24,7 @@ const ordered = computed(() => {
   if (!query.value.trim()) {
     return [...results].sort(
       (a, b) =>
-        a.tool.category.localeCompare(b.tool.category) ||
-        a.tool.name.localeCompare(b.tool.name)
+        a.tool.category.localeCompare(b.tool.category) || a.tool.name.localeCompare(b.tool.name),
     );
   }
   return results;
@@ -34,7 +33,9 @@ const ordered = computed(() => {
 const sections = computed(() => {
   const flat = ordered.value;
   if (query.value.trim()) {
-    return [{ heading: null as string | null, items: flat.map((r, i) => ({ tool: r.tool, index: i })) }];
+    return [
+      { heading: null as string | null, items: flat.map((r, i) => ({ tool: r.tool, index: i })) },
+    ];
   }
   const out: { heading: string | null; items: { tool: SearchTool; index: number }[] }[] = [];
   flat.forEach((r, i) => {
@@ -47,21 +48,21 @@ const sections = computed(() => {
 
 function onKeydown(e: KeyboardEvent) {
   const count = ordered.value.length;
-  if (e.key === 'ArrowDown') {
+  if (e.key === "ArrowDown") {
     e.preventDefault();
     if (count) activeIndex.value = activeIndex.value < 0 ? 0 : (activeIndex.value + 1) % count;
-  } else if (e.key === 'ArrowUp') {
+  } else if (e.key === "ArrowUp") {
     e.preventDefault();
     if (count) activeIndex.value = activeIndex.value <= 0 ? count - 1 : activeIndex.value - 1;
-  } else if (e.key === 'Enter') {
+  } else if (e.key === "Enter") {
     if (count && activeIndex.value >= 0) {
       e.preventDefault();
       itemEls.value[activeIndex.value]?.click();
     }
-  } else if (e.key === 'Escape' && query.value) {
+  } else if (e.key === "Escape" && query.value) {
     // Clear the search first; let a second Escape reach the drawer handler.
     e.stopPropagation();
-    query.value = '';
+    query.value = "";
   }
 }
 
@@ -74,12 +75,12 @@ watch(query, (q) => {
 watch(activeIndex, async (i) => {
   if (i < 0) return;
   await nextTick();
-  itemEls.value[i]?.scrollIntoView({ block: 'nearest' });
+  itemEls.value[i]?.scrollIntoView({ block: "nearest" });
 });
 
 /** Scroll the sidebar (not the page) so the active tool is visible. */
 function revealActive() {
-  const aside = document.getElementById('site-sidebar');
+  const aside = document.getElementById("site-sidebar");
   const active = aside?.querySelector<HTMLElement>('[aria-current="page"]');
   if (!aside || !active) return;
   const top = active.offsetTop - 96;
@@ -87,16 +88,16 @@ function revealActive() {
 }
 
 function syncPath() {
-  currentPath.value = window.location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
+  currentPath.value = window.location.pathname.replace(/^\/+/, "").replace(/\/+$/, "");
   nextTick(revealActive);
 }
 
 onMounted(() => {
-  document.addEventListener('astro:after-swap', syncPath);
+  document.addEventListener("astro:after-swap", syncPath);
   nextTick(revealActive);
 });
 onUnmounted(() => {
-  document.removeEventListener('astro:after-swap', syncPath);
+  document.removeEventListener("astro:after-swap", syncPath);
 });
 </script>
 
@@ -113,22 +114,15 @@ onUnmounted(() => {
         spellcheck="false"
         class="sidebar-search h-9 w-full rounded-[10px] border border-input bg-secondary px-3 text-sm outline-none placeholder:text-muted-foreground"
         @keydown="onKeydown"
-      >
+      />
     </div>
 
     <nav class="px-2 pt-1 pb-8">
-      <p
-        v-if="ordered.length === 0"
-        class="px-2 py-4 text-sm text-muted-foreground"
-      >
+      <p v-if="ordered.length === 0" class="px-2 py-4 text-sm text-muted-foreground">
         No tools match "{{ query }}".
       </p>
 
-      <div
-        v-for="(section, si) in sections"
-        :key="si"
-        class="mt-5 first:mt-0"
-      >
+      <div v-for="(section, si) in sections" :key="si" class="mt-5 first:mt-0">
         <h3
           v-if="section.heading"
           class="px-2 text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
@@ -136,12 +130,13 @@ onUnmounted(() => {
           {{ section.heading }}
         </h3>
         <ul :class="section.heading ? 'mt-1' : ''">
-          <li
-            v-for="entry in section.items"
-            :key="entry.tool.slug"
-          >
+          <li v-for="entry in section.items" :key="entry.tool.slug">
             <a
-              :ref="(el) => { if (el) itemEls[entry.index] = el as HTMLAnchorElement; }"
+              :ref="
+                (el) => {
+                  if (el) itemEls[entry.index] = el as HTMLAnchorElement;
+                }
+              "
               :href="`/${entry.tool.slug}`"
               :aria-current="entry.tool.slug === currentPath ? 'page' : undefined"
               :data-active="entry.index === activeIndex ? 'true' : undefined"
@@ -173,7 +168,9 @@ onUnmounted(() => {
 
 .sidebar-link {
   color: var(--muted-foreground);
-  transition: background-color 120ms ease-out, color 120ms ease-out;
+  transition:
+    background-color 120ms ease-out,
+    color 120ms ease-out;
 }
 
 .sidebar-link:hover {
@@ -181,13 +178,13 @@ onUnmounted(() => {
   color: var(--foreground);
 }
 
-.sidebar-link[aria-current='page'] {
+.sidebar-link[aria-current="page"] {
   background: var(--accent-soft);
   color: var(--primary);
   font-weight: 500;
 }
 
-.sidebar-link[data-active='true'] {
+.sidebar-link[data-active="true"] {
   background: var(--accent-soft);
   color: var(--primary);
 }

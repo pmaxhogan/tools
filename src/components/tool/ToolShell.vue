@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, shallowRef, watch } from 'vue';
-import type { ToolMeta } from '@/tools/types';
-import { ToolError, type ToolLogic } from '@/tools/types';
-import { loaders } from '@/tools/registry';
-import { readFragment, writeFragment } from '@/lib/fragment';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { X } from 'lucide-vue-next';
-import OptionControl from './OptionControl.vue';
-import OutputView from './OutputView.vue';
+import { computed, onMounted, ref, shallowRef, watch } from "vue";
+import type { ToolMeta } from "@/tools/types";
+import { ToolError, type ToolLogic } from "@/tools/types";
+import { loaders } from "@/tools/registry";
+import { readFragment, writeFragment } from "@/lib/fragment";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { X } from "lucide-vue-next";
+import OptionControl from "./OptionControl.vue";
+import OutputView from "./OutputView.vue";
 
 /**
  * The generic tool island. Renders input (paste / drop / file picker),
@@ -26,23 +26,23 @@ const props = defineProps<{ meta: ToolMeta }>();
  * rather than a new meta field so every other string-output tool is
  * untouched by this change.
  */
-const HORIZONTAL_SCROLL_TOOLS = new Set(['figlet']);
+const HORIZONTAL_SCROLL_TOOLS = new Set(["figlet"]);
 const scrollsHorizontally = HORIZONTAL_SCROLL_TOOLS.has(props.meta.slug);
 
-const hasInput = props.meta.input !== 'none';
-const acceptsFiles = props.meta.input === 'File' || props.meta.input.startsWith('image/');
+const hasInput = props.meta.input !== "none";
+const acceptsFiles = props.meta.input === "File" || props.meta.input.startsWith("image/");
 
 /** Types whose `run()` takes raw bytes; everything else stays a string. */
-const BINARY_INPUTS: string[] = ['File', 'image/*', 'image/png', 'application/octet-stream'];
+const BINARY_INPUTS: string[] = ["File", "image/*", "image/png", "application/octet-stream"];
 const isBinary = computed(() => BINARY_INPUTS.includes(props.meta.input));
 
-const input = ref('');
+const input = ref("");
 /** Bytes of the loaded file, for binary tools only. Never hits the fragment. */
 const fileBytes = shallowRef<Uint8Array | null>(null);
-const fileName = ref('');
+const fileName = ref("");
 const fileSize = ref(0);
 const opts = ref<Record<string, unknown>>(
-  Object.fromEntries((props.meta.options ?? []).map((o) => [o.id, o.default]))
+  Object.fromEntries((props.meta.options ?? []).map((o) => [o.id, o.default])),
 );
 const output = ref<string | Record<string, string> | null>(null);
 const error = ref<{ message: string; fix?: string } | null>(null);
@@ -51,9 +51,9 @@ const fileInput = ref<HTMLInputElement>();
 
 /** Narrows the picker for known types; leaves it open for File and raw bytes. */
 const acceptAttr = computed(() => {
-  if (props.meta.input === 'image/*' || props.meta.input === 'image/png') return props.meta.input;
+  if (props.meta.input === "image/*" || props.meta.input === "image/png") return props.meta.input;
   if (acceptsFiles || isBinary.value) return undefined;
-  return 'text/*,.json,.csv,.txt';
+  return "text/*,.json,.csv,.txt";
 });
 
 /**
@@ -64,13 +64,13 @@ const isHint = computed(() => hasInput && !input.value && !fileBytes.value);
 
 const placeholder = computed(() =>
   isBinary.value
-    ? 'Drop or pick a file, or paste text here…'
-    : `Paste or drop ${props.meta.input === 'text/plain' ? 'text' : props.meta.input} here…`
+    ? "Drop or pick a file, or paste text here…"
+    : `Paste or drop ${props.meta.input === "text/plain" ? "text" : props.meta.input} here…`,
 );
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -128,8 +128,8 @@ onMounted(async () => {
   for (const spec of props.meta.options ?? []) {
     const raw = frag.opts[spec.id];
     if (raw === undefined) continue;
-    if (spec.kind === 'number' || spec.kind === 'slider') opts.value[spec.id] = Number(raw);
-    else if (spec.kind === 'boolean') opts.value[spec.id] = raw === 'true';
+    if (spec.kind === "number" || spec.kind === "slider") opts.value[spec.id] = Number(raw);
+    else if (spec.kind === "boolean") opts.value[spec.id] = raw === "true";
     else opts.value[spec.id] = raw;
   }
   run();
@@ -137,9 +137,9 @@ onMounted(async () => {
 
 function clearFileState() {
   fileBytes.value = null;
-  fileName.value = '';
+  fileName.value = "";
   fileSize.value = 0;
-  if (fileInput.value) fileInput.value.value = '';
+  if (fileInput.value) fileInput.value.value = "";
 }
 
 /** The x on the file chip: drop the bytes and re-run on the empty string. */
@@ -154,7 +154,7 @@ async function readFile(file: File) {
     fileName.value = file.name;
     fileSize.value = file.size;
     // Clearing the textarea leaves the bytes intact (see the input watcher).
-    input.value = '';
+    input.value = "";
     scheduleRun();
     return;
   }
@@ -182,7 +182,7 @@ function onPickFile(e: Event) {
   if (!file) return;
   readFile(file).then(() => {
     // Reset so picking the same file again still fires a change event.
-    picker.value = '';
+    picker.value = "";
   });
 }
 </script>
@@ -198,29 +198,22 @@ function onPickFile(e: Event) {
       @drop.prevent="onDrop"
     >
       <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">Input</span>
+        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+          >Input</span
+        >
         <div class="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            @click="fileInput?.click()"
-          >
-            Open file…
-          </Button>
+          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
           <input
             ref="fileInput"
             type="file"
             class="hidden"
             :accept="acceptAttr"
             @change="onPickFile"
-          >
+          />
         </div>
       </div>
 
-      <div
-        v-if="fileBytes"
-        class="px-3 pt-2"
-      >
+      <div v-if="fileBytes" class="px-3 pt-2">
         <span
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
@@ -245,10 +238,7 @@ function onPickFile(e: Event) {
       />
     </div>
 
-    <div
-      v-if="meta.options?.length"
-      class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
-    >
+    <div v-if="meta.options?.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       <OptionControl
         v-for="spec in meta.options"
         :key="spec.id"
@@ -257,13 +247,7 @@ function onPickFile(e: Event) {
       />
     </div>
 
-    <Button
-      v-if="!hasInput"
-      class="self-start"
-      @click="run"
-    >
-      Generate
-    </Button>
+    <Button v-if="!hasInput" class="self-start" @click="run"> Generate </Button>
 
     <div
       v-if="error"
@@ -274,19 +258,13 @@ function onPickFile(e: Event) {
       <p :class="isHint ? 'font-medium text-muted-foreground' : 'font-medium text-destructive'">
         {{ error.message }}
       </p>
-      <p
-        v-if="error.fix"
-        class="mt-1 text-muted-foreground"
-      >
+      <p v-if="error.fix" class="mt-1 text-muted-foreground">
         {{ error.fix }}
       </p>
     </div>
 
     <div :class="scrollsHorizontally ? 'output-scrolls-horizontally' : undefined">
-      <OutputView
-        v-if="output !== null && !error"
-        :output="output"
-      />
+      <OutputView v-if="output !== null && !error" :output="output" />
     </div>
   </div>
 </template>

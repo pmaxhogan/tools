@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface CompressOpts {
   /** Include a hex preview of the first 64 gzip-compressed bytes. Default true. */
@@ -9,11 +9,11 @@ export interface CompressOpts {
 export type CompressResult = Record<string, string>;
 
 /** The three algorithms CompressionStream / DecompressionStream support without wasm. */
-type Algo = 'gzip' | 'deflate' | 'deflate-raw';
-const ALGOS: Algo[] = ['gzip', 'deflate', 'deflate-raw'];
+type Algo = "gzip" | "deflate" | "deflate-raw";
+const ALGOS: Algo[] = ["gzip", "deflate", "deflate-raw"];
 
 function toBytes(input: Uint8Array | string): Uint8Array {
-  if (typeof input === 'string') return new TextEncoder().encode(input);
+  if (typeof input === "string") return new TextEncoder().encode(input);
   return input;
 }
 
@@ -60,13 +60,13 @@ export async function decompressBytes(bytes: Uint8Array, algo: Algo): Promise<Ui
   return pump(bytes, new DecompressionStream(algo));
 }
 
-type DetectedFormat = 'gzip' | 'zlib';
+type DetectedFormat = "gzip" | "zlib";
 
 /** Sniffs a gzip magic number or a zlib (RFC 1950) header. */
 export function detectFormat(bytes: Uint8Array): DetectedFormat | null {
-  if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) return 'gzip';
+  if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) return "gzip";
   if (bytes.length >= 2 && bytes[0] === 0x78 && [0x01, 0x9c, 0xda].includes(bytes[1]!)) {
-    return 'zlib';
+    return "zlib";
   }
   return null;
 }
@@ -86,13 +86,13 @@ export function shannonEntropy(bytes: Uint8Array): number {
 }
 
 function toHex(bytes: Uint8Array, limit: number): string {
-  return [...bytes.slice(0, limit)].map((b) => b.toString(16).padStart(2, '0')).join(' ');
+  return [...bytes.slice(0, limit)].map((b) => b.toString(16).padStart(2, "0")).join(" ");
 }
 
 /** "1,204 bytes" or "1,204 bytes (1.18 KB)" / "(1.14 MB)" above 1024 bytes. */
 function formatBytes(n: number): string {
-  const commas = n.toLocaleString('en-US');
-  const plain = `${commas} byte${n === 1 ? '' : 's'}`;
+  const commas = n.toLocaleString("en-US");
+  const plain = `${commas} byte${n === 1 ? "" : "s"}`;
   const suffix = unitSuffix(n);
   return suffix ? `${plain} (${suffix})` : plain;
 }
@@ -106,43 +106,46 @@ function unitSuffix(n: number): string | null {
 
 /** "1,204 bytes (1.18 KB, 63.2% smaller)" style row for one algorithm's result. */
 function algoRow(compressedLen: number, inputLen: number): string {
-  const commas = compressedLen.toLocaleString('en-US');
-  const plain = `${commas} byte${compressedLen === 1 ? '' : 's'}`;
+  const commas = compressedLen.toLocaleString("en-US");
+  const plain = `${commas} byte${compressedLen === 1 ? "" : "s"}`;
   const suffix = unitSuffix(compressedLen);
   const pct = inputLen > 0 ? (1 - compressedLen / inputLen) * 100 : 0;
-  const direction = pct >= 0 ? 'smaller' : 'larger';
+  const direction = pct >= 0 ? "smaller" : "larger";
   const pctPart = `${Math.abs(pct).toFixed(1)}% ${direction}`;
   return suffix ? `${plain} (${suffix}, ${pctPart})` : `${plain} (${pctPart})`;
 }
 
-async function decompressReport(bytes: Uint8Array, format: DetectedFormat): Promise<CompressResult> {
+async function decompressReport(
+  bytes: Uint8Array,
+  format: DetectedFormat,
+): Promise<CompressResult> {
   // zlib (RFC 1950) is exactly what CompressionStream/DecompressionStream call 'deflate'.
-  const algo: Algo = format === 'gzip' ? 'gzip' : 'deflate';
+  const algo: Algo = format === "gzip" ? "gzip" : "deflate";
 
   let decompressed: Uint8Array;
   try {
     decompressed = await decompressBytes(bytes, algo);
   } catch {
     throw new ToolError(
-      'decompress-failed',
-      `Could not decompress this ${format === 'gzip' ? 'gzip' : 'zlib'} data.`,
-      'The file may be truncated or corrupted. Try re-downloading or re-compressing the source.',
+      "decompress-failed",
+      `Could not decompress this ${format === "gzip" ? "gzip" : "zlib"} data.`,
+      "The file may be truncated or corrupted. Try re-downloading or re-compressing the source.",
     );
   }
 
   const result: CompressResult = {
-    'Original (compressed) size': formatBytes(bytes.length),
-    'Decompressed size': formatBytes(decompressed.length),
-    'Expansion ratio': bytes.length > 0 ? `${(decompressed.length / bytes.length).toFixed(2)}x` : 'n/a',
-    'Detected format': format === 'gzip' ? 'gzip' : 'zlib (deflate)',
+    "Original (compressed) size": formatBytes(bytes.length),
+    "Decompressed size": formatBytes(decompressed.length),
+    "Expansion ratio":
+      bytes.length > 0 ? `${(decompressed.length / bytes.length).toFixed(2)}x` : "n/a",
+    "Detected format": format === "gzip" ? "gzip" : "zlib (deflate)",
   };
 
   try {
-    const text = new TextDecoder('utf-8', { fatal: true }).decode(decompressed);
-    result['Content preview'] = text.length > 500 ? `${text.slice(0, 500)}...` : text;
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(decompressed);
+    result["Content preview"] = text.length > 500 ? `${text.slice(0, 500)}...` : text;
   } catch {
-    result['Content preview'] =
-      `Binary content, first 64 bytes (hex): ${toHex(decompressed, 64)}`;
+    result["Content preview"] = `Binary content, first 64 bytes (hex): ${toHex(decompressed, 64)}`;
   }
 
   return result;
@@ -153,7 +156,7 @@ async function compressReport(bytes: Uint8Array, opts: CompressOpts): Promise<Co
   const sizeByAlgo = new Map<Algo, Uint8Array>(ALGOS.map((algo, i) => [algo, compressed[i]!]));
 
   const result: CompressResult = {
-    'Input size': formatBytes(bytes.length),
+    "Input size": formatBytes(bytes.length),
   };
 
   let winner: Algo = ALGOS[0]!;
@@ -162,35 +165,32 @@ async function compressReport(bytes: Uint8Array, opts: CompressOpts): Promise<Co
     result[algo] = algoRow(data.length, bytes.length);
     if (data.length < sizeByAlgo.get(winner)!.length) winner = algo;
   }
-  result['Best algorithm'] = `${winner}, ${formatBytes(sizeByAlgo.get(winner)!.length)}`;
+  result["Best algorithm"] = `${winner}, ${formatBytes(sizeByAlgo.get(winner)!.length)}`;
 
   const entropy = shannonEntropy(bytes);
   const note =
     entropy >= 7.5
-      ? 'near 8 means the data is already compressed or random'
+      ? "near 8 means the data is already compressed or random"
       : entropy <= 4
-        ? 'low means the data is very compressible'
-        : 'moderate compressibility';
-  result['Entropy estimate'] = `${entropy.toFixed(2)} bits/byte (${note})`;
+        ? "low means the data is very compressible"
+        : "moderate compressibility";
+  result["Entropy estimate"] = `${entropy.toFixed(2)} bits/byte (${note})`;
 
   if (opts.preview !== false) {
-    const gzip = sizeByAlgo.get('gzip')!;
-    result['Gzip hex preview (first 64 bytes)'] = toHex(gzip, 64);
+    const gzip = sizeByAlgo.get("gzip")!;
+    result["Gzip hex preview (first 64 bytes)"] = toHex(gzip, 64);
   }
 
   return result;
 }
 
-export async function run(
-  input: Uint8Array | string,
-  opts: CompressOpts,
-): Promise<CompressResult> {
+export async function run(input: Uint8Array | string, opts: CompressOpts): Promise<CompressResult> {
   const bytes = toBytes(input);
   if (bytes.length === 0) {
     throw new ToolError(
-      'empty-input',
-      'Provide text or a file to run through compression.',
-      'Paste some text or drop a file into the input.',
+      "empty-input",
+      "Provide text or a file to run through compression.",
+      "Paste some text or drop a file into the input.",
     );
   }
 

@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
-import { X } from 'lucide-vue-next';
-import { ToolError, type ToolMeta } from '@/tools/types';
-import { isEngineReady, isMediaSupported, runJob } from '@/lib/ffmpeg';
-import { isMetered, shouldAutoDownload } from '@/lib/connection';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import { X } from "lucide-vue-next";
+import { ToolError, type ToolMeta } from "@/tools/types";
+import { isEngineReady, isMediaSupported, runJob } from "@/lib/ffmpeg";
+import { isMetered, shouldAutoDownload } from "@/lib/connection";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 /**
  * Bespoke panel for the Spectrogram Viewer.
@@ -28,12 +28,12 @@ import {
  */
 defineProps<{ meta: ToolMeta }>();
 
-type SpecLogic = typeof import('@/tools/audio-spectrogram/index');
+type SpecLogic = typeof import("@/tools/audio-spectrogram/index");
 
 /** The FFT module loads on the first file rather than on page load. */
 let logicPromise: Promise<SpecLogic> | null = null;
 function loadLogic(): Promise<SpecLogic> {
-  logicPromise ??= import('@/tools/audio-spectrogram/index');
+  logicPromise ??= import("@/tools/audio-spectrogram/index");
   return logicPromise;
 }
 
@@ -71,7 +71,7 @@ const AXIS_H = 26;
 
 const logic = shallowRef<SpecLogic | null>(null);
 
-const fileName = ref('');
+const fileName = ref("");
 const fileSize = ref(0);
 const error = ref<{ message: string; fix?: string } | null>(null);
 const dragging = ref(false);
@@ -92,8 +92,8 @@ const freqBins = ref(1024);
 const peaks = shallowRef<{ min: Float32Array; max: Float32Array } | null>(null);
 
 const stage = ref<
-  'idle' | 'engine-prompt' | 'loading-engine' | 'extracting' | 'decoding' | 'analyzing' | 'ready'
->('idle');
+  "idle" | "engine-prompt" | "loading-engine" | "extracting" | "decoding" | "analyzing" | "ready"
+>("idle");
 const progress = ref(0);
 
 /**
@@ -112,9 +112,9 @@ const extractRatio = ref<number | null>(null);
 /** The video's true duration, read from the ffmpeg log, before any analysis cap. */
 const videoDuration = ref<number | null>(null);
 
-const fftSize = ref('2048');
-const colors = ref('viridis');
-const axisScale = ref('linear');
+const fftSize = ref("2048");
+const colors = ref("viridis");
+const axisScale = ref("linear");
 const showWaveform = ref(true);
 
 /**
@@ -142,11 +142,13 @@ const renderScale = ref(1);
 
 const truncated = computed(() => fullDuration.value > analyzedDuration.value + 0.01);
 const hasAudio = computed(() => mono.value !== null);
-const ready = computed(() => stage.value === 'ready' && columns.value.length > 0);
+const ready = computed(() => stage.value === "ready" && columns.value.length > 0);
 
 const specTop = computed(() => TOP_H + (showWaveform.value ? WAVE_H + GAP : 0));
 const canvasHeight = computed(() => specTop.value + SPEC_H + AXIS_H);
-const plotWidth = computed(() => Math.max(160, Math.round(cssWidth.value - GUTTER_LEFT - GUTTER_RIGHT)));
+const plotWidth = computed(() =>
+  Math.max(160, Math.round(cssWidth.value - GUTTER_LEFT - GUTTER_RIGHT)),
+);
 
 /* ---------------------------------------------------------------- */
 /* small helpers                                                     */
@@ -154,7 +156,7 @@ const plotWidth = computed(() => Math.max(160, Math.round(cssWidth.value - GUTTE
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -165,8 +167,8 @@ function humanSize(bytes: number): string {
 }
 
 function baseName(name: string): string {
-  const dot = name.lastIndexOf('.');
-  return dot > 0 ? name.slice(0, dot) : name || 'audio';
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(0, dot) : name || "audio";
 }
 
 function clamp(value: number, low: number, high: number): number {
@@ -180,7 +182,7 @@ function toToolError(e: unknown): { message: string; fix?: string } {
 }
 
 function triggerDownload(url: string, name: string) {
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = name;
   document.body.appendChild(a);
@@ -189,7 +191,7 @@ function triggerDownload(url: string, name: string) {
 }
 
 function ascii(bytes: Uint8Array, at: number, length: number): string {
-  let out = '';
+  let out = "";
   for (let i = at; i < at + length && i < bytes.length; i++) out += String.fromCharCode(bytes[i]!);
   return out;
 }
@@ -199,22 +201,22 @@ function ascii(bytes: Uint8Array, at: number, length: number): string {
  * the file actually is instead of blaming the user for a "bad file".
  */
 function sniffAudioFormat(bytes: Uint8Array): string {
-  if (bytes.length < 12) return '';
-  if (ascii(bytes, 0, 4) === 'RIFF' && ascii(bytes, 8, 4) === 'WAVE') return 'WAV';
-  if (ascii(bytes, 0, 4) === 'fLaC') return 'FLAC';
-  if (ascii(bytes, 0, 4) === 'OggS') return 'Ogg';
-  if (ascii(bytes, 0, 4) === 'FORM' && ascii(bytes, 8, 4).startsWith('AIF')) return 'AIFF';
-  if (ascii(bytes, 4, 4) === 'ftyp') return 'MP4 or M4A';
-  if (ascii(bytes, 0, 3) === 'ID3') return 'MP3';
-  if (bytes[0] === 0xff && (bytes[1]! & 0xe0) === 0xe0) return 'MP3';
-  if (ascii(bytes, 0, 4) === 'caff') return 'CAF';
-  if (ascii(bytes, 0, 4) === 'MThd') return 'MIDI';
+  if (bytes.length < 12) return "";
+  if (ascii(bytes, 0, 4) === "RIFF" && ascii(bytes, 8, 4) === "WAVE") return "WAV";
+  if (ascii(bytes, 0, 4) === "fLaC") return "FLAC";
+  if (ascii(bytes, 0, 4) === "OggS") return "Ogg";
+  if (ascii(bytes, 0, 4) === "FORM" && ascii(bytes, 8, 4).startsWith("AIF")) return "AIFF";
+  if (ascii(bytes, 4, 4) === "ftyp") return "MP4 or M4A";
+  if (ascii(bytes, 0, 3) === "ID3") return "MP3";
+  if (bytes[0] === 0xff && (bytes[1]! & 0xe0) === 0xe0) return "MP3";
+  if (ascii(bytes, 0, 4) === "caff") return "CAF";
+  if (ascii(bytes, 0, 4) === "MThd") return "MIDI";
   if (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3) {
-    return 'WebM or Matroska';
+    return "WebM or Matroska";
   }
-  if (ascii(bytes, 0, 4) === 'wvpk') return 'WavPack';
-  if (ascii(bytes, 0, 3) === 'MAC') return 'APE';
-  return '';
+  if (ascii(bytes, 0, 4) === "wvpk") return "WavPack";
+  if (ascii(bytes, 0, 3) === "MAC") return "APE";
+  return "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -230,18 +232,32 @@ const EXTRACT_SECONDS = MAX_ANALYSIS_SECONDS;
  * extension is the fallback that keeps those on the video path.
  */
 const VIDEO_EXTENSIONS = [
-  'mp4', 'm4v', 'mov', 'webm', 'mkv', 'avi', 'ogv', 'ts', 'm2ts', 'mts',
-  'flv', 'wmv', 'mpg', 'mpeg', '3gp', '3g2',
+  "mp4",
+  "m4v",
+  "mov",
+  "webm",
+  "mkv",
+  "avi",
+  "ogv",
+  "ts",
+  "m2ts",
+  "mts",
+  "flv",
+  "wmv",
+  "mpg",
+  "mpeg",
+  "3gp",
+  "3g2",
 ];
 
 function extensionOf(name: string): string {
-  const dot = name.lastIndexOf('.');
-  return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
 }
 
 function fileIsVideo(file: File): boolean {
-  if (file.type.startsWith('video/')) return true;
-  if (file.type.startsWith('audio/')) return false;
+  if (file.type.startsWith("video/")) return true;
+  if (file.type.startsWith("audio/")) return false;
   return VIDEO_EXTENSIONS.includes(extensionOf(file.name));
 }
 
@@ -255,10 +271,10 @@ function safeName(file: File): string {
   const stem =
     file.name
       .slice(0, ext ? file.name.length - ext.length - 1 : undefined)
-      .replace(/[^A-Za-z0-9._-]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 40) || 'input';
-  return ext ? `${stem}.${ext.replace(/[^A-Za-z0-9]/g, '')}` : 'input.bin';
+      .replace(/[^A-Za-z0-9._-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "input";
+  return ext ? `${stem}.${ext.replace(/[^A-Za-z0-9]/g, "")}` : "input.bin";
 }
 
 /** Pull the source duration in seconds out of an ffmpeg "Duration:" log line. */
@@ -322,7 +338,7 @@ async function playFrom(time: number) {
     const ac = ensureAudioContext();
     // A context created before any gesture starts suspended, which would play
     // silence, so it is resumed here inside the click handler.
-    if (ac.state === 'suspended') await ac.resume();
+    if (ac.state === "suspended") await ac.resume();
     const node = ac.createBufferSource();
     node.buffer = buffer;
     node.connect(ac.destination);
@@ -362,7 +378,7 @@ function resetAudio() {
   analyzedDuration.value = 0;
   channelCount.value = 0;
   progress.value = 0;
-  stage.value = 'idle';
+  stage.value = "idle";
   isVideo.value = false;
   pendingVideo.value = null;
   downloadBytes.value = 0;
@@ -429,10 +445,10 @@ async function readFile(file: File) {
 
   if (isVideo.value) {
     if (!isMediaSupported()) {
-      stage.value = 'idle';
+      stage.value = "idle";
       error.value = {
-        message: 'This browser cannot extract audio from a video file.',
-        fix: 'Reading a video track needs WebAssembly. Use a current version of Chrome, Edge, Firefox, or Safari, or convert the video to an audio file first.',
+        message: "This browser cannot extract audio from a video file.",
+        fix: "Reading a video track needs WebAssembly. Use a current version of Chrome, Edge, Firefox, or Safari, or convert the video to an audio file first.",
       };
       return;
     }
@@ -443,18 +459,18 @@ async function readFile(file: File) {
       await processVideo(file, token);
     } else {
       pendingVideo.value = file;
-      stage.value = 'engine-prompt';
+      stage.value = "engine-prompt";
     }
     return;
   }
 
-  stage.value = 'decoding';
+  stage.value = "decoding";
   let bytes: Uint8Array;
   try {
     bytes = new Uint8Array(await file.arrayBuffer());
   } catch (e) {
     if (token !== analysisToken) return;
-    stage.value = 'idle';
+    stage.value = "idle";
     error.value = toToolError(e);
     return;
   }
@@ -468,7 +484,7 @@ async function readFile(file: File) {
  * the two inputs are identical, so the whole DSP path is shared.
  */
 async function decodeAndAnalyze(bytes: Uint8Array, token: number) {
-  stage.value = 'decoding';
+  stage.value = "decoding";
   try {
     logic.value ??= await loadLogic();
     if (token !== analysisToken) return;
@@ -494,7 +510,7 @@ async function decodeAndAnalyze(bytes: Uint8Array, token: number) {
     await analyze();
   } catch (e) {
     if (token !== analysisToken) return;
-    stage.value = 'idle';
+    stage.value = "idle";
     const format = sniffAudioFormat(bytes);
     if (e instanceof ToolError) {
       error.value = toToolError(e);
@@ -502,10 +518,10 @@ async function decodeAndAnalyze(bytes: Uint8Array, token: number) {
       error.value = {
         message: format
           ? `This browser could not decode this ${format} file as audio.`
-          : 'This browser could not decode this file as audio, and its first bytes do not match any audio container this tool recognizes.',
+          : "This browser could not decode this file as audio, and its first bytes do not match any audio container this tool recognizes.",
         fix: format
-          ? 'The container is recognized but the codec inside it is not supported here. Convert it to WAV or MP3 and try again.'
-          : 'Try a WAV, MP3, FLAC, OGG, or M4A file, or a video with an audio track.',
+          ? "The container is recognized but the codec inside it is not supported here. Convert it to WAV or MP3 and try again."
+          : "Try a WAV, MP3, FLAC, OGG, or M4A file, or a video with an audio track.",
       };
     }
   }
@@ -518,7 +534,7 @@ async function decodeAndAnalyze(bytes: Uint8Array, token: number) {
  * window so a two hour film never expands into a gigabyte of PCM.
  */
 async function processVideo(file: File, token: number) {
-  stage.value = isEngineReady() ? 'extracting' : 'loading-engine';
+  stage.value = isEngineReady() ? "extracting" : "loading-engine";
   downloadBytes.value = 0;
   downloadTotal.value = 0;
   extractRatio.value = null;
@@ -528,32 +544,41 @@ async function processVideo(file: File, token: number) {
     data = new Uint8Array(await file.arrayBuffer());
   } catch (e) {
     if (token !== analysisToken) return;
-    stage.value = 'idle';
+    stage.value = "idle";
     error.value = toToolError(e);
     return;
   }
   if (token !== analysisToken) return;
 
   const inputName = safeName(file);
-  const outputName = 'spectrogram-audio.wav';
+  const outputName = "spectrogram-audio.wav";
 
   try {
     const produced = await runJob({
       inputs: [{ name: inputName, data }],
       // -vn drops the video, -t caps the length, pcm_s16le keeps a WAV whose
       // RIFF header states the true sample rate so the decode path reads it.
-      args: ['-i', inputName, '-vn', '-t', String(EXTRACT_SECONDS), '-c:a', 'pcm_s16le', outputName],
+      args: [
+        "-i",
+        inputName,
+        "-vn",
+        "-t",
+        String(EXTRACT_SECONDS),
+        "-c:a",
+        "pcm_s16le",
+        outputName,
+      ],
       outputs: [outputName],
       onDownload: (loaded, total) => {
         if (token !== analysisToken) return;
         downloadBytes.value = loaded;
         downloadTotal.value = total;
-        if (total > 0 && loaded < total) stage.value = 'loading-engine';
+        if (total > 0 && loaded < total) stage.value = "loading-engine";
       },
       onProgress: (p) => {
         if (token !== analysisToken) return;
         // Any progress tick means the download is done and ffmpeg is running.
-        stage.value = 'extracting';
+        stage.value = "extracting";
         extractRatio.value = p.ratio;
         if (p.logLine && videoDuration.value === null) {
           const parsed = parseFfmpegDuration(p.logLine);
@@ -564,23 +589,23 @@ async function processVideo(file: File, token: number) {
     if (token !== analysisToken) return;
     const wav = produced[0]?.data;
     if (!wav || wav.byteLength === 0) {
-      stage.value = 'idle';
+      stage.value = "idle";
       error.value = {
-        message: 'No audio track was found in this video.',
-        fix: 'This file carries video but no sound to analyze. Try a different file.',
+        message: "No audio track was found in this video.",
+        fix: "This file carries video but no sound to analyze. Try a different file.",
       };
       return;
     }
     await decodeAndAnalyze(wav, token);
   } catch (e) {
     if (token !== analysisToken) return;
-    stage.value = 'idle';
+    stage.value = "idle";
     const base = toToolError(e);
     error.value = {
-      message: base.message || 'The audio could not be extracted from this video.',
+      message: base.message || "The audio could not be extracted from this video.",
       fix:
         base.fix ??
-        'The video may have no audio track, or its audio codec is not supported here. Try another file.',
+        "The video may have no audio track, or its audio codec is not supported here. Try another file.",
     };
   }
 }
@@ -598,7 +623,7 @@ async function analyze() {
   const mod = logic.value;
   if (!samples || !mod) return;
   const token = ++analysisToken;
-  stage.value = 'analyzing';
+  stage.value = "analyzing";
   progress.value = 0;
   columns.value = [];
 
@@ -622,13 +647,13 @@ async function analyze() {
     columns.value = out;
     freqBins.value = plan.freqBins;
     progress.value = 100;
-    stage.value = 'ready';
+    stage.value = "ready";
     rebuildPeaks();
     renderSpecImage();
     draw();
   } catch (e) {
     if (token !== analysisToken) return;
-    stage.value = 'idle';
+    stage.value = "idle";
     error.value = toToolError(e);
   }
 }
@@ -652,17 +677,17 @@ function onPickFile(e: Event) {
   if (!file) return;
   readFile(file).then(() => {
     // Reset so picking the same file again still fires a change event.
-    picker.value = '';
+    picker.value = "";
   });
 }
 
 function clearFile() {
   analysisToken += 1;
   resetAudio();
-  fileName.value = '';
+  fileName.value = "";
   fileSize.value = 0;
   error.value = null;
-  if (fileInput.value) fileInput.value.value = '';
+  if (fileInput.value) fileInput.value.value = "";
   draw();
 }
 
@@ -677,7 +702,7 @@ const logBottom = computed(() => Math.min(LOG_MIN_HZ, nyquist.value / 4));
 /** Frequency at a fraction of the spectrogram height, 0 at the top. */
 function freqAtFraction(fraction: number): number {
   const f = clamp(fraction, 0, 1);
-  if (axisScale.value === 'log') {
+  if (axisScale.value === "log") {
     const low = logBottom.value;
     return low * Math.pow(nyquist.value / low, 1 - f);
   }
@@ -686,7 +711,7 @@ function freqAtFraction(fraction: number): number {
 
 /** Inverse of freqAtFraction: where a frequency sits down the plot. */
 function fractionAtFreq(hz: number): number {
-  if (axisScale.value === 'log') {
+  if (axisScale.value === "log") {
     const low = logBottom.value;
     const value = clamp(hz, low, nyquist.value);
     return 1 - Math.log(value / low) / Math.log(nyquist.value / low);
@@ -703,7 +728,7 @@ let specImage: HTMLCanvasElement | null = null;
 /** 256 entry color ramp so the pixel loop never calls into the colormap. */
 function buildColorLut(mod: SpecLogic): Uint8Array {
   const lut = new Uint8Array(256 * 3);
-  const scheme = colors.value as 'viridis' | 'magma' | 'gray';
+  const scheme = colors.value as "viridis" | "magma" | "gray";
   for (let i = 0; i < 256; i++) {
     const [r, g, b] = mod.dbToColor(mod.DB_FLOOR + (-mod.DB_FLOOR * i) / 255, scheme);
     lut[i * 3] = r;
@@ -732,10 +757,10 @@ function renderSpecImage() {
   const w = Math.max(1, Math.round(plotWidth.value * scale));
   const h = Math.max(1, Math.round(SPEC_H * scale));
 
-  specImage ??= document.createElement('canvas');
+  specImage ??= document.createElement("canvas");
   specImage.width = w;
   specImage.height = h;
-  const ctx = specImage.getContext('2d');
+  const ctx = specImage.getContext("2d");
   if (!ctx) return;
 
   const bins = freqBins.value;
@@ -801,12 +826,12 @@ function readTheme(el: HTMLElement): Theme {
   const style = getComputedStyle(el);
   const pick = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback;
   return {
-    surface: pick('--card', '#ffffff'),
-    text: pick('--foreground', '#1b1917'),
-    muted: pick('--muted-foreground', '#79726b'),
-    border: pick('--border', '#e7e2da'),
-    accent: pick('--primary', '#5b4bd6'),
-    well: pick('--secondary', '#f0ede8'),
+    surface: pick("--card", "#ffffff"),
+    text: pick("--foreground", "#1b1917"),
+    muted: pick("--muted-foreground", "#79726b"),
+    border: pick("--border", "#e7e2da"),
+    accent: pick("--primary", "#5b4bd6"),
+    well: pick("--secondary", "#f0ede8"),
   };
 }
 
@@ -821,7 +846,7 @@ function pickTimeStep(duration: number, maxTicks: number): number {
 
 function freqTicks(): number[] {
   const top = nyquist.value;
-  if (axisScale.value === 'log') {
+  if (axisScale.value === "log") {
     const out: number[] = [];
     let lastY = Number.POSITIVE_INFINITY;
     for (let i = LOG_FREQ_TICKS.length - 1; i >= 0; i--) {
@@ -864,9 +889,8 @@ function drawAll(ctx: CanvasRenderingContext2D, theme: Theme, overlays: boolean)
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = theme.surface;
   ctx.fillRect(0, 0, width, height);
-  ctx.textBaseline = 'middle';
-  ctx.font =
-    '11px "Geist Mono", ui-monospace, "Cascadia Code", "Source Code Pro", monospace';
+  ctx.textBaseline = "middle";
+  ctx.font = '11px "Geist Mono", ui-monospace, "Cascadia Code", "Source Code Pro", monospace';
 
   const mod = logic.value;
 
@@ -875,10 +899,10 @@ function drawAll(ctx: CanvasRenderingContext2D, theme: Theme, overlays: boolean)
     ctx.fillStyle = theme.well;
     ctx.fillRect(GUTTER_LEFT, TOP_H, plotW, height - TOP_H - AXIS_H);
     ctx.fillStyle = theme.muted;
-    ctx.textAlign = 'center';
+    ctx.textAlign = "center";
     ctx.font = '13px "Geist", ui-sans-serif, system-ui, sans-serif';
     ctx.fillText(
-      'Drop an audio or video file to see its waveform and spectrogram',
+      "Drop an audio or video file to see its waveform and spectrogram",
       GUTTER_LEFT + plotW / 2,
       TOP_H + (height - TOP_H - AXIS_H) / 2,
     );
@@ -894,16 +918,16 @@ function drawAll(ctx: CanvasRenderingContext2D, theme: Theme, overlays: boolean)
     for (let i = 0; i < rampW; i++) {
       const [r, g, b] = mod.dbToColor(
         mod.DB_FLOOR + (-mod.DB_FLOOR * i) / (rampW - 1),
-        colors.value as 'viridis' | 'magma' | 'gray',
+        colors.value as "viridis" | "magma" | "gray",
       );
       ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
       ctx.fillRect(rampX + i, rampY, 1, rampH);
     }
     ctx.fillStyle = theme.muted;
-    ctx.textAlign = 'right';
+    ctx.textAlign = "right";
     ctx.fillText(`${mod.DB_FLOOR} dB`, rampX - 6, rampY + rampH / 2);
-    ctx.textAlign = 'left';
-    ctx.fillText('0 dB', GUTTER_LEFT + plotW + 2, rampY + rampH / 2);
+    ctx.textAlign = "left";
+    ctx.fillText("0 dB", GUTTER_LEFT + plotW + 2, rampY + rampH / 2);
   }
 
   // Waveform strip.
@@ -929,8 +953,8 @@ function drawAll(ctx: CanvasRenderingContext2D, theme: Theme, overlays: boolean)
       }
     }
     ctx.fillStyle = theme.muted;
-    ctx.textAlign = 'right';
-    ctx.fillText('Wave', GUTTER_LEFT - 8, mid);
+    ctx.textAlign = "right";
+    ctx.fillText("Wave", GUTTER_LEFT - 8, mid);
   }
 
   // Spectrogram bitmap.
@@ -947,28 +971,36 @@ function drawAll(ctx: CanvasRenderingContext2D, theme: Theme, overlays: boolean)
   // Frequency axis on the left.
   ctx.fillStyle = theme.muted;
   ctx.strokeStyle = theme.border;
-  ctx.textAlign = 'right';
+  ctx.textAlign = "right";
   for (const hz of freqTicks()) {
     const y = top + fractionAtFreq(hz) * SPEC_H;
     ctx.beginPath();
     ctx.moveTo(GUTTER_LEFT - 4, Math.round(y) + 0.5);
     ctx.lineTo(GUTTER_LEFT, Math.round(y) + 0.5);
     ctx.stroke();
-    ctx.fillText(mod ? mod.freqToLabel(hz) : `${Math.round(hz)}`, GUTTER_LEFT - 8, clamp(y, top + 6, top + SPEC_H - 6));
+    ctx.fillText(
+      mod ? mod.freqToLabel(hz) : `${Math.round(hz)}`,
+      GUTTER_LEFT - 8,
+      clamp(y, top + 6, top + SPEC_H - 6),
+    );
   }
 
   // Time axis underneath.
   if (duration > 0 && mod) {
     const step = pickTimeStep(duration, Math.max(3, Math.floor(plotW / 84)));
     const places = step < 1 ? 1 : 0;
-    ctx.textAlign = 'center';
+    ctx.textAlign = "center";
     for (let t = 0; t <= duration + 1e-6; t += step) {
       const x = GUTTER_LEFT + (t / duration) * plotW;
       ctx.beginPath();
       ctx.moveTo(Math.round(x) + 0.5, top + SPEC_H);
       ctx.lineTo(Math.round(x) + 0.5, top + SPEC_H + 4);
       ctx.stroke();
-      ctx.fillText(mod.secondsToLabel(t, places), clamp(x, GUTTER_LEFT + 16, GUTTER_LEFT + plotW - 16), top + SPEC_H + 14);
+      ctx.fillText(
+        mod.secondsToLabel(t, places),
+        clamp(x, GUTTER_LEFT + 16, GUTTER_LEFT + plotW - 16),
+        top + SPEC_H + 14,
+      );
     }
   }
 
@@ -1018,7 +1050,7 @@ function draw() {
     canvas.height = backingH;
   }
   canvas.style.aspectRatio = `${width} / ${height}`;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) return;
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   drawAll(ctx, readTheme(canvas), true);
@@ -1027,25 +1059,25 @@ function draw() {
 function exportPng() {
   const canvas = canvasEl.value;
   if (!canvas || !ready.value) return;
-  const out = document.createElement('canvas');
+  const out = document.createElement("canvas");
   out.width = canvas.width;
   out.height = canvas.height;
-  const ctx = out.getContext('2d');
+  const ctx = out.getContext("2d");
   if (!ctx) return;
   ctx.setTransform(renderScale.value, 0, 0, renderScale.value, 0, 0);
   drawAll(ctx, readTheme(canvas), false);
   out.toBlob((blob) => {
     if (!blob) {
       error.value = {
-        message: 'This browser could not encode the spectrogram as a PNG.',
-        fix: 'Take a screenshot of the panel instead, or try another browser.',
+        message: "This browser could not encode the spectrogram as a PNG.",
+        fix: "Take a screenshot of the panel instead, or try another browser.",
       };
       return;
     }
     const url = URL.createObjectURL(blob);
     triggerDownload(url, `${baseName(fileName.value)}-spectrogram.png`);
     URL.revokeObjectURL(url);
-  }, 'image/png');
+  }, "image/png");
 }
 
 /* ---------------------------------------------------------------- */
@@ -1150,7 +1182,7 @@ onMounted(() => {
   themeWatcher = new MutationObserver(() => draw());
   themeWatcher.observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ['class'],
+    attributeFilter: ["class"],
   });
   draw();
 });
@@ -1163,7 +1195,7 @@ onUnmounted(() => {
   themeWatcher?.disconnect();
   themeWatcher = null;
   specImage = null;
-  if (audioCtx && audioCtx.state !== 'closed') {
+  if (audioCtx && audioCtx.state !== "closed") {
     audioCtx.close().catch(() => {
       // Closing a context the browser already tore down is not an error worth showing.
     });
@@ -1223,10 +1255,10 @@ const rateSummary = computed(() => {
 });
 
 const summary = computed(() => {
-  if (!hasAudio.value) return '';
-  const channels = channelCount.value === 1 ? 'mono' : `${channelCount.value} channels`;
+  if (!hasAudio.value) return "";
+  const channels = channelCount.value === 1 ? "mono" : `${channelCount.value} channels`;
   const mod = logic.value;
-  const length = mod ? mod.secondsToLabel(fullDuration.value) : '';
+  const length = mod ? mod.secondsToLabel(fullDuration.value) : "";
   return `${length}, ${rateSummary.value}, ${channels}`;
 });
 
@@ -1240,10 +1272,10 @@ function mb(bytes: number): string {
 
 const busy = computed(
   () =>
-    stage.value === 'loading-engine' ||
-    stage.value === 'extracting' ||
-    stage.value === 'decoding' ||
-    stage.value === 'analyzing',
+    stage.value === "loading-engine" ||
+    stage.value === "extracting" ||
+    stage.value === "decoding" ||
+    stage.value === "analyzing",
 );
 
 const downloadPercent = computed(() =>
@@ -1252,51 +1284,51 @@ const downloadPercent = computed(() =>
 
 const stageLabel = computed(() => {
   switch (stage.value) {
-    case 'loading-engine':
+    case "loading-engine":
       return downloadTotal.value > 0
         ? `Downloading the audio extractor (${mb(downloadBytes.value)} of ${mb(downloadTotal.value)} MB)…`
-        : 'Downloading the audio extractor…';
-    case 'extracting':
-      return 'Extracting the audio track from the video…';
-    case 'decoding':
-      return 'Decoding audio…';
-    case 'analyzing':
-      return 'Running the FFT…';
+        : "Downloading the audio extractor…";
+    case "extracting":
+      return "Extracting the audio track from the video…";
+    case "decoding":
+      return "Decoding audio…";
+    case "analyzing":
+      return "Running the FFT…";
     default:
-      return '';
+      return "";
   }
 });
 
 const stagePercentText = computed(() => {
-  if (stage.value === 'analyzing') return `${progress.value}%`;
-  if (stage.value === 'loading-engine' && downloadTotal.value > 0) {
+  if (stage.value === "analyzing") return `${progress.value}%`;
+  if (stage.value === "loading-engine" && downloadTotal.value > 0) {
     return `${Math.round(downloadPercent.value)}%`;
   }
-  if (stage.value === 'extracting' && extractRatio.value !== null) {
+  if (stage.value === "extracting" && extractRatio.value !== null) {
     return `${Math.round(extractRatio.value * 100)}%`;
   }
-  return '';
+  return "";
 });
 
 /** The known progress percentage for aria, or undefined for indeterminate stages. */
 const stageValueNow = computed<number | undefined>(() => {
-  if (stage.value === 'analyzing') return progress.value;
-  if (stage.value === 'loading-engine') {
+  if (stage.value === "analyzing") return progress.value;
+  if (stage.value === "loading-engine") {
     return downloadTotal.value > 0 ? Math.round(downloadPercent.value) : undefined;
   }
-  if (stage.value === 'extracting') {
+  if (stage.value === "extracting") {
     return extractRatio.value !== null ? Math.round(extractRatio.value * 100) : undefined;
   }
   return undefined;
 });
 
 const stageBarWidth = computed(() => {
-  if (stage.value === 'analyzing') return `${progress.value}%`;
-  if (stage.value === 'loading-engine') return `${Math.max(4, downloadPercent.value)}%`;
-  if (stage.value === 'extracting') {
-    return extractRatio.value !== null ? `${Math.round(extractRatio.value * 100)}%` : '30%';
+  if (stage.value === "analyzing") return `${progress.value}%`;
+  if (stage.value === "loading-engine") return `${Math.max(4, downloadPercent.value)}%`;
+  if (stage.value === "extracting") {
+    return extractRatio.value !== null ? `${Math.round(extractRatio.value * 100)}%` : "30%";
   }
-  return '15%';
+  return "15%";
 });
 
 /** True when this connection looks metered, for the one tap prompt copy. */
@@ -1309,7 +1341,7 @@ const hoverChipStyle = computed(() => {
   return {
     left: `${flip ? point.px - 12 : point.px + 12}px`,
     top: `${point.py + 12}px`,
-    transform: flip ? 'translateX(-100%)' : 'none',
+    transform: flip ? "translateX(-100%)" : "none",
   };
 });
 </script>
@@ -1328,35 +1360,25 @@ const hoverChipStyle = computed(() => {
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Audio or video
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          @click="fileInput?.click()"
-        >
-          Open file…
-        </Button>
+        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
         <input
           ref="fileInput"
           type="file"
           class="hidden"
           accept="audio/*,video/*,.mkv,.ts,.m2ts,.avi,.flv,.wmv"
           @change="onPickFile"
-        >
+        />
       </div>
 
-      <div
-        v-if="fileName"
-        class="px-3 pt-2 pb-3"
-      >
+      <div v-if="fileName" class="px-3 pt-2 pb-3">
         <span
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
           <span class="truncate font-medium">{{ fileName }}</span>
           <span class="shrink-0 text-muted-foreground">{{ humanSize(fileSize) }}</span>
-          <span
-            v-if="summary"
-            class="shrink-0 text-muted-foreground tabular-nums"
-          >{{ summary }}</span>
+          <span v-if="summary" class="shrink-0 text-muted-foreground tabular-nums">{{
+            summary
+          }}</span>
           <button
             type="button"
             aria-label="Remove audio file"
@@ -1368,10 +1390,7 @@ const hoverChipStyle = computed(() => {
         </span>
       </div>
 
-      <p
-        v-else
-        class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
-      >
+      <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
         Drop an audio or video file here to see its waveform and its frequency spectrogram. WAV,
         MP3, FLAC, OGG, and M4A all work, and a video's audio track is extracted locally first.
         Everything runs in this tab: your files and inputs never leave your device.
@@ -1387,10 +1406,7 @@ const hoverChipStyle = computed(() => {
       <p class="font-medium text-destructive">
         {{ error.message }}
       </p>
-      <p
-        v-if="error.fix"
-        class="mt-1 text-muted-foreground"
-      >
+      <p v-if="error.fix" class="mt-1 text-muted-foreground">
         {{ error.fix }}
       </p>
     </div>
@@ -1404,16 +1420,12 @@ const hoverChipStyle = computed(() => {
         Audio extractor
       </span>
       <p class="text-sm text-muted-foreground">
-        Reading a video's audio needs a one time download of about 31 MB, an ffmpeg engine that
-        runs inside this tab. {{ connectionMetered ? 'Your connection looks metered, so it' : 'It' }}
+        Reading a video's audio needs a one time download of about 31 MB, an ffmpeg engine that runs
+        inside this tab. {{ connectionMetered ? "Your connection looks metered, so it" : "It" }}
         will not start until you ask. Your browser keeps the engine afterwards, so later videos
         start straight from the cache. Your files and inputs never leave your device.
       </p>
-      <Button
-        class="self-start"
-        size="sm"
-        @click="startPendingVideo"
-      >
+      <Button class="self-start" size="sm" @click="startPendingVideo">
         Extract audio (about 31 MB)
       </Button>
     </div>
@@ -1424,88 +1436,42 @@ const hoverChipStyle = computed(() => {
       class="flex flex-wrap items-end gap-4 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
     >
       <div class="flex w-40 flex-col gap-1.5">
-        <Label
-          for="spec-fft"
-          class="text-xs text-muted-foreground"
-        >FFT size</Label>
-        <Select
-          :model-value="fftSize"
-          @update:model-value="(v) => (fftSize = String(v))"
-        >
-          <SelectTrigger
-            id="spec-fft"
-            size="sm"
-            class="w-full bg-card"
-          >
+        <Label for="spec-fft" class="text-xs text-muted-foreground">FFT size</Label>
+        <Select :model-value="fftSize" @update:model-value="(v) => (fftSize = String(v))">
+          <SelectTrigger id="spec-fft" size="sm" class="w-full bg-card">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1024">
-              1024 (sharper in time)
-            </SelectItem>
-            <SelectItem value="2048">
-              2048 (balanced)
-            </SelectItem>
-            <SelectItem value="4096">
-              4096 (sharper in frequency)
-            </SelectItem>
+            <SelectItem value="1024"> 1024 (sharper in time) </SelectItem>
+            <SelectItem value="2048"> 2048 (balanced) </SelectItem>
+            <SelectItem value="4096"> 4096 (sharper in frequency) </SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div class="flex w-32 flex-col gap-1.5">
-        <Label
-          for="spec-colors"
-          class="text-xs text-muted-foreground"
-        >Colors</Label>
-        <Select
-          :model-value="colors"
-          @update:model-value="(v) => (colors = String(v))"
-        >
-          <SelectTrigger
-            id="spec-colors"
-            size="sm"
-            class="w-full bg-card"
-          >
+        <Label for="spec-colors" class="text-xs text-muted-foreground">Colors</Label>
+        <Select :model-value="colors" @update:model-value="(v) => (colors = String(v))">
+          <SelectTrigger id="spec-colors" size="sm" class="w-full bg-card">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="viridis">
-              Viridis
-            </SelectItem>
-            <SelectItem value="magma">
-              Magma
-            </SelectItem>
-            <SelectItem value="gray">
-              Grayscale
-            </SelectItem>
+            <SelectItem value="viridis"> Viridis </SelectItem>
+            <SelectItem value="magma"> Magma </SelectItem>
+            <SelectItem value="gray"> Grayscale </SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div class="flex w-36 flex-col gap-1.5">
-        <Label
-          for="spec-scale"
-          class="text-xs text-muted-foreground"
-        >Frequency axis</Label>
-        <Select
-          :model-value="axisScale"
-          @update:model-value="(v) => (axisScale = String(v))"
-        >
-          <SelectTrigger
-            id="spec-scale"
-            size="sm"
-            class="w-full bg-card"
-          >
+        <Label for="spec-scale" class="text-xs text-muted-foreground">Frequency axis</Label>
+        <Select :model-value="axisScale" @update:model-value="(v) => (axisScale = String(v))">
+          <SelectTrigger id="spec-scale" size="sm" class="w-full bg-card">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="linear">
-              Linear
-            </SelectItem>
-            <SelectItem value="log">
-              Logarithmic
-            </SelectItem>
+            <SelectItem value="linear"> Linear </SelectItem>
+            <SelectItem value="log"> Logarithmic </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -1516,28 +1482,14 @@ const hoverChipStyle = computed(() => {
           :model-value="showWaveform"
           @update:model-value="(v) => (showWaveform = Boolean(v))"
         />
-        <Label
-          for="spec-wave"
-          class="text-xs text-muted-foreground"
-        >Show waveform</Label>
+        <Label for="spec-wave" class="text-xs text-muted-foreground">Show waveform</Label>
       </div>
 
       <div class="ml-auto flex items-center gap-2 pb-1">
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="!ready"
-          @click="exportPng"
-        >
+        <Button variant="outline" size="sm" :disabled="!ready" @click="exportPng">
           Download PNG
         </Button>
-        <Button
-          v-if="playing"
-          size="sm"
-          @click="stopPlayback"
-        >
-          Stop
-        </Button>
+        <Button v-if="playing" size="sm" @click="stopPlayback"> Stop </Button>
       </div>
     </div>
 
@@ -1566,10 +1518,7 @@ const hoverChipStyle = computed(() => {
     </div>
 
     <!-- Plot -->
-    <div
-      ref="wrapper"
-      class="relative w-full"
-    >
+    <div ref="wrapper" class="relative w-full">
       <canvas
         ref="canvasEl"
         class="w-full rounded-[10px] shadow-[var(--sh-inset)]"
@@ -1583,8 +1532,8 @@ const hoverChipStyle = computed(() => {
         class="pointer-events-none absolute z-10 rounded-[8px] border bg-popover px-2 py-1 font-mono text-[11px] whitespace-nowrap text-popover-foreground shadow-[var(--sh-md)] tabular-nums"
         :style="hoverChipStyle"
       >
-        {{ logic.secondsToLabel(hover.time, 2) }} &middot; {{ logic.freqToLabel(hover.freq) }} &middot;
-        {{ hover.db.toFixed(1) }} dB
+        {{ logic.secondsToLabel(hover.time, 2) }} &middot;
+        {{ logic.freqToLabel(hover.freq) }} &middot; {{ hover.db.toFixed(1) }} dB
       </div>
     </div>
 
@@ -1599,9 +1548,9 @@ const hoverChipStyle = computed(() => {
         play from that moment, and click again to stop.
       </p>
       <p v-if="truncated && logic">
-        This {{ isVideo ? 'video' : 'file' }} is {{ logic.secondsToLabel(fullDuration) }} long. Only
+        This {{ isVideo ? "video" : "file" }} is {{ logic.secondsToLabel(fullDuration) }} long. Only
         the first {{ logic.secondsToLabel(analyzedDuration) }} are
-        {{ isVideo ? 'extracted, analyzed, and drawn' : 'analyzed and drawn' }}, because a longer
+        {{ isVideo ? "extracted, analyzed, and drawn" : "analyzed and drawn" }}, because a longer
         analysis would not fit in browser memory on most machines.
       </p>
       <p v-if="ready">

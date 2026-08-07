@@ -1,6 +1,6 @@
-import { UAParser } from 'ua-parser-js';
-import { isBot } from 'ua-parser-js/bot-detection';
-import { ToolError, type ToolLogic } from '../types';
+import { UAParser } from "ua-parser-js";
+import { isBot } from "ua-parser-js/bot-detection";
+import { ToolError, type ToolLogic } from "../types";
 
 export interface UserAgentParserResult {
   [label: string]: string;
@@ -14,24 +14,24 @@ export interface UserAgentParserResult {
 const BOT_HINTS = /(bot|crawler|spider|curl|wget)/i;
 
 function nameAndVersion(name?: string, version?: string): string {
-  if (!name) return 'Unknown';
+  if (!name) return "Unknown";
   return version ? `${name} ${version}` : name;
 }
 
 function deviceLabel(device: { vendor?: string; model?: string; type?: string }): string {
   const { vendor, model, type } = device;
-  if (!vendor && !model && !type) return 'Desktop (no device markers)';
-  const parts = [vendor, model].filter(Boolean).join(' ');
-  return type ? `${parts || 'Unknown'} (${type})` : parts || 'Unknown';
+  if (!vendor && !model && !type) return "Desktop (no device markers)";
+  const parts = [vendor, model].filter(Boolean).join(" ");
+  return type ? `${parts || "Unknown"} (${type})` : parts || "Unknown";
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: Record<string, unknown>): UserAgentParserResult {
-  const ua = (input ?? '').trim();
+  const ua = (input ?? "").trim();
   if (!ua)
     throw new ToolError(
-      'empty-input',
-      'Enter a User-Agent string to decode.',
+      "empty-input",
+      "Enter a User-Agent string to decode.",
       'Paste a User-Agent string: find yours by searching "what is my user agent".',
     );
 
@@ -45,11 +45,11 @@ export function run(input: string, _opts: Record<string, unknown>): UserAgentPar
   };
 
   if (result.cpu.architecture) {
-    out['CPU architecture'] = result.cpu.architecture;
+    out["CPU architecture"] = result.cpu.architecture;
   }
 
   if (isBot(ua) || BOT_HINTS.test(ua)) {
-    out['Bot?'] = 'Yes, this looks like a known crawler/bot, not a browser.';
+    out["Bot?"] = "Yes, this looks like a known crawler/bot, not a browser.";
   }
 
   return out;

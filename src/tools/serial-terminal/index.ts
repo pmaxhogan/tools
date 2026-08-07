@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * The data processing core of the serial terminal.
@@ -49,9 +49,9 @@ export interface AssembledChunk {
  *    decision until the next chunk arrives.
  */
 export class LineAssembler {
-  private decoder = new TextDecoder('utf-8');
+  private decoder = new TextDecoder("utf-8");
   /** Text of the line currently being built, not yet terminated. */
-  private partial = '';
+  private partial = "";
   /** The previous chunk ended with a CR whose meaning is still unknown. */
   private pendingCR = false;
 
@@ -64,40 +64,40 @@ export class LineAssembler {
     // character) tells us nothing, so a pending CR stays pending.
     if (this.pendingCR && text.length > 0) {
       this.pendingCR = false;
-      if (text.startsWith('\n')) {
+      if (text.startsWith("\n")) {
         // The CR was the first half of a CRLF split across chunks.
         lines.push(this.partial);
-        this.partial = '';
+        this.partial = "";
         text = text.slice(1);
       } else {
         // A bare CR: the line restarts and whatever was drawn is replaced.
-        this.partial = '';
+        this.partial = "";
       }
     }
 
     for (let i = 0; i < text.length; i++) {
       const ch = text[i] as string;
 
-      if (ch === '\n') {
+      if (ch === "\n") {
         lines.push(this.partial);
-        this.partial = '';
+        this.partial = "";
         continue;
       }
 
-      if (ch === '\r') {
+      if (ch === "\r") {
         if (i === text.length - 1) {
           // Ambiguous. Keep `partial` intact so a following LF can commit it.
           this.pendingCR = true;
           break;
         }
-        if (text[i + 1] === '\n') {
+        if (text[i + 1] === "\n") {
           lines.push(this.partial);
-          this.partial = '';
+          this.partial = "";
           i++;
           continue;
         }
         // Bare CR in the middle of a chunk: restart the line.
-        this.partial = '';
+        this.partial = "";
         continue;
       }
 
@@ -115,15 +115,15 @@ export class LineAssembler {
     const tail = this.decoder.decode();
     if (tail) this.partial += tail;
     const lines = this.partial ? [this.partial] : [];
-    this.partial = '';
+    this.partial = "";
     this.pendingCR = false;
     return { lines };
   }
 
   /** Drops all buffered state. Used when a new connection starts. */
   reset(): void {
-    this.decoder = new TextDecoder('utf-8');
-    this.partial = '';
+    this.decoder = new TextDecoder("utf-8");
+    this.partial = "";
     this.pendingCR = false;
   }
 }
@@ -141,7 +141,7 @@ const HEX_ROW = 16;
  * so a rolling capture keeps counting up instead of restarting at zero.
  */
 export function formatHexDump(bytes: Uint8Array, offsetStart = 0): string {
-  if (bytes.length === 0) return '';
+  if (bytes.length === 0) return "";
 
   const rows: string[] = [];
   for (let i = 0; i < bytes.length; i += HEX_ROW) {
@@ -149,29 +149,27 @@ export function formatHexDump(bytes: Uint8Array, offsetStart = 0): string {
     const cells: string[] = [];
     for (let j = 0; j < HEX_ROW; j++) {
       const byte = slice[j];
-      cells.push(byte === undefined ? '  ' : byte.toString(16).padStart(2, '0'));
+      cells.push(byte === undefined ? "  " : byte.toString(16).padStart(2, "0"));
     }
 
-    let ascii = '';
+    let ascii = "";
     for (let j = 0; j < slice.length; j++) {
       const byte = slice[j] as number;
-      ascii += byte >= 0x20 && byte <= 0x7e ? String.fromCharCode(byte) : '.';
+      ascii += byte >= 0x20 && byte <= 0x7e ? String.fromCharCode(byte) : ".";
     }
 
-    const offset = (offsetStart + i).toString(16).padStart(8, '0');
-    rows.push(
-      `${offset}  ${cells.slice(0, 8).join(' ')}  ${cells.slice(8).join(' ')}  |${ascii}|`,
-    );
+    const offset = (offsetStart + i).toString(16).padStart(8, "0");
+    rows.push(`${offset}  ${cells.slice(0, 8).join(" ")}  ${cells.slice(8).join(" ")}  |${ascii}|`);
   }
-  return rows.join('\n');
+  return rows.join("\n");
 }
 
 /* ------------------------------------------------------------------ *
  * send parsing
  * ------------------------------------------------------------------ */
 
-export type SendMode = 'text' | 'hex';
-export type LineEnding = 'none' | 'lf' | 'crlf' | 'cr';
+export type SendMode = "text" | "hex";
+export type LineEnding = "none" | "lf" | "crlf" | "cr";
 
 const ENDING_BYTES: Record<LineEnding, number[]> = {
   none: [],
@@ -195,28 +193,28 @@ const HEX_FIX =
 export function parseSendInput(
   text: string,
   mode: SendMode,
-  lineEnding: LineEnding = 'lf',
+  lineEnding: LineEnding = "lf",
 ): Uint8Array {
   const ending = ENDING_BYTES[lineEnding] ?? [];
   let payload: Uint8Array;
 
-  if (mode === 'hex') {
-    let cleaned = '';
+  if (mode === "hex") {
+    let cleaned = "";
     for (const token of text.split(/[\s,]+/)) {
       if (!token) continue;
-      cleaned += token.replace(/^0x/i, '');
+      cleaned += token.replace(/^0x/i, "");
     }
 
     if (!/^[0-9a-fA-F]*$/.test(cleaned)) {
       throw new ToolError(
-        'invalid-hex',
-        'That is not a hex byte string: it contains characters that are not hex digits.',
+        "invalid-hex",
+        "That is not a hex byte string: it contains characters that are not hex digits.",
         HEX_FIX,
       );
     }
     if (cleaned.length % 2 !== 0) {
       throw new ToolError(
-        'odd-nibbles',
+        "odd-nibbles",
         `Hex input has ${cleaned.length} digits, which is an odd number, so the last byte is incomplete.`,
         HEX_FIX,
       );
@@ -232,9 +230,9 @@ export function parseSendInput(
 
   if (payload.length === 0 && ending.length === 0) {
     throw new ToolError(
-      'empty-input',
-      'There is nothing to send.',
-      'Type something to send, or pick a line ending so pressing send delivers a bare newline.',
+      "empty-input",
+      "There is nothing to send.",
+      "Type something to send, or pick a line ending so pressing send delivers a bare newline.",
     );
   }
 
@@ -252,7 +250,7 @@ export function parseSendInput(
 export const BAUD_HINT_MIN_SAMPLE = 16;
 
 const BAUD_ADVICE =
-  'Try another baud rate: 115200 and 9600 cover most boards, and an ESP32 prints its first boot lines at 74880.';
+  "Try another baud rate: 115200 and 9600 cover most boards, and an ESP32 prints its first boot lines at 74880.";
 
 /**
  * Looks at the first bytes of a session and guesses whether the baud rate is
@@ -271,9 +269,9 @@ export function autoDetectBaudHint(sample: Uint8Array): string | null {
     else if (byte < 0x20 && byte !== 0x09 && byte !== 0x0a && byte !== 0x0d) control++;
   }
 
-  const decoded = new TextDecoder('utf-8').decode(sample);
+  const decoded = new TextDecoder("utf-8").decode(sample);
   let replacement = 0;
-  const REPLACEMENT_CHAR = '�';
+  const REPLACEMENT_CHAR = "�";
   for (const ch of decoded) {
     if (ch === REPLACEMENT_CHAR) replacement++;
   }
@@ -304,7 +302,7 @@ export function autoDetectBaudHint(sample: Uint8Array): string | null {
  */
 export function timestamp(ms: number): string {
   const d = new Date(ms);
-  const pad = (n: number, width = 2) => String(n).padStart(width, '0');
+  const pad = (n: number, width = 2) => String(n).padStart(width, "0");
   return `[${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}]`;
 }
 
@@ -318,15 +316,15 @@ export interface SerialTerminalOpts {
 }
 
 const USAGE_ROWS: Record<string, string> = {
-  'How this works':
-    'This tool is a live serial terminal. Click Connect a device, pick the port your board is on, and the log fills as the device talks. Baud rate, data bits, stop bits, parity and the DTR and RTS lines are all set in the panel.',
+  "How this works":
+    "This tool is a live serial terminal. Click Connect a device, pick the port your board is on, and the log fills as the device talks. Baud rate, data bits, stop bits, parity and the DTR and RTS lines are all set in the panel.",
   Browsers:
-    'Talking to a port needs the Web Serial API, which Chromium browsers such as Chrome, Edge, Brave, Arc and Opera ship on desktop. Firefox has recent partial support and Safari has none, so the page checks for the API rather than for a browser name.',
-  'One port, one holder':
-    'A serial port can only be open in one place at a time. If the Arduino IDE, PlatformIO, screen or another tab already holds it, close that first.',
-  'Paste path':
-    'Paste a hex capture into the input to get a hex dump, the decoded text and a wrong baud check, without a device attached.',
-  Privacy: 'Everything happens in this tab: your files and inputs never leave your device.',
+    "Talking to a port needs the Web Serial API, which Chromium browsers such as Chrome, Edge, Brave, Arc and Opera ship on desktop. Firefox has recent partial support and Safari has none, so the page checks for the API rather than for a browser name.",
+  "One port, one holder":
+    "A serial port can only be open in one place at a time. If the Arduino IDE, PlatformIO, screen or another tab already holds it, close that first.",
+  "Paste path":
+    "Paste a hex capture into the input to get a hex dump, the decoded text and a wrong baud check, without a device attached.",
+  Privacy: "Everything happens in this tab: your files and inputs never leave your device.",
 };
 
 /**
@@ -336,26 +334,26 @@ const USAGE_ROWS: Record<string, string> = {
  * makes the pure surface useful for a saved dump.
  */
 export function run(
-  input: string | Uint8Array = '',
+  input: string | Uint8Array = "",
   opts: SerialTerminalOpts = {},
 ): Record<string, string> {
   const hasInput = input instanceof Uint8Array ? input.length > 0 : input.trim().length > 0;
   if (!hasInput) return { ...USAGE_ROWS };
 
-  const bytes = input instanceof Uint8Array ? input : parseSendInput(input, 'hex', 'none');
+  const bytes = input instanceof Uint8Array ? input : parseSendInput(input, "hex", "none");
 
   const assembler = new LineAssembler();
   const first = assembler.push(bytes);
   const rest = assembler.flush();
-  const text = [...first.lines, ...rest.lines].join('\n');
+  const text = [...first.lines, ...rest.lines].join("\n");
 
   const hint = autoDetectBaudHint(bytes);
 
   return {
-    Summary: `${bytes.length} byte${bytes.length === 1 ? '' : 's'}, ${first.lines.length + rest.lines.length} line${first.lines.length + rest.lines.length === 1 ? '' : 's'} of text.`,
-    'Hex dump': formatHexDump(bytes, opts.offset ?? 0),
-    'Decoded text': text,
-    'Baud check': hint ?? 'Nothing in this sample looks like a baud rate mismatch.',
+    Summary: `${bytes.length} byte${bytes.length === 1 ? "" : "s"}, ${first.lines.length + rest.lines.length} line${first.lines.length + rest.lines.length === 1 ? "" : "s"} of text.`,
+    "Hex dump": formatHexDump(bytes, opts.offset ?? 0),
+    "Decoded text": text,
+    "Baud check": hint ?? "Nothing in this sample looks like a baud rate mismatch.",
   };
 }
 

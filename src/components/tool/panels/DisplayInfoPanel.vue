@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-import type { ToolMeta } from '@/tools/types';
-import { run } from '@/tools/display-info/index';
-import type { DisplayMediaFeatures, DisplaySnapshot, ScreenSummary } from '@/tools/display-info/index';
-import { Button } from '@/components/ui/button';
-import { Monitor, RefreshCw } from 'lucide-vue-next';
-import OutputView from '../OutputView.vue';
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import type { ToolMeta } from "@/tools/types";
+import { run } from "@/tools/display-info/index";
+import type {
+  DisplayMediaFeatures,
+  DisplaySnapshot,
+  ScreenSummary,
+} from "@/tools/display-info/index";
+import { Button } from "@/components/ui/button";
+import { Monitor, RefreshCw } from "lucide-vue-next";
+import OutputView from "../OutputView.vue";
 
 /**
  * Bespoke panel for Display Info: the pure layer only knows how to describe
@@ -117,34 +121,34 @@ function readStaticFields() {
 
   const orientation = window.screen.orientation;
   orientationType.value = orientation?.type ?? null;
-  orientationAngle.value = typeof orientation?.angle === 'number' ? orientation.angle : null;
+  orientationAngle.value = typeof orientation?.angle === "number" ? orientation.angle : null;
 
-  colorGamut.value = matchMediaValue('color-gamut', ['rec2020', 'p3', 'srgb']);
-  dynamicRange.value = matchMediaValue('dynamic-range', ['high', 'standard']);
-  prefersColorScheme.value = matchMediaValue('prefers-color-scheme', ['dark', 'light']);
-  prefersContrast.value = matchMediaValue('prefers-contrast', [
-    'more',
-    'less',
-    'custom',
-    'no-preference',
+  colorGamut.value = matchMediaValue("color-gamut", ["rec2020", "p3", "srgb"]);
+  dynamicRange.value = matchMediaValue("dynamic-range", ["high", "standard"]);
+  prefersColorScheme.value = matchMediaValue("prefers-color-scheme", ["dark", "light"]);
+  prefersContrast.value = matchMediaValue("prefers-contrast", [
+    "more",
+    "less",
+    "custom",
+    "no-preference",
   ]);
-  prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  pointer.value = matchMediaValue('pointer', ['none', 'coarse', 'fine']);
-  anyPointer.value = matchMediaValue('any-pointer', ['none', 'coarse', 'fine']);
-  hover.value = matchMediaValue('hover', ['none', 'hover']);
-  anyHover.value = matchMediaValue('any-hover', ['none', 'hover']);
+  prefersReducedMotion.value = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  pointer.value = matchMediaValue("pointer", ["none", "coarse", "fine"]);
+  anyPointer.value = matchMediaValue("any-pointer", ["none", "coarse", "fine"]);
+  hover.value = matchMediaValue("hover", ["none", "hover"]);
+  anyHover.value = matchMediaValue("any-hover", ["none", "hover"]);
 
   hardwareConcurrency.value = navigator.hardwareConcurrency ?? null;
 
   const nav = navigator as NavigatorWithExtras;
-  deviceMemory.value = typeof nav.deviceMemory === 'number' ? nav.deviceMemory : null;
+  deviceMemory.value = typeof nav.deviceMemory === "number" ? nav.deviceMemory : null;
 
   const conn = nav.connection;
   if (conn) {
     networkEffectiveType.value = conn.effectiveType ?? null;
-    networkDownlink.value = typeof conn.downlink === 'number' ? conn.downlink : null;
-    networkRtt.value = typeof conn.rtt === 'number' ? conn.rtt : null;
-    networkSaveData.value = typeof conn.saveData === 'boolean' ? conn.saveData : null;
+    networkDownlink.value = typeof conn.downlink === "number" ? conn.downlink : null;
+    networkRtt.value = typeof conn.rtt === "number" ? conn.rtt : null;
+    networkSaveData.value = typeof conn.saveData === "boolean" ? conn.saveData : null;
   }
 }
 
@@ -214,7 +218,7 @@ async function detectDisplays() {
   screensError.value = null;
   const win = window as WindowWithScreenDetails;
   if (!win.getScreenDetails) {
-    screensError.value = 'The Screen Details API is not available in this browser.';
+    screensError.value = "The Screen Details API is not available in this browser.";
     return;
   }
   try {
@@ -222,15 +226,14 @@ async function detectDisplays() {
     screensGranted.value = true;
     updateScreensFromDetails();
     const onChange = () => updateScreensFromDetails();
-    screenDetails.addEventListener('screenschange', onChange);
-    screenDetails.addEventListener('currentscreenchange', onChange);
+    screenDetails.addEventListener("screenschange", onChange);
+    screenDetails.addEventListener("currentscreenchange", onChange);
     cleanupFns.push(() => {
-      screenDetails?.removeEventListener('screenschange', onChange);
-      screenDetails?.removeEventListener('currentscreenchange', onChange);
+      screenDetails?.removeEventListener("screenschange", onChange);
+      screenDetails?.removeEventListener("currentscreenchange", onChange);
     });
   } catch (err) {
-    screensError.value =
-      err instanceof Error ? err.message : 'Could not access display details.';
+    screensError.value = err instanceof Error ? err.message : "Could not access display details.";
   }
 }
 
@@ -241,35 +244,35 @@ async function detectDisplays() {
 onMounted(() => {
   readStaticFields();
   measureRefreshRate();
-  screensSupported.value = 'getScreenDetails' in window;
+  screensSupported.value = "getScreenDetails" in window;
 
   const onChange = () => readStaticFields();
 
-  window.addEventListener('resize', onChange);
-  cleanupFns.push(() => window.removeEventListener('resize', onChange));
+  window.addEventListener("resize", onChange);
+  cleanupFns.push(() => window.removeEventListener("resize", onChange));
 
   const orientation = window.screen.orientation;
   if (orientation) {
-    orientation.addEventListener('change', onChange);
-    cleanupFns.push(() => orientation.removeEventListener('change', onChange));
+    orientation.addEventListener("change", onChange);
+    cleanupFns.push(() => orientation.removeEventListener("change", onChange));
   }
 
   const MEDIA_WATCHES: [string, string[]][] = [
-    ['prefers-color-scheme', ['light', 'dark']],
-    ['prefers-contrast', ['no-preference', 'more', 'less', 'custom']],
-    ['prefers-reduced-motion', ['no-preference', 'reduce']],
-    ['pointer', ['none', 'coarse', 'fine']],
-    ['any-pointer', ['none', 'coarse', 'fine']],
-    ['hover', ['none', 'hover']],
-    ['any-hover', ['none', 'hover']],
-    ['color-gamut', ['srgb', 'p3', 'rec2020']],
-    ['dynamic-range', ['standard', 'high']],
+    ["prefers-color-scheme", ["light", "dark"]],
+    ["prefers-contrast", ["no-preference", "more", "less", "custom"]],
+    ["prefers-reduced-motion", ["no-preference", "reduce"]],
+    ["pointer", ["none", "coarse", "fine"]],
+    ["any-pointer", ["none", "coarse", "fine"]],
+    ["hover", ["none", "hover"]],
+    ["any-hover", ["none", "hover"]],
+    ["color-gamut", ["srgb", "p3", "rec2020"]],
+    ["dynamic-range", ["standard", "high"]],
   ];
   for (const [feature, values] of MEDIA_WATCHES) {
     for (const v of values) {
       const mql = window.matchMedia(`(${feature}: ${v})`);
-      mql.addEventListener('change', onChange);
-      cleanupFns.push(() => mql.removeEventListener('change', onChange));
+      mql.addEventListener("change", onChange);
+      cleanupFns.push(() => mql.removeEventListener("change", onChange));
     }
   }
 
@@ -282,16 +285,16 @@ onMounted(() => {
       onChange();
       trackDpr();
     };
-    mql.addEventListener('change', handler, { once: true });
-    cleanupFns.push(() => mql.removeEventListener('change', handler));
+    mql.addEventListener("change", handler, { once: true });
+    cleanupFns.push(() => mql.removeEventListener("change", handler));
   };
   trackDpr();
 
   const nav = navigator as NavigatorWithExtras;
   if (nav.connection) {
     const conn = nav.connection;
-    conn.addEventListener('change', onChange);
-    cleanupFns.push(() => conn.removeEventListener('change', onChange));
+    conn.addEventListener("change", onChange);
+    cleanupFns.push(() => conn.removeEventListener("change", onChange));
   }
 });
 
@@ -319,15 +322,15 @@ const snapshot = computed<DisplaySnapshot>(() => ({
   },
   orientation: { type: orientationType.value, angle: orientationAngle.value },
   media: {
-    colorGamut: colorGamut.value as DisplayMediaFeatures['colorGamut'],
-    dynamicRange: dynamicRange.value as DisplayMediaFeatures['dynamicRange'],
-    prefersColorScheme: prefersColorScheme.value as DisplayMediaFeatures['prefersColorScheme'],
-    prefersContrast: prefersContrast.value as DisplayMediaFeatures['prefersContrast'],
+    colorGamut: colorGamut.value as DisplayMediaFeatures["colorGamut"],
+    dynamicRange: dynamicRange.value as DisplayMediaFeatures["dynamicRange"],
+    prefersColorScheme: prefersColorScheme.value as DisplayMediaFeatures["prefersColorScheme"],
+    prefersContrast: prefersContrast.value as DisplayMediaFeatures["prefersContrast"],
     prefersReducedMotion: prefersReducedMotion.value,
-    pointer: pointer.value as DisplayMediaFeatures['pointer'],
-    anyPointer: anyPointer.value as DisplayMediaFeatures['pointer'],
-    hover: hover.value as DisplayMediaFeatures['hover'],
-    anyHover: anyHover.value as DisplayMediaFeatures['hover'],
+    pointer: pointer.value as DisplayMediaFeatures["pointer"],
+    anyPointer: anyPointer.value as DisplayMediaFeatures["pointer"],
+    hover: hover.value as DisplayMediaFeatures["hover"],
+    anyHover: anyHover.value as DisplayMediaFeatures["hover"],
   },
   hardware: { hardwareConcurrency: hardwareConcurrency.value, deviceMemory: deviceMemory.value },
   network: {
@@ -352,38 +355,38 @@ const output = computed<Record<string, string> | null>(() => {
  * come straight from index.ts, so a row only ever appears in one place. */
 const GROUPS: { title: string; keys: string[] }[] = [
   {
-    title: 'Screen',
+    title: "Screen",
     keys: [
-      'Screen resolution',
-      'Available screen area',
-      'Window size',
-      'Aspect ratio',
-      'Color depth',
-      'Orientation',
+      "Screen resolution",
+      "Available screen area",
+      "Window size",
+      "Aspect ratio",
+      "Color depth",
+      "Orientation",
     ],
   },
-  { title: 'Pixel density', keys: ['Device pixel ratio', 'Physical pixel resolution'] },
-  { title: 'Refresh rate', keys: ['Refresh rate'] },
-  { title: 'Color and HDR', keys: ['Color gamut', 'Dynamic range (HDR)'] },
+  { title: "Pixel density", keys: ["Device pixel ratio", "Physical pixel resolution"] },
+  { title: "Refresh rate", keys: ["Refresh rate"] },
+  { title: "Color and HDR", keys: ["Color gamut", "Dynamic range (HDR)"] },
   {
-    title: 'Preferences',
-    keys: ['Prefers color scheme', 'Prefers contrast', 'Prefers reduced motion'],
+    title: "Preferences",
+    keys: ["Prefers color scheme", "Prefers contrast", "Prefers reduced motion"],
   },
   {
-    title: 'Input',
+    title: "Input",
     keys: [
-      'Pointer, primary input',
-      'Pointer, any input',
-      'Hover, primary input',
-      'Hover, any input',
+      "Pointer, primary input",
+      "Pointer, any input",
+      "Hover, primary input",
+      "Hover, any input",
     ],
   },
-  { title: 'Hardware', keys: ['CPU logical cores', 'Device memory'] },
+  { title: "Hardware", keys: ["CPU logical cores", "Device memory"] },
   {
-    title: 'Network',
-    keys: ['Network type', 'Network downlink', 'Network round trip time', 'Data saver'],
+    title: "Network",
+    keys: ["Network type", "Network downlink", "Network round trip time", "Data saver"],
   },
-  { title: 'Connected displays', keys: ['Connected displays'] },
+  { title: "Connected displays", keys: ["Connected displays"] },
 ];
 
 const groupedOutput = computed(() => {
@@ -391,9 +394,10 @@ const groupedOutput = computed(() => {
   if (!out) return [];
   return GROUPS.map((group) => ({
     title: group.title,
-    rows: Object.fromEntries(
-      group.keys.filter((k) => k in out).map((k) => [k, out[k]!]),
-    ) as Record<string, string>,
+    rows: Object.fromEntries(group.keys.filter((k) => k in out).map((k) => [k, out[k]!])) as Record<
+      string,
+      string
+    >,
   })).filter((group) => Object.keys(group.rows).length > 0);
 });
 </script>
@@ -401,15 +405,11 @@ const groupedOutput = computed(() => {
 <template>
   <div class="flex flex-col gap-5 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <p class="text-xs text-muted-foreground">
-      Read directly from this browser and updated live as you resize, rotate, or move the
-      window: your files and inputs never leave your device.
+      Read directly from this browser and updated live as you resize, rotate, or move the window:
+      your files and inputs never leave your device.
     </p>
 
-    <div
-      v-for="group in groupedOutput"
-      :key="group.title"
-      class="flex flex-col gap-2"
-    >
+    <div v-for="group in groupedOutput" :key="group.title" class="flex flex-col gap-2">
       <div class="flex items-center justify-between">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">{{
           group.title
@@ -422,11 +422,8 @@ const groupedOutput = computed(() => {
           :disabled="measuringRate"
           @click="measureRefreshRate"
         >
-          <RefreshCw
-            class="size-3.5"
-            aria-hidden="true"
-          />
-          {{ measuringRate ? 'Measuring…' : 'Remeasure' }}
+          <RefreshCw class="size-3.5" aria-hidden="true" />
+          {{ measuringRate ? "Measuring…" : "Remeasure" }}
         </Button>
 
         <Button
@@ -435,11 +432,8 @@ const groupedOutput = computed(() => {
           size="sm"
           @click="detectDisplays"
         >
-          <Monitor
-            class="size-3.5"
-            aria-hidden="true"
-          />
-          {{ screensGranted ? 'Rescan displays' : 'Show all displays' }}
+          <Monitor class="size-3.5" aria-hidden="true" />
+          {{ screensGranted ? "Rescan displays" : "Show all displays" }}
         </Button>
       </div>
 
@@ -447,8 +441,8 @@ const groupedOutput = computed(() => {
         v-if="group.title === 'Connected displays' && !screensSupported"
         class="text-xs text-muted-foreground"
       >
-        Listing every monitor needs the Screen Details API, available in Chromium browsers such
-        as Chrome and Edge on desktop. This browser only reports the current screen below.
+        Listing every monitor needs the Screen Details API, available in Chromium browsers such as
+        Chrome and Edge on desktop. This browser only reports the current screen below.
       </p>
       <p
         v-if="group.title === 'Connected displays' && screensError"

@@ -13,7 +13,7 @@
  * smaller of the two, so planning against it undershoots either interpretation
  * rather than overshooting one of them.
  */
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /* ------------------------------------------------------------------ */
 /* constants                                                           */
@@ -53,7 +53,7 @@ export const MAX_CAP_MB = 2000;
 export const CAPPED_FPS = 30;
 
 /** x264 speed preset. Fast enough to be usable in wasm, still rate accurate. */
-export const PRESET = 'veryfast';
+export const PRESET = "veryfast";
 
 /* ------------------------------------------------------------------ */
 /* types                                                               */
@@ -124,15 +124,13 @@ export function formatMegabytes(bytes: number): string {
 
 /** 83.45 seconds reads as "1:23". Hours appear only when there are any. */
 export function formatClock(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds < 0) return 'unknown';
+  if (!Number.isFinite(seconds) || seconds < 0) return "unknown";
   const total = Math.round(seconds);
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
-  const mm = h > 0 ? String(m).padStart(2, '0') : String(m);
-  return h > 0
-    ? `${h}:${mm}:${String(s).padStart(2, '0')}`
-    : `${mm}:${String(s).padStart(2, '0')}`;
+  const mm = h > 0 ? String(m).padStart(2, "0") : String(m);
+  return h > 0 ? `${h}:${mm}:${String(s).padStart(2, "0")}` : `${mm}:${String(s).padStart(2, "0")}`;
 }
 
 /** Megabytes to bytes, rounded, so a fractional custom cap still lands on an integer. */
@@ -144,7 +142,12 @@ export function megabytesToBytes(mb: number): number {
 /* the plan                                                            */
 /* ------------------------------------------------------------------ */
 
-function infeasible(reason: string, audioKbps = 0, videoKbps = 0, estimatedBytes = 0): CompressionPlan {
+function infeasible(
+  reason: string,
+  audioKbps = 0,
+  videoKbps = 0,
+  estimatedBytes = 0,
+): CompressionPlan {
   return { videoKbps, audioKbps, estimatedBytes, feasible: false, reason };
 }
 
@@ -164,18 +167,18 @@ export function planCompression(input: PlanInput): CompressionPlan {
   const { targetBytes, durationSec, hasAudio } = input;
 
   if (!Number.isFinite(targetBytes) || targetBytes <= 0) {
-    return infeasible('The size cap has to be a positive number of bytes.');
+    return infeasible("The size cap has to be a positive number of bytes.");
   }
   if (!Number.isFinite(durationSec) || durationSec <= 0) {
     return infeasible(
-      'The length of this clip is unknown, so there is no budget to divide over it.'
+      "The length of this clip is unknown, so there is no budget to divide over it.",
     );
   }
 
   const usableBytes = targetBytes * (1 - OVERHEAD_FRACTION) - OVERHEAD_FLOOR_BYTES;
   if (usableBytes <= 0) {
     return infeasible(
-      `A ${formatMegabytes(targetBytes)} cap is smaller than the container overhead it would need, so no bits are left for the streams.`
+      `A ${formatMegabytes(targetBytes)} cap is smaller than the container overhead it would need, so no bits are left for the streams.`,
     );
   }
 
@@ -190,7 +193,7 @@ export function planCompression(input: PlanInput): CompressionPlan {
   if (hasAudio) {
     if (explicit !== undefined) {
       if (!Number.isFinite(explicit) || explicit < 0) {
-        return infeasible('The audio bitrate has to be zero or a positive number of kbps.');
+        return infeasible("The audio bitrate has to be zero or a positive number of kbps.");
       }
       audioKbps = explicit;
     } else {
@@ -246,66 +249,66 @@ function scaleFilter(maxHeight: number): string {
 export function buildPassArgs(pass: 1 | 2, o: PassInput): string[] {
   if (!o.inputName) {
     throw new ToolError(
-      'empty-input',
-      'No input file was named for the encode.',
-      'Pick a video file first.'
+      "empty-input",
+      "No input file was named for the encode.",
+      "Pick a video file first.",
     );
   }
   if (!Number.isFinite(o.videoKbps) || o.videoKbps < 1) {
     throw new ToolError(
-      'invalid-bitrate',
+      "invalid-bitrate",
       `A video bitrate of ${o.videoKbps} kbps cannot be encoded.`,
-      'Raise the size cap or shorten the clip so the plan leaves room for video.'
+      "Raise the size cap or shorten the clip so the plan leaves room for video.",
     );
   }
 
   const args = [
-    '-y',
-    '-i',
+    "-y",
+    "-i",
     o.inputName,
-    '-c:v',
-    'libx264',
-    '-preset',
+    "-c:v",
+    "libx264",
+    "-preset",
     PRESET,
-    '-b:v',
+    "-b:v",
     `${Math.floor(o.videoKbps)}k`,
   ];
 
-  if (o.maxHeight) args.push('-vf', scaleFilter(o.maxHeight));
-  if (o.fps) args.push('-r', String(o.fps));
+  if (o.maxHeight) args.push("-vf", scaleFilter(o.maxHeight));
+  if (o.fps) args.push("-r", String(o.fps));
 
-  args.push('-pass', String(pass));
+  args.push("-pass", String(pass));
 
   if (pass === 1) {
-    args.push('-an', '-f', 'null', '-');
+    args.push("-an", "-f", "null", "-");
     return args;
   }
 
   if (o.audioKbps > 0) {
-    args.push('-c:a', 'aac', '-b:a', `${Math.floor(o.audioKbps)}k`);
+    args.push("-c:a", "aac", "-b:a", `${Math.floor(o.audioKbps)}k`);
   } else {
-    args.push('-an');
+    args.push("-an");
   }
-  args.push('-movflags', '+faststart', o.outputName || 'output.mp4');
+  args.push("-movflags", "+faststart", o.outputName || "output.mp4");
   return args;
 }
 
 /** Shell-safe rendering of an argument list, for the copyable command readout. */
 export function formatCommand(args: string[]): string {
   const quoted = args.map((arg) =>
-    /^[A-Za-z0-9_.:+=\-/]+$/.test(arg) ? arg : `'${arg.replace(/'/g, `'\\''`)}'`
+    /^[A-Za-z0-9_.:+=\-/]+$/.test(arg) ? arg : `'${arg.replace(/'/g, `'\\''`)}'`,
   );
-  return `ffmpeg ${quoted.join(' ')}`;
+  return `ffmpeg ${quoted.join(" ")}`;
 }
 
 /** "clip.mov" at a 10 MB cap becomes "clip-10mb.mp4". */
 export function outputNameFor(originalName: string, capMB: number): string {
-  const dot = originalName.lastIndexOf('.');
+  const dot = originalName.lastIndexOf(".");
   const stem = (dot > 0 ? originalName.slice(0, dot) : originalName)
-    .replace(/[^A-Za-z0-9._-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replace(/[^A-Za-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
     .slice(0, 40);
-  return `${stem || 'video'}-${capMB}mb.mp4`;
+  return `${stem || "video"}-${capMB}mb.mp4`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -322,10 +325,9 @@ const DURATION_RE = /Duration:\s*(\d+):([0-5]\d):([0-5]\d(?:\.\d+)?)/;
  * which is what a stream with no known length reports.
  */
 export function parseDuration(ffprobeLikeLog: string): number | null {
-  const match = DURATION_RE.exec(ffprobeLikeLog ?? '');
+  const match = DURATION_RE.exec(ffprobeLikeLog ?? "");
   if (!match) return null;
-  const seconds =
-    Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
+  const seconds = Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
   return Number.isFinite(seconds) && seconds > 0 ? seconds : null;
 }
 
@@ -348,33 +350,33 @@ export function normalizeDuration(seconds: number): number | null {
  * it is filled in, otherwise the preset select decides.
  */
 export function resolveCapMB(opts: DiscordCompressorOpts): number {
-  const custom = String(opts.customMB ?? '').trim();
+  const custom = String(opts.customMB ?? "").trim();
   if (custom) {
     const parsed = Number(custom);
     if (!Number.isFinite(parsed) || parsed <= 0) {
       throw new ToolError(
-        'invalid-cap',
+        "invalid-cap",
         `"${custom}" is not a size in megabytes.`,
-        'Enter a positive number, for example 25, or clear the field to use a preset cap.'
+        "Enter a positive number, for example 25, or clear the field to use a preset cap.",
       );
     }
     if (parsed > MAX_CAP_MB) {
       throw new ToolError(
-        'invalid-cap',
+        "invalid-cap",
         `A ${parsed} MB cap is larger than this tool will plan for.`,
-        `Enter ${MAX_CAP_MB} MB or less. Past that the browser runs out of memory before the encode finishes.`
+        `Enter ${MAX_CAP_MB} MB or less. Past that the browser runs out of memory before the encode finishes.`,
       );
     }
     return parsed;
   }
 
-  const preset = Number(String(opts.cap ?? '10'));
+  const preset = Number(String(opts.cap ?? "10"));
   return Number.isFinite(preset) && preset > 0 ? preset : 10;
 }
 
 /** '0' or an empty value keeps the source height; anything else is a pixel cap. */
 export function resolveMaxHeight(opts: DiscordCompressorOpts): number | null {
-  const parsed = Number(String(opts.maxHeight ?? '0'));
+  const parsed = Number(String(opts.maxHeight ?? "0"));
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : null;
 }
 
@@ -399,16 +401,16 @@ function parseRequest(input: string): PlanRequest {
     parsed = JSON.parse(input);
   } catch {
     throw new ToolError(
-      'invalid-json',
-      'That is not valid JSON.',
-      'Describe the clip like {"targetMB": 10, "durationSec": 90, "hasAudio": true}.'
+      "invalid-json",
+      "That is not valid JSON.",
+      'Describe the clip like {"targetMB": 10, "durationSec": 90, "hasAudio": true}.',
     );
   }
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     throw new ToolError(
-      'invalid-plan',
-      'The request has to be a JSON object.',
-      'Describe the clip like {"targetMB": 10, "durationSec": 90, "hasAudio": true}.'
+      "invalid-plan",
+      "The request has to be a JSON object.",
+      'Describe the clip like {"targetMB": 10, "durationSec": 90, "hasAudio": true}.',
     );
   }
   return parsed as PlanRequest;
@@ -421,38 +423,38 @@ function parseRequest(input: string): PlanRequest {
  */
 export function run(
   input: Uint8Array | string,
-  opts: DiscordCompressorOpts = {}
+  opts: DiscordCompressorOpts = {},
 ): CompressionReport {
   if (input instanceof Uint8Array) {
     throw new ToolError(
-      'needs-panel',
-      'The encode itself runs in the tool panel on this page, not through this text interface.',
-      'Drop the video into the panel above. To plan a cap here instead, describe the clip as JSON like {"targetMB": 10, "durationSec": 90, "hasAudio": true}.'
+      "needs-panel",
+      "The encode itself runs in the tool panel on this page, not through this text interface.",
+      'Drop the video into the panel above. To plan a cap here instead, describe the clip as JSON like {"targetMB": 10, "durationSec": 90, "hasAudio": true}.',
     );
   }
 
   const text = input.trim();
   if (!text) {
     throw new ToolError(
-      'empty-input',
-      'Describe the clip you want to fit.',
-      'Paste something like {"targetMB": 10, "durationSec": 90, "hasAudio": true}.'
+      "empty-input",
+      "Describe the clip you want to fit.",
+      'Paste something like {"targetMB": 10, "durationSec": 90, "hasAudio": true}.',
     );
   }
 
   const request = parseRequest(text);
 
   const capMB =
-    typeof request.targetMB === 'number' && Number.isFinite(request.targetMB)
+    typeof request.targetMB === "number" && Number.isFinite(request.targetMB)
       ? request.targetMB
       : resolveCapMB(opts);
 
   const durationSec = Number(request.durationSec);
   if (!Number.isFinite(durationSec) || durationSec <= 0) {
     throw new ToolError(
-      'invalid-plan',
-      'The clip length is missing or is not a positive number of seconds.',
-      'Add "durationSec" to the request, for example {"targetMB": 10, "durationSec": 90}.'
+      "invalid-plan",
+      "The clip length is missing or is not a positive number of seconds.",
+      'Add "durationSec" to the request, for example {"targetMB": 10, "durationSec": 90}.',
     );
   }
 
@@ -461,34 +463,34 @@ export function run(
   const plan = planCompression({ targetBytes, durationSec, hasAudio });
 
   const report: CompressionReport = {
-    'Size cap': `${formatMegabytes(targetBytes)} (${targetBytes.toLocaleString('en-US')} bytes)`,
-    'Clip length': `${formatClock(durationSec)} (${durationSec} s)`,
-    'Video bitrate': `${plan.videoKbps} kbps`,
-    'Audio bitrate': plan.audioKbps > 0 ? `${plan.audioKbps} kbps AAC` : 'none, silent output',
-    'Estimated stream size': formatMegabytes(plan.estimatedBytes),
-    'Reserved for the container': formatMegabytes(
-      Math.round(targetBytes * OVERHEAD_FRACTION) + OVERHEAD_FLOOR_BYTES
+    "Size cap": `${formatMegabytes(targetBytes)} (${targetBytes.toLocaleString("en-US")} bytes)`,
+    "Clip length": `${formatClock(durationSec)} (${durationSec} s)`,
+    "Video bitrate": `${plan.videoKbps} kbps`,
+    "Audio bitrate": plan.audioKbps > 0 ? `${plan.audioKbps} kbps AAC` : "none, silent output",
+    "Estimated stream size": formatMegabytes(plan.estimatedBytes),
+    "Reserved for the container": formatMegabytes(
+      Math.round(targetBytes * OVERHEAD_FRACTION) + OVERHEAD_FLOOR_BYTES,
     ),
   };
 
   if (!plan.feasible) {
-    report['Fits the cap'] = `No. ${plan.reason ?? ''}`.trim();
+    report["Fits the cap"] = `No. ${plan.reason ?? ""}`.trim();
     return report;
   }
 
   const headroom = targetBytes - plan.estimatedBytes;
-  report['Fits the cap'] = `Yes, about ${formatMegabytes(headroom)} to spare`;
+  report["Fits the cap"] = `Yes, about ${formatMegabytes(headroom)} to spare`;
 
   const passInput: PassInput = {
-    inputName: 'input.mp4',
+    inputName: "input.mp4",
     videoKbps: plan.videoKbps,
     audioKbps: plan.audioKbps,
     maxHeight: resolveMaxHeight(opts),
     fps: resolveFps(opts),
-    outputName: outputNameFor('input.mp4', capMB),
+    outputName: outputNameFor("input.mp4", capMB),
   };
-  report['ffmpeg pass 1'] = formatCommand(buildPassArgs(1, passInput));
-  report['ffmpeg pass 2'] = formatCommand(buildPassArgs(2, passInput));
+  report["ffmpeg pass 1"] = formatCommand(buildPassArgs(1, passInput));
+  report["ffmpeg pass 2"] = formatCommand(buildPassArgs(2, passInput));
 
   return report;
 }

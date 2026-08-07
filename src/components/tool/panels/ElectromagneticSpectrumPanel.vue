@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
-import type { ToolMeta } from '@/tools/types';
-import { ToolError } from '@/tools/types';
-import { readFragment, writeFragment } from '@/lib/fragment';
+import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
+import type { ToolMeta } from "@/tools/types";
+import { ToolError } from "@/tools/types";
+import { readFragment, writeFragment } from "@/lib/fragment";
 import {
   AXIS_DECADES,
   BANDS,
@@ -21,10 +21,10 @@ import {
   rgbToHex,
   wavelengthNmToRgb,
   type Readout,
-} from '@/tools/electromagnetic-spectrum/index';
-import { Button } from '@/components/ui/button';
-import CopyButton from '../CopyButton.vue';
-import { Download, Link as LinkIcon, Check, Search } from 'lucide-vue-next';
+} from "@/tools/electromagnetic-spectrum/index";
+import { Button } from "@/components/ui/button";
+import CopyButton from "../CopyButton.vue";
+import { Download, Link as LinkIcon, Check, Search } from "lucide-vue-next";
 
 /**
  * Bespoke panel for the Electromagnetic Spectrum explorer.
@@ -51,7 +51,7 @@ const MIN_SPAN = 0.0015;
 const containerRef = ref<HTMLDivElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 
-const orientation = ref<'horizontal' | 'vertical'>('horizontal');
+const orientation = ref<"horizontal" | "vertical">("horizontal");
 const cssW = ref(800);
 const cssH = ref(320);
 
@@ -63,8 +63,8 @@ const hoverFreq = ref<number | null>(null);
 const pinnedFreq = ref<number | null>(null);
 const pointerPx = ref<{ x: number; y: number } | null>(null);
 
-const jumpText = ref('');
-const jumpError = ref('');
+const jumpText = ref("");
+const jumpError = ref("");
 const linkCopied = ref(false);
 
 const reducedMotion = ref(false);
@@ -74,34 +74,40 @@ const reducedMotion = ref(false);
 /* ------------------------------------------------------------------ */
 
 const colors = reactive({
-  fg: '#1b1917',
-  muted: '#57514a',
-  border: '#e7e2da',
-  surface: '#f0ede8',
-  card: '#ffffff',
-  accentSoft: '#efebfe',
-  primary: '#5b4bd6',
-  positive: '#2f7d5b',
+  fg: "#1b1917",
+  muted: "#57514a",
+  border: "#e7e2da",
+  surface: "#f0ede8",
+  card: "#ffffff",
+  accentSoft: "#efebfe",
+  primary: "#5b4bd6",
+  positive: "#2f7d5b",
 });
 
 function refreshColors() {
   const cs = getComputedStyle(document.documentElement);
   const read = (name: string, fallback: string) => cs.getPropertyValue(name).trim() || fallback;
-  colors.fg = read('--foreground', colors.fg);
-  colors.muted = read('--muted-foreground', colors.muted);
-  colors.border = read('--border', colors.border);
-  colors.surface = read('--secondary', colors.surface);
-  colors.card = read('--card', colors.card);
-  colors.accentSoft = read('--accent-soft', colors.accentSoft);
-  colors.primary = read('--primary', colors.primary);
-  colors.positive = read('--positive', colors.positive);
+  colors.fg = read("--foreground", colors.fg);
+  colors.muted = read("--muted-foreground", colors.muted);
+  colors.border = read("--border", colors.border);
+  colors.surface = read("--secondary", colors.surface);
+  colors.card = read("--card", colors.card);
+  colors.accentSoft = read("--accent-soft", colors.accentSoft);
+  colors.primary = read("--primary", colors.primary);
+  colors.positive = read("--positive", colors.positive);
   scheduleDraw();
 }
 
 /** Parse "#rrggbb" (or shorthand) to an rgba() string with the given alpha. */
 function withAlpha(hex: string, a: number): string {
-  const h = hex.replace('#', '');
-  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const h = hex.replace("#", "");
+  const full =
+    h.length === 3
+      ? h
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : h;
   const r = parseInt(full.slice(0, 2), 16) || 0;
   const g = parseInt(full.slice(2, 4), 16) || 0;
   const b = parseInt(full.slice(4, 6), 16) || 0;
@@ -122,7 +128,7 @@ const v0 = () => center.value - span.value / 2;
 
 /** Axis length in CSS pixels (the long dimension). */
 function axisLength(): number {
-  return orientation.value === 'horizontal' ? cssW.value : cssH.value;
+  return orientation.value === "horizontal" ? cssW.value : cssH.value;
 }
 
 /** Normalized axis position (0..1 full range) to a pixel along the axis. */
@@ -144,7 +150,7 @@ function freqToAxisPx(freqHz: number): number {
 /** Pointer event offset to the axis coordinate for the current orientation. */
 function eventAxisPx(e: PointerEvent): number {
   const rect = canvasRef.value!.getBoundingClientRect();
-  return orientation.value === 'horizontal' ? e.clientX - rect.left : e.clientY - rect.top;
+  return orientation.value === "horizontal" ? e.clientX - rect.left : e.clientY - rect.top;
 }
 
 /* ------------------------------------------------------------------ */
@@ -167,7 +173,7 @@ interface SceneText {
   text: string;
   color: string;
   size: number;
-  align: 'center' | 'start';
+  align: "center" | "start";
   plate?: { x: number; y: number; w: number; h: number };
 }
 interface SceneLine {
@@ -196,11 +202,11 @@ function fitLabel(text: string, maxPx: number, size: number): string | null {
   const maxChars = Math.floor((maxPx - 6) / charPx);
   if (maxChars >= text.length) return text;
   if (maxChars < 3) return null;
-  return text.slice(0, maxChars - 1) + '…';
+  return text.slice(0, maxChars - 1) + "…";
 }
 
 function buildScene(w: number, h: number): Scene {
-  const horizontal = orientation.value === 'horizontal';
+  const horizontal = orientation.value === "horizontal";
   const L = horizontal ? w : h;
   const tickMargin = horizontal ? TICK_MARGIN_H : TICK_MARGIN_V;
   const lanesExtent = (horizontal ? h : w) - tickMargin;
@@ -228,7 +234,7 @@ function buildScene(w: number, h: number): Scene {
     const rw = horizontal ? wpx : laneSize;
     const rh = horizontal ? laneSize : wpx;
 
-    const isVisible = band.id === 'visible';
+    const isVisible = band.id === "visible";
     let fill: string;
     let colored = false;
     if (band.color) {
@@ -262,7 +268,7 @@ function buildScene(w: number, h: number): Scene {
         text: label,
         color: colors.fg,
         size,
-        align: 'center',
+        align: "center",
         plate: needPlate
           ? { x: cx - textW / 2 - 4, y: cy - size / 2 - 2, w: textW + 8, h: size + 4 }
           : undefined,
@@ -285,11 +291,41 @@ function buildScene(w: number, h: number): Scene {
       const apx = posToAxisPx(frequencyToPosition(f));
       if (apx < 0 || apx > L) continue;
       if (horizontal) {
-        lines.push({ x1: apx, y1: 0, x2: apx, y2: lanesExtent, color: tickColor, dash: false, width: 1 });
-        texts.push({ x: apx + 3, y: lanesExtent + 15, text: formatFrequency(f), color: colors.muted, size: 10, align: 'start' });
+        lines.push({
+          x1: apx,
+          y1: 0,
+          x2: apx,
+          y2: lanesExtent,
+          color: tickColor,
+          dash: false,
+          width: 1,
+        });
+        texts.push({
+          x: apx + 3,
+          y: lanesExtent + 15,
+          text: formatFrequency(f),
+          color: colors.muted,
+          size: 10,
+          align: "start",
+        });
       } else {
-        lines.push({ x1: tickMargin, y1: apx, x2: w, y2: apx, color: tickColor, dash: false, width: 1 });
-        texts.push({ x: 4, y: apx + 12, text: formatFrequency(f), color: colors.muted, size: 10, align: 'start' });
+        lines.push({
+          x1: tickMargin,
+          y1: apx,
+          x2: w,
+          y2: apx,
+          color: tickColor,
+          dash: false,
+          width: 1,
+        });
+        texts.push({
+          x: 4,
+          y: apx + 12,
+          text: formatFrequency(f),
+          color: colors.muted,
+          size: 10,
+          align: "start",
+        });
       }
     }
   }
@@ -314,7 +350,7 @@ function buildScene(w: number, h: number): Scene {
 
 function spectralGradient(
   make: (x1: number, y1: number, x2: number, y2: number) => CanvasGradient,
-  s: NonNullable<SceneRect['spectral']>,
+  s: NonNullable<SceneRect["spectral"]>,
 ): CanvasGradient {
   const grad = make(s.x1, s.y1, s.x2, s.y2);
   const steps = 24;
@@ -361,8 +397,8 @@ function paintCanvas(ctx: CanvasRenderingContext2D, scene: Scene, scale: number)
     }
     ctx.fillStyle = t.color;
     ctx.font = `${t.size}px ui-sans-serif, system-ui, sans-serif`;
-    ctx.textAlign = t.align === 'center' ? 'center' : 'left';
-    ctx.textBaseline = 'middle';
+    ctx.textAlign = t.align === "center" ? "center" : "left";
+    ctx.textBaseline = "middle";
     ctx.fillText(t.text, t.x, t.y);
   }
   ctx.restore();
@@ -381,7 +417,7 @@ function scheduleDraw() {
 function draw() {
   const canvas = canvasRef.value;
   if (!canvas) return;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = cssW.value;
@@ -412,32 +448,32 @@ const readoutRows = computed<Row[]>(() => {
   const r = activeReadout.value;
   if (!r) return [];
   const rows: Row[] = [
-    { label: 'Frequency', value: formatFrequency(r.frequencyHz) },
-    { label: 'Wavelength', value: formatWavelength(r.wavelengthM) },
-    { label: 'Photon energy', value: formatEnergyEv(r.energyEv) },
-    { label: 'Black-body peak', value: formatKelvin(r.blackbodyKelvin) },
-    { label: 'Band', value: r.pathLabel },
-    { label: 'Ionizing', value: r.ionizing ? 'Yes (approximate, at or above 10 eV)' : 'No' },
+    { label: "Frequency", value: formatFrequency(r.frequencyHz) },
+    { label: "Wavelength", value: formatWavelength(r.wavelengthM) },
+    { label: "Photon energy", value: formatEnergyEv(r.energyEv) },
+    { label: "Black-body peak", value: formatKelvin(r.blackbodyKelvin) },
+    { label: "Band", value: r.pathLabel },
+    { label: "Ionizing", value: r.ionizing ? "Yes (approximate, at or above 10 eV)" : "No" },
   ];
-  if (r.colorHex) rows.push({ label: 'Color', value: r.colorHex, swatch: r.colorHex });
+  if (r.colorHex) rows.push({ label: "Color", value: r.colorHex, swatch: r.colorHex });
   return rows;
 });
 
 const copyableText = computed(() =>
-  readoutRows.value.map((r) => `${r.label}: ${r.value}`).join('\n'),
+  readoutRows.value.map((r) => `${r.label}: ${r.value}`).join("\n"),
 );
 
 /** Tooltip position, flipped away from the near edges. */
 const tooltipStyle = computed(() => {
   const p = pointerPx.value;
-  if (!p) return { display: 'none' };
+  if (!p) return { display: "none" };
   const flipX = p.x > cssW.value * 0.62;
   const flipY = p.y > cssH.value * 0.6;
   return {
     left: `${p.x}px`,
     top: `${p.y}px`,
-    transform: `translate(${flipX ? 'calc(-100% - 14px)' : '14px'}, ${flipY ? 'calc(-100% - 14px)' : '14px'})`,
-    transition: reducedMotion.value ? 'none' : 'left 60ms linear, top 60ms linear',
+    transform: `translate(${flipX ? "calc(-100% - 14px)" : "14px"}, ${flipY ? "calc(-100% - 14px)" : "14px"})`,
+    transition: reducedMotion.value ? "none" : "left 60ms linear, top 60ms linear",
   } as Record<string, string>;
 });
 
@@ -479,15 +515,16 @@ function onPointerDown(e: PointerEvent) {
     pinchStartDist = Math.hypot(pts[0]!.x - pts[1]!.x, pts[0]!.y - pts[1]!.y);
     pinchStartSpan = span.value;
     const rect = canvasRef.value!.getBoundingClientRect();
-    const midClient = orientation.value === 'horizontal'
-      ? (pts[0]!.x + pts[1]!.x) / 2 - rect.left
-      : (pts[0]!.y + pts[1]!.y) / 2 - rect.top;
+    const midClient =
+      orientation.value === "horizontal"
+        ? (pts[0]!.x + pts[1]!.x) / 2 - rect.left
+        : (pts[0]!.y + pts[1]!.y) / 2 - rect.top;
     pinchAnchorPos = v0() + (midClient / axisLength()) * span.value;
     dragging = false;
     return;
   }
 
-  if (e.pointerType === 'mouse') {
+  if (e.pointerType === "mouse") {
     // Mouse drags to pan; a click without movement pins.
     dragging = true;
     dragMoved = false;
@@ -511,9 +548,10 @@ function onPointerMove(e: PointerEvent) {
       span.value = pinchStartSpan * (pinchStartDist / dist);
       clampView();
       const rect = canvasRef.value!.getBoundingClientRect();
-      const midPx = orientation.value === 'horizontal'
-        ? (pts[0]!.x + pts[1]!.x) / 2 - rect.left
-        : (pts[0]!.y + pts[1]!.y) / 2 - rect.top;
+      const midPx =
+        orientation.value === "horizontal"
+          ? (pts[0]!.x + pts[1]!.x) / 2 - rect.left
+          : (pts[0]!.y + pts[1]!.y) / 2 - rect.top;
       // Keep the anchor frequency under the midpoint.
       center.value = pinchAnchorPos - (midPx / axisLength()) * span.value + span.value / 2;
       clampView();
@@ -523,7 +561,7 @@ function onPointerMove(e: PointerEvent) {
     return;
   }
 
-  if (dragging && e.pointerType === 'mouse') {
+  if (dragging && e.pointerType === "mouse") {
     const apx = eventAxisPx(e);
     const delta = apx - dragStartAxis;
     if (Math.abs(delta) > 3) dragMoved = true;
@@ -535,7 +573,7 @@ function onPointerMove(e: PointerEvent) {
     return;
   }
 
-  if (e.pointerType === 'mouse') {
+  if (e.pointerType === "mouse") {
     readAt(e, false);
   } else if (activePointers.has(e.pointerId)) {
     readAt(e, true);
@@ -543,7 +581,7 @@ function onPointerMove(e: PointerEvent) {
 }
 
 function onPointerUp(e: PointerEvent) {
-  if (dragging && e.pointerType === 'mouse' && !dragMoved) {
+  if (dragging && e.pointerType === "mouse" && !dragMoved) {
     // A click that did not pan pins the readout.
     readAt(e, true);
   }
@@ -554,7 +592,7 @@ function onPointerUp(e: PointerEvent) {
 }
 
 function onPointerLeave(e: PointerEvent) {
-  if (e.pointerType === 'mouse' && !dragging) {
+  if (e.pointerType === "mouse" && !dragging) {
     hoverFreq.value = null;
     if (pinnedFreq.value == null) pointerPx.value = null;
     scheduleDraw();
@@ -564,7 +602,7 @@ function onPointerLeave(e: PointerEvent) {
 function onWheel(e: WheelEvent) {
   e.preventDefault();
   const rect = canvasRef.value!.getBoundingClientRect();
-  const apx = orientation.value === 'horizontal' ? e.clientX - rect.left : e.clientY - rect.top;
+  const apx = orientation.value === "horizontal" ? e.clientX - rect.left : e.clientY - rect.top;
   if (e.ctrlKey || e.metaKey) {
     // Zoom centered on the pointer.
     const anchorPos = v0() + (apx / axisLength()) * span.value;
@@ -575,9 +613,8 @@ function onWheel(e: WheelEvent) {
     clampView();
   } else {
     // Pan along the axis.
-    const primary = orientation.value === 'horizontal'
-      ? e.deltaX || e.deltaY
-      : e.deltaY || e.deltaX;
+    const primary =
+      orientation.value === "horizontal" ? e.deltaX || e.deltaY : e.deltaY || e.deltaX;
     center.value += (primary / axisLength()) * span.value;
     clampView();
   }
@@ -590,20 +627,20 @@ function onKeydown(e: KeyboardEvent) {
   const zoomStep = 1.2;
   let handled = true;
   switch (e.key) {
-    case 'ArrowLeft':
-    case 'ArrowUp':
+    case "ArrowLeft":
+    case "ArrowUp":
       center.value -= panStep;
       break;
-    case 'ArrowRight':
-    case 'ArrowDown':
+    case "ArrowRight":
+    case "ArrowDown":
       center.value += panStep;
       break;
-    case '+':
-    case '=':
+    case "+":
+    case "=":
       span.value /= zoomStep;
       break;
-    case '-':
-    case '_':
+    case "-":
+    case "_":
       span.value *= zoomStep;
       break;
     default:
@@ -651,7 +688,7 @@ function animateTo(rawCenter: number, rawSpan: number) {
 }
 
 function doJump() {
-  jumpError.value = '';
+  jumpError.value = "";
   try {
     const freq = parseJump(jumpText.value);
     pinnedFreq.value = freq;
@@ -666,14 +703,15 @@ function doJump() {
     animateTo(frequencyToPosition(freq), rawSpan);
     const finalAxisPx =
       ((frequencyToPosition(freq) - (finalCenter - finalSpan / 2)) / finalSpan) * axisLength();
-    pointerPx.value = orientation.value === 'horizontal'
-      ? { x: finalAxisPx, y: cssH.value * 0.4 }
-      : { x: cssW.value * 0.5, y: finalAxisPx };
+    pointerPx.value =
+      orientation.value === "horizontal"
+        ? { x: finalAxisPx, y: cssH.value * 0.4 }
+        : { x: cssW.value * 0.5, y: finalAxisPx };
   } catch (err) {
     jumpError.value =
       err instanceof ToolError
-        ? `${err.message}${err.fix ? ' ' + err.fix : ''}`
-        : 'Could not read that value.';
+        ? `${err.message}${err.fix ? " " + err.fix : ""}`
+        : "Could not read that value.";
   }
 }
 
@@ -707,9 +745,10 @@ function restoreFromFragment() {
   if (Number.isFinite(q) && q > 0) {
     pinnedFreq.value = q;
     const apx = freqToAxisPx(q);
-    pointerPx.value = orientation.value === 'horizontal'
-      ? { x: apx, y: cssH.value * 0.4 }
-      : { x: cssW.value * 0.5, y: apx };
+    pointerPx.value =
+      orientation.value === "horizontal"
+        ? { x: apx, y: cssH.value * 0.4 }
+        : { x: cssW.value * 0.5, y: apx };
   }
 }
 
@@ -725,7 +764,7 @@ async function copyLink() {
 /* ------------------------------------------------------------------ */
 
 function triggerDownload(url: string, filename: string) {
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
@@ -734,23 +773,23 @@ function triggerDownload(url: string, filename: string) {
 }
 
 function exportPng() {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   const scale = 2;
   canvas.width = cssW.value * scale;
   canvas.height = cssH.value * scale;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) return;
   paintCanvas(ctx, buildScene(cssW.value, cssH.value), scale);
   canvas.toBlob((blob) => {
     if (!blob) return;
     const url = URL.createObjectURL(blob);
-    triggerDownload(url, 'electromagnetic-spectrum.png');
+    triggerDownload(url, "electromagnetic-spectrum.png");
     URL.revokeObjectURL(url);
-  }, 'image/png');
+  }, "image/png");
 }
 
 function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function exportSvg() {
@@ -772,10 +811,13 @@ function exportSvg() {
       for (let i = 0; i <= steps; i++) {
         const nm = VISIBLE_MIN_NM + ((VISIBLE_MAX_NM - VISIBLE_MIN_NM) * i) / steps;
         const rgb = wavelengthNmToRgb(nm);
-        if (rgb) stops.push(`<stop offset="${((i / steps) * 100).toFixed(1)}%" stop-color="${rgbToHex(rgb)}"/>`);
+        if (rgb)
+          stops.push(
+            `<stop offset="${((i / steps) * 100).toFixed(1)}%" stop-color="${rgbToHex(rgb)}"/>`,
+          );
       }
       defs.push(
-        `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${r.spectral.x1.toFixed(1)}" y1="${r.spectral.y1.toFixed(1)}" x2="${r.spectral.x2.toFixed(1)}" y2="${r.spectral.y2.toFixed(1)}">${stops.join('')}</linearGradient>`,
+        `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${r.spectral.x1.toFixed(1)}" y1="${r.spectral.y1.toFixed(1)}" x2="${r.spectral.x2.toFixed(1)}" y2="${r.spectral.y2.toFixed(1)}">${stops.join("")}</linearGradient>`,
       );
       fill = `url(#${id})`;
     }
@@ -786,7 +828,7 @@ function exportSvg() {
 
   for (const l of scene.lines) {
     parts.push(
-      `<line x1="${l.x1.toFixed(1)}" y1="${l.y1.toFixed(1)}" x2="${l.x2.toFixed(1)}" y2="${l.y2.toFixed(1)}" stroke="${l.color}" stroke-width="${l.width}"${l.dash ? ' stroke-dasharray="4 3"' : ''}/>`,
+      `<line x1="${l.x1.toFixed(1)}" y1="${l.y1.toFixed(1)}" x2="${l.x2.toFixed(1)}" y2="${l.y2.toFixed(1)}" stroke="${l.color}" stroke-width="${l.width}"${l.dash ? ' stroke-dasharray="4 3"' : ""}/>`,
     );
   }
 
@@ -796,16 +838,16 @@ function exportSvg() {
         `<rect x="${t.plate.x.toFixed(1)}" y="${t.plate.y.toFixed(1)}" width="${t.plate.w.toFixed(1)}" height="${t.plate.h.toFixed(1)}" fill="${withAlpha(colors.card, 0.72)}"/>`,
       );
     }
-    const anchor = t.align === 'center' ? 'middle' : 'start';
+    const anchor = t.align === "center" ? "middle" : "start";
     parts.push(
       `<text x="${t.x.toFixed(1)}" y="${t.y.toFixed(1)}" fill="${t.color}" font-family="system-ui, sans-serif" font-size="${t.size}" text-anchor="${anchor}" dominant-baseline="middle">${esc(t.text)}</text>`,
     );
   }
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs>${defs.join('')}</defs>${parts.join('')}</svg>`;
-  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs>${defs.join("")}</defs>${parts.join("")}</svg>`;
+  const blob = new Blob([svg], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
-  triggerDownload(url, 'electromagnetic-spectrum.svg');
+  triggerDownload(url, "electromagnetic-spectrum.svg");
   URL.revokeObjectURL(url);
 }
 
@@ -826,13 +868,14 @@ function measure() {
   cssH.value = Math.max(160, Math.round(rect.height));
   // Orientation follows the viewport (landscape to horizontal, portrait to
   // vertical), not the container box, per the brief.
-  orientation.value = window.innerWidth >= window.innerHeight ? 'horizontal' : 'vertical';
+  orientation.value = window.innerWidth >= window.innerHeight ? "horizontal" : "vertical";
   // Keep a pinned readout's tooltip anchored after a resize or orientation flip.
   if (pinnedFreq.value != null && hoverFreq.value == null) {
     const apx = freqToAxisPx(pinnedFreq.value);
-    pointerPx.value = orientation.value === 'horizontal'
-      ? { x: apx, y: cssH.value * 0.4 }
-      : { x: cssW.value * 0.5, y: apx };
+    pointerPx.value =
+      orientation.value === "horizontal"
+        ? { x: apx, y: cssH.value * 0.4 }
+        : { x: cssW.value * 0.5, y: apx };
   }
   scheduleDraw();
 }
@@ -840,12 +883,12 @@ function measure() {
 const onMotionChange = () => (reducedMotion.value = !!motionMql?.matches);
 
 onMounted(() => {
-  motionMql = window.matchMedia('(prefers-reduced-motion: reduce)');
+  motionMql = window.matchMedia("(prefers-reduced-motion: reduce)");
   reducedMotion.value = motionMql.matches;
-  motionMql.addEventListener('change', onMotionChange);
+  motionMql.addEventListener("change", onMotionChange);
 
-  schemeMql = window.matchMedia('(prefers-color-scheme: dark)');
-  schemeMql.addEventListener('change', refreshColors);
+  schemeMql = window.matchMedia("(prefers-color-scheme: dark)");
+  schemeMql.addEventListener("change", refreshColors);
 
   refreshColors();
   restoreFromFragment();
@@ -855,18 +898,18 @@ onMounted(() => {
   if (containerRef.value) resizeObserver.observe(containerRef.value);
 
   themeObserver = new MutationObserver(refreshColors);
-  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
-  canvasRef.value?.addEventListener('wheel', onWheel, { passive: false });
+  canvasRef.value?.addEventListener("wheel", onWheel, { passive: false });
   scheduleDraw();
 });
 
 onUnmounted(() => {
-  motionMql?.removeEventListener('change', onMotionChange);
-  schemeMql?.removeEventListener('change', refreshColors);
+  motionMql?.removeEventListener("change", onMotionChange);
+  schemeMql?.removeEventListener("change", refreshColors);
   resizeObserver?.disconnect();
   themeObserver?.disconnect();
-  canvasRef.value?.removeEventListener('wheel', onWheel);
+  canvasRef.value?.removeEventListener("wheel", onWheel);
   if (fragTimer) clearTimeout(fragTimer);
 });
 </script>
@@ -888,49 +931,23 @@ onUnmounted(() => {
             aria-label="Jump to a frequency, wavelength, or energy"
             class="h-9 w-full rounded-[10px] border bg-secondary pr-3 pl-8 font-mono text-sm shadow-[var(--sh-inset)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
             @keydown.enter="doJump"
-          >
+          />
         </div>
-        <Button
-          size="sm"
-          @click="doJump"
-        >
-          Jump
-        </Button>
+        <Button size="sm" @click="doJump"> Jump </Button>
       </div>
       <div class="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          aria-label="Export as PNG"
-          @click="exportPng"
-        >
+        <Button variant="outline" size="sm" aria-label="Export as PNG" @click="exportPng">
           <Download class="size-4" />
           PNG
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          aria-label="Export as SVG"
-          @click="exportSvg"
-        >
+        <Button variant="outline" size="sm" aria-label="Export as SVG" @click="exportSvg">
           <Download class="size-4" />
           SVG
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          aria-label="Copy shareable link"
-          @click="copyLink"
-        >
-          <Check
-            v-if="linkCopied"
-            class="size-4 text-[color:var(--positive)]"
-          />
-          <LinkIcon
-            v-else
-            class="size-4"
-          />
-          {{ linkCopied ? 'Copied' : 'Link' }}
+        <Button variant="outline" size="sm" aria-label="Copy shareable link" @click="copyLink">
+          <Check v-if="linkCopied" class="size-4 text-[color:var(--positive)]" />
+          <LinkIcon v-else class="size-4" />
+          {{ linkCopied ? "Copied" : "Link" }}
         </Button>
       </div>
     </div>
@@ -978,27 +995,19 @@ onUnmounted(() => {
           <span class="truncate font-semibold">{{ activeReadout.pathLabel }}</span>
         </div>
         <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 font-mono text-xs tabular-nums">
-          <dt class="text-muted-foreground">
-            Frequency
-          </dt>
+          <dt class="text-muted-foreground">Frequency</dt>
           <dd class="text-right">
             {{ formatFrequency(activeReadout.frequencyHz) }}
           </dd>
-          <dt class="text-muted-foreground">
-            Wavelength
-          </dt>
+          <dt class="text-muted-foreground">Wavelength</dt>
           <dd class="text-right">
             {{ formatWavelength(activeReadout.wavelengthM) }}
           </dd>
-          <dt class="text-muted-foreground">
-            Energy
-          </dt>
+          <dt class="text-muted-foreground">Energy</dt>
           <dd class="text-right">
             {{ formatEnergyEv(activeReadout.energyEv) }}
           </dd>
-          <dt class="text-muted-foreground">
-            Black-body
-          </dt>
+          <dt class="text-muted-foreground">Black-body</dt>
           <dd class="text-right">
             {{ formatKelvin(activeReadout.blackbodyKelvin) }}
           </dd>
@@ -1006,16 +1015,19 @@ onUnmounted(() => {
         <div class="mt-1.5 flex items-center gap-1.5 text-xs">
           <span
             class="rounded-[6px] px-1.5 py-0.5 font-medium"
-            :class="activeReadout.ionizing
-              ? 'bg-[color:var(--accent-soft)] text-[color:var(--primary)]'
-              : 'bg-secondary text-muted-foreground'"
-          >{{ activeReadout.ionizing ? 'Ionizing' : 'Non-ionizing' }}</span>
+            :class="
+              activeReadout.ionizing
+                ? 'bg-[color:var(--accent-soft)] text-[color:var(--primary)]'
+                : 'bg-secondary text-muted-foreground'
+            "
+            >{{ activeReadout.ionizing ? "Ionizing" : "Non-ionizing" }}</span
+          >
         </div>
         <p
           v-if="activeReadout.uses.length"
           class="mt-1.5 line-clamp-3 text-xs text-muted-foreground"
         >
-          {{ activeReadout.uses.join(', ') }}
+          {{ activeReadout.uses.join(", ") }}
         </p>
       </div>
 
@@ -1024,25 +1036,21 @@ onUnmounted(() => {
         v-if="!activeReadout"
         class="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center"
       >
-        <span class="rounded-full bg-popover/90 px-3 py-1 text-xs text-muted-foreground shadow-[var(--sh-sm)]">
+        <span
+          class="rounded-full bg-popover/90 px-3 py-1 text-xs text-muted-foreground shadow-[var(--sh-sm)]"
+        >
           Hover or tap the spectrum to read values. Ctrl and scroll or pinch to zoom.
         </span>
       </div>
     </div>
 
     <!-- Persistent, copyable readout -->
-    <div
-      v-if="activeReadout"
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-    >
+    <div v-if="activeReadout" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
       <div class="flex items-center justify-between px-3 pt-2">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Readout at {{ formatFrequency(activeReadout.frequencyHz) }}
         </span>
-        <CopyButton
-          :text="copyableText"
-          label="Copy all"
-        />
+        <CopyButton :text="copyableText" label="Copy all" />
       </div>
       <div class="divide-y divide-border/60">
         <div
@@ -1067,10 +1075,10 @@ onUnmounted(() => {
     </div>
 
     <p class="text-xs text-muted-foreground">
-      Gamma rays are at the start of the axis and ELF radio at the end. Band boundaries follow common
-      conventions and broadcast allocations are United States allocations. The ionizing flag uses an
-      approximate 10 eV threshold. Everything runs in your browser: your files and inputs never
-      leave your device.
+      Gamma rays are at the start of the axis and ELF radio at the end. Band boundaries follow
+      common conventions and broadcast allocations are United States allocations. The ionizing flag
+      uses an approximate 10 eV threshold. Everything runs in your browser: your files and inputs
+      never leave your device.
     </p>
   </div>
 </template>

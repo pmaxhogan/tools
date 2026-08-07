@@ -42,7 +42,7 @@
  *
  * No dependencies beyond node builtins.
  */
-import { createHash } from 'node:crypto';
+import { createHash } from "node:crypto";
 import {
   copyFileSync,
   existsSync,
@@ -52,9 +52,9 @@ import {
   rmSync,
   statSync,
   writeFileSync,
-} from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+} from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 /** Cloudflare's hard per-asset limit. */
 const ASSET_MAX_BYTES = 25 * 1024 * 1024;
@@ -63,10 +63,10 @@ const CHUNK_BYTES = 16 * 1024 * 1024;
 /** Download attempts per file before the build fails. */
 const ATTEMPTS = 3;
 
-const root = fileURLToPath(new URL('../', import.meta.url));
-const publicDir = join(root, 'public');
-const cacheDir = join(root, '.model-cache');
-const manifestPath = join(publicDir, 'models', 'manifest.json');
+const root = fileURLToPath(new URL("../", import.meta.url));
+const publicDir = join(root, "public");
+const cacheDir = join(root, ".model-cache");
+const manifestPath = join(publicDir, "models", "manifest.json");
 
 /**
  * Bumped by hand whenever the entry list below changes in a way that must
@@ -74,22 +74,22 @@ const manifestPath = join(publicDir, 'models', 'manifest.json');
  */
 const STAGE_VERSION = 1;
 
-const hfBase = 'https://huggingface.co';
+const hfBase = "https://huggingface.co";
 /** Revision-pinned resolve URL. `main` is what the spike verified against. */
 const hf = (repo, path) => `${hfBase}/${repo}/resolve/main/${path}?download=true`;
 
 /** The small config and tokenizer files every transformers.js repo needs. */
 const WHISPER_SUPPORT = [
-  'config.json',
-  'generation_config.json',
-  'preprocessor_config.json',
-  'tokenizer.json',
-  'tokenizer_config.json',
-  'vocab.json',
-  'merges.txt',
+  "config.json",
+  "generation_config.json",
+  "preprocessor_config.json",
+  "tokenizer.json",
+  "tokenizer_config.json",
+  "vocab.json",
+  "merges.txt",
 ];
 /** Present in some Whisper repos and absent in others. A 404 is not an error. */
-const WHISPER_OPTIONAL = ['added_tokens.json', 'special_tokens_map.json'];
+const WHISPER_OPTIONAL = ["added_tokens.json", "special_tokens_map.json"];
 
 /**
  * One Whisper repo as a list of entries. The onnx weights are hash pinned
@@ -99,26 +99,26 @@ const WHISPER_OPTIONAL = ['added_tokens.json', 'special_tokens_map.json'];
 function whisper(dir, repo, encoder, decoder) {
   return [
     {
-      source: 'url',
-      from: hf(repo, 'onnx/encoder_model_quantized.onnx'),
+      source: "url",
+      from: hf(repo, "onnx/encoder_model_quantized.onnx"),
       to: `models/${dir}/onnx/encoder_model_quantized.onnx`,
       sha256: encoder.sha256,
       expectedBytes: encoder.bytes,
     },
     {
-      source: 'url',
-      from: hf(repo, 'onnx/decoder_model_merged_quantized.onnx'),
+      source: "url",
+      from: hf(repo, "onnx/decoder_model_merged_quantized.onnx"),
       to: `models/${dir}/onnx/decoder_model_merged_quantized.onnx`,
       sha256: decoder.sha256,
       expectedBytes: decoder.bytes,
     },
     ...WHISPER_SUPPORT.map((name) => ({
-      source: 'url',
+      source: "url",
       from: hf(repo, name),
       to: `models/${dir}/${name}`,
     })),
     ...WHISPER_OPTIONAL.map((name) => ({
-      source: 'url',
+      source: "url",
       from: hf(repo, name),
       to: `models/${dir}/${name}`,
       optional: true,
@@ -126,7 +126,7 @@ function whisper(dir, repo, encoder, decoder) {
   ];
 }
 
-const TESSERACT_LANGS = ['eng', 'spa', 'fra', 'deu', 'jpn'];
+const TESSERACT_LANGS = ["eng", "spa", "fra", "deu", "jpn"];
 
 /**
  * The manifest. `source: 'url'` is fetched once into .model-cache and copied
@@ -135,82 +135,82 @@ const TESSERACT_LANGS = ['eng', 'spa', 'fra', 'deu', 'jpn'];
  */
 const ENTRIES = [
   ...whisper(
-    'whisper-tiny',
-    'Xenova/whisper-tiny',
+    "whisper-tiny",
+    "Xenova/whisper-tiny",
     {
       bytes: 10_124_910,
-      sha256: 'fd9d995b9dcb0520f0dbf6cf68651af639fc385f594d9d876e69ca2802dc438e',
+      sha256: "fd9d995b9dcb0520f0dbf6cf68651af639fc385f594d9d876e69ca2802dc438e",
     },
     {
       bytes: 30_727_765,
-      sha256: '6c0c125986b007d2e3734bec84c18bda0152071b90b87fadac6d7764499927a0',
-    }
+      sha256: "6c0c125986b007d2e3734bec84c18bda0152071b90b87fadac6d7764499927a0",
+    },
   ),
   ...whisper(
-    'whisper-base',
-    'Xenova/whisper-base',
+    "whisper-base",
+    "Xenova/whisper-base",
     {
       bytes: 23_200_850,
-      sha256: '3e345e977b55620a37c0c2b2af0644e019afdfad562dcf71eb929bb7274285f9',
+      sha256: "3e345e977b55620a37c0c2b2af0644e019afdfad562dcf71eb929bb7274285f9",
     },
     {
       bytes: 53_707_539,
-      sha256: 'a6beb6baabb66f00b6a686d828c95ffca6146d51900cbad0266cad38f64cf861',
-    }
+      sha256: "a6beb6baabb66f00b6a686d828c95ffca6146d51900cbad0266cad38f64cf861",
+    },
   ),
   {
-    source: 'url',
-    from: hf('Xenova/modnet', 'onnx/model_quantized.onnx'),
-    to: 'models/modnet/onnx/model_quantized.onnx',
+    source: "url",
+    from: hf("Xenova/modnet", "onnx/model_quantized.onnx"),
+    to: "models/modnet/onnx/model_quantized.onnx",
     expectedBytes: 6_632_188,
-    sha256: '92e49898c3e05a6d7a944fc67a8cb87c4aad754ffb6ebd949528c7d1105fee3a',
+    sha256: "92e49898c3e05a6d7a944fc67a8cb87c4aad754ffb6ebd949528c7d1105fee3a",
   },
 
   // onnxruntime-web runtime. The plain build is what runs when the page has
   // cross origin isolation; the asyncify build is the fallback without it.
   // The jsep and jspi builds are for WebGPU and are deliberately not staged.
   {
-    source: 'node_modules',
-    from: 'onnxruntime-web/dist/ort-wasm-simd-threaded.wasm',
-    to: 'models/ort/ort-wasm-simd-threaded.wasm',
+    source: "node_modules",
+    from: "onnxruntime-web/dist/ort-wasm-simd-threaded.wasm",
+    to: "models/ort/ort-wasm-simd-threaded.wasm",
   },
   {
-    source: 'node_modules',
-    from: 'onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm',
-    to: 'models/ort/ort-wasm-simd-threaded.asyncify.wasm',
+    source: "node_modules",
+    from: "onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm",
+    to: "models/ort/ort-wasm-simd-threaded.asyncify.wasm",
   },
   // The .mjs glue loaders next to the wasm binaries. onnxruntime-web
   // dynamically imports these siblings at runtime; without them the engine
   // dies with "no available backend found" before inference ever starts.
   {
-    source: 'node_modules',
-    from: 'onnxruntime-web/dist/ort-wasm-simd-threaded.mjs',
-    to: 'models/ort/ort-wasm-simd-threaded.mjs',
+    source: "node_modules",
+    from: "onnxruntime-web/dist/ort-wasm-simd-threaded.mjs",
+    to: "models/ort/ort-wasm-simd-threaded.mjs",
   },
   {
-    source: 'node_modules',
-    from: 'onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.mjs',
-    to: 'models/ort/ort-wasm-simd-threaded.asyncify.mjs',
+    source: "node_modules",
+    from: "onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.mjs",
+    to: "models/ort/ort-wasm-simd-threaded.asyncify.mjs",
   },
 
   // Tesseract OCR. See the corePath note in the header comment.
   {
-    source: 'node_modules',
-    from: 'tesseract.js/dist/worker.min.js',
-    to: 'tesseract/worker.min.js',
+    source: "node_modules",
+    from: "tesseract.js/dist/worker.min.js",
+    to: "tesseract/worker.min.js",
   },
   {
-    source: 'node_modules',
-    from: 'tesseract.js-core/tesseract-core-simd-lstm.js',
-    to: 'tesseract/tesseract-core-simd-lstm.js',
+    source: "node_modules",
+    from: "tesseract.js-core/tesseract-core-simd-lstm.js",
+    to: "tesseract/tesseract-core-simd-lstm.js",
   },
   {
-    source: 'node_modules',
-    from: 'tesseract.js-core/tesseract-core-simd-lstm.wasm',
-    to: 'tesseract/tesseract-core-simd-lstm.wasm',
+    source: "node_modules",
+    from: "tesseract.js-core/tesseract-core-simd-lstm.wasm",
+    to: "tesseract/tesseract-core-simd-lstm.wasm",
   },
   ...TESSERACT_LANGS.map((lang) => ({
-    source: 'node_modules',
+    source: "node_modules",
     from: `@tesseract.js-data/${lang}/4.0.0_best_int/${lang}.traineddata.gz`,
     to: `tesseract/lang/${lang}.traineddata.gz`,
   })),
@@ -222,19 +222,19 @@ function fail(message) {
 }
 
 function sha256(buffer) {
-  return createHash('sha256').update(buffer).digest('hex');
+  return createHash("sha256").update(buffer).digest("hex");
 }
 
 /** Stable, filesystem-safe cache filename for a remote URL. */
 function cacheNameFor(url) {
-  const clean = url.split('?')[0].replace(/^https?:\/\//, '');
-  const slug = clean.replace(/[^A-Za-z0-9._-]+/g, '_').slice(-96);
+  const clean = url.split("?")[0].replace(/^https?:\/\//, "");
+  const slug = clean.replace(/[^A-Za-z0-9._-]+/g, "_").slice(-96);
   return `${sha256(Buffer.from(url)).slice(0, 16)}-${slug}`;
 }
 
 async function download(url, attempt = 1) {
   try {
-    const res = await fetch(url, { redirect: 'follow' });
+    const res = await fetch(url, { redirect: "follow" });
     if (res.status === 404) return { missing: true };
     if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
     return { buffer: Buffer.from(await res.arrayBuffer()) };
@@ -244,7 +244,7 @@ async function download(url, attempt = 1) {
     }
     const waitMs = 1000 * attempt;
     console.warn(
-      `prepare-models: attempt ${attempt} for ${url} failed (${err.message}), retrying in ${waitMs}ms`
+      `prepare-models: attempt ${attempt} for ${url} failed (${err.message}), retrying in ${waitMs}ms`,
     );
     await new Promise((resolve) => setTimeout(resolve, waitMs));
     return download(url, attempt + 1);
@@ -256,8 +256,8 @@ async function download(url, attempt = 1) {
  * node_modules (for packages). Returns null when an optional file is absent.
  */
 async function resolveSource(entry) {
-  if (entry.source === 'node_modules') {
-    const path = join(root, 'node_modules', entry.from);
+  if (entry.source === "node_modules") {
+    const path = join(root, "node_modules", entry.from);
     if (!existsSync(path)) {
       fail(`missing ${path}. Run npm install so every model package is present.`);
     }
@@ -286,7 +286,7 @@ async function resolveSource(entry) {
   if (entry.expectedBytes !== undefined && buffer.length !== entry.expectedBytes) {
     fail(
       `${entry.from} is ${buffer.length} bytes, expected ${entry.expectedBytes}. ` +
-        'The upstream file changed; update the pin in scripts/prepare-models.mjs.'
+        "The upstream file changed; update the pin in scripts/prepare-models.mjs.",
     );
   }
   if (buffer.length === 0) fail(`${entry.from} downloaded as an empty file`);
@@ -295,7 +295,7 @@ async function resolveSource(entry) {
     if (actual !== entry.sha256) {
       fail(
         `${entry.from} hashed ${actual}, expected ${entry.sha256}. ` +
-          'Refusing to stage a file that does not match its pin.'
+          "Refusing to stage a file that does not match its pin.",
       );
     }
   }
@@ -310,8 +310,8 @@ function clearOutput(to) {
   const dir = dirname(outPath);
   if (existsSync(outPath)) rmSync(outPath);
   if (!existsSync(dir)) return;
-  const base = to.split('/').pop();
-  const partPattern = new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.part\\d+$`);
+  const base = to.split("/").pop();
+  const partPattern = new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\.part\\d+$`);
   for (const name of readdirSync(dir)) {
     if (partPattern.test(name) || name === `${base}.chunks.json`) {
       rmSync(join(dir, name));
@@ -337,14 +337,14 @@ function stage(entry, source) {
   const count = Math.ceil(data.length / CHUNK_BYTES);
   const parts = [];
   for (let i = 0; i < count; i += 1) {
-    const name = `${entry.to.split('/').pop()}.part${i}`;
+    const name = `${entry.to.split("/").pop()}.part${i}`;
     const slice = data.subarray(i * CHUNK_BYTES, Math.min((i + 1) * CHUNK_BYTES, data.length));
     writeFileSync(join(dirname(outPath), name), slice);
     parts.push({ name, bytes: slice.length });
   }
   writeFileSync(
     `${outPath}.chunks.json`,
-    `${JSON.stringify({ totalBytes: data.length, parts }, null, 2)}\n`
+    `${JSON.stringify({ totalBytes: data.length, parts }, null, 2)}\n`,
   );
   // The oversized original must never reach dist/, or the deploy is rejected.
   if (existsSync(outPath)) rmSync(outPath);
@@ -363,13 +363,13 @@ function stage(entry, source) {
  * path like `onnxruntime-web/dist/x.wasm` or `@tesseract.js-data/eng/...`.
  */
 function packageVersion(from) {
-  const parts = from.split('/');
-  const name = from.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
+  const parts = from.split("/");
+  const name = from.startsWith("@") ? parts.slice(0, 2).join("/") : parts[0];
   try {
-    const json = readFileSync(join(root, 'node_modules', name, 'package.json'), 'utf8');
-    return JSON.parse(json).version ?? 'unknown';
+    const json = readFileSync(join(root, "node_modules", name, "package.json"), "utf8");
+    return JSON.parse(json).version ?? "unknown";
   } catch {
-    return 'unknown';
+    return "unknown";
   }
 }
 
@@ -379,7 +379,7 @@ function packageVersion(from) {
 // to a loader built for different ones: the byte counts still match the old
 // manifest, so the idempotence check would call the tree current and skip them.
 for (const entry of ENTRIES) {
-  if (entry.source === 'node_modules') entry.pkgVersion = packageVersion(entry.from);
+  if (entry.source === "node_modules") entry.pkgVersion = packageVersion(entry.from);
 }
 
 /**
@@ -402,7 +402,7 @@ function isStaged(previous) {
       if (existsSync(outPath)) return false;
       let chunks;
       try {
-        chunks = JSON.parse(readFileSync(chunksPath, 'utf8'));
+        chunks = JSON.parse(readFileSync(chunksPath, "utf8"));
       } catch {
         return false;
       }
@@ -424,7 +424,7 @@ function isStaged(previous) {
 let previous = null;
 if (existsSync(manifestPath)) {
   try {
-    previous = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    previous = JSON.parse(readFileSync(manifestPath, "utf8"));
   } catch {
     previous = null;
   }
@@ -434,36 +434,36 @@ if (isStaged(previous)) {
   const chunked = previous.files.filter((f) => f.chunked).length;
   console.log(
     `prepare-models: public/models and public/tesseract are current ` +
-      `(${previous.files.length} files, ${chunked} chunked, ${previous.totalBytes} bytes)`
+      `(${previous.files.length} files, ${chunked} chunked, ${previous.totalBytes} bytes)`,
   );
   process.exit(0);
 }
 
-mkdirSync(join(publicDir, 'models'), { recursive: true });
+mkdirSync(join(publicDir, "models"), { recursive: true });
 
 const staged = [];
 let downloaded = 0;
 for (const entry of ENTRIES) {
-  const cached = entry.source === 'url' && existsSync(join(cacheDir, cacheNameFor(entry.from)));
+  const cached = entry.source === "url" && existsSync(join(cacheDir, cacheNameFor(entry.from)));
   const source = await resolveSource(entry);
   if (!source) {
     console.log(`prepare-models: ${entry.to} is not published upstream, skipping`);
     clearOutput(entry.to);
     continue;
   }
-  if (entry.source === 'url' && !cached) downloaded += source.bytes;
+  if (entry.source === "url" && !cached) downloaded += source.bytes;
   const record = stage(entry, source);
   staged.push(record);
   console.log(
     `prepare-models: ${record.to} ${record.bytes} bytes` +
-      (record.chunked ? ` split into ${record.parts} parts` : '')
+      (record.chunked ? ` split into ${record.parts} parts` : ""),
   );
 }
 
 const totalBytes = staged.reduce((sum, f) => sum + f.bytes, 0);
 writeFileSync(
   manifestPath,
-  `${JSON.stringify({ stageVersion: STAGE_VERSION, entriesHash, totalBytes, files: staged }, null, 2)}\n`
+  `${JSON.stringify({ stageVersion: STAGE_VERSION, entriesHash, totalBytes, files: staged }, null, 2)}\n`,
 );
 
 // Belt and braces: nothing under public/models or public/tesseract may exceed
@@ -477,13 +477,13 @@ function oversized(dir) {
   });
 }
 const tooBig = [
-  ...oversized(join(publicDir, 'models')),
-  ...oversized(join(publicDir, 'tesseract')),
+  ...oversized(join(publicDir, "models")),
+  ...oversized(join(publicDir, "tesseract")),
 ];
-if (tooBig.length) fail(`these staged files exceed the 25 MiB asset cap: ${tooBig.join(', ')}`);
+if (tooBig.length) fail(`these staged files exceed the 25 MiB asset cap: ${tooBig.join(", ")}`);
 
 const chunkedCount = staged.filter((f) => f.chunked).length;
 console.log(
   `prepare-models: staged ${staged.length} files, ${totalBytes} bytes, ` +
-    `${chunkedCount} chunked, ${downloaded} bytes newly downloaded`
+    `${chunkedCount} chunked, ${downloaded} bytes newly downloaded`,
 );

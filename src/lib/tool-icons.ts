@@ -4,7 +4,7 @@
  * Keyed by lucide export name; `iconFor` resolves a ToolMeta.icon string to a
  * component and falls back to Wrench for an unknown or missing name.
  */
-import type { Component } from 'vue';
+import type { Component } from "vue";
 import {
   AppWindow,
   ArrowDownAZ,
@@ -86,7 +86,7 @@ import {
   WholeWord,
   Workflow,
   Wrench,
-} from 'lucide-vue-next';
+} from "lucide-vue-next";
 
 const ICONS: Record<string, Component> = {
   AppWindow,

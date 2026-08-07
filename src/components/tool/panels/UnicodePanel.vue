@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Check, Search } from 'lucide-vue-next';
-import type { ToolMeta } from '@/tools/types';
-import { readFragment, writeFragment } from '@/lib/fragment';
-import { search } from '@/tools/unicode-picker/index';
-import { CATEGORIES, type UnicodeEntry } from '@/tools/unicode-picker/data';
-import { Input } from '@/components/ui/input';
-import CopyButton from '../CopyButton.vue';
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { Check, Search } from "lucide-vue-next";
+import type { ToolMeta } from "@/tools/types";
+import { readFragment, writeFragment } from "@/lib/fragment";
+import { search } from "@/tools/unicode-picker/index";
+import { CATEGORIES, type UnicodeEntry } from "@/tools/unicode-picker/data";
+import { Input } from "@/components/ui/input";
+import CopyButton from "../CopyButton.vue";
 
 /**
  * Bespoke panel for the unicode picker: a glyph grid you can scan, not a list
@@ -21,27 +21,27 @@ const CAP = 200;
 
 /** Short stand-in labels for characters that have nothing to draw. */
 const ABBREVIATIONS: Record<string, string> = {
-  'no-break space': 'NBSP',
-  'narrow no-break space': 'NNBSP',
-  'zero width space': 'ZWSP',
-  'zero width joiner': 'ZWJ',
-  'zero width non-joiner': 'ZWNJ',
-  'zero width no-break space': 'ZWNBSP',
-  'soft hyphen': 'SHY',
-  'word joiner': 'WJ',
-  'en space': 'ENSP',
-  'em space': 'EMSP',
-  'thin space': 'THINSP',
-  'hair space': 'HAIRSP',
-  'figure space': 'FIGSP',
-  'punctuation space': 'PUNCSP',
+  "no-break space": "NBSP",
+  "narrow no-break space": "NNBSP",
+  "zero width space": "ZWSP",
+  "zero width joiner": "ZWJ",
+  "zero width non-joiner": "ZWNJ",
+  "zero width no-break space": "ZWNBSP",
+  "soft hyphen": "SHY",
+  "word joiner": "WJ",
+  "en space": "ENSP",
+  "em space": "EMSP",
+  "thin space": "THINSP",
+  "hair space": "HAIRSP",
+  "figure space": "FIGSP",
+  "punctuation space": "PUNCSP",
 };
 
-const pills = [{ id: 'all', label: 'All' }, ...CATEGORIES];
+const pills = [{ id: "all", label: "All" }, ...CATEGORIES];
 
-const typed = ref('');
-const query = ref('');
-const category = ref('all');
+const typed = ref("");
+const query = ref("");
+const category = ref("all");
 const selected = ref<UnicodeEntry | null>(null);
 const copiedKey = ref<string | null>(null);
 const grid = ref<HTMLElement>();
@@ -54,7 +54,7 @@ const results = computed(() => search(query.value, category.value));
 const visible = computed(() => results.value.slice(0, CAP));
 
 function isInvisible(entry: UnicodeEntry): boolean {
-  return entry.category === 'invisible';
+  return entry.category === "invisible";
 }
 
 /** "NBSP" where we have a familiar abbreviation, else the code point. */
@@ -81,7 +81,7 @@ async function pick(entry: UnicodeEntry) {
 /** Arrow keys move focus between cells. Tab order is untouched. */
 function columns(): number {
   if (!grid.value) return 1;
-  const tracks = getComputedStyle(grid.value).gridTemplateColumns.split(' ').filter(Boolean);
+  const tracks = getComputedStyle(grid.value).gridTemplateColumns.split(" ").filter(Boolean);
   return Math.max(1, tracks.length);
 }
 
@@ -94,7 +94,7 @@ function onGridKeydown(event: KeyboardEvent) {
   };
   const step = steps[event.key];
   if (!step || !grid.value) return;
-  const cells = Array.from(grid.value.querySelectorAll<HTMLButtonElement>('button[data-cell]'));
+  const cells = Array.from(grid.value.querySelectorAll<HTMLButtonElement>("button[data-cell]"));
   const from = cells.indexOf(document.activeElement as HTMLButtonElement);
   if (from === -1) return;
   const to = Math.min(cells.length - 1, Math.max(0, from + step));
@@ -112,7 +112,7 @@ watch([query, category], () => {
   if (!mounted.value) return;
   writeFragment({
     input: query.value,
-    opts: category.value === 'all' ? {} : { cat: category.value },
+    opts: category.value === "all" ? {} : { cat: category.value },
   });
 });
 
@@ -139,10 +139,7 @@ onUnmounted(() => {
       <div
         class="flex items-center gap-2 rounded-[10px] bg-secondary px-3 shadow-[var(--sh-inset)]"
       >
-        <Search
-          class="size-4 shrink-0 text-muted-foreground"
-          aria-hidden="true"
-        />
+        <Search class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <Input
           v-model="typed"
           type="text"
@@ -175,10 +172,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <p
-      v-if="results.length > CAP"
-      class="text-xs text-muted-foreground"
-    >
+    <p v-if="results.length > CAP" class="text-xs text-muted-foreground">
       Showing {{ CAP }} of {{ results.length }} matches. Narrow the search or pick a category to see
       the rest.
     </p>
@@ -206,19 +200,13 @@ onUnmounted(() => {
         >
           {{ chipLabel(entry) }}
         </span>
-        <span
-          v-else
-          class="font-mono text-2xl leading-none"
-        >{{ entry.char }}</span>
+        <span v-else class="font-mono text-2xl leading-none">{{ entry.char }}</span>
 
         <span
           v-if="copiedKey === entry.codepoint"
           class="absolute inset-0 flex items-center justify-center rounded-[10px] bg-[var(--positive-soft)] text-[var(--positive)]"
         >
-          <Check
-            class="size-5"
-            aria-hidden="true"
-          />
+          <Check class="size-5" aria-hidden="true" />
           <span class="sr-only">Copied</span>
         </span>
       </button>
@@ -245,7 +233,8 @@ onUnmounted(() => {
       <span
         v-else
         class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[6px] bg-background font-mono text-3xl leading-none"
-      >{{ selected.char }}</span>
+        >{{ selected.char }}</span
+      >
 
       <div class="min-w-0 flex-1">
         <p class="text-sm font-medium">
@@ -257,14 +246,8 @@ onUnmounted(() => {
       </div>
 
       <div class="flex items-center gap-1">
-        <CopyButton
-          :text="selected.char"
-          label="Copy character"
-        />
-        <CopyButton
-          :text="selected.htmlEntity"
-          label="Copy entity"
-        />
+        <CopyButton :text="selected.char" label="Copy character" />
+        <CopyButton :text="selected.htmlEntity" label="Copy entity" />
       </div>
     </div>
   </div>

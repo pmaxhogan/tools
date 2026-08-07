@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import {
   CircleAlert,
   Compass as CompassIcon,
@@ -8,9 +8,9 @@ import {
   SunMedium,
   TabletSmartphone,
   Waves,
-} from 'lucide-vue-next';
-import type { ToolMeta } from '@/tools/types';
-import { Button } from '@/components/ui/button';
+} from "lucide-vue-next";
+import type { ToolMeta } from "@/tools/types";
+import { Button } from "@/components/ui/button";
 import {
   bubbleLevelOffset,
   compassDirection,
@@ -20,8 +20,8 @@ import {
   run,
   vectorMagnitude,
   type Vector3,
-} from '@/tools/mobile-sensors/index';
-import OutputView from '../OutputView.vue';
+} from "@/tools/mobile-sensors/index";
+import OutputView from "../OutputView.vue";
 
 /**
  * Bespoke panel for the Mobile Sensors Explorer. The pure layer in
@@ -42,7 +42,7 @@ defineProps<{ meta: ToolMeta }>();
  * ------------------------------------------------------------------ */
 
 interface IosPermissionEventCtor {
-  requestPermission?: () => Promise<'granted' | 'denied'>;
+  requestPermission?: () => Promise<"granted" | "denied">;
 }
 
 interface IosOrientationEvent {
@@ -69,11 +69,11 @@ function sensorCtor(name: string): GenericSensorCtor | undefined {
 
 function screenAngle(): number {
   const withOrientation = screen as Screen & { orientation?: { angle: number } };
-  if (withOrientation.orientation && typeof withOrientation.orientation.angle === 'number') {
+  if (withOrientation.orientation && typeof withOrientation.orientation.angle === "number") {
     return withOrientation.orientation.angle;
   }
   const legacy = (window as Window & { orientation?: number }).orientation;
-  return typeof legacy === 'number' ? legacy : 0;
+  return typeof legacy === "number" ? legacy : 0;
 }
 
 /* ------------------------------------------------------------------ *
@@ -89,18 +89,18 @@ const SMOOTHING = 0.25;
  * state
  * ------------------------------------------------------------------ */
 
-type Phase = 'idle' | 'waiting' | 'live' | 'unsupported' | 'denied' | 'error';
+type Phase = "idle" | "waiting" | "live" | "unsupported" | "denied" | "error";
 
-const phase = ref<Phase>('idle');
+const phase = ref<Phase>("idle");
 const errorDetail = ref<string | null>(null);
 
-const hasOrientationApi = typeof window !== 'undefined' && 'DeviceOrientationEvent' in window;
-const hasMotionApi = typeof window !== 'undefined' && 'DeviceMotionEvent' in window;
+const hasOrientationApi = typeof window !== "undefined" && "DeviceOrientationEvent" in window;
+const hasMotionApi = typeof window !== "undefined" && "DeviceMotionEvent" in window;
 
 const needsIosPermission = computed(() => {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
   const ctor = window.DeviceMotionEvent as unknown as IosPermissionEventCtor;
-  return typeof ctor?.requestPermission === 'function';
+  return typeof ctor?.requestPermission === "function";
 });
 
 // device orientation
@@ -145,13 +145,13 @@ function round(value: number, places = 1): number {
 }
 
 const headingLabel = computed(() =>
-  heading.value === null ? '--' : `${round(heading.value)}° ${compassDirection(heading.value)}`,
+  heading.value === null ? "--" : `${round(heading.value)}° ${compassDirection(heading.value)}`,
 );
 const pitchLabel = computed(() =>
-  smoothPitch.value === null ? '--' : `${round(smoothPitch.value)}°`,
+  smoothPitch.value === null ? "--" : `${round(smoothPitch.value)}°`,
 );
 const rollLabel = computed(() =>
-  smoothRoll.value === null ? '--' : `${round(smoothRoll.value)}°`,
+  smoothRoll.value === null ? "--" : `${round(smoothRoll.value)}°`,
 );
 const isLevel = computed(() => tiltMagnitude.value !== null && tiltMagnitude.value < 1.5);
 
@@ -161,29 +161,29 @@ const bubble = computed(() => {
 });
 
 function vectorLabel(v: Vector3 | null): string {
-  if (!v) return '--';
+  if (!v) return "--";
   return `${round(vectorMagnitude(v.x, v.y, v.z), 2)} m/s²`;
 }
 
 function vectorDetail(v: Vector3 | null): string {
-  if (!v) return '';
+  if (!v) return "";
   return `x ${round(v.x, 2)}  y ${round(v.y, 2)}  z ${round(v.z, 2)}`;
 }
 
 const rotationRateLabel = computed(() => {
   const r = rotationRate.value;
-  if (!r) return '--';
+  if (!r) return "--";
   return `${round(vectorMagnitude(r.alpha, r.beta, r.gamma), 1)} deg/s`;
 });
 const rotationRateDetail = computed(() => {
   const r = rotationRate.value;
-  if (!r) return '';
+  if (!r) return "";
   return `alpha ${round(r.alpha, 1)}  beta ${round(r.beta, 1)}  gamma ${round(r.gamma, 1)}`;
 });
 
 /** A JSON snapshot matching the pure tool's input shape, for the copy button. */
 const snapshotOutput = computed<Record<string, string> | null>(() => {
-  if (phase.value !== 'live') return null;
+  if (phase.value !== "live") return null;
   const snapshot: Record<string, unknown> = {};
   if (heading.value !== null && smoothPitch.value !== null && smoothRoll.value !== null) {
     // Reconstruct an alpha that reproduces the displayed heading exactly, so
@@ -219,24 +219,24 @@ function clearWatchdog() {
 
 function markReceived() {
   clearWatchdog();
-  if (phase.value === 'waiting') phase.value = 'live';
+  if (phase.value === "waiting") phase.value = "live";
 }
 
 function onOrientation(event: DeviceOrientationEvent) {
   const iosHeading = (event as DeviceOrientationEvent & IosOrientationEvent).webkitCompassHeading;
-  const hasTrueHeading = typeof iosHeading === 'number' && Number.isFinite(iosHeading);
+  const hasTrueHeading = typeof iosHeading === "number" && Number.isFinite(iosHeading);
 
   if (hasTrueHeading) {
     heading.value = iosHeading as number;
     usingTrueHeading.value = true;
     markReceived();
-  } else if (typeof event.alpha === 'number') {
+  } else if (typeof event.alpha === "number") {
     heading.value = compassHeading(event.alpha, screenAngle());
     usingTrueHeading.value = event.absolute === true;
     markReceived();
   }
 
-  if (typeof event.beta === 'number' && typeof event.gamma === 'number') {
+  if (typeof event.beta === "number" && typeof event.gamma === "number") {
     smoothPitch.value = lowPassFilter(smoothPitch.value, event.beta, SMOOTHING);
     smoothRoll.value = lowPassFilter(smoothRoll.value, event.gamma, SMOOTHING);
     tiltMagnitude.value = Math.sqrt(
@@ -247,7 +247,7 @@ function onOrientation(event: DeviceOrientationEvent) {
 }
 
 function vectorOf(v: DeviceMotionEventAcceleration | null): Vector3 | null {
-  if (!v || typeof v.x !== 'number' || typeof v.y !== 'number' || typeof v.z !== 'number') {
+  if (!v || typeof v.x !== "number" || typeof v.y !== "number" || typeof v.z !== "number") {
     return null;
   }
   return { x: v.x, y: v.y, z: v.z };
@@ -267,9 +267,9 @@ function onMotion(event: DeviceMotionEvent) {
   const rate = event.rotationRate;
   if (
     rate &&
-    typeof rate.alpha === 'number' &&
-    typeof rate.beta === 'number' &&
-    typeof rate.gamma === 'number'
+    typeof rate.alpha === "number" &&
+    typeof rate.beta === "number" &&
+    typeof rate.gamma === "number"
   ) {
     rotationRate.value = { alpha: rate.alpha, beta: rate.beta, gamma: rate.gamma };
     markReceived();
@@ -294,12 +294,12 @@ function startGenericSensor(
     const handleReading = () => {
       target.value = { supported: true, live: true, error: null, value: onReading(sensor) };
     };
-    sensor.addEventListener('reading', handleReading);
-    sensor.addEventListener('error', (ev: Event) => {
+    sensor.addEventListener("reading", handleReading);
+    sensor.addEventListener("error", (ev: Event) => {
       const detail = (ev as Event & { error?: { name?: string; message?: string } }).error;
       target.value = {
         ...target.value,
-        error: detail?.message || detail?.name || 'This sensor reported an error.',
+        error: detail?.message || detail?.name || "This sensor reported an error.",
       };
     });
     sensor.start();
@@ -316,26 +316,26 @@ function startGenericSensor(
     // DeviceOrientation readouts above still work independently.
     target.value = {
       ...target.value,
-      error: err instanceof Error ? err.message : 'Not available in this browser context.',
+      error: err instanceof Error ? err.message : "Not available in this browser context.",
     };
   }
 }
 
 function startGenericSensors() {
-  startGenericSensor('Accelerometer', 30, genericAccelerometer, (s) => {
+  startGenericSensor("Accelerometer", 30, genericAccelerometer, (s) => {
     const v = { x: s.x ?? 0, y: s.y ?? 0, z: s.z ?? 0 };
     return `${round(vectorMagnitude(v.x, v.y, v.z), 2)} m/s² (x ${round(v.x, 2)}, y ${round(v.y, 2)}, z ${round(v.z, 2)})`;
   });
-  startGenericSensor('Gyroscope', 30, genericGyroscope, (s) => {
+  startGenericSensor("Gyroscope", 30, genericGyroscope, (s) => {
     const v = { x: s.x ?? 0, y: s.y ?? 0, z: s.z ?? 0 };
     return `${round(vectorMagnitude(v.x, v.y, v.z), 2)} rad/s (x ${round(v.x, 2)}, y ${round(v.y, 2)}, z ${round(v.z, 2)})`;
   });
-  startGenericSensor('Magnetometer', 30, genericMagnetometer, (s) => {
+  startGenericSensor("Magnetometer", 30, genericMagnetometer, (s) => {
     const v = { x: s.x ?? 0, y: s.y ?? 0, z: s.z ?? 0 };
     return `${round(vectorMagnitude(v.x, v.y, v.z), 1)} µT (x ${round(v.x, 1)}, y ${round(v.y, 1)}, z ${round(v.z, 1)})`;
   });
-  startGenericSensor('AmbientLightSensor', 5, genericAmbientLight, (s) =>
-    typeof s.illuminance === 'number' ? `${round(s.illuminance, 1)} lux` : '--',
+  startGenericSensor("AmbientLightSensor", 5, genericAmbientLight, (s) =>
+    typeof s.illuminance === "number" ? `${round(s.illuminance, 1)} lux` : "--",
   );
 }
 
@@ -344,17 +344,17 @@ function startGenericSensors() {
  * ------------------------------------------------------------------ */
 
 function describePermissionError(err: unknown): string {
-  if (err instanceof DOMException && err.name === 'NotAllowedError') {
-    return 'Motion and orientation access was blocked. On iOS, open Settings > Safari > Motion & Orientation Access, turn it on, then reload this page.';
+  if (err instanceof DOMException && err.name === "NotAllowedError") {
+    return "Motion and orientation access was blocked. On iOS, open Settings > Safari > Motion & Orientation Access, turn it on, then reload this page.";
   }
-  return err instanceof Error ? err.message : 'Could not get permission to read the sensors.';
+  return err instanceof Error ? err.message : "Could not get permission to read the sensors.";
 }
 
 async function enableSensors() {
   errorDetail.value = null;
 
   if (!hasOrientationApi && !hasMotionApi) {
-    phase.value = 'unsupported';
+    phase.value = "unsupported";
     return;
   }
 
@@ -364,31 +364,31 @@ async function enableSensors() {
       const orientationCtor = window.DeviceOrientationEvent as unknown as IosPermissionEventCtor;
       const motionResult = await motionCtor.requestPermission();
       const orientationResult =
-        typeof orientationCtor.requestPermission === 'function'
+        typeof orientationCtor.requestPermission === "function"
           ? await orientationCtor.requestPermission()
-          : 'granted';
-      if (motionResult !== 'granted' || orientationResult !== 'granted') {
-        phase.value = 'denied';
+          : "granted";
+      if (motionResult !== "granted" || orientationResult !== "granted") {
+        phase.value = "denied";
         return;
       }
     } catch (err) {
-      phase.value = 'denied';
+      phase.value = "denied";
       errorDetail.value = describePermissionError(err);
       return;
     }
   }
 
-  phase.value = 'waiting';
-  window.addEventListener('deviceorientation', onOrientation);
-  window.addEventListener('devicemotion', onMotion);
-  cleanupFns.push(() => window.removeEventListener('deviceorientation', onOrientation));
-  cleanupFns.push(() => window.removeEventListener('devicemotion', onMotion));
+  phase.value = "waiting";
+  window.addEventListener("deviceorientation", onOrientation);
+  window.addEventListener("devicemotion", onMotion);
+  cleanupFns.push(() => window.removeEventListener("deviceorientation", onOrientation));
+  cleanupFns.push(() => window.removeEventListener("devicemotion", onMotion));
 
   startGenericSensors();
 
   clearWatchdog();
   watchdogTimer = setTimeout(() => {
-    if (phase.value === 'waiting') phase.value = 'unsupported';
+    if (phase.value === "waiting") phase.value = "unsupported";
   }, WATCHDOG_MS);
 }
 
@@ -399,7 +399,7 @@ function teardown() {
 
 function disableSensors() {
   teardown();
-  phase.value = 'idle';
+  phase.value = "idle";
   heading.value = null;
   smoothPitch.value = null;
   smoothRoll.value = null;
@@ -415,7 +415,7 @@ function disableSensors() {
 
 onMounted(() => {
   if (!hasOrientationApi && !hasMotionApi) {
-    phase.value = 'unsupported';
+    phase.value = "unsupported";
   }
 });
 
@@ -434,25 +434,11 @@ onBeforeUnmount(() => {
           size="lg"
           @click="enableSensors"
         >
-          <TabletSmartphone
-            class="size-4"
-            aria-hidden="true"
-          />
+          <TabletSmartphone class="size-4" aria-hidden="true" />
           Enable sensors
         </Button>
-        <Button
-          v-else-if="phase === 'waiting'"
-          size="lg"
-          disabled
-        >
-          Waiting for readings…
-        </Button>
-        <Button
-          v-else
-          size="lg"
-          variant="secondary"
-          @click="disableSensors"
-        >
+        <Button v-else-if="phase === 'waiting'" size="lg" disabled> Waiting for readings… </Button>
+        <Button v-else size="lg" variant="secondary" @click="disableSensors">
           Disable sensors
         </Button>
 
@@ -460,10 +446,7 @@ onBeforeUnmount(() => {
           v-if="phase === 'live'"
           class="inline-flex items-center gap-1.5 text-sm text-positive"
         >
-          <span
-            class="size-2 rounded-full bg-positive"
-            aria-hidden="true"
-          />
+          <span class="size-2 rounded-full bg-positive" aria-hidden="true" />
           Reading live
         </span>
       </div>
@@ -480,10 +463,7 @@ onBeforeUnmount(() => {
         class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
       >
         <p class="flex items-center gap-1.5 font-medium text-destructive">
-          <CircleAlert
-            class="size-4"
-            aria-hidden="true"
-          />
+          <CircleAlert class="size-4" aria-hidden="true" />
           These sensors need a phone or tablet.
         </p>
         <p class="mt-1 text-muted-foreground">
@@ -498,13 +478,11 @@ onBeforeUnmount(() => {
         role="alert"
         class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
       >
-        <p class="font-medium text-destructive">
-          Sensor permission was not granted.
-        </p>
+        <p class="font-medium text-destructive">Sensor permission was not granted.</p>
         <p class="mt-1 text-muted-foreground">
           {{
             errorDetail ||
-              'On iOS, open Settings > Safari > Motion & Orientation Access, turn it on, then reload this page and tap Enable sensors again.'
+            "On iOS, open Settings > Safari > Motion & Orientation Access, turn it on, then reload this page and tap Enable sensors again."
           }}
         </p>
       </div>
@@ -519,29 +497,27 @@ onBeforeUnmount(() => {
           <span
             class="flex items-center gap-1.5 self-start text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
           >
-            <CompassIcon
-              class="size-3.5"
-              aria-hidden="true"
-            />
+            <CompassIcon class="size-3.5" aria-hidden="true" />
             Compass
           </span>
-          <div
-            v-if="heading !== null"
-            class="relative size-36"
-          >
+          <div v-if="heading !== null" class="relative size-36">
             <div class="absolute inset-0 rounded-full bg-secondary shadow-[var(--sh-inset)]" />
             <span
               class="absolute top-1.5 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground"
-            >N</span>
+              >N</span
+            >
             <span
               class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground"
-            >E</span>
+              >E</span
+            >
             <span
               class="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground"
-            >S</span>
+              >S</span
+            >
             <span
               class="absolute left-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground"
-            >W</span>
+              >W</span
+            >
             <div
               class="absolute top-1/2 left-1/2 h-[46%] w-0.5 origin-bottom -translate-x-1/2 -translate-y-full rounded-full bg-primary transition-transform duration-[160ms] ease-out"
               :style="{ transform: `translateX(-50%) translateY(-100%) rotate(${heading}deg)` }"
@@ -556,8 +532,8 @@ onBeforeUnmount(() => {
           <p class="text-xs text-muted-foreground">
             {{
               usingTrueHeading
-                ? 'True heading from the magnetometer.'
-                : 'Relative heading: turn the device once to calibrate against north.'
+                ? "True heading from the magnetometer."
+                : "Relative heading: turn the device once to calibrate against north."
             }}
           </p>
         </div>
@@ -568,10 +544,7 @@ onBeforeUnmount(() => {
           <span
             class="flex items-center gap-1.5 self-start text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
           >
-            <Gauge
-              class="size-3.5"
-              aria-hidden="true"
-            />
+            <Gauge class="size-3.5" aria-hidden="true" />
             Bubble level
           </span>
           <div class="relative size-36 rounded-full bg-secondary shadow-[var(--sh-inset)]">
@@ -587,7 +560,7 @@ onBeforeUnmount(() => {
             />
           </div>
           <p class="font-mono text-2xl font-semibold tabular-nums">
-            {{ isLevel ? 'Level' : `${pitchLabel} / ${rollLabel}` }}
+            {{ isLevel ? "Level" : `${pitchLabel} / ${rollLabel}` }}
           </p>
           <p class="text-xs text-muted-foreground">
             Pitch (front-back) and roll (left-right), smoothed to damp jitter.
@@ -623,10 +596,7 @@ onBeforeUnmount(() => {
           <span
             class="flex items-center gap-1.5 text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
           >
-            <RadioTower
-              class="size-3.5"
-              aria-hidden="true"
-            />
+            <RadioTower class="size-3.5" aria-hidden="true" />
             Rotation rate
           </span>
           <span class="font-mono text-xl font-semibold tabular-nums">{{ rotationRateLabel }}</span>
@@ -638,19 +608,16 @@ onBeforeUnmount(() => {
       <div
         v-if="
           genericAccelerometer.supported ||
-            genericGyroscope.supported ||
-            genericMagnetometer.supported ||
-            genericAmbientLight.supported
+          genericGyroscope.supported ||
+          genericMagnetometer.supported ||
+          genericAmbientLight.supported
         "
         class="flex flex-col gap-3 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6"
       >
         <span
           class="flex items-center gap-1.5 text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
         >
-          <Waves
-            class="size-3.5"
-            aria-hidden="true"
-          />
+          <Waves class="size-3.5" aria-hidden="true" />
           Generic Sensor API
         </span>
         <p class="text-xs text-muted-foreground">
@@ -677,27 +644,18 @@ onBeforeUnmount(() => {
               />
               {{ row.label }}
             </span>
-            <span
-              v-if="row.reading.error"
-              class="text-xs text-muted-foreground"
-            >{{
+            <span v-if="row.reading.error" class="text-xs text-muted-foreground">{{
               row.reading.error
             }}</span>
-            <span
-              v-else
-              class="font-mono text-sm break-all"
-            >{{
-              row.reading.value ?? 'waiting…'
+            <span v-else class="font-mono text-sm break-all">{{
+              row.reading.value ?? "waiting…"
             }}</span>
           </div>
         </div>
       </div>
 
       <!-- copyable snapshot -->
-      <OutputView
-        v-if="snapshotOutput"
-        :output="snapshotOutput"
-      />
+      <OutputView v-if="snapshotOutput" :output="snapshotOutput" />
     </template>
   </div>
 </template>

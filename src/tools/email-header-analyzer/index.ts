@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface EmailHeaderOpts {
   /** Append the full unfolded header list to the report. */
@@ -41,21 +41,21 @@ interface Hop {
 const HOST_WIDTH = 30;
 const DELAY_WIDTH = 9;
 const BAR_MAX = 24;
-const BLOCK = '█';
+const BLOCK = "█";
 
 const AUTH_HONESTY_NOTE =
-  'Note: these are the verdicts the receiving mail server recorded in the headers; this tool reads them as written and never re-verifies them, because real verification needs DNS lookups this tool does not make.';
+  "Note: these are the verdicts the receiving mail server recorded in the headers; this tool reads them as written and never re-verifies them, because real verification needs DNS lookups this tool does not make.";
 
 /* ------------------------------------------------------------------ *
  * Small string helpers
  * ------------------------------------------------------------------ */
 
 function padRight(s: string, n: number): string {
-  return s.length >= n ? s : s + ' '.repeat(n - s.length);
+  return s.length >= n ? s : s + " ".repeat(n - s.length);
 }
 
 function padLeft(s: string, n: number): string {
-  return s.length >= n ? s : ' '.repeat(n - s.length) + s;
+  return s.length >= n ? s : " ".repeat(n - s.length) + s;
 }
 
 function truncate(s: string, n: number): string {
@@ -72,14 +72,14 @@ function truncate(s: string, n: number): string {
  * previous field. Anything after the blank line is the body and is dropped.
  */
 function parseHeaders(raw: string): Header[] {
-  const lines = raw.replace(/\r\n?/g, '\n').split('\n');
+  const lines = raw.replace(/\r\n?/g, "\n").split("\n");
 
   let start = 0;
-  while (start < lines.length && lines[start].trim() === '') start++;
+  while (start < lines.length && lines[start].trim() === "") start++;
 
   const block: string[] = [];
   for (let i = start; i < lines.length; i++) {
-    if (lines[i].trim() === '') break;
+    if (lines[i].trim() === "") break;
     block.push(lines[i]);
   }
 
@@ -90,7 +90,7 @@ function parseHeaders(raw: string): Header[] {
     if (current === null) return;
     const line = current;
     current = null;
-    const colon = line.indexOf(':');
+    const colon = line.indexOf(":");
     if (colon <= 0) return; // mbox "From " separator or junk: skip it
     const name = line.slice(0, colon).trim();
     if (!/^[!-9;-~]+$/.test(name)) return; // printable, no spaces, per RFC 5322
@@ -124,11 +124,11 @@ function addressDomain(value: string | undefined): string | undefined {
   if (!value) return undefined;
   const angle = value.match(/<([^>]*)>/);
   const addr = (angle ? angle[1] : value).trim();
-  const at = addr.lastIndexOf('@');
+  const at = addr.lastIndexOf("@");
   if (at < 0) return undefined;
   const domain = addr
     .slice(at + 1)
-    .replace(/[>,;\s].*$/, '')
+    .replace(/[>,;\s].*$/, "")
     .trim()
     .toLowerCase();
   return domain || undefined;
@@ -141,7 +141,7 @@ function addressDomain(value: string | undefined): string | undefined {
 /** Split on a separator that sits outside quoted strings and parenthesised comments. */
 function splitTopLevel(value: string, sep: string): string[] {
   const parts: string[] = [];
-  let cur = '';
+  let cur = "";
   let depth = 0;
   let quoted = false;
 
@@ -149,7 +149,7 @@ function splitTopLevel(value: string, sep: string): string[] {
     const c = value[i];
     if (quoted) {
       cur += c;
-      if (c === '\\' && i + 1 < value.length) cur += value[++i];
+      if (c === "\\" && i + 1 < value.length) cur += value[++i];
       else if (c === '"') quoted = false;
       continue;
     }
@@ -158,11 +158,11 @@ function splitTopLevel(value: string, sep: string): string[] {
       cur += c;
       continue;
     }
-    if (c === '(') depth++;
-    else if (c === ')' && depth > 0) depth--;
+    if (c === "(") depth++;
+    else if (c === ")" && depth > 0) depth--;
     else if (c === sep && depth === 0) {
       parts.push(cur);
-      cur = '';
+      cur = "";
       continue;
     }
     cur += c;
@@ -173,8 +173,8 @@ function splitTopLevel(value: string, sep: string): string[] {
 
 /** Strip parenthesised comments, returning the remaining text and the comments. */
 function extractComments(s: string): { clean: string; comments: string[] } {
-  let clean = '';
-  let cur = '';
+  let clean = "";
+  let cur = "";
   const comments: string[] = [];
   let depth = 0;
   let quoted = false;
@@ -188,7 +188,7 @@ function extractComments(s: string): { clean: string; comments: string[] } {
     const c = s[i];
     if (quoted) {
       put(c);
-      if (c === '\\' && i + 1 < s.length) put(s[++i]);
+      if (c === "\\" && i + 1 < s.length) put(s[++i]);
       else if (c === '"') quoted = false;
       continue;
     }
@@ -197,18 +197,18 @@ function extractComments(s: string): { clean: string; comments: string[] } {
       put(c);
       continue;
     }
-    if (c === '(') {
+    if (c === "(") {
       depth++;
-      if (depth === 1) cur = '';
+      if (depth === 1) cur = "";
       else cur += c;
       continue;
     }
-    if (c === ')' && depth > 0) {
+    if (c === ")" && depth > 0) {
       depth--;
       if (depth === 0) {
         comments.push(cur.trim());
-        cur = '';
-        clean += ' ';
+        cur = "";
+        clean += " ";
       } else {
         cur += c;
       }
@@ -223,13 +223,13 @@ function extractComments(s: string): { clean: string; comments: string[] } {
 /** Whitespace tokenizer that keeps quoted strings together. */
 function tokenize(s: string): string[] {
   const out: string[] = [];
-  let cur = '';
+  let cur = "";
   let quoted = false;
   for (let i = 0; i < s.length; i++) {
     const c = s[i];
     if (quoted) {
       cur += c;
-      if (c === '\\' && i + 1 < s.length) cur += s[++i];
+      if (c === "\\" && i + 1 < s.length) cur += s[++i];
       else if (c === '"') quoted = false;
       continue;
     }
@@ -240,7 +240,7 @@ function tokenize(s: string): string[] {
     }
     if (/\s/.test(c)) {
       if (cur) out.push(cur);
-      cur = '';
+      cur = "";
       continue;
     }
     cur += c;
@@ -251,7 +251,7 @@ function tokenize(s: string): string[] {
 
 function unquote(s: string): string {
   return s.startsWith('"') && s.endsWith('"') && s.length >= 2
-    ? s.slice(1, -1).replace(/\\(.)/g, '$1')
+    ? s.slice(1, -1).replace(/\\(.)/g, "$1")
     : s;
 }
 
@@ -264,7 +264,7 @@ function parseAuthResults(values: string[]): { servers: string[]; entries: AuthE
   const entries: AuthEntry[] = [];
 
   for (const value of values) {
-    const segments = splitTopLevel(value, ';');
+    const segments = splitTopLevel(value, ";");
     segments.forEach((segment, index) => {
       const { clean, comments } = extractComments(segment);
       const tokens = tokenize(clean);
@@ -274,7 +274,7 @@ function parseAuthResults(values: string[]): { servers: string[]; entries: AuthE
       if (!head) {
         // Not a method=result chunk. The opening segment is the authserv-id.
         if (index === 0) {
-          const id = tokens[0].replace(/[;,]$/, '');
+          const id = tokens[0].replace(/[;,]$/, "");
           if (id && !servers.includes(id)) servers.push(id);
         }
         return;
@@ -288,11 +288,11 @@ function parseAuthResults(values: string[]): { servers: string[]; entries: AuthE
       };
 
       for (const token of tokens.slice(1)) {
-        const eq = token.indexOf('=');
+        const eq = token.indexOf("=");
         if (eq <= 0) continue;
         const key = token.slice(0, eq).toLowerCase();
         const val = unquote(token.slice(eq + 1));
-        if (key === 'reason') entry.reason = val;
+        if (key === "reason") entry.reason = val;
         else entry.props[key] = val;
       }
       entries.push(entry);
@@ -305,8 +305,8 @@ function parseAuthResults(values: string[]): { servers: string[]; entries: AuthE
 /** Parse a DKIM-Signature value into its tag=value pairs. */
 function parseDkimSignature(value: string): Record<string, string> {
   const tags: Record<string, string> = {};
-  for (const part of value.split(';')) {
-    const eq = part.indexOf('=');
+  for (const part of value.split(";")) {
+    const eq = part.indexOf("=");
     if (eq <= 0) continue;
     const key = part.slice(0, eq).trim().toLowerCase();
     if (key) tags[key] = part.slice(eq + 1).trim();
@@ -321,10 +321,10 @@ function parseDkimSignature(value: string): Record<string, string> {
 /** Parse an RFC 5322 date, tolerating trailing "(UTC)" style comments. */
 function parseHeaderDate(raw: string): Date | undefined {
   let s = raw.trim();
-  let prev = '';
+  let prev = "";
   while (s !== prev) {
     prev = s;
-    s = s.replace(/\s*\([^()]*\)\s*$/, '').trim();
+    s = s.replace(/\s*\([^()]*\)\s*$/, "").trim();
   }
   if (!s || s.length > 80) return undefined;
   if (!/\d{1,2}:\d{2}/.test(s) || !/\b\d{4}\b/.test(s)) return undefined;
@@ -339,7 +339,7 @@ function parseReceived(value: string): Hop {
   // semicolon inside the clause list, so walk backwards until a date parses.
   let cut = value.length;
   while (cut > 0) {
-    const semi = value.lastIndexOf(';', cut - 1);
+    const semi = value.lastIndexOf(";", cut - 1);
     if (semi < 0) break;
     const date = parseHeaderDate(value.slice(semi + 1));
     if (date) {
@@ -387,33 +387,33 @@ function formatDelay(ms: number): string {
  * ------------------------------------------------------------------ */
 
 function renderSummary(headers: Header[]): string[] {
-  const out: string[] = ['SUMMARY', '-------'];
+  const out: string[] = ["SUMMARY", "-------"];
 
   const fields: [string, string][] = [];
   const add = (label: string, name: string): void => {
     const value = first(headers, name);
     if (value) fields.push([label, value]);
   };
-  add('From', 'from');
-  add('To', 'to');
-  add('Cc', 'cc');
-  add('Subject', 'subject');
-  add('Date', 'date');
-  add('Message-ID', 'message-id');
-  add('Reply-To', 'reply-to');
-  add('Return-Path', 'return-path');
+  add("From", "from");
+  add("To", "to");
+  add("Cc", "cc");
+  add("Subject", "subject");
+  add("Date", "date");
+  add("Message-ID", "message-id");
+  add("Reply-To", "reply-to");
+  add("Return-Path", "return-path");
 
   if (fields.length === 0) {
-    out.push('No From, To, Subject, Date or Message-ID header is present in this input.');
+    out.push("No From, To, Subject, Date or Message-ID header is present in this input.");
     return out;
   }
 
   const width = Math.max(...fields.map(([label]) => label.length)) + 2;
   for (const [label, value] of fields) out.push(padRight(`${label}:`, width) + value);
 
-  const fromDomain = addressDomain(first(headers, 'from'));
-  const replyDomain = addressDomain(first(headers, 'reply-to'));
-  const returnDomain = addressDomain(first(headers, 'return-path'));
+  const fromDomain = addressDomain(first(headers, "from"));
+  const replyDomain = addressDomain(first(headers, "reply-to"));
+  const returnDomain = addressDomain(first(headers, "return-path"));
 
   const notes: string[] = [];
   if (fromDomain && replyDomain && replyDomain !== fromDomain) {
@@ -426,13 +426,13 @@ function renderSummary(headers: Header[]): string[] {
       `Note: the Return-Path domain (${returnDomain}) is not the From domain (${fromDomain}). That is completely normal for mailing lists, ticketing systems and bulk senders, so on its own it proves nothing. Read it together with the SPF and DMARC results.`,
     );
   }
-  if (first(headers, 'return-path') !== undefined && !returnDomain) {
+  if (first(headers, "return-path") !== undefined && !returnDomain) {
     notes.push(
-      'Note: the Return-Path is the null sender, which is what bounce messages and some automated reports use.',
+      "Note: the Return-Path is the null sender, which is what bounce messages and some automated reports use.",
     );
   }
   if (notes.length) {
-    out.push('');
+    out.push("");
     out.push(...notes);
   }
 
@@ -440,20 +440,20 @@ function renderSummary(headers: Header[]): string[] {
 }
 
 function renderAuth(headers: Header[]): string[] {
-  const out: string[] = ['AUTHENTICATION', '--------------', AUTH_HONESTY_NOTE, ''];
+  const out: string[] = ["AUTHENTICATION", "--------------", AUTH_HONESTY_NOTE, ""];
 
-  const arcValues = all(headers, 'arc-authentication-results');
-  const values = all(headers, 'authentication-results');
+  const arcValues = all(headers, "arc-authentication-results");
+  const values = all(headers, "authentication-results");
   const { servers, entries } = parseAuthResults(values);
   const arcParsed = parseAuthResults(arcValues);
-  const signatures = all(headers, 'dkim-signature').map(parseDkimSignature);
+  const signatures = all(headers, "dkim-signature").map(parseDkimSignature);
 
   if (values.length === 0) {
     out.push(
-      'No Authentication-Results header is present, so this message carries no recorded SPF, DKIM or DMARC verdict. That absence says nothing about whether the message would pass or fail; it only means the receiving server did not write a verdict down.',
+      "No Authentication-Results header is present, so this message carries no recorded SPF, DKIM or DMARC verdict. That absence says nothing about whether the message would pass or fail; it only means the receiving server did not write a verdict down.",
     );
   } else if (servers.length) {
-    out.push(`Recorded by: ${servers.join(', ')}`);
+    out.push(`Recorded by: ${servers.join(", ")}`);
   }
 
   const lines: string[] = [];
@@ -461,51 +461,51 @@ function renderAuth(headers: Header[]): string[] {
     const details: string[] = [];
     for (const key of keys) if (entry.props[key]) details.push(`${key}=${entry.props[key]}`);
     if (entry.reason) details.push(`reason: ${entry.reason}`);
-    let text = details.join(', ');
+    let text = details.join(", ");
     if (entry.comment) text = text ? `${text} (${entry.comment})` : `(${entry.comment})`;
     return text;
   };
 
-  for (const entry of entries.filter((e) => e.method === 'spf')) {
-    const detail = describe(entry, ['smtp.mailfrom', 'smtp.helo', 'envelope-from']);
+  for (const entry of entries.filter((e) => e.method === "spf")) {
+    const detail = describe(entry, ["smtp.mailfrom", "smtp.helo", "envelope-from"]);
     lines.push(`SPF    ${padRight(entry.result, 8)}${detail}`);
   }
 
-  const dkimEntries = entries.filter((e) => e.method === 'dkim');
+  const dkimEntries = entries.filter((e) => e.method === "dkim");
   if (dkimEntries.length) {
     const counts = new Map<string, number>();
     for (const entry of dkimEntries) counts.set(entry.result, (counts.get(entry.result) ?? 0) + 1);
-    const word = counts.size === 1 ? dkimEntries[0].result : 'mixed';
-    const breakdown = [...counts.entries()].map(([result, n]) => `${n} ${result}`).join(', ');
+    const word = counts.size === 1 ? dkimEntries[0].result : "mixed";
+    const breakdown = [...counts.entries()].map(([result, n]) => `${n} ${result}`).join(", ");
     lines.push(
-      `DKIM   ${padRight(word, 8)}${dkimEntries.length} signature${dkimEntries.length === 1 ? '' : 's'} recorded: ${breakdown}`,
+      `DKIM   ${padRight(word, 8)}${dkimEntries.length} signature${dkimEntries.length === 1 ? "" : "s"} recorded: ${breakdown}`,
     );
   } else if (values.length) {
     lines.push(
-      `DKIM   ${padRight('absent', 8)}the Authentication-Results header records no DKIM verdict`,
+      `DKIM   ${padRight("absent", 8)}the Authentication-Results header records no DKIM verdict`,
     );
   }
 
-  for (const entry of entries.filter((e) => e.method === 'dmarc')) {
-    const detail = describe(entry, ['header.from', 'policy.dmarc']);
+  for (const entry of entries.filter((e) => e.method === "dmarc")) {
+    const detail = describe(entry, ["header.from", "policy.dmarc"]);
     lines.push(`DMARC  ${padRight(entry.result, 8)}${detail}`);
   }
-  for (const entry of entries.filter((e) => e.method === 'arc')) {
-    const detail = describe(entry, ['smtp.remote-ip', 'header.oldest-pass']);
+  for (const entry of entries.filter((e) => e.method === "arc")) {
+    const detail = describe(entry, ["smtp.remote-ip", "header.oldest-pass"]);
     lines.push(`ARC    ${padRight(entry.result, 8)}${detail}`);
   }
   if (arcParsed.entries.length) {
     lines.push(
-      `ARC    ${padRight('sealed', 8)}${arcParsed.entries.length} verdict(s) carried over from an earlier hop by ARC-Authentication-Results`,
+      `ARC    ${padRight("sealed", 8)}${arcParsed.entries.length} verdict(s) carried over from an earlier hop by ARC-Authentication-Results`,
     );
   }
-  const known = new Set(['spf', 'dmarc', 'arc', 'dkim']);
+  const known = new Set(["spf", "dmarc", "arc", "dkim"]);
   for (const entry of entries.filter((e) => !known.has(e.method))) {
     lines.push(`${padRight(entry.method.toUpperCase(), 7)}${padRight(entry.result, 8)}`);
   }
 
   if (lines.length) {
-    out.push('');
+    out.push("");
     out.push(...lines);
   }
 
@@ -514,65 +514,65 @@ function renderAuth(headers: Header[]): string[] {
   const dkimRows: string[] = [];
 
   signatures.forEach((tags, i) => {
-    const domain = (tags.d || '').toLowerCase();
-    const selector = tags.s || '';
+    const domain = (tags.d || "").toLowerCase();
+    const selector = tags.s || "";
     let matched = dkimEntries.findIndex(
       (e, j) =>
         !used.has(j) &&
-        (e.props['header.d'] || '').toLowerCase() === domain &&
-        (!e.props['header.s'] || e.props['header.s'] === selector),
+        (e.props["header.d"] || "").toLowerCase() === domain &&
+        (!e.props["header.s"] || e.props["header.s"] === selector),
     );
     if (matched < 0) {
       matched = dkimEntries.findIndex(
-        (e, j) => !used.has(j) && (e.props['header.d'] || '').toLowerCase() === domain,
+        (e, j) => !used.has(j) && (e.props["header.d"] || "").toLowerCase() === domain,
       );
     }
     const entry = matched >= 0 ? dkimEntries[matched] : undefined;
     if (matched >= 0) used.add(matched);
 
     const parts = [
-      `${i + 1}. domain ${tags.d || '(no d= tag)'}`,
-      `selector ${selector || '(no s= tag)'}`,
+      `${i + 1}. domain ${tags.d || "(no d= tag)"}`,
+      `selector ${selector || "(no s= tag)"}`,
     ];
     if (tags.a) parts.push(`algorithm ${tags.a}`);
     parts.push(
       entry
-        ? `recorded result: ${entry.result}${entry.reason ? ` (${entry.reason})` : ''}`
-        : 'recorded result: not recorded for this signature',
+        ? `recorded result: ${entry.result}${entry.reason ? ` (${entry.reason})` : ""}`
+        : "recorded result: not recorded for this signature",
     );
-    dkimRows.push(`  ${parts.join(', ')}`);
+    dkimRows.push(`  ${parts.join(", ")}`);
   });
 
   dkimEntries.forEach((entry, j) => {
     if (used.has(j)) return;
-    const domain = entry.props['header.d'] || entry.props['header.i'] || '(no domain given)';
-    const selector = entry.props['header.s'];
+    const domain = entry.props["header.d"] || entry.props["header.i"] || "(no domain given)";
+    const selector = entry.props["header.s"];
     const parts = [
       `${signatures.length + j + 1}. domain ${domain}`,
-      selector ? `selector ${selector}` : 'selector not recorded',
-      'no DKIM-Signature header for it is still on the message',
-      `recorded result: ${entry.result}${entry.reason ? ` (${entry.reason})` : ''}`,
+      selector ? `selector ${selector}` : "selector not recorded",
+      "no DKIM-Signature header for it is still on the message",
+      `recorded result: ${entry.result}${entry.reason ? ` (${entry.reason})` : ""}`,
     ];
-    dkimRows.push(`  ${parts.join(', ')}`);
+    dkimRows.push(`  ${parts.join(", ")}`);
   });
 
-  out.push('');
+  out.push("");
   if (dkimRows.length) {
     out.push(`DKIM signatures (${dkimRows.length})`);
     out.push(...dkimRows);
   } else {
-    out.push('DKIM signatures: none. The message carries no DKIM-Signature header.');
+    out.push("DKIM signatures: none. The message carries no DKIM-Signature header.");
   }
 
   return out;
 }
 
 function renderHops(headers: Header[]): string[] {
-  const out: string[] = ['HOP WATERFALL', '-------------'];
+  const out: string[] = ["HOP WATERFALL", "-------------"];
 
-  const received = all(headers, 'received');
+  const received = all(headers, "received");
   if (received.length === 0) {
-    out.push('No Received header is present, so there is no delivery path to trace.');
+    out.push("No Received header is present, so there is no delivery path to trace.");
     return out;
   }
 
@@ -610,69 +610,69 @@ function renderHops(headers: Header[]): string[] {
   const originIp = hops[0]?.fromComment?.match(/\[([0-9A-Fa-f.:]+)\]/)?.[1];
 
   out.push(
-    `${hops.length} Received header${hops.length === 1 ? '' : 's'}, oldest first. Delay is the gap between this hop and the one before it.`,
+    `${hops.length} Received header${hops.length === 1 ? "" : "s"}, oldest first. Delay is the gap between this hop and the one before it.`,
   );
   if (originHost)
     out.push(
-      'Hop 0 is the originating host named by the oldest Received header. It writes no timestamp of its own, so it carries no delay.',
+      "Hop 0 is the originating host named by the oldest Received header. It writes no timestamp of its own, so it carries no delay.",
     );
-  out.push('');
+  out.push("");
 
   if (originHost) {
     out.push(
-      `${padLeft('0', 2)}  ${padRight(truncate(originHost, HOST_WIDTH), HOST_WIDTH)}  ${padLeft('origin', DELAY_WIDTH)}  ${originIp ? `IP ${originIp}` : ''}`.trimEnd(),
+      `${padLeft("0", 2)}  ${padRight(truncate(originHost, HOST_WIDTH), HOST_WIDTH)}  ${padLeft("origin", DELAY_WIDTH)}  ${originIp ? `IP ${originIp}` : ""}`.trimEnd(),
     );
   }
 
   hops.forEach((hop, i) => {
-    const host = truncate(hop.by || hop.from || '(host not recorded)', HOST_WIDTH);
+    const host = truncate(hop.by || hop.from || "(host not recorded)", HOST_WIDTH);
     const delay = delays[i];
     let text: string;
-    if (!hop.date) text = '?';
-    else if (delay === undefined) text = '-';
+    if (!hop.date) text = "?";
+    else if (delay === undefined) text = "-";
     else text = formatDelay(delay);
 
     const bar =
       delay !== undefined && delay > 0 && maxDelay > 0
         ? BLOCK.repeat(Math.max(1, Math.round((delay / maxDelay) * BAR_MAX)))
-        : '';
+        : "";
 
     const trailer: string[] = [];
     if (bar) trailer.push(bar);
-    if (!hop.date) trailer.push('no timestamp could be parsed from this line');
+    if (!hop.date) trailer.push("no timestamp could be parsed from this line");
     if (backwards[i] > 0)
       trailer.push(
         `clock skew: the recorded time moved backwards by ${formatDelay(backwards[i])}, clamped to 0`,
       );
-    if (i === slowest) trailer.push('<- slowest hop');
+    if (i === slowest) trailer.push("<- slowest hop");
 
     out.push(
-      `${padLeft(String(i + 1), 2)}  ${padRight(host, HOST_WIDTH)}  ${padLeft(text, DELAY_WIDTH)}  ${trailer.join('  ')}`.trimEnd(),
+      `${padLeft(String(i + 1), 2)}  ${padRight(host, HOST_WIDTH)}  ${padLeft(text, DELAY_WIDTH)}  ${trailer.join("  ")}`.trimEnd(),
     );
   });
 
-  out.push('');
+  out.push("");
   if (dated.length >= 2) {
     const total = dated[dated.length - 1].date!.getTime() - dated[0].date!.getTime();
     out.push(`Total transit time: ${formatDelay(Math.max(0, total))}`);
   } else if (hops.length === 1) {
-    out.push('Only one Received header, so there is no hop to hop delay to measure.');
+    out.push("Only one Received header, so there is no hop to hop delay to measure.");
   } else {
     out.push(
-      'Total transit time: not available, because fewer than two hops carry a timestamp that could be parsed.',
+      "Total transit time: not available, because fewer than two hops carry a timestamp that could be parsed.",
     );
   }
 
-  out.push('');
-  out.push('Hop details');
+  out.push("");
+  out.push("Hop details");
   hops.forEach((hop, i) => {
     const bits: string[] = [];
-    if (hop.from) bits.push(`from ${hop.from}${hop.fromComment ? ` (${hop.fromComment})` : ''}`);
+    if (hop.from) bits.push(`from ${hop.from}${hop.fromComment ? ` (${hop.fromComment})` : ""}`);
     if (hop.by) bits.push(`by ${hop.by}`);
     if (hop.withProto) bits.push(`with ${hop.withProto}`);
     if (hop.id) bits.push(`id ${hop.id}`);
     if (hop.date) bits.push(hop.date.toISOString());
-    out.push(`${padLeft(String(i + 1), 2)}. ${bits.length ? bits.join(', ') : 'nothing parsable'}`);
+    out.push(`${padLeft(String(i + 1), 2)}. ${bits.length ? bits.join(", ") : "nothing parsable"}`);
     if (!hop.date || bits.length === 0) out.push(`    raw: ${hop.raw}`);
   });
 
@@ -681,14 +681,14 @@ function renderHops(headers: Header[]): string[] {
 
 function renderExtras(headers: Header[]): string[] {
   const wanted: [string, string][] = [
-    ['X-Mailer', 'x-mailer'],
-    ['User-Agent', 'user-agent'],
-    ['List-Unsubscribe', 'list-unsubscribe'],
-    ['List-Id', 'list-id'],
-    ['X-Spam-Status', 'x-spam-status'],
-    ['X-Spam-Score', 'x-spam-score'],
-    ['X-Spam-Level', 'x-spam-level'],
-    ['X-Originating-IP', 'x-originating-ip'],
+    ["X-Mailer", "x-mailer"],
+    ["User-Agent", "user-agent"],
+    ["List-Unsubscribe", "list-unsubscribe"],
+    ["List-Id", "list-id"],
+    ["X-Spam-Status", "x-spam-status"],
+    ["X-Spam-Score", "x-spam-score"],
+    ["X-Spam-Level", "x-spam-level"],
+    ["X-Originating-IP", "x-originating-ip"],
   ];
 
   const rows: [string, string][] = [];
@@ -700,8 +700,8 @@ function renderExtras(headers: Header[]): string[] {
 
   const width = Math.max(...rows.map(([label]) => label.length)) + 2;
   return [
-    'EXTRAS',
-    '------',
+    "EXTRAS",
+    "------",
     ...rows.map(([label, value]) => padRight(`${label}:`, width) + value),
   ];
 }
@@ -711,29 +711,29 @@ function renderExtras(headers: Header[]): string[] {
  * ------------------------------------------------------------------ */
 
 export function run(input: string, opts: EmailHeaderOpts): string {
-  const raw = input ?? '';
+  const raw = input ?? "";
   if (!raw.trim())
     throw new ToolError(
-      'empty-input',
-      'Paste the raw email headers to analyze.',
+      "empty-input",
+      "Paste the raw email headers to analyze.",
       'In Gmail open the message menu and choose "Show original"; in Outlook open Properties and copy the internet headers. A whole .eml file works too.',
     );
 
   const headers = parseHeaders(raw);
   if (headers.length === 0)
     throw new ToolError(
-      'no-headers',
-      'No email headers were found in that input.',
+      "no-headers",
+      "No email headers were found in that input.",
       'Header lines look like "Received: from ..." or "Subject: ...", one field per line. Make sure you pasted the header block and not just the message body.',
     );
 
-  const section = (opts?.section || 'all').toLowerCase();
+  const section = (opts?.section || "all").toLowerCase();
   const blocks: string[][] = [];
 
-  if (section === 'all' || section === 'summary') blocks.push(renderSummary(headers));
-  if (section === 'all' || section === 'auth') blocks.push(renderAuth(headers));
-  if (section === 'all' || section === 'hops') blocks.push(renderHops(headers));
-  if (section === 'all') {
+  if (section === "all" || section === "summary") blocks.push(renderSummary(headers));
+  if (section === "all" || section === "auth") blocks.push(renderAuth(headers));
+  if (section === "all" || section === "hops") blocks.push(renderHops(headers));
+  if (section === "all") {
     const extras = renderExtras(headers);
     if (extras.length) blocks.push(extras);
   }
@@ -741,15 +741,15 @@ export function run(input: string, opts: EmailHeaderOpts): string {
   if (opts?.showRaw) {
     blocks.push([
       `UNFOLDED HEADERS (${headers.length})`,
-      '-'.repeat(`UNFOLDED HEADERS (${headers.length})`.length),
+      "-".repeat(`UNFOLDED HEADERS (${headers.length})`.length),
       ...headers.map((h) => `${h.name}: ${h.value}`),
     ]);
   }
 
   return blocks
     .filter((b) => b.length > 0)
-    .map((b) => b.join('\n'))
-    .join('\n\n');
+    .map((b) => b.join("\n"))
+    .join("\n\n");
 }
 
 export default { run } satisfies ToolLogic<string, string, EmailHeaderOpts>;

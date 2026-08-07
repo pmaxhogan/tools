@@ -1,15 +1,15 @@
-import Papa from 'papaparse';
-import * as TOML from 'smol-toml';
-import YAML from 'yaml';
-import { ToolError, type ToolLogic } from '../types';
+import Papa from "papaparse";
+import * as TOML from "smol-toml";
+import YAML from "yaml";
+import { ToolError, type ToolLogic } from "../types";
 
-export type DataFormat = 'csv' | 'json' | 'yaml' | 'toml';
+export type DataFormat = "csv" | "json" | "yaml" | "toml";
 
-const FORMATS: readonly DataFormat[] = ['csv', 'json', 'yaml', 'toml'];
+const FORMATS: readonly DataFormat[] = ["csv", "json", "yaml", "toml"];
 
 export interface ConvertOpts {
   /** Source format, or 'auto' to sniff it from the text. */
-  from: 'auto' | DataFormat;
+  from: "auto" | DataFormat;
   /** Target format. */
   to: DataFormat;
   /** Pretty-print width for JSON and YAML. 0 minifies JSON (YAML clamps to 2). */
@@ -25,13 +25,15 @@ export interface ConvertOpts {
 
 /** True for objects that behave like a record: not null, not an array, not a Date. */
 function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date);
+  return (
+    typeof value === "object" && value !== null && !Array.isArray(value) && !(value instanceof Date)
+  );
 }
 
 /** Library errors are often multi-line with a source excerpt. Keep the headline. */
 function firstLine(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err);
-  return message.split('\n')[0]!.trim();
+  return message.split("\n")[0]!.trim();
 }
 
 function stripBom(text: string): string {
@@ -39,18 +41,18 @@ function stripBom(text: string): string {
 }
 
 function clampIndent(raw: unknown): number {
-  const n = typeof raw === 'number' ? raw : Number(raw);
+  const n = typeof raw === "number" ? raw : Number(raw);
   if (!Number.isFinite(n)) return 2;
   return Math.min(8, Math.max(0, Math.floor(n)));
 }
 
-function asFormat(raw: unknown, field: 'from' | 'to'): DataFormat {
-  const value = String(raw ?? '').toLowerCase();
+function asFormat(raw: unknown, field: "from" | "to"): DataFormat {
+  const value = String(raw ?? "").toLowerCase();
   if ((FORMATS as readonly string[]).includes(value)) return value as DataFormat;
   throw new ToolError(
-    'unknown-format',
+    "unknown-format",
     `Unknown ${field} format "${String(raw)}".`,
-    'Choose one of csv, json, yaml, or toml.',
+    "Choose one of csv, json, yaml, or toml.",
   );
 }
 
@@ -64,9 +66,9 @@ function parseJson(text: string): unknown {
     return JSON.parse(text);
   } catch (err) {
     throw new ToolError(
-      'invalid-json',
+      "invalid-json",
       `JSON parse failed: ${firstLine(err)}`,
-      'Strict JSON needs double-quoted keys and strings, and no trailing commas or comments.',
+      "Strict JSON needs double-quoted keys and strings, and no trailing commas or comments.",
     );
   }
 }
@@ -76,9 +78,9 @@ function parseYaml(text: string): unknown {
     return YAML.parse(text);
   } catch (err) {
     throw new ToolError(
-      'invalid-yaml',
+      "invalid-yaml",
       `YAML parse failed: ${firstLine(err)}`,
-      'Check the indentation (spaces only, never tabs) and that every key is followed by a colon and a space.',
+      "Check the indentation (spaces only, never tabs) and that every key is followed by a colon and a space.",
     );
   }
 }
@@ -88,9 +90,9 @@ function parseToml(text: string): unknown {
     return TOML.parse(text);
   } catch (err) {
     throw new ToolError(
-      'invalid-toml',
+      "invalid-toml",
       `TOML parse failed: ${firstLine(err)}`,
-      'Every line must be a key = value pair, a [table] header, or a # comment.',
+      "Every line must be a key = value pair, a [table] header, or a # comment.",
     );
   }
 }
@@ -109,14 +111,14 @@ function parseCsv(text: string, csvHeader: boolean): unknown {
 
   // UndetectableDelimiter is a warning, not a failure: a single column file
   // is still perfectly good CSV once the user has picked the format by hand.
-  const fatal = result.errors.filter((e) => e.code !== 'UndetectableDelimiter');
+  const fatal = result.errors.filter((e) => e.code !== "UndetectableDelimiter");
   if (fatal.length > 0) {
     const first = fatal[0]!;
-    const where = typeof first.row === 'number' ? ` on row ${first.row + 1}` : '';
+    const where = typeof first.row === "number" ? ` on row ${first.row + 1}` : "";
     throw new ToolError(
-      'invalid-csv',
+      "invalid-csv",
       `CSV parse failed${where}: ${first.message}`,
-      'Make sure every row has the same number of fields and that quoted fields are closed.',
+      "Make sure every row has the same number of fields and that quoted fields are closed.",
     );
   }
 
@@ -134,13 +136,13 @@ function parseCsv(text: string, csvHeader: boolean): unknown {
 
 function parseAs(text: string, format: DataFormat, csvHeader: boolean): unknown {
   switch (format) {
-    case 'json':
+    case "json":
       return parseJson(text);
-    case 'yaml':
+    case "yaml":
       return parseYaml(text);
-    case 'toml':
+    case "toml":
       return parseToml(text);
-    case 'csv':
+    case "csv":
       return parseCsv(text, csvHeader);
   }
 }
@@ -185,14 +187,14 @@ interface Detected {
 
 function detect(text: string, csvHeader: boolean): Detected {
   try {
-    return { format: 'json', value: JSON.parse(text) };
+    return { format: "json", value: JSON.parse(text) };
   } catch {
     /* not JSON, keep looking */
   }
 
   if (TOML_HINT.test(text)) {
     try {
-      return { format: 'toml', value: TOML.parse(text) };
+      return { format: "toml", value: TOML.parse(text) };
     } catch {
       /* the hint matched but the document did not parse, keep looking */
     }
@@ -200,27 +202,27 @@ function detect(text: string, csvHeader: boolean): Detected {
 
   try {
     const value = YAML.parse(text);
-    if (value !== null && value !== undefined && typeof value !== 'string') {
-      return { format: 'yaml', value };
+    if (value !== null && value !== undefined && typeof value !== "string") {
+      return { format: "yaml", value };
     }
   } catch {
     /* not YAML, keep looking */
   }
 
   if (looksLikeCsv(text)) {
-    return { format: 'csv', value: parseCsv(text, csvHeader) };
+    return { format: "csv", value: parseCsv(text, csvHeader) };
   }
 
   throw new ToolError(
-    'undetected-format',
-    'Could not tell what format this text is.',
+    "undetected-format",
+    "Could not tell what format this text is.",
     'Pick the source format explicitly with the "From" option, or check the text for a typo.',
   );
 }
 
 /** Public helper: which format does auto-detection think this text is? */
 export function detectFormat(text: string, csvHeader = true): DataFormat {
-  return detect(stripBom(text ?? '').trim(), csvHeader).format;
+  return detect(stripBom(text ?? "").trim(), csvHeader).format;
 }
 
 /* ------------------------------------------------------------------ *
@@ -278,7 +280,7 @@ function stripNullish(value: unknown, path: string, dropped: string[]): unknown 
 
 function toJson(value: unknown, indent: number): string {
   const text = indent > 0 ? JSON.stringify(value, null, indent) : JSON.stringify(value);
-  return text ?? 'null';
+  return text ?? "null";
 }
 
 function toYaml(value: unknown, indent: number): string {
@@ -289,9 +291,9 @@ function toYaml(value: unknown, indent: number): string {
 
 /** One CSV cell. Anything still structured after flattening becomes inline JSON. */
 function toCell(value: unknown): string | number | boolean {
-  if (value === null || value === undefined) return '';
+  if (value === null || value === undefined) return "";
   if (value instanceof Date) return value.toISOString();
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
     return value;
   }
   return JSON.stringify(value);
@@ -319,9 +321,9 @@ function flattenRow(row: Record<string, unknown>): Record<string, string | numbe
 
 function notTabular(detail: string): ToolError {
   return new ToolError(
-    'not-tabular',
+    "not-tabular",
     `CSV needs rows and columns, and ${detail}`,
-    'Convert to JSON or YAML instead, or reshape the data into an array of objects with the same keys.',
+    "Convert to JSON or YAML instead, or reshape the data into an array of objects with the same keys.",
   );
 }
 
@@ -332,19 +334,19 @@ function toCsv(value: unknown): string {
   } else if (isPlainObject(value)) {
     rows = [value]; // a single object is a one row table
   } else {
-    throw notTabular('this input is a single scalar value.');
+    throw notTabular("this input is a single scalar value.");
   }
 
-  if (rows.length === 0) return '';
+  if (rows.length === 0) return "";
 
   // Array of arrays: already a grid, so emit it as is with no header row.
   if (rows.every((row) => Array.isArray(row))) {
     const grid = (rows as unknown[][]).map((row) => row.map(toCell));
-    return Papa.unparse(grid, { newline: '\n' });
+    return Papa.unparse(grid, { newline: "\n" });
   }
 
   if (!rows.every((row) => isPlainObject(row))) {
-    throw notTabular('this input mixes scalars with objects or arrays.');
+    throw notTabular("this input mixes scalars with objects or arrays.");
   }
 
   const flat = (rows as Record<string, unknown>[]).map(flattenRow);
@@ -355,8 +357,8 @@ function toCsv(value: unknown): string {
     }
   }
   // Build the grid by field name so rows with missing keys keep their columns.
-  const data = flat.map((row) => fields.map((field) => (field in row ? row[field]! : '')));
-  return Papa.unparse({ fields, data }, { newline: '\n' });
+  const data = flat.map((row) => fields.map((field) => (field in row ? row[field]! : "")));
+  return Papa.unparse({ fields, data }, { newline: "\n" });
 }
 
 function toToml(value: unknown): string {
@@ -367,20 +369,24 @@ function toToml(value: unknown): string {
   // wrapper key and a comment saying so.
   if (Array.isArray(value)) {
     root = { items: value };
-    notes.push('# Root array wrapped under an "items" key because TOML requires a table at the root.');
+    notes.push(
+      '# Root array wrapped under an "items" key because TOML requires a table at the root.',
+    );
   } else if (!isPlainObject(value)) {
     root = { value };
-    notes.push('# Root scalar wrapped under a "value" key because TOML requires a table at the root.');
+    notes.push(
+      '# Root scalar wrapped under a "value" key because TOML requires a table at the root.',
+    );
   }
 
   const dropped: string[] = [];
-  const cleaned = stripNullish(root, '', dropped);
+  const cleaned = stripNullish(root, "", dropped);
   if (dropped.length > 0) {
-    notes.push(`# TOML has no null, so these keys were dropped: ${dropped.join(', ')}`);
+    notes.push(`# TOML has no null, so these keys were dropped: ${dropped.join(", ")}`);
   }
 
   const body = TOML.stringify(cleaned as Record<string, unknown>);
-  return notes.length > 0 ? `${notes.join('\n')}\n${body}` : body;
+  return notes.length > 0 ? `${notes.join("\n")}\n${body}` : body;
 }
 
 /**
@@ -390,26 +396,26 @@ function toToml(value: unknown): string {
  */
 function convert(parsed: unknown, to: DataFormat, indent: number): string {
   try {
-    const value = to === 'toml' ? parsed : datesToIso(parsed);
+    const value = to === "toml" ? parsed : datesToIso(parsed);
     switch (to) {
-      case 'json':
+      case "json":
         return toJson(value, indent);
-      case 'yaml':
+      case "yaml":
         return toYaml(value, indent);
-      case 'toml':
+      case "toml":
         return toToml(value);
-      case 'csv':
+      case "csv":
         return toCsv(value);
     }
   } catch (err) {
     if (err instanceof ToolError) throw err;
     // A circular structure recurses forever and lands here as a RangeError.
     const detail =
-      err instanceof RangeError ? 'the structure is circular or too deeply nested' : firstLine(err);
+      err instanceof RangeError ? "the structure is circular or too deeply nested" : firstLine(err);
     throw new ToolError(
-      'conversion-failed',
+      "conversion-failed",
       `Could not write this data as ${to.toUpperCase()}: ${detail}.`,
-      'None of these formats can hold a circular reference, so remove any anchor that points back at its own parent.',
+      "None of these formats can hold a circular reference, so remove any anchor that points back at its own parent.",
     );
   }
 }
@@ -419,27 +425,27 @@ function convert(parsed: unknown, to: DataFormat, indent: number): string {
  * ------------------------------------------------------------------ */
 
 export function run(input: string, opts: ConvertOpts): string {
-  const text = stripBom(input ?? '').trim();
+  const text = stripBom(input ?? "").trim();
   if (!text) {
     throw new ToolError(
-      'empty-input',
-      'There is nothing to convert.',
-      'Paste or drop some CSV, JSON, YAML, or TOML into the input.',
+      "empty-input",
+      "There is nothing to convert.",
+      "Paste or drop some CSV, JSON, YAML, or TOML into the input.",
     );
   }
 
-  const to = asFormat(opts?.to ?? 'json', 'to');
+  const to = asFormat(opts?.to ?? "json", "to");
   const csvHeader = opts?.csvHeader !== false;
   const indent = clampIndent(opts?.indent ?? 2);
-  const fromOpt = opts?.from ?? 'auto';
+  const fromOpt = opts?.from ?? "auto";
 
   // from === to still runs a full parse and re-serialise, which is what
   // reformats the document: json to json applies the indent, csv to csv
   // normalises quoting and line endings.
   const parsed =
-    fromOpt === 'auto'
+    fromOpt === "auto"
       ? detect(text, csvHeader).value
-      : parseAs(text, asFormat(fromOpt, 'from'), csvHeader);
+      : parseAs(text, asFormat(fromOpt, "from"), csvHeader);
 
   return convert(parsed, to, indent);
 }

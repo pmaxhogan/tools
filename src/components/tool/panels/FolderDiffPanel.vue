@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
-import { Download, FolderOpen, RotateCw } from 'lucide-vue-next';
-import type { ToolMeta } from '@/tools/types';
-import { ToolError } from '@/tools/types';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import { Download, FolderOpen, RotateCw } from "lucide-vue-next";
+import type { ToolMeta } from "@/tools/types";
+import { ToolError } from "@/tools/types";
 import {
   hashFile,
   isFsAccessSupported,
@@ -11,7 +11,7 @@ import {
   scanDirectory,
   type DirectoryHandleWrapper,
   type FsScan,
-} from '@/lib/fs-access';
+} from "@/lib/fs-access";
 import {
   MAX_TEXT_DIFF_BYTES,
   diffScans,
@@ -24,18 +24,18 @@ import {
   type CommonPair,
   type FolderDiff,
   type ReportRow,
-} from '@/tools/folder-diff/index';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+} from "@/tools/folder-diff/index";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 /**
  * Bespoke panel for Folder Diff.
@@ -53,10 +53,10 @@ import {
  */
 const props = defineProps<{ meta: ToolMeta }>();
 
-type Side = 'a' | 'b';
+type Side = "a" | "b";
 
 /** The two roots, in the order they are drawn. */
-const SIDES: readonly Side[] = ['a', 'b'];
+const SIDES: readonly Side[] = ["a", "b"];
 
 /** Rows drawn at once before the list asks to be expanded. */
 const ROW_CAP = 800;
@@ -80,7 +80,7 @@ const scanningB = ref(false);
 const countA = ref(0);
 const countB = ref(0);
 
-const ignoreInput = ref('node_modules, .git, *.log');
+const ignoreInput = ref("node_modules, .git, *.log");
 const ignoreApplied = ref(ignoreInput.value);
 const caseInsensitive = ref(false);
 const ignoreLineEndings = ref(false);
@@ -101,7 +101,7 @@ const textDiff = ref<string | null>(null);
 const textNote = ref<string | null>(null);
 const textBusy = ref(false);
 
-const format = ref('tree');
+const format = ref("tree");
 const error = ref<{ message: string; fix?: string } | null>(null);
 
 let ignoreTimer: ReturnType<typeof setTimeout> | null = null;
@@ -113,7 +113,7 @@ let ignoreTimer: ReturnType<typeof setTimeout> | null = null;
 function humanSize(bytes: number): string {
   const n = Math.max(0, Math.round(bytes));
   if (n < 1024) return `${n} B`;
-  const units = ['KB', 'MB', 'GB', 'TB'];
+  const units = ["KB", "MB", "GB", "TB"];
   let value = n / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -131,9 +131,9 @@ function fileSlug(name: string): string {
   return (
     name
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 30) || 'folder'
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 30) || "folder"
   );
 }
 
@@ -155,10 +155,10 @@ async function pick(side: Side) {
   if (!supported.value || resolving.value) return;
   error.value = null;
   try {
-    const picked = await pickDirectory('read');
+    const picked = await pickDirectory("read");
     // null is the visitor closing the dialog, which is not worth a message.
     if (!picked) return;
-    if (side === 'a') {
+    if (side === "a") {
       dirA.value = picked;
       scanA.value = null;
     } else {
@@ -173,10 +173,10 @@ async function pick(side: Side) {
 }
 
 async function rescan(side: Side) {
-  const dir = side === 'a' ? dirA.value : dirB.value;
+  const dir = side === "a" ? dirA.value : dirB.value;
   if (!dir) return;
-  const scanning = side === 'a' ? scanningA : scanningB;
-  const count = side === 'a' ? countA : countB;
+  const scanning = side === "a" ? scanningA : scanningB;
+  const count = side === "a" ? countA : countB;
   if (scanning.value) return;
 
   scanning.value = true;
@@ -188,7 +188,7 @@ async function rescan(side: Side) {
         count.value = seen;
       },
     });
-    if (side === 'a') scanA.value = result;
+    if (side === "a") scanA.value = result;
     else scanB.value = result;
   } catch (e) {
     setError(e);
@@ -199,8 +199,8 @@ async function rescan(side: Side) {
 
 async function rescanBoth() {
   resetComparison();
-  await rescan('a');
-  await rescan('b');
+  await rescan("a");
+  await rescan("b");
 }
 
 /** Everything derived from file contents is stale the moment a root changes. */
@@ -261,8 +261,8 @@ const candidates = computed(() => (diff.value ? planHashCompare(diff.value) : []
 const scanNotes = computed(() => {
   const notes: string[] = [];
   for (const [label, scan] of [
-    ['Folder A', scanA.value],
-    ['Folder B', scanB.value],
+    ["Folder A", scanA.value],
+    ["Folder B", scanB.value],
   ] as const) {
     if (scan?.truncated) {
       notes.push(
@@ -279,33 +279,33 @@ const scanNotes = computed(() => {
 /** Tailwind classes per status, so the list reads at a glance. */
 function rowTone(row: ReportRow): string {
   switch (row.status) {
-    case 'added':
-    case 'dir-added':
-      return 'text-[var(--positive)]';
-    case 'removed':
-    case 'dir-removed':
-      return 'text-destructive';
-    case 'different':
-      return 'text-amber-700 dark:text-amber-400';
-    case 'maybe-different':
-      return 'text-muted-foreground';
+    case "added":
+    case "dir-added":
+      return "text-[var(--positive)]";
+    case "removed":
+    case "dir-removed":
+      return "text-destructive";
+    case "different":
+      return "text-amber-700 dark:text-amber-400";
+    case "maybe-different":
+      return "text-muted-foreground";
     default:
-      return 'text-muted-foreground/70';
+      return "text-muted-foreground/70";
   }
 }
 
-const STATUS_LABEL: Record<ReportRow['status'], string> = {
-  added: 'only in B',
-  removed: 'only in A',
-  different: 'different',
-  'maybe-different': 'same size, not read yet',
-  identical: 'identical',
-  'dir-added': 'folder only in B',
-  'dir-removed': 'folder only in A',
+const STATUS_LABEL: Record<ReportRow["status"], string> = {
+  added: "only in B",
+  removed: "only in A",
+  different: "different",
+  "maybe-different": "same size, not read yet",
+  identical: "identical",
+  "dir-added": "folder only in B",
+  "dir-removed": "folder only in A",
 };
 
 function sizeLabel(row: ReportRow): string {
-  if (row.kind === 'directory') return '';
+  if (row.kind === "directory") return "";
   if (row.sizeA !== null && row.sizeB !== null) {
     return row.sizeA === row.sizeB
       ? humanSize(row.sizeA)
@@ -313,12 +313,12 @@ function sizeLabel(row: ReportRow): string {
   }
   if (row.sizeA !== null) return humanSize(row.sizeA);
   if (row.sizeB !== null) return humanSize(row.sizeB);
-  return '';
+  return "";
 }
 
 /** A row is openable when both sides exist and they are not known to match. */
 function canOpen(row: ReportRow): boolean {
-  return row.kind === 'file' && (row.status === 'different' || row.status === 'maybe-different');
+  return row.kind === "file" && (row.status === "different" || row.status === "maybe-different");
 }
 
 /* ---------------------------------------------------------------- */
@@ -422,7 +422,7 @@ async function openPair(row: ReportRow) {
 
     if (looksBinary(bytesA) || looksBinary(bytesB)) {
       textNote.value =
-        'This looks like a binary file, so there are no lines to show. The comparison above still tells you whether the two copies differ.';
+        "This looks like a binary file, so there are no lines to show. The comparison above still tells you whether the two copies differ.";
       return;
     }
 
@@ -447,14 +447,14 @@ function downloadReport() {
   if (!current) return;
   try {
     const text = formatReport(current, format.value, { includeIdentical: showIdentical.value });
-    const csv = format.value === 'csv';
+    const csv = format.value === "csv";
     const blob = new Blob([csv ? text : `${text}\n`], {
-      type: csv ? 'text/csv;charset=utf-8' : 'text/plain;charset=utf-8',
+      type: csv ? "text/csv;charset=utf-8" : "text/plain;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = `folder-diff-${fileSlug(current.rootA)}-${fileSlug(current.rootB)}.${csv ? 'csv' : 'txt'}`;
+    link.download = `folder-diff-${fileSlug(current.rootA)}-${fileSlug(current.rootB)}.${csv ? "csv" : "txt"}`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -504,12 +504,10 @@ onUnmounted(() => {
       role="status"
       class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
     >
-      <p class="font-medium text-muted-foreground">
-        Checking folder access.
-      </p>
+      <p class="font-medium text-muted-foreground">Checking folder access.</p>
       <p class="mt-1 text-muted-foreground">
-        {{ props.meta.name }} opens two folders in place, which needs the File System Access API.
-        It is available in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop.
+        {{ props.meta.name }} opens two folders in place, which needs the File System Access API. It
+        is available in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop.
       </p>
     </div>
 
@@ -532,7 +530,7 @@ onUnmounted(() => {
               @click="pick(side)"
             >
               <FolderOpen class="size-3.5" />
-              {{ (side === 'a' ? dirA : dirB) ? 'Change' : 'Choose folder' }}
+              {{ (side === "a" ? dirA : dirB) ? "Change" : "Choose folder" }}
             </Button>
           </div>
 
@@ -541,31 +539,28 @@ onUnmounted(() => {
             class="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1"
           >
             <span class="font-mono text-sm font-medium">{{
-              (side === 'a' ? dirA : dirB)?.name
+              (side === "a" ? dirA : dirB)?.name
             }}</span>
             <span
               v-if="side === 'a' ? scanningA : scanningB"
               role="status"
               class="font-mono text-xs text-muted-foreground tabular-nums"
             >
-              reading… {{ (side === 'a' ? countA : countB).toLocaleString() }} items
+              reading… {{ (side === "a" ? countA : countB).toLocaleString() }} items
             </span>
             <span
               v-else-if="side === 'a' ? scanA : scanB"
               class="text-xs text-muted-foreground tabular-nums"
             >
-              {{ plural((side === 'a' ? scanA : scanB)?.fileCount ?? 0, 'file', 'files') }} ·
-              {{ humanSize((side === 'a' ? scanA : scanB)?.totalBytes ?? 0) }}
+              {{ plural((side === "a" ? scanA : scanB)?.fileCount ?? 0, "file", "files") }} ·
+              {{ humanSize((side === "a" ? scanA : scanB)?.totalBytes ?? 0) }}
             </span>
           </div>
-          <p
-            v-else
-            class="mt-2 text-sm text-muted-foreground"
-          >
+          <p v-else class="mt-2 text-sm text-muted-foreground">
             {{
-              side === 'a'
-                ? 'The folder to compare from, such as last week\'s copy.'
-                : 'The folder to compare against, such as today\'s.'
+              side === "a"
+                ? "The folder to compare from, such as last week's copy."
+                : "The folder to compare against, such as today's."
             }}
           </p>
         </div>
@@ -576,12 +571,7 @@ onUnmounted(() => {
         device. Nothing here renames, writes or deletes anything.
       </p>
 
-      <p
-        v-for="note in scanNotes"
-        :key="note"
-        role="status"
-        class="text-xs text-muted-foreground"
-      >
+      <p v-for="note in scanNotes" :key="note" role="status" class="text-xs text-muted-foreground">
         {{ note }}
       </p>
 
@@ -610,12 +600,7 @@ onUnmounted(() => {
               :model-value="caseInsensitive"
               @update:model-value="(v) => (caseInsensitive = Boolean(v))"
             />
-            <Label
-              for="folder-diff-case"
-              class="text-sm font-normal"
-            >
-              Ignore case in paths
-            </Label>
+            <Label for="folder-diff-case" class="text-sm font-normal"> Ignore case in paths </Label>
           </div>
           <div class="flex items-center gap-2">
             <Switch
@@ -623,10 +608,7 @@ onUnmounted(() => {
               :model-value="ignoreLineEndings"
               @update:model-value="(v) => (ignoreLineEndings = Boolean(v))"
             />
-            <Label
-              for="folder-diff-eol"
-              class="text-sm font-normal"
-            >
+            <Label for="folder-diff-eol" class="text-sm font-normal">
               Ignore line endings in the text diff
             </Label>
           </div>
@@ -636,10 +618,7 @@ onUnmounted(() => {
               :model-value="showIdentical"
               @update:model-value="(v) => (showIdentical = Boolean(v))"
             />
-            <Label
-              for="folder-diff-identical"
-              class="text-sm font-normal"
-            >
+            <Label for="folder-diff-identical" class="text-sm font-normal">
               Show identical files
             </Label>
           </div>
@@ -647,10 +626,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Summary -->
-      <div
-        v-if="counts"
-        class="flex flex-wrap items-center gap-2"
-      >
+      <div v-if="counts" class="flex flex-wrap items-center gap-2">
         <span
           class="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-[var(--positive)] tabular-nums"
         >
@@ -683,20 +659,10 @@ onUnmounted(() => {
       </div>
 
       <!-- Actions -->
-      <div
-        v-if="bothScanned"
-        class="flex flex-wrap items-center gap-2"
-      >
-        <Button
-          size="sm"
-          :disabled="resolving || candidates.length === 0"
-          @click="resolveSameSize"
-        >
+      <div v-if="bothScanned" class="flex flex-wrap items-center gap-2">
+        <Button size="sm" :disabled="resolving || candidates.length === 0" @click="resolveSameSize">
           Resolve same-size files
-          <span
-            v-if="candidates.length"
-            class="tabular-nums"
-          >({{ candidates.length }})</span>
+          <span v-if="candidates.length" class="tabular-nums">({{ candidates.length }})</span>
         </Button>
         <Button
           variant="outline"
@@ -708,10 +674,7 @@ onUnmounted(() => {
           Rescan both
         </Button>
         <div class="ml-auto flex items-center gap-2">
-          <Select
-            :model-value="format"
-            @update:model-value="(v) => (format = String(v))"
-          >
+          <Select :model-value="format" @update:model-value="(v) => (format = String(v))">
             <SelectTrigger
               id="folder-diff-format"
               size="sm"
@@ -721,22 +684,12 @@ onUnmounted(() => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="tree">
-                Tree
-              </SelectItem>
-              <SelectItem value="flat">
-                Flat list
-              </SelectItem>
-              <SelectItem value="csv">
-                CSV
-              </SelectItem>
+              <SelectItem value="tree"> Tree </SelectItem>
+              <SelectItem value="flat"> Flat list </SelectItem>
+              <SelectItem value="csv"> CSV </SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="ghost"
-            size="sm"
-            @click="downloadReport"
-          >
+          <Button variant="ghost" size="sm" @click="downloadReport">
             <Download class="size-3.5" />
             Download report
           </Button>
@@ -744,10 +697,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Hashing progress -->
-      <div
-        v-if="resolving"
-        class="flex flex-col gap-2"
-      >
+      <div v-if="resolving" class="flex flex-col gap-2">
         <div
           class="h-2 overflow-hidden rounded-full bg-secondary"
           role="progressbar"
@@ -765,13 +715,7 @@ onUnmounted(() => {
           <span class="font-mono text-xs text-muted-foreground tabular-nums">
             Comparing {{ resolveDone }} of {{ resolveTotal }}
           </span>
-          <Button
-            variant="outline"
-            size="sm"
-            @click="stopResolving"
-          >
-            Stop
-          </Button>
+          <Button variant="outline" size="sm" @click="stopResolving"> Stop </Button>
         </div>
       </div>
 
@@ -781,42 +725,27 @@ onUnmounted(() => {
         class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
       >
         <p class="font-medium">
-          {{ plural(resolveNotes.length, 'file', 'files') }} could not be read, so those pairs are
+          {{ plural(resolveNotes.length, "file", "files") }} could not be read, so those pairs are
           still unresolved.
         </p>
         <ul class="mt-1 list-disc pl-4 text-xs text-muted-foreground">
-          <li
-            v-for="note in resolveNotes.slice(0, 8)"
-            :key="note"
-          >
+          <li v-for="note in resolveNotes.slice(0, 8)" :key="note">
             {{ note }}
           </li>
         </ul>
       </div>
 
       <!-- The comparison -->
-      <div
-        v-if="bothScanned"
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      >
-        <p
-          v-if="allRows.length === 0"
-          class="px-3 py-4 text-sm text-muted-foreground"
-        >
+      <div v-if="bothScanned" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
+        <p v-if="allRows.length === 0" class="px-3 py-4 text-sm text-muted-foreground">
           {{
             showIdentical
-              ? 'These two folders hold the same files.'
-              : 'No differences. Switch on Show identical files to list what matched.'
+              ? "These two folders hold the same files."
+              : "No differences. Switch on Show identical files to list what matched."
           }}
         </p>
-        <ul
-          v-else
-          class="max-h-[28rem] overflow-auto py-1"
-        >
-          <li
-            v-for="row in visibleRows"
-            :key="`${row.kind}:${row.path}`"
-          >
+        <ul v-else class="max-h-[28rem] overflow-auto py-1">
+          <li v-for="row in visibleRows" :key="`${row.kind}:${row.path}`">
             <component
               :is="canOpen(row) ? 'button' : 'div'"
               :type="canOpen(row) ? 'button' : undefined"
@@ -828,66 +757,41 @@ onUnmounted(() => {
               :title="STATUS_LABEL[row.status]"
               @click="canOpen(row) ? openPair(row) : undefined"
             >
-              <span
-                class="w-3 shrink-0 font-semibold"
-                :class="rowTone(row)"
-                aria-hidden="true"
-              >{{ row.marker }}</span>
-              <span
-                class="min-w-0 flex-1 break-all"
-                :class="rowTone(row)"
-              >
-                {{ row.path }}{{ row.kind === 'directory' ? '/' : '' }}
+              <span class="w-3 shrink-0 font-semibold" :class="rowTone(row)" aria-hidden="true">{{
+                row.marker
+              }}</span>
+              <span class="min-w-0 flex-1 break-all" :class="rowTone(row)">
+                {{ row.path }}{{ row.kind === "directory" ? "/" : "" }}
                 <span class="sr-only">{{ STATUS_LABEL[row.status] }}</span>
               </span>
               <span class="shrink-0 text-muted-foreground tabular-nums">{{ sizeLabel(row) }}</span>
             </component>
 
             <!-- Inline diff for the selected pair -->
-            <div
-              v-if="selectedPath === row.path"
-              class="px-3 pt-1 pb-3"
-            >
-              <p
-                v-if="textBusy"
-                role="status"
-                class="text-xs text-muted-foreground"
-              >
+            <div v-if="selectedPath === row.path" class="px-3 pt-1 pb-3">
+              <p v-if="textBusy" role="status" class="text-xs text-muted-foreground">
                 Reading both copies…
               </p>
-              <p
-                v-else-if="textNote"
-                class="text-xs text-muted-foreground"
-              >
+              <p v-else-if="textNote" class="text-xs text-muted-foreground">
                 {{ textNote }}
               </p>
               <pre
                 v-else-if="textDiff"
                 class="max-h-72 overflow-auto rounded-[8px] bg-background p-2 font-mono text-xs whitespace-pre text-muted-foreground"
-              >{{ textDiff }}</pre>
+                >{{ textDiff }}</pre>
             </div>
           </li>
         </ul>
 
-        <div
-          v-if="hiddenRowCount"
-          class="px-3 pb-3"
-        >
-          <Button
-            variant="ghost"
-            size="sm"
-            @click="showAllRows = true"
-          >
+        <div v-if="hiddenRowCount" class="px-3 pb-3">
+          <Button variant="ghost" size="sm" @click="showAllRows = true">
             Show all {{ allRows.length.toLocaleString() }} rows
           </Button>
         </div>
       </div>
 
-      <p
-        v-if="bothScanned && counts?.unresolved"
-        class="text-xs text-muted-foreground"
-      >
-        {{ plural(counts.unresolved, 'pair shares', 'pairs share') }} a path and a size, so nothing
+      <p v-if="bothScanned && counts?.unresolved" class="text-xs text-muted-foreground">
+        {{ plural(counts.unresolved, "pair shares", "pairs share") }} a path and a size, so nothing
         has been read for them yet. Resolve same-size files hashes both copies and settles each one.
       </p>
 
@@ -900,10 +804,7 @@ onUnmounted(() => {
         <p class="font-medium text-destructive">
           {{ error.message }}
         </p>
-        <p
-          v-if="error.fix"
-          class="mt-1 text-muted-foreground"
-        >
+        <p v-if="error.fix" class="mt-1 text-muted-foreground">
           {{ error.fix }}
         </p>
       </div>

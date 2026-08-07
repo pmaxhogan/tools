@@ -1,4 +1,4 @@
-import { type ToolLogic } from '../types';
+import { type ToolLogic } from "../types";
 
 export interface HashOpts {
   /** Known-good hash to compare (case-insensitive) against every computed digest. */
@@ -55,9 +55,9 @@ function md5Pad(bytes: Uint8Array): Uint8Array {
 /** int32 -> 4 hex bytes, little-endian (MD5 outputs its words this way). */
 function wordToHexLE(word: number): string {
   const u = word >>> 0;
-  let hex = '';
+  let hex = "";
   for (let i = 0; i < 4; i++) {
-    hex += ((u >>> (i * 8)) & 0xff).toString(16).padStart(2, '0');
+    hex += ((u >>> (i * 8)) & 0xff).toString(16).padStart(2, "0");
   }
   return hex;
 }
@@ -112,16 +112,16 @@ export function md5(input: string): string {
     d0 = (d0 + D) | 0;
   }
 
-  return [a0, b0, c0, d0].map(wordToHexLE).join('');
+  return [a0, b0, c0, d0].map(wordToHexLE).join("");
 }
 
 function bufToHex(buf: ArrayBuffer): string {
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /** SHA-* digest via WebCrypto (Node 20+ and all browsers), lowercase hex. */
 async function subtleHex(
-  algorithm: 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512',
+  algorithm: "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512",
   data: Uint8Array,
 ): Promise<string> {
   const buf = await globalThis.crypto.subtle.digest(algorithm, data as BufferSource);
@@ -131,29 +131,29 @@ async function subtleHex(
 export async function run(input: string, opts: HashOpts): Promise<HashResult> {
   // The empty string is a valid, well-known input (hashes of "" are
   // documented, common test vectors) — never rejected.
-  const text = input ?? '';
+  const text = input ?? "";
   const data = new TextEncoder().encode(text);
 
   const [sha1, sha256, sha384, sha512] = await Promise.all([
-    subtleHex('SHA-1', data),
-    subtleHex('SHA-256', data),
-    subtleHex('SHA-384', data),
-    subtleHex('SHA-512', data),
+    subtleHex("SHA-1", data),
+    subtleHex("SHA-256", data),
+    subtleHex("SHA-384", data),
+    subtleHex("SHA-512", data),
   ]);
 
   const result: HashResult = {
     MD5: md5(text),
-    'SHA-1': sha1,
-    'SHA-256': sha256,
-    'SHA-384': sha384,
-    'SHA-512': sha512,
+    "SHA-1": sha1,
+    "SHA-256": sha256,
+    "SHA-384": sha384,
+    "SHA-512": sha512,
   };
 
-  const verify = (opts.verify ?? '').trim();
+  const verify = (opts.verify ?? "").trim();
   if (verify) {
     const target = verify.toLowerCase();
     const match = Object.entries(result).find(([, v]) => v === target);
-    result.Verification = match ? `Matches ${match[0]}` : 'No match';
+    result.Verification = match ? `Matches ${match[0]}` : "No match";
   }
 
   return result;

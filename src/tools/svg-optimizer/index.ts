@@ -1,5 +1,5 @@
-import { optimize, type Config } from 'svgo/browser';
-import { ToolError, type ToolLogic } from '../types';
+import { optimize, type Config } from "svgo/browser";
+import { ToolError, type ToolLogic } from "../types";
 
 export interface SvgoOpts {
   /** Run SVGO passes repeatedly (up to 10) until no further shrinkage. */
@@ -54,29 +54,29 @@ function buildConfig(opts: SvgoOpts): Config {
     floatPrecision: opts.precision,
     plugins: [
       {
-        name: 'preset-default',
+        name: "preset-default",
         params: {
           overrides: opts.removeIds ? {} : { cleanupIds: false },
         },
       },
       // removeViewBox is not part of preset-default in this SVGO version, so
       // it has to be added explicitly when the "keep viewBox" toggle is off.
-      ...(opts.keepViewBox ? [] : (['removeViewBox'] as const)),
+      ...(opts.keepViewBox ? [] : (["removeViewBox"] as const)),
     ],
     js2svg: opts.pretty ? { pretty: true, indent: 2 } : undefined,
   };
 }
 
 export function run(input: string, opts: SvgoOpts): SvgoResult {
-  const trimmed = (input ?? '').trim();
+  const trimmed = (input ?? "").trim();
   if (!trimmed) {
-    throw new ToolError('empty-input', 'Paste or drop an SVG file to optimize.');
+    throw new ToolError("empty-input", "Paste or drop an SVG file to optimize.");
   }
 
   if (!/<svg[\s>]/i.test(trimmed)) {
     throw new ToolError(
-      'not-svg',
-      'This does not look like SVG markup.',
+      "not-svg",
+      "This does not look like SVG markup.",
       "Paste an SVG file's contents, starting with an <svg> tag (an XML prolog or comments before it are fine).",
     );
   }
@@ -87,30 +87,30 @@ export function run(input: string, opts: SvgoOpts): SvgoResult {
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     throw new ToolError(
-      'invalid-svg',
-      message.split('\n')[0],
-      'Check for unclosed tags or a missing xmlns attribute.',
+      "invalid-svg",
+      message.split("\n")[0],
+      "Check for unclosed tags or a missing xmlns attribute.",
     );
   }
 
   if (result.error != null) {
     throw new ToolError(
-      'invalid-svg',
-      String(result.error).split('\n')[0],
-      'Check for unclosed tags or a missing xmlns attribute.',
+      "invalid-svg",
+      String(result.error).split("\n")[0],
+      "Check for unclosed tags or a missing xmlns attribute.",
     );
   }
 
-  const optimized = result.data ?? '';
+  const optimized = result.data ?? "";
   const beforeBytes = byteLength(trimmed);
   const afterBytes = byteLength(optimized);
 
   return {
-    'Optimized SVG': optimized,
+    "Optimized SVG": optimized,
     Before: formatBytes(beforeBytes),
     After: formatBytes(afterBytes),
     Saved: formatSaved(beforeBytes, afterBytes),
-    Passes: opts.multipass ? 'Multipass (on)' : 'Single pass (off)',
+    Passes: opts.multipass ? "Multipass (on)" : "Single pass (off)",
   };
 }
 

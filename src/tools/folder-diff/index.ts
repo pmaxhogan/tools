@@ -1,6 +1,6 @@
-import { diffLines } from 'diff';
-import { ToolError, type ToolLogic } from '../types';
-import type { FsDirEntry, FsFileEntry, FsScan } from '@/lib/fs-access';
+import { diffLines } from "diff";
+import { ToolError, type ToolLogic } from "../types";
+import type { FsDirEntry, FsFileEntry, FsScan } from "@/lib/fs-access";
 
 /**
  * Folder Diff: compare two folders that were scanned in place.
@@ -37,7 +37,7 @@ import type { FsDirEntry, FsFileEntry, FsScan } from '@/lib/fs-access';
  * `maybe-different` is an honest third state rather than a guess: the two files
  * share a path and a size, and nothing has read them yet.
  */
-export type CommonStatus = 'identical' | 'different' | 'maybe-different';
+export type CommonStatus = "identical" | "different" | "maybe-different";
 
 /** One file present in both folders. */
 export interface CommonPair {
@@ -120,7 +120,7 @@ export interface DiffSummary {
   totalFiles: number;
 }
 
-export type ReportFormat = 'tree' | 'flat' | 'csv';
+export type ReportFormat = "tree" | "flat" | "csv";
 
 export interface ReportOptions {
   /** Leave the matching files out, which is usually what a person wants to read. */
@@ -137,11 +137,15 @@ export interface FolderDiffOpts extends DiffScansOptions {
 
 /** Split whatever the panel or the options panel supplied into clean patterns. */
 export function normalizeIgnore(patterns: string[] | string | undefined): string[] {
-  const raw = Array.isArray(patterns) ? patterns : String(patterns ?? '').split(/[\n,]/);
+  const raw = Array.isArray(patterns) ? patterns : String(patterns ?? "").split(/[\n,]/);
   return raw
-    .map((pattern) => String(pattern ?? '').trim().replace(/\\/g, '/'))
-    .map((pattern) => pattern.replace(/^\.\//, '').replace(/\/+$/, ''))
-    .filter((pattern) => pattern !== '');
+    .map((pattern) =>
+      String(pattern ?? "")
+        .trim()
+        .replace(/\\/g, "/"),
+    )
+    .map((pattern) => pattern.replace(/^\.\//, "").replace(/\/+$/, ""))
+    .filter((pattern) => pattern !== "");
 }
 
 /**
@@ -149,20 +153,20 @@ export function normalizeIgnore(patterns: string[] | string | undefined): string
  * every other character is matched literally.
  */
 function globToRegExp(pattern: string): RegExp {
-  let source = '';
+  let source = "";
   for (let i = 0; i < pattern.length; i += 1) {
     const char = pattern[i] as string;
-    if (char === '*') {
-      if (pattern[i + 1] === '*') {
-        source += '.*';
+    if (char === "*") {
+      if (pattern[i + 1] === "*") {
+        source += ".*";
         i += 1;
       } else {
-        source += '[^/]*';
+        source += "[^/]*";
       }
-    } else if (char === '?') {
-      source += '[^/]';
+    } else if (char === "?") {
+      source += "[^/]";
     } else {
-      source += char.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+      source += char.replace(/[.+^${}()|[\]\\]/g, "\\$&");
     }
   }
   return new RegExp(`^${source}$`);
@@ -181,7 +185,7 @@ export function makeIgnoreMatcher(
   caseInsensitive = false,
 ): (path: string) => boolean {
   const compiled = patterns.map((pattern) => ({
-    scoped: pattern.includes('/'),
+    scoped: pattern.includes("/"),
     re: globToRegExp(caseInsensitive ? pattern.toLowerCase() : pattern),
   }));
 
@@ -189,12 +193,12 @@ export function makeIgnoreMatcher(
 
   return (path: string): boolean => {
     const target = caseInsensitive ? path.toLowerCase() : path;
-    const segments = target.split('/');
+    const segments = target.split("/");
     for (const { scoped, re } of compiled) {
       if (scoped) {
-        let prefix = '';
+        let prefix = "";
         for (const segment of segments) {
-          prefix = prefix === '' ? segment : `${prefix}/${segment}`;
+          prefix = prefix === "" ? segment : `${prefix}/${segment}`;
           if (re.test(prefix)) return true;
         }
       } else {
@@ -218,12 +222,12 @@ function statusFor(
   hashesB: Record<string, string> | undefined,
 ): CommonStatus {
   // Different lengths settle it without reading a byte.
-  if (a.size !== b.size) return 'different';
+  if (a.size !== b.size) return "different";
   const hashA = hashesA?.[a.path];
   const hashB = hashesB?.[b.path];
   // A hash on one side alone says nothing, so the pair stays a candidate.
-  if (typeof hashA !== 'string' || typeof hashB !== 'string') return 'maybe-different';
-  return hashA === hashB ? 'identical' : 'different';
+  if (typeof hashA !== "string" || typeof hashB !== "string") return "maybe-different";
+  return hashA === hashB ? "identical" : "different";
 }
 
 /**
@@ -235,9 +239,9 @@ function statusFor(
 export function diffScans(a: FsScan, b: FsScan, opts: DiffScansOptions = {}): FolderDiff {
   if (!a || !Array.isArray(a.entries) || !b || !Array.isArray(b.entries)) {
     throw new ToolError(
-      'missing-scan',
-      'Two scanned folders are needed before anything can be compared.',
-      'Choose folder A and folder B in the panel, and let both finish reading.',
+      "missing-scan",
+      "Two scanned folders are needed before anything can be compared.",
+      "Choose folder A and folder B in the panel, and let both finish reading.",
     );
   }
 
@@ -299,7 +303,7 @@ export function diffScans(a: FsScan, b: FsScan, opts: DiffScansOptions = {}): Fo
  */
 export function planHashCompare(diff: FolderDiff): HashCandidate[] {
   return diff.common
-    .filter((pair) => pair.status === 'maybe-different')
+    .filter((pair) => pair.status === "maybe-different")
     .map((pair) => ({
       path: pair.path,
       pathA: pair.a.path,
@@ -313,8 +317,8 @@ export function summarize(diff: FolderDiff): DiffSummary {
   let identical = 0;
   let unresolved = 0;
   for (const pair of diff.common) {
-    if (pair.status === 'different') changed += 1;
-    else if (pair.status === 'identical') identical += 1;
+    if (pair.status === "different") changed += 1;
+    else if (pair.status === "identical") identical += 1;
     else unresolved += 1;
   }
 
@@ -340,34 +344,28 @@ export function summarize(diff: FolderDiff): DiffSummary {
  * ------------------------------------------------------------------ */
 
 export type RowStatus =
-  | 'added'
-  | 'removed'
-  | 'different'
-  | 'maybe-different'
-  | 'identical'
-  | 'dir-added'
-  | 'dir-removed';
+  "added" | "removed" | "different" | "maybe-different" | "identical" | "dir-added" | "dir-removed";
 
 /** One line of a report, before it is shaped into a tree, a list or a CSV. */
 export interface ReportRow {
   path: string;
-  kind: 'file' | 'directory';
+  kind: "file" | "directory";
   status: RowStatus;
-  marker: '+' | '-' | '~' | '?' | '=';
+  marker: "+" | "-" | "~" | "?" | "=";
   /** Null when the file is not in folder A. */
   sizeA: number | null;
   /** Null when the file is not in folder B. */
   sizeB: number | null;
 }
 
-const MARKERS: Record<RowStatus, ReportRow['marker']> = {
-  added: '+',
-  removed: '-',
-  different: '~',
-  'maybe-different': '?',
-  identical: '=',
-  'dir-added': '+',
-  'dir-removed': '-',
+const MARKERS: Record<RowStatus, ReportRow["marker"]> = {
+  added: "+",
+  removed: "-",
+  different: "~",
+  "maybe-different": "?",
+  identical: "=",
+  "dir-added": "+",
+  "dir-removed": "-",
 };
 
 /** Flatten a diff into sorted rows. The shared input for all three formats. */
@@ -377,7 +375,7 @@ export function reportRows(diff: FolderDiff, opts: ReportOptions = {}): ReportRo
 
   const push = (
     path: string,
-    kind: ReportRow['kind'],
+    kind: ReportRow["kind"],
     status: RowStatus,
     sizeA: number | null,
     sizeB: number | null,
@@ -385,14 +383,14 @@ export function reportRows(diff: FolderDiff, opts: ReportOptions = {}): ReportRo
     rows.push({ path, kind, status, marker: MARKERS[status], sizeA, sizeB });
   };
 
-  for (const entry of diff.onlyInA) push(entry.path, 'file', 'removed', entry.size, null);
-  for (const entry of diff.onlyInB) push(entry.path, 'file', 'added', null, entry.size);
+  for (const entry of diff.onlyInA) push(entry.path, "file", "removed", entry.size, null);
+  for (const entry of diff.onlyInB) push(entry.path, "file", "added", null, entry.size);
   for (const pair of diff.common) {
-    if (pair.status === 'identical' && !includeIdentical) continue;
-    push(pair.path, 'file', pair.status, pair.a.size, pair.b.size);
+    if (pair.status === "identical" && !includeIdentical) continue;
+    push(pair.path, "file", pair.status, pair.a.size, pair.b.size);
   }
-  for (const dir of diff.dirsOnlyInA) push(dir.path, 'directory', 'dir-removed', null, null);
-  for (const dir of diff.dirsOnlyInB) push(dir.path, 'directory', 'dir-added', null, null);
+  for (const dir of diff.dirsOnlyInA) push(dir.path, "directory", "dir-removed", null, null);
+  for (const dir of diff.dirsOnlyInB) push(dir.path, "directory", "dir-added", null, null);
 
   rows.sort((x, y) => (x.path < y.path ? -1 : x.path > y.path ? 1 : 0));
   return rows;
@@ -402,22 +400,22 @@ function legend(diff: FolderDiff): string[] {
   return [
     `A: ${diff.rootA}`,
     `B: ${diff.rootB}`,
-    '- only in A   + only in B   ~ different   ? same size, not read yet   = identical',
-    '',
+    "- only in A   + only in B   ~ different   ? same size, not read yet   = identical",
+    "",
   ];
 }
 
 interface TreeNode {
   name: string;
-  kind: 'file' | 'directory';
+  kind: "file" | "directory";
   marker: string;
   children: Map<string, TreeNode>;
 }
 
 function buildTree(rows: ReportRow[]): TreeNode {
-  const root: TreeNode = { name: '', kind: 'directory', marker: ' ', children: new Map() };
+  const root: TreeNode = { name: "", kind: "directory", marker: " ", children: new Map() };
   for (const row of rows) {
-    const segments = row.path.split('/').filter((segment) => segment !== '');
+    const segments = row.path.split("/").filter((segment) => segment !== "");
     let node = root;
     segments.forEach((segment, index) => {
       const last = index === segments.length - 1;
@@ -425,8 +423,8 @@ function buildTree(rows: ReportRow[]): TreeNode {
       if (!child) {
         child = {
           name: segment,
-          kind: last ? row.kind : 'directory',
-          marker: ' ',
+          kind: last ? row.kind : "directory",
+          marker: " ",
           children: new Map(),
         };
         node.children.set(segment, child);
@@ -445,12 +443,12 @@ function buildTree(rows: ReportRow[]): TreeNode {
 
 function renderTree(node: TreeNode, depth: number, out: string[]): void {
   const children = [...node.children.values()].sort((a, b) => {
-    if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
+    if (a.kind !== b.kind) return a.kind === "directory" ? -1 : 1;
     return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
   });
   for (const child of children) {
-    const suffix = child.kind === 'directory' ? '/' : '';
-    out.push(`${'  '.repeat(depth)}${child.marker} ${child.name}${suffix}`);
+    const suffix = child.kind === "directory" ? "/" : "";
+    out.push(`${"  ".repeat(depth)}${child.marker} ${child.name}${suffix}`);
     if (child.children.size > 0) renderTree(child, depth + 1, out);
   }
 }
@@ -469,49 +467,49 @@ function csvField(value: string): string {
  */
 export function formatReport(
   diff: FolderDiff,
-  format: ReportFormat | string = 'tree',
+  format: ReportFormat | string = "tree",
   opts: ReportOptions = {},
 ): string {
   const rows = reportRows(diff, opts);
 
-  if (format === 'csv') {
-    const lines = ['path,status,sizeA,sizeB'];
+  if (format === "csv") {
+    const lines = ["path,status,sizeA,sizeB"];
     for (const row of rows) {
       lines.push(
         [
           csvField(row.path),
           row.status,
-          row.sizeA === null ? '' : String(row.sizeA),
-          row.sizeB === null ? '' : String(row.sizeB),
-        ].join(','),
+          row.sizeA === null ? "" : String(row.sizeA),
+          row.sizeB === null ? "" : String(row.sizeB),
+        ].join(","),
       );
     }
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
-  if (format === 'flat') {
+  if (format === "flat") {
     const lines = legend(diff);
-    if (rows.length === 0) lines.push('No differences.');
+    if (rows.length === 0) lines.push("No differences.");
     for (const row of rows) {
-      lines.push(`${row.marker} ${row.path}${row.kind === 'directory' ? '/' : ''}`);
+      lines.push(`${row.marker} ${row.path}${row.kind === "directory" ? "/" : ""}`);
     }
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
-  if (format === 'tree') {
+  if (format === "tree") {
     const lines = legend(diff);
     if (rows.length === 0) {
-      lines.push('No differences.');
-      return lines.join('\n');
+      lines.push("No differences.");
+      return lines.join("\n");
     }
     renderTree(buildTree(rows), 0, lines);
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   throw new ToolError(
-    'unknown-format',
+    "unknown-format",
     `"${String(format)}" is not a report format this tool knows.`,
-    'Pick one of: tree, flat, csv.',
+    "Pick one of: tree, flat, csv.",
   );
 }
 
@@ -544,7 +542,7 @@ export interface TextDiffOptions {
   context?: number;
 }
 
-type LineKind = 'add' | 'remove' | 'same';
+type LineKind = "add" | "remove" | "same";
 
 /**
  * Line diff for one matched pair, once both sides are known to be text.
@@ -554,26 +552,26 @@ type LineKind = 'add' | 'remove' | 'same';
  */
 export function diffTextPair(a: string, b: string, opts: TextDiffOptions = {}): string {
   const normalize = (text: string) =>
-    opts.ignoreLineEndings ? String(text ?? '').replace(/\r\n?/g, '\n') : String(text ?? '');
+    opts.ignoreLineEndings ? String(text ?? "").replace(/\r\n?/g, "\n") : String(text ?? "");
 
   const changes = diffLines(normalize(a), normalize(b), { ignoreNewlineAtEof: true });
 
   const entries: { kind: LineKind; text: string }[] = [];
   for (const change of changes) {
-    const kind: LineKind = change.added ? 'add' : change.removed ? 'remove' : 'same';
-    const lines = change.value.split('\n');
+    const kind: LineKind = change.added ? "add" : change.removed ? "remove" : "same";
+    const lines = change.value.split("\n");
     // Splitting a chunk that ends in a newline leaves a trailing empty string.
-    if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+    if (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
     for (const text of lines) entries.push({ kind, text });
   }
 
   let additions = 0;
   let removals = 0;
   for (const entry of entries) {
-    if (entry.kind === 'add') additions += 1;
-    else if (entry.kind === 'remove') removals += 1;
+    if (entry.kind === "add") additions += 1;
+    else if (entry.kind === "remove") removals += 1;
   }
-  if (additions === 0 && removals === 0) return 'No differences.';
+  if (additions === 0 && removals === 0) return "No differences.";
 
   const context = Math.min(10, Math.max(0, Math.floor(opts.context ?? 3)));
   const maxRun = 2 * context + 1;
@@ -582,31 +580,31 @@ export function diffTextPair(a: string, b: string, opts: TextDiffOptions = {}): 
   let i = 0;
   while (i < entries.length) {
     const entry = entries[i] as { kind: LineKind; text: string };
-    if (entry.kind !== 'same') {
-      out.push(`${entry.kind === 'add' ? '+ ' : '- '}${entry.text}`);
+    if (entry.kind !== "same") {
+      out.push(`${entry.kind === "add" ? "+ " : "- "}${entry.text}`);
       i += 1;
       continue;
     }
 
     let j = i;
-    while (j < entries.length && entries[j]?.kind === 'same') j += 1;
+    while (j < entries.length && entries[j]?.kind === "same") j += 1;
     const run = j - i;
 
     if (run <= maxRun) {
-      for (let k = i; k < j; k += 1) out.push(`  ${entries[k]?.text ?? ''}`);
+      for (let k = i; k < j; k += 1) out.push(`  ${entries[k]?.text ?? ""}`);
     } else {
-      for (let k = i; k < i + context; k += 1) out.push(`  ${entries[k]?.text ?? ''}`);
+      for (let k = i; k < i + context; k += 1) out.push(`  ${entries[k]?.text ?? ""}`);
       out.push(`... ${run - 2 * context} unchanged lines ...`);
-      for (let k = j - context; k < j; k += 1) out.push(`  ${entries[k]?.text ?? ''}`);
+      for (let k = j - context; k < j; k += 1) out.push(`  ${entries[k]?.text ?? ""}`);
     }
     i = j;
   }
 
-  out.push('');
+  out.push("");
   out.push(
-    `${additions} addition${additions === 1 ? '' : 's'}, ${removals} removal${removals === 1 ? '' : 's'}.`,
+    `${additions} addition${additions === 1 ? "" : "s"}, ${removals} removal${removals === 1 ? "" : "s"}.`,
   );
-  return out.join('\n');
+  return out.join("\n");
 }
 
 /* ------------------------------------------------------------------ *
@@ -621,19 +619,19 @@ export function diffTextPair(a: string, b: string, opts: TextDiffOptions = {}): 
 export function run(_input: unknown, opts: FolderDiffOpts = {}): Record<string, string> {
   const ignore = normalizeIgnore(opts.ignore);
   return {
-    'How it works':
-      'Choose folder A and folder B in the panel above. Both folders are opened in place and read in this tab: your files and inputs never leave your device.',
-    'What it compares':
-      'Files are matched by their path inside each folder. A pair whose sizes differ is already different. A pair with the same size is checked by hash when you press Resolve same-size files, and a text pair can then be opened as a line diff.',
-    'Ignore list': ignore.length > 0 ? ignore.join(', ') : 'nothing ignored',
-    'Path matching': opts.caseInsensitive === true ? 'case-insensitive' : 'case-sensitive',
-    'Line endings':
+    "How it works":
+      "Choose folder A and folder B in the panel above. Both folders are opened in place and read in this tab: your files and inputs never leave your device.",
+    "What it compares":
+      "Files are matched by their path inside each folder. A pair whose sizes differ is already different. A pair with the same size is checked by hash when you press Resolve same-size files, and a text pair can then be opened as a line diff.",
+    "Ignore list": ignore.length > 0 ? ignore.join(", ") : "nothing ignored",
+    "Path matching": opts.caseInsensitive === true ? "case-insensitive" : "case-sensitive",
+    "Line endings":
       opts.ignoreLineEndings === true
-        ? 'CRLF and LF treated as the same in the text diff'
-        : 'line endings compared exactly',
-    'Report format': typeof opts.format === 'string' && opts.format ? opts.format : 'tree',
+        ? "CRLF and LF treated as the same in the text diff"
+        : "line endings compared exactly",
+    "Report format": typeof opts.format === "string" && opts.format ? opts.format : "tree",
     Browser:
-      'Opening a folder in place needs the File System Access API, which ships in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop.',
+      "Opening a folder in place needs the File System Access API, which ships in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop.",
   };
 }
 

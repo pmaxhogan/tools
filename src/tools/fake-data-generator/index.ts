@@ -1,5 +1,5 @@
-import { Faker, en } from '@faker-js/faker';
-import { ToolError, type ToolLogic } from '../types';
+import { Faker, en } from "@faker-js/faker";
+import { ToolError, type ToolLogic } from "../types";
 
 export interface FakeDataOpts {
   /** One of DATA_TYPES. */
@@ -12,12 +12,12 @@ export interface FakeDataOpts {
 }
 
 export const DATA_TYPES = [
-  'people',
-  'addresses',
-  'companies',
-  'users-json',
-  'credit-cards',
-  'lorem',
+  "people",
+  "addresses",
+  "companies",
+  "users-json",
+  "credit-cards",
+  "lorem",
 ] as const;
 
 export type DataType = (typeof DATA_TYPES)[number];
@@ -72,7 +72,7 @@ function address(f: Faker): string {
     `${f.location.state({ abbreviated: true })} ${f.location.zipCode()}`,
     f.location.country(),
   ];
-  return parts.join(', ');
+  return parts.join(", ");
 }
 
 /** "Acme Corp · Engineering · synergize scalable metrics" */
@@ -121,40 +121,40 @@ const LINE_GENERATORS: Record<string, (f: Faker) => string> = {
   people: person,
   addresses: address,
   companies: company,
-  'credit-cards': creditCard,
+  "credit-cards": creditCard,
 };
 
 export function run(_input: undefined, opts: FakeDataOpts): string {
-  const type = opts.type || 'people';
+  const type = opts.type || "people";
   if (!(DATA_TYPES as readonly string[]).includes(type))
     throw new ToolError(
-      'bad-type',
+      "bad-type",
       `Unknown data type "${type}".`,
-      `Pick one of: ${DATA_TYPES.join(', ')}.`,
+      `Pick one of: ${DATA_TYPES.join(", ")}.`,
     );
 
   const count = Math.floor(Number(opts.count));
   if (!Number.isFinite(count) || count < 1 || count > 100)
     throw new ToolError(
-      'bad-count',
-      'Count must be between 1 and 100.',
-      'Lower the count: 100 records per run is the cap.',
+      "bad-count",
+      "Count must be between 1 and 100.",
+      "Lower the count: 100 records per run is the cap.",
     );
 
-  const f = makeFaker(typeof opts.seed === 'string' ? opts.seed.trim() : '');
+  const f = makeFaker(typeof opts.seed === "string" ? opts.seed.trim() : "");
 
-  if (type === 'users-json') {
+  if (type === "users-json") {
     const users = Array.from({ length: count }, () => userRecord(f));
     return JSON.stringify(users, null, 2);
   }
 
-  if (type === 'lorem') {
+  if (type === "lorem") {
     // count = paragraphs. Blank line between them, like real prose.
-    return Array.from({ length: count }, () => f.lorem.paragraph()).join('\n\n');
+    return Array.from({ length: count }, () => f.lorem.paragraph()).join("\n\n");
   }
 
   const gen = LINE_GENERATORS[type]!;
-  return Array.from({ length: count }, () => gen(f)).join('\n');
+  return Array.from({ length: count }, () => gen(f)).join("\n");
 }
 
 export default { run } satisfies ToolLogic<undefined, string, FakeDataOpts>;

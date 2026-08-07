@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * Redaction that destroys pixels instead of covering them.
@@ -33,13 +33,13 @@ export interface Drag {
 /** Red, green, blue. Alpha is always forced opaque by a redaction. */
 export type Rgb = [number, number, number];
 
-export type RedactMode = 'solid' | 'pixelate';
+export type RedactMode = "solid" | "pixelate";
 
 export interface RedactorOpts {
   /** Redaction style used when a region is drawn. Solid destroys, pixelate averages. */
   mode?: RedactMode;
   /** Fill color for solid regions. Only black and white are offered. */
-  color?: 'black' | 'white';
+  color?: "black" | "white";
   /** Pixelate block edge in pixels. Larger blocks discard more detail. */
   blockSize?: number;
   /**
@@ -50,13 +50,13 @@ export interface RedactorOpts {
   /** Seed for the pixelate perturbation PRNG. The panel generates a fresh one per region. */
   seed?: number;
   /** Export container. Both re-encode from the canvas, so neither keeps metadata. */
-  format?: 'png' | 'jpeg';
+  format?: "png" | "jpeg";
   [key: string]: unknown;
 }
 
 export type RedactorResult = Record<string, string>;
 
-export const SOLID_COLORS: Record<'black' | 'white', Rgb> = {
+export const SOLID_COLORS: Record<"black" | "white", Rgb> = {
   black: [0, 0, 0],
   white: [255, 255, 255],
 };
@@ -105,12 +105,12 @@ export function normalizeRect(drag: Drag, width?: number, height?: number): Rect
   let right = Math.max(x1, x2);
   let bottom = Math.max(y1, y2);
 
-  if (typeof width === 'number' && Number.isFinite(width)) {
+  if (typeof width === "number" && Number.isFinite(width)) {
     const max = Math.max(0, Math.round(width));
     left = Math.max(0, Math.min(max, left));
     right = Math.max(0, Math.min(max, right));
   }
-  if (typeof height === 'number' && Number.isFinite(height)) {
+  if (typeof height === "number" && Number.isFinite(height)) {
     const max = Math.max(0, Math.round(height));
     top = Math.max(0, Math.min(max, top));
     bottom = Math.max(0, Math.min(max, bottom));
@@ -281,9 +281,9 @@ export function applyPixelateRect(
 /* ------------------------------------------------------------------ */
 
 const EXPORT_EXTENSIONS: Record<string, string> = {
-  png: 'png',
-  jpeg: 'jpg',
-  jpg: 'jpg',
+  png: "png",
+  jpeg: "jpg",
+  jpg: "jpg",
 };
 
 /**
@@ -291,16 +291,16 @@ const EXPORT_EXTENSIONS: Record<string, string> = {
  * the original: "shot.png" becomes "shot-redacted.png". The suffix is added
  * once, so re-running the tool on its own output does not stack it.
  */
-export function suggestExportName(inputName: string, format: string = 'png'): string {
-  const ext = EXPORT_EXTENSIONS[String(format).toLowerCase()] ?? 'png';
-  const raw = String(inputName ?? '')
+export function suggestExportName(inputName: string, format: string = "png"): string {
+  const ext = EXPORT_EXTENSIONS[String(format).toLowerCase()] ?? "png";
+  const raw = String(inputName ?? "")
     .split(/[\\/]/)
     .pop();
-  const trimmed = (raw ?? '').trim();
-  const dot = trimmed.lastIndexOf('.');
+  const trimmed = (raw ?? "").trim();
+  const dot = trimmed.lastIndexOf(".");
   let stem = dot > 0 ? trimmed.slice(0, dot) : trimmed;
-  if (!stem) stem = 'image';
-  if (!stem.toLowerCase().endsWith('-redacted')) stem += '-redacted';
+  if (!stem) stem = "image";
+  if (!stem.toLowerCase().endsWith("-redacted")) stem += "-redacted";
   return `${stem}.${ext}`;
 }
 
@@ -310,7 +310,7 @@ export function suggestExportName(inputName: string, format: string = 'png'): st
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -322,12 +322,12 @@ function formatBytes(bytes: number): string {
 
 /** Enough magic bytes to name the container without decoding anything. */
 export function sniffImageFormat(bytes: Uint8Array): string {
-  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50) return 'PNG';
+  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50) return "PNG";
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
-    return 'JPEG';
+    return "JPEG";
   }
   if (bytes.length >= 6 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
-    return 'GIF';
+    return "GIF";
   }
   if (
     bytes.length >= 12 &&
@@ -336,20 +336,20 @@ export function sniffImageFormat(bytes: Uint8Array): string {
     bytes[8] === 0x57 &&
     bytes[9] === 0x45
   ) {
-    return 'WebP';
+    return "WebP";
   }
-  if (bytes.length >= 2 && bytes[0] === 0x42 && bytes[1] === 0x4d) return 'BMP';
-  return 'unknown';
+  if (bytes.length >= 2 && bytes[0] === 0x42 && bytes[1] === 0x4d) return "BMP";
+  return "unknown";
 }
 
 const USAGE =
-  'Drop a screenshot on the panel above, then drag a rectangle over anything sensitive. Each rectangle overwrites those pixels immediately. Download when the preview looks right.';
+  "Drop a screenshot on the panel above, then drag a rectangle over anything sensitive. Each rectangle overwrites those pixels immediately. Download when the preview looks right.";
 
 const SAFETY =
-  'Solid fill is the default because it replaces the pixels with one flat color and leaves nothing to recover. Pixelate now mixes seeded random noise into each block average, which stops the simplest attack of rendering candidate text through the same grid until it matches. That makes reconstruction much harder, not impossible: the perturbed average still carries a rough trace of the original, so solid fill remains the only option that leaves nothing to analyze.';
+  "Solid fill is the default because it replaces the pixels with one flat color and leaves nothing to recover. Pixelate now mixes seeded random noise into each block average, which stops the simplest attack of rendering candidate text through the same grid until it matches. That makes reconstruction much harder, not impossible: the perturbed average still carries a rough trace of the original, so solid fill remains the only option that leaves nothing to analyze.";
 
 const EXPORT_NOTE =
-  'The download is re-encoded from the canvas, so it carries none of the original EXIF, XMP, or IPTC metadata and none of the original compressed data.';
+  "The download is re-encoded from the canvas, so it carries none of the original EXIF, XMP, or IPTC metadata and none of the original compressed data.";
 
 /**
  * This tool is panel first: the redaction itself needs a canvas and a pointer,
@@ -357,42 +357,42 @@ const EXPORT_NOTE =
  * inventing regions nobody drew.
  */
 export function run(input: Uint8Array | string, opts: RedactorOpts = {}): RedactorResult {
-  const mode: RedactMode = opts.mode === 'pixelate' ? 'pixelate' : 'solid';
-  const color = opts.color === 'white' ? 'white' : 'black';
+  const mode: RedactMode = opts.mode === "pixelate" ? "pixelate" : "solid";
+  const color = opts.color === "white" ? "white" : "black";
   const blockSize = Math.max(2, Math.round(Number(opts.blockSize ?? 12) || 12));
   const randomness = Math.max(0, Math.min(100, Math.round(Number(opts.randomness ?? 35) || 0)));
-  const format = opts.format === 'jpeg' ? 'jpeg' : 'png';
+  const format = opts.format === "jpeg" ? "jpeg" : "png";
 
   const rows: RedactorResult = {};
 
-  if (typeof input === 'string') {
+  if (typeof input === "string") {
     rows.Input = input.trim()
-      ? 'Text was pasted. This tool redacts images, so drop or pick a screenshot instead.'
-      : 'No image loaded yet.';
-    rows['How to use'] = USAGE;
-    rows['Why solid'] = SAFETY;
-    rows.Export = `${EXPORT_NOTE} The file will be named ${suggestExportName('screenshot.png', format)}.`;
+      ? "Text was pasted. This tool redacts images, so drop or pick a screenshot instead."
+      : "No image loaded yet.";
+    rows["How to use"] = USAGE;
+    rows["Why solid"] = SAFETY;
+    rows.Export = `${EXPORT_NOTE} The file will be named ${suggestExportName("screenshot.png", format)}.`;
     return rows;
   }
 
   if (input.length === 0) {
     throw new ToolError(
-      'empty-file',
-      'That file is empty, so there is nothing to redact.',
-      'Pick a PNG, JPEG, WebP, GIF, or BMP screenshot and try again.',
+      "empty-file",
+      "That file is empty, so there is nothing to redact.",
+      "Pick a PNG, JPEG, WebP, GIF, or BMP screenshot and try again.",
     );
   }
 
   const kind = sniffImageFormat(input);
   rows.Loaded = `${kind} image, ${formatBytes(input.length)}.`;
-  rows['How to use'] = USAGE;
+  rows["How to use"] = USAGE;
   rows.Mode =
-    mode === 'solid'
+    mode === "solid"
       ? `Solid fill, ${color}. Every pixel under the rectangle is replaced.`
       : `Pixelate, ${blockSize} px blocks with ${randomness}% seeded randomness. Averaged and perturbed, not destroyed: solid fill is the safer choice.`;
-  rows['Why solid'] = SAFETY;
-  rows.Export = `${EXPORT_NOTE} Suggested filename: ${suggestExportName(`screenshot.${kind === 'JPEG' ? 'jpg' : 'png'}`, format)}.`;
-  rows.Privacy = 'Redaction runs in this tab: your files and inputs never leave your device.';
+  rows["Why solid"] = SAFETY;
+  rows.Export = `${EXPORT_NOTE} Suggested filename: ${suggestExportName(`screenshot.${kind === "JPEG" ? "jpg" : "png"}`, format)}.`;
+  rows.Privacy = "Redaction runs in this tab: your files and inputs never leave your device.";
   return rows;
 }
 

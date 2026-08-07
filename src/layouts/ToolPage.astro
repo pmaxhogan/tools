@@ -1,8 +1,8 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro';
-import SiteHeader from '@/components/SiteHeader.astro';
-import { iconFor } from '@/lib/tool-icons';
-import type { ToolMeta } from '@/tools/types';
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import { iconFor } from "@/lib/tool-icons";
+import type { ToolMeta } from "@/tools/types";
 
 export interface Props {
   meta: ToolMeta;
@@ -14,23 +14,23 @@ const title = `${meta.name}: free, private, in your browser`;
 const Icon = iconFor(meta.icon);
 
 const jsonLd = {
-  '@context': 'https://schema.org',
-  '@graph': [
+  "@context": "https://schema.org",
+  "@graph": [
     {
-      '@type': 'SoftwareApplication',
+      "@type": "SoftwareApplication",
       name: meta.name,
       description: meta.description,
       url: new URL(`/${meta.slug}`, Astro.site).href,
-      applicationCategory: 'UtilityApplication',
-      operatingSystem: 'Any',
-      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      applicationCategory: "UtilityApplication",
+      operatingSystem: "Any",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     },
     {
-      '@type': 'FAQPage',
+      "@type": "FAQPage",
       mainEntity: meta.copy.faq.map((f) => ({
-        '@type': 'Question',
+        "@type": "Question",
         name: f.q,
-        acceptedAnswer: { '@type': 'Answer', text: f.a },
+        acceptedAnswer: { "@type": "Answer", text: f.a },
       })),
     },
   ],
@@ -102,7 +102,7 @@ const jsonLd = {
 
     <footer class="mt-12 border-t pt-6 text-xs text-muted-foreground">
       <p>
-        No ads, no accounts, no limits. Your files and inputs never leave your device.{' '}
+        No ads, no accounts, no limits. Your files and inputs never leave your device.{" "}
         <a href="https://github.com/pmaxhogan/tools" class="underline hover:text-foreground"
           >MIT licensed</a
         >.

@@ -18,20 +18,28 @@
  * installed core version and every staged file is present at the right size,
  * it does nothing. No dependencies beyond node builtins.
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 /** Chunk boundary. 16 MiB keeps every part comfortably under the 25 MiB cap. */
 const CHUNK_BYTES = 16 * 1024 * 1024;
 
-const root = fileURLToPath(new URL('../', import.meta.url));
-const coreDir = join(root, 'node_modules', '@ffmpeg', 'core');
-const srcJs = join(coreDir, 'dist', 'esm', 'ffmpeg-core.js');
-const srcWasm = join(coreDir, 'dist', 'esm', 'ffmpeg-core.wasm');
-const outDir = join(root, 'public', 'ffmpeg');
-const outJs = join(outDir, 'ffmpeg-core.js');
-const outManifest = join(outDir, 'manifest.json');
+const root = fileURLToPath(new URL("../", import.meta.url));
+const coreDir = join(root, "node_modules", "@ffmpeg", "core");
+const srcJs = join(coreDir, "dist", "esm", "ffmpeg-core.js");
+const srcWasm = join(coreDir, "dist", "esm", "ffmpeg-core.wasm");
+const outDir = join(root, "public", "ffmpeg");
+const outJs = join(outDir, "ffmpeg-core.js");
+const outManifest = join(outDir, "manifest.json");
 
 function fail(message) {
   console.error(`prepare-ffmpeg: ${message}`);
@@ -44,7 +52,7 @@ for (const file of [srcJs, srcWasm]) {
   }
 }
 
-const version = JSON.parse(readFileSync(join(coreDir, 'package.json'), 'utf8')).version;
+const version = JSON.parse(readFileSync(join(coreDir, "package.json"), "utf8")).version;
 const wasmBytes = statSync(srcWasm).size;
 const wasmParts = Math.ceil(wasmBytes / CHUNK_BYTES);
 const jsBytes = statSync(srcJs).size;
@@ -56,7 +64,7 @@ function isStaged() {
   if (!existsSync(outManifest) || !existsSync(outJs)) return false;
   let manifest;
   try {
-    manifest = JSON.parse(readFileSync(outManifest, 'utf8'));
+    manifest = JSON.parse(readFileSync(outManifest, "utf8"));
   } catch {
     return false;
   }
@@ -75,7 +83,7 @@ function isStaged() {
 
 if (isStaged()) {
   console.log(
-    `prepare-ffmpeg: public/ffmpeg is current (core ${version}, ${wasmParts} wasm parts, ${wasmBytes} bytes)`
+    `prepare-ffmpeg: public/ffmpeg is current (core ${version}, ${wasmParts} wasm parts, ${wasmBytes} bytes)`,
   );
   process.exit(0);
 }
@@ -100,5 +108,5 @@ writeFileSync(outManifest, `${JSON.stringify({ version, wasmParts, wasmBytes }, 
 
 const sizes = Array.from({ length: wasmParts }, (_, i) => statSync(partPath(i)).size);
 console.log(
-  `prepare-ffmpeg: staged core ${version} to public/ffmpeg (${wasmParts} parts: ${sizes.join(', ')} bytes)`
+  `prepare-ffmpeg: staged core ${version} to public/ffmpeg (${wasmParts} parts: ${sizes.join(", ")} bytes)`,
 );

@@ -1,5 +1,5 @@
-import { ToolError, type ToolLogic } from '../types';
-import { CATEGORIES, ENTRIES, type UnicodeEntry } from './data';
+import { ToolError, type ToolLogic } from "../types";
+import { CATEGORIES, ENTRIES, type UnicodeEntry } from "./data";
 
 export interface UnicodePickerOpts {
   /** 'all' or a category id from CATEGORIES. */
@@ -16,7 +16,7 @@ const LABELS = new Map(CATEGORIES.map((c) => [c.id, c.label]));
 
 /** Everything a query is matched against, lowercased once per entry. */
 const HAYSTACK = new Map<UnicodeEntry, string>(
-  ENTRIES.map((e) => [e, `${e.name} ${e.category} ${LABELS.get(e.category) ?? ''}`.toLowerCase()]),
+  ENTRIES.map((e) => [e, `${e.name} ${e.category} ${LABELS.get(e.category) ?? ""}`.toLowerCase()]),
 );
 
 /**
@@ -37,11 +37,11 @@ function score(e: UnicodeEntry, raw: string, q: string): number {
  * Multi-word queries are AND-ed, so "left arrow" finds "leftwards arrow".
  */
 export function search(query: string, category: string): UnicodeEntry[] {
-  const raw = (query ?? '').trim();
+  const raw = (query ?? "").trim();
   const q = raw.toLowerCase();
   const terms = q.split(/\s+/).filter(Boolean);
 
-  const pool = category === 'all' ? ENTRIES : ENTRIES.filter((e) => e.category === category);
+  const pool = category === "all" ? ENTRIES : ENTRIES.filter((e) => e.category === category);
 
   const hits = pool.filter((e) => {
     if (!terms.length) return true;
@@ -62,21 +62,21 @@ export function describe(e: UnicodeEntry): string {
 }
 
 export function run(input: string, opts: UnicodePickerOpts): UnicodePickerResult {
-  const category = String(opts?.category ?? 'all').trim() || 'all';
-  if (category !== 'all' && !LABELS.has(category))
+  const category = String(opts?.category ?? "all").trim() || "all";
+  if (category !== "all" && !LABELS.has(category))
     throw new ToolError(
-      'unknown-category',
+      "unknown-category",
       `Unknown category "${category}".`,
-      `Use "all" or one of: ${CATEGORIES.map((c) => c.id).join(', ')}.`,
+      `Use "all" or one of: ${CATEGORIES.map((c) => c.id).join(", ")}.`,
     );
 
-  const query = (input ?? '').trim();
+  const query = (input ?? "").trim();
   const hits = search(query, category);
 
   if (!hits.length) {
-    const where = category === 'all' ? 'any category' : `the ${LABELS.get(category)} category`;
+    const where = category === "all" ? "any category" : `the ${LABELS.get(category)} category`;
     return {
-      'No matches': `Nothing in ${where} matches "${query}". Try a shorter query like "arrow", "dash", "greek" or "space", or paste the character itself.`,
+      "No matches": `Nothing in ${where} matches "${query}". Try a shorter query like "arrow", "dash", "greek" or "space", or paste the character itself.`,
     };
   }
 
@@ -86,7 +86,7 @@ export function run(input: string, opts: UnicodePickerOpts): UnicodePickerResult
   const extra = hits.length - MAX_RESULTS;
   if (extra > 0)
     out[`…and ${extra} more`] =
-      'Narrow the search or pick a category to see the rest of the matches.';
+      "Narrow the search or pick a category to see the rest of the matches.";
 
   return out;
 }

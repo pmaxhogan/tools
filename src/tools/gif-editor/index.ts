@@ -23,22 +23,16 @@
  * `run()` is the headless fallback: it reads the GIF header itself and reports
  * the plan as text, since a wasm encode cannot happen outside a browser.
  */
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 /* ------------------------------------------------------------------ */
 /* types                                                               */
 /* ------------------------------------------------------------------ */
 
 export type GifOperation =
-  | 'resize'
-  | 'crop'
-  | 'optimize'
-  | 'reverse'
-  | 'speed'
-  | 'caption'
-  | 'split';
+  "resize" | "crop" | "optimize" | "reverse" | "speed" | "caption" | "split";
 
-export type CaptionPosition = 'top' | 'bottom';
+export type CaptionPosition = "top" | "bottom";
 
 /** A runnable ffmpeg command plus the files it is guaranteed to produce. */
 export interface GifPlan {
@@ -56,7 +50,7 @@ export type GifPlanResult = GifPlan | GifRefusal;
 
 /** True when a planner refused. Narrowing helper for callers. */
 export function isRefusal(result: GifPlanResult): result is GifRefusal {
-  return 'error' in result;
+  return "error" in result;
 }
 
 /** What the GIF header and block walk report about a file. */
@@ -98,20 +92,20 @@ export interface GifOptions {
 }
 
 /** Name the panel and the fallback both use for the produced GIF. */
-export const GIF_OUTPUT = 'out.gif';
+export const GIF_OUTPUT = "out.gif";
 
 /* ------------------------------------------------------------------ */
 /* validation helpers                                                  */
 /* ------------------------------------------------------------------ */
 
 function toInt(value: unknown): number | null {
-  const n = typeof value === 'string' ? Number(value.trim()) : Number(value);
+  const n = typeof value === "string" ? Number(value.trim()) : Number(value);
   if (!Number.isFinite(n) || !Number.isInteger(n)) return null;
   return n;
 }
 
 function toNumber(value: unknown): number | null {
-  const n = typeof value === 'string' ? Number(value.trim()) : Number(value);
+  const n = typeof value === "string" ? Number(value.trim()) : Number(value);
   return Number.isFinite(n) ? n : null;
 }
 
@@ -130,8 +124,8 @@ function badInteger(label: string, min: number, max: number): GifRefusal {
 function checkInput(inputName: string): GifRefusal | null {
   if (!inputName || !inputName.trim()) {
     return {
-      error: 'No GIF has been selected yet.',
-      fix: 'Drop a .gif file on the input above, or use the file picker.',
+      error: "No GIF has been selected yet.",
+      fix: "Drop a .gif file on the input above, or use the file picker.",
     };
   }
   return null;
@@ -160,9 +154,9 @@ export interface PaletteOptions {
  *   "scale=480:-1:flags=lanczos". Pass an empty string for a pure re-encode.
  */
 export function paletteWrap(filter: string, options: PaletteOptions = {}): string {
-  const chain = filter.trim() ? `${filter.trim()},` : '';
-  const gen = options.palettegen ? `palettegen=${options.palettegen}` : 'palettegen';
-  const use = options.paletteuse ? `paletteuse=${options.paletteuse}` : 'paletteuse';
+  const chain = filter.trim() ? `${filter.trim()},` : "";
+  const gen = options.palettegen ? `palettegen=${options.palettegen}` : "palettegen";
+  const use = options.paletteuse ? `paletteuse=${options.paletteuse}` : "paletteuse";
   return `[0:v]${chain}split[pgs][pgu];[pgs]${gen}[pal];[pgu][pal]${use}`;
 }
 
@@ -170,7 +164,7 @@ export function paletteWrap(filter: string, options: PaletteOptions = {}): strin
 function gifArgs(inputName: string, filterComplex: string): string[] {
   // -loop 0 is an infinite loop in the gif muxer, which is what a source GIF
   // almost always was before it was edited.
-  return ['-i', inputName, '-filter_complex', filterComplex, '-loop', '0', GIF_OUTPUT];
+  return ["-i", inputName, "-filter_complex", filterComplex, "-loop", "0", GIF_OUTPUT];
 }
 
 function gifPlan(inputName: string, filterComplex: string): GifPlan {
@@ -195,7 +189,7 @@ export function buildResize(input: { inputName: string; width: number }): GifPla
 
   const width = toInt(input.width);
   if (width === null || width < MIN_WIDTH || width > MAX_WIDTH) {
-    return badInteger('Width', MIN_WIDTH, MAX_WIDTH);
+    return badInteger("Width", MIN_WIDTH, MAX_WIDTH);
   }
 
   return gifPlan(input.inputName, paletteWrap(`scale=${width}:-1:flags=lanczos`));
@@ -220,8 +214,8 @@ export function buildCrop(input: {
   const h = toInt(input.h);
   if (w === null || w < 1 || h === null || h < 1) {
     return {
-      error: 'Crop width and height must be whole numbers of at least 1 pixel.',
-      fix: 'Enter the size of the region you want to keep, in pixels.',
+      error: "Crop width and height must be whole numbers of at least 1 pixel.",
+      fix: "Enter the size of the region you want to keep, in pixels.",
     };
   }
 
@@ -229,8 +223,8 @@ export function buildCrop(input: {
   const y = toInt(input.y);
   if (x === null || x < 0 || y === null || y < 0) {
     return {
-      error: 'Crop offsets must be whole numbers of 0 or more.',
-      fix: 'The offset is measured from the top left corner, so 0 and 0 keeps the corner.',
+      error: "Crop offsets must be whole numbers of 0 or more.",
+      fix: "The offset is measured from the top left corner, so 0 and 0 keeps the corner.",
     };
   }
 
@@ -263,19 +257,19 @@ export function buildOptimize(input: {
 
   if (input.lossy === true) {
     return {
-      error: 'Lossy GIF compression is not something ffmpeg can do.',
-      fix: 'Lower the color count or the frame rate instead. Those are the two levers ffmpeg has, and together they usually beat a lossy pass.',
+      error: "Lossy GIF compression is not something ffmpeg can do.",
+      fix: "Lower the color count or the frame rate instead. Those are the two levers ffmpeg has, and together they usually beat a lossy pass.",
     };
   }
 
   const fps = toInt(input.fps);
   if (fps === null || fps < MIN_FPS || fps > MAX_FPS) {
-    return badInteger('Frame rate', MIN_FPS, MAX_FPS);
+    return badInteger("Frame rate", MIN_FPS, MAX_FPS);
   }
 
   const colors = toInt(input.colors);
   if (colors === null || colors < MIN_COLORS || colors > MAX_COLORS) {
-    return badInteger('Colors', MIN_COLORS, MAX_COLORS);
+    return badInteger("Colors", MIN_COLORS, MAX_COLORS);
   }
 
   return gifPlan(
@@ -284,8 +278,8 @@ export function buildOptimize(input: {
       palettegen: `max_colors=${colors}`,
       // Bayer dithering costs a little detail and saves a lot of bytes,
       // because ordered noise compresses far better than error diffusion.
-      paletteuse: 'dither=bayer:bayer_scale=5',
-    })
+      paletteuse: "dither=bayer:bayer_scale=5",
+    }),
   );
 }
 
@@ -296,7 +290,7 @@ export function buildOptimize(input: {
 export function buildReverse(input: { inputName: string }): GifPlanResult {
   const missing = checkInput(input.inputName);
   if (missing) return missing;
-  return gifPlan(input.inputName, paletteWrap('reverse'));
+  return gifPlan(input.inputName, paletteWrap("reverse"));
 }
 
 export const MIN_SPEED = 0.25;
@@ -320,7 +314,7 @@ export function buildSpeed(input: {
   if (factor === null || factor < MIN_SPEED || factor > MAX_SPEED) {
     return {
       error: `Speed must be between ${MIN_SPEED} and ${MAX_SPEED} times.`,
-      fix: 'Values under 1 slow the GIF down, values over 1 speed it up. Run the tool twice for anything more extreme.',
+      fix: "Values under 1 slow the GIF down, values over 1 speed it up. Run the tool twice for anything more extreme.",
     };
   }
 
@@ -328,7 +322,7 @@ export function buildSpeed(input: {
   if (input.fps !== undefined && input.fps !== null) {
     const fps = toInt(input.fps);
     if (fps === null || fps < MIN_FPS || fps > MAX_FPS) {
-      return badInteger('Frame rate', MIN_FPS, MAX_FPS);
+      return badInteger("Frame rate", MIN_FPS, MAX_FPS);
     }
     chain += `,fps=${fps}`;
   }
@@ -355,13 +349,13 @@ export function buildSpeed(input: {
  */
 export function escapeDrawtext(text: string): string {
   return text
-    .replace(/\\/g, '\\\\\\\\')
+    .replace(/\\/g, "\\\\\\\\")
     .replace(/'/g, "\\\\\\'")
-    .replace(/:/g, '\\\\:')
-    .replace(/,/g, '\\,')
-    .replace(/;/g, '\\;')
-    .replace(/\[/g, '\\[')
-    .replace(/\]/g, '\\]');
+    .replace(/:/g, "\\\\:")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;")
+    .replace(/\[/g, "\\[")
+    .replace(/\]/g, "\\]");
 }
 
 export const MIN_FONT_SIZE = 8;
@@ -392,35 +386,35 @@ export function buildCaption(input: {
   const missing = checkInput(input.inputName);
   if (missing) return missing;
 
-  const text = (input.text ?? '').trim();
+  const text = (input.text ?? "").trim();
   if (!text) {
     return {
-      error: 'The caption is empty.',
-      fix: 'Type the words you want burned into the GIF.',
+      error: "The caption is empty.",
+      fix: "Type the words you want burned into the GIF.",
     };
   }
 
   const fontSize = toInt(input.fontSize);
   if (fontSize === null || fontSize < MIN_FONT_SIZE || fontSize > MAX_FONT_SIZE) {
-    return badInteger('Font size', MIN_FONT_SIZE, MAX_FONT_SIZE);
+    return badInteger("Font size", MIN_FONT_SIZE, MAX_FONT_SIZE);
   }
 
-  const fontFile = (input.fontFile ?? '').trim();
+  const fontFile = (input.fontFile ?? "").trim();
   if (!fontFile) {
     return {
-      error: 'Captioning needs a font file, and this build does not ship one.',
-      fix: 'Add the text in an image editor first, or use resize, crop, optimize, reverse, speed or split here.',
+      error: "Captioning needs a font file, and this build does not ship one.",
+      fix: "Add the text in an image editor first, or use resize, crop, optimize, reverse, speed or split here.",
     };
   }
   if (!/^[A-Za-z0-9._-]+$/.test(fontFile)) {
     return {
-      error: 'The font file name has characters ffmpeg cannot read in a filter.',
-      fix: 'Use a plain name made of letters, digits, dots, dashes and underscores.',
+      error: "The font file name has characters ffmpeg cannot read in a filter.",
+      fix: "Use a plain name made of letters, digits, dots, dashes and underscores.",
     };
   }
 
   const y =
-    input.position === 'top'
+    input.position === "top"
       ? `${Math.max(4, Math.round(fontSize * 0.3))}`
       : `h-text_h-${Math.max(4, Math.round(fontSize * 0.3))}`;
 
@@ -431,13 +425,13 @@ export function buildCaption(input: {
     `drawtext=fontfile=${fontFile}`,
     `text=${escapeDrawtext(text)}`,
     `fontsize=${fontSize}`,
-    'fontcolor=white',
-    'borderw=2',
-    'bordercolor=black',
-    'expansion=none',
-    'x=(w-text_w)/2',
+    "fontcolor=white",
+    "borderw=2",
+    "bordercolor=black",
+    "expansion=none",
+    "x=(w-text_w)/2",
     `y=${y}`,
-  ].join(':');
+  ].join(":");
 
   return gifPlan(input.inputName, paletteWrap(draw));
 }
@@ -451,7 +445,7 @@ export const MAX_EVERY_NTH = 20;
 
 /** Zero padded name of the nth exported frame, matching the image2 muxer. */
 export function splitFrameName(index: number): string {
-  return `out${String(index).padStart(4, '0')}.png`;
+  return `out${String(index).padStart(4, "0")}.png`;
 }
 
 /**
@@ -481,21 +475,21 @@ export function buildSplit(input: {
 
   const everyNth = toInt(input.everyNth);
   if (everyNth === null || everyNth < 1 || everyNth > MAX_EVERY_NTH) {
-    return badInteger('Frame step', 1, MAX_EVERY_NTH);
+    return badInteger("Frame step", 1, MAX_EVERY_NTH);
   }
 
   const frames = toInt(input.frames);
   if (frames === null || frames < 1 || frames > MAX_SPLIT_FRAMES) {
-    return badInteger('Frames to export', 1, MAX_SPLIT_FRAMES);
+    return badInteger("Frames to export", 1, MAX_SPLIT_FRAMES);
   }
 
-  const args = ['-i', input.inputName];
+  const args = ["-i", input.inputName];
   if (everyNth > 1) {
     // The comma inside the select expression belongs to mod(), so it is escaped
     // to keep the filtergraph parser from reading it as the next filter.
-    args.push('-vf', `select=not(mod(n\\,${everyNth}))`);
+    args.push("-vf", `select=not(mod(n\\,${everyNth}))`);
   }
-  args.push('-vsync', '0', '-frames:v', String(frames), 'out%04d.png');
+  args.push("-vsync", "0", "-frames:v", String(frames), "out%04d.png");
 
   return {
     args,
@@ -535,7 +529,7 @@ function skipSubBlocks(bytes: Uint8Array, start: number): number {
 export function readGifInfo(bytes: Uint8Array): GifInfo | null {
   if (bytes.length < 13) return null;
   const signature = String.fromCharCode(bytes[0], bytes[1], bytes[2]);
-  if (signature !== 'GIF') return null;
+  if (signature !== "GIF") return null;
 
   const width = bytes[6] | (bytes[7] << 8);
   const height = bytes[8] | (bytes[9] << 8);
@@ -587,7 +581,8 @@ export function readGifInfo(bytes: Uint8Array): GifInfo | null {
 
 function finishInfo(width: number, height: number, frames: number, delayCs: number): GifInfo {
   const durationMs = delayCs * 10;
-  const fps = frames > 1 && durationMs > 0 ? Number((frames / (durationMs / 1000)).toFixed(2)) : null;
+  const fps =
+    frames > 1 && durationMs > 0 ? Number((frames / (durationMs / 1000)).toFixed(2)) : null;
   return { width, height, frames, durationMs, fps };
 }
 
@@ -628,45 +623,45 @@ export function parseGifInfo(logText: string): GifLogInfo | null {
 /* ------------------------------------------------------------------ */
 
 const OPERATION_LABELS: Record<GifOperation, string> = {
-  resize: 'Resize',
-  crop: 'Crop',
-  optimize: 'Optimize',
-  reverse: 'Reverse',
-  speed: 'Change speed',
-  caption: 'Caption',
-  split: 'Split into frames',
+  resize: "Resize",
+  crop: "Crop",
+  optimize: "Optimize",
+  reverse: "Reverse",
+  speed: "Change speed",
+  caption: "Caption",
+  split: "Split into frames",
 };
 
 const OPERATION_NOTES: Record<GifOperation, string> = {
   resize:
-    'Height follows the width so the aspect ratio is kept. The frames are re-palettized, which is what stops a resized GIF from banding.',
-  crop: 'The rectangle is measured in pixels from the top left corner. A rectangle larger than the frame is rejected by ffmpeg at run time.',
+    "Height follows the width so the aspect ratio is kept. The frames are re-palettized, which is what stops a resized GIF from banding.",
+  crop: "The rectangle is measured in pixels from the top left corner. A rectangle larger than the frame is rejected by ffmpeg at run time.",
   optimize:
-    'Fewer frames per second and a smaller color table are the two levers ffmpeg has. There is no gifsicle style lossy mode.',
+    "Fewer frames per second and a smaller color table are the two levers ffmpeg has. There is no gifsicle style lossy mode.",
   reverse:
-    'Every frame is buffered in memory to play them back to front, so a very long GIF can run out of room in the browser.',
+    "Every frame is buffered in memory to play them back to front, so a very long GIF can run out of room in the browser.",
   speed:
-    'Speed is a timestamp rewrite. GIF delays are stored in hundredths of a second and browsers treat anything under two of those as ten, so very fast results stop getting faster.',
+    "Speed is a timestamp rewrite. GIF delays are stored in hundredths of a second and browsers treat anything under two of those as ten, so very fast results stop getting faster.",
   caption:
-    'Captioning needs a font file inside the media engine and a build of ffmpeg that includes drawtext, so it is turned off for now.',
+    "Captioning needs a font file inside the media engine and a build of ffmpeg that includes drawtext, so it is turned off for now.",
   split:
-    'Frames come out as PNG files. The count is fixed in advance because the run declares its output names before it starts.',
+    "Frames come out as PNG files. The count is fixed in advance because the run declares its output names before it starts.",
 };
 
 /** Quotes an argument the way a shell would need it, for the copyable command. */
 function quoteArg(arg: string): string {
-  return /[\s"'\\[\]();$*?]/.test(arg) ? `"${arg.replace(/(["\\$`])/g, '\\$1')}"` : arg;
+  return /[\s"'\\[\]();$*?]/.test(arg) ? `"${arg.replace(/(["\\$`])/g, "\\$1")}"` : arg;
 }
 
 function formatCommand(args: string[]): string {
-  return ['ffmpeg', ...args.map(quoteArg)].join(' ');
+  return ["ffmpeg", ...args.map(quoteArg)].join(" ");
 }
 
 function planFor(operation: GifOperation, inputName: string, opts: GifOptions): GifPlanResult {
   switch (operation) {
-    case 'resize':
+    case "resize":
       return buildResize({ inputName, width: opts.width ?? 480 });
-    case 'crop':
+    case "crop":
       return buildCrop({
         inputName,
         x: opts.cropX ?? 0,
@@ -674,29 +669,29 @@ function planFor(operation: GifOperation, inputName: string, opts: GifOptions): 
         w: opts.cropW ?? 0,
         h: opts.cropH ?? 0,
       });
-    case 'optimize':
+    case "optimize":
       return buildOptimize({
         inputName,
         fps: opts.fps ?? 15,
         colors: opts.colors ?? 128,
         lossy: opts.lossy,
       });
-    case 'reverse':
+    case "reverse":
       return buildReverse({ inputName });
-    case 'speed':
+    case "speed":
       return buildSpeed({
         inputName,
         factor: opts.factor ?? 2,
         fps: opts.speedFps && opts.speedFps > 0 ? opts.speedFps : undefined,
       });
-    case 'caption':
+    case "caption":
       return buildCaption({
         inputName,
-        text: opts.text ?? '',
-        position: opts.position ?? 'bottom',
+        text: opts.text ?? "",
+        position: opts.position ?? "bottom",
         fontSize: opts.fontSize ?? 32,
       });
-    case 'split':
+    case "split":
       return buildSplit({
         inputName,
         everyNth: opts.everyNth ?? 1,
@@ -705,18 +700,18 @@ function planFor(operation: GifOperation, inputName: string, opts: GifOptions): 
     default:
       return {
         error: `"${String(operation)}" is not one of the operations this tool knows.`,
-        fix: 'Pick resize, crop, optimize, reverse, speed, caption or split.',
+        fix: "Pick resize, crop, optimize, reverse, speed, caption or split.",
       };
   }
 }
 
 function describeSource(input: Uint8Array): string {
   const info = readGifInfo(input);
-  if (!info) return 'Not a readable GIF file.';
+  if (!info) return "Not a readable GIF file.";
   const parts = [`${info.width} x ${info.height} px`, `${info.frames} frames`];
   if (info.durationMs > 0) parts.push(`${(info.durationMs / 1000).toFixed(2)} s`);
   if (info.fps !== null) parts.push(`${info.fps} fps average`);
-  return parts.join(', ');
+  return parts.join(", ");
 }
 
 /**
@@ -726,39 +721,36 @@ function describeSource(input: Uint8Array): string {
  * the plan rather than pretending to produce a GIF. The GIF header is parsed
  * here in plain TypeScript, so the file summary is real either way.
  */
-export function run(
-  input: Uint8Array | string,
-  opts: GifOptions = {}
-): Record<string, string> {
-  if (typeof input === 'string') {
+export function run(input: Uint8Array | string, opts: GifOptions = {}): Record<string, string> {
+  if (typeof input === "string") {
     if (!input.trim()) {
       throw new ToolError(
-        'empty-input',
-        'No GIF was provided.',
-        'Drop a .gif file on the input, or pick one with the file button.'
+        "empty-input",
+        "No GIF was provided.",
+        "Drop a .gif file on the input, or pick one with the file button.",
       );
     }
     throw new ToolError(
-      'not-a-gif',
-      'This tool reads GIF files, not text.',
-      'Drop a .gif file on the input instead of pasting text.'
+      "not-a-gif",
+      "This tool reads GIF files, not text.",
+      "Drop a .gif file on the input instead of pasting text.",
     );
   }
 
-  const operation = (opts.operation ?? 'resize') as GifOperation;
-  const inputName = 'in.gif';
+  const operation = (opts.operation ?? "resize") as GifOperation;
+  const inputName = "in.gif";
   const plan = planFor(operation, inputName, opts);
 
   if (isRefusal(plan)) {
-    throw new ToolError('cannot-plan', plan.error, plan.fix);
+    throw new ToolError("cannot-plan", plan.error, plan.fix);
   }
 
   return {
     Operation: OPERATION_LABELS[operation] ?? operation,
     Source: describeSource(input),
     Command: formatCommand(plan.args),
-    'Output files': plan.outputs.join(', '),
-    Note: OPERATION_NOTES[operation] ?? '',
+    "Output files": plan.outputs.join(", "),
+    Note: OPERATION_NOTES[operation] ?? "",
   };
 }
 

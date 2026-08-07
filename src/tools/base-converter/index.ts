@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from '../types';
+import { ToolError, type ToolLogic } from "../types";
 
 export interface BaseConverterOpts {
   /** 'auto' | '2' | '8' | '10' | '16' | '36' — ignored when a prefix is detected. */
@@ -35,22 +35,22 @@ function maxDigitDescription(base: number): string {
 /** Parse a signed integer string in the given/auto-detected base into a BigInt. */
 function parse(raw: string, inputBaseOpt: string): Parsed {
   const trimmed = raw.trim();
-  if (!trimmed) throw new ToolError('empty-input', 'Enter a number to convert.');
+  if (!trimmed) throw new ToolError("empty-input", "Enter a number to convert.");
 
   let offset = 0;
   let negative = false;
   let s = trimmed;
-  if (s[0] === '-' || s[0] === '+') {
-    negative = s[0] === '-';
+  if (s[0] === "-" || s[0] === "+") {
+    negative = s[0] === "-";
     s = s.slice(1);
     offset = 1;
   }
 
-  if (s.includes('.'))
+  if (s.includes("."))
     throw new ToolError(
-      'non-integer',
+      "non-integer",
       `"${trimmed}" has a decimal point: only integers are supported.`,
-      'Remove the fractional part or round to the nearest integer first.',
+      "Remove the fractional part or round to the nearest integer first.",
     );
 
   let base: number;
@@ -68,18 +68,18 @@ function parse(raw: string, inputBaseOpt: string): Parsed {
     base = 8;
     digits = s.slice(2);
     prefixLen = 2;
-  } else if (!inputBaseOpt || inputBaseOpt === 'auto') {
+  } else if (!inputBaseOpt || inputBaseOpt === "auto") {
     base = 10;
   } else {
     const parsedBase = parseInt(inputBaseOpt, 10);
     if (!Number.isFinite(parsedBase) || parsedBase < 2 || parsedBase > 36)
-      throw new ToolError('bad-base', `Unsupported input base "${inputBaseOpt}".`);
+      throw new ToolError("bad-base", `Unsupported input base "${inputBaseOpt}".`);
     base = parsedBase;
   }
 
   if (!digits.length)
     throw new ToolError(
-      'empty-input',
+      "empty-input",
       `Enter digits after the "${trimmed.slice(offset, offset + prefixLen)}" prefix.`,
     );
 
@@ -91,7 +91,7 @@ function parse(raw: string, inputBaseOpt: string): Parsed {
     if (v === -1 || v >= base) {
       const position = offset + prefixLen + i + 1; // 1-indexed, within the original input
       throw new ToolError(
-        'invalid-digit',
+        "invalid-digit",
         `Character '${ch}' at position ${position} is not valid for base ${base}.`,
         `Use only digits ${maxDigitDescription(base)} for base ${base}.`,
       );
@@ -104,27 +104,27 @@ function parse(raw: string, inputBaseOpt: string): Parsed {
 
 function groupNibbles(bin: string): string {
   const pad = (4 - (bin.length % 4)) % 4;
-  const padded = '0'.repeat(pad) + bin;
+  const padded = "0".repeat(pad) + bin;
   const groups = padded.match(/.{4}/g) ?? [padded];
-  return groups.join(' ');
+  return groups.join(" ");
 }
 
 function groupThousands(decimal: string): string {
-  return decimal.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return decimal.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 function toBytesHex(abs: bigint): string {
   let hex = abs.toString(16);
-  if (hex.length % 2 !== 0) hex = '0' + hex;
+  if (hex.length % 2 !== 0) hex = "0" + hex;
   const pairs = hex.match(/.{2}/g) ?? [hex];
-  return pairs.join(' ');
+  return pairs.join(" ");
 }
 
 export function run(input: string, opts: BaseConverterOpts): BaseConverterResult {
-  const { value } = parse(input ?? '', opts.inputBase);
+  const { value } = parse(input ?? "", opts.inputBase);
   const negative = value < 0n;
   const abs = negative ? -value : value;
-  const sign = negative ? '-' : '';
+  const sign = negative ? "-" : "";
 
   const binStr = abs.toString(2);
   const bits = abs === 0n ? 1 : binStr.length;
@@ -133,8 +133,8 @@ export function run(input: string, opts: BaseConverterOpts): BaseConverterResult
     Binary: sign + groupNibbles(binStr),
     Octal: sign + abs.toString(8),
     Decimal: value.toString(),
-    'Decimal (grouped)': sign + groupThousands(abs.toString(10)),
-    Hex: sign + '0x' + abs.toString(16),
+    "Decimal (grouped)": sign + groupThousands(abs.toString(10)),
+    Hex: sign + "0x" + abs.toString(16),
     Base36: sign + abs.toString(36),
     Bits: String(bits),
   };

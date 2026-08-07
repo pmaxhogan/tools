@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
-import { Trash2, Undo2, X } from 'lucide-vue-next';
-import type { ToolMeta } from '@/tools/types';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import { Trash2, Undo2, X } from "lucide-vue-next";
+import type { ToolMeta } from "@/tools/types";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import {
   applyPixelateRect,
   applySolidRect,
@@ -20,7 +20,7 @@ import {
   SOLID_COLORS,
   type Rect,
   type RedactMode,
-} from '@/tools/image-redactor/index';
+} from "@/tools/image-redactor/index";
 
 /**
  * Bespoke panel for the redaction tool. The generic ToolShell has no way to
@@ -45,7 +45,7 @@ defineProps<{ meta: ToolMeta }>();
 interface Region {
   id: number;
   mode: RedactMode;
-  color: 'black' | 'white';
+  color: "black" | "white";
   blockSize: number;
   /** Pixelate randomness strength, 0 to 100. Unused for solid regions. */
   randomness: number;
@@ -68,7 +68,7 @@ function randomSeed(): number {
 /* state                                                             */
 /* ---------------------------------------------------------------- */
 
-const fileName = ref('');
+const fileName = ref("");
 const fileSize = ref(0);
 const decodeFailed = ref(false);
 const busy = ref(false);
@@ -85,12 +85,12 @@ const imgHeight = ref(0);
 const regions = ref<Region[]>([]);
 let nextId = 1;
 
-const mode = ref<RedactMode>('solid');
-const color = ref<'black' | 'white'>('black');
+const mode = ref<RedactMode>("solid");
+const color = ref<"black" | "white">("black");
 const blockSize = ref(12);
 /** Pixelate randomness strength, 0 to 100. Matches meta.ts's default. */
 const randomness = ref(35);
-const format = ref<'png' | 'jpeg'>('png');
+const format = ref<"png" | "jpeg">("png");
 
 /** The rectangle currently being dragged, in image pixel space. */
 const pending = ref<Rect | null>(null);
@@ -103,12 +103,12 @@ const drawing = ref(false);
  */
 const dragSeed = ref(randomSeed());
 
-const exportedName = ref('');
+const exportedName = ref("");
 const exportedSize = ref<number | null>(null);
 
 const hasImage = computed(() => pristine.value !== null);
 const pixelateChosen = computed(
-  () => mode.value === 'pixelate' || regions.value.some((r) => r.mode === 'pixelate'),
+  () => mode.value === "pixelate" || regions.value.some((r) => r.mode === "pixelate"),
 );
 
 /* ---------------------------------------------------------------- */
@@ -117,7 +117,7 @@ const pixelateChosen = computed(
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -129,7 +129,7 @@ function humanSize(bytes: number): string {
 
 function regionLabel(region: Region): string {
   const size = `${region.rect.w} x ${region.rect.h} px`;
-  return region.mode === 'solid'
+  return region.mode === "solid"
     ? `Solid ${region.color}, ${size}`
     : `Pixelate ${region.blockSize} px, ${region.randomness}% random, ${size}`;
 }
@@ -150,10 +150,10 @@ function decode(file: File): Promise<void> {
     img.onload = () => {
       const w = img.naturalWidth || img.width;
       const h = img.naturalHeight || img.height;
-      const off = document.createElement('canvas');
+      const off = document.createElement("canvas");
       off.width = w;
       off.height = h;
-      const ctx = off.getContext('2d', { willReadFrequently: true });
+      const ctx = off.getContext("2d", { willReadFrequently: true });
       if (!ctx || w === 0 || h === 0) {
         decodeFailed.value = true;
         URL.revokeObjectURL(url);
@@ -187,7 +187,7 @@ async function readFile(file: File) {
     fileSize.value = file.size;
     regions.value = [];
     pending.value = null;
-    exportedName.value = '';
+    exportedName.value = "";
     exportedSize.value = null;
     await decode(file);
     redraw();
@@ -208,7 +208,7 @@ function onPickFile(e: Event) {
   if (!file) return;
   readFile(file).then(() => {
     // Reset so picking the same file again still fires a change event.
-    picker.value = '';
+    picker.value = "";
   });
 }
 
@@ -218,12 +218,12 @@ function clearFile() {
   imgHeight.value = 0;
   regions.value = [];
   pending.value = null;
-  fileName.value = '';
+  fileName.value = "";
   fileSize.value = 0;
   decodeFailed.value = false;
-  exportedName.value = '';
+  exportedName.value = "";
   exportedSize.value = null;
-  if (fileInput.value) fileInput.value.value = '';
+  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -237,7 +237,7 @@ function composite(extra?: Region | null): ImageData | null {
   const data = new Uint8ClampedArray(source.data);
   const list = extra ? [...regions.value, extra] : regions.value;
   for (const region of list) {
-    if (region.mode === 'solid') {
+    if (region.mode === "solid") {
       applySolidRect(data, source.width, source.height, region.rect, SOLID_COLORS[region.color]);
     } else {
       applyPixelateRect(data, source.width, source.height, region.rect, region.blockSize, {
@@ -275,7 +275,7 @@ function redraw() {
   // Assigning width or height clears the canvas, so only do it on a new image.
   if (el.width !== image.width) el.width = image.width;
   if (el.height !== image.height) el.height = image.height;
-  const ctx = el.getContext('2d');
+  const ctx = el.getContext("2d");
   if (!ctx) return;
   const composed = composite(pendingRegion());
   if (!composed) return;
@@ -285,10 +285,10 @@ function redraw() {
   if (drawing.value && rect && rect.w > 0 && rect.h > 0) {
     ctx.save();
     ctx.lineWidth = Math.max(1, Math.round(image.width / 400));
-    ctx.strokeStyle = '#ffffff';
+    ctx.strokeStyle = "#ffffff";
     ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
     ctx.setLineDash([ctx.lineWidth * 4, ctx.lineWidth * 4]);
-    ctx.strokeStyle = '#000000';
+    ctx.strokeStyle = "#000000";
     ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
     ctx.restore();
   }
@@ -373,7 +373,7 @@ function onPointerUp(e: PointerEvent) {
       rect,
     },
   ];
-  exportedName.value = '';
+  exportedName.value = "";
   exportedSize.value = null;
   redraw();
 }
@@ -389,19 +389,19 @@ function cancelDrag() {
 function undoLast() {
   if (regions.value.length === 0) return;
   regions.value = regions.value.slice(0, -1);
-  exportedName.value = '';
+  exportedName.value = "";
   exportedSize.value = null;
 }
 
 function removeRegion(id: number) {
   regions.value = regions.value.filter((r) => r.id !== id);
-  exportedName.value = '';
+  exportedName.value = "";
   exportedSize.value = null;
 }
 
 function clearRegions() {
   regions.value = [];
-  exportedName.value = '';
+  exportedName.value = "";
   exportedSize.value = null;
 }
 
@@ -413,24 +413,24 @@ function isTypingTarget(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
   if (!el || !el.tagName) return false;
   const tag = el.tagName.toLowerCase();
-  return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable;
+  return tag === "input" || tag === "textarea" || tag === "select" || el.isContentEditable;
 }
 
 function onKeydown(e: KeyboardEvent) {
   if (!hasImage.value) return;
-  if (e.key === 'Escape') {
+  if (e.key === "Escape") {
     cancelDrag();
     return;
   }
-  if ((e.key === 'Delete' || e.key === 'Backspace') && !isTypingTarget(e.target)) {
+  if ((e.key === "Delete" || e.key === "Backspace") && !isTypingTarget(e.target)) {
     if (regions.value.length === 0) return;
     e.preventDefault();
     undoLast();
   }
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown));
-onUnmounted(() => window.removeEventListener('keydown', onKeydown));
+onMounted(() => window.addEventListener("keydown", onKeydown));
+onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
 /* ---------------------------------------------------------------- */
 /* export                                                            */
@@ -447,35 +447,35 @@ async function downloadExport() {
   try {
     // A fresh canvas, so the marquee outline drawn on the preview can never
     // reach the file, and so the export is built purely from redacted pixels.
-    const out = document.createElement('canvas');
+    const out = document.createElement("canvas");
     out.width = composed.width;
     out.height = composed.height;
-    const ctx = out.getContext('2d');
+    const ctx = out.getContext("2d");
     if (!ctx) return;
 
-    if (format.value === 'jpeg') {
+    if (format.value === "jpeg") {
       // JPEG has no alpha channel, so transparent areas would turn black.
       // putImageData ignores compositing, hence the staging canvas.
-      const stage = document.createElement('canvas');
+      const stage = document.createElement("canvas");
       stage.width = composed.width;
       stage.height = composed.height;
-      const stageCtx = stage.getContext('2d');
+      const stageCtx = stage.getContext("2d");
       if (!stageCtx) return;
       stageCtx.putImageData(composed, 0, 0);
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, out.width, out.height);
       ctx.drawImage(stage, 0, 0);
     } else {
       ctx.putImageData(composed, 0, 0);
     }
 
-    const type = format.value === 'jpeg' ? 'image/jpeg' : 'image/png';
-    const blob = await canvasToBlob(out, type, format.value === 'jpeg' ? 0.9 : undefined);
+    const type = format.value === "jpeg" ? "image/jpeg" : "image/png";
+    const blob = await canvasToBlob(out, type, format.value === "jpeg" ? 0.9 : undefined);
     if (!blob) return;
 
     const name = suggestExportName(fileName.value, format.value);
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = name;
     document.body.appendChild(a);
@@ -504,26 +504,11 @@ async function downloadExport() {
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Screenshot
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          @click="fileInput?.click()"
-        >
-          Open file…
-        </Button>
-        <input
-          ref="fileInput"
-          type="file"
-          class="hidden"
-          accept="image/*"
-          @change="onPickFile"
-        >
+        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
+        <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
       </div>
 
-      <div
-        v-if="hasImage || decodeFailed"
-        class="px-3 pt-2 pb-3"
-      >
+      <div v-if="hasImage || decodeFailed" class="px-3 pt-2 pb-3">
         <span
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
@@ -540,10 +525,7 @@ async function downloadExport() {
         </span>
       </div>
 
-      <p
-        v-else
-        class="px-3 pt-1 pb-4 text-sm text-muted-foreground"
-      >
+      <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
         Drop a screenshot here, then drag rectangles over anything sensitive. The pixels underneath
         are overwritten, not covered. Everything runs in this tab: your files and inputs never leave
         your device.
@@ -555,8 +537,9 @@ async function downloadExport() {
       role="alert"
       class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
     >
-      <span class="font-medium text-destructive">This browser could not decode that file as an
-        image.</span>
+      <span class="font-medium text-destructive"
+        >This browser could not decode that file as an image.</span
+      >
       <span class="mt-1 block text-muted-foreground">
         Try a PNG, JPEG, WebP, GIF, or BMP screenshot.
       </span>
@@ -587,66 +570,38 @@ async function downloadExport() {
         </span>
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-40 flex-col gap-1.5">
-            <Label
-              for="redact-mode"
-              class="text-xs text-muted-foreground"
-            >Style</Label>
+            <Label for="redact-mode" class="text-xs text-muted-foreground">Style</Label>
             <Select
               :model-value="mode"
               @update:model-value="(v) => (mode = v === 'pixelate' ? 'pixelate' : 'solid')"
             >
-              <SelectTrigger
-                id="redact-mode"
-                size="sm"
-                class="w-full bg-card"
-              >
+              <SelectTrigger id="redact-mode" size="sm" class="w-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="solid">
-                  Solid fill (safest)
-                </SelectItem>
-                <SelectItem value="pixelate">
-                  Pixelate (weaker)
-                </SelectItem>
+                <SelectItem value="solid"> Solid fill (safest) </SelectItem>
+                <SelectItem value="pixelate"> Pixelate (weaker) </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div
-            v-if="mode === 'solid'"
-            class="flex w-32 flex-col gap-1.5"
-          >
-            <Label
-              for="redact-color"
-              class="text-xs text-muted-foreground"
-            >Color</Label>
+          <div v-if="mode === 'solid'" class="flex w-32 flex-col gap-1.5">
+            <Label for="redact-color" class="text-xs text-muted-foreground">Color</Label>
             <Select
               :model-value="color"
               @update:model-value="(v) => (color = v === 'white' ? 'white' : 'black')"
             >
-              <SelectTrigger
-                id="redact-color"
-                size="sm"
-                class="w-full bg-card"
-              >
+              <SelectTrigger id="redact-color" size="sm" class="w-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="black">
-                  Black
-                </SelectItem>
-                <SelectItem value="white">
-                  White
-                </SelectItem>
+                <SelectItem value="black"> Black </SelectItem>
+                <SelectItem value="white"> White </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div
-            v-else
-            class="flex min-w-48 flex-1 flex-col gap-1.5"
-          >
+          <div v-else class="flex min-w-48 flex-1 flex-col gap-1.5">
             <span class="text-xs text-muted-foreground tabular-nums">
               Block size: {{ blockSize }} px
             </span>
@@ -661,10 +616,7 @@ async function downloadExport() {
             />
           </div>
 
-          <div
-            v-if="mode === 'pixelate'"
-            class="flex min-w-48 flex-1 flex-col gap-1.5"
-          >
+          <div v-if="mode === 'pixelate'" class="flex min-w-48 flex-1 flex-col gap-1.5">
             <span class="text-xs text-muted-foreground tabular-nums">
               Randomness: {{ randomness }}%
             </span>
@@ -685,8 +637,9 @@ async function downloadExport() {
           role="note"
           class="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-muted-foreground"
         >
-          <span class="font-medium text-destructive">Randomness is off: this is a plain block
-            average.</span>
+          <span class="font-medium text-destructive"
+            >Randomness is off: this is a plain block average.</span
+          >
           Every block is replaced with the flat average of the pixels it covers, and that average is
           a fixed function of the source image, the exact case researchers have reconstructed by
           rendering candidate words through the same block grid until the output matches. Raise the
@@ -699,16 +652,13 @@ async function downloadExport() {
         >
           <span class="font-medium text-destructive">Pixelate is still the weaker choice.</span>
           When randomness is above 0%, each block mixes seeded random noise into its average,
-          generated fresh per region, so the output is no longer a fixed function of the source image
-          and the classic attack of rendering candidate words through the same block grid no longer
-          lands the same way. That makes reconstruction much harder, not impossible: a rough trace of
-          the original brightness still survives the average. Use solid fill for anything you truly
-          need gone.
+          generated fresh per region, so the output is no longer a fixed function of the source
+          image and the classic attack of rendering candidate words through the same block grid no
+          longer lands the same way. That makes reconstruction much harder, not impossible: a rough
+          trace of the original brightness still survives the average. Use solid fill for anything
+          you truly need gone.
         </p>
-        <p
-          v-else
-          class="text-xs text-muted-foreground"
-        >
+        <p v-else class="text-xs text-muted-foreground">
           Solid fill replaces every pixel under the rectangle with one flat color, so nothing of the
           original remains in the image data.
         </p>
@@ -721,12 +671,7 @@ async function downloadExport() {
             Regions ({{ regions.length }})
           </span>
           <div class="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              :disabled="regions.length === 0"
-              @click="undoLast"
-            >
+            <Button variant="outline" size="sm" :disabled="regions.length === 0" @click="undoLast">
               <Undo2 class="size-3.5" />
               Undo last
             </Button>
@@ -741,10 +686,7 @@ async function downloadExport() {
           </div>
         </div>
 
-        <ul
-          v-if="regions.length"
-          class="flex flex-col divide-y divide-border/60"
-        >
+        <ul v-if="regions.length" class="flex flex-col divide-y divide-border/60">
           <li
             v-for="(region, index) in regions"
             :key="region.id"
@@ -764,10 +706,7 @@ async function downloadExport() {
             </button>
           </li>
         </ul>
-        <p
-          v-else
-          class="text-xs text-muted-foreground"
-        >
+        <p v-else class="text-xs text-muted-foreground">
           No regions yet. Drag a rectangle on the image above to add one. Regions apply in order, so
           a later one draws over an earlier one.
         </p>
@@ -780,45 +719,26 @@ async function downloadExport() {
         </span>
         <div class="flex flex-wrap items-end gap-3">
           <div class="flex w-40 flex-col gap-1.5">
-            <Label
-              for="redact-format"
-              class="text-xs text-muted-foreground"
-            >Format</Label>
+            <Label for="redact-format" class="text-xs text-muted-foreground">Format</Label>
             <Select
               :model-value="format"
               @update:model-value="(v) => (format = v === 'jpeg' ? 'jpeg' : 'png')"
             >
-              <SelectTrigger
-                id="redact-format"
-                size="sm"
-                class="w-full bg-card"
-              >
+              <SelectTrigger id="redact-format" size="sm" class="w-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="png">
-                  PNG (lossless)
-                </SelectItem>
-                <SelectItem value="jpeg">
-                  JPEG (quality 90)
-                </SelectItem>
+                <SelectItem value="png"> PNG (lossless) </SelectItem>
+                <SelectItem value="jpeg"> JPEG (quality 90) </SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <Button
-            size="sm"
-            :disabled="busy"
-            class="mb-0.5"
-            @click="downloadExport"
-          >
+          <Button size="sm" :disabled="busy" class="mb-0.5" @click="downloadExport">
             Download redacted image
           </Button>
         </div>
 
-        <p
-          v-if="exportedName"
-          class="font-mono text-xs text-muted-foreground tabular-nums"
-        >
+        <p v-if="exportedName" class="font-mono text-xs text-muted-foreground tabular-nums">
           Saved {{ exportedName }}, {{ humanSize(exportedSize ?? 0) }}.
         </p>
 

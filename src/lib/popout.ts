@@ -63,14 +63,14 @@ interface DocumentPictureInPictureApi {
 }
 
 function pipApi(): DocumentPictureInPictureApi | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   const host = window as Window & { documentPictureInPicture?: DocumentPictureInPictureApi };
   return host.documentPictureInPicture ?? null;
 }
 
 /** True when this browser ships Document Picture-in-Picture. SSR safe. */
 export function isPopoutSupported(): boolean {
-  return typeof window !== 'undefined' && 'documentPictureInPicture' in window;
+  return typeof window !== "undefined" && "documentPictureInPicture" in window;
 }
 
 /** True while a panel from this page is floating. */
@@ -80,8 +80,8 @@ export function isPoppedOut(): boolean {
 
 /** Resolves the data attribute contract above. SSR safe. */
 export function findPopoutRoot(): HTMLElement | null {
-  if (typeof document === 'undefined') return null;
-  return document.querySelector<HTMLElement>('[data-popout-root]');
+  if (typeof document === "undefined") return null;
+  return document.querySelector<HTMLElement>("[data-popout-root]");
 }
 
 /**
@@ -101,7 +101,7 @@ function serializeSheet(sheet: CSSStyleSheet): string {
     }
     out.push(rule.cssText);
   }
-  return out.join('\n');
+  return out.join("\n");
 }
 
 /**
@@ -118,7 +118,7 @@ function serializeSheet(sheet: CSSStyleSheet): string {
 function copyStyles(pip: Window): void {
   const head = pip.document.head;
 
-  const base = pip.document.createElement('base');
+  const base = pip.document.createElement("base");
   base.href = document.baseURI;
   head.append(base);
 
@@ -127,7 +127,7 @@ function copyStyles(pip: Window): void {
     try {
       // Serializing avoids a flash of unstyled content: the rules are there
       // before the first paint instead of one network round trip later.
-      const style = pip.document.createElement('style');
+      const style = pip.document.createElement("style");
       if (sheet.media.mediaText) style.media = sheet.media.mediaText;
       style.textContent = serializeSheet(sheet);
       head.append(style);
@@ -137,8 +137,8 @@ function copyStyles(pip: Window): void {
       // one, so fall back to linking it. `link.href` is already absolute.
       const owner = sheet.ownerNode;
       if (owner instanceof HTMLLinkElement && owner.href) {
-        const link = pip.document.createElement('link');
-        link.rel = 'stylesheet';
+        const link = pip.document.createElement("link");
+        link.rel = "stylesheet";
         link.href = owner.href;
         if (owner.media) link.media = owner.media;
         head.append(link);
@@ -157,18 +157,18 @@ function applyTheme(pip: Window): void {
   const source = document.documentElement;
   const target = pip.document.documentElement;
   target.className = source.className;
-  target.lang = source.lang || 'en';
+  target.lang = source.lang || "en";
 
   const tokens = getComputedStyle(source);
-  const background = tokens.getPropertyValue('--background').trim();
-  const foreground = tokens.getPropertyValue('--foreground').trim();
-  const dark = source.classList.contains('dark');
+  const background = tokens.getPropertyValue("--background").trim();
+  const foreground = tokens.getPropertyValue("--foreground").trim();
+  const dark = source.classList.contains("dark");
 
-  target.style.colorScheme = dark ? 'dark' : 'light';
-  pip.document.body.style.background = background || (dark ? '#141311' : '#f6f4f1');
-  pip.document.body.style.color = foreground || (dark ? '#f4f1ec' : '#1b1917');
-  pip.document.body.style.margin = '0';
-  pip.document.body.style.padding = '12px';
+  target.style.colorScheme = dark ? "dark" : "light";
+  pip.document.body.style.background = background || (dark ? "#141311" : "#f6f4f1");
+  pip.document.body.style.color = foreground || (dark ? "#f4f1ec" : "#1b1917");
+  pip.document.body.style.margin = "0";
+  pip.document.body.style.padding = "12px";
 }
 
 /**
@@ -178,48 +178,48 @@ function applyTheme(pip: Window): void {
  * the placeholder's appearance to scanner behavior.
  */
 function buildPlaceholder(onReturn: () => void): HTMLElement {
-  const card = document.createElement('div');
-  card.setAttribute('data-popout-placeholder', '');
+  const card = document.createElement("div");
+  card.setAttribute("data-popout-placeholder", "");
   card.style.cssText = [
-    'display:flex',
-    'flex-wrap:wrap',
-    'align-items:center',
-    'justify-content:space-between',
-    'gap:12px',
-    'padding:20px',
-    'border:1px solid var(--border)',
-    'border-radius:14px',
-    'background:var(--card)',
-    'color:var(--foreground)',
-    'box-shadow:var(--sh-sm)',
-    'font-size:14px',
-  ].join(';');
+    "display:flex",
+    "flex-wrap:wrap",
+    "align-items:center",
+    "justify-content:space-between",
+    "gap:12px",
+    "padding:20px",
+    "border:1px solid var(--border)",
+    "border-radius:14px",
+    "background:var(--card)",
+    "color:var(--foreground)",
+    "box-shadow:var(--sh-sm)",
+    "font-size:14px",
+  ].join(";");
 
-  const text = document.createElement('div');
-  const title = document.createElement('p');
-  title.textContent = 'This tool is floating in its own window.';
-  title.style.cssText = 'margin:0;font-weight:500';
-  const hint = document.createElement('p');
-  hint.textContent = 'Close that window, or bring it back here.';
-  hint.style.cssText = 'margin:2px 0 0;color:var(--muted-foreground);font-size:13.5px';
+  const text = document.createElement("div");
+  const title = document.createElement("p");
+  title.textContent = "This tool is floating in its own window.";
+  title.style.cssText = "margin:0;font-weight:500";
+  const hint = document.createElement("p");
+  hint.textContent = "Close that window, or bring it back here.";
+  hint.style.cssText = "margin:2px 0 0;color:var(--muted-foreground);font-size:13.5px";
   text.append(title, hint);
 
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.textContent = 'Bring it back';
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = "Bring it back";
   button.style.cssText = [
-    'height:32px',
-    'padding:0 12px',
-    'border:1px solid var(--border)',
-    'border-radius:10px',
-    'background:var(--background)',
-    'color:var(--foreground)',
-    'font:inherit',
-    'font-size:13.5px',
-    'font-weight:500',
-    'cursor:pointer',
-  ].join(';');
-  button.addEventListener('click', onReturn);
+    "height:32px",
+    "padding:0 12px",
+    "border:1px solid var(--border)",
+    "border-radius:10px",
+    "background:var(--background)",
+    "color:var(--foreground)",
+    "font:inherit",
+    "font-size:13.5px",
+    "font-weight:500",
+    "cursor:pointer",
+  ].join(";");
+  button.addEventListener("click", onReturn);
 
   card.append(text, button);
   return card;
@@ -230,17 +230,20 @@ function buildPlaceholder(onReturn: () => void): HTMLElement {
  * Document PiP support, when the user gesture requirement is not met, or when
  * a pop out window is already open.
  */
-export async function popOut(root: HTMLElement, opts: PopoutOptions = {}): Promise<PopoutHandle | null> {
+export async function popOut(
+  root: HTMLElement,
+  opts: PopoutOptions = {},
+): Promise<PopoutHandle | null> {
   const api = pipApi();
   if (!api) {
-    console.warn('[popout] Document Picture-in-Picture is not available in this browser.');
+    console.warn("[popout] Document Picture-in-Picture is not available in this browser.");
     return null;
   }
   // Already floating: hand back the live handle instead of opening a second
   // window, which the API would either reject or silently replace.
   if (active) return active;
   if (api.window) {
-    console.warn('[popout] Another Picture-in-Picture window is already open.');
+    console.warn("[popout] Another Picture-in-Picture window is already open.");
     return null;
   }
 
@@ -253,7 +256,7 @@ export async function popOut(root: HTMLElement, opts: PopoutOptions = {}): Promi
   } catch (err) {
     // Rejects without a user gesture, when the feature is policy blocked, or
     // when the user declines. Nothing moved yet, so there is nothing to undo.
-    console.warn('[popout] Could not open the pop out window.', err);
+    console.warn("[popout] Could not open the pop out window.", err);
     return null;
   }
 
@@ -270,7 +273,7 @@ export async function popOut(root: HTMLElement, opts: PopoutOptions = {}): Promi
   // Keep the floating window in sync when the header theme toggle flips the
   // `.dark` class on the opener, otherwise it strands the old theme.
   const themeWatcher = new MutationObserver(() => applyTheme(pip));
-  themeWatcher.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  themeWatcher.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
   let restored = false;
 
@@ -279,8 +282,8 @@ export async function popOut(root: HTMLElement, opts: PopoutOptions = {}): Promi
     if (restored) return;
     restored = true;
     themeWatcher.disconnect();
-    pip.removeEventListener('pagehide', restore);
-    window.removeEventListener('pagehide', closeOnly);
+    pip.removeEventListener("pagehide", restore);
+    window.removeEventListener("pagehide", closeOnly);
     // If the placeholder is gone the host component was torn down, so there is
     // nowhere sensible to put the panel back. Dropping it is better than
     // appending an orphan panel to the end of the page.
@@ -299,8 +302,8 @@ export async function popOut(root: HTMLElement, opts: PopoutOptions = {}): Promi
   }
 
   // User closed the floating window with its own close button.
-  pip.addEventListener('pagehide', restore);
-  window.addEventListener('pagehide', closeOnly);
+  pip.addEventListener("pagehide", restore);
+  window.addEventListener("pagehide", closeOnly);
 
   const handle: PopoutHandle = {
     window: pip,

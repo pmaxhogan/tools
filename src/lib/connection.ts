@@ -15,12 +15,12 @@ interface NetworkInformationLike {
   saveData?: boolean;
   effectiveType?: string;
   type?: string;
-  addEventListener?: (type: 'change', listener: () => void) => void;
-  removeEventListener?: (type: 'change', listener: () => void) => void;
+  addEventListener?: (type: "change", listener: () => void) => void;
+  removeEventListener?: (type: "change", listener: () => void) => void;
 }
 
 function connection(): NetworkInformationLike | undefined {
-  if (typeof navigator === 'undefined') return undefined;
+  if (typeof navigator === "undefined") return undefined;
   const nav = navigator as Navigator & {
     connection?: NetworkInformationLike;
     mozConnection?: NetworkInformationLike;
@@ -34,8 +34,9 @@ export function isMetered(): boolean {
   const c = connection();
   if (!c) return false;
   if (c.saveData) return true;
-  if (c.type === 'cellular') return true;
-  const slow = c.effectiveType === 'slow-2g' || c.effectiveType === '2g' || c.effectiveType === '3g';
+  if (c.type === "cellular") return true;
+  const slow =
+    c.effectiveType === "slow-2g" || c.effectiveType === "2g" || c.effectiveType === "3g";
   return Boolean(slow);
 }
 
@@ -52,6 +53,6 @@ export function shouldAutoDownload(): boolean {
 export function onConnectionChange(listener: () => void): () => void {
   const c = connection();
   if (!c?.addEventListener) return () => {};
-  c.addEventListener('change', listener);
-  return () => c.removeEventListener?.('change', listener);
+  c.addEventListener("change", listener);
+  return () => c.removeEventListener?.("change", listener);
 }

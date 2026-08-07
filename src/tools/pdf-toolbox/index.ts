@@ -12,8 +12,8 @@ import {
   degrees,
   rgb,
   type PDFForm,
-} from 'pdf-lib';
-import { ToolError, type ToolLogic } from '../types';
+} from "pdf-lib";
+import { ToolError, type ToolLogic } from "../types";
 
 /**
  * PDF toolbox: merge, split, rotate, reorder, watermark, and fill forms.
@@ -31,7 +31,7 @@ import { ToolError, type ToolLogic } from '../types';
 export type RotationAngle = 90 | 180 | 270;
 
 /** Where a watermark sits on the page. */
-export type WatermarkPosition = 'center' | 'diagonal' | 'bottom';
+export type WatermarkPosition = "center" | "diagonal" | "bottom";
 
 export interface WatermarkOptions {
   text: string;
@@ -54,14 +54,7 @@ export interface SplitPart {
 }
 
 export type FormFieldType =
-  | 'text'
-  | 'checkbox'
-  | 'dropdown'
-  | 'radio'
-  | 'option list'
-  | 'button'
-  | 'signature'
-  | 'unknown';
+  "text" | "checkbox" | "dropdown" | "radio" | "option list" | "button" | "signature" | "unknown";
 
 export interface FormFieldInfo {
   name: string;
@@ -103,16 +96,16 @@ export interface PdfInfo {
 export async function loadPdf(bytes: Uint8Array): Promise<PDFDocument> {
   if (!(bytes instanceof Uint8Array)) {
     throw new ToolError(
-      'not-bytes',
-      'This operation needs the raw bytes of a PDF file.',
-      'Drop a .pdf file onto the input instead of typing text.',
+      "not-bytes",
+      "This operation needs the raw bytes of a PDF file.",
+      "Drop a .pdf file onto the input instead of typing text.",
     );
   }
   if (bytes.length === 0) {
     throw new ToolError(
-      'empty-input',
-      'That file is empty, so there is nothing to read.',
-      'Pick a PDF file that has actual content in it.',
+      "empty-input",
+      "That file is empty, so there is nothing to read.",
+      "Pick a PDF file that has actual content in it.",
     );
   }
   try {
@@ -120,16 +113,16 @@ export async function loadPdf(bytes: Uint8Array): Promise<PDFDocument> {
   } catch (e) {
     if (e instanceof EncryptedPDFError) {
       throw new ToolError(
-        'encrypted-pdf',
-        'This PDF is password protected, so its pages cannot be read.',
-        'Open it in a viewer that has the password, save an unprotected copy, then load that copy here. This tool cannot remove a password it does not have.',
+        "encrypted-pdf",
+        "This PDF is password protected, so its pages cannot be read.",
+        "Open it in a viewer that has the password, save an unprotected copy, then load that copy here. This tool cannot remove a password it does not have.",
       );
     }
     const detail = e instanceof Error ? e.message : String(e);
     throw new ToolError(
-      'invalid-pdf',
+      "invalid-pdf",
       `That file could not be parsed as a PDF. ${detail}`,
-      'Check that the file really is a PDF and that it downloaded completely, then try again.',
+      "Check that the file really is a PDF and that it downloaded completely, then try again.",
     );
   }
 }
@@ -140,26 +133,26 @@ export async function loadPdf(bytes: Uint8Array): Promise<PDFDocument> {
 
 function resolveToken(token: string, pageCount: number, segment: string): number {
   const lower = token.trim().toLowerCase();
-  if (lower === 'end' || lower === 'last') return pageCount;
+  if (lower === "end" || lower === "last") return pageCount;
   if (!/^\d+$/.test(lower)) {
     throw new ToolError(
-      'invalid-range',
+      "invalid-range",
       `"${segment}" is not a page range.`,
-      'Use page numbers, ranges like 4-9, and the word end, separated by commas. For example 1-3,7,9-end.',
+      "Use page numbers, ranges like 4-9, and the word end, separated by commas. For example 1-3,7,9-end.",
     );
   }
   const n = Number(lower);
   if (n < 1) {
     throw new ToolError(
-      'page-out-of-range',
+      "page-out-of-range",
       `Page ${n} does not exist: pages are numbered from 1.`,
       `Use a page number between 1 and ${pageCount}.`,
     );
   }
   if (n > pageCount) {
     throw new ToolError(
-      'page-out-of-range',
-      `Page ${n} does not exist: this PDF has ${pageCount} ${pageCount === 1 ? 'page' : 'pages'}.`,
+      "page-out-of-range",
+      `Page ${n} does not exist: this PDF has ${pageCount} ${pageCount === 1 ? "page" : "pages"}.`,
       `Use a page number between 1 and ${pageCount}.`,
     );
   }
@@ -174,31 +167,31 @@ function resolveToken(token: string, pageCount: number, segment: string): number
 export function parsePageRanges(spec: string, pageCount: number): number[][] {
   if (!Number.isInteger(pageCount) || pageCount < 1) {
     throw new ToolError(
-      'no-pages',
-      'That PDF reports no pages, so no range can be applied to it.',
-      'Load a PDF that has at least one page.',
+      "no-pages",
+      "That PDF reports no pages, so no range can be applied to it.",
+      "Load a PDF that has at least one page.",
     );
   }
-  const trimmed = (spec ?? '').trim();
-  if (trimmed === '') {
+  const trimmed = (spec ?? "").trim();
+  if (trimmed === "") {
     throw new ToolError(
-      'empty-range',
-      'No page range was given.',
-      'Type something like 1-3,7,9-end. The word end means the last page.',
+      "empty-range",
+      "No page range was given.",
+      "Type something like 1-3,7,9-end. The word end means the last page.",
     );
   }
 
   const groups: number[][] = [];
-  for (const raw of trimmed.split(',')) {
+  for (const raw of trimmed.split(",")) {
     const segment = raw.trim();
-    if (segment === '') {
+    if (segment === "") {
       throw new ToolError(
-        'invalid-range',
-        'That range has an empty section, so one of the commas has nothing after it.',
-        'Remove the extra comma. A valid range looks like 1-3,7,9-end.',
+        "invalid-range",
+        "That range has an empty section, so one of the commas has nothing after it.",
+        "Remove the extra comma. A valid range looks like 1-3,7,9-end.",
       );
     }
-    const dash = segment.indexOf('-');
+    const dash = segment.indexOf("-");
     if (dash === -1) {
       groups.push([resolveToken(segment, pageCount, segment)]);
       continue;
@@ -207,7 +200,7 @@ export function parsePageRanges(spec: string, pageCount: number): number[][] {
     const stop = resolveToken(segment.slice(dash + 1), pageCount, segment);
     if (start > stop) {
       throw new ToolError(
-        'reversed-range',
+        "reversed-range",
         `"${segment}" runs backwards: page ${start} comes after page ${stop}.`,
         `Write it as ${stop}-${start} instead.`,
       );
@@ -223,7 +216,7 @@ export function parsePageRanges(spec: string, pageCount: number): number[][] {
 function checkPages(pages: number[], pageCount: number, label: string): number[] {
   if (!Array.isArray(pages) || pages.length === 0) {
     throw new ToolError(
-      'no-pages-selected',
+      "no-pages-selected",
       `No pages were selected for ${label}.`,
       `Choose at least one page between 1 and ${pageCount}.`,
     );
@@ -231,8 +224,8 @@ function checkPages(pages: number[], pageCount: number, label: string): number[]
   for (const n of pages) {
     if (!Number.isInteger(n) || n < 1 || n > pageCount) {
       throw new ToolError(
-        'page-out-of-range',
-        `Page ${n} does not exist: this PDF has ${pageCount} ${pageCount === 1 ? 'page' : 'pages'}.`,
+        "page-out-of-range",
+        `Page ${n} does not exist: this PDF has ${pageCount} ${pageCount === 1 ? "page" : "pages"}.`,
         `Use whole page numbers between 1 and ${pageCount}.`,
       );
     }
@@ -248,9 +241,9 @@ function checkPages(pages: number[], pageCount: number, label: string): number[]
 export async function mergePdfs(docs: Uint8Array[]): Promise<Uint8Array> {
   if (!Array.isArray(docs) || docs.length === 0) {
     throw new ToolError(
-      'no-documents',
-      'No PDF files were given to merge.',
-      'Add at least two PDF files, then drag them into the order you want.',
+      "no-documents",
+      "No PDF files were given to merge.",
+      "Add at least two PDF files, then drag them into the order you want.",
     );
   }
   const out = await PDFDocument.create();
@@ -261,9 +254,9 @@ export async function mergePdfs(docs: Uint8Array[]): Promise<Uint8Array> {
   }
   if (out.getPageCount() === 0) {
     throw new ToolError(
-      'no-pages',
-      'Every file in the list has zero pages, so the merge produced nothing.',
-      'Check the files you added: at least one of them needs a page.',
+      "no-pages",
+      "Every file in the list has zero pages, so the merge produced nothing.",
+      "Check the files you added: at least one of them needs a page.",
     );
   }
   return out.save();
@@ -324,22 +317,22 @@ export async function extractPages(doc: Uint8Array, ranges: string): Promise<Uin
  */
 export async function rotatePages(
   doc: Uint8Array,
-  pages: number[] | 'all',
+  pages: number[] | "all",
   angle: RotationAngle,
 ): Promise<Uint8Array> {
   if (angle !== 90 && angle !== 180 && angle !== 270) {
     throw new ToolError(
-      'invalid-rotation',
+      "invalid-rotation",
       `${String(angle)} is not a rotation this tool can apply.`,
-      'Pick 90, 180, or 270 degrees. PDF viewers only honor quarter turns.',
+      "Pick 90, 180, or 270 degrees. PDF viewers only honor quarter turns.",
     );
   }
   const source = await loadPdf(doc);
   const pageCount = source.getPageCount();
   const targets =
-    pages === 'all'
+    pages === "all"
       ? Array.from({ length: pageCount }, (_, i) => i + 1)
-      : checkPages(pages, pageCount, 'rotation');
+      : checkPages(pages, pageCount, "rotation");
 
   for (const n of new Set(targets)) {
     const page = source.getPage(n - 1);
@@ -363,15 +356,15 @@ export async function rotatePages(
 export async function reorderPages(doc: Uint8Array, order: number[]): Promise<Uint8Array> {
   const source = await loadPdf(doc);
   const pageCount = source.getPageCount();
-  checkPages(order, pageCount, 'the new order');
+  checkPages(order, pageCount, "the new order");
 
   const seen = new Set<number>();
   for (const n of order) {
     if (seen.has(n)) {
       throw new ToolError(
-        'duplicate-page',
+        "duplicate-page",
         `Page ${n} is listed more than once.`,
-        'List each page at most once. Leaving a page out of the list deletes it.',
+        "List each page at most once. Leaving a page out of the list deletes it.",
       );
     }
     seen.add(n);
@@ -388,15 +381,15 @@ export async function reorderPages(doc: Uint8Array, order: number[]): Promise<Ui
 export async function deletePages(doc: Uint8Array, pages: number[]): Promise<Uint8Array> {
   const source = await loadPdf(doc);
   const pageCount = source.getPageCount();
-  checkPages(pages, pageCount, 'deletion');
+  checkPages(pages, pageCount, "deletion");
   const drop = new Set(pages);
   const keep: number[] = [];
   for (let n = 1; n <= pageCount; n += 1) if (!drop.has(n)) keep.push(n);
   if (keep.length === 0) {
     throw new ToolError(
-      'deletes-everything',
-      'That would delete every page, and a PDF with no pages is not a valid file.',
-      'Leave at least one page in the document.',
+      "deletes-everything",
+      "That would delete every page, and a PDF with no pages is not a valid file.",
+      "Leave at least one page in the document.",
     );
   }
   return reorderPages(doc, keep);
@@ -406,22 +399,22 @@ export async function deletePages(doc: Uint8Array, pages: number[]): Promise<Uin
 /* watermark                                                           */
 /* ------------------------------------------------------------------ */
 
-const WATERMARK_POSITIONS: WatermarkPosition[] = ['center', 'diagonal', 'bottom'];
+const WATERMARK_POSITIONS: WatermarkPosition[] = ["center", "diagonal", "bottom"];
 
 /** Expand #rgb or #rrggbb into three 0 to 1 channels. */
 function parseColor(raw: string): { r: number; g: number; b: number } {
-  const body = raw.trim().replace(/^#/, '');
+  const body = raw.trim().replace(/^#/, "");
   const full = /^[0-9a-fA-F]{3}$/.test(body)
     ? body
-        .split('')
+        .split("")
         .map((c) => c + c)
-        .join('')
+        .join("")
     : body;
   if (!/^[0-9a-fA-F]{6}$/.test(full)) {
     throw new ToolError(
-      'invalid-color',
+      "invalid-color",
       `"${raw}" is not a hex color.`,
-      'Use a value like #ff0000 or #f00.',
+      "Use a value like #ff0000 or #f00.",
     );
   }
   return {
@@ -438,7 +431,7 @@ function anchorFor(
   height: number,
   textHeight: number,
 ): { cx: number; cy: number } {
-  if (position === 'bottom') {
+  if (position === "bottom") {
     return { cx: width / 2, cy: Math.min(height / 2, 36 + textHeight / 2) };
   }
   return { cx: width / 2, cy: height / 2 };
@@ -451,53 +444,56 @@ function anchorFor(
  * the page: pdf-lib rotates around the drawing origin, and the origin is
  * offset here to compensate.
  */
-export async function watermarkPdf(doc: Uint8Array, options: WatermarkOptions): Promise<Uint8Array> {
-  const text = (options?.text ?? '').trim();
-  if (text === '') {
+export async function watermarkPdf(
+  doc: Uint8Array,
+  options: WatermarkOptions,
+): Promise<Uint8Array> {
+  const text = (options?.text ?? "").trim();
+  if (text === "") {
     throw new ToolError(
-      'empty-watermark',
-      'The watermark has no text, so there would be nothing to stamp.',
-      'Type the words you want across the pages, such as DRAFT or CONFIDENTIAL.',
+      "empty-watermark",
+      "The watermark has no text, so there would be nothing to stamp.",
+      "Type the words you want across the pages, such as DRAFT or CONFIDENTIAL.",
     );
   }
 
-  const position = options.position ?? 'diagonal';
+  const position = options.position ?? "diagonal";
   if (!WATERMARK_POSITIONS.includes(position)) {
     throw new ToolError(
-      'invalid-position',
+      "invalid-position",
       `"${String(position)}" is not a watermark position.`,
-      'Choose center, diagonal, or bottom.',
+      "Choose center, diagonal, or bottom.",
     );
   }
 
   const opacity = options.opacity ?? 0.2;
   if (!Number.isFinite(opacity) || opacity <= 0 || opacity > 1) {
     throw new ToolError(
-      'invalid-opacity',
+      "invalid-opacity",
       `An opacity of ${String(options.opacity)} cannot be drawn.`,
-      'Use a value above 0 and up to 1. Around 0.2 reads as a watermark without hiding the text under it.',
+      "Use a value above 0 and up to 1. Around 0.2 reads as a watermark without hiding the text under it.",
     );
   }
 
   const fontSize = options.fontSize ?? 48;
   if (!Number.isFinite(fontSize) || fontSize <= 0 || fontSize > 500) {
     throw new ToolError(
-      'invalid-font-size',
+      "invalid-font-size",
       `A font size of ${String(options.fontSize)} cannot be drawn.`,
-      'Use a size between 1 and 500 points.',
+      "Use a size between 1 and 500 points.",
     );
   }
 
-  const angle = options.angle ?? (position === 'diagonal' ? 45 : 0);
+  const angle = options.angle ?? (position === "diagonal" ? 45 : 0);
   if (!Number.isFinite(angle)) {
     throw new ToolError(
-      'invalid-angle',
+      "invalid-angle",
       `An angle of ${String(options.angle)} is not a number of degrees.`,
-      'Use a number between -180 and 180. 45 is the usual diagonal stamp.',
+      "Use a number between -180 and 180. 45 is the usual diagonal stamp.",
     );
   }
 
-  const color = parseColor(options.color ?? '#ff0000');
+  const color = parseColor(options.color ?? "#ff0000");
 
   const source = await loadPdf(doc);
   const font = await source.embedFont(StandardFonts.Helvetica);
@@ -528,47 +524,47 @@ export async function watermarkPdf(doc: Uint8Array, options: WatermarkOptions): 
 /* ------------------------------------------------------------------ */
 
 /** Values a checkbox reads as ticked. Anything else unticks it. */
-const TRUTHY = new Set(['true', 'yes', 'on', '1', 'x', 'checked']);
+const TRUTHY = new Set(["true", "yes", "on", "1", "x", "checked"]);
 
 function describeField(field: unknown): FormFieldInfo {
   if (field instanceof PDFTextField) {
-    return { name: field.getName(), type: 'text', value: field.getText() ?? '' };
+    return { name: field.getName(), type: "text", value: field.getText() ?? "" };
   }
   if (field instanceof PDFCheckBox) {
-    return { name: field.getName(), type: 'checkbox', value: String(field.isChecked()) };
+    return { name: field.getName(), type: "checkbox", value: String(field.isChecked()) };
   }
   if (field instanceof PDFDropdown) {
     return {
       name: field.getName(),
-      type: 'dropdown',
-      value: field.getSelected()[0] ?? '',
+      type: "dropdown",
+      value: field.getSelected()[0] ?? "",
       options: field.getOptions(),
     };
   }
   if (field instanceof PDFRadioGroup) {
     return {
       name: field.getName(),
-      type: 'radio',
-      value: field.getSelected() ?? '',
+      type: "radio",
+      value: field.getSelected() ?? "",
       options: field.getOptions(),
     };
   }
   if (field instanceof PDFOptionList) {
     return {
       name: field.getName(),
-      type: 'option list',
-      value: field.getSelected().join(', '),
+      type: "option list",
+      value: field.getSelected().join(", "),
       options: field.getOptions(),
     };
   }
   if (field instanceof PDFButton) {
-    return { name: field.getName(), type: 'button' };
+    return { name: field.getName(), type: "button" };
   }
   if (field instanceof PDFSignature) {
-    return { name: field.getName(), type: 'signature' };
+    return { name: field.getName(), type: "signature" };
   }
   const named = field as { getName?: () => string };
-  return { name: named.getName?.() ?? 'unnamed field', type: 'unknown' };
+  return { name: named.getName?.() ?? "unnamed field", type: "unknown" };
 }
 
 /** Every interactive field in the document, with its current value. */
@@ -591,13 +587,13 @@ function findField(form: PDFForm, name: string) {
     const available = form
       .getFields()
       .map((f) => f.getName())
-      .join(', ');
+      .join(", ");
     throw new ToolError(
-      'unknown-field',
+      "unknown-field",
       `This PDF has no form field called "${name}".`,
       available
         ? `The fields in this document are: ${available}.`
-        : 'This document has no interactive form fields at all.',
+        : "This document has no interactive form fields at all.",
     );
   }
   return field;
@@ -621,14 +617,14 @@ export async function fillForm(
   const entries = Object.entries(values ?? {});
   if (entries.length === 0) {
     throw new ToolError(
-      'no-values',
-      'No field values were given, so the form would come back unchanged.',
-      'Fill in at least one of the fields listed above, then run it again.',
+      "no-values",
+      "No field values were given, so the form would come back unchanged.",
+      "Fill in at least one of the fields listed above, then run it again.",
     );
   }
 
   for (const [name, raw] of entries) {
-    const value = raw ?? '';
+    const value = raw ?? "";
     const field = findField(form, name);
 
     if (field instanceof PDFTextField) {
@@ -641,34 +637,34 @@ export async function fillForm(
       continue;
     }
     if (field instanceof PDFDropdown || field instanceof PDFRadioGroup) {
-      if (value.trim() === '') continue;
+      if (value.trim() === "") continue;
       const choices = field.getOptions();
       const choice = matchOption(value.trim(), choices);
       if (choice === undefined) {
         throw new ToolError(
-          'invalid-option',
+          "invalid-option",
           `"${value}" is not one of the choices for the field "${name}".`,
-          `Pick one of: ${choices.join(', ')}.`,
+          `Pick one of: ${choices.join(", ")}.`,
         );
       }
       field.select(choice);
       continue;
     }
     if (field instanceof PDFOptionList) {
-      if (value.trim() === '') continue;
+      if (value.trim() === "") continue;
       const choices = field.getOptions();
       const wanted = value
-        .split(',')
+        .split(",")
         .map((v) => v.trim())
-        .filter((v) => v !== '');
+        .filter((v) => v !== "");
       const resolved: string[] = [];
       for (const one of wanted) {
         const choice = matchOption(one, choices);
         if (choice === undefined) {
           throw new ToolError(
-            'invalid-option',
+            "invalid-option",
             `"${one}" is not one of the choices for the field "${name}".`,
-            `Pick one or more of: ${choices.join(', ')}.`,
+            `Pick one or more of: ${choices.join(", ")}.`,
           );
         }
         resolved.push(choice);
@@ -678,9 +674,9 @@ export async function fillForm(
     }
 
     throw new ToolError(
-      'unsupported-field',
+      "unsupported-field",
       `The field "${name}" is a ${describeField(field).type} field, which cannot be filled in with text.`,
-      'Leave this field alone. Buttons and signature fields need a PDF viewer, not a text value.',
+      "Leave this field alone. Buttons and signature fields need a PDF viewer, not a text value.",
     );
   }
 
@@ -694,13 +690,13 @@ export async function fillForm(
 
 /** Common paper sizes in points, so a size readout says something recognizable. */
 const PAPER: { name: string; w: number; h: number }[] = [
-  { name: 'Letter', w: 612, h: 792 },
-  { name: 'Legal', w: 612, h: 1008 },
-  { name: 'Tabloid', w: 792, h: 1224 },
-  { name: 'A3', w: 841.89, h: 1190.55 },
-  { name: 'A4', w: 595.28, h: 841.89 },
-  { name: 'A5', w: 419.53, h: 595.28 },
-  { name: 'A6', w: 297.64, h: 419.53 },
+  { name: "Letter", w: 612, h: 792 },
+  { name: "Legal", w: 612, h: 1008 },
+  { name: "Tabloid", w: 792, h: 1224 },
+  { name: "A3", w: 841.89, h: 1190.55 },
+  { name: "A4", w: 595.28, h: 841.89 },
+  { name: "A5", w: 419.53, h: 595.28 },
+  { name: "A6", w: 297.64, h: 419.53 },
 ];
 
 function round(n: number): number {
@@ -714,7 +710,7 @@ function paperName(width: number, height: number): string {
     if (portrait) return paper.name;
     if (landscape) return `${paper.name} landscape`;
   }
-  return '';
+  return "";
 }
 
 /** Read what is inside the document without changing a byte of it. */
@@ -724,7 +720,7 @@ export async function getPdfInfo(doc: Uint8Array): Promise<PdfInfo> {
   for (const page of source.getPages()) {
     const { width, height } = page.getSize();
     const name = paperName(width, height);
-    const label = `${round(width)} x ${round(height)} pt${name ? ` (${name})` : ''}`;
+    const label = `${round(width)} x ${round(height)} pt${name ? ` (${name})` : ""}`;
     counts.set(label, (counts.get(label) ?? 0) + 1);
   }
 
@@ -760,20 +756,20 @@ export async function getPdfInfo(doc: Uint8Array): Promise<PdfInfo> {
 /* ------------------------------------------------------------------ */
 
 const USAGE = [
-  'PDF Toolbox works on PDF files, not on typed text.',
-  '',
-  'Drop a .pdf file onto the input, or pick one, and this panel will report',
-  'what is inside it. The toolbox on the page can then merge several PDFs,',
-  'split or extract page ranges like 1-3,7,9-end, rotate pages by a quarter',
-  'turn, reorder or delete pages, stamp a text watermark across every page,',
-  'and fill in interactive form fields.',
-  '',
-  'Everything runs in this tab: your files and inputs never leave your device.',
-].join('\n');
+  "PDF Toolbox works on PDF files, not on typed text.",
+  "",
+  "Drop a .pdf file onto the input, or pick one, and this panel will report",
+  "what is inside it. The toolbox on the page can then merge several PDFs,",
+  "split or extract page ranges like 1-3,7,9-end, rotate pages by a quarter",
+  "turn, reorder or delete pages, stamp a text watermark across every page,",
+  "and fill in interactive form fields.",
+  "",
+  "Everything runs in this tab: your files and inputs never leave your device.",
+].join("\n");
 
 function humanBytes(n: number): string {
   if (n < 1024) return `${n} B`;
-  const units = ['KB', 'MB', 'GB'];
+  const units = ["KB", "MB", "GB"];
   let value = n / 1024;
   let unit = 0;
   while (value >= 1024 && unit < units.length - 1) {
@@ -785,12 +781,9 @@ function humanBytes(n: number): string {
 
 /** Format a PdfInfo as the plain text rows the generic shell renders. */
 export function formatPdfInfo(info: PdfInfo): string {
-  const rows: string[] = [
-    `Pages: ${info.pageCount}`,
-    `File size: ${humanBytes(info.byteLength)}`,
-  ];
+  const rows: string[] = [`Pages: ${info.pageCount}`, `File size: ${humanBytes(info.byteLength)}`];
   for (const size of info.pageSizes) {
-    rows.push(`Page size: ${size.label} (${size.count} ${size.count === 1 ? 'page' : 'pages'})`);
+    rows.push(`Page size: ${size.label} (${size.count} ${size.count === 1 ? "page" : "pages"})`);
   }
   if (info.title) rows.push(`Title: ${info.title}`);
   if (info.author) rows.push(`Author: ${info.author}`);
@@ -798,7 +791,7 @@ export function formatPdfInfo(info: PdfInfo): string {
   if (info.creator) rows.push(`Creator: ${info.creator}`);
   if (info.producer) rows.push(`Producer: ${info.producer}`);
   rows.push(`Form fields: ${info.formFieldCount}`);
-  return rows.join('\n');
+  return rows.join("\n");
 }
 
 /**
@@ -806,7 +799,7 @@ export function formatPdfInfo(info: PdfInfo): string {
  * this tool actually takes, because a PDF cannot be typed in.
  */
 export async function run(input: Uint8Array | string): Promise<string> {
-  if (typeof input === 'string') return USAGE;
+  if (typeof input === "string") return USAGE;
   return formatPdfInfo(await getPdfInfo(input));
 }
 

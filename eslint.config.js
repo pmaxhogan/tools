@@ -1,39 +1,47 @@
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import astro from 'eslint-plugin-astro';
-import vue from 'eslint-plugin-vue';
-import globals from 'globals';
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
+import astro from "eslint-plugin-astro";
+import vue from "eslint-plugin-vue";
+import globals from "globals";
+import eslintConfigPrettier from "eslint-config-prettier";
 
 export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...astro.configs.recommended,
-  ...vue.configs['flat/recommended'],
+  ...vue.configs["flat/recommended"],
   {
-    files: ['**/*.vue', 'src/lib/**', 'src/components/**'],
+    files: ["**/*.vue", "src/lib/**", "src/components/**"],
     languageOptions: {
       globals: globals.browser,
     },
   },
   {
-    files: ['scripts/**', 'worker/**', '*.config.{js,mjs,ts}'],
+    files: ["scripts/**", "worker/**", "*.config.{js,mjs,ts}"],
     languageOptions: {
       globals: { ...globals.node, ...globals.serviceworker },
     },
   },
   {
-    files: ['**/*.vue'],
+    files: ["**/*.vue"],
     languageOptions: {
       parserOptions: { parser: tseslint.parser },
     },
   },
   {
-    files: ['src/tools/**/*.ts'],
-    ignores: ['src/tools/**/*.test.ts'],
+    files: ["src/tools/**/*.ts"],
+    ignores: ["src/tools/**/*.test.ts"],
     rules: {
       // Rule 27: tool logic is pure — no DOM, no globals, no framework.
-      'no-restricted-globals': ['error', 'window', 'document', 'navigator', 'localStorage', 'fetch'],
-      'no-restricted-imports': ['error', { patterns: ['vue', '@/components/*', 'astro:*'] }],
+      "no-restricted-globals": [
+        "error",
+        "window",
+        "document",
+        "navigator",
+        "localStorage",
+        "fetch",
+      ],
+      "no-restricted-imports": ["error", { patterns: ["vue", "@/components/*", "astro:*"] }],
     },
   },
   {
@@ -42,16 +50,19 @@ export default tseslint.config(
     // prepare-*.mjs scripts stage under public/), never hand-authored, so
     // linting them is noise. They are gitignored; CI never sees them.
     ignores: [
-      'dist/',
-      'dist-worker-check/',
-      '.astro/',
-      '.wrangler/',
-      'node_modules/',
-      'src/components/ui/',
-      'public/ffmpeg/',
-      'public/models/',
-      'public/pyodide/',
-      'public/tesseract/',
+      "dist/",
+      "dist-worker-check/",
+      ".astro/",
+      ".wrangler/",
+      "node_modules/",
+      "src/components/ui/",
+      "public/ffmpeg/",
+      "public/models/",
+      "public/pyodide/",
+      "public/tesseract/",
     ],
-  }
+  },
+  // Last: turn off every stylistic rule that Prettier owns, so eslint and
+  // Prettier never fight over formatting (quotes, attribute wrapping, indent).
+  eslintConfigPrettier,
 );
