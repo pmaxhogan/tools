@@ -246,6 +246,51 @@ export function usesAt(freqHz: number): string[] {
   return [];
 }
 
+/**
+ * Every band, at any depth, whose range contains a frequency. Unlike bandPathAt
+ * this does not stop at the narrowest child: it descends into every matching
+ * branch, so overlapping allocations (Wi-Fi, Bluetooth, Zigbee and ovens all in
+ * the 2.4 GHz ISM band) are all returned.
+ */
+export function bandsCoveringAt(freqHz: number): Band[] {
+  const acc: Band[] = [];
+  const walk = (bands: Band[]) => {
+    for (const band of bands) {
+      if (inBand(freqHz, band)) {
+        acc.push(band);
+        if (band.children) walk(band.children);
+      }
+    }
+  };
+  walk(BANDS);
+  return acc;
+}
+
+/** How many uses the aggregated readout shows before it is cut for readability. */
+export const MAX_AGGREGATED_USES = 8;
+
+/**
+ * All uses that apply at a frequency, gathered from every band that covers the
+ * point and ordered most specific (narrowest band) first, deduplicated and
+ * capped. This is what the readout shows so a shared frequency lists all of its
+ * real world uses, not just the single narrowest one.
+ */
+export function aggregatedUses(freqHz: number): string[] {
+  const covering = bandsCoveringAt(freqHz).sort((a, b) => bandLogWidth(a) - bandLogWidth(b));
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const band of covering) {
+    for (const use of band.uses) {
+      if (!seen.has(use)) {
+        seen.add(use);
+        out.push(use);
+        if (out.length >= MAX_AGGREGATED_USES) return out;
+      }
+    }
+  }
+  return out;
+}
+
 /** A flat band with its depth, for the renderer to lay out as nested rows. */
 export interface FlatBand {
   band: Band;
@@ -570,7 +615,7 @@ export function describeFrequency(freqHz: number): Readout {
     colorHex: frequencyToColorHex(freqHz),
     path,
     pathLabel: bandPathLabel(path) || "Outside the modeled bands",
-    uses: usesAt(freqHz),
+    uses: aggregatedUses(freqHz),
   };
 }
 

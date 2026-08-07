@@ -24,7 +24,7 @@ import {
 } from "@/tools/electromagnetic-spectrum/index";
 import { Button } from "@/components/ui/button";
 import CopyButton from "../CopyButton.vue";
-import { Download, Link as LinkIcon, Check, Search } from "lucide-vue-next";
+import { Download, Link as LinkIcon, Check, Search, Maximize2, Minimize2 } from "lucide-vue-next";
 
 /**
  * Bespoke panel for the Electromagnetic Spectrum explorer.
@@ -50,6 +50,9 @@ const MIN_SPAN = 0.0015;
 
 const containerRef = ref<HTMLDivElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
+const readoutCardRef = ref<HTMLDivElement | null>(null);
+
+const isFullscreen = ref(false);
 
 const orientation = ref<"horizontal" | "vertical">("horizontal");
 const cssW = ref(800);
@@ -459,9 +462,12 @@ const readoutRows = computed<Row[]>(() => {
   return rows;
 });
 
-const copyableText = computed(() =>
-  readoutRows.value.map((r) => `${r.label}: ${r.value}`).join("\n"),
-);
+const copyableText = computed(() => {
+  const lines = readoutRows.value.map((r) => `${r.label}: ${r.value}`);
+  const uses = activeReadout.value?.uses ?? [];
+  if (uses.length) lines.push(`Common uses: ${uses.join(", ")}`);
+  return lines.join("\n");
+});
 
 /** Tooltip position, flipped away from the near edges. */
 const tooltipStyle = computed(() => {
@@ -760,6 +766,59 @@ async function copyLink() {
 }
 
 /* ------------------------------------------------------------------ */
+/* Fullscreen and outside-tap dismiss                                  */
+/* ------------------------------------------------------------------ */
+
+interface FsElement extends HTMLElement {
+  webkitRequestFullscreen?: () => Promise<void> | void;
+}
+interface FsDocument extends Document {
+  webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void> | void;
+}
+
+/**
+ * Toggle fullscreen on the spectrum container only, so the visualization fills
+ * the screen while the readout card and page chrome (which live outside the
+ * container) stay hidden behind it. The tooltip and a minimal control overlay
+ * live inside the container, so both remain usable in fullscreen.
+ */
+function toggleFullscreen() {
+  const el = containerRef.value as FsElement | null;
+  const doc = document as FsDocument;
+  if (!el) return;
+  const current = doc.fullscreenElement ?? doc.webkitFullscreenElement ?? null;
+  if (!current) {
+    const req = el.requestFullscreen ?? el.webkitRequestFullscreen;
+    if (req) Promise.resolve(req.call(el)).catch(() => {});
+  } else {
+    const exit = doc.exitFullscreen ?? doc.webkitExitFullscreen;
+    if (exit) Promise.resolve(exit.call(doc)).catch(() => {});
+  }
+}
+
+function onFullscreenChange() {
+  const doc = document as FsDocument;
+  const current = doc.fullscreenElement ?? doc.webkitFullscreenElement ?? null;
+  isFullscreen.value = current === containerRef.value;
+  // The viewport size changed, so relayout and re-evaluate orientation.
+  requestAnimationFrame(measure);
+}
+
+/** Clicking or tapping outside the spectrum and its readout clears the pin. */
+function onDocumentPointerDown(e: PointerEvent) {
+  if (pinnedFreq.value == null) return;
+  const target = e.target as Node | null;
+  if (!target) return;
+  if (containerRef.value?.contains(target)) return;
+  if (readoutCardRef.value?.contains(target)) return;
+  pinnedFreq.value = null;
+  if (hoverFreq.value == null) pointerPx.value = null;
+  scheduleFragmentWrite();
+  scheduleDraw();
+}
+
+/* ------------------------------------------------------------------ */
 /* Export                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -901,6 +960,9 @@ onMounted(() => {
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
   canvasRef.value?.addEventListener("wheel", onWheel, { passive: false });
+  document.addEventListener("fullscreenchange", onFullscreenChange);
+  document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+  document.addEventListener("pointerdown", onDocumentPointerDown);
   scheduleDraw();
 });
 
@@ -910,6 +972,9 @@ onUnmounted(() => {
   resizeObserver?.disconnect();
   themeObserver?.disconnect();
   canvasRef.value?.removeEventListener("wheel", onWheel);
+  document.removeEventListener("fullscreenchange", onFullscreenChange);
+  document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
+  document.removeEventListener("pointerdown", onDocumentPointerDown);
   if (fragTimer) clearTimeout(fragTimer);
 });
 </script>
@@ -949,6 +1014,17 @@ onUnmounted(() => {
           <LinkIcon v-else class="size-4" />
           {{ linkCopied ? "Copied" : "Link" }}
         </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          :aria-label="isFullscreen ? 'Exit fullscreen' : 'View fullscreen'"
+          :aria-pressed="isFullscreen"
+          @click="toggleFullscreen"
+        >
+          <Minimize2 v-if="isFullscreen" class="size-4" />
+          <Maximize2 v-else class="size-4" />
+          Full
+        </Button>
       </div>
     </div>
 
@@ -978,6 +1054,39 @@ onUnmounted(() => {
         @pointerleave="onPointerLeave"
         @keydown="onKeydown"
       />
+
+      <!-- Minimal controls shown only in fullscreen (toolbar is hidden there) -->
+      <div
+        v-if="isFullscreen"
+        class="absolute top-2 right-2 left-2 z-20 flex flex-wrap items-center gap-2"
+      >
+        <div class="relative min-w-[180px] flex-1">
+          <Search
+            class="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            v-model="jumpText"
+            type="text"
+            inputmode="text"
+            placeholder="Jump to 2.45 GHz, 550 nm, 10 keV"
+            aria-label="Jump to a frequency, wavelength, or energy"
+            class="h-9 w-full rounded-[10px] border bg-popover pr-3 pl-8 font-mono text-sm shadow-[var(--sh-md)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+            @keydown.enter="doJump"
+          />
+        </div>
+        <Button size="sm" @click="doJump"> Jump </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label="Exit fullscreen"
+          :aria-pressed="isFullscreen"
+          class="bg-popover"
+          @click="toggleFullscreen"
+        >
+          <Minimize2 class="size-4" />
+          Exit
+        </Button>
+      </div>
 
       <!-- Floating readout tooltip -->
       <div
@@ -1045,7 +1154,11 @@ onUnmounted(() => {
     </div>
 
     <!-- Persistent, copyable readout -->
-    <div v-if="activeReadout" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
+    <div
+      v-if="activeReadout"
+      ref="readoutCardRef"
+      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
+    >
       <div class="flex items-center justify-between px-3 pt-2">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Readout at {{ formatFrequency(activeReadout.frequencyHz) }}
@@ -1069,6 +1182,22 @@ onUnmounted(() => {
             />
             <span class="truncate font-mono text-sm tabular-nums">{{ row.value }}</span>
             <CopyButton :text="row.value" />
+          </div>
+        </div>
+        <div
+          v-if="activeReadout.uses.length"
+          class="flex items-start justify-between gap-3 px-3 py-2"
+        >
+          <div class="shrink-0 pt-0.5 text-xs text-muted-foreground">Common uses</div>
+          <div class="flex min-w-0 flex-1 flex-wrap justify-end gap-1.5">
+            <span
+              v-for="use in activeReadout.uses"
+              :key="use"
+              class="rounded-[6px] bg-card px-2 py-0.5 text-xs shadow-[var(--sh-sm)]"
+            >
+              {{ use }}
+            </span>
+            <CopyButton :text="activeReadout.uses.join(', ')" />
           </div>
         </div>
       </div>

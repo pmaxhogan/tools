@@ -80,6 +80,16 @@ const um = (v: number): number => fromWavelength(v * 1e-6);
  * Microwave rather than Radio. Radio holds ELF through VHF. Broadcast
  * allocations (FM 88 to 108 MHz, AM 530 to 1700 kHz, UHF TV 470 to 698 MHz) are
  * United States allocations and labeled as broadcast bands.
+ *
+ * The main hierarchy (top level down to the ITU bands) stays a strict, non
+ * overlapping partition, but the deepest named allocations may deliberately
+ * overlap where real spectrum sharing does. The 2.4 GHz ISM band is the clearest
+ * case: Wi-Fi channels, Bluetooth, Zigbee and microwave ovens all occupy it at
+ * once. Two logic helpers resolve this: bandPathAt walks the narrowest matching
+ * child at each level for a single most-specific path, and bandsCoveringAt
+ * collects every band that contains a frequency (at any depth) so the readout
+ * can aggregate all overlapping uses. When leaves overlap they are ordered
+ * widest first so the narrower ones draw on top.
  */
 export const BANDS: Band[] = [
   {
@@ -276,6 +286,22 @@ export const BANDS: Band[] = [
         uses: ["Mobile phones", "Wi-Fi at 2.4 GHz", "GPS", "UHF television"],
         children: [
           {
+            id: "uhf-70cm",
+            name: "Amateur 70 centimeter",
+            fLow: 420e6,
+            fHigh: 450e6,
+            uses: ["Amateur voice, repeaters and satellite work"],
+            children: [
+              {
+                id: "uhf-433ism",
+                name: "433 MHz ISM band",
+                fLow: 433.05e6,
+                fHigh: 434.79e6,
+                uses: ["Garage and gate remotes", "LoRa in Europe", "Weather stations"],
+              },
+            ],
+          },
+          {
             id: "uhf-tv",
             name: "UHF television",
             fLow: 470e6,
@@ -290,18 +316,99 @@ export const BANDS: Band[] = [
             uses: ["LTE and 5G phone service across many licensed bands"],
           },
           {
+            id: "uhf-900ism",
+            name: "900 MHz ISM band",
+            fLow: 902e6,
+            fHigh: 928e6,
+            uses: ["Cordless phones", "LoRa in North America", "Zigbee", "RFID and smart meters"],
+          },
+          {
             id: "uhf-gps",
             name: "GPS and GNSS",
             fLow: 1.164e9,
             fHigh: 1.61e9,
-            uses: ["Satellite navigation on the L1, L2 and L5 signals"],
+            uses: ["Satellite navigation"],
+            children: [
+              {
+                id: "gps-l5",
+                name: "GPS L5",
+                fLow: 1.16645e9,
+                fHigh: 1.18645e9,
+                uses: ["The 1176.45 MHz aviation safety navigation signal"],
+              },
+              {
+                id: "gps-l2",
+                name: "GPS L2",
+                fLow: 1.2176e9,
+                fHigh: 1.2376e9,
+                uses: ["The 1227.60 MHz second civilian navigation signal"],
+              },
+              {
+                id: "gps-l1",
+                name: "GPS L1",
+                fLow: 1.56542e9,
+                fHigh: 1.58542e9,
+                uses: ["The 1575.42 MHz main GPS signal your phone uses"],
+              },
+            ],
+          },
+          {
+            id: "uhf-hline",
+            name: "21 cm hydrogen line",
+            fLow: 1.42035e9,
+            fHigh: 1.42046e9,
+            uses: ["The 1420.405 MHz hydrogen emission line used in radio astronomy"],
           },
           {
             id: "uhf-ism24",
             name: "2.4 GHz ISM band",
             fLow: 2.4e9,
             fHigh: 2.4835e9,
-            uses: ["Wi-Fi", "Bluetooth", "Zigbee", "Microwave ovens near 2.45 GHz"],
+            uses: ["License free 2.4 GHz band shared by many devices"],
+            children: [
+              {
+                id: "ism24-bt",
+                name: "Bluetooth",
+                fLow: 2.4e9,
+                fHigh: 2.4835e9,
+                uses: ["Bluetooth and Bluetooth Low Energy", "Wireless earbuds and keyboards"],
+              },
+              {
+                id: "ism24-zigbee",
+                name: "Zigbee and Thread",
+                fLow: 2.405e9,
+                fHigh: 2.48e9,
+                uses: ["Zigbee", "Thread and Matter smart home devices"],
+              },
+              {
+                id: "ism24-wifi1",
+                name: "Wi-Fi channel 1",
+                fLow: 2.401e9,
+                fHigh: 2.423e9,
+                uses: ["2.4 GHz Wi-Fi centered on 2412 MHz"],
+              },
+              {
+                id: "ism24-wifi6",
+                name: "Wi-Fi channel 6",
+                fLow: 2.426e9,
+                fHigh: 2.448e9,
+                uses: ["2.4 GHz Wi-Fi centered on 2437 MHz"],
+              },
+              {
+                id: "ism24-wifi11",
+                name: "Wi-Fi channel 11",
+                fLow: 2.451e9,
+                fHigh: 2.473e9,
+                uses: ["2.4 GHz Wi-Fi centered on 2462 MHz"],
+              },
+              {
+                id: "ism24-oven",
+                name: "Microwave ovens",
+                fLow: 2.45e9,
+                fHigh: 2.46e9,
+                uses: ["Microwave ovens heat food at about 2.45 GHz"],
+              },
+            ],
           },
         ],
       },
@@ -325,6 +432,36 @@ export const BANDS: Band[] = [
             fLow: 5.15e9,
             fHigh: 7.125e9,
             uses: ["The 5 GHz and 6 GHz Wi-Fi bands"],
+            children: [
+              {
+                id: "wifi-unii1",
+                name: "UNII-1 (5.2 GHz)",
+                fLow: 5.15e9,
+                fHigh: 5.25e9,
+                uses: ["Indoor 5 GHz Wi-Fi channels 36 to 48"],
+              },
+              {
+                id: "wifi-unii2",
+                name: "UNII-2 (5.5 GHz, DFS)",
+                fLow: 5.25e9,
+                fHigh: 5.725e9,
+                uses: ["5 GHz Wi-Fi channels that must avoid weather radar"],
+              },
+              {
+                id: "wifi-unii3",
+                name: "UNII-3 (5.8 GHz)",
+                fLow: 5.725e9,
+                fHigh: 5.85e9,
+                uses: ["Outdoor capable 5 GHz Wi-Fi channels"],
+              },
+              {
+                id: "wifi-6e",
+                name: "6 GHz (Wi-Fi 6E and 7)",
+                fLow: 5.925e9,
+                fHigh: 7.125e9,
+                uses: ["The newest wide Wi-Fi band with many clean channels"],
+              },
+            ],
           },
           {
             id: "shf-xband",
@@ -362,6 +499,13 @@ export const BANDS: Band[] = [
             fLow: 37e9,
             fHigh: 40e9,
             uses: ["High capacity 5G in the n260 band"],
+          },
+          {
+            id: "ehf-wigig",
+            name: "60 GHz WiGig",
+            fLow: 57e9,
+            fHigh: 71e9,
+            uses: ["Very fast short range WiGig links", "Oxygen absorbs strongly here"],
           },
           {
             id: "ehf-autoradar",
@@ -421,7 +565,23 @@ export const BANDS: Band[] = [
         name: "LF",
         fLow: 30e3,
         fHigh: 300e3,
-        uses: ["Longwave AM radio", "Time signals such as WWVB at 60 kHz", "RFID tags"],
+        uses: ["Longwave AM radio", "Aircraft nondirectional beacons", "RFID tags"],
+        children: [
+          {
+            id: "lf-wwvb",
+            name: "WWVB 60 kHz time signal",
+            fLow: 59.5e3,
+            fHigh: 60.5e3,
+            uses: ["The 60 kHz signal that sets radio controlled atomic clocks"],
+          },
+          {
+            id: "lf-2200m",
+            name: "Amateur 2200 meter",
+            fLow: 135.7e3,
+            fHigh: 137.8e3,
+            uses: ["The lowest amateur radio allocation"],
+          },
+        ],
       },
       {
         id: "radio-mf",
@@ -431,11 +591,25 @@ export const BANDS: Band[] = [
         uses: ["AM broadcast radio", "Maritime and aviation beacons"],
         children: [
           {
+            id: "mf-630m",
+            name: "Amateur 630 meter",
+            fLow: 472e3,
+            fHigh: 479e3,
+            uses: ["A low frequency amateur radio band"],
+          },
+          {
             id: "mf-am",
             name: "AM broadcast",
             fLow: 530e3,
             fHigh: 1700e3,
             uses: ["Mediumwave AM radio stations in the United States"],
+          },
+          {
+            id: "mf-160m",
+            name: "Amateur 160 meter",
+            fLow: 1.8e6,
+            fHigh: 2.0e6,
+            uses: ["The amateur top band, popular at night"],
           },
         ],
       },
@@ -445,6 +619,131 @@ export const BANDS: Band[] = [
         fLow: 3e6,
         fHigh: 30e6,
         uses: ["Shortwave and amateur radio", "Long distance aviation and marine radio", "RFID"],
+        children: [
+          {
+            id: "hf-80m",
+            name: "Amateur 80 meter",
+            fLow: 3.5e6,
+            fHigh: 4.0e6,
+            uses: ["Regional amateur voice and Morse code, best at night"],
+          },
+          {
+            id: "hf-49m",
+            name: "Shortwave broadcast (49 m)",
+            fLow: 5.9e6,
+            fHigh: 6.2e6,
+            uses: ["International shortwave broadcasting"],
+          },
+          {
+            id: "hf-40m",
+            name: "Amateur 40 meter",
+            fLow: 7.0e6,
+            fHigh: 7.3e6,
+            uses: ["A reliable amateur band day and night"],
+          },
+          {
+            id: "hf-31m",
+            name: "Shortwave broadcast (31 m)",
+            fLow: 9.4e6,
+            fHigh: 9.9e6,
+            uses: ["The most used international shortwave broadcast band"],
+          },
+          {
+            id: "hf-30m",
+            name: "Amateur 30 meter",
+            fLow: 10.1e6,
+            fHigh: 10.15e6,
+            uses: ["A narrow Morse code and data only amateur band"],
+          },
+          {
+            id: "hf-20m",
+            name: "Amateur 20 meter",
+            fLow: 14.0e6,
+            fHigh: 14.35e6,
+            uses: ["The classic long distance amateur band"],
+            children: [
+              {
+                id: "hf-20m-cw",
+                name: "20 m CW and data",
+                fLow: 14.0e6,
+                fHigh: 14.15e6,
+                uses: ["Morse code and digital modes"],
+              },
+              {
+                id: "hf-20m-ssb",
+                name: "20 m SSB voice",
+                fLow: 14.15e6,
+                fHigh: 14.35e6,
+                uses: ["Single sideband voice contacts worldwide"],
+              },
+            ],
+          },
+          {
+            id: "hf-17m",
+            name: "Amateur 17 meter",
+            fLow: 18.068e6,
+            fHigh: 18.168e6,
+            uses: ["A quieter amateur voice and data band"],
+          },
+          {
+            id: "hf-15m",
+            name: "Amateur 15 meter",
+            fLow: 21.0e6,
+            fHigh: 21.45e6,
+            uses: ["A daytime long distance amateur band"],
+          },
+          {
+            id: "hf-cb",
+            name: "CB radio",
+            fLow: 26.965e6,
+            fHigh: 27.405e6,
+            uses: ["License free Citizens Band radio, 40 channels"],
+            children: [
+              {
+                id: "hf-cb-19",
+                name: "CB Channel 19",
+                fLow: 27.18e6,
+                fHigh: 27.19e6,
+                uses: ["The unofficial trucker highway channel at 27.185 MHz"],
+              },
+            ],
+          },
+          {
+            id: "hf-10m",
+            name: "Amateur 10 meter",
+            fLow: 28.0e6,
+            fHigh: 29.7e6,
+            uses: ["Long distance amateur contacts when the sun is active"],
+          },
+          {
+            id: "hf-wwv5",
+            name: "WWV 5 MHz time signal",
+            fLow: 4.999e6,
+            fHigh: 5.001e6,
+            uses: ["Standard time and frequency broadcast from WWV"],
+          },
+          {
+            id: "hf-wwv10",
+            name: "WWV 10 MHz time signal",
+            fLow: 9.999e6,
+            fHigh: 10.001e6,
+            uses: ["Standard time and frequency broadcast from WWV"],
+          },
+          {
+            id: "hf-wwv15",
+            name: "WWV 15 MHz time signal",
+            fLow: 14.999e6,
+            fHigh: 15.001e6,
+            uses: ["Standard time and frequency broadcast from WWV"],
+          },
+          {
+            id: "hf-wwv20",
+            name: "WWV 20 MHz time signal",
+            fLow: 19.999e6,
+            fHigh: 20.001e6,
+            uses: ["Standard time and frequency broadcast from WWV"],
+          },
+        ],
       },
       {
         id: "radio-vhf",
@@ -473,6 +772,29 @@ export const BANDS: Band[] = [
             fLow: 108e6,
             fHigh: 137e6,
             uses: ["Aircraft to ground voice communication"],
+            children: [
+              {
+                id: "air-nav",
+                name: "VOR and ILS navigation",
+                fLow: 108e6,
+                fHigh: 118e6,
+                uses: ["Aircraft navigation beacons and landing systems"],
+              },
+              {
+                id: "air-voice",
+                name: "Air traffic control voice",
+                fLow: 118e6,
+                fHigh: 137e6,
+                uses: ["Pilot to controller voice communication"],
+              },
+              {
+                id: "air-guard",
+                name: "121.5 MHz emergency guard",
+                fLow: 121.475e6,
+                fHigh: 121.525e6,
+                uses: ["The international aviation emergency and distress frequency"],
+              },
+            ],
           },
           {
             id: "vhf-amateur",
@@ -480,6 +802,15 @@ export const BANDS: Band[] = [
             fLow: 144e6,
             fHigh: 148e6,
             uses: ["Amateur radio handhelds and repeaters"],
+            children: [
+              {
+                id: "vhf-2m-calling",
+                name: "146.52 MHz calling",
+                fLow: 146.505e6,
+                fHigh: 146.535e6,
+                uses: ["The 2 meter FM simplex calling frequency"],
+              },
+            ],
           },
           {
             id: "vhf-marine",
@@ -487,6 +818,43 @@ export const BANDS: Band[] = [
             fLow: 156e6,
             fHigh: 162e6,
             uses: ["Ship to ship and ship to shore radio", "Weather broadcasts"],
+            children: [
+              {
+                id: "marine-ch70",
+                name: "Marine Channel 70 DSC",
+                fLow: 156.5e6,
+                fHigh: 156.55e6,
+                uses: ["Digital Selective Calling for automated distress alerts"],
+              },
+              {
+                id: "marine-ch16",
+                name: "Marine Channel 16 distress",
+                fLow: 156.75e6,
+                fHigh: 156.85e6,
+                uses: ["The 156.8 MHz international hailing and distress channel"],
+              },
+            ],
+          },
+          {
+            id: "vhf-noaa",
+            name: "NOAA weather radio",
+            fLow: 162.4e6,
+            fHigh: 162.55e6,
+            uses: ["Continuous weather broadcasts and emergency alerts"],
+          },
+          {
+            id: "vhf-1p25m",
+            name: "Amateur 1.25 meter",
+            fLow: 222e6,
+            fHigh: 225e6,
+            uses: ["A regional amateur VHF band"],
+          },
+          {
+            id: "vhf-milair-guard",
+            name: "243.0 MHz military guard",
+            fLow: 242.95e6,
+            fHigh: 243.05e6,
+            uses: ["The military aviation emergency and distress frequency"],
           },
         ],
       },

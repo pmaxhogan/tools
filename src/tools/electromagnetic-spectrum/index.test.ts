@@ -3,8 +3,10 @@ import { ToolError } from "../types";
 import {
   AXIS_MAX_HZ,
   AXIS_MIN_HZ,
+  aggregatedUses,
   bandPathAt,
   bandPathLabel,
+  bandsCoveringAt,
   describeFrequency,
   energyEvToFrequency,
   flattenBands,
@@ -132,8 +134,36 @@ describe("band lookup", () => {
     expect(bandPathLabel(bandPathAt(100e6))).toBe("Radio > VHF > FM broadcast");
   });
 
-  it("resolves the 2.4 GHz ISM band as the narrowest match", () => {
-    expect(bandPathLabel(bandPathAt(2.45e9))).toBe("Microwave > UHF > 2.4 GHz ISM band");
+  it("resolves 2.45 GHz to the narrowest leaf (microwave ovens) inside the ISM band", () => {
+    expect(bandPathLabel(bandPathAt(2.45e9))).toBe(
+      "Microwave > UHF > 2.4 GHz ISM band > Microwave ovens",
+    );
+  });
+
+  it("resolves a Wi-Fi channel 6 center to its channel leaf", () => {
+    expect(bandPathLabel(bandPathAt(2.437e9))).toBe(
+      "Microwave > UHF > 2.4 GHz ISM band > Wi-Fi channel 6",
+    );
+  });
+
+  it("resolves a deep aviation leaf: 121.5 MHz emergency guard", () => {
+    expect(bandPathLabel(bandPathAt(121.5e6))).toBe(
+      "Radio > VHF > Airband > 121.5 MHz emergency guard",
+    );
+    expect(usesAt(121.5e6)).toContain(
+      "The international aviation emergency and distress frequency",
+    );
+  });
+
+  it("resolves GPS L1 and the 21 cm hydrogen line as named leaves", () => {
+    expect(bandPathLabel(bandPathAt(1575.42e6))).toBe("Microwave > UHF > GPS and GNSS > GPS L1");
+    expect(bandPathLabel(bandPathAt(1420.405e6))).toBe("Microwave > UHF > 21 cm hydrogen line");
+  });
+
+  it("resolves CB Channel 19 inside the CB band inside HF", () => {
+    expect(bandPathLabel(bandPathAt(27.185e6))).toBe(
+      "Radio > HF (shortwave) > CB radio > CB Channel 19",
+    );
   });
 
   it("resolves visible green at 550 nm", () => {
@@ -161,6 +191,37 @@ describe("band lookup", () => {
         }
       }
     }
+  });
+});
+
+describe("multi-use aggregation", () => {
+  it("returns every overlapping allocation at 2.45 GHz, most specific first", () => {
+    const uses = aggregatedUses(2.45e9);
+    expect(uses.length).toBeGreaterThan(1);
+    // The narrowest leaf (microwave ovens) comes first.
+    expect(uses[0]).toBe("Microwave ovens heat food at about 2.45 GHz");
+    // And the shared 2.4 GHz occupants are all present.
+    expect(uses).toContain("Bluetooth and Bluetooth Low Energy");
+    expect(uses).toContain("Zigbee");
+  });
+
+  it("gathers overlapping bands with bandsCoveringAt", () => {
+    const ids = bandsCoveringAt(2.45e9).map((b) => b.id);
+    expect(ids).toContain("microwave");
+    expect(ids).toContain("uhf");
+    expect(ids).toContain("uhf-ism24");
+    expect(ids).toContain("ism24-oven");
+    expect(ids).toContain("ism24-bt");
+    // Wi-Fi channel 6 ends at 2448 MHz, so 2450 MHz is not inside it.
+    expect(ids).not.toContain("ism24-wifi6");
+  });
+
+  it("caps the aggregated list for readability", () => {
+    expect(aggregatedUses(2.437e9).length).toBeLessThanOrEqual(8);
+  });
+
+  it("still returns a single use for an unshared frequency", () => {
+    expect(aggregatedUses(100e6)).toContain("FM radio stations in the United States");
   });
 });
 
@@ -279,12 +340,13 @@ describe("formatting", () => {
 });
 
 describe("describeFrequency and run", () => {
-  it("builds a full readout for Wi-Fi", () => {
+  it("builds a full readout for the 2.45 GHz ISM band", () => {
     const r = describeFrequency(2.45e9);
-    expect(r.pathLabel).toBe("Microwave > UHF > 2.4 GHz ISM band");
+    expect(r.pathLabel).toBe("Microwave > UHF > 2.4 GHz ISM band > Microwave ovens");
     expect(r.ionizing).toBe(false);
     expect(r.colorHex).toBeNull();
-    expect(r.uses.length).toBeGreaterThan(0);
+    // The aggregated readout lists more than the single narrowest use.
+    expect(r.uses.length).toBeGreaterThan(1);
   });
 
   it("run() reads the query option", () => {
@@ -294,7 +356,7 @@ describe("describeFrequency and run", () => {
   });
 
   it("run() falls back to a string input, then to 550 nm", () => {
-    expect(run("2.45 GHz", {}).Band).toBe("Microwave > UHF > 2.4 GHz ISM band");
+    expect(run("2.45 GHz", {}).Band).toBe("Microwave > UHF > 2.4 GHz ISM band > Microwave ovens");
     expect(run(undefined, {}).Band).toBe("Visible light > Green");
   });
 
