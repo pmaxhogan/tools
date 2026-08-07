@@ -30,6 +30,12 @@ export interface Drag {
   y2: number;
 }
 
+/** A single point in image pixel space. Where the user tapped. */
+export interface Point {
+  x: number;
+  y: number;
+}
+
 /** Red, green, blue. Alpha is always forced opaque by a redaction. */
 export type Rgb = [number, number, number];
 
@@ -117,6 +123,217 @@ export function normalizeRect(drag: Drag, width?: number, height?: number): Rect
   }
 
   return { x: left, y: top, w: right - left, h: bottom - top };
+}
+
+/* ------------------------------------------------------------------ */
+/* smart tap selection                                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The minimum an image needs to expose for the blob selector: a flat RGBA
+ * buffer and its dimensions. `ImageData` satisfies this directly, so the panel
+ * hands its pristine pixels straight in, and a test can build a tiny literal.
+ */
+export interface ImageLike {
+  data: Uint8ClampedArray | Uint8Array | number[];
+  width: number;
+  height: number;
+}
+
+/**
+ * The "blob under the tap" selector for anything that is not text.
+ *
+ * Starting from the tapped pixel, this grows a 4-connected region of pixels
+ * whose color is within `threshold` of the tapped pixel's color, then returns
+ * the bounding rectangle of that region. Similarity is the sum of the absolute
+ * per channel differences across red, green, blue, and alpha, so a flat colored
+ * chip, badge, or panel is selected whole while a differently colored
+ * background stops the fill at its edge.
+ *
+ * It is deterministic: the same image, point, and threshold always return the
+ * same rectangle. Returns null when the point falls outside the image, so the
+ * caller can treat an off image tap as a no-op.
+ *
+ * @param threshold color tolerance, 0 selects only exactly matching pixels.
+ */
+export function floodFillBounds(image: ImageLike, point: Point, threshold: number): Rect | null {
+  const width = Math.max(0, Math.trunc(image.width));
+  const height = Math.max(0, Math.trunc(image.height));
+  if (width <= 0 || height <= 0) return null;
+
+  const startX = toInt(point.x);
+  const startY = toInt(point.y);
+  if (startX < 0 || startY < 0 || startX >= width || startY >= height) return null;
+
+  const data = image.data;
+  const tol = Math.max(0, Number.isFinite(threshold) ? threshold : 0);
+
+  const at = (x: number, y: number): number => (y * width + x) * 4;
+  const seed = at(startX, startY);
+  const sr = data[seed] ?? 0;
+  const sg = data[seed + 1] ?? 0;
+  const sb = data[seed + 2] ?? 0;
+  const sa = data[seed + 3] ?? 0;
+
+  const similar = (i: number): boolean =>
+    Math.abs((data[i] ?? 0) - sr) +
+      Math.abs((data[i + 1] ?? 0) - sg) +
+      Math.abs((data[i + 2] ?? 0) - sb) +
+      Math.abs((data[i + 3] ?? 0) - sa) <=
+    tol;
+
+  const visited = new Uint8Array(width * height);
+  const stack: number[] = [startX, startY];
+  visited[startY * width + startX] = 1;
+
+  let minX = startX;
+  let maxX = startX;
+  let minY = startY;
+  let maxY = startY;
+
+  while (stack.length > 0) {
+    const y = stack.pop() as number;
+    const x = stack.pop() as number;
+
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+
+    // 4-connected neighbors.
+    const neighbors = [
+      [x - 1, y],
+      [x + 1, y],
+      [x, y - 1],
+      [x, y + 1],
+    ];
+    for (const [nx, ny] of neighbors) {
+      if (nx! < 0 || ny! < 0 || nx! >= width || ny! >= height) continue;
+      const flat = ny! * width + nx!;
+      if (visited[flat]) continue;
+      if (!similar(at(nx!, ny!))) continue;
+      visited[flat] = 1;
+      stack.push(nx!, ny!);
+    }
+  }
+
+  // Pixel coordinates are inclusive, so a single pixel is width and height 1.
+  return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+}
+
+/**
+ * One OCR word paired with the line it sits on. The panel builds these from a
+ * recognition result; `boxAtPoint` reads them. Keeping both rectangles means a
+ * single tap can redact either the tapped word or its whole line without
+ * re-deriving anything.
+ */
+export interface TextBox {
+  /** The tight rectangle around the single word. */
+  word: Rect;
+  /** The rectangle around the line the word belongs to. */
+  line: Rect;
+}
+
+/** The subset of a tesseract page this module reads to build TextBoxes. */
+interface OcrTapBbox {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+interface OcrTapWord {
+  bbox?: OcrTapBbox;
+}
+interface OcrTapLine {
+  bbox?: OcrTapBbox;
+  words?: (OcrTapWord | null | undefined)[];
+}
+interface OcrTapParagraph {
+  lines?: (OcrTapLine | null | undefined)[];
+}
+interface OcrTapBlock {
+  paragraphs?: (OcrTapParagraph | null | undefined)[];
+}
+export interface OcrTapPage {
+  blocks?: (OcrTapBlock | null | undefined)[] | null;
+}
+
+function bboxToRect(bbox: OcrTapBbox | undefined): Rect | null {
+  if (!bbox) return null;
+  const x = toInt(bbox.x0);
+  const y = toInt(bbox.y0);
+  const w = toInt(bbox.x1) - x;
+  const h = toInt(bbox.y1) - y;
+  if (w <= 0 || h <= 0) return null;
+  return { x, y, w, h };
+}
+
+/**
+ * Flatten a recognition result into a flat list of word boxes, each carrying
+ * the rectangle of its own line. Words or lines with a degenerate box are
+ * skipped so the tap picker never has to consider a zero size rectangle. This
+ * redeclares the page shape rather than importing the OCR tool, so the
+ * redaction tool stays independently deletable (rule 13).
+ */
+export function collectTextBoxes(page: OcrTapPage | null | undefined): TextBox[] {
+  const boxes: TextBox[] = [];
+  for (const block of page?.blocks ?? []) {
+    for (const paragraph of block?.paragraphs ?? []) {
+      for (const line of paragraph?.lines ?? []) {
+        const lineRect = bboxToRect(line?.bbox);
+        if (!lineRect) continue;
+        for (const word of line?.words ?? []) {
+          const wordRect = bboxToRect(word?.bbox);
+          if (!wordRect) continue;
+          boxes.push({ word: wordRect, line: lineRect });
+        }
+      }
+    }
+  }
+  return boxes;
+}
+
+/** How far a point sits from a rectangle, zero when the point is inside it. */
+function pointRectDistance(point: Point, rect: Rect): number {
+  const dx = Math.max(rect.x - point.x, 0, point.x - (rect.x + rect.w));
+  const dy = Math.max(rect.y - point.y, 0, point.y - (rect.y + rect.h));
+  return Math.hypot(dx, dy);
+}
+
+/** How a tap resolves to a rectangle: the single word or its whole line. */
+export type TapTarget = "word" | "line";
+
+/**
+ * The text selector for a tap. Given the word boxes from OCR and a point, it
+ * returns the rectangle a tap should redact: the word (or its line, per mode)
+ * that contains the point, or failing that the nearest one within
+ * `maxDistance`. A box that contains the point scores distance zero, so it
+ * always wins over a merely nearby one.
+ *
+ * Returns null when there are no boxes, or when the nearest box is further than
+ * `maxDistance`, which is the panel's signal to fall back to the blob selector.
+ */
+export function boxAtPoint(
+  boxes: TextBox[],
+  point: Point,
+  mode: TapTarget = "word",
+  maxDistance: number = Number.POSITIVE_INFINITY,
+): Rect | null {
+  let best: Rect | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  for (const box of boxes) {
+    const rect = mode === "line" ? box.line : box.word;
+    if (!rect) continue;
+    const distance = pointRectDistance(point, rect);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = rect;
+    }
+  }
+
+  if (!best || bestDistance > maxDistance) return null;
+  return { ...best };
 }
 
 /* ------------------------------------------------------------------ */

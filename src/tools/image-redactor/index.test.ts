@@ -3,13 +3,18 @@ import { ToolError } from "../types";
 import {
   applyPixelateRect,
   applySolidRect,
+  boxAtPoint,
   clampRect,
+  collectTextBoxes,
+  floodFillBounds,
   mulberry32,
   normalizeRect,
   run,
   sniffImageFormat,
   suggestExportName,
+  type ImageLike,
   type Rect,
+  type TextBox,
 } from "./index";
 
 /* ------------------------------------------------------------------ */
@@ -118,6 +123,217 @@ describe("clampRect", () => {
 
   it("returns null for a zero size rectangle", () => {
     expect(clampRect({ x: 2, y: 2, w: 0, h: 5 }, W, H)).toBeNull();
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* floodFillBounds                                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A flat background with a solid rectangle of a second color painted on it.
+ * The two colors are far apart, so a modest threshold selects the rectangle
+ * and nothing of the background.
+ */
+function blobImage(
+  width: number,
+  height: number,
+  rect: Rect,
+  bg: [number, number, number, number],
+  fg: [number, number, number, number],
+): ImageLike {
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      const inside = x >= rect.x && x < rect.x + rect.w && y >= rect.y && y < rect.y + rect.h;
+      const [r, g, b, a] = inside ? fg : bg;
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
+      data[i + 3] = a;
+    }
+  }
+  return { data, width, height };
+}
+
+describe("floodFillBounds", () => {
+  it("selects a solid rectangle painted on a different background", () => {
+    const rect = { x: 2, y: 3, w: 4, h: 3 };
+    const image = blobImage(12, 12, rect, [10, 10, 10, 255], [200, 40, 40, 255]);
+    expect(floodFillBounds(image, { x: 3, y: 4 }, 30)).toEqual(rect);
+  });
+
+  it("returns the tapped background region, not the shape sitting in it", () => {
+    // Tapping the background selects everything except the inner rectangle, so
+    // the bounds span the whole image.
+    const rect = { x: 4, y: 4, w: 2, h: 2 };
+    const image = blobImage(10, 10, rect, [240, 240, 240, 255], [0, 0, 0, 255]);
+    expect(floodFillBounds(image, { x: 0, y: 0 }, 20)).toEqual({ x: 0, y: 0, w: 10, h: 10 });
+  });
+
+  it("selects only the tapped pixel when the threshold is zero and neighbors differ", () => {
+    const data = new Uint8ClampedArray(3 * 3 * 4);
+    // A gradient so no two pixels share a color.
+    for (let i = 0; i < 9; i++) {
+      data[i * 4] = i * 20;
+      data[i * 4 + 3] = 255;
+    }
+    const image: ImageLike = { data, width: 3, height: 3 };
+    expect(floodFillBounds(image, { x: 1, y: 1 }, 0)).toEqual({ x: 1, y: 1, w: 1, h: 1 });
+  });
+
+  it("rounds a fractional tap to the nearest pixel", () => {
+    const rect = { x: 1, y: 1, w: 3, h: 3 };
+    const image = blobImage(8, 8, rect, [0, 0, 0, 255], [255, 255, 255, 255]);
+    expect(floodFillBounds(image, { x: 2.4, y: 2.6 }, 30)).toEqual(rect);
+  });
+
+  it("returns null when the tap lands outside the image", () => {
+    const image = blobImage(6, 6, { x: 0, y: 0, w: 2, h: 2 }, [0, 0, 0, 255], [1, 1, 1, 255]);
+    expect(floodFillBounds(image, { x: -1, y: 3 }, 10)).toBeNull();
+    expect(floodFillBounds(image, { x: 6, y: 6 }, 10)).toBeNull();
+  });
+
+  it("finds a blob boundary by alpha even when the color underneath matches", () => {
+    // Fully transparent field with an opaque black square. RGB is identical
+    // everywhere, so only the alpha term in the difference finds the edge.
+    const width = 8;
+    const height = 8;
+    const data = new Uint8ClampedArray(width * height * 4);
+    const rect = { x: 2, y: 2, w: 3, h: 3 };
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const i = (y * width + x) * 4;
+        const inside = x >= rect.x && x < rect.x + rect.w && y >= rect.y && y < rect.y + rect.h;
+        data[i + 3] = inside ? 255 : 0;
+      }
+    }
+    expect(floodFillBounds({ data, width, height }, { x: 3, y: 3 }, 40)).toEqual(rect);
+  });
+
+  it("is deterministic across repeated calls", () => {
+    const rect = { x: 2, y: 2, w: 3, h: 2 };
+    const image = blobImage(9, 9, rect, [30, 60, 90, 255], [200, 210, 220, 255]);
+    const a = floodFillBounds(image, { x: 3, y: 3 }, 40);
+    const b = floodFillBounds(image, { x: 3, y: 3 }, 40);
+    expect(a).toEqual(b);
+    expect(a).toEqual(rect);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* collectTextBoxes and boxAtPoint                                     */
+/* ------------------------------------------------------------------ */
+
+function tapPage() {
+  return {
+    blocks: [
+      {
+        paragraphs: [
+          {
+            lines: [
+              {
+                bbox: { x0: 10, y0: 10, x1: 90, y1: 24 },
+                words: [
+                  { bbox: { x0: 10, y0: 10, x1: 40, y1: 24 } },
+                  { bbox: { x0: 50, y0: 10, x1: 90, y1: 24 } },
+                ],
+              },
+              {
+                bbox: { x0: 10, y0: 40, x1: 70, y1: 54 },
+                words: [{ bbox: { x0: 10, y0: 40, x1: 70, y1: 54 } }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+describe("collectTextBoxes", () => {
+  it("flattens every word and pairs it with its line rectangle", () => {
+    const boxes = collectTextBoxes(tapPage());
+    expect(boxes).toHaveLength(3);
+    expect(boxes[0]).toEqual({
+      word: { x: 10, y: 10, w: 30, h: 14 },
+      line: { x: 10, y: 10, w: 80, h: 14 },
+    });
+    // Both words on the first line share that line's rectangle.
+    expect(boxes[0]!.line).toEqual(boxes[1]!.line);
+  });
+
+  it("returns an empty list for a page with no blocks", () => {
+    expect(collectTextBoxes(null)).toEqual([]);
+    expect(collectTextBoxes({ blocks: null })).toEqual([]);
+    expect(collectTextBoxes({ blocks: [] })).toEqual([]);
+  });
+
+  it("skips words and lines with a degenerate bounding box", () => {
+    const boxes = collectTextBoxes({
+      blocks: [
+        {
+          paragraphs: [
+            {
+              lines: [
+                {
+                  bbox: { x0: 0, y0: 0, x1: 0, y1: 10 }, // zero width line, dropped
+                  words: [{ bbox: { x0: 0, y0: 0, x1: 5, y1: 10 } }],
+                },
+                {
+                  bbox: { x0: 0, y0: 20, x1: 30, y1: 34 },
+                  words: [
+                    { bbox: { x0: 0, y0: 20, x1: 0, y1: 34 } }, // zero width word, dropped
+                    { bbox: { x0: 10, y0: 20, x1: 30, y1: 34 } },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    expect(boxes).toHaveLength(1);
+    expect(boxes[0]!.word).toEqual({ x: 10, y: 20, w: 20, h: 14 });
+  });
+});
+
+describe("boxAtPoint", () => {
+  const boxes: TextBox[] = collectTextBoxes(tapPage());
+
+  it("returns the word box containing the point in word mode", () => {
+    expect(boxAtPoint(boxes, { x: 20, y: 15 }, "word")).toEqual({ x: 10, y: 10, w: 30, h: 14 });
+  });
+
+  it("returns the whole line box containing the point in line mode", () => {
+    expect(boxAtPoint(boxes, { x: 20, y: 15 }, "line")).toEqual({ x: 10, y: 10, w: 80, h: 14 });
+  });
+
+  it("returns the second word when the point is inside it", () => {
+    expect(boxAtPoint(boxes, { x: 70, y: 15 }, "word")).toEqual({ x: 50, y: 10, w: 40, h: 14 });
+  });
+
+  it("returns the nearest box when the point is outside every box", () => {
+    // Just below the first line, closer to it than to the second line.
+    expect(boxAtPoint(boxes, { x: 20, y: 30 }, "word")).toEqual({ x: 10, y: 10, w: 30, h: 14 });
+  });
+
+  it("returns null when the nearest box is beyond the max distance", () => {
+    expect(boxAtPoint(boxes, { x: 200, y: 200 }, "word", 20)).toBeNull();
+  });
+
+  it("returns the box when it is within the max distance", () => {
+    // The gap from y=15 down to the second line at y0=40 is 16 px on the word.
+    expect(boxAtPoint(boxes, { x: 40, y: 56 }, "word", 10)).toEqual({ x: 10, y: 40, w: 60, h: 14 });
+  });
+
+  it("returns null for an empty box list", () => {
+    expect(boxAtPoint([], { x: 0, y: 0 }, "word")).toBeNull();
+  });
+
+  it("defaults to word mode", () => {
+    expect(boxAtPoint(boxes, { x: 20, y: 15 })).toEqual({ x: 10, y: 10, w: 30, h: 14 });
   });
 });
 
