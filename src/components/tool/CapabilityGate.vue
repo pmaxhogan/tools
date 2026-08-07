@@ -86,7 +86,7 @@ const CHECKS: Partial<Record<Capability, CapabilityInfo>> = {
     supported: () => 'serial' in navigator,
     label: 'serial port access',
     detail:
-      'This tool needs the Web Serial API, available in Chromium browsers on desktop. Firefox and Safari do not support it.',
+      'This tool needs the Web Serial API, available in Chromium browsers on desktop and in recent Firefox. Safari does not support it.',
   },
   hid: {
     supported: () => 'hid' in navigator,

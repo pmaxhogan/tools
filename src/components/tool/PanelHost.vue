@@ -28,6 +28,7 @@ const panels: Record<string, Component> = {
   ),
   'duplicate-finder': defineAsyncComponent(() => import('./panels/DuplicateFinderPanel.vue')),
   'favicon-generator': defineAsyncComponent(() => import('./panels/FaviconPanel.vue')),
+  'firmware-flasher': defineAsyncComponent(() => import('./panels/FirmwareFlasherPanel.vue')),
   'folder-diff': defineAsyncComponent(() => import('./panels/FolderDiffPanel.vue')),
   'gif-editor': defineAsyncComponent(() => import('./panels/GifEditorPanel.vue')),
   'har-viewer': defineAsyncComponent(() => import('./panels/HarViewerPanel.vue')),
