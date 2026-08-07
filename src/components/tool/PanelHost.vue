@@ -40,6 +40,7 @@ const panels: Record<string, Component> = {
   'jinja-template-tester': defineAsyncComponent(() => import('./panels/JinjaTesterPanel.vue')),
   keycode: defineAsyncComponent(() => import('./panels/KeycodePanel.vue')),
   'pdf-toolbox': defineAsyncComponent(() => import('./panels/PdfToolboxPanel.vue')),
+  pipelines: defineAsyncComponent(() => import('./panels/PipelinesPanel.vue')),
   'qr-code-generator': defineAsyncComponent(() => import('./panels/QrPanel.vue')),
   'serial-terminal': defineAsyncComponent(() => import('./panels/SerialTerminalPanel.vue')),
   'sqlite-viewer': defineAsyncComponent(() => import('./panels/SqliteViewerPanel.vue')),

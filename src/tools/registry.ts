@@ -63,6 +63,7 @@ import { meta as oauthScopeDecoder } from './oauth-scope-decoder/meta';
 import { meta as oryxLayoutDiff } from './oryx-layout-diff/meta';
 import { meta as passwordGenerator } from './password-generator/meta';
 import { meta as pdfToolbox } from './pdf-toolbox/meta';
+import { meta as pipelines } from './pipelines/meta';
 import { meta as placeholderImage } from './placeholder-image/meta';
 import { meta as qrCodeGenerator } from './qr-code-generator/meta';
 import { meta as randomPicker } from './random-picker/meta';
@@ -138,6 +139,7 @@ export const tools: ToolMeta[] = [
   oryxLayoutDiff,
   passwordGenerator,
   pdfToolbox,
+  pipelines,
   placeholderImage,
   qrCodeGenerator,
   randomPicker,
@@ -218,6 +220,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   'oryx-layout-diff': () => import('./oryx-layout-diff/index').then((m) => m.default),
   'password-generator': () => import('./password-generator/index').then((m) => m.default),
   'pdf-toolbox': () => import('./pdf-toolbox/index').then((m) => m.default),
+  pipelines: () => import('./pipelines/index').then((m) => m.default),
   'placeholder-image': () => import('./placeholder-image/index').then((m) => m.default),
   'qr-code-generator': () => import('./qr-code-generator/index').then((m) => m.default),
   'random-picker': () => import('./random-picker/index').then((m) => m.default),
