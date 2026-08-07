@@ -10,6 +10,7 @@
  * tool-matrix.csv stays the planning doc.
  */
 import type { ToolMeta } from './types';
+import { meta as audioSpectrogram } from './audio-spectrogram/meta';
 import { meta as audioTrimmer } from './audio-trimmer/meta';
 import { meta as baseConverter } from './base-converter/meta';
 import { meta as caseConverter } from './case-converter/meta';
@@ -59,6 +60,7 @@ import { meta as videoTrimmer } from './video-trimmer/meta';
 import { meta as weekNumber } from './week-number/meta';
 
 export const tools: ToolMeta[] = [
+  audioSpectrogram,
   audioTrimmer,
   baseConverter,
   caseConverter,
@@ -110,6 +112,7 @@ export const tools: ToolMeta[] = [
 
 /** Lazy loaders for tool logic, keyed by URL slug. */
 export const loaders: Record<string, () => Promise<unknown>> = {
+  'audio-spectrogram': () => import('./audio-spectrogram/index').then((m) => m.default),
   'audio-trimmer': () => import('./audio-trimmer/index').then((m) => m.default),
   'base-converter': () => import('./base-converter/index').then((m) => m.default),
   'case-converter': () => import('./case-converter/index').then((m) => m.default),

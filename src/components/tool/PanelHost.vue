@@ -14,6 +14,7 @@ import PopoutButton from './PopoutButton.vue';
  * Document Picture-in-Picture window.
  */
 const panels: Record<string, Component> = {
+  'audio-spectrogram': defineAsyncComponent(() => import('./panels/SpectrogramPanel.vue')),
   'audio-trimmer': defineAsyncComponent(() => import('./panels/AudioTrimmerPanel.vue')),
   'clipboard-inspector': defineAsyncComponent(() => import('./panels/ClipboardPanel.vue')),
   'discord-video-compressor': defineAsyncComponent(
