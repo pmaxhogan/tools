@@ -1,0 +1,92 @@
+{
+ "version": "26.2",
+ "generated": "2026-08-10T16:33:55.879Z",
+ "serverJarSha1": "823e2250d24b3ddac457a60c92a6a941943fcd6a",
+ "method": "rcon-e2e",
+ "samples": [
+  {
+   "height": 2,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 0
+  },
+  {
+   "height": 3,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 0
+  },
+  {
+   "height": 3.5,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 0
+  },
+  {
+   "height": 4,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 1
+  },
+  {
+   "height": 5,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 2
+  },
+  {
+   "height": 10,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 7
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 20
+  },
+  {
+   "height": 50,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 47
+  },
+  {
+   "height": 100,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 97
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 1,
+   "slowFalling": false,
+   "taken": 17.6
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 2,
+   "slowFalling": false,
+   "taken": 15.2
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 3,
+   "slowFalling": false,
+   "taken": 12.8
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 4,
+   "slowFalling": false,
+   "taken": 10.4
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 0,
+   "slowFalling": true,
+   "taken": 0
+  }
+ ]
+}

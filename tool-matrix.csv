@@ -167,3 +167,15 @@ Multitouch Tester,touch,Visualise simultaneous touch points,Testers,Yes,A,C,C+,A
 Pomodoro,pomodoro,Work and break cycles in a pop-out always-on-top window,Time,Yes,A-,B,D+,A-,2.73
 G-code Viewer,gcode,Visualise toolpaths layer by layer,Hardware,Yes,D+,B,B+,B+,2.69
 Sprite Sheet Packer,sprite-packer,Pack loose images into an atlas plus JSON coordinates,Media,Yes,B,C+,C,A-,2.52
+Minecraft Loot Calculator,minecraft-loot,Exact drop probabilities from the game's own loot tables per version,Minecraft,Yes,C,A-,A,A,3.9
+Minecraft Damage Calculator,minecraft-damage,Armor and fall and mace damage verified against real servers per version,Minecraft,Yes,C+,A-,A-,A,3.8
+Minecraft Anvil Calculator,minecraft-anvil,Full anvil algorithm with prior work and Too Expensive planning per version,Minecraft,Yes,C+,A-,B+,A,3.7
+Minecraft XP Calculator,minecraft-xp,Level curve and Mending economics from decompiled game code,Minecraft,Yes,B,B+,B,A-,3.4
+Minecraft Hunger Simulator,minecraft-hunger,Exhaustion and saturation and regen simulated per version,Minecraft,Yes,C+,B+,A,B+,3.4
+Minecraft Villager Discounts,minecraft-villager,Gossip and cure discount stacking with the 1.20.2 nerf modeled,Minecraft,Yes,C+,B,A-,B+,3.2
+Minecraft Spawning Simulator,minecraft-spawning,Spawn caps and light rules and pack spawning per version,Minecraft,Yes,C,B+,A,B,3.2
+Minecraft Projectile Plotter,minecraft-projectile,Arrow and trident and pearl trajectories from source constants,Minecraft,Yes,C,B,A,B,3.1
+Minecraft Elytra Calculator,minecraft-elytra,Flight speed and rockets per distance from real physics,Minecraft,Yes,C+,B,A,B,3.0
+Minecraft Growth Timers,minecraft-growth,Crop and animal growth odds from random tick constants,Minecraft,Yes,B,B,A-,B,3.0
+Minecraft Redstone Timing,minecraft-redstone-timing,Tick conversions and hopper throughput and comparator delays,Minecraft,Yes,B+,B,B+,B,2.9
+Minecraft Fall Damage,minecraft-fall,Merged into the damage calculator; kept for search coverage,Minecraft,Yes,A-,B,B+,B+,3.0

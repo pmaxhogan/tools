@@ -1,0 +1,2491 @@
+{
+ "version": "26.2",
+ "generated": "2026-08-10T16:33:55.879Z",
+ "serverJarSha1": "823e2250d24b3ddac457a60c92a6a941943fcd6a",
+ "method": "rcon-e2e",
+ "samples": [
+  {
+   "armor": 0,
+   "toughness": 0,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 1
+  },
+  {
+   "armor": 0,
+   "toughness": 0,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 0,
+   "toughness": 0,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 7.5
+  },
+  {
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 10
+  },
+  {
+   "armor": 0,
+   "toughness": 0,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 15
+  },
+  {
+   "armor": 0,
+   "toughness": 0,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 20
+  },
+  {
+   "armor": 0,
+   "toughness": 0,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 36
+  },
+  {
+   "armor": 0,
+   "toughness": 0,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 100
+  },
+  {
+   "armor": 0,
+   "toughness": 4,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 1
+  },
+  {
+   "armor": 0,
+   "toughness": 4,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 0,
+   "toughness": 4,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 7.5
+  },
+  {
+   "armor": 0,
+   "toughness": 4,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 10
+  },
+  {
+   "armor": 0,
+   "toughness": 4,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 15
+  },
+  {
+   "armor": 0,
+   "toughness": 4,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 20
+  },
+  {
+   "armor": 0,
+   "toughness": 4,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 36
+  },
+  {
+   "armor": 0,
+   "toughness": 4,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 100
+  },
+  {
+   "armor": 0,
+   "toughness": 8,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 1
+  },
+  {
+   "armor": 0,
+   "toughness": 8,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 0,
+   "toughness": 8,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 7.5
+  },
+  {
+   "armor": 0,
+   "toughness": 8,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 10
+  },
+  {
+   "armor": 0,
+   "toughness": 8,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 15
+  },
+  {
+   "armor": 0,
+   "toughness": 8,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 20
+  },
+  {
+   "armor": 0,
+   "toughness": 8,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 36
+  },
+  {
+   "armor": 0,
+   "toughness": 8,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 100
+  },
+  {
+   "armor": 0,
+   "toughness": 12,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 1
+  },
+  {
+   "armor": 0,
+   "toughness": 12,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 0,
+   "toughness": 12,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 7.5
+  },
+  {
+   "armor": 0,
+   "toughness": 12,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 10
+  },
+  {
+   "armor": 0,
+   "toughness": 12,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 15
+  },
+  {
+   "armor": 0,
+   "toughness": 12,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 20
+  },
+  {
+   "armor": 0,
+   "toughness": 12,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 36
+  },
+  {
+   "armor": 0,
+   "toughness": 12,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 100
+  },
+  {
+   "armor": 0,
+   "toughness": 20,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 1
+  },
+  {
+   "armor": 0,
+   "toughness": 20,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 0,
+   "toughness": 20,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 7.5
+  },
+  {
+   "armor": 0,
+   "toughness": 20,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 10
+  },
+  {
+   "armor": 0,
+   "toughness": 20,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 15
+  },
+  {
+   "armor": 0,
+   "toughness": 20,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 20
+  },
+  {
+   "armor": 0,
+   "toughness": 20,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 36
+  },
+  {
+   "armor": 0,
+   "toughness": 20,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 100
+  },
+  {
+   "armor": 2,
+   "toughness": 0,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.94
+  },
+  {
+   "armor": 2,
+   "toughness": 0,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 2.94
+  },
+  {
+   "armor": 2,
+   "toughness": 0,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 7.38
+  },
+  {
+   "armor": 2,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 9.84
+  },
+  {
+   "armor": 2,
+   "toughness": 0,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 14.76
+  },
+  {
+   "armor": 2,
+   "toughness": 0,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 19.68
+  },
+  {
+   "armor": 2,
+   "toughness": 0,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 35.42
+  },
+  {
+   "armor": 2,
+   "toughness": 0,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 98.4
+  },
+  {
+   "armor": 2,
+   "toughness": 4,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.93
+  },
+  {
+   "armor": 2,
+   "toughness": 4,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 2.88
+  },
+  {
+   "armor": 2,
+   "toughness": 4,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 7.38
+  },
+  {
+   "armor": 2,
+   "toughness": 4,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 9.84
+  },
+  {
+   "armor": 2,
+   "toughness": 4,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 14.76
+  },
+  {
+   "armor": 2,
+   "toughness": 4,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 19.68
+  },
+  {
+   "armor": 2,
+   "toughness": 4,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 35.42
+  },
+  {
+   "armor": 2,
+   "toughness": 4,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 98.4
+  },
+  {
+   "armor": 2,
+   "toughness": 8,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.93
+  },
+  {
+   "armor": 2,
+   "toughness": 8,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 2.85
+  },
+  {
+   "armor": 2,
+   "toughness": 8,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 7.38
+  },
+  {
+   "armor": 2,
+   "toughness": 8,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 9.84
+  },
+  {
+   "armor": 2,
+   "toughness": 8,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 14.76
+  },
+  {
+   "armor": 2,
+   "toughness": 8,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 19.68
+  },
+  {
+   "armor": 2,
+   "toughness": 8,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 35.42
+  },
+  {
+   "armor": 2,
+   "toughness": 8,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 98.4
+  },
+  {
+   "armor": 2,
+   "toughness": 12,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.93
+  },
+  {
+   "armor": 2,
+   "toughness": 12,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 2.83
+  },
+  {
+   "armor": 2,
+   "toughness": 12,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 7.35
+  },
+  {
+   "armor": 2,
+   "toughness": 12,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 9.84
+  },
+  {
+   "armor": 2,
+   "toughness": 12,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 14.76
+  },
+  {
+   "armor": 2,
+   "toughness": 12,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 19.68
+  },
+  {
+   "armor": 2,
+   "toughness": 12,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 35.42
+  },
+  {
+   "armor": 2,
+   "toughness": 12,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 98.4
+  },
+  {
+   "armor": 2,
+   "toughness": 20,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.93
+  },
+  {
+   "armor": 2,
+   "toughness": 20,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 2.81
+  },
+  {
+   "armor": 2,
+   "toughness": 20,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 7.22
+  },
+  {
+   "armor": 2,
+   "toughness": 20,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 9.77
+  },
+  {
+   "armor": 2,
+   "toughness": 20,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 14.76
+  },
+  {
+   "armor": 2,
+   "toughness": 20,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 19.68
+  },
+  {
+   "armor": 2,
+   "toughness": 20,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 35.42
+  },
+  {
+   "armor": 2,
+   "toughness": 20,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 98.4
+  },
+  {
+   "armor": 5,
+   "toughness": 0,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.82
+  },
+  {
+   "armor": 5,
+   "toughness": 0,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 2.58
+  },
+  {
+   "armor": 5,
+   "toughness": 0,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 7.13
+  },
+  {
+   "armor": 5,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 9.6
+  },
+  {
+   "armor": 5,
+   "toughness": 0,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 14.4
+  },
+  {
+   "armor": 5,
+   "toughness": 0,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 19.2
+  },
+  {
+   "armor": 5,
+   "toughness": 0,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 34.56
+  },
+  {
+   "armor": 5,
+   "toughness": 0,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 96
+  },
+  {
+   "armor": 5,
+   "toughness": 4,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.81
+  },
+  {
+   "armor": 5,
+   "toughness": 4,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 2.52
+  },
+  {
+   "armor": 5,
+   "toughness": 4,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 6.75
+  },
+  {
+   "armor": 5,
+   "toughness": 4,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 9.33
+  },
+  {
+   "armor": 5,
+   "toughness": 4,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 14.4
+  },
+  {
+   "armor": 5,
+   "toughness": 4,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 19.2
+  },
+  {
+   "armor": 5,
+   "toughness": 4,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 34.56
+  },
+  {
+   "armor": 5,
+   "toughness": 4,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 96
+  },
+  {
+   "armor": 5,
+   "toughness": 8,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.81
+  },
+  {
+   "armor": 5,
+   "toughness": 8,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 2.49
+  },
+  {
+   "armor": 5,
+   "toughness": 8,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 6.56
+  },
+  {
+   "armor": 5,
+   "toughness": 8,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 9
+  },
+  {
+   "armor": 5,
+   "toughness": 8,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 14.25
+  },
+  {
+   "armor": 5,
+   "toughness": 8,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 19.2
+  },
+  {
+   "armor": 5,
+   "toughness": 8,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 34.56
+  },
+  {
+   "armor": 5,
+   "toughness": 8,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 96
+  },
+  {
+   "armor": 5,
+   "toughness": 12,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.81
+  },
+  {
+   "armor": 5,
+   "toughness": 12,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 2.47
+  },
+  {
+   "armor": 5,
+   "toughness": 12,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 6.45
+  },
+  {
+   "armor": 5,
+   "toughness": 12,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 8.8
+  },
+  {
+   "armor": 5,
+   "toughness": 12,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 13.8
+  },
+  {
+   "armor": 5,
+   "toughness": 12,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 19.2
+  },
+  {
+   "armor": 5,
+   "toughness": 12,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 34.56
+  },
+  {
+   "armor": 5,
+   "toughness": 12,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 96
+  },
+  {
+   "armor": 5,
+   "toughness": 20,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.81
+  },
+  {
+   "armor": 5,
+   "toughness": 20,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 2.45
+  },
+  {
+   "armor": 5,
+   "toughness": 20,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 6.32
+  },
+  {
+   "armor": 5,
+   "toughness": 20,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 8.57
+  },
+  {
+   "armor": 5,
+   "toughness": 20,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 13.29
+  },
+  {
+   "armor": 5,
+   "toughness": 20,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 18.29
+  },
+  {
+   "armor": 5,
+   "toughness": 20,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 34.56
+  },
+  {
+   "armor": 5,
+   "toughness": 20,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 96
+  },
+  {
+   "armor": 10,
+   "toughness": 0,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.62
+  },
+  {
+   "armor": 10,
+   "toughness": 0,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 1.98
+  },
+  {
+   "armor": 10,
+   "toughness": 0,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 5.63
+  },
+  {
+   "armor": 10,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 8
+  },
+  {
+   "armor": 10,
+   "toughness": 0,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 13.5
+  },
+  {
+   "armor": 10,
+   "toughness": 0,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 18.4
+  },
+  {
+   "armor": 10,
+   "toughness": 0,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 33.12
+  },
+  {
+   "armor": 10,
+   "toughness": 0,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 92
+  },
+  {
+   "armor": 10,
+   "toughness": 4,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.61
+  },
+  {
+   "armor": 10,
+   "toughness": 4,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 1.92
+  },
+  {
+   "armor": 10,
+   "toughness": 4,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 5.25
+  },
+  {
+   "armor": 10,
+   "toughness": 4,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 7.33
+  },
+  {
+   "armor": 10,
+   "toughness": 4,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 12
+  },
+  {
+   "armor": 10,
+   "toughness": 4,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 17.33
+  },
+  {
+   "armor": 10,
+   "toughness": 4,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 33.12
+  },
+  {
+   "armor": 10,
+   "toughness": 4,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 92
+  },
+  {
+   "armor": 10,
+   "toughness": 8,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.61
+  },
+  {
+   "armor": 10,
+   "toughness": 8,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 1.89
+  },
+  {
+   "armor": 10,
+   "toughness": 8,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 5.06
+  },
+  {
+   "armor": 10,
+   "toughness": 8,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 7
+  },
+  {
+   "armor": 10,
+   "toughness": 8,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 11.25
+  },
+  {
+   "armor": 10,
+   "toughness": 8,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 16
+  },
+  {
+   "armor": 10,
+   "toughness": 8,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 33.12
+  },
+  {
+   "armor": 10,
+   "toughness": 8,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 92
+  },
+  {
+   "armor": 10,
+   "toughness": 12,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.61
+  },
+  {
+   "armor": 10,
+   "toughness": 12,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 1.87
+  },
+  {
+   "armor": 10,
+   "toughness": 12,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 4.95
+  },
+  {
+   "armor": 10,
+   "toughness": 12,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 6.8
+  },
+  {
+   "armor": 10,
+   "toughness": 12,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 10.8
+  },
+  {
+   "armor": 10,
+   "toughness": 12,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 15.2
+  },
+  {
+   "armor": 10,
+   "toughness": 12,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 31.97
+  },
+  {
+   "armor": 10,
+   "toughness": 12,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 92
+  },
+  {
+   "armor": 10,
+   "toughness": 20,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.61
+  },
+  {
+   "armor": 10,
+   "toughness": 20,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 1.85
+  },
+  {
+   "armor": 10,
+   "toughness": 20,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 4.82
+  },
+  {
+   "armor": 10,
+   "toughness": 20,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 6.57
+  },
+  {
+   "armor": 10,
+   "toughness": 20,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 10.29
+  },
+  {
+   "armor": 10,
+   "toughness": 20,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 14.29
+  },
+  {
+   "armor": 10,
+   "toughness": 20,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 29.01
+  },
+  {
+   "armor": 10,
+   "toughness": 20,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 92
+  },
+  {
+   "armor": 15,
+   "toughness": 0,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.42
+  },
+  {
+   "armor": 15,
+   "toughness": 0,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 1.38
+  },
+  {
+   "armor": 15,
+   "toughness": 0,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 4.13
+  },
+  {
+   "armor": 15,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 6
+  },
+  {
+   "armor": 15,
+   "toughness": 0,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 10.5
+  },
+  {
+   "armor": 15,
+   "toughness": 0,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 16
+  },
+  {
+   "armor": 15,
+   "toughness": 0,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 31.68
+  },
+  {
+   "armor": 15,
+   "toughness": 0,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 88
+  },
+  {
+   "armor": 15,
+   "toughness": 4,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.41
+  },
+  {
+   "armor": 15,
+   "toughness": 4,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 1.32
+  },
+  {
+   "armor": 15,
+   "toughness": 4,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 3.75
+  },
+  {
+   "armor": 15,
+   "toughness": 4,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 5.33
+  },
+  {
+   "armor": 15,
+   "toughness": 4,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 9
+  },
+  {
+   "armor": 15,
+   "toughness": 4,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 13.33
+  },
+  {
+   "armor": 15,
+   "toughness": 4,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 31.68
+  },
+  {
+   "armor": 15,
+   "toughness": 4,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 88
+  },
+  {
+   "armor": 15,
+   "toughness": 8,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.41
+  },
+  {
+   "armor": 15,
+   "toughness": 8,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 1.29
+  },
+  {
+   "armor": 15,
+   "toughness": 8,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 3.56
+  },
+  {
+   "armor": 15,
+   "toughness": 8,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 5
+  },
+  {
+   "armor": 15,
+   "toughness": 8,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 8.25
+  },
+  {
+   "armor": 15,
+   "toughness": 8,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 12
+  },
+  {
+   "armor": 15,
+   "toughness": 8,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 27.36
+  },
+  {
+   "armor": 15,
+   "toughness": 8,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 88
+  },
+  {
+   "armor": 15,
+   "toughness": 12,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.41
+  },
+  {
+   "armor": 15,
+   "toughness": 12,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 1.27
+  },
+  {
+   "armor": 15,
+   "toughness": 12,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 3.45
+  },
+  {
+   "armor": 15,
+   "toughness": 12,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 4.8
+  },
+  {
+   "armor": 15,
+   "toughness": 12,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 7.8
+  },
+  {
+   "armor": 15,
+   "toughness": 12,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 11.2
+  },
+  {
+   "armor": 15,
+   "toughness": 12,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 24.77
+  },
+  {
+   "armor": 15,
+   "toughness": 12,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 88
+  },
+  {
+   "armor": 15,
+   "toughness": 20,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.41
+  },
+  {
+   "armor": 15,
+   "toughness": 20,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 1.25
+  },
+  {
+   "armor": 15,
+   "toughness": 20,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 3.32
+  },
+  {
+   "armor": 15,
+   "toughness": 20,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 4.57
+  },
+  {
+   "armor": 15,
+   "toughness": 20,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 7.29
+  },
+  {
+   "armor": 15,
+   "toughness": 20,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 10.29
+  },
+  {
+   "armor": 15,
+   "toughness": 20,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 21.81
+  },
+  {
+   "armor": 15,
+   "toughness": 20,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 88
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.22
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.78
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 2.63
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 4
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 7.5
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 12
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 30.24
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 84
+  },
+  {
+   "armor": 20,
+   "toughness": 4,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.21
+  },
+  {
+   "armor": 20,
+   "toughness": 4,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.72
+  },
+  {
+   "armor": 20,
+   "toughness": 4,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 2.25
+  },
+  {
+   "armor": 20,
+   "toughness": 4,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 3.33
+  },
+  {
+   "armor": 20,
+   "toughness": 4,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 6
+  },
+  {
+   "armor": 20,
+   "toughness": 4,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 9.33
+  },
+  {
+   "armor": 20,
+   "toughness": 4,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 24.48
+  },
+  {
+   "armor": 20,
+   "toughness": 4,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 84
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.21
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.69
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 2.06
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 5.25
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 8
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 20.16
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 84
+  },
+  {
+   "armor": 20,
+   "toughness": 12,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.21
+  },
+  {
+   "armor": 20,
+   "toughness": 12,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.67
+  },
+  {
+   "armor": 20,
+   "toughness": 12,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.95
+  },
+  {
+   "armor": 20,
+   "toughness": 12,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2.8
+  },
+  {
+   "armor": 20,
+   "toughness": 12,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 4.8
+  },
+  {
+   "armor": 20,
+   "toughness": 12,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 7.2
+  },
+  {
+   "armor": 20,
+   "toughness": 12,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 17.57
+  },
+  {
+   "armor": 20,
+   "toughness": 12,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 84
+  },
+  {
+   "armor": 20,
+   "toughness": 20,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.21
+  },
+  {
+   "armor": 20,
+   "toughness": 20,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.65
+  },
+  {
+   "armor": 20,
+   "toughness": 20,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.82
+  },
+  {
+   "armor": 20,
+   "toughness": 20,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2.57
+  },
+  {
+   "armor": 20,
+   "toughness": 20,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 4.29
+  },
+  {
+   "armor": 20,
+   "toughness": 20,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 6.29
+  },
+  {
+   "armor": 20,
+   "toughness": 20,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 14.61
+  },
+  {
+   "armor": 20,
+   "toughness": 20,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 77.14
+  },
+  {
+   "armor": 25,
+   "toughness": 0,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.2
+  },
+  {
+   "armor": 25,
+   "toughness": 0,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.6
+  },
+  {
+   "armor": 25,
+   "toughness": 0,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.5
+  },
+  {
+   "armor": 25,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2
+  },
+  {
+   "armor": 25,
+   "toughness": 0,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 4.5
+  },
+  {
+   "armor": 25,
+   "toughness": 0,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 8
+  },
+  {
+   "armor": 25,
+   "toughness": 0,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 25.92
+  },
+  {
+   "armor": 25,
+   "toughness": 0,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 80
+  },
+  {
+   "armor": 25,
+   "toughness": 4,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.2
+  },
+  {
+   "armor": 25,
+   "toughness": 4,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.6
+  },
+  {
+   "armor": 25,
+   "toughness": 4,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.5
+  },
+  {
+   "armor": 25,
+   "toughness": 4,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2
+  },
+  {
+   "armor": 25,
+   "toughness": 4,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 25,
+   "toughness": 4,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 5.33
+  },
+  {
+   "armor": 25,
+   "toughness": 4,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 17.28
+  },
+  {
+   "armor": 25,
+   "toughness": 4,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 80
+  },
+  {
+   "armor": 25,
+   "toughness": 8,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.2
+  },
+  {
+   "armor": 25,
+   "toughness": 8,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.6
+  },
+  {
+   "armor": 25,
+   "toughness": 8,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.5
+  },
+  {
+   "armor": 25,
+   "toughness": 8,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2
+  },
+  {
+   "armor": 25,
+   "toughness": 8,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 25,
+   "toughness": 8,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 4
+  },
+  {
+   "armor": 25,
+   "toughness": 8,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 12.96
+  },
+  {
+   "armor": 25,
+   "toughness": 8,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 80
+  },
+  {
+   "armor": 25,
+   "toughness": 12,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.2
+  },
+  {
+   "armor": 25,
+   "toughness": 12,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.6
+  },
+  {
+   "armor": 25,
+   "toughness": 12,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.5
+  },
+  {
+   "armor": 25,
+   "toughness": 12,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2
+  },
+  {
+   "armor": 25,
+   "toughness": 12,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 25,
+   "toughness": 12,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 4
+  },
+  {
+   "armor": 25,
+   "toughness": 12,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 10.37
+  },
+  {
+   "armor": 25,
+   "toughness": 12,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 80
+  },
+  {
+   "armor": 25,
+   "toughness": 20,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.2
+  },
+  {
+   "armor": 25,
+   "toughness": 20,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.6
+  },
+  {
+   "armor": 25,
+   "toughness": 20,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.5
+  },
+  {
+   "armor": 25,
+   "toughness": 20,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2
+  },
+  {
+   "armor": 25,
+   "toughness": 20,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 25,
+   "toughness": 20,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 4
+  },
+  {
+   "armor": 25,
+   "toughness": 20,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 7.41
+  },
+  {
+   "armor": 25,
+   "toughness": 20,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 57.14
+  },
+  {
+   "armor": 30,
+   "toughness": 0,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.2
+  },
+  {
+   "armor": 30,
+   "toughness": 0,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.6
+  },
+  {
+   "armor": 30,
+   "toughness": 0,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.5
+  },
+  {
+   "armor": 30,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2
+  },
+  {
+   "armor": 30,
+   "toughness": 0,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 30,
+   "toughness": 0,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 4
+  },
+  {
+   "armor": 30,
+   "toughness": 0,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 18.72
+  },
+  {
+   "armor": 30,
+   "toughness": 0,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 76
+  },
+  {
+   "armor": 30,
+   "toughness": 4,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.2
+  },
+  {
+   "armor": 30,
+   "toughness": 4,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.6
+  },
+  {
+   "armor": 30,
+   "toughness": 4,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.5
+  },
+  {
+   "armor": 30,
+   "toughness": 4,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2
+  },
+  {
+   "armor": 30,
+   "toughness": 4,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 30,
+   "toughness": 4,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 4
+  },
+  {
+   "armor": 30,
+   "toughness": 4,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 10.08
+  },
+  {
+   "armor": 30,
+   "toughness": 4,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 76
+  },
+  {
+   "armor": 30,
+   "toughness": 8,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.2
+  },
+  {
+   "armor": 30,
+   "toughness": 8,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.6
+  },
+  {
+   "armor": 30,
+   "toughness": 8,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.5
+  },
+  {
+   "armor": 30,
+   "toughness": 8,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2
+  },
+  {
+   "armor": 30,
+   "toughness": 8,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 30,
+   "toughness": 8,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 4
+  },
+  {
+   "armor": 30,
+   "toughness": 8,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 7.2
+  },
+  {
+   "armor": 30,
+   "toughness": 8,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 76
+  },
+  {
+   "armor": 30,
+   "toughness": 12,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.2
+  },
+  {
+   "armor": 30,
+   "toughness": 12,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.6
+  },
+  {
+   "armor": 30,
+   "toughness": 12,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.5
+  },
+  {
+   "armor": 30,
+   "toughness": 12,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2
+  },
+  {
+   "armor": 30,
+   "toughness": 12,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 30,
+   "toughness": 12,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 4
+  },
+  {
+   "armor": 30,
+   "toughness": 12,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 7.2
+  },
+  {
+   "armor": 30,
+   "toughness": 12,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 60
+  },
+  {
+   "armor": 30,
+   "toughness": 20,
+   "amount": 1,
+   "type": "mob_attack",
+   "taken": 0.2
+  },
+  {
+   "armor": 30,
+   "toughness": 20,
+   "amount": 3,
+   "type": "mob_attack",
+   "taken": 0.6
+  },
+  {
+   "armor": 30,
+   "toughness": 20,
+   "amount": 7.5,
+   "type": "mob_attack",
+   "taken": 1.5
+  },
+  {
+   "armor": 30,
+   "toughness": 20,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2
+  },
+  {
+   "armor": 30,
+   "toughness": 20,
+   "amount": 15,
+   "type": "mob_attack",
+   "taken": 3
+  },
+  {
+   "armor": 30,
+   "toughness": 20,
+   "amount": 20,
+   "type": "mob_attack",
+   "taken": 4
+  },
+  {
+   "armor": 30,
+   "toughness": 20,
+   "amount": 36,
+   "type": "mob_attack",
+   "taken": 7.2
+  },
+  {
+   "armor": 30,
+   "toughness": 20,
+   "amount": 100,
+   "type": "mob_attack",
+   "taken": 37.14
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 1,
+    "protection": 1
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 9.6
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 1,
+    "protection": 2
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 9.2
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 1,
+    "protection": 3
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 8.8
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 1,
+    "protection": 4
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 8.4
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 2,
+    "protection": 1
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 9.2
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 2,
+    "protection": 2
+   },
+   "armor": 3,
+   "toughness": 2,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 8.2
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 2,
+    "protection": 3
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 7.6
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 2,
+    "protection": 4
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 6.8
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 3,
+    "protection": 1
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 8.8
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 3,
+    "protection": 2
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 7.6
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 3,
+    "protection": 3
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 6.4
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 3,
+    "protection": 4
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 5.2
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 4,
+    "protection": 1
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 8.4
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 4,
+    "protection": 2
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 6.8
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 4,
+    "protection": 3
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 5.2
+  },
+  {
+   "equipped": {
+    "material": "diamond",
+    "pieces": 4,
+    "protection": 4
+   },
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 3.6
+  },
+  {
+   "resistance": 1,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 8
+  },
+  {
+   "resistance": 2,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 6
+  },
+  {
+   "resistance": 3,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 4
+  },
+  {
+   "resistance": 4,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 2
+  },
+  {
+   "resistance": 5,
+   "amount": 10,
+   "type": "mob_attack",
+   "taken": 0
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 10,
+   "type": "magic",
+   "taken": 10
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 10,
+   "type": "out_of_world",
+   "taken": 10
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 10,
+   "type": "generic",
+   "taken": 10
+  }
+ ]
+}

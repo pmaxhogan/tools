@@ -41,3 +41,7 @@ public/pyodide/
 
 # wrangler dry-run output
 dist-worker-check/
+
+# minecraft pipeline artifacts: jars, JDKs, servers, mappings, decompiled
+# source. Local-only by license posture; never committed or redistributed.
+mc-pipeline/work/

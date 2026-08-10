@@ -1,0 +1,393 @@
+{
+ "version": "1.18.2",
+ "generated": "2026-08-10T16:34:21.250Z",
+ "serverJarSha1": "c8f83c5655308435b3dcf03c06d9fe8740a77469",
+ "method": "rcon-e2e",
+ "perRoll": {
+  "blocks/diamond_ore|bare": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:diamond:1": 400
+   }
+  },
+  "blocks/diamond_ore|fortune1": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:diamond:1": 252,
+    "minecraft:diamond:2": 148
+   }
+  },
+  "blocks/diamond_ore|fortune2": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:diamond:3": 96,
+    "minecraft:diamond:1": 202,
+    "minecraft:diamond:2": 102
+   }
+  },
+  "blocks/diamond_ore|fortune3": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:diamond:1": 144,
+    "minecraft:diamond:3": 89,
+    "minecraft:diamond:2": 86,
+    "minecraft:diamond:4": 81
+   }
+  },
+  "blocks/diamond_ore|silk_touch1": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:diamond_ore:1": 400
+   }
+  },
+  "blocks/redstone_ore|bare": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:redstone:5": 202,
+    "minecraft:redstone:4": 198
+   }
+  },
+  "blocks/redstone_ore|fortune3": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:redstone:7": 97,
+    "minecraft:redstone:5": 104,
+    "minecraft:redstone:6": 87,
+    "minecraft:redstone:8": 59,
+    "minecraft:redstone:4": 53
+   }
+  },
+  "blocks/lapis_ore|bare": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:lapis_lazuli:4": 70,
+    "minecraft:lapis_lazuli:8": 67,
+    "minecraft:lapis_lazuli:9": 79,
+    "minecraft:lapis_lazuli:5": 66,
+    "minecraft:lapis_lazuli:6": 53,
+    "minecraft:lapis_lazuli:7": 65
+   }
+  },
+  "blocks/lapis_ore|fortune3": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:lapis_lazuli:12": 27,
+    "minecraft:lapis_lazuli:28": 14,
+    "minecraft:lapis_lazuli:16": 29,
+    "minecraft:lapis_lazuli:6": 28,
+    "minecraft:lapis_lazuli:8": 37,
+    "minecraft:lapis_lazuli:18": 33,
+    "minecraft:lapis_lazuli:27": 14,
+    "minecraft:lapis_lazuli:24": 36,
+    "minecraft:lapis_lazuli:9": 19,
+    "minecraft:lapis_lazuli:21": 10,
+    "minecraft:lapis_lazuli:10": 19,
+    "minecraft:lapis_lazuli:7": 29,
+    "minecraft:lapis_lazuli:14": 11,
+    "minecraft:lapis_lazuli:5": 31,
+    "minecraft:lapis_lazuli:20": 16,
+    "minecraft:lapis_lazuli:32": 10,
+    "minecraft:lapis_lazuli:36": 16,
+    "minecraft:lapis_lazuli:15": 9,
+    "minecraft:lapis_lazuli:4": 12
+   }
+  },
+  "blocks/gravel|bare": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:gravel:1": 356,
+    "minecraft:flint:1": 43,
+    "nothing": 1
+   }
+  },
+  "blocks/gravel|fortune3": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:flint:1": 400
+   }
+  },
+  "blocks/wheat|bare": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:wheat:1,minecraft:wheat_seeds:3": 168,
+    "minecraft:wheat:1,minecraft:wheat_seeds:2": 127,
+    "minecraft:wheat:1,minecraft:wheat_seeds:4": 73,
+    "minecraft:wheat:1,minecraft:wheat_seeds:1": 32
+   }
+  },
+  "blocks/wheat|fortune3": {
+   "rolls": 400,
+   "histogram": {
+    "minecraft:wheat:1,minecraft:wheat_seeds:6": 58,
+    "minecraft:wheat:1,minecraft:wheat_seeds:3": 65,
+    "minecraft:wheat:1,minecraft:wheat_seeds:5": 124,
+    "minecraft:wheat:1,minecraft:wheat_seeds:2": 23,
+    "minecraft:wheat:1,minecraft:wheat_seeds:1": 2,
+    "minecraft:wheat:1,minecraft:wheat_seeds:4": 119,
+    "minecraft:wheat:1,minecraft:wheat_seeds:7": 9
+   }
+  }
+ },
+ "bulk": {
+  "acacia_leaves|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:acacia_sapling": 49,
+    "minecraft:stick": 14
+   }
+  },
+  "amethyst_cluster|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:amethyst_shard": 4000
+   }
+  },
+  "ancient_debris|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:ancient_debris": 1000
+   }
+  },
+  "azalea_leaves|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:azalea": 64,
+    "minecraft:stick": 33
+   }
+  },
+  "beetroots|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:beetroot_seeds": 1000
+   }
+  },
+  "birch_leaves|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:stick": 33,
+    "minecraft:birch_sapling": 43
+   }
+  },
+  "carrots|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:carrot": 1000
+   }
+  },
+  "clay|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:clay_ball": 4000
+   }
+  },
+  "coal_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:coal": 1000
+   }
+  },
+  "cocoa|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:cocoa_beans": 1000
+   }
+  },
+  "copper_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:raw_copper": 3482
+   }
+  },
+  "dark_oak_leaves|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:dark_oak_sapling": 51,
+    "minecraft:stick": 20,
+    "minecraft:apple": 3
+   }
+  },
+  "deepslate_coal_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:coal": 1000
+   }
+  },
+  "deepslate_copper_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:raw_copper": 3503
+   }
+  },
+  "deepslate_diamond_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:diamond": 1000
+   }
+  },
+  "deepslate_emerald_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:emerald": 1000
+   }
+  },
+  "deepslate_gold_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:raw_gold": 1000
+   }
+  },
+  "deepslate_iron_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:raw_iron": 1000
+   }
+  },
+  "deepslate_lapis_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:lapis_lazuli": 6545
+   }
+  },
+  "deepslate_redstone_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:redstone": 4489
+   }
+  },
+  "emerald_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:emerald": 1000
+   }
+  },
+  "fern|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:wheat_seeds": 136
+   }
+  },
+  "glowstone|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:glowstone_dust": 3011
+   }
+  },
+  "gold_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:raw_gold": 1000
+   }
+  },
+  "grass|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:wheat_seeds": 134
+   }
+  },
+  "iron_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:raw_iron": 1000
+   }
+  },
+  "jungle_leaves|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:stick": 31,
+    "minecraft:jungle_sapling": 20
+   }
+  },
+  "melon|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:melon_slice": 5079
+   }
+  },
+  "nether_gold_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:gold_nugget": 4018
+   }
+  },
+  "nether_quartz_ore|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:quartz": 1000
+   }
+  },
+  "nether_wart|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:nether_wart": 1000
+   }
+  },
+  "oak_leaves|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:stick": 36,
+    "minecraft:oak_sapling": 48,
+    "minecraft:apple": 2
+   }
+  },
+  "potatoes|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:potato": 1000
+   }
+  },
+  "sea_lantern|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:prismarine_crystals": 2493
+   }
+  },
+  "snow|bare": {
+   "rolls": 1000,
+   "totals": {}
+  },
+  "spruce_leaves|bare": {
+   "rolls": 1000,
+   "totals": {
+    "minecraft:spruce_sapling": 51,
+    "minecraft:stick": 35
+   }
+  },
+  "sweet_berry_bush|bare": {
+   "rolls": 1000,
+   "totals": {}
+  },
+  "tall_grass|bare": {
+   "rolls": 1000,
+   "totals": {}
+  },
+  "entities/zombie|bare": {
+   "rolls": 600,
+   "totals": {
+    "minecraft:rotten_flesh": 598
+   }
+  },
+  "entities/skeleton|bare": {
+   "rolls": 600,
+   "totals": {
+    "minecraft:arrow": 581,
+    "minecraft:bone": 605
+   }
+  },
+  "entities/creeper|bare": {
+   "rolls": 600,
+   "totals": {
+    "minecraft:gunpowder": 628
+   }
+  },
+  "entities/enderman|bare": {
+   "rolls": 600,
+   "totals": {
+    "minecraft:ender_pearl": 301
+   }
+  },
+  "entities/blaze|bare": {
+   "rolls": 600,
+   "totals": {}
+  }
+ }
+}

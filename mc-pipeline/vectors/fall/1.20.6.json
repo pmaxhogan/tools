@@ -1,0 +1,92 @@
+{
+ "version": "1.20.6",
+ "generated": "2026-08-10T16:34:09.290Z",
+ "serverJarSha1": "145ff0858209bcfc164859ba735d4199aafa1eea",
+ "method": "rcon-e2e",
+ "samples": [
+  {
+   "height": 2,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 980
+  },
+  {
+   "height": 3,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 980
+  },
+  {
+   "height": 3.5,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 981
+  },
+  {
+   "height": 4,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 981
+  },
+  {
+   "height": 5,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 982
+  },
+  {
+   "height": 10,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": 987
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": null
+  },
+  {
+   "height": 50,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": null
+  },
+  {
+   "height": 100,
+   "featherFalling": 0,
+   "slowFalling": false,
+   "taken": null
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 1,
+   "slowFalling": false,
+   "taken": 998.48
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 2,
+   "slowFalling": false,
+   "taken": 995.96
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 3,
+   "slowFalling": false,
+   "taken": 993.44
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 4,
+   "slowFalling": false,
+   "taken": 990.92
+  },
+  {
+   "height": 23.5,
+   "featherFalling": 0,
+   "slowFalling": true,
+   "taken": 980
+  }
+ ]
+}

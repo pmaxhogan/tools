@@ -1,0 +1,14 @@
+{
+  "id": "1.21.1",
+  "name": "1.21.1",
+  "release_target": null,
+  "type": "release",
+  "stable": true,
+  "data_version": 3955,
+  "protocol_version": 767,
+  "data_pack_version": 48,
+  "resource_pack_version": 34,
+  "build_time": "2024-08-08T12:21:55+00:00",
+  "release_time": "2024-08-08T12:24:45+00:00",
+  "sha1": "94f420093e771cd1e72614184736b044c747a8df"
+}
