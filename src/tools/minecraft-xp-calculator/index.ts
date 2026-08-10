@@ -1,5 +1,21 @@
 import { ToolError, type ToolLogic } from "../types";
-import { MENDING_DURABILITY_PER_XP, XP_SOURCE_BY_ID, type XpSource } from "./data";
+import {
+  attackDamage,
+  MATERIAL_BY_ID,
+  MAX_BANE,
+  MAX_FIRE_ASPECT,
+  MAX_SHARPNESS,
+  MAX_SMITE,
+  MAX_UNBREAKING,
+  MENDING_DURABILITY_PER_XP,
+  sharpnessBonus,
+  smiteBaneBonus,
+  TOOL_FAMILY_BY_ID,
+  XP_SOURCE_BY_ID,
+  type McMaterial,
+  type McToolFamily,
+  type XpSource,
+} from "./data";
 
 /**
  * Minecraft XP economy math, reimplemented from decompiled server source
@@ -199,3 +215,322 @@ export function run(_input: undefined, opts: McXpOpts): McXpResult {
 }
 
 export default { run } satisfies ToolLogic<undefined, McXpResult, McXpOpts>;
+
+// ---------------------------------------------------------------------------
+// Weighted source mixtures and the Mending sustainability model. Pure
+// functions used by the bespoke panel and the vector test suite; the generic
+// run() surface above stays single-source.
+// ---------------------------------------------------------------------------
+
+export interface MixtureEntry {
+  sourceId: string;
+  /** Relative weight; normalized internally. */
+  weight: number;
+}
+
+export interface MixtureShare {
+  source: XpSource;
+  /** Normalized share in 0..1. */
+  share: number;
+}
+
+/**
+ * Validate and normalize a weighted mixture. All entries must resolve to
+ * known sources of one kind (mob or block are never mixed).
+ */
+export function normalizeMixture(mixture: readonly MixtureEntry[]): MixtureShare[] {
+  if (!mixture.length) {
+    throw new ToolError(
+      "empty-mixture",
+      "No XP sources are selected.",
+      "Select at least one XP source, or apply a preset.",
+    );
+  }
+  const shares: { source: XpSource; weight: number }[] = [];
+  let total = 0;
+  for (const entry of mixture) {
+    const source = XP_SOURCE_BY_ID.get(String(entry.sourceId));
+    if (!source) {
+      throw new ToolError(
+        "unknown-source",
+        `Unknown XP source "${String(entry.sourceId)}".`,
+        "Pick XP sources from the list, for example Zombie or Diamond ore.",
+      );
+    }
+    const w = typeof entry.weight === "number" ? entry.weight : Number(entry.weight);
+    if (!Number.isFinite(w) || w < 0) {
+      throw new ToolError(
+        "bad-weight",
+        `Weight for ${source.label} must be a non-negative number, got "${String(entry.weight)}".`,
+        "Use plain numbers like 1, 2.5, or 100 for the relative weights.",
+      );
+    }
+    shares.push({ source, weight: w });
+    total += w;
+  }
+  const kinds = new Set(shares.map((s) => s.source.kind));
+  if (kinds.size > 1) {
+    throw new ToolError(
+      "mixed-kinds",
+      "A mixture cannot combine mob and block XP sources.",
+      "Select only mobs (for weapons) or only mined blocks (for mining tools).",
+    );
+  }
+  if (total <= 0) {
+    throw new ToolError(
+      "zero-weights",
+      "All mixture weights are zero.",
+      "Give at least one selected source a weight above zero.",
+    );
+  }
+  return shares.map(({ source, weight }) => ({ source, share: weight / total }));
+}
+
+/** Weighted mean XP per action across a normalized mixture. */
+export function mixtureMeanXp(shares: readonly MixtureShare[]): number {
+  return shares.reduce((acc, s) => acc + s.share * s.source.mean, 0);
+}
+
+export interface MixturePlan {
+  meanXpPerAction: number;
+  /** ceil(xp / weighted mean). */
+  avgActions: number;
+  /** The single worst selected source (lowest minimum drop) at 100 percent. */
+  worstSource: XpSource;
+  /** ceil(xp / worst source minimum), or null when that minimum is 0. */
+  guaranteedActions: number | null;
+}
+
+/**
+ * Plan how many actions cover `xpNeeded` for a weighted mixture. The
+ * average case uses the weighted mean XP per action; the worst case is
+ * the single worst selected source at 100 percent of the actions.
+ */
+export function planMixture(xpNeeded: number, mixture: readonly MixtureEntry[]): MixturePlan {
+  const shares = normalizeMixture(mixture);
+  const mean = mixtureMeanXp(shares);
+  let worst = shares[0]!.source;
+  for (const { source } of shares) if (source.min < worst.min) worst = source;
+  return {
+    meanXpPerAction: mean,
+    avgActions: xpNeeded <= 0 ? 0 : Math.ceil(xpNeeded / mean),
+    worstSource: worst,
+    guaranteedActions:
+      worst.min > 0 ? (xpNeeded <= 0 ? 0 : Math.ceil(xpNeeded / worst.min)) : null,
+  };
+}
+
+export interface SustainInput {
+  family: string; // 'sword' | 'axe' | 'pickaxe'
+  material: string;
+  /** Current durability of the tool (1..material max). */
+  durability: number;
+  mending: boolean;
+  unbreaking: number;
+  sharpness: number;
+  smite: number;
+  bane: number;
+  fireAspect: number;
+  /** Free damage per kill attributed to Fire Aspect burn (flat HP model). */
+  fireAspectFreeHp: number;
+  mixture: readonly MixtureEntry[];
+}
+
+export interface SustainPerSource {
+  source: XpSource;
+  share: number;
+  /** Hits to kill (weapons); null for mining. */
+  hits: number | null;
+  /** Damage per hit against this source (weapons); null for mining. */
+  damagePerHit: number | null;
+  /** Durability lost per action before Unbreaking. */
+  rawLossPerAction: number;
+}
+
+export interface SustainResult {
+  family: McToolFamily;
+  material: McMaterial;
+  perSource: SustainPerSource[];
+  /** Expected durability lost per action after Unbreaking, weighted. */
+  avgLossPerAction: number;
+  /** Expected durability restored per action by Mending, weighted. */
+  avgRepairPerAction: number;
+  avgNetPerAction: number;
+  avgSelfSustaining: boolean;
+  /** Expected actions until the tool breaks; null when self-sustaining. */
+  avgActions: number | null;
+  /** The single worst selected source at 100 percent. */
+  worstSource: XpSource;
+  worstNetPerAction: number;
+  worstSelfSustaining: boolean;
+  worstActions: number | null;
+}
+
+function intLevel(value: number, label: string, max: number): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isInteger(n) || n < 0 || n > max) {
+    throw new ToolError(
+      "bad-enchant-level",
+      `${label} level must be a whole number from 0 to ${max}, got "${String(value)}".`,
+      `Use 0 to disable ${label}, or a level from 1 to ${max}.`,
+    );
+  }
+  return n;
+}
+
+/** Damage per hit of a weapon against one mob, including damage enchants. */
+export function damagePerHit(
+  family: McToolFamily,
+  material: McMaterial,
+  source: XpSource,
+  sharpness: number,
+  smite: number,
+  bane: number,
+): number {
+  const base = attackDamage(family, material);
+  if (sharpness > 0) return base + sharpnessBonus(sharpness);
+  if (smite > 0 && source.taxonomy === "undead") return base + smiteBaneBonus(smite);
+  if (bane > 0 && source.taxonomy === "arthropod") return base + smiteBaneBonus(bane);
+  return base;
+}
+
+/** Hits to kill a mob, with Fire Aspect modeled as flat free HP per kill. */
+export function hitsToKill(hp: number, damage: number, freeHp: number): number {
+  const effective = Math.max(0, hp - Math.max(0, freeHp));
+  return Math.max(1, Math.ceil(effective / damage));
+}
+
+/**
+ * The Mending sustainability model. Per action (one block mined or one mob
+ * killed):
+ *
+ *   raw loss   = durabilityPerAction (x hits per kill for weapons)
+ *   avg loss   = raw loss x 1 / (unbreaking + 1)
+ *   avg repair = mending ? 2 x mean XP per action : 0
+ *   avg net    = weighted avg loss - weighted avg repair
+ *
+ * If avg net <= 0 the tool is self-sustaining on average. Otherwise the
+ * expected actions until it breaks is floor(durability / avg net). The
+ * worst case is the single worst selected source at 100 percent, with
+ * Unbreaking never proccing and minimum XP rolls:
+ *
+ *   worst net = max over sources of (raw loss - 2 x min XP)
+ */
+export function sustainability(input: SustainInput): SustainResult {
+  const family = TOOL_FAMILY_BY_ID.get(String(input.family));
+  if (!family) {
+    throw new ToolError(
+      "unknown-family",
+      `Unknown tool family "${String(input.family)}".`,
+      "Pick sword, axe, or pickaxe.",
+    );
+  }
+  const material = MATERIAL_BY_ID.get(String(input.material));
+  if (!material) {
+    throw new ToolError(
+      "unknown-material",
+      `Unknown tool material "${String(input.material)}".`,
+      "Pick a material such as iron, diamond, or netherite.",
+    );
+  }
+  const durability =
+    typeof input.durability === "number" ? input.durability : Number(input.durability);
+  if (!Number.isInteger(durability) || durability < 1 || durability > material.durability) {
+    throw new ToolError(
+      "bad-durability",
+      `Durability must be a whole number from 1 to ${material.durability} for a ${material.label.toLowerCase()} ${family.label.toLowerCase()}, got "${String(input.durability)}".`,
+      `Enter the tool's remaining durability, at most ${material.durability}.`,
+    );
+  }
+  const unbreaking = intLevel(input.unbreaking, "Unbreaking", MAX_UNBREAKING);
+  const sharpness = intLevel(input.sharpness, "Sharpness", MAX_SHARPNESS);
+  const smite = intLevel(input.smite, "Smite", MAX_SMITE);
+  const bane = intLevel(input.bane, "Bane of Arthropods", MAX_BANE);
+  const fireAspect = intLevel(input.fireAspect, "Fire Aspect", MAX_FIRE_ASPECT);
+  if ([sharpness, smite, bane].filter((l) => l > 0).length > 1) {
+    throw new ToolError(
+      "exclusive-damage-enchants",
+      "Sharpness, Smite, and Bane of Arthropods are mutually exclusive.",
+      "Keep at most one of the three damage enchantments above level 0.",
+    );
+  }
+  if (family.id === "pickaxe" && (sharpness || smite || bane || fireAspect)) {
+    throw new ToolError(
+      "enchant-not-applicable",
+      "A pickaxe cannot hold damage enchantments or Fire Aspect.",
+      "Clear the combat enchantments, or switch to a sword or axe.",
+    );
+  }
+  if (fireAspect > 0 && family.id !== "sword") {
+    throw new ToolError(
+      "enchant-not-applicable",
+      "Fire Aspect only applies to swords.",
+      "Set Fire Aspect to 0, or switch the tool family to sword.",
+    );
+  }
+  const freeHp = fireAspect > 0 ? Math.max(0, Number(input.fireAspectFreeHp) || 0) : 0;
+
+  const shares = normalizeMixture(input.mixture);
+  if (shares[0]!.source.kind !== family.acts) {
+    const want = family.acts === "mob" ? "mobs" : "mined blocks";
+    throw new ToolError(
+      "kind-mismatch",
+      `A ${family.label.toLowerCase()} works on ${want}, not ${shares[0]!.source.kind === "mob" ? "mobs" : "blocks"} like ${shares[0]!.source.label}.`,
+      `Select ${want} as the XP sources for this tool family.`,
+    );
+  }
+
+  const perSource: SustainPerSource[] = shares.map(({ source, share }) => {
+    if (family.acts === "mob") {
+      const dmg = damagePerHit(family, material, source, sharpness, smite, bane);
+      const hits = hitsToKill(source.hp ?? 0, dmg, freeHp);
+      return {
+        source,
+        share,
+        hits,
+        damagePerHit: dmg,
+        rawLossPerAction: hits * family.durabilityPerAction,
+      };
+    }
+    return {
+      source,
+      share,
+      hits: null,
+      damagePerHit: null,
+      rawLossPerAction: family.durabilityPerAction,
+    };
+  });
+
+  const unbreakingFactor = 1 / (unbreaking + 1);
+  const avgLoss = perSource.reduce((a, p) => a + p.share * p.rawLossPerAction * unbreakingFactor, 0);
+  const avgRepair = input.mending
+    ? MENDING_DURABILITY_PER_XP * perSource.reduce((a, p) => a + p.share * p.source.mean, 0)
+    : 0;
+  const avgNet = avgLoss - avgRepair;
+
+  let worst = perSource[0]!;
+  let worstNet = -Infinity;
+  for (const p of perSource) {
+    const net = p.rawLossPerAction - (input.mending ? MENDING_DURABILITY_PER_XP * p.source.min : 0);
+    if (net > worstNet) {
+      worstNet = net;
+      worst = p;
+    }
+  }
+
+  const EPS = 1e-9;
+  return {
+    family,
+    material,
+    perSource,
+    avgLossPerAction: avgLoss,
+    avgRepairPerAction: avgRepair,
+    avgNetPerAction: avgNet,
+    avgSelfSustaining: avgNet <= EPS,
+    avgActions: avgNet <= EPS ? null : Math.floor(durability / avgNet + EPS),
+    worstSource: worst.source,
+    worstNetPerAction: worstNet,
+    worstSelfSustaining: worstNet <= EPS,
+    worstActions: worstNet <= EPS ? null : Math.floor(durability / worstNet + EPS),
+  };
+}

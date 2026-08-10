@@ -46,6 +46,7 @@ const panels: Record<string, Component> = {
   "minecraft-anvil-calculator": defineAsyncComponent(() => import("./panels/MinecraftAnvilPanel.vue")),
   "minecraft-damage-calculator": defineAsyncComponent(() => import("./panels/MinecraftDamagePanel.vue")),
   "minecraft-loot-table-calculator": defineAsyncComponent(() => import("./panels/MinecraftLootPanel.vue")),
+  "minecraft-xp-calculator": defineAsyncComponent(() => import("./panels/MinecraftXpPanel.vue")),
   "mobile-sensors": defineAsyncComponent(() => import("./panels/MobileSensorsPanel.vue")),
   "pdf-toolbox": defineAsyncComponent(() => import("./panels/PdfToolboxPanel.vue")),
   pipelines: defineAsyncComponent(() => import("./panels/PipelinesPanel.vue")),

@@ -1,62 +1,951 @@
 {
   "method": "source-derived",
   "generated": "2026-08-10T00:00:00Z",
-  "versionsChecked": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
-  "note": "All constants verified identical across the six decompiled trees under mc-pipeline/work/<id>/src/. Worked cases were hand-derived from the cited classes.",
+  "versionsChecked": [
+    "1.16.5",
+    "1.18.2",
+    "1.20.6",
+    "1.21.1",
+    "1.21.11",
+    "26.2"
+  ],
+  "note": "All constants verified identical across the six decompiled trees under mc-pipeline/work/<id>/src/. Worked cases were hand-derived from the cited classes. Sustainability and mixture cases were added for the Mending tool model; see each provenance.",
   "cases": [
-    { "type": "xp-to-next", "level": 0, "expected": 7, "provenance": "Player#getXpNeededForNextLevel: 7 + level * 2, identical in all six trees" },
-    { "type": "xp-to-next", "level": 1, "expected": 9, "provenance": "Player#getXpNeededForNextLevel: 7 + level * 2" },
-    { "type": "xp-to-next", "level": 5, "expected": 17, "provenance": "Player#getXpNeededForNextLevel: 7 + level * 2" },
-    { "type": "xp-to-next", "level": 14, "expected": 35, "provenance": "Player#getXpNeededForNextLevel: 7 + level * 2 (last level of the low tier)" },
-    { "type": "xp-to-next", "level": 15, "expected": 37, "provenance": "Player#getXpNeededForNextLevel: 37 + (level - 15) * 5" },
-    { "type": "xp-to-next", "level": 16, "expected": 42, "provenance": "Player#getXpNeededForNextLevel: 37 + (level - 15) * 5" },
-    { "type": "xp-to-next", "level": 29, "expected": 107, "provenance": "Player#getXpNeededForNextLevel: 37 + (level - 15) * 5 (last level of the mid tier)" },
-    { "type": "xp-to-next", "level": 30, "expected": 112, "provenance": "Player#getXpNeededForNextLevel: 112 + (level - 30) * 9" },
-    { "type": "xp-to-next", "level": 31, "expected": 121, "provenance": "Player#getXpNeededForNextLevel: 112 + (level - 30) * 9" },
-    { "type": "xp-to-next", "level": 100, "expected": 742, "provenance": "Player#getXpNeededForNextLevel: 112 + (100 - 30) * 9" },
-    { "type": "total-xp", "level": 0, "expected": 0, "provenance": "sum of Player#getXpNeededForNextLevel over zero levels" },
-    { "type": "total-xp", "level": 1, "expected": 7, "provenance": "sum of Player#getXpNeededForNextLevel for level 0" },
-    { "type": "total-xp", "level": 15, "expected": 315, "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 14" },
-    { "type": "total-xp", "level": 16, "expected": 352, "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 15" },
-    { "type": "total-xp", "level": 17, "expected": 394, "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 16" },
-    { "type": "total-xp", "level": 30, "expected": 1395, "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 29 (the enchanting benchmark)" },
-    { "type": "total-xp", "level": 31, "expected": 1507, "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 30" },
-    { "type": "total-xp", "level": 32, "expected": 1628, "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 31" },
-    { "type": "total-xp", "level": 50, "expected": 5345, "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 49" },
-    { "type": "total-xp", "level": 100, "expected": 30970, "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 99" },
-    { "type": "delta", "from": 0, "to": 30, "expected": 1395, "provenance": "difference of summed Player#getXpNeededForNextLevel totals" },
-    { "type": "delta", "from": 16, "to": 17, "expected": 42, "provenance": "equals getXpNeededForNextLevel(16)" },
-    { "type": "delta", "from": 27, "to": 30, "expected": 306, "provenance": "totals 1089 and 1395 from summed Player#getXpNeededForNextLevel" },
-    { "type": "delta", "from": 30, "to": 50, "expected": 3950, "provenance": "totals 1395 and 5345 from summed Player#getXpNeededForNextLevel" },
-    { "type": "xp-to-level", "totalXp": 6, "expectedLevel": 0, "expectedInto": 6, "expectedNext": 7, "provenance": "inverse of the summed Player#getXpNeededForNextLevel curve" },
-    { "type": "xp-to-level", "totalXp": 7, "expectedLevel": 1, "expectedInto": 0, "expectedNext": 9, "provenance": "inverse of the summed Player#getXpNeededForNextLevel curve" },
-    { "type": "xp-to-level", "totalXp": 1394, "expectedLevel": 29, "expectedInto": 106, "expectedNext": 107, "provenance": "one point short of level 30 (total 1395)" },
-    { "type": "xp-to-level", "totalXp": 1395, "expectedLevel": 30, "expectedInto": 0, "expectedNext": 112, "provenance": "inverse of the summed Player#getXpNeededForNextLevel curve" },
-    { "type": "xp-to-level", "totalXp": 30970, "expectedLevel": 100, "expectedInto": 0, "expectedNext": 742, "provenance": "inverse of the summed Player#getXpNeededForNextLevel curve" },
-    { "type": "xp-to-level", "totalXp": 100000, "expectedLevel": 166, "expectedInto": 753, "expectedNext": 1336, "provenance": "inverse of the summed Player#getXpNeededForNextLevel curve; total at 166 is 99247" },
-    { "type": "mending", "durability": 1, "expectedXp": 1, "provenance": "orb XP that must be collected; single-orb consumption floors the odd remainder, so ceil(d / 2) is the planning-safe bound, per ExperienceOrb#repairPlayerItems + xpToDurability (1.16.5-1.20.6) / repair_with_xp factor 2.0 (1.21.1+)" },
-    { "type": "mending", "durability": 250, "expectedXp": 125, "provenance": "ceil(250 / 2), ExperienceOrb#xpToDurability = xp * 2 / repair_with_xp factor 2.0" },
-    { "type": "mending", "durability": 432, "expectedXp": 216, "provenance": "elytra full repair, ceil(432 / 2), ExperienceOrb#xpToDurability / repair_with_xp factor 2.0" },
-    { "type": "mending", "durability": 1561, "expectedXp": 781, "provenance": "diamond tool full repair, ceil(1561 / 2), ExperienceOrb#xpToDurability / repair_with_xp factor 2.0" },
-    { "type": "mending", "durability": 2031, "expectedXp": 1016, "provenance": "netherite tool full repair, ceil(2031 / 2), ExperienceOrb#xpToDurability / repair_with_xp factor 2.0" },
-    { "type": "source", "source": "zombie", "min": 5, "max": 5, "mean": 5, "provenance": "Monster constructor: this.xpReward = 5, identical in all six trees" },
-    { "type": "source", "source": "baby_zombie", "min": 12, "max": 12, "mean": 12, "provenance": "Zombie#getBaseExperienceReward: (int)(this.xpReward * 2.5) = 12" },
-    { "type": "source", "source": "blaze", "min": 10, "max": 10, "mean": 10, "provenance": "Blaze constructor: this.xpReward = 10" },
-    { "type": "source", "source": "ravager", "min": 20, "max": 20, "mean": 20, "provenance": "Ravager constructor: this.xpReward = 20" },
-    { "type": "source", "source": "wither", "min": 50, "max": 50, "mean": 50, "provenance": "WitherBoss constructor: this.xpReward = 50" },
-    { "type": "source", "source": "ender_dragon_first", "min": 12000, "max": 12000, "mean": 12000, "provenance": "EnderDragon death tick: 12000 on first kill, 500 on later kills" },
-    { "type": "source", "source": "adult_animal", "min": 1, "max": 3, "mean": 2, "provenance": "Animal#getBaseExperienceReward: 1 + nextInt(3)" },
-    { "type": "source", "source": "breeding", "min": 1, "max": 7, "mean": 4, "provenance": "Animal#spawnChildFromBreeding: ExperienceOrb of nextInt(7) + 1" },
-    { "type": "source", "source": "xp_bottle", "min": 3, "max": 11, "mean": 7, "provenance": "ThrownExperienceBottle: 3 + nextInt(5) + nextInt(5), identical in all six trees" },
-    { "type": "source", "source": "spawner_block", "min": 15, "max": 43, "mean": 29, "provenance": "SpawnerBlock#spawnAfterBreak: 15 + nextInt(15) + nextInt(15)" },
-    { "type": "source", "source": "coal_ore", "min": 0, "max": 2, "mean": 1, "provenance": "Blocks.COAL_ORE: UniformInt.of(0, 2) (OreBlock#xpOnDrop in 1.16.5)" },
-    { "type": "source", "source": "redstone_ore", "min": 1, "max": 5, "mean": 3, "provenance": "RedStoneOreBlock#spawnAfterBreak: 1 + nextInt(5)" },
-    { "type": "source", "source": "diamond_ore", "min": 3, "max": 7, "mean": 5, "provenance": "Blocks.DIAMOND_ORE: UniformInt.of(3, 7) (OreBlock#xpOnDrop in 1.16.5)" },
-    { "type": "source", "source": "emerald_ore", "min": 3, "max": 7, "mean": 5, "provenance": "Blocks.EMERALD_ORE: UniformInt.of(3, 7) (OreBlock#xpOnDrop in 1.16.5)" },
-    { "type": "kills", "from": 0, "to": 30, "source": "zombie", "expectedAverage": 279, "expectedGuaranteed": 279, "provenance": "ceil(1395 / 5) with the Monster base reward" },
-    { "type": "kills", "from": 0, "to": 30, "source": "xp_bottle", "expectedAverage": 200, "expectedGuaranteed": 465, "provenance": "ceil(1395 / 7) average, ceil(1395 / 3) worst case, ThrownExperienceBottle range 3 to 11" },
-    { "type": "kills", "from": 27, "to": 30, "source": "blaze", "expectedAverage": 31, "expectedGuaranteed": 31, "provenance": "ceil(306 / 10) with the Blaze reward" },
-    { "type": "kills", "from": 0, "to": 30, "source": "ender_dragon_first", "expectedAverage": 1, "expectedGuaranteed": 1, "provenance": "12000 XP covers 1395 in one kill, EnderDragon death tick" },
-    { "type": "kills", "from": 0, "to": 30, "source": "coal_ore", "expectedAverage": 1395, "expectedGuaranteed": null, "provenance": "ceil(1395 / 1) average; no worst-case bound because the minimum drop is 0" }
+    {
+      "type": "xp-to-next",
+      "level": 0,
+      "expected": 7,
+      "provenance": "Player#getXpNeededForNextLevel: 7 + level * 2, identical in all six trees"
+    },
+    {
+      "type": "xp-to-next",
+      "level": 1,
+      "expected": 9,
+      "provenance": "Player#getXpNeededForNextLevel: 7 + level * 2"
+    },
+    {
+      "type": "xp-to-next",
+      "level": 5,
+      "expected": 17,
+      "provenance": "Player#getXpNeededForNextLevel: 7 + level * 2"
+    },
+    {
+      "type": "xp-to-next",
+      "level": 14,
+      "expected": 35,
+      "provenance": "Player#getXpNeededForNextLevel: 7 + level * 2 (last level of the low tier)"
+    },
+    {
+      "type": "xp-to-next",
+      "level": 15,
+      "expected": 37,
+      "provenance": "Player#getXpNeededForNextLevel: 37 + (level - 15) * 5"
+    },
+    {
+      "type": "xp-to-next",
+      "level": 16,
+      "expected": 42,
+      "provenance": "Player#getXpNeededForNextLevel: 37 + (level - 15) * 5"
+    },
+    {
+      "type": "xp-to-next",
+      "level": 29,
+      "expected": 107,
+      "provenance": "Player#getXpNeededForNextLevel: 37 + (level - 15) * 5 (last level of the mid tier)"
+    },
+    {
+      "type": "xp-to-next",
+      "level": 30,
+      "expected": 112,
+      "provenance": "Player#getXpNeededForNextLevel: 112 + (level - 30) * 9"
+    },
+    {
+      "type": "xp-to-next",
+      "level": 31,
+      "expected": 121,
+      "provenance": "Player#getXpNeededForNextLevel: 112 + (level - 30) * 9"
+    },
+    {
+      "type": "xp-to-next",
+      "level": 100,
+      "expected": 742,
+      "provenance": "Player#getXpNeededForNextLevel: 112 + (100 - 30) * 9"
+    },
+    {
+      "type": "total-xp",
+      "level": 0,
+      "expected": 0,
+      "provenance": "sum of Player#getXpNeededForNextLevel over zero levels"
+    },
+    {
+      "type": "total-xp",
+      "level": 1,
+      "expected": 7,
+      "provenance": "sum of Player#getXpNeededForNextLevel for level 0"
+    },
+    {
+      "type": "total-xp",
+      "level": 15,
+      "expected": 315,
+      "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 14"
+    },
+    {
+      "type": "total-xp",
+      "level": 16,
+      "expected": 352,
+      "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 15"
+    },
+    {
+      "type": "total-xp",
+      "level": 17,
+      "expected": 394,
+      "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 16"
+    },
+    {
+      "type": "total-xp",
+      "level": 30,
+      "expected": 1395,
+      "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 29 (the enchanting benchmark)"
+    },
+    {
+      "type": "total-xp",
+      "level": 31,
+      "expected": 1507,
+      "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 30"
+    },
+    {
+      "type": "total-xp",
+      "level": 32,
+      "expected": 1628,
+      "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 31"
+    },
+    {
+      "type": "total-xp",
+      "level": 50,
+      "expected": 5345,
+      "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 49"
+    },
+    {
+      "type": "total-xp",
+      "level": 100,
+      "expected": 30970,
+      "provenance": "sum of Player#getXpNeededForNextLevel, levels 0 to 99"
+    },
+    {
+      "type": "delta",
+      "from": 0,
+      "to": 30,
+      "expected": 1395,
+      "provenance": "difference of summed Player#getXpNeededForNextLevel totals"
+    },
+    {
+      "type": "delta",
+      "from": 16,
+      "to": 17,
+      "expected": 42,
+      "provenance": "equals getXpNeededForNextLevel(16)"
+    },
+    {
+      "type": "delta",
+      "from": 27,
+      "to": 30,
+      "expected": 306,
+      "provenance": "totals 1089 and 1395 from summed Player#getXpNeededForNextLevel"
+    },
+    {
+      "type": "delta",
+      "from": 30,
+      "to": 50,
+      "expected": 3950,
+      "provenance": "totals 1395 and 5345 from summed Player#getXpNeededForNextLevel"
+    },
+    {
+      "type": "xp-to-level",
+      "totalXp": 6,
+      "expectedLevel": 0,
+      "expectedInto": 6,
+      "expectedNext": 7,
+      "provenance": "inverse of the summed Player#getXpNeededForNextLevel curve"
+    },
+    {
+      "type": "xp-to-level",
+      "totalXp": 7,
+      "expectedLevel": 1,
+      "expectedInto": 0,
+      "expectedNext": 9,
+      "provenance": "inverse of the summed Player#getXpNeededForNextLevel curve"
+    },
+    {
+      "type": "xp-to-level",
+      "totalXp": 1394,
+      "expectedLevel": 29,
+      "expectedInto": 106,
+      "expectedNext": 107,
+      "provenance": "one point short of level 30 (total 1395)"
+    },
+    {
+      "type": "xp-to-level",
+      "totalXp": 1395,
+      "expectedLevel": 30,
+      "expectedInto": 0,
+      "expectedNext": 112,
+      "provenance": "inverse of the summed Player#getXpNeededForNextLevel curve"
+    },
+    {
+      "type": "xp-to-level",
+      "totalXp": 30970,
+      "expectedLevel": 100,
+      "expectedInto": 0,
+      "expectedNext": 742,
+      "provenance": "inverse of the summed Player#getXpNeededForNextLevel curve"
+    },
+    {
+      "type": "xp-to-level",
+      "totalXp": 100000,
+      "expectedLevel": 166,
+      "expectedInto": 753,
+      "expectedNext": 1336,
+      "provenance": "inverse of the summed Player#getXpNeededForNextLevel curve; total at 166 is 99247"
+    },
+    {
+      "type": "mending",
+      "durability": 1,
+      "expectedXp": 1,
+      "provenance": "orb XP that must be collected; single-orb consumption floors the odd remainder, so ceil(d / 2) is the planning-safe bound, per ExperienceOrb#repairPlayerItems + xpToDurability (1.16.5-1.20.6) / repair_with_xp factor 2.0 (1.21.1+)"
+    },
+    {
+      "type": "mending",
+      "durability": 250,
+      "expectedXp": 125,
+      "provenance": "ceil(250 / 2), ExperienceOrb#xpToDurability = xp * 2 / repair_with_xp factor 2.0"
+    },
+    {
+      "type": "mending",
+      "durability": 432,
+      "expectedXp": 216,
+      "provenance": "elytra full repair, ceil(432 / 2), ExperienceOrb#xpToDurability / repair_with_xp factor 2.0"
+    },
+    {
+      "type": "mending",
+      "durability": 1561,
+      "expectedXp": 781,
+      "provenance": "diamond tool full repair, ceil(1561 / 2), ExperienceOrb#xpToDurability / repair_with_xp factor 2.0"
+    },
+    {
+      "type": "mending",
+      "durability": 2031,
+      "expectedXp": 1016,
+      "provenance": "netherite tool full repair, ceil(2031 / 2), ExperienceOrb#xpToDurability / repair_with_xp factor 2.0"
+    },
+    {
+      "type": "source",
+      "source": "zombie",
+      "min": 5,
+      "max": 5,
+      "mean": 5,
+      "provenance": "Monster constructor: this.xpReward = 5, identical in all six trees"
+    },
+    {
+      "type": "source",
+      "source": "baby_zombie",
+      "min": 12,
+      "max": 12,
+      "mean": 12,
+      "provenance": "Zombie#getBaseExperienceReward: (int)(this.xpReward * 2.5) = 12"
+    },
+    {
+      "type": "source",
+      "source": "blaze",
+      "min": 10,
+      "max": 10,
+      "mean": 10,
+      "provenance": "Blaze constructor: this.xpReward = 10"
+    },
+    {
+      "type": "source",
+      "source": "ravager",
+      "min": 20,
+      "max": 20,
+      "mean": 20,
+      "provenance": "Ravager constructor: this.xpReward = 20"
+    },
+    {
+      "type": "source",
+      "source": "wither",
+      "min": 50,
+      "max": 50,
+      "mean": 50,
+      "provenance": "WitherBoss constructor: this.xpReward = 50"
+    },
+    {
+      "type": "source",
+      "source": "ender_dragon_first",
+      "min": 12000,
+      "max": 12000,
+      "mean": 12000,
+      "provenance": "EnderDragon death tick: 12000 on first kill, 500 on later kills"
+    },
+    {
+      "type": "source",
+      "source": "adult_animal",
+      "min": 1,
+      "max": 3,
+      "mean": 2,
+      "provenance": "Animal#getBaseExperienceReward: 1 + nextInt(3)"
+    },
+    {
+      "type": "source",
+      "source": "breeding",
+      "min": 1,
+      "max": 7,
+      "mean": 4,
+      "provenance": "Animal#spawnChildFromBreeding: ExperienceOrb of nextInt(7) + 1"
+    },
+    {
+      "type": "source",
+      "source": "xp_bottle",
+      "min": 3,
+      "max": 11,
+      "mean": 7,
+      "provenance": "ThrownExperienceBottle: 3 + nextInt(5) + nextInt(5), identical in all six trees"
+    },
+    {
+      "type": "source",
+      "source": "spawner_block",
+      "min": 15,
+      "max": 43,
+      "mean": 29,
+      "provenance": "SpawnerBlock#spawnAfterBreak: 15 + nextInt(15) + nextInt(15)"
+    },
+    {
+      "type": "source",
+      "source": "coal_ore",
+      "min": 0,
+      "max": 2,
+      "mean": 1,
+      "provenance": "Blocks.COAL_ORE: UniformInt.of(0, 2) (OreBlock#xpOnDrop in 1.16.5)"
+    },
+    {
+      "type": "source",
+      "source": "redstone_ore",
+      "min": 1,
+      "max": 5,
+      "mean": 3,
+      "provenance": "RedStoneOreBlock#spawnAfterBreak: 1 + nextInt(5)"
+    },
+    {
+      "type": "source",
+      "source": "diamond_ore",
+      "min": 3,
+      "max": 7,
+      "mean": 5,
+      "provenance": "Blocks.DIAMOND_ORE: UniformInt.of(3, 7) (OreBlock#xpOnDrop in 1.16.5)"
+    },
+    {
+      "type": "source",
+      "source": "emerald_ore",
+      "min": 3,
+      "max": 7,
+      "mean": 5,
+      "provenance": "Blocks.EMERALD_ORE: UniformInt.of(3, 7) (OreBlock#xpOnDrop in 1.16.5)"
+    },
+    {
+      "type": "kills",
+      "from": 0,
+      "to": 30,
+      "source": "zombie",
+      "expectedAverage": 279,
+      "expectedGuaranteed": 279,
+      "provenance": "ceil(1395 / 5) with the Monster base reward"
+    },
+    {
+      "type": "kills",
+      "from": 0,
+      "to": 30,
+      "source": "xp_bottle",
+      "expectedAverage": 200,
+      "expectedGuaranteed": 465,
+      "provenance": "ceil(1395 / 7) average, ceil(1395 / 3) worst case, ThrownExperienceBottle range 3 to 11"
+    },
+    {
+      "type": "kills",
+      "from": 27,
+      "to": 30,
+      "source": "blaze",
+      "expectedAverage": 31,
+      "expectedGuaranteed": 31,
+      "provenance": "ceil(306 / 10) with the Blaze reward"
+    },
+    {
+      "type": "kills",
+      "from": 0,
+      "to": 30,
+      "source": "ender_dragon_first",
+      "expectedAverage": 1,
+      "expectedGuaranteed": 1,
+      "provenance": "12000 XP covers 1395 in one kill, EnderDragon death tick"
+    },
+    {
+      "type": "kills",
+      "from": 0,
+      "to": 30,
+      "source": "coal_ore",
+      "expectedAverage": 1395,
+      "expectedGuaranteed": null,
+      "provenance": "ceil(1395 / 1) average; no worst-case bound because the minimum drop is 0"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "pickaxe",
+        "material": "diamond",
+        "durability": 1561,
+        "mending": true,
+        "unbreaking": 0,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "diamond_ore",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": true,
+        "avgActions": null,
+        "worstSelfSustaining": true,
+        "worstActions": null,
+        "worstSource": "diamond_ore"
+      },
+      "provenance": "Diamond ore 3-7 XP (UniformInt 3,7) vs 1 durability per block (DiggerItem#mineBlock): repair 10 or worst 6 always beats loss 1. Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "pickaxe",
+        "material": "diamond",
+        "durability": 1561,
+        "mending": true,
+        "unbreaking": 0,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "coal_ore",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": true,
+        "avgActions": null,
+        "worstSelfSustaining": false,
+        "worstActions": 1561,
+        "worstSource": "coal_ore"
+      },
+      "provenance": "Coal ore mean 1 XP sustains on average (repair 2 vs loss 1) but its minimum roll is 0, so worst case loses 1 per block: floor(1561/1). Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "pickaxe",
+        "material": "diamond",
+        "durability": 1561,
+        "mending": false,
+        "unbreaking": 3,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "coal_ore",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": false,
+        "avgActions": 6244,
+        "worstSelfSustaining": false,
+        "worstActions": 1561,
+        "worstSource": "coal_ore"
+      },
+      "provenance": "No Mending, Unbreaking III: expected loss 1/4 per block, floor(1561/0.25) = 6244; worst case Unbreaking never procs, 1561. Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "pickaxe",
+        "material": "diamond",
+        "durability": 1561,
+        "mending": false,
+        "unbreaking": 1,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "coal_ore",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": false,
+        "avgActions": 3122,
+        "worstSelfSustaining": false,
+        "worstActions": 1561,
+        "worstSource": "coal_ore"
+      },
+      "provenance": "Unbreaking I halves expected loss: floor(1561/0.5) = 3122. Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "pickaxe",
+        "material": "diamond",
+        "durability": 1561,
+        "mending": false,
+        "unbreaking": 2,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "coal_ore",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": false,
+        "avgActions": 4683,
+        "worstSelfSustaining": false,
+        "worstActions": 1561,
+        "worstSource": "coal_ore"
+      },
+      "provenance": "Unbreaking II: expected loss 1/3 per block, floor(1561*3) = 4683. Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "pickaxe",
+        "material": "gold",
+        "durability": 32,
+        "mending": false,
+        "unbreaking": 0,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "lapis_ore",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": false,
+        "avgActions": 32,
+        "worstSelfSustaining": false,
+        "worstActions": 32,
+        "worstSource": "lapis_ore"
+      },
+      "provenance": "Gold tier durability 32 (Tiers.GOLD / ToolMaterial.GOLD), 1 per block, no repair: 32 blocks either way. Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "pickaxe",
+        "material": "diamond",
+        "durability": 1561,
+        "mending": true,
+        "unbreaking": 0,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "lapis_ore",
+            "weight": 0.6413
+          },
+          {
+            "sourceId": "redstone_ore",
+            "weight": 0.4
+          },
+          {
+            "sourceId": "diamond_ore",
+            "weight": 0.1589
+          },
+          {
+            "sourceId": "coal_ore",
+            "weight": 0.0361
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": true,
+        "avgActions": null,
+        "worstSelfSustaining": false,
+        "worstActions": 1561,
+        "worstSource": "coal_ore"
+      },
+      "provenance": "Mining at y=0 preset mixture (xp-mixtures.json overworld_y0): weighted mean XP ~3.46 sustains on average; worst single source at 100 percent is coal ore (min 0). Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "sword",
+        "material": "diamond",
+        "durability": 1561,
+        "mending": false,
+        "unbreaking": 0,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "zombie",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": false,
+        "avgActions": 520,
+        "worstSelfSustaining": false,
+        "worstActions": 520,
+        "worstSource": "zombie"
+      },
+      "provenance": "Diamond sword 7 attack (1 player base + 3 SwordItem + 3 tier) vs zombie 20 HP: 3 hits per kill, 1 durability per hit (SwordItem#hurtEnemy), floor(1561/3) = 520. Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "sword",
+        "material": "diamond",
+        "durability": 1561,
+        "mending": true,
+        "unbreaking": 0,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "zombie",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": true,
+        "avgActions": null,
+        "worstSelfSustaining": true,
+        "worstActions": null,
+        "worstSource": "zombie"
+      },
+      "provenance": "Mending sword on zombies: 3 durability lost vs 10 repaired per kill (5 XP x 2), self-sustaining even in the worst case (fixed XP drop). Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "sword",
+        "material": "wood",
+        "durability": 59,
+        "mending": true,
+        "unbreaking": 0,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "enderman",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": true,
+        "avgActions": null,
+        "worstSelfSustaining": true,
+        "worstActions": null,
+        "worstSource": "enderman"
+      },
+      "provenance": "Boundary case: wooden sword 4 attack vs enderman 40 HP = 10 hits, exactly balanced by 10 repair (5 XP x 2); net 0 counts as self-sustaining. Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "axe",
+        "material": "diamond",
+        "durability": 1561,
+        "mending": false,
+        "unbreaking": 0,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "zombie",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": false,
+        "avgActions": 260,
+        "worstSelfSustaining": false,
+        "worstActions": 260,
+        "worstSource": "zombie"
+      },
+      "provenance": "Diamond axe 9 attack (1 + 5 AxeItem arg + 3 tier) vs zombie: 3 hits, 2 durability per hit (DiggerItem#hurtEnemy), floor(1561/6) = 260. Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "sword",
+        "material": "netherite",
+        "durability": 2031,
+        "mending": true,
+        "unbreaking": 3,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 0,
+        "fireAspectFreeHp": 3,
+        "mixture": [
+          {
+            "sourceId": "warden",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": false,
+        "avgActions": 353,
+        "worstSelfSustaining": false,
+        "worstActions": 38,
+        "worstSource": "warden"
+      },
+      "provenance": "Netherite sword 8 attack vs warden 500 HP: 63 hits per kill; avg net 63/4 - 10 = 5.75, floor(2031/5.75) = 353; worst 63 - 10 = 53, floor(2031/53) = 38. Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "sustain",
+      "input": {
+        "family": "sword",
+        "material": "diamond",
+        "durability": 1561,
+        "mending": false,
+        "unbreaking": 0,
+        "sharpness": 0,
+        "smite": 0,
+        "bane": 0,
+        "fireAspect": 1,
+        "fireAspectFreeHp": 6,
+        "mixture": [
+          {
+            "sourceId": "zombie",
+            "weight": 1
+          }
+        ]
+      },
+      "expected": {
+        "avgSelfSustaining": false,
+        "avgActions": 780,
+        "worstSelfSustaining": false,
+        "worstActions": 780,
+        "worstSource": "zombie"
+      },
+      "provenance": "Fire Aspect as configurable free HP: 6 free HP leaves 14 effective HP, 2 hits instead of 3, floor(1561/2) = 780. Sustainability model: avg net = weighted(rawLoss/(unbreaking+1)) - weighted(2 x mean XP) per action; worst = single worst source at 100 percent, Unbreaking never proccing, minimum XP rolls (2 durability per XP: ExperienceOrb#xpToDurability / repair_with_xp factor 2.0; Unbreaking 1/(level+1): DigDurabilityEnchantment / unbreaking.json remove_binomial)"
+    },
+    {
+      "type": "hits",
+      "family": "sword",
+      "material": "diamond",
+      "sharpness": 0,
+      "smite": 5,
+      "bane": 0,
+      "fireAspectFreeHp": 0,
+      "source": "zombie",
+      "expected": 2,
+      "provenance": "Smite V vs undead: 7 + 2.5x5 = 19.5 damage (DamageEnchantment type 1 / smite.json linear 2.5), ceil(20/19.5) = 2 hits"
+    },
+    {
+      "type": "hits",
+      "family": "sword",
+      "material": "diamond",
+      "sharpness": 0,
+      "smite": 5,
+      "bane": 0,
+      "fireAspectFreeHp": 0,
+      "source": "creeper",
+      "expected": 3,
+      "provenance": "Smite V vs creeper (not undead, no MobType.UNDEAD / sensitive_to_smite): no bonus, 7 damage, 3 hits"
+    },
+    {
+      "type": "hits",
+      "family": "sword",
+      "material": "diamond",
+      "sharpness": 0,
+      "smite": 0,
+      "bane": 5,
+      "fireAspectFreeHp": 0,
+      "source": "spider",
+      "expected": 1,
+      "provenance": "Bane of Arthropods V vs spider (MobType.ARTHROPOD / sensitive_to_bane_of_arthropods, 16 HP): 19.5 damage, 1 hit"
+    },
+    {
+      "type": "hits",
+      "family": "sword",
+      "material": "diamond",
+      "sharpness": 0,
+      "smite": 0,
+      "bane": 5,
+      "fireAspectFreeHp": 0,
+      "source": "zombie",
+      "expected": 3,
+      "provenance": "Bane of Arthropods V vs zombie (not an arthropod): no bonus, 3 hits"
+    },
+    {
+      "type": "hits",
+      "family": "sword",
+      "material": "diamond",
+      "sharpness": 5,
+      "smite": 0,
+      "bane": 0,
+      "fireAspectFreeHp": 0,
+      "source": "zombie",
+      "expected": 2,
+      "provenance": "Sharpness V: 7 + (1 + 0.5x4) = 10 damage (DamageEnchantment type 0 / sharpness.json base 1.0 per level 0.5), ceil(20/10) = 2 hits"
+    },
+    {
+      "type": "hits",
+      "family": "axe",
+      "material": "netherite",
+      "sharpness": 0,
+      "smite": 0,
+      "bane": 0,
+      "fireAspectFreeHp": 0,
+      "source": "zombie",
+      "expected": 2,
+      "provenance": "Netherite axe 10 attack (1 + 5 AxeItem arg + 4 tier bonus): ceil(20/10) = 2 hits"
+    },
+    {
+      "type": "mixture-plan",
+      "from": 0,
+      "to": 30,
+      "mixture": [
+        {
+          "sourceId": "zombie",
+          "weight": 1
+        },
+        {
+          "sourceId": "blaze",
+          "weight": 1
+        }
+      ],
+      "expectedAvg": 186,
+      "expectedGuaranteed": 279,
+      "expectedWorstSource": "zombie",
+      "provenance": "Equal split zombie (5 XP) + blaze (10 XP): weighted mean 7.5, ceil(1395/7.5) = 186; worst single source at 100 percent is zombie, ceil(1395/5) = 279"
+    },
+    {
+      "type": "mixture-plan",
+      "from": 0,
+      "to": 30,
+      "mixture": [
+        {
+          "sourceId": "zombie",
+          "weight": 3
+        },
+        {
+          "sourceId": "blaze",
+          "weight": 1
+        }
+      ],
+      "expectedAvg": 224,
+      "expectedGuaranteed": 279,
+      "expectedWorstSource": "zombie",
+      "provenance": "Skewed 3:1 zombie:blaze: weighted mean 6.25, ceil(1395/6.25) = 224"
+    },
+    {
+      "type": "mixture-plan",
+      "from": 0,
+      "to": 30,
+      "mixture": [
+        {
+          "sourceId": "spider",
+          "weight": 100
+        },
+        {
+          "sourceId": "zombie",
+          "weight": 95
+        },
+        {
+          "sourceId": "skeleton",
+          "weight": 100
+        },
+        {
+          "sourceId": "creeper",
+          "weight": 100
+        },
+        {
+          "sourceId": "enderman",
+          "weight": 10
+        },
+        {
+          "sourceId": "witch",
+          "weight": 5
+        }
+      ],
+      "expectedAvg": 279,
+      "expectedGuaranteed": 279,
+      "expectedWorstSource": "spider",
+      "provenance": "Overworld mobs preset (plains.json spawners.monster, pre-1.21.11 weights): every source drops 5 XP, so 279 kills either way"
+    },
+    {
+      "type": "mixture-plan",
+      "from": 0,
+      "to": 30,
+      "mixture": [
+        {
+          "sourceId": "diamond_ore",
+          "weight": 1
+        },
+        {
+          "sourceId": "coal_ore",
+          "weight": 1
+        }
+      ],
+      "expectedAvg": 465,
+      "expectedGuaranteed": null,
+      "expectedWorstSource": "coal_ore",
+      "provenance": "Equal split diamond ore (mean 5) + coal ore (mean 1): weighted mean 3, ceil(1395/3) = 465; no guaranteed bound because coal ore can drop 0"
+    }
   ]
 }

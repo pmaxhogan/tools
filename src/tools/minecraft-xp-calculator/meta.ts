@@ -92,6 +92,9 @@ export const meta: ToolMeta = {
             { value: "enderman", label: "Enderman (5 XP)", synonyms: ["ender man", "enderman farm", "end farm"] },
             { value: "witch", label: "Witch (5 XP)", synonyms: ["witch farm"] },
             { value: "wither_skeleton", label: "Wither skeleton (5 XP)", synonyms: ["wither skelly", "nether fortress"] },
+            { value: "ghast", label: "Ghast (5 XP)", synonyms: ["ghast tear"] },
+            { value: "zombified_piglin", label: "Zombified piglin (5 XP)", synonyms: ["zombie pigman", "pigman", "gold farm"] },
+            { value: "piglin", label: "Piglin (5 XP)", synonyms: ["bartering", "nether mob"] },
             { value: "blaze", label: "Blaze (10 XP)", synonyms: ["blaze farm", "blaze rod"] },
             { value: "guardian", label: "Guardian (10 XP)", synonyms: ["guardian farm", "elder guardian", "ocean monument"] },
             { value: "evoker", label: "Evoker (10 XP)", synonyms: ["raid", "totem of undying"] },
@@ -148,21 +151,21 @@ export const meta: ToolMeta = {
     },
   ],
   copy: {
-    what: "Exact Minecraft XP math: convert levels to experience points and back, price a Mending repair in orb XP, and plan how many mob kills, XP bottles, or mined ore blocks a level climb costs. Every constant is reimplemented from decompiled, unobfuscated game code and checked across six releases from 1.16.5 through 26.2. Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.",
-    how: "Pick a mode. Levels to XP takes a current and a target level and shows the total points at each, the gap between them, and how many of your chosen XP source cover it on average and in the worst case. XP to level converts a raw point total into a level with progress toward the next. Mending repair takes a durability deficit and prices it in orb XP, then in your chosen source. The settings live in the page address, so you can share an exact calculation as a link.",
-    why: "Most Minecraft XP calculators copy each other's tables and never say which version they describe. The numbers here were verified against the game's own decompiled code, version by version: the level curve, mob rewards, bottle and ore drops, and the Mending ratio of 2 durability per point are identical in every release checked, from 1.16.5 through 26.2, so there is no version picker because nothing differs. The math runs in your browser with no ads, and your files and inputs never leave your device.",
+    what: "Exact Minecraft XP math: convert levels to experience points and back, chart the full XP curve, and plan how many mob kills, XP bottles, or mined ore blocks a level climb costs, with a planner table covering every source. Mix several sources with relative weights, or apply presets built from the game's own biome spawner weights and ore generation data. A Mending mode models a self-repairing tool: pick a sword, axe, or pickaxe with its enchantments and see whether grinding your sources sustains it forever or how long until it breaks. Every constant is reimplemented from decompiled, unobfuscated game code and checked across six releases from 1.16.5 through 26.2. Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.",
+    how: "Enter a level range (or flip the converter to turn raw XP back into a level) and read the totals, the gap, and the every-level chart. Pick XP sources below: select several within a category to weight them, or load a preset like Overworld mobs or Mining at y=0. Turn on the Mending toggle to describe your tool: family, material, durability, Unbreaking, Sharpness or Smite or Bane, and Fire Aspect where legal; the result shows average and worst-case actions before the tool breaks, or calls it self-sustaining. Everything lives in the page address, so a link reproduces your exact setup.",
+    why: "Most Minecraft XP calculators copy each other's tables and never say which version they describe. The numbers here were verified against the game's own decompiled code, version by version: the level curve, mob rewards, bottle and ore drops, weapon damage, Unbreaking odds, and the Mending ratio of 2 durability per point are identical in every release checked, from 1.16.5 through 26.2, so the version picker only gates newer content such as copper tools and the preset data. The math runs in your browser with no ads, and your files and inputs never leave your device.",
     faq: [
       {
         q: "How much XP does it take to reach level 30?",
         a: "1,395 experience points starting from level 0. The curve has three tiers: each level up to 15 costs 7 + 2 times the level, levels 15 to 30 cost 37 + 5 per level above 15, and levels past 30 cost 112 + 9 per level above 30. That is why level 30 to 39 costs more than level 0 to 30.",
       },
       {
-        q: "How does Mending turn XP into durability?",
-        a: "Every experience point an orb carries repairs 2 points of durability on the Mending item you are holding or wearing, and orbs go to repair before they fill your XP bar. The ratio is hard-coded in the experience orb logic through 1.20.6 and defined as a repair_with_xp factor of 2.0 in the enchantment data from 1.21 on; both were checked and match.",
+        q: "Can a Mending tool repair itself forever?",
+        a: "Often, yes. Each XP point an orb carries repairs 2 durability on the damaged Mending item before filling your XP bar, and Unbreaking makes each point of wear land only 1 time in level + 1. A Mending sword on zombies loses about 3 durability per kill and repairs 10, so it is self-sustaining; the calculator also reports the honest worst case, meaning your single worst selected source at 100 percent, minimum XP rolls, and Unbreaking never proccing. Fortune never changes ore XP and Silk Touch drops zero, so a silk-touched pickaxe cannot sustain off ore.",
       },
       {
         q: "Do these numbers change between Minecraft versions?",
-        a: "No. The level curve, mob XP rewards, Bottle o' Enchanting range, ore drop ranges, and the Mending ratio were compared across decompiled code for 1.16.5, 1.18.2, 1.20.6, 1.21.1, 1.21.11, and 26.2, and every value is identical. Only availability changes: newer mobs like the Warden and Breeze simply do not exist in older versions. Mob equipment adds 1 to 3 bonus XP per equipped item, and Looting does not change XP drops.",
+        a: "No. The level curve, mob XP rewards, Bottle o' Enchanting range, ore drop ranges, weapon damage, enchantment formulas, and the Mending ratio were compared across decompiled code for 1.16.5, 1.18.2, 1.20.6, 1.21.1, 1.21.11, and 26.2, and every value is identical. Only availability and world data change: copper tools and mobs like the Warden or Breeze do not exist in older versions, and the mining presets use 1.18+ world generation. Mob equipment adds 1 to 3 bonus XP per equipped item, and Looting does not change XP drops.",
       },
     ],
   },

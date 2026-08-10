@@ -1,16 +1,71 @@
 import { describe, expect, it } from "vitest";
 import {
+  damagePerHit,
+  hitsToKill,
   levelFromTotalXp,
   MAX_LEVEL,
   mendingXpForDurability,
+  normalizeMixture,
+  planMixture,
   run,
+  sustainability,
   totalXpAtLevel,
   xpToNextLevel,
   type McXpOpts,
+  type MixtureEntry,
+  type SustainInput,
 } from "./index";
-import { XP_SOURCE_BY_ID } from "./data";
+import {
+  MATERIAL_BY_ID,
+  MIXTURE_PRESET_BY_ID,
+  presetWeights,
+  TOOL_FAMILY_BY_ID,
+  XP_SOURCE_BY_ID,
+} from "./data";
 import { ToolError } from "../types";
 import vectors from "../../../mc-pipeline/vectors/xp/source-derived.json";
+
+/** The union of every vector case shape (fields optional per type). */
+interface VectorCase {
+  type: string;
+  provenance: string;
+  level?: number;
+  expected?: number;
+  from?: number;
+  to?: number;
+  totalXp?: number;
+  expectedLevel?: number;
+  expectedInto?: number;
+  expectedNext?: number;
+  durability?: number;
+  expectedXp?: number;
+  source?: string;
+  min?: number;
+  max?: number;
+  mean?: number;
+  expectedAverage?: number;
+  expectedGuaranteed?: number | null;
+  input?: SustainInput;
+  family?: string;
+  material?: string;
+  sharpness?: number;
+  smite?: number;
+  bane?: number;
+  fireAspectFreeHp?: number;
+  mixture?: MixtureEntry[];
+  expectedAvg?: number;
+  expectedWorstSource?: string;
+}
+
+const vectorCases = vectors.cases as unknown as VectorCase[];
+
+interface SustainExpected {
+  avgSelfSustaining: boolean;
+  avgActions: number | null;
+  worstSelfSustaining: boolean;
+  worstActions: number | null;
+  worstSource: string;
+}
 
 function opts(overrides: Partial<McXpOpts>): McXpOpts {
   return {
@@ -161,9 +216,10 @@ describe("minecraft-xp-calculator", () => {
 
   describe("source-derived vectors (mc-pipeline/vectors/xp)", () => {
     expect(vectors.method).toBe("source-derived");
-    expect(vectors.cases.length).toBeGreaterThanOrEqual(30);
+    expect(vectorCases.length).toBeGreaterThanOrEqual(30);
+    expect(vectorCases.filter((c) => c.type === "sustain" || c.type === "hits").length).toBeGreaterThanOrEqual(15);
 
-    for (const c of vectors.cases) {
+    for (const c of vectorCases) {
       it(`${c.type}: ${c.provenance.slice(0, 60)}`, () => {
         switch (c.type) {
           case "xp-to-next":
@@ -204,10 +260,215 @@ describe("minecraft-xp-calculator", () => {
             }
             break;
           }
+          case "sustain": {
+            const out = sustainability(c.input!);
+            const exp = c.expected as unknown as SustainExpected;
+            expect(out.avgSelfSustaining).toBe(exp.avgSelfSustaining);
+            expect(out.avgActions).toBe(exp.avgActions);
+            expect(out.worstSelfSustaining).toBe(exp.worstSelfSustaining);
+            expect(out.worstActions).toBe(exp.worstActions);
+            expect(out.worstSource.id).toBe(exp.worstSource);
+            break;
+          }
+          case "hits": {
+            const family = TOOL_FAMILY_BY_ID.get(c.family!)!;
+            const material = MATERIAL_BY_ID.get(c.material!)!;
+            const source = XP_SOURCE_BY_ID.get(c.source!)!;
+            const dmg = damagePerHit(family, material, source, c.sharpness!, c.smite!, c.bane!);
+            expect(hitsToKill(source.hp!, dmg, c.fireAspectFreeHp!)).toBe(c.expected);
+            break;
+          }
+          case "mixture-plan": {
+            const delta = totalXpAtLevel(c.to!) - totalXpAtLevel(c.from!);
+            const plan = planMixture(delta, c.mixture!);
+            expect(plan.avgActions).toBe(c.expectedAvg);
+            expect(plan.guaranteedActions).toBe(c.expectedGuaranteed ?? null);
+            expect(plan.worstSource.id).toBe(c.expectedWorstSource);
+            break;
+          }
           default:
             throw new Error(`Unhandled vector case type: ${String(c.type)}`);
         }
       });
     }
+  });
+
+  describe("mixtures", () => {
+    it("normalizes an equal split to equal shares", () => {
+      const shares = normalizeMixture([
+        { sourceId: "zombie", weight: 1 },
+        { sourceId: "blaze", weight: 1 },
+      ]);
+      expect(shares.map((s) => s.share)).toEqual([0.5, 0.5]);
+    });
+
+    it("normalizes skewed weights and any scale identically", () => {
+      const a = planMixture(1395, [
+        { sourceId: "zombie", weight: 3 },
+        { sourceId: "blaze", weight: 1 },
+      ]);
+      const b = planMixture(1395, [
+        { sourceId: "zombie", weight: 75 },
+        { sourceId: "blaze", weight: 25 },
+      ]);
+      expect(a.avgActions).toBe(b.avgActions);
+      expect(a.meanXpPerAction).toBeCloseTo(6.25, 10);
+    });
+
+    it("defines the worst case as the single worst source at 100 percent", () => {
+      const plan = planMixture(1395, [
+        { sourceId: "diamond_ore", weight: 99 },
+        { sourceId: "coal_ore", weight: 1 },
+      ]);
+      // Even at 1 percent weight, coal ore (min 0) is the worst source.
+      expect(plan.worstSource.id).toBe("coal_ore");
+      expect(plan.guaranteedActions).toBeNull();
+    });
+
+    it("loads authoritative preset weights per version from the committed data", () => {
+      const overworld = MIXTURE_PRESET_BY_ID.get("overworld_mobs")!;
+      expect(presetWeights(overworld, "1.16.5")).toMatchObject({ zombie: 95, spider: 100 });
+      expect(presetWeights(overworld, "1.21.11")).toMatchObject({ zombie: 90 });
+      expect(presetWeights(overworld, "26.2")).toMatchObject({ zombie: 90 });
+      const mining = MIXTURE_PRESET_BY_ID.get("mining_y0")!;
+      expect(presetWeights(mining, "1.16.5")).toBeNull();
+      expect(presetWeights(mining, "1.18.2")).toMatchObject({ lapis_ore: 0.6413 });
+      const nether = MIXTURE_PRESET_BY_ID.get("nether_mobs")!;
+      const weights = presetWeights(nether, "1.20.6")!;
+      // Preset weights must resolve to known sources of one kind.
+      const shares = normalizeMixture(
+        Object.entries(weights).map(([sourceId, weight]) => ({ sourceId, weight })),
+      );
+      expect(shares.every((s) => s.source.kind === "mob")).toBe(true);
+    });
+
+    it("rejects an empty mixture, mixed kinds, and zero weights", () => {
+      expect(() => normalizeMixture([])).toThrowError(ToolError);
+      try {
+        normalizeMixture([]);
+      } catch (e) {
+        expect((e as ToolError).code).toBe("empty-mixture");
+      }
+      try {
+        normalizeMixture([
+          { sourceId: "zombie", weight: 1 },
+          { sourceId: "coal_ore", weight: 1 },
+        ]);
+        expect.unreachable();
+      } catch (e) {
+        expect((e as ToolError).code).toBe("mixed-kinds");
+      }
+      try {
+        normalizeMixture([{ sourceId: "zombie", weight: 0 }]);
+        expect.unreachable();
+      } catch (e) {
+        expect((e as ToolError).code).toBe("zero-weights");
+      }
+      try {
+        normalizeMixture([{ sourceId: "zombie", weight: -1 }]);
+        expect.unreachable();
+      } catch (e) {
+        expect((e as ToolError).code).toBe("bad-weight");
+      }
+    });
+  });
+
+  describe("sustainability model", () => {
+    const base: SustainInput = {
+      family: "sword",
+      material: "diamond",
+      durability: 1561,
+      mending: true,
+      unbreaking: 0,
+      sharpness: 0,
+      smite: 0,
+      bane: 0,
+      fireAspect: 0,
+      fireAspectFreeHp: 3,
+      mixture: [{ sourceId: "zombie", weight: 1 }],
+    };
+
+    it("ignores the free HP setting while Fire Aspect is level 0", () => {
+      const off = sustainability({ ...base, mending: false, fireAspect: 0, fireAspectFreeHp: 50 });
+      expect(off.perSource[0]!.hits).toBe(3);
+      const on = sustainability({ ...base, mending: false, fireAspect: 1, fireAspectFreeHp: 50 });
+      expect(on.perSource[0]!.hits).toBe(1);
+    });
+
+    it("scales expected durability loss by 1/(unbreaking + 1)", () => {
+      for (const level of [0, 1, 2, 3]) {
+        const out = sustainability({ ...base, mending: false, unbreaking: level });
+        expect(out.avgLossPerAction).toBeCloseTo(3 / (level + 1), 10);
+      }
+    });
+
+    it("rejects both Smite and Bane at once (mutually exclusive group)", () => {
+      try {
+        sustainability({ ...base, smite: 5, bane: 5 });
+        expect.unreachable();
+      } catch (e) {
+        expect((e as ToolError).code).toBe("exclusive-damage-enchants");
+        expect((e as ToolError).fix).toMatch(/at most one/);
+      }
+    });
+
+    it("rejects combat enchantments on a pickaxe and Fire Aspect on an axe", () => {
+      try {
+        sustainability({
+          ...base,
+          family: "pickaxe",
+          sharpness: 5,
+          mixture: [{ sourceId: "coal_ore", weight: 1 }],
+        });
+        expect.unreachable();
+      } catch (e) {
+        expect((e as ToolError).code).toBe("enchant-not-applicable");
+      }
+      try {
+        sustainability({ ...base, family: "axe", fireAspect: 1 });
+        expect.unreachable();
+      } catch (e) {
+        expect((e as ToolError).code).toBe("enchant-not-applicable");
+        expect((e as ToolError).fix).toMatch(/sword/);
+      }
+    });
+
+    it("rejects a source kind that does not match the tool family", () => {
+      try {
+        sustainability({ ...base, mixture: [{ sourceId: "diamond_ore", weight: 1 }] });
+        expect.unreachable();
+      } catch (e) {
+        expect((e as ToolError).code).toBe("kind-mismatch");
+        expect((e as ToolError).fix).toMatch(/mobs/);
+      }
+    });
+
+    it("rejects unknown family, unknown material, and out-of-range durability", () => {
+      try {
+        sustainability({ ...base, family: "hoe" });
+        expect.unreachable();
+      } catch (e) {
+        expect((e as ToolError).code).toBe("unknown-family");
+      }
+      try {
+        sustainability({ ...base, material: "emerald" });
+        expect.unreachable();
+      } catch (e) {
+        expect((e as ToolError).code).toBe("unknown-material");
+      }
+      try {
+        sustainability({ ...base, durability: 2000 });
+        expect.unreachable();
+      } catch (e) {
+        expect((e as ToolError).code).toBe("bad-durability");
+        expect((e as ToolError).fix).toMatch(/1561/);
+      }
+      try {
+        sustainability({ ...base, unbreaking: 4 });
+        expect.unreachable();
+      } catch (e) {
+        expect((e as ToolError).code).toBe("bad-enchant-level");
+      }
+    });
   });
 });

@@ -1,0 +1,188 @@
+{
+  "version": "26.2",
+  "generated": "2026-08-10T17:53:13.116Z",
+  "biomes": {
+    "plains": {
+      "monster": [
+        {
+          "type": "minecraft:spider",
+          "weight": 100
+        },
+        {
+          "type": "minecraft:zombie",
+          "weight": 90
+        },
+        {
+          "type": "minecraft:zombie_villager",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:zombie_horse",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:skeleton",
+          "weight": 100
+        },
+        {
+          "type": "minecraft:creeper",
+          "weight": 100
+        },
+        {
+          "type": "minecraft:slime",
+          "weight": 100
+        },
+        {
+          "type": "minecraft:enderman",
+          "weight": 10
+        },
+        {
+          "type": "minecraft:witch",
+          "weight": 5
+        }
+      ]
+    },
+    "nether_wastes": {
+      "monster": [
+        {
+          "type": "minecraft:ghast",
+          "weight": 50
+        },
+        {
+          "type": "minecraft:zombified_piglin",
+          "weight": 100
+        },
+        {
+          "type": "minecraft:magma_cube",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:enderman",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:piglin",
+          "weight": 15
+        }
+      ]
+    }
+  },
+  "mining": {
+    "overworld_y0": {
+      "y": 0,
+      "scores": {
+        "coal_ore": 0.03613561483685833,
+        "redstone_ore": 0.4,
+        "diamond_ore": 0.15891886399430982,
+        "lapis_ore": 0.6412966878083157
+      },
+      "details": [
+        {
+          "placed": "ore_coal_upper",
+          "size": 17,
+          "countPerChunk": 30,
+          "pmfAtY": 0,
+          "score": 0,
+          "source": "coal_ore"
+        },
+        {
+          "placed": "ore_coal_lower",
+          "size": 17,
+          "countPerChunk": 20,
+          "pmfAtY": 0.00010628122010840685,
+          "score": 0.03613561483685833,
+          "source": "coal_ore"
+        },
+        {
+          "placed": "ore_redstone",
+          "size": 8,
+          "countPerChunk": 4,
+          "pmfAtY": 0.0125,
+          "score": 0.4,
+          "source": "redstone_ore"
+        },
+        {
+          "placed": "ore_redstone_lower",
+          "size": 8,
+          "countPerChunk": 8,
+          "pmfAtY": 0,
+          "score": 0,
+          "source": "redstone_ore"
+        },
+        {
+          "placed": "ore_diamond",
+          "size": 4,
+          "countPerChunk": 7,
+          "pmfAtY": 0.002591068434689834,
+          "score": 0.07254991617131534,
+          "source": "diamond_ore"
+        },
+        {
+          "placed": "ore_diamond_medium",
+          "size": 8,
+          "countPerChunk": 2,
+          "pmfAtY": 0,
+          "score": 0,
+          "source": "diamond_ore"
+        },
+        {
+          "placed": "ore_diamond_large",
+          "size": 12,
+          "countPerChunk": 0.1111111111111111,
+          "pmfAtY": 0.002591068434689834,
+          "score": 0.003454757912919778,
+          "source": "diamond_ore"
+        },
+        {
+          "placed": "ore_diamond_buried",
+          "size": 8,
+          "countPerChunk": 4,
+          "pmfAtY": 0.002591068434689834,
+          "score": 0.08291418991007468,
+          "source": "diamond_ore"
+        },
+        {
+          "placed": "ore_lapis",
+          "size": 7,
+          "countPerChunk": 2,
+          "pmfAtY": 0.030303030303030304,
+          "score": 0.42424242424242425,
+          "source": "lapis_ore"
+        },
+        {
+          "placed": "ore_lapis_buried",
+          "size": 7,
+          "countPerChunk": 4,
+          "pmfAtY": 0.007751937984496124,
+          "score": 0.21705426356589147,
+          "source": "lapis_ore"
+        }
+      ]
+    },
+    "nether_y14": {
+      "y": 14,
+      "scores": {
+        "nether_gold_ore": 0.9259259259259258,
+        "nether_quartz_ore": 2.074074074074074
+      },
+      "details": [
+        {
+          "placed": "ore_gold_nether",
+          "size": 10,
+          "countPerChunk": 10,
+          "pmfAtY": 0.009259259259259259,
+          "score": 0.9259259259259258,
+          "source": "nether_gold_ore"
+        },
+        {
+          "placed": "ore_quartz_nether",
+          "size": 14,
+          "countPerChunk": 16,
+          "pmfAtY": 0.009259259259259259,
+          "score": 2.074074074074074,
+          "source": "nether_quartz_ore"
+        }
+      ]
+    }
+  }
+}
