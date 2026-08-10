@@ -12,6 +12,8 @@ import {
   type OcrPage,
 } from "@/tools/image-to-text/index";
 import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
+import { formatBytes } from "@/lib/format";
+import { downloadText } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -186,18 +188,6 @@ const verdictClass = computed(() => {
 /* ---------------------------------------------------------------- */
 /* helpers                                                           */
 /* ---------------------------------------------------------------- */
-
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
 
 function describeError(e: unknown): { message: string; fix?: string } {
   const raw = e instanceof Error ? e.message : String(e ?? "");
@@ -476,15 +466,7 @@ function clearImage() {
 }
 
 function download() {
-  const blob = new Blob([output.value], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = downloadName.value;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  downloadText(output.value, downloadName.value);
 }
 
 /* ---------------------------------------------------------------- */
@@ -549,7 +531,9 @@ onUnmounted(() => {
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
           <span class="truncate font-medium">{{ fileName }}</span>
-          <span v-if="file" class="shrink-0 text-muted-foreground">{{ humanSize(file.size) }}</span>
+          <span v-if="file" class="shrink-0 text-muted-foreground">{{
+            formatBytes(file.size)
+          }}</span>
           <button
             type="button"
             aria-label="Remove image"

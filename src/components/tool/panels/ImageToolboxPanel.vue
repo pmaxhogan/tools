@@ -2,6 +2,8 @@
 import { computed, onUnmounted, ref, shallowRef } from "vue";
 import { X } from "lucide-vue-next";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
+import { formatBytes } from "@/lib/format";
+import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -127,18 +129,6 @@ const EXTENSIONS: Record<string, string> = {
   "image/bmp": "bmp",
 };
 
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
-
 function sniffMime(b: Uint8Array): string {
   if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) {
     return "image/png";
@@ -164,15 +154,6 @@ function toDimension(value: unknown): number {
 
 function revoke(url: string | null) {
   if (url) URL.revokeObjectURL(url);
-}
-
-function triggerDownload(url: string, name: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
 }
 
 function toToolError(e: unknown): { message: string; fix?: string } {
@@ -490,9 +471,7 @@ async function downloadExport() {
     const name = `image-${width}x${height}.${ext}`;
     exportedSize.value = blob.size;
     exportedName.value = name;
-    const url = URL.createObjectURL(blob);
-    triggerDownload(url, name);
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, name);
   } finally {
     busy.value = false;
   }
@@ -511,9 +490,7 @@ async function downloadStripped() {
     const blob = new Blob([result.bytes.slice().buffer as ArrayBuffer], {
       type: originalMime.value,
     });
-    const url = URL.createObjectURL(blob);
-    triggerDownload(url, `${baseName(fileName.value)}-no-metadata.${ext}`);
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `${baseName(fileName.value)}-no-metadata.${ext}`);
     error.value = null;
   } catch (e) {
     error.value = toToolError(e);
@@ -551,7 +528,7 @@ onUnmounted(() => {
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
           <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ humanSize(originalSize) }}</span>
+          <span class="shrink-0 text-muted-foreground">{{ formatBytes(originalSize) }}</span>
           <button
             type="button"
             aria-label="Remove image"
@@ -848,8 +825,8 @@ onUnmounted(() => {
             v-if="exportedSize !== null"
             class="font-mono text-xs text-muted-foreground tabular-nums"
           >
-            {{ exportedName }}: {{ humanSize(originalSize) }} before,
-            {{ humanSize(exportedSize) }} after.
+            {{ exportedName }}: {{ formatBytes(originalSize) }} before,
+            {{ formatBytes(exportedSize) }} after.
           </p>
 
           <p class="text-xs text-muted-foreground">

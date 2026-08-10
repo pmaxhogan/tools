@@ -45,6 +45,7 @@ import {
   type BatchPlan,
 } from "@/tools/batch-processor/index";
 import FsShell from "../FsShell.vue";
+import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -727,14 +728,7 @@ function downloadBackup(rootName: string) {
   const day = new Date().toISOString().slice(0, 10);
 
   const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `batch-backup-${slug}-${day}.json`;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, `batch-backup-${slug}-${day}.json`);
 
   backupSaved.value = true;
 }

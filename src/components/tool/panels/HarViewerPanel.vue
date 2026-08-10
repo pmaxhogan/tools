@@ -2,6 +2,8 @@
 import { computed, ref, shallowRef } from "vue";
 import { ArrowDown, ArrowUp, Eye, EyeOff, TriangleAlert, X } from "lucide-vue-next";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
+import { formatBytes } from "@/lib/format";
+import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,19 +104,6 @@ const ROW_CAP = 500;
 /* ---------------------------------------------------------------- */
 /* formatting                                                        */
 /* ---------------------------------------------------------------- */
-
-function humanSize(bytes: number): string {
-  const n = Math.max(0, Math.round(bytes));
-  if (n < 1024) return `${n} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = n / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
 
 function humanTime(ms: number): string {
   const n = Math.max(0, ms);
@@ -412,14 +401,7 @@ function downloadSanitized() {
   try {
     const clean = mod.sanitizeHar(current);
     const blob = new Blob([JSON.stringify(clean)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${baseName(fileName.value)}-sanitized.har`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `${baseName(fileName.value)}-sanitized.har`);
     error.value = null;
   } catch (e) {
     error.value = toToolError(e);
@@ -456,7 +438,7 @@ function downloadSanitized() {
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
           <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ humanSize(fileSize) }}</span>
+          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
           <button
             type="button"
             aria-label="Remove capture"
@@ -510,7 +492,7 @@ function downloadSanitized() {
         <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
           <div class="text-xs text-muted-foreground">Transferred</div>
           <div class="font-mono text-lg tabular-nums">
-            {{ humanSize(summary.transferred) }}
+            {{ formatBytes(summary.transferred) }}
           </div>
         </div>
         <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
@@ -616,7 +598,7 @@ function downloadSanitized() {
 
       <p v-if="filteredSummary" class="text-xs text-muted-foreground tabular-nums">
         Showing {{ filtered.length }} of {{ summary.requests }} requests,
-        {{ humanSize(filteredSummary.transferred) }} transferred.
+        {{ formatBytes(filteredSummary.transferred) }} transferred.
       </p>
 
       <!-- Legend -->
@@ -710,7 +692,7 @@ function downloadSanitized() {
                   </div>
                 </td>
                 <td class="px-3 py-2 text-right font-mono text-xs whitespace-nowrap tabular-nums">
-                  {{ humanSize(entry.bytes) }}
+                  {{ formatBytes(entry.bytes) }}
                 </td>
                 <td class="px-3 py-2 text-right font-mono text-xs whitespace-nowrap tabular-nums">
                   {{ Math.round(entry.time) }} ms
@@ -741,9 +723,11 @@ function downloadSanitized() {
                     </div>
                     <div class="text-muted-foreground">
                       {{ entry.response.status }} {{ entry.response.statusText }} ·
-                      {{ humanSize(entry.bytes) }} transferred ·
+                      {{ formatBytes(entry.bytes) }} transferred ·
                       {{
-                        humanSize(entry.response.content.size > 0 ? entry.response.content.size : 0)
+                        formatBytes(
+                          entry.response.content.size > 0 ? entry.response.content.size : 0,
+                        )
                       }}
                       uncompressed · {{ humanTime(entry.time) }}
                     </div>

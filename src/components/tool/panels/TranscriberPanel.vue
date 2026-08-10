@@ -3,6 +3,8 @@ import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { Check, X } from "lucide-vue-next";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
+import { formatBytes } from "@/lib/format";
+import { downloadText } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -260,18 +262,6 @@ let copiedTimer = 0;
 /* ---------------------------------------------------------------- */
 /* small helpers                                                     */
 /* ---------------------------------------------------------------- */
-
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
 
 function megabytes(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1);
@@ -729,14 +719,7 @@ async function copyTranscript() {
 function downloadTranscript() {
   if (!transcript.value) return;
   const type = MIME_FOR_FORMAT[format.value] ?? "text/plain";
-  const url = URL.createObjectURL(new Blob([transcript.value], { type: `${type};charset=utf-8` }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = downloadName.value;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  downloadText(transcript.value, downloadName.value, type);
 }
 
 /* ---------------------------------------------------------------- */
@@ -816,7 +799,7 @@ onUnmounted(() => {
           >
             <span class="truncate font-medium">{{ fileName }}</span>
             <span class="shrink-0 text-muted-foreground tabular-nums">
-              {{ humanSize(fileSize) }}
+              {{ formatBytes(fileSize) }}
             </span>
             <span v-if="decoding" class="shrink-0 text-muted-foreground">decoding…</span>
             <span v-else-if="duration > 0" class="shrink-0 text-muted-foreground tabular-nums">{{

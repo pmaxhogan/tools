@@ -83,6 +83,8 @@ import {
   type WriteOp,
   type WritePlan,
 } from "@/lib/fs-access";
+import { formatBytes } from "@/lib/format";
+import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 
 const props = withDefaults(
@@ -131,18 +133,6 @@ let resolveConfirm: ((ok: boolean) => void) | null = null;
 /* formatting                                                        */
 /* ---------------------------------------------------------------- */
 
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB", "TB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
-
 function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
 }
@@ -150,7 +140,7 @@ function plural(count: number, one: string, many: string): string {
 const summary = computed(() => {
   const current = scan.value;
   if (!current) return "";
-  const parts = [plural(current.fileCount, "file", "files"), humanSize(current.totalBytes)];
+  const parts = [plural(current.fileCount, "file", "files"), formatBytes(current.totalBytes)];
   if (current.directories.length) {
     parts.splice(1, 0, plural(current.directories.length, "folder", "folders"));
   }
@@ -162,7 +152,7 @@ function describeOp(op: WriteOp): string {
   if (op.op === "rename") return `Rename  ${op.from}  ->  ${op.to}`;
   if (op.op === "writeFile") {
     const size = typeof op.data === "string" ? op.data.length : op.data.byteLength;
-    return `Write   ${op.path}  (${humanSize(size)})`;
+    return `Write   ${op.path}  (${formatBytes(size)})`;
   }
   return `Delete  ${op.path}`;
 }
@@ -376,14 +366,7 @@ function downloadManifest() {
     pending.value?.undoManifest ?? approved.value?.undoManifest ?? lastResult.value?.undoManifest;
   if (!manifest) return;
   const blob = new Blob([undoManifestToJson(manifest)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = undoManifestFileName(manifest);
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, undoManifestFileName(manifest));
 }
 
 /* ---------------------------------------------------------------- */

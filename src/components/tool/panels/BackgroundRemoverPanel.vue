@@ -3,6 +3,8 @@ import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { Check, X } from "lucide-vue-next";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
+import { formatBytes } from "@/lib/format";
+import { downloadUrl } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -159,18 +161,6 @@ function megabytes(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1);
 }
 
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
-
 function baseName(name: string): string {
   const dot = name.lastIndexOf(".");
   return dot > 0 ? name.slice(0, dot) : name || "photo";
@@ -184,15 +174,6 @@ function toToolError(e: unknown): { message: string; fix?: string } {
   return e instanceof ToolError
     ? { message: e.message, fix: e.fix }
     : { message: e instanceof Error ? e.message : String(e) };
-}
-
-function triggerDownload(url: string, name: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
 }
 
 function canvasToBlob(canvas: HTMLCanvasElement, type: string, q?: number): Promise<Blob | null> {
@@ -565,7 +546,10 @@ async function removeBackground() {
     } else {
       const fill = outputMode.value === "white" ? "#ffffff" : bgColor.value;
       const composed = logic.compositeOnColor(image.data, work.w, work.h, fill);
-      target.ctx.putImageData(new ImageData(composed, work.w, work.h), 0, 0);
+      // ImageData wants a Uint8ClampedArray backed by a concrete ArrayBuffer;
+      // the logic layer's return type only promises ArrayBufferLike, so this
+      // copies into one rather than asserting the buffer is not shared.
+      target.ctx.putImageData(new ImageData(new Uint8ClampedArray(composed), work.w, work.h), 0, 0);
       resultType.value = "image/jpeg";
     }
 
@@ -593,7 +577,8 @@ async function removeBackground() {
 
 function downloadResult() {
   if (!resultUrl.value) return;
-  triggerDownload(
+  // resultUrl is owned by this component's state, revoked in revoke()/clearResult().
+  downloadUrl(
     resultUrl.value,
     `${baseName(fileName.value)}-no-background.${resultExtension.value}`,
   );
@@ -820,7 +805,7 @@ onUnmounted(() => {
           </div>
           <figcaption class="text-xs text-muted-foreground">
             <template v-if="resultUrl">
-              Result, {{ humanSize(resultBytes) }} as {{ resultExtension.toUpperCase() }}
+              Result, {{ formatBytes(resultBytes) }} as {{ resultExtension.toUpperCase() }}
             </template>
             <template v-else> Result </template>
           </figcaption>

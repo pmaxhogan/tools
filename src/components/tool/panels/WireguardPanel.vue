@@ -13,6 +13,7 @@ import {
   subnetPrefix,
   type Keypair,
 } from "@/tools/wireguard-config-generator/index";
+import { downloadText } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { TriangleAlert } from "lucide-vue-next";
 import OptionControl from "../OptionControl.vue";
@@ -149,18 +150,6 @@ async function regeneratePeer(index: number) {
     generating.value = false;
   }
 }
-
-function triggerDownload(text: string, filename: string) {
-  const blob = new Blob([text], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
 </script>
 
 <template>
@@ -219,11 +208,7 @@ function triggerDownload(text: string, filename: string) {
           </span>
           <div class="flex items-center gap-1">
             <CopyButton :text="serverConfigText" label="Copy" />
-            <Button
-              variant="outline"
-              size="sm"
-              @click="triggerDownload(serverConfigText, 'wg0.conf')"
-            >
+            <Button variant="outline" size="sm" @click="downloadText(serverConfigText, 'wg0.conf')">
               Download
             </Button>
           </div>
@@ -255,7 +240,7 @@ function triggerDownload(text: string, filename: string) {
             <Button
               variant="outline"
               size="sm"
-              @click="triggerDownload(peer.configText, `wg0-peer${i + 1}.conf`)"
+              @click="downloadText(peer.configText, `wg0-peer${i + 1}.conf`)"
             >
               Download .conf
             </Button>

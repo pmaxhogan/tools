@@ -11,6 +11,7 @@ import {
   scannabilityWarnings,
 } from "@/tools/qr-code-generator/index";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -400,21 +401,10 @@ onMounted(() => {
 /* Downloads                                                                  */
 /* -------------------------------------------------------------------------- */
 
-function triggerDownload(url: string, filename: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
 function downloadSvg() {
   if (!svgOutput.value) return;
   const blob = new Blob([svgOutput.value], { type: "image/svg+xml" });
-  const url = URL.createObjectURL(blob);
-  triggerDownload(url, "qr.svg");
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, "qr.svg");
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -479,9 +469,7 @@ async function downloadPng() {
 
     canvas.toBlob((blob) => {
       if (!blob) return;
-      const pngUrl = URL.createObjectURL(blob);
-      triggerDownload(pngUrl, "qr.png");
-      URL.revokeObjectURL(pngUrl);
+      downloadBlob(blob, "qr.png");
     }, "image/png");
   } catch (e) {
     error.value = {

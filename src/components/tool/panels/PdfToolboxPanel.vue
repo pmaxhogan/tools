@@ -2,6 +2,8 @@
 import { computed, onUnmounted, ref, shallowRef, watch } from "vue";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, X } from "lucide-vue-next";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
+import { formatBytes } from "@/lib/format";
+import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -238,18 +240,6 @@ const rotateCheck = computed(() =>
 /* helpers                                                           */
 /* ---------------------------------------------------------------- */
 
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
-
 function baseName(name: string): string {
   const dot = name.toLowerCase().lastIndexOf(".pdf");
   return (dot > 0 ? name.slice(0, dot) : name) || "document";
@@ -265,17 +255,6 @@ function toPdfBlob(bytes: Uint8Array): Blob {
   // A fresh copy keeps the Blob independent of the array it came from, and
   // gives TypeScript a plain ArrayBuffer rather than an ArrayBufferLike.
   return new Blob([bytes.slice().buffer as ArrayBuffer], { type: "application/pdf" });
-}
-
-function triggerDownload(blob: Blob, name: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function parseHex(raw: string): string | null {
@@ -337,7 +316,7 @@ async function renderPage(
 
 async function openForPreview(bytes: Uint8Array) {
   const pdfjs = await loadPdfjs();
-  const task = pdfjs.getDocument({ data: bytes.slice(), isEvalSupported: false });
+  const task = pdfjs.getDocument({ data: bytes.slice() });
   return { task, pdf: await task.promise };
 }
 
@@ -710,7 +689,7 @@ function runFill() {
 
 function downloadAll() {
   results.value.forEach((file, i) => {
-    setTimeout(() => triggerDownload(file.blob, file.name), i * 250);
+    setTimeout(() => downloadBlob(file.blob, file.name), i * 250);
   });
 }
 
@@ -785,7 +764,7 @@ onUnmounted(() => {
               <template v-if="file.error">Could not be read</template>
               <template v-else>
                 {{ file.pageCount }} {{ file.pageCount === 1 ? "page" : "pages" }},
-                {{ humanSize(file.size) }}
+                {{ formatBytes(file.size) }}
                 <template v-if="file.id === activeId"> (selected)</template>
               </template>
             </span>
@@ -1289,10 +1268,10 @@ onUnmounted(() => {
               {{ file.name }}
             </div>
             <div class="text-xs text-muted-foreground">
-              {{ file.note }}, {{ humanSize(file.blob.size) }}
+              {{ file.note }}, {{ formatBytes(file.blob.size) }}
             </div>
           </div>
-          <Button variant="outline" size="sm" @click="triggerDownload(file.blob, file.name)">
+          <Button variant="outline" size="sm" @click="downloadBlob(file.blob, file.name)">
             Download
           </Button>
         </div>

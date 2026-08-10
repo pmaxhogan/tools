@@ -34,6 +34,7 @@ import {
   type FsScan,
   type WriteOp,
 } from "@/lib/fs-access";
+import { formatBytes } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -137,19 +138,6 @@ const keepSpec: SelectOptionSpec = {
 /* formatting                                                        */
 /* ---------------------------------------------------------------- */
 
-function humanSize(bytes: number): string {
-  const n = Math.max(0, Math.round(bytes));
-  if (n < 1024) return `${n} B`;
-  const units = ["KB", "MB", "GB", "TB"];
-  let value = n / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
-
 function plural(count: number, one: string, many: string): string {
   return `${count.toLocaleString()} ${count === 1 ? one : many}`;
 }
@@ -222,7 +210,11 @@ async function loadThumbs(handle: DirectoryHandleWrapper) {
     if (!showPreviews.value) return;
     try {
       const bytes = await readFileBytes(handle, entry.path);
-      const url = URL.createObjectURL(new Blob([bytes], { type: imageType(entry.path) as string }));
+      // readFileBytes's return type only promises ArrayBufferLike; Blob wants a
+      // concrete ArrayBuffer, so this copies rather than asserting it is one.
+      const url = URL.createObjectURL(
+        new Blob([new Uint8Array(bytes)], { type: imageType(entry.path) as string }),
+      );
       const next = new Map(thumbs.value);
       next.set(entry.path, url);
       thumbs.value = next;
@@ -605,7 +597,7 @@ onBeforeUnmount(() => {
             <div class="min-w-0">
               <p class="text-sm font-medium tabular-nums">
                 {{ plural(group.files.length, "copy", "copies") }} ·
-                {{ humanSize(group.size) }} each · {{ humanSize(group.wastedBytes) }} wasted
+                {{ formatBytes(group.size) }} each · {{ formatBytes(group.wastedBytes) }} wasted
               </p>
               <p class="truncate font-mono text-xs text-muted-foreground">
                 sha256 {{ shortHash(group.hash) }}
@@ -723,7 +715,7 @@ onBeforeUnmount(() => {
               :key="i"
               class="font-mono text-xs text-muted-foreground"
             >
-              {{ humanSize(sizeGroup[0]?.size ?? 0) }}:
+              {{ formatBytes(sizeGroup[0]?.size ?? 0) }}:
               {{ sizeGroup.map((f) => f.path).join(", ") }}
             </li>
           </ul>
@@ -752,10 +744,11 @@ onBeforeUnmount(() => {
               <p class="font-medium text-destructive">Deleting cannot be undone.</p>
               <p class="mt-1 text-muted-foreground">
                 This removes {{ plural(deletionOps.length, "file", "files") }} and frees about
-                {{ humanSize(deletionBytes) }}. The bytes are gone at that point: the undo file you
-                can download on the next screen only records which paths were deleted, it does not
-                hold their contents and cannot bring them back. Files removed this way do not go to
-                the recycle bin or trash. Read the list on the confirm screen before you accept it.
+                {{ formatBytes(deletionBytes) }}. The bytes are gone at that point: the undo file
+                you can download on the next screen only records which paths were deleted, it does
+                not hold their contents and cannot bring them back. Files removed this way do not go
+                to the recycle bin or trash. Read the list on the confirm screen before you accept
+                it.
               </p>
             </div>
           </div>
@@ -792,7 +785,7 @@ onBeforeUnmount(() => {
       >
         <p class="font-medium">
           {{ plural(reclaimed.files, "file deleted", "files deleted") }},
-          {{ humanSize(reclaimed.bytes) }} reclaimed.
+          {{ formatBytes(reclaimed.bytes) }} reclaimed.
         </p>
         <p v-if="reclaimed.failed" class="mt-1 text-xs text-muted-foreground">
           {{ plural(reclaimed.failed, "file", "files") }} could not be deleted and were left alone.

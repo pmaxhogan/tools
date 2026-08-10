@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { formatBytes } from "@/lib/format";
 
 /**
  * Receives content shared into the installed PWA. The service worker parks the
@@ -50,18 +51,6 @@ const bySlug = computed(() => new Map(props.catalog.map((t) => [t.slug, t])));
 
 function entries(slugs: string[]): CatalogEntry[] {
   return slugs.map((s) => bySlug.value.get(s)).filter((t): t is CatalogEntry => Boolean(t));
-}
-
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
 }
 
 /** What kind of thing was shared, and which tools match it. */
@@ -208,7 +197,7 @@ onMounted(async () => {
                 {{ file.name }}
               </p>
               <p class="text-xs text-muted-foreground">
-                {{ file.type || "unknown type" }} &middot; {{ humanSize(file.size) }}
+                {{ file.type || "unknown type" }} &middot; {{ formatBytes(file.size) }}
               </p>
             </div>
           </div>

@@ -23,6 +23,8 @@ import {
   type TextBox,
 } from "@/tools/image-redactor/index";
 import { isMetered, onConnectionChange, shouldAutoDownload } from "@/lib/connection";
+import { formatBytes } from "@/lib/format";
+import { downloadBlob } from "@/lib/download";
 
 /**
  * Bespoke panel for the redaction tool. The generic ToolShell has no way to
@@ -256,18 +258,6 @@ const enginePercent = computed(() =>
 /* ---------------------------------------------------------------- */
 /* helpers                                                           */
 /* ---------------------------------------------------------------- */
-
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
 
 function regionLabel(region: Region): string {
   const size = `${region.rect.w} x ${region.rect.h} px`;
@@ -915,14 +905,7 @@ async function downloadExport() {
     if (!blob) return;
 
     const name = suggestExportName(fileName.value, format.value);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, name);
     exportedName.value = name;
     exportedSize.value = blob.size;
   } finally {
@@ -954,7 +937,7 @@ async function downloadExport() {
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
           <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ humanSize(fileSize) }}</span>
+          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
           <button
             type="button"
             aria-label="Remove image"
@@ -1286,7 +1269,7 @@ async function downloadExport() {
         </div>
 
         <p v-if="exportedName" class="font-mono text-xs text-muted-foreground tabular-nums">
-          Saved {{ exportedName }}, {{ humanSize(exportedSize ?? 0) }}.
+          Saved {{ exportedName }}, {{ formatBytes(exportedSize ?? 0) }}.
         </p>
 
         <p class="text-xs text-muted-foreground">

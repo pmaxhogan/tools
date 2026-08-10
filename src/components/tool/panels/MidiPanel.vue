@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { CircleAlert, FileMusic, Music4, Radio, Trash2, X } from "lucide-vue-next";
 import type { ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
+import { formatBytes } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -90,19 +91,6 @@ const selectedTrack = ref(0);
 
 /** How many event rows to render before the list is cut off, to keep it snappy. */
 const MAX_EVENT_ROWS = 800;
-
-function humanSize(bytes: number): string {
-  const n = Math.max(0, Math.round(bytes));
-  if (n < 1024) return `${n} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = n / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
 
 function toToolError(e: unknown): { message: string; fix?: string } {
   return e instanceof ToolError
@@ -582,7 +570,7 @@ onUnmounted(() => {
             class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
             <span class="truncate font-medium">{{ fileName }}</span>
-            <span class="shrink-0 text-muted-foreground">{{ humanSize(fileSize) }}</span>
+            <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
             <button
               type="button"
               aria-label="Close this file"

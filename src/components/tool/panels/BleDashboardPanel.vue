@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { downloadBlob } from "@/lib/download";
 import {
   SUPPORTED_SERVICES,
   downsampleForChart,
@@ -519,14 +520,7 @@ function exportCsv() {
   const csv = toCsv(sessionLog);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   const blob = new Blob([`${csv}\n`], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `ble-session-${stamp}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, `ble-session-${stamp}.csv`);
 }
 
 /* ---------------------------------------------------------------- */
