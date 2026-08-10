@@ -1,0 +1,580 @@
+{
+  "version": "1.21.11",
+  "source": "net/minecraft/world/entity/SpawnPlacements.java (decompiled, local only)",
+  "placements": {
+    "minecraft:axolotl": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Axolotl::checkAxolotlSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:cod": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "WaterAnimal::checkSurfaceWaterAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:dolphin": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "AgeableWaterCreature::checkSurfaceAgeableWaterCreatureSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:drowned": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Drowned::checkDrownedSpawnRules",
+      "rule": "dark",
+      "extraConditions": true
+    },
+    "minecraft:guardian": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Guardian::checkGuardianSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:pufferfish": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "WaterAnimal::checkSurfaceWaterAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:salmon": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "WaterAnimal::checkSurfaceWaterAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:squid": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "AgeableWaterCreature::checkSurfaceAgeableWaterCreatureSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:tropical_fish": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "TropicalFish::checkTropicalFishSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:armadillo": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Armadillo::checkArmadilloSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:bat": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Bat::checkBatSpawnRules",
+      "rule": "own-light",
+      "extraConditions": true
+    },
+    "minecraft:blaze": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkAnyLightMonsterSpawnRules",
+      "rule": "any-light",
+      "extraConditions": false
+    },
+    "minecraft:bogged": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:breeze": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkAnyLightMonsterSpawnRules",
+      "rule": "any-light",
+      "extraConditions": false
+    },
+    "minecraft:camel": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Camel::checkCamelSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:camel_husk": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkSurfaceMonstersSpawnRules",
+      "rule": "surface",
+      "extraConditions": false
+    },
+    "minecraft:cave_spider": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:chicken": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:cow": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:creeper": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:donkey": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:enderman": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:endermite": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Endermite::checkEndermiteSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:ender_dragon": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Mob::checkMobSpawnRules",
+      "rule": "any-light",
+      "extraConditions": false
+    },
+    "minecraft:frog": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Frog::checkFrogSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:ghast": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Ghast::checkGhastSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:happy_ghast": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:giant": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:glow_squid": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "GlowSquid::checkGlowSquidSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:goat": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Goat::checkGoatSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:horse": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:husk": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkSurfaceMonstersSpawnRules",
+      "rule": "surface",
+      "extraConditions": false
+    },
+    "minecraft:iron_golem": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Mob::checkMobSpawnRules",
+      "rule": "any-light",
+      "extraConditions": false
+    },
+    "minecraft:llama": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:magma_cube": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "MagmaCube::checkMagmaCubeSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:mooshroom": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "MushroomCow::checkMushroomSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:mule": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:nautilus": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "AbstractNautilus::checkNautilusSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:ocelot": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING",
+      "predicate": "Ocelot::checkOcelotSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:parrot": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING",
+      "predicate": "Parrot::checkParrotSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:pig": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:hoglin": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Hoglin::checkHoglinSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:piglin": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Piglin::checkPiglinSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:pillager": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "PatrollingMonster::checkPatrollingMonsterSpawnRules",
+      "rule": "own-light",
+      "extraConditions": true
+    },
+    "minecraft:polar_bear": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "PolarBear::checkPolarBearSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:rabbit": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Rabbit::checkRabbitSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:sheep": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:silverfish": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Silverfish::checkSilverfishSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:skeleton": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:skeleton_horse": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "SkeletonHorse::checkSkeletonHorseSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:slime": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Slime::checkSlimeSpawnRules",
+      "rule": "own-light",
+      "extraConditions": true
+    },
+    "minecraft:snow_golem": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Mob::checkMobSpawnRules",
+      "rule": "any-light",
+      "extraConditions": false
+    },
+    "minecraft:spider": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:stray": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Stray::checkStraySpawnRules",
+      "rule": "dark",
+      "extraConditions": true
+    },
+    "minecraft:parched": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkSurfaceMonstersSpawnRules",
+      "rule": "surface",
+      "extraConditions": false
+    },
+    "minecraft:strider": {
+      "placement": "IN_LAVA",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Strider::checkStriderSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:turtle": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Turtle::checkTurtleSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:villager": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Mob::checkMobSpawnRules",
+      "rule": "any-light",
+      "extraConditions": false
+    },
+    "minecraft:witch": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:wither": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:wither_skeleton": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:wolf": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Wolf::checkWolfSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:zoglin": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkAnyLightMonsterSpawnRules",
+      "rule": "any-light",
+      "extraConditions": false
+    },
+    "minecraft:creaking": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:zombie": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:zombie_horse": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:zombified_piglin": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "ZombifiedPiglin::checkZombifiedPiglinSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:zombie_villager": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:cat": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:elder_guardian": {
+      "placement": "IN_WATER",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Guardian::checkGuardianSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:evoker": {
+      "placement": "NO_RESTRICTIONS",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:fox": {
+      "placement": "NO_RESTRICTIONS",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Fox::checkFoxSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:illusioner": {
+      "placement": "NO_RESTRICTIONS",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:panda": {
+      "placement": "NO_RESTRICTIONS",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:phantom": {
+      "placement": "NO_RESTRICTIONS",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Mob::checkMobSpawnRules",
+      "rule": "any-light",
+      "extraConditions": false
+    },
+    "minecraft:ravager": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:shulker": {
+      "placement": "NO_RESTRICTIONS",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Mob::checkMobSpawnRules",
+      "rule": "any-light",
+      "extraConditions": false
+    },
+    "minecraft:trader_llama": {
+      "placement": "NO_RESTRICTIONS",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Animal::checkAnimalSpawnRules",
+      "rule": "any-light",
+      "extraConditions": true
+    },
+    "minecraft:vex": {
+      "placement": "NO_RESTRICTIONS",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:vindicator": {
+      "placement": "NO_RESTRICTIONS",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    },
+    "minecraft:wandering_trader": {
+      "placement": "ON_GROUND",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Mob::checkMobSpawnRules",
+      "rule": "any-light",
+      "extraConditions": false
+    },
+    "minecraft:warden": {
+      "placement": "NO_RESTRICTIONS",
+      "heightmap": "MOTION_BLOCKING_NO_LEAVES",
+      "predicate": "Monster::checkMonsterSpawnRules",
+      "rule": "dark",
+      "extraConditions": false
+    }
+  }
+}

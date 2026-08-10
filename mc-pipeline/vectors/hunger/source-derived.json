@@ -1,0 +1,733 @@
+{
+  "method": "source-derived",
+  "generated": "2026-08-10T00:00:00Z",
+  "versionsChecked": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+  "note": "Hand-derived from the decompiled trees under mc-pipeline/work/<id>/src/. The hunger mechanic cannot be driven headlessly over RCON: /effect and /damage cannot reproduce a player's exhaustion accumulation, and foodExhaustionLevel is not readable from a command, so every case below was worked out by reading net.minecraft.world.food.FoodData#tick, FoodConstants, the causeFoodExhaustion call sites, and the per-version food tables. FoodData#tick is byte-for-byte equivalent in all six trees; the only version boundaries are in the food table and in the Peaceful refill.",
+  "cases": [
+    {
+      "id": "const-max-food",
+      "type": "constant",
+      "key": "maxFood",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 20,
+      "provenance": "FoodConstants.MAX_FOOD; FoodData#add clamps foodLevel to 20 in 1.16.5 which predates FoodConstants"
+    },
+    {
+      "id": "const-max-saturation",
+      "type": "constant",
+      "key": "maxSaturation",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 20,
+      "provenance": "FoodConstants.MAX_SATURATION"
+    },
+    {
+      "id": "const-start-saturation",
+      "type": "constant",
+      "key": "startSaturation",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 5,
+      "provenance": "FoodConstants.START_SATURATION; FoodData field initialiser saturationLevel = 5.0F"
+    },
+    {
+      "id": "const-exhaustion-drop",
+      "type": "constant",
+      "key": "exhaustionDrop",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 4,
+      "provenance": "FoodConstants.EXHAUSTION_DROP; FoodData#tick branches on exhaustionLevel > 4.0F and subtracts 4.0F"
+    },
+    {
+      "id": "const-max-exhaustion",
+      "type": "constant",
+      "key": "maxExhaustion",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 40,
+      "provenance": "FoodData#addExhaustion: Math.min(exhaustionLevel + amount, 40.0F)"
+    },
+    {
+      "id": "const-health-tick-count",
+      "type": "constant",
+      "key": "healthTickCount",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 80,
+      "provenance": "FoodConstants.HEALTH_TICK_COUNT; FoodData#tick normal regeneration and starvation both fire at tickTimer >= 80"
+    },
+    {
+      "id": "const-health-tick-count-saturated",
+      "type": "constant",
+      "key": "healthTickCountSaturated",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 10,
+      "provenance": "FoodConstants.HEALTH_TICK_COUNT_SATURATED; FoodData#tick fast path fires at tickTimer >= 10"
+    },
+    {
+      "id": "const-heal-level",
+      "type": "constant",
+      "key": "healLevel",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 18,
+      "provenance": "FoodConstants.HEAL_LEVEL; FoodData#tick normal regeneration requires foodLevel >= 18"
+    },
+    {
+      "id": "const-exhaustion-heal",
+      "type": "constant",
+      "key": "exhaustionHeal",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 6,
+      "provenance": "FoodConstants.EXHAUSTION_HEAL; FoodData#tick calls addExhaustion(6.0F) after heal(1.0F)"
+    },
+    {
+      "id": "const-saturated-heal-cap",
+      "type": "constant",
+      "key": "saturatedHealCap",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 6,
+      "provenance": "FoodData#tick fast path: Math.min(saturationLevel, 6.0F), healed as that value divided by 6"
+    },
+    {
+      "id": "const-sprint-level",
+      "type": "constant",
+      "key": "sprintLevel",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 6,
+      "provenance": "FoodConstants.SPRINT_LEVEL = 6 from 1.18.2 on, and FoodData#hasEnoughFood returns foodLevel > 6.0F from 1.21.11 on. The sprint gate itself is enforced client side in LocalPlayer, which the dedicated server jar does not contain, so 1.16.5 carries the same 6 by continuity with the constant 1.18.2 pinned"
+    },
+    {
+      "id": "const-starve-level",
+      "type": "constant",
+      "key": "starveLevel",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 0,
+      "provenance": "FoodConstants.STARVE_LEVEL; FoodData#tick starvation branch requires foodLevel <= 0"
+    },
+
+    {
+      "id": "act-sprint",
+      "type": "activity",
+      "activityId": "sprint",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 0.1,
+      "provenance": "ServerPlayer#checkMovementStatistics (Player#checkMovementStatistics in 1.16.5 and 1.18.2): causeFoodExhaustion(0.1F * cm * 0.01F) on the sprinting branch, so 0.1 per block"
+    },
+    {
+      "id": "act-swim",
+      "type": "activity",
+      "activityId": "swim",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 0.01,
+      "provenance": "ServerPlayer#checkMovementStatistics: causeFoodExhaustion(0.01F * cm * 0.01F) on the swimming, underwater walking, and walking on water branches"
+    },
+    {
+      "id": "act-walk",
+      "type": "activity",
+      "activityId": "walk",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 0,
+      "provenance": "ServerPlayer#checkMovementStatistics: causeFoodExhaustion(0.0F * cm * 0.01F) on the walking and crouching branches, so ordinary walking is free"
+    },
+    {
+      "id": "act-jump",
+      "type": "activity",
+      "activityId": "jump",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 0.05,
+      "provenance": "ServerPlayer#jumpFromGround from 1.21.2, Player#jumpFromGround before it: causeFoodExhaustion(0.05F) when not sprinting"
+    },
+    {
+      "id": "act-sprint-jump",
+      "type": "activity",
+      "activityId": "sprint_jump",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 0.2,
+      "provenance": "ServerPlayer#jumpFromGround from 1.21.2, Player#jumpFromGround before it: causeFoodExhaustion(0.2F) when sprinting"
+    },
+    {
+      "id": "act-mine",
+      "type": "activity",
+      "activityId": "mine",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 0.005,
+      "provenance": "Block#playerDestroy: causeFoodExhaustion(0.005F) once per block broken"
+    },
+    {
+      "id": "act-attack",
+      "type": "activity",
+      "activityId": "attack",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 0.1,
+      "provenance": "Player#attack: causeFoodExhaustion(0.1F) after the hit lands"
+    },
+    {
+      "id": "act-damage",
+      "type": "activity",
+      "activityId": "damage",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 0.1,
+      "provenance": "Player#actuallyHurt: causeFoodExhaustion(source.getFoodExhaustion()). DamageTypes registers 0.1F for mob_attack, player_attack, arrow, explosion, cactus, thorns, in_fire and lava; 1.16.5 uses the DamageSource field default of 0.1F"
+    },
+    {
+      "id": "act-hunger-effect",
+      "type": "activity",
+      "activityId": "hunger_effect",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": 0.1,
+      "provenance": "HungerMobEffect#applyEffectTick from 1.20.5, MobEffect#applyEffectTick before it: causeFoodExhaustion(0.005F * (amplifier + 1)) every tick, so 0.1 per second at Hunger I"
+    },
+
+    {
+      "id": "act-lunge-enchantment",
+      "type": "activity",
+      "activityId": "ench_lunge",
+      "versions": ["1.21.11", "26.2"],
+      "expect": 4,
+      "provenance": "Enchantments.LUNGE registers the apply_exhaustion entity effect on POST_PIERCING_ATTACK with LevelBasedValue.perLevel(4.0F), so a Lunge I piercing attack costs 4.0 exhaustion, a full hunger or saturation point in one swing. ApplyExhaustion.java and the enchantment itself do not exist before 1.21.2, and the extracted enchantment data has no other vanilla enchantment carrying apply_exhaustion in any verified version"
+    },
+    {
+      "id": "food-cooked-beef",
+      "type": "food",
+      "foodId": "cooked_beef",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 8,
+        "saturation": 12.8,
+        "alwaysEdible": false,
+        "eatTicks": 32,
+        "stack": 64,
+        "hungerExhaustion": 0
+      },
+      "provenance": "Foods.COOKED_BEEF nutrition(8).saturationMod(0.8F) with saturationByModifier giving 8 x 0.8 x 2 = 12.8; identical in the minecraft:food component of cooked_beef from 1.20.5 on"
+    },
+    {
+      "id": "food-cooked-porkchop",
+      "type": "food",
+      "foodId": "cooked_porkchop",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 8,
+        "saturation": 12.8,
+        "alwaysEdible": false,
+        "eatTicks": 32,
+        "stack": 64,
+        "hungerExhaustion": 0
+      },
+      "provenance": "Foods.COOKED_PORKCHOP nutrition(8).saturationMod(0.8F); same component values from 1.20.5 on"
+    },
+    {
+      "id": "food-golden-carrot",
+      "type": "food",
+      "foodId": "golden_carrot",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 6,
+        "saturation": 14.4,
+        "alwaysEdible": false,
+        "eatTicks": 32,
+        "stack": 64,
+        "hungerExhaustion": 0
+      },
+      "provenance": "Foods.GOLDEN_CARROT nutrition(6).saturationMod(1.2F) giving 14.4, the highest saturation of any food; the component dump stores 14.400001 because the value is a float32"
+    },
+    {
+      "id": "food-rabbit-stew",
+      "type": "food",
+      "foodId": "rabbit_stew",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 10,
+        "saturation": 12,
+        "alwaysEdible": false,
+        "eatTicks": 32,
+        "stack": 1,
+        "hungerExhaustion": 0
+      },
+      "provenance": "Foods.RABBIT_STEW via the stew(10) helper at saturationMod 0.6F; Items.RABBIT_STEW is a BowlFoodItem with stacksTo(1)"
+    },
+    {
+      "id": "food-dried-kelp",
+      "type": "food",
+      "foodId": "dried_kelp",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 1,
+        "saturation": 0.6,
+        "alwaysEdible": false,
+        "eatTicks": 16,
+        "stack": 64,
+        "hungerExhaustion": 0
+      },
+      "provenance": "Foods.DRIED_KELP marked fast(), and Item#getUseDuration returns 16 for fast food against 32 otherwise; from 1.20.5 the same 16 ticks appear as eat_seconds 0.8 and from 1.21.2 as consume_seconds 0.8"
+    },
+    {
+      "id": "food-golden-apple",
+      "type": "food",
+      "foodId": "golden_apple",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 4,
+        "saturation": 9.6,
+        "alwaysEdible": true,
+        "eatTicks": 32,
+        "stack": 64,
+        "hungerExhaustion": 0
+      },
+      "provenance": "Foods.GOLDEN_APPLE nutrition(4).saturationMod(1.2F).alwaysEat(); can_always_eat true in the component era"
+    },
+    {
+      "id": "food-chorus-fruit",
+      "type": "food",
+      "foodId": "chorus_fruit",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 4,
+        "saturation": 2.4,
+        "alwaysEdible": true,
+        "eatTicks": 32,
+        "stack": 64,
+        "hungerExhaustion": 0
+      },
+      "provenance": "Foods.CHORUS_FRUIT nutrition(4).saturationMod(0.3F).alwaysEat()"
+    },
+    {
+      "id": "food-rotten-flesh",
+      "type": "food",
+      "foodId": "rotten_flesh",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 4,
+        "saturation": 0.8,
+        "alwaysEdible": false,
+        "eatTicks": 32,
+        "stack": 64,
+        "hungerExhaustion": 2.4
+      },
+      "provenance": "Foods.ROTTEN_FLESH nutrition(4).saturationMod(0.1F) with an 80 percent chance of Hunger for 600 ticks; the expected Hunger cost is 0.8 x 600 x 0.005 = 2.4 exhaustion, which is 0.6 hunger points"
+    },
+    {
+      "id": "food-pufferfish",
+      "type": "food",
+      "foodId": "pufferfish",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 1,
+        "saturation": 0.2,
+        "alwaysEdible": false,
+        "eatTicks": 32,
+        "stack": 64,
+        "hungerExhaustion": 4.5
+      },
+      "provenance": "Foods.PUFFERFISH with a guaranteed Hunger III for 300 ticks: 1.0 x 300 x 0.005 x 3 = 4.5 exhaustion, more than the 1.2 points the fish restores"
+    },
+    {
+      "id": "food-cake-slice",
+      "type": "food",
+      "foodId": "cake_slice",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 2,
+        "saturation": 0.4,
+        "alwaysEdible": false,
+        "eatTicks": 0,
+        "stack": 7,
+        "hungerExhaustion": 0
+      },
+      "provenance": "CakeBlock#eat calls getFoodData().eat(2, 0.1F) per slice, so 2 nutrition and 2 x 0.1 x 2 = 0.4 saturation; MAX_BITES is 6 so a cake has 7 slices. Cake is a block interaction, not an item use, so there is no eating animation"
+    },
+    {
+      "id": "food-glow-berries-absent-1165",
+      "type": "food",
+      "foodId": "glow_berries",
+      "versions": ["1.16.5"],
+      "present": false,
+      "provenance": "Glow berries arrived with cave vines in 1.17, so Foods.java in 1.16.5 has no GLOW_BERRIES entry"
+    },
+    {
+      "id": "food-glow-berries",
+      "type": "food",
+      "foodId": "glow_berries",
+      "versions": ["1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 2,
+        "saturation": 0.4,
+        "alwaysEdible": false,
+        "eatTicks": 32,
+        "stack": 64,
+        "hungerExhaustion": 0
+      },
+      "provenance": "Foods.GLOW_BERRIES nutrition(2).saturationMod(0.1F), added in 1.17"
+    },
+    {
+      "id": "food-suspicious-stew-1165",
+      "type": "food",
+      "foodId": "suspicious_stew",
+      "versions": ["1.16.5"],
+      "expect": {
+        "nutrition": 6,
+        "saturation": 7.2,
+        "alwaysEdible": false,
+        "eatTicks": 32,
+        "stack": 1,
+        "hungerExhaustion": 0
+      },
+      "provenance": "Foods.SUSPICIOUS_STEW is a plain stew(6) in 1.16.5, with no alwaysEat()"
+    },
+    {
+      "id": "food-suspicious-stew-modern",
+      "type": "food",
+      "foodId": "suspicious_stew",
+      "versions": ["1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 6,
+        "saturation": 7.2,
+        "alwaysEdible": true,
+        "eatTicks": 32,
+        "stack": 1,
+        "hungerExhaustion": 0
+      },
+      "provenance": "Foods.SUSPICIOUS_STEW gained alwaysEat() in 1.17, so from 1.18.2 on it can be eaten on a full hunger bar"
+    },
+    {
+      "id": "food-honey-bottle-old",
+      "type": "food",
+      "foodId": "honey_bottle",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1"],
+      "expect": {
+        "nutrition": 6,
+        "saturation": 1.2,
+        "alwaysEdible": false,
+        "eatTicks": 40,
+        "stack": 16,
+        "hungerExhaustion": 0
+      },
+      "provenance": "Foods.HONEY_BOTTLE nutrition(6).saturationMod(0.1F) with Items.HONEY_BOTTLE stacksTo(16); HoneyBottleItem#getUseDuration returns 40, overriding the 32 tick default that the component dump would otherwise imply"
+    },
+    {
+      "id": "food-honey-bottle-new",
+      "type": "food",
+      "foodId": "honey_bottle",
+      "versions": ["1.21.11", "26.2"],
+      "expect": {
+        "nutrition": 6,
+        "saturation": 1.2,
+        "alwaysEdible": true,
+        "eatTicks": 40,
+        "stack": 16,
+        "hungerExhaustion": 0
+      },
+      "provenance": "From 1.21.2 the honey bottle component carries can_always_eat true and consume_seconds 2.0, so it can be drunk on a full hunger bar to clear poison"
+    },
+    {
+      "id": "food-ominous-bottle-gated",
+      "type": "food",
+      "foodId": "ominous_bottle",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.11", "26.2"],
+      "present": false,
+      "provenance": "The ominous bottle does not exist before 1.20.5, and in 1.20.6 Items.OMINOUS_BOTTLE carries requiredFeatures(FeatureFlags.UPDATE_1_21) so it is unobtainable without the experimental pack. From 1.21.2 it keeps a consumable component but loses its food component, so it no longer restores hunger"
+    },
+    {
+      "id": "food-ominous-bottle-1211",
+      "type": "food",
+      "foodId": "ominous_bottle",
+      "versions": ["1.21.1"],
+      "expect": {
+        "nutrition": 1,
+        "saturation": 0.2,
+        "alwaysEdible": false,
+        "eatTicks": 32,
+        "stack": 64,
+        "hungerExhaustion": 0
+      },
+      "provenance": "1.21 released the ominous bottle with a food component of nutrition 1 and saturation 0.2; OminousBottleItem#getUseDuration returns 32"
+    },
+    {
+      "id": "food-fish-buckets-not-edible",
+      "type": "food",
+      "foodId": "cod_bucket",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "present": false,
+      "provenance": "From 1.21.2 Items.COD_BUCKET carries DataComponents.FOOD but no consumable component, and from 1.21.2 the consumable component is what makes an item edible, so buckets of fish cannot be eaten"
+    },
+
+    {
+      "id": "value-cooked-beef",
+      "type": "value",
+      "foodId": "cooked_beef",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": { "netPoints": 20.8, "heartsPerItem": 6.9333333333, "heartsPerSlot": 443.7333333 },
+      "provenance": "8 + 12.8 = 20.8 points; healing costs 6 exhaustion per health point and 4 exhaustion is one point, so one point is 2/3 health and one heart is 3 points"
+    },
+    {
+      "id": "value-golden-carrot",
+      "type": "value",
+      "foodId": "golden_carrot",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": { "netPoints": 20.4, "heartsPerItem": 6.8, "heartsPerSlot": 435.2 },
+      "provenance": "6 + 14.4 = 20.4 points, so the golden carrot leads on saturation but trails steak and cooked porkchop on total value"
+    },
+    {
+      "id": "value-rabbit-stew",
+      "type": "value",
+      "foodId": "rabbit_stew",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": { "netPoints": 22, "heartsPerItem": 7.3333333333, "heartsPerSlot": 7.3333333333 },
+      "provenance": "10 + 12 = 22 points, the best single item in the game, but rabbit stew stacks to 1 so one inventory slot carries only 7.33 hearts"
+    },
+    {
+      "id": "value-rotten-flesh",
+      "type": "value",
+      "foodId": "rotten_flesh",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": { "netPoints": 4.2, "heartsPerItem": 1.4, "heartsPerSlot": 89.6 },
+      "provenance": "4 + 0.8 = 4.8 raw, minus the 2.4 exhaustion the 80 percent Hunger chance costs, which is 0.6 points, giving 4.2"
+    },
+    {
+      "id": "value-pufferfish",
+      "type": "value",
+      "foodId": "pufferfish",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "expect": { "netPoints": 0.075, "heartsPerItem": 0.025, "heartsPerSlot": 1.6 },
+      "provenance": "1 + 0.2 = 1.2 raw, minus 4.5 exhaustion of guaranteed Hunger III which is 1.125 points, leaving almost nothing"
+    },
+
+    {
+      "id": "eat-clamp-to-food-level",
+      "type": "eat",
+      "foodId": "golden_carrot",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 5, "saturation": 0 },
+      "expect": { "food": 11, "saturation": 11 },
+      "provenance": "FoodData#add fills the hunger bar first, then clamps saturation to the NEW food level, so 14.4 saturation is cut to 11"
+    },
+    {
+      "id": "eat-full-value",
+      "type": "eat",
+      "foodId": "golden_carrot",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 14, "saturation": 0 },
+      "expect": { "food": 20, "saturation": 14.4 },
+      "provenance": "FoodData#add: at food 14 the whole 6 nutrition lands and the 14.4 saturation clears the clamp at 20"
+    },
+    {
+      "id": "eat-food-overflow-wasted",
+      "type": "eat",
+      "foodId": "rabbit_stew",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 19, "saturation": 0 },
+      "expect": { "food": 20, "saturation": 12 },
+      "provenance": "FoodData#add clamps foodLevel to 20, so 9 of the 10 nutrition is thrown away while the saturation still lands"
+    },
+
+    {
+      "id": "tick-exhaustion-burns-saturation",
+      "type": "tick",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 20, "saturation": 5, "exhaustion": 0, "health": 20 },
+      "env": { "difficulty": "normal", "naturalRegen": true, "exhaustionPerTick": 5 },
+      "ticks": 1,
+      "expect": { "food": 20, "saturation": 4, "exhaustion": 1, "health": 20 },
+      "provenance": "FoodData#tick: exhaustion above 4 is reduced by exactly 4 and burns one saturation point, once per tick"
+    },
+    {
+      "id": "tick-exhaustion-capped-at-40",
+      "type": "tick",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 20, "saturation": 5, "exhaustion": 0, "health": 20 },
+      "env": { "difficulty": "normal", "naturalRegen": true, "exhaustionPerTick": 100 },
+      "ticks": 1,
+      "expect": { "food": 20, "saturation": 4, "exhaustion": 36, "health": 20 },
+      "provenance": "FoodData#addExhaustion clamps to 40, so 60 of the 100 exhaustion is discarded before the tick subtracts 4"
+    },
+    {
+      "id": "tick-partial-saturation-absorbs-full-burn",
+      "type": "tick",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 20, "saturation": 0.5, "exhaustion": 0, "health": 20 },
+      "env": { "difficulty": "normal", "naturalRegen": true, "exhaustionPerTick": 5 },
+      "ticks": 1,
+      "expect": { "food": 20, "saturation": 0, "exhaustion": 1, "health": 20 },
+      "provenance": "FoodData#tick uses Math.max(saturationLevel - 1.0F, 0.0F), so half a saturation point still soaks a whole 4 exhaustion burn"
+    },
+    {
+      "id": "tick-hunger-bar-drops-when-saturation-empty",
+      "type": "tick",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 20, "saturation": 0, "exhaustion": 0, "health": 20 },
+      "env": { "difficulty": "normal", "naturalRegen": true, "exhaustionPerTick": 5 },
+      "ticks": 1,
+      "expect": { "food": 19, "saturation": 0, "exhaustion": 1, "health": 20 },
+      "provenance": "FoodData#tick drops one food point only once saturation has reached zero"
+    },
+    {
+      "id": "tick-peaceful-never-drains-hunger",
+      "type": "tick",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 20, "saturation": 0, "exhaustion": 0, "health": 20 },
+      "env": { "difficulty": "peaceful", "naturalRegen": false, "exhaustionPerTick": 5 },
+      "ticks": 1,
+      "expect": { "food": 20, "saturation": 0, "exhaustion": 1, "health": 20 },
+      "provenance": "FoodData#tick guards the food drop with difficulty != PEACEFUL, so on Peaceful exhaustion still burns down but the hunger bar never moves"
+    },
+    {
+      "id": "tick-normal-regen-first-heal",
+      "type": "tick",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 19, "saturation": 0, "exhaustion": 0, "health": 10 },
+      "env": { "difficulty": "normal", "naturalRegen": true, "exhaustionPerTick": 0 },
+      "ticks": 80,
+      "expect": { "food": 19, "saturation": 0, "exhaustion": 6, "health": 11 },
+      "provenance": "FoodData#tick normal path: at food level 18 or more the player heals 1.0 health every 80 ticks and pays 6.0 exhaustion for it"
+    },
+    {
+      "id": "tick-normal-regen-one-heart-costs-three-points",
+      "type": "tick",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 19, "saturation": 0, "exhaustion": 0, "health": 10 },
+      "env": { "difficulty": "normal", "naturalRegen": true, "exhaustionPerTick": 0 },
+      "ticks": 162,
+      "expect": { "food": 17, "saturation": 0, "exhaustion": 4, "health": 12 },
+      "provenance": "Two heals cost 12 exhaustion, which the tick converts into 2 hunger points at 4 exhaustion each with 4 left pending: one heart of natural healing costs 3 hunger or saturation points"
+    },
+    {
+      "id": "tick-regen-stops-below-eighteen",
+      "type": "tick",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 17, "saturation": 0, "exhaustion": 0, "health": 10 },
+      "env": { "difficulty": "normal", "naturalRegen": true, "exhaustionPerTick": 0 },
+      "ticks": 400,
+      "expect": { "food": 17, "saturation": 0, "exhaustion": 0, "health": 10 },
+      "provenance": "FoodData#tick requires foodLevel >= 18 for the normal path, so at 17 nothing heals and nothing drains"
+    },
+    {
+      "id": "tick-saturated-fast-heal",
+      "type": "tick",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 20, "saturation": 20, "exhaustion": 0, "health": 10 },
+      "env": { "difficulty": "normal", "naturalRegen": true, "exhaustionPerTick": 0 },
+      "ticks": 10,
+      "expect": { "food": 20, "saturation": 20, "exhaustion": 6, "health": 11 },
+      "provenance": "FoodData#tick fast path: with the bar full and saturation left, the player heals min(saturation, 6) / 6 health every 10 ticks and pays that same amount in exhaustion"
+    },
+    {
+      "id": "tick-saturated-partial-heal",
+      "type": "tick",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 20, "saturation": 3, "exhaustion": 0, "health": 10 },
+      "env": { "difficulty": "normal", "naturalRegen": true, "exhaustionPerTick": 0 },
+      "ticks": 10,
+      "expect": { "food": 20, "saturation": 3, "exhaustion": 3, "health": 10.5 },
+      "provenance": "With only 3 saturation the fast path heals 3/6 = 0.5 health and adds 3.0 exhaustion, so the rate scales down as saturation runs out"
+    },
+    {
+      "id": "tick-no-regen-gamerule",
+      "type": "tick",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 20, "saturation": 20, "exhaustion": 0, "health": 10 },
+      "env": { "difficulty": "normal", "naturalRegen": false, "exhaustionPerTick": 0 },
+      "ticks": 400,
+      "expect": { "food": 20, "saturation": 20, "exhaustion": 0, "health": 10 },
+      "provenance": "Both regeneration branches in FoodData#tick are gated on the naturalRegeneration game rule"
+    },
+
+    {
+      "id": "starve-easy-floor",
+      "type": "starve",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "difficulty": "easy",
+      "startHealth": 20,
+      "ticks": 12000,
+      "expect": { "health": 10, "died": false, "starvationDamage": 10 },
+      "provenance": "FoodData#tick starvation branch: on Easy the damage only lands while health > 10, so the player is left on exactly 5 hearts"
+    },
+    {
+      "id": "starve-normal-floor",
+      "type": "starve",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "difficulty": "normal",
+      "startHealth": 20,
+      "ticks": 12000,
+      "expect": { "health": 1, "died": false, "starvationDamage": 19 },
+      "provenance": "On Normal the extra clause health > 1.0F allows damage down to half a heart, then stops"
+    },
+    {
+      "id": "starve-hard-kills",
+      "type": "starve",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "difficulty": "hard",
+      "startHealth": 20,
+      "ticks": 12000,
+      "expect": { "health": 0, "died": true, "starvationDamage": 20 },
+      "provenance": "On Hard the difficulty test short circuits before the health floors, so starvation kills; 20 hits of 1.0 at one hit per 80 ticks is 1600 ticks, or 80 seconds"
+    },
+    {
+      "id": "starve-rate",
+      "type": "starve",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "difficulty": "normal",
+      "startHealth": 20,
+      "ticks": 1200,
+      "expect": { "health": 5, "died": false, "starvationDamage": 15 },
+      "provenance": "Starvation shares the 80 tick timer with natural regeneration, so it deals 1.0 damage every 4 seconds: 15 hits in one minute"
+    },
+
+    {
+      "id": "peaceful-no-saturation-refill",
+      "type": "peaceful",
+      "versions": ["1.16.5", "1.18.2", "1.20.6"],
+      "start": { "food": 0, "saturation": 0, "exhaustion": 0, "health": 5 },
+      "ticks": 200,
+      "expect": { "food": 20, "saturation": 0, "health": 15 },
+      "provenance": "Player#aiStep on Peaceful heals 1.0 health every 20 ticks and adds one food point every 10 ticks; before 1.21 there is no saturation refill, so 200 ticks give 10 health and a full bar with zero saturation. The refills are keyed on the player tick counter, which the simulation starts at 0"
+    },
+    {
+      "id": "peaceful-saturation-refill",
+      "type": "peaceful",
+      "versions": ["1.21.1", "1.21.11", "26.2"],
+      "start": { "food": 0, "saturation": 0, "exhaustion": 0, "health": 5 },
+      "ticks": 200,
+      "expect": { "food": 20, "saturation": 9, "health": 16 },
+      "provenance": "1.21 added setSaturation(saturation + 1.0F) every 20 ticks to the Peaceful branch (Player#aiStep, moved to ServerPlayer#tickRegeneration in 1.21.2). The saturation it grants turns on the fast heal path once the bar refills, so the player also ends one health point ahead of the older versions. The refills are keyed on the player tick counter, which the simulation starts at 0"
+    },
+
+    {
+      "id": "drain-full-bar-at-one-exhaustion-per-second",
+      "type": "drain",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "food": 20,
+      "saturation": 5,
+      "exhaustionPerSecond": 1,
+      "expect": {
+        "secondsToSaturationGone": 20,
+        "secondsToSprintLost": 76,
+        "secondsToEmpty": 100
+      },
+      "provenance": "5 saturation plus 20 food is 25 burns of 4 exhaustion each, which is 100 exhaustion; sprinting stops once the bar reaches 6, which is 5 + 14 = 19 burns"
+    },
+    {
+      "id": "drain-partial-saturation-rounds-up",
+      "type": "drain",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "food": 20,
+      "saturation": 0.5,
+      "exhaustionPerSecond": 1,
+      "expect": {
+        "secondsToSaturationGone": 4,
+        "secondsToSprintLost": 60,
+        "secondsToEmpty": 84
+      },
+      "provenance": "The tick clamps saturation at zero rather than carrying the remainder, so half a point still costs a full 4 exhaustion burn"
+    },
+    {
+      "id": "drain-fresh-spawn-sprinting",
+      "type": "drain",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "food": 20,
+      "saturation": 5,
+      "exhaustionPerSecond": 0.5,
+      "expect": {
+        "secondsToSaturationGone": 40,
+        "secondsToSprintLost": 152,
+        "secondsToEmpty": 200
+      },
+      "provenance": "Sprinting costs 0.1 exhaustion per block, so 5 blocks per second is 0.5 exhaustion per second and a fresh spawn empties in 200 seconds"
+    }
+  ]
+}

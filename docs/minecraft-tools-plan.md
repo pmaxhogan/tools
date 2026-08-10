@@ -154,6 +154,58 @@ publicly). Game code is reimplemented, never copied.
 - [x] Enchant applicability gating across all panels (no impossible
       enchant/tool combos are ever shown)
 
-Later sessions pick up the eight remaining matrix rows (hunger, villager,
-spawning, projectile, elytra, growth, redstone timing) with the pipeline,
-vectors, and gotchas documented above and in the mc-pipeline README notes.
+## Wave 2: the remaining matrix rows (2026-08-10)
+
+All seven remaining tools shipped: hunger, villager trades, mob spawning,
+projectile, elytra, crop growth, redstone timing. The eighth row
+(`minecraft-fall`) stays merged into the damage calculator for search
+coverage. Eleven Minecraft tools are now live.
+
+`mc-pipeline/07-harness-sim.mjs` adds four measured families on top of the
+original three, six versions each:
+
+    node mc-pipeline/07-harness-sim.mjs <id> [--slot=N] [projectile|villager|growth|redstone ...]
+
+What the second harness can and cannot reach, established by runtime probes:
+
+- Projectile: exact per-tick positions and motions via `tick freeze` plus
+  `tick step`, full double precision. Available from 1.20.6 on; 1.16.5 and
+  1.18.2 have no tick commands, so those are source-derived and cross-checked
+  against the measured modern constants.
+- Villager: a summoned villager generates its `Offers` immediately and they
+  are readable over RCON, so trade tables are measured rather than
+  transcribed. Trades are drawn randomly per villager, so each profession and
+  level is sampled 200 times. 26.2 is the exception: it only writes `Offers`
+  once they exist and only generates them on a job-site restock, so those
+  samples stand each villager next to its job block until it restocks.
+- Growth: measurable only on 1.21.11 and 26.2. Before 1.21.11 the random tick
+  loop sits inside the natural-spawning branch of
+  `ServerChunkCache.tickChunks`, gated on `anyPlayerCloseEnoughForSpawning`,
+  so a headless server with no player never random ticks anything. 1.21.11
+  moved it to `forEachBlockTickingChunk`. This is the same mechanism that
+  makes natural mob spawning unmeasurable headlessly on every version, which
+  is why the spawning tool is source-derived plus extracted biome data and
+  says so on the page.
+- Redstone: exact tick counts by stepping, on the versions with tick commands.
+
+Two traps worth remembering. `tick step` and `tick sprint` return before the
+ticks actually run, so reads must poll `tick query` or they silently return
+stale values. And gamerules were renamed to namespaced ids in the newest
+versions: `randomTickSpeed` is now `minecraft:random_tick_speed`, so the
+harness probes both rather than parsing version numbers.
+
+Vector file schema, one shape for every family:
+
+- Always: `version`, `generated`, `serverJarSha1`, `method`
+  (`rcon-e2e` or `source-derived`), `measured` (boolean), `note`.
+- `source-derived` files carry `sourceConstants`, where every leaf constant is
+  `{ value, class, note }` so each number names the class it came from.
+- `rcon-e2e` files carry the per-family measured payload (`cases`,
+  `professions`, and so on).
+
+Source constants are extracted by collecting every match and requiring them to
+agree rather than taking the first: a first-match regex over a Java file is
+only correct by luck, and it produced two wrong vectors before it was fixed
+(a hopper cooldown that read the `setCooldown(0)` reset instead of the real 8,
+and a trident water drag that took the `AbstractArrow` base value instead of
+the `ThrownTrident` override).

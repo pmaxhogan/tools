@@ -1,0 +1,63 @@
+{
+ "version": "1.18.2",
+ "generated": "2026-08-10T20:51:50.918Z",
+ "serverJarSha1": "c8f83c5655308435b3dcf03c06d9fe8740a77469",
+ "method": "source-derived",
+ "note": "This version has no tick freeze/step commands, so exact per-tick timings cannot be measured over RCON. Each constant below was read out of the decompiled source of the class recorded next to its value.",
+ "measured": false,
+ "sourceConstants": [
+  {
+   "name": "hopper-transfer-cooldown",
+   "ticks": {
+    "value": 8,
+    "class": "HopperBlockEntity",
+    "note": "ticks between one item moving and the next"
+   }
+  },
+  {
+   "name": "dispenser-and-dropper-fire-delay",
+   "ticks": {
+    "value": 4,
+    "class": "DispenserBlock",
+    "note": null
+   }
+  },
+  {
+   "name": "repeater-ticks-per-delay-setting",
+   "ticks": {
+    "value": 2,
+    "class": "RepeaterBlock",
+    "note": "a repeater set to delay N takes N times this many ticks"
+   }
+  },
+  {
+   "name": "comparator-delay",
+   "ticks": {
+    "value": 2,
+    "class": "ComparatorBlock",
+    "note": null
+   }
+  },
+  {
+   "name": "observer-schedule-delay",
+   "ticks": {
+    "value": 2,
+    "class": "ObserverBlock",
+    "note": null
+   }
+  },
+  {
+   "name": "piston-movement",
+   "ticks": {
+    "value": 2,
+    "class": "PistonMovingBlockEntity",
+    "note": "pistons are block-event driven, not scheduled: the moving block entity advances its progress by this fraction each tick, so a full extension or retraction takes 1 / progressPerTick ticks"
+   },
+   "progressPerTick": {
+    "value": 0.5,
+    "class": "PistonMovingBlockEntity",
+    "note": "pistons are block-event driven, not scheduled: the moving block entity advances its progress by this fraction each tick, so a full extension or retraction takes 1 / progressPerTick ticks"
+   }
+  }
+ ]
+}

@@ -1,0 +1,326 @@
+{
+ "version": "1.18.2",
+ "generated": "2026-08-10T20:54:39.089Z",
+ "serverJarSha1": "c8f83c5655308435b3dcf03c06d9fe8740a77469",
+ "method": "source-derived",
+ "note": "This version has no tick freeze/step commands, so per-tick vectors cannot be measured over RCON. Each constant below was read out of the decompiled source of the first class in the projectile's class chain that defines it, and the class it came from is recorded next to the value, so a subclass override such as the trident's own water drag is not shadowed by the base class. The values are compared against the constants implied by the measured modern vectors.",
+ "measured": false,
+ "sourceConstants": [
+  {
+   "type": "arrow",
+   "classChain": [
+    "Arrow",
+    "AbstractArrow"
+   ],
+   "constants": {
+    "drag": {
+     "value": 0.99,
+     "class": "AbstractArrow",
+     "note": null
+    },
+    "gravity": {
+     "value": 0.05,
+     "class": "AbstractArrow",
+     "note": null
+    },
+    "waterDrag": {
+     "value": 0.6,
+     "class": "AbstractArrow",
+     "note": null
+    }
+   },
+   "modernReference": {
+    "fromVersion": "1.20.6",
+    "drag": 0.9900000095367432,
+    "gravity": 0.05
+   },
+   "matchesModern": true
+  },
+  {
+   "type": "spectral_arrow",
+   "classChain": [
+    "SpectralArrow",
+    "AbstractArrow"
+   ],
+   "constants": {
+    "drag": {
+     "value": 0.99,
+     "class": "AbstractArrow",
+     "note": null
+    },
+    "gravity": {
+     "value": 0.05,
+     "class": "AbstractArrow",
+     "note": null
+    },
+    "waterDrag": {
+     "value": 0.6,
+     "class": "AbstractArrow",
+     "note": null
+    }
+   },
+   "modernReference": {
+    "fromVersion": "1.20.6",
+    "drag": 0.9900000095367432,
+    "gravity": 0.05
+   },
+   "matchesModern": true
+  },
+  {
+   "type": "trident",
+   "classChain": [
+    "ThrownTrident",
+    "AbstractArrow"
+   ],
+   "constants": {
+    "drag": {
+     "value": 0.99,
+     "class": "AbstractArrow",
+     "note": null
+    },
+    "gravity": {
+     "value": 0.05,
+     "class": "AbstractArrow",
+     "note": null
+    },
+    "waterDrag": {
+     "value": 0.99,
+     "class": "ThrownTrident",
+     "note": null
+    }
+   },
+   "modernReference": {
+    "fromVersion": "1.20.6",
+    "drag": 0.9900000095367432,
+    "gravity": 0.05
+   },
+   "matchesModern": true
+  },
+  {
+   "type": "snowball",
+   "classChain": [
+    "Snowball",
+    "ThrowableItemProjectile",
+    "ThrowableProjectile"
+   ],
+   "constants": {
+    "drag": {
+     "value": 0.99,
+     "class": "ThrowableProjectile",
+     "note": null
+    },
+    "gravity": {
+     "value": 0.03,
+     "class": "ThrowableProjectile",
+     "note": null
+    },
+    "waterDrag": {
+     "value": 0.8,
+     "class": "ThrowableProjectile",
+     "note": null
+    }
+   },
+   "modernReference": {
+    "fromVersion": "1.20.6",
+    "drag": 0.9900000095367432,
+    "gravity": 0.03
+   },
+   "matchesModern": true
+  },
+  {
+   "type": "egg",
+   "classChain": [
+    "ThrownEgg",
+    "ThrowableItemProjectile",
+    "ThrowableProjectile"
+   ],
+   "constants": {
+    "drag": {
+     "value": 0.99,
+     "class": "ThrowableProjectile",
+     "note": null
+    },
+    "gravity": {
+     "value": 0.03,
+     "class": "ThrowableProjectile",
+     "note": null
+    },
+    "waterDrag": {
+     "value": 0.8,
+     "class": "ThrowableProjectile",
+     "note": null
+    }
+   },
+   "modernReference": {
+    "fromVersion": "1.20.6",
+    "drag": 0.9900000095367432,
+    "gravity": 0.03
+   },
+   "matchesModern": true
+  },
+  {
+   "type": "ender_pearl",
+   "classChain": [
+    "ThrownEnderpearl",
+    "ThrowableItemProjectile",
+    "ThrowableProjectile"
+   ],
+   "constants": {
+    "drag": {
+     "value": 0.99,
+     "class": "ThrowableProjectile",
+     "note": null
+    },
+    "gravity": {
+     "value": 0.03,
+     "class": "ThrowableProjectile",
+     "note": null
+    },
+    "waterDrag": {
+     "value": 0.8,
+     "class": "ThrowableProjectile",
+     "note": null
+    }
+   },
+   "modernReference": {
+    "fromVersion": "1.20.6",
+    "drag": 0.9900000095367432,
+    "gravity": 0.03
+   },
+   "matchesModern": true
+  },
+  {
+   "type": "experience_bottle",
+   "classChain": [
+    "ThrownExperienceBottle",
+    "ThrowableItemProjectile",
+    "ThrowableProjectile"
+   ],
+   "constants": {
+    "drag": {
+     "value": 0.99,
+     "class": "ThrowableProjectile",
+     "note": null
+    },
+    "gravity": {
+     "value": 0.07,
+     "class": "ThrownExperienceBottle",
+     "note": null
+    },
+    "waterDrag": {
+     "value": 0.8,
+     "class": "ThrowableProjectile",
+     "note": null
+    }
+   },
+   "modernReference": {
+    "fromVersion": "1.20.6",
+    "drag": 0.9900000095367432,
+    "gravity": 0.07
+   },
+   "matchesModern": true
+  },
+  {
+   "type": "splash_potion",
+   "classChain": [
+    "ThrownPotion",
+    "ThrowableItemProjectile",
+    "ThrowableProjectile"
+   ],
+   "constants": {
+    "drag": {
+     "value": 0.99,
+     "class": "ThrowableProjectile",
+     "note": null
+    },
+    "gravity": {
+     "value": 0.05,
+     "class": "ThrownPotion",
+     "note": null
+    },
+    "waterDrag": {
+     "value": 0.8,
+     "class": "ThrowableProjectile",
+     "note": null
+    }
+   },
+   "modernReference": {
+    "fromVersion": "1.20.6",
+    "drag": 0.9900000095367432,
+    "gravity": 0.05
+   },
+   "matchesModern": true
+  },
+  {
+   "type": "fireball",
+   "classChain": [
+    "LargeFireball",
+    "Fireball",
+    "AbstractHurtingProjectile"
+   ],
+   "constants": {
+    "drag": {
+     "value": 0.95,
+     "class": "AbstractHurtingProjectile",
+     "note": null
+    },
+    "gravity": {
+     "value": 0,
+     "class": "AbstractHurtingProjectile",
+     "note": "hurting projectiles fly with no gravity"
+    }
+   },
+   "modernReference": {
+    "fromVersion": "1.20.6",
+    "drag": 0.949999988079071,
+    "gravity": 0
+   },
+   "matchesModern": true
+  },
+  {
+   "type": "small_fireball",
+   "classChain": [
+    "SmallFireball",
+    "Fireball",
+    "AbstractHurtingProjectile"
+   ],
+   "constants": {
+    "drag": {
+     "value": 0.95,
+     "class": "AbstractHurtingProjectile",
+     "note": null
+    },
+    "gravity": {
+     "value": 0,
+     "class": "AbstractHurtingProjectile",
+     "note": "hurting projectiles fly with no gravity"
+    }
+   },
+   "modernReference": {
+    "fromVersion": "1.20.6",
+    "drag": 0.949999988079071,
+    "gravity": 0
+   },
+   "matchesModern": true
+  },
+  {
+   "type": "firework_rocket",
+   "classChain": [
+    "FireworkRocketEntity"
+   ],
+   "constants": {
+    "speedMultiplier": {
+     "value": 1.15,
+     "class": "FireworkRocketEntity",
+     "note": null
+    }
+   },
+   "modernReference": {
+    "fromVersion": "1.20.6",
+    "drag": 1.15,
+    "gravity": -0.04
+   },
+   "matchesModern": true
+  }
+ ]
+}

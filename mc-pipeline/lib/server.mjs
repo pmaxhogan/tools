@@ -36,6 +36,11 @@ function serverProperties(id, rconPort, gamePort) {
     "max-players=1",
     "enable-command-block=true",
     "sync-chunk-writes=false",
+    // The watchdog kills the server when one tick runs long. Harness runs do
+    // exactly that on purpose (tick sprint, high random tick speed) and get
+    // starved when several versions run side by side, so it is turned off:
+    // a server that shoots itself mid-measurement loses the whole run.
+    "max-tick-time=-1",
     "level-name=world",
     "motd=mc-pipeline harness",
   ].join("\n");

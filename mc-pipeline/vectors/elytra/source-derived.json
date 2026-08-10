@@ -1,0 +1,344 @@
+{
+  "method": "source-derived",
+  "generated": "2026-08-10T00:00:00Z",
+  "versionsChecked": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+  "note": "Elytra flight cannot be driven headlessly: gliding is player bound, there is no command that makes an entity fall-fly on demand with a controlled pitch, and the elytra branch of LivingEntity#travel only runs on the instance that controls the entity. So these vectors are hand derived from the decompiled and unobfuscated trees under mc-pipeline/work/<id>/src/ rather than measured on a live server. Every constant below names the class and method it was read from and the versions it holds for. Cases of type steady-glide and steady-cruise additionally carry an independent closed form solved by hand from the same equations, so the simulator is checked against algebra rather than against itself; those carry a relative tolerance of 1e-5 because the closed forms use exact 0.99 and 0.98 while the game (and the reimplementation) widen float literals to 0.9900000095367432 and 0.9800000190734863. Cases of type flight, dive-then-level, and travel are per tick runs of the same cited physics, pinned as regressions. Cross check against the projectile physics the pipeline did measure on a live server (mc-pipeline/vectors/projectile, method rcon-e2e, exact per tick Motion read back over RCON): an arrow launched at 3.0 blocks per tick comes back from the real server at 2.9700000286102295, which is 3 * fround(0.99) and not 3 * 0.99. The elytra multiplies by the same float literals in the same place, so the arithmetic layer these vectors rest on is confirmed against a real server even though the elytra branch itself cannot be. vectors.test.ts asserts that cross check directly.",
+  "model": {
+    "tickOrder": "Per simulated tick the firework rocket boost is applied first (FireworkRocketEntity#tick, attached branch) and then the glide step (LivingEntity#travel elytra branch, LivingEntity#updateFallFlyingMovement from 1.21.11). The game ticks the player entity and the rocket entity separately, so real order differs by a one tick phase shift; the displacement per tick at steady state is identical either way because move() consumes the post-drag delta in both orderings.",
+    "assumptions": [
+      "Yaw is constant, so the flight is a vertical plane and distance means horizontal distance along the heading.",
+      "Pitch is the player xRot in degrees: positive looks down.",
+      "No blocks, no water, no wind, no collisions; horizontalCollision never fires so the fly-into-wall damage path is never taken.",
+      "Flights start from rest unless a case says otherwise.",
+      "Rocket lifetime is evaluated at the mean of its 0 to 11 tick jitter; min and max are reported as a spread, never sampled randomly."
+    ]
+  },
+  "constants": [
+    {
+      "name": "gravity",
+      "value": 0.08,
+      "provenance": "LivingEntity#travel local (1.16.5, 1.18.2), Entity#getGravity backed by Attributes#GRAVITY with default 0.08 (1.20.6 onward), read through LivingEntity#getEffectiveGravity in 1.21.11 and 26.2",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "slowFallingGravity",
+      "value": 0.01,
+      "provenance": "LivingEntity#travel sets gravity to 0.01 under Slow Falling (1.16.5, 1.18.2); Math.min(gravity, 0.01) from 1.20.6 onward",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "dragHorizontal",
+      "value": 0.99,
+      "provenance": "LivingEntity#travel elytra branch, Vec3#multiply(0.99F, 0.98F, 0.99F)",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "dragVertical",
+      "value": 0.98,
+      "provenance": "LivingEntity#travel elytra branch, Vec3#multiply(0.99F, 0.98F, 0.99F)",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "liftFactor",
+      "value": 0.75,
+      "provenance": "LivingEntity#travel elytra branch: deltaY += gravity * (-1.0 + cos(pitch)^2 * 0.75). 1.16.5 evaluates the cosine through Mth#cos (float sine table); 1.18.2 onward use Math.cos. The 1.16.5 through 1.21.1 form also multiplies by Math.min(1.0, lookLength / 0.4), which is a no-op because the look vector is a unit vector; 1.21.11 dropped it and wrote Mth#square(Math.cos(pitch)).",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "diveConversion",
+      "value": 0.1,
+      "provenance": "LivingEntity#travel elytra branch: when deltaY < 0, convert = deltaY * -0.1 * lift, added to Y and spread along the horizontal look direction",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "climbTrade",
+      "value": 0.04,
+      "provenance": "LivingEntity#travel elytra branch: when pitch < 0, convert = horizontalSpeed * -Mth.sin(pitch) * 0.04, subtracted from the horizontal look direction",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "climbVerticalGain",
+      "value": 3.2,
+      "provenance": "LivingEntity#travel elytra branch: the same convert term is added to Y multiplied by 3.2",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "steerRate",
+      "value": 0.1,
+      "provenance": "LivingEntity#travel elytra branch: horizontal velocity is moved 10 percent toward (lookHorizontal / |lookHorizontal|) * preStepHorizontalSpeed",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "boostAdd",
+      "value": 0.1,
+      "provenance": "FireworkRocketEntity#tick attached branch: v += look * 0.1 + (look * 1.5 - v) * 0.5",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "boostTarget",
+      "value": 1.5,
+      "provenance": "FireworkRocketEntity#tick attached branch",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "boostPull",
+      "value": 0.5,
+      "provenance": "FireworkRocketEntity#tick attached branch",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "boostFixedPoint",
+      "value": 1.7,
+      "provenance": "Solving v = 0.5v + 0.85 from the boost recurrence: the rocket alone drives velocity toward look * 1.7 blocks per tick",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "lifetimePerLevel",
+      "value": 10,
+      "provenance": "FireworkRocketEntity constructor: lifetime = 10 * (1 + flightDuration) + nextInt(6) + nextInt(7)",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "ticksPerDurability",
+      "value": 20,
+      "provenance": "LivingEntity#updateFallFlying: (fallFlyTicks + 1) % 20 == 0 in 1.16.5; from 1.18.2 the same rate written as a 10 tick game event with damage on every second one",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "elytraMaxDamage",
+      "value": 432,
+      "provenance": "Items#ELYTRA Item.Properties.durability(432); confirmed from the extracted minecraft:max_damage component for 1.20.6 onward",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "flightCutoffDamage",
+      "value": 431,
+      "provenance": "ElytraItem#isFlyEnabled requires damage < maxDamage - 1 (1.16.5 through 1.21.1); LivingEntity#canGlideUsing requires !ItemStack#nextDamageWillBreak from 1.21.11, the same threshold. So an elytra refuses to glide once damage reaches 431 and 431 durability points are usable.",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "unbreakingSkipChance",
+      "value": "level / (level + 1)",
+      "provenance": "DigDurabilityEnchantment#shouldIgnoreDurabilityDrop takes the 60 percent armor penalty only when the item is an ArmorItem, and ElytraItem extends Item through 1.21.1. From 1.21.1 on the data driven unbreaking.json applies its armor branch only to #minecraft:enchantable/armor, and the elytra sits in #minecraft:enchantable/durability but not in that armor tag. Either way the elytra gets the full non-armor skip rate.",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "repairPerMembrane",
+      "value": 108,
+      "provenance": "AnvilMenu#createResult restores min(damage, maxDamage / 4) per repair material; 432 / 4 = 108. ElytraItem#isValidRepairItem accepts the phantom membrane through 1.21.1, and the minecraft:repairable component names it from 1.21.11.",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "mendingDurabilityPerXp",
+      "value": 2,
+      "provenance": "ExperienceOrb repairs 2 durability per point of experience absorbed",
+      "holdsFor": "all six"
+    },
+    {
+      "name": "gliderComponentBoundary",
+      "value": "between 1.21.1 and 1.21.11",
+      "provenance": "1.21.1 and earlier gate gliding on Items.ELYTRA plus ElytraItem#isFlyEnabled inside LivingEntity#updateFallFlying. 1.21.11 and 26.2 gate it on LivingEntity#canGlideUsing, which requires the data driven DataComponents.GLIDER plus a matching EQUIPPABLE slot. The extracted item component dumps agree: minecraft:glider is absent for 1.20.6 and 1.21.1 and present for 1.21.11 and 26.2. The exact release inside the 1.21.2 to 1.21.10 gap is not on disk, so the boundary is stated as a bracket.",
+      "holdsFor": "boundary"
+    }
+  ],
+  "cases": [
+    {
+      "type": "boost-fixed-point",
+      "expected": 1.7,
+      "tolerance": 1e-12,
+      "provenance": "FireworkRocketEntity#tick recurrence v' = 0.5v + 0.85 solved for its fixed point"
+    },
+    {
+      "type": "steady-glide",
+      "pitchDeg": 0,
+      "expectedHorizontal": 1.5101694915254236,
+      "expectedVertical": -0.14949152542372882,
+      "expectedGlideRatio": 10.102040816326531,
+      "relativeTolerance": 1e-5,
+      "provenance": "Closed form of the pitch 0 fixed point with lift = 1: vy = -0.02 * 0.882 / (1 - 0.882) and vh = 0.99 * 0.9 * (-0.1 * (vy - 0.02)) / 0.01, both solved by hand from LivingEntity#travel. This is the terminal glide speed with no rockets."
+    },
+    {
+      "type": "steady-glide",
+      "pitchDeg": 15,
+      "expectedHorizontal": 1.7918530969689732,
+      "expectedVertical": -0.19152515232387646,
+      "relativeTolerance": 1e-9,
+      "provenance": "Per tick run of the cited glide physics, pinned as a regression"
+    },
+    {
+      "type": "steady-glide",
+      "pitchDeg": 45,
+      "expectedHorizontal": 3.2282648708042987,
+      "expectedVertical": -0.6746379116410645,
+      "relativeTolerance": 1e-9,
+      "provenance": "Per tick run of the cited glide physics, pinned as a regression"
+    },
+    {
+      "type": "steady-glide",
+      "pitchDeg": -5,
+      "expectedHorizontal": 0.7225900745943418,
+      "expectedVertical": -0.08664146714599101,
+      "relativeTolerance": 1e-9,
+      "provenance": "Per tick run of the cited glide physics with the pitch-up trade term active, pinned as a regression"
+    },
+    {
+      "type": "steady-cruise",
+      "pitchDeg": 0,
+      "expectedHorizontal": 1.6726491790502843,
+      "expectedVertical": -0.031556350626118066,
+      "relativeTolerance": 1e-5,
+      "provenance": "Closed form of the pitch 0 fixed point with the rocket boost applied every tick: vy = -0.02 * 0.882 / (1 - 0.441) and vh = 0.99 * (0.85 + 0.9 * -0.1 * (0.5 vy - 0.02)) / 0.505. This is the chained rocket cruise speed, 33.45 blocks per second, and it is the number the community quotes as roughly 33.5 metres per second."
+    },
+    {
+      "type": "steady-cruise",
+      "pitchDeg": -5,
+      "expectedHorizontal": 1.6497054567562222,
+      "expectedVertical": 0.1388380161042675,
+      "relativeTolerance": 1e-9,
+      "provenance": "Per tick run with the boost active, showing that a small upward pitch climbs while barely losing cruise speed"
+    },
+    {
+      "type": "glide-ratio-gravity-independence",
+      "pitchDeg": 0,
+      "gravityA": 0.08,
+      "gravityB": 0.01,
+      "relativeTolerance": 1e-8,
+      "provenance": "Gravity is a common factor of both steady state components in LivingEntity#travel, so Slow Falling changes the speeds but not the glide ratio"
+    },
+    {
+      "type": "rocket-lifetime",
+      "flightDuration": 1,
+      "expectedMinBoostTicks": 21,
+      "expectedMeanBoostTicks": 26.5,
+      "expectedMaxBoostTicks": 32,
+      "provenance": "FireworkRocketEntity constructor lifetime roll 10 * (1 + 1) + nextInt(6) + nextInt(7), plus the one extra tick before #tick explodes it"
+    },
+    {
+      "type": "rocket-lifetime",
+      "flightDuration": 2,
+      "expectedMinBoostTicks": 31,
+      "expectedMeanBoostTicks": 36.5,
+      "expectedMaxBoostTicks": 42,
+      "provenance": "FireworkRocketEntity constructor lifetime roll 10 * (1 + 2) + nextInt(6) + nextInt(7), plus one"
+    },
+    {
+      "type": "rocket-lifetime",
+      "flightDuration": 3,
+      "expectedMinBoostTicks": 41,
+      "expectedMeanBoostTicks": 46.5,
+      "expectedMaxBoostTicks": 52,
+      "provenance": "FireworkRocketEntity constructor lifetime roll 10 * (1 + 3) + nextInt(6) + nextInt(7), plus one"
+    },
+    {
+      "type": "blocks-per-rocket",
+      "pitchDeg": 0,
+      "flightDuration": 1,
+      "expected": 44.32520409290822,
+      "relativeTolerance": 1e-9,
+      "provenance": "Cruise speed times mean boost ticks: 1.67265 * 26.5"
+    },
+    {
+      "type": "blocks-per-rocket",
+      "pitchDeg": 0,
+      "flightDuration": 3,
+      "expected": 77.77818831397103,
+      "relativeTolerance": 1e-9,
+      "provenance": "Cruise speed times mean boost ticks: 1.67265 * 46.5"
+    },
+    {
+      "type": "flight",
+      "label": "level glide from 100 blocks",
+      "pitchDeg": 0,
+      "stopAfterDrop": 100,
+      "expectedDistance": 861.7702829336695,
+      "expectedTicks": 677,
+      "relativeTolerance": 1e-9,
+      "provenance": "Per tick run from rest at pitch 0 until 100 blocks of altitude are lost"
+    },
+    {
+      "type": "flight",
+      "label": "shallow dive from build height",
+      "pitchDeg": 5,
+      "stopAfterDrop": 256,
+      "expectedDistance": 2411.7865730908056,
+      "expectedTicks": 1670,
+      "relativeTolerance": 1e-9,
+      "provenance": "Per tick run from rest at pitch 5 until 256 blocks of altitude are lost"
+    },
+    {
+      "type": "dive-then-level",
+      "divePitchDeg": 45,
+      "diveTicks": 100,
+      "levelPitchDeg": 0,
+      "expectedSpeedAtSwitch": 1.86055405972925,
+      "expectedPeakSpeed": 2.119158278286062,
+      "expectedPeakTick": 117,
+      "relativeTolerance": 1e-9,
+      "provenance": "The speed spike is real and comes from the dive-to-speed term: after levelling out the flier keeps converting its remaining descent into forward speed for another 17 ticks, peaking 40 percent above the 1.51 blocks per tick level glide terminal before drag pulls it back."
+    },
+    {
+      "type": "travel",
+      "dx": 10000,
+      "dz": 0,
+      "flightDuration": 1,
+      "expectedOverworldRockets": 226,
+      "expectedNetherRockets": 29,
+      "expectedOverworldTicks": 5978.539871909998,
+      "relativeTolerance": 1e-9,
+      "provenance": "10000 blocks at 44.325 blocks per rocket, against 1250 blocks in the Nether at the fixed 8 to 1 ratio"
+    },
+    {
+      "type": "durability",
+      "unbreaking": 0,
+      "currentDamage": 0,
+      "expectedUsableDurability": 431,
+      "expectedFlightTicks": 8620,
+      "provenance": "431 usable points at 20 ticks each: an elytra carries 7 minutes 11 seconds of flight"
+    },
+    {
+      "type": "durability",
+      "unbreaking": 3,
+      "currentDamage": 0,
+      "expectedUsableDurability": 431,
+      "expectedFlightTicks": 34480,
+      "provenance": "Unbreaking 3 skips the damage 3 times in 4, so the expected flight per point is 80 ticks; the elytra is not armor so it gets the full rate"
+    },
+    {
+      "type": "durability",
+      "unbreaking": 0,
+      "currentDamage": 432,
+      "expectError": "bad-damage",
+      "provenance": "Damage 432 would mean a broken item; the highest damage a real elytra can hold is 431, and it refuses to glide there"
+    },
+    {
+      "type": "repair",
+      "currentDamage": 432,
+      "expectedRepairPerMembrane": 108,
+      "provenance": "AnvilMenu#createResult restores min(damage, maxDamage / 4) per material"
+    },
+    {
+      "type": "self-damage",
+      "stars": 0,
+      "expected": 0,
+      "provenance": "FireworkRocketEntity#dealExplosionDamage returns early when the rocket carries no explosions"
+    },
+    {
+      "type": "self-damage",
+      "stars": 1,
+      "expected": 7,
+      "provenance": "5 + 2 * 1, dealt to the attached glider by FireworkRocketEntity#dealExplosionDamage with no distance falloff"
+    },
+    {
+      "type": "self-damage",
+      "stars": 3,
+      "expected": 11,
+      "provenance": "5 + 2 * 3, the damage from a three star rocket that finishes its lifetime while attached to you"
+    },
+    {
+      "type": "self-damage",
+      "stars": 7,
+      "expected": 19,
+      "provenance": "5 + 2 * 7, the most stars that fit alongside 1 paper and 1 gunpowder in a crafting grid"
+    }
+  ]
+}

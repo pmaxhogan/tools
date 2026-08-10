@@ -1,0 +1,92 @@
+{
+ "version": "1.20.6",
+ "generated": "2026-08-10T20:39:09.771Z",
+ "serverJarSha1": "145ff0858209bcfc164859ba735d4199aafa1eea",
+ "method": "source-derived",
+ "note": "Growth could not be measured live on this version: a headless server never random ticks, because the random tick loop is nested inside the natural-spawning branch of ServerChunkCache.tickChunks, which is gated on a player being close enough to a chunk for spawning. The constants below were read out of the decompiled source of the class recorded next to each value. Expected chance per random tick for a farmland crop is 1 / (floor(growthRollDivisor / growthSpeed) + growthRollOffset), where growthSpeed starts at 1, adds farmlandWetBonus or farmlandDryBonus for the soil directly below, adds the same divided by neighbourDivisor for each of the eight neighbouring soil cells, and is divided by crowdingDivisor when the same crop is adjacent on both axes or on a diagonal.",
+ "measured": false,
+ "sourceConstants": {
+  "cropGrowth": {
+   "growthRollDivisor": {
+    "value": 25,
+    "class": "CropBlock",
+    "note": null
+   },
+   "growthRollOffset": {
+    "value": 1,
+    "class": "CropBlock",
+    "note": null
+   },
+   "minimumLight": {
+    "value": 9,
+    "class": "CropBlock",
+    "note": "minimum light level at the crop for the growth roll to run at all"
+   },
+   "farmlandDryBonus": {
+    "value": 1,
+    "class": "CropBlock",
+    "note": null
+   },
+   "farmlandWetBonus": {
+    "value": 3,
+    "class": "CropBlock",
+    "note": null
+   },
+   "neighbourDivisor": {
+    "value": 4,
+    "class": "CropBlock",
+    "note": "each of the eight neighbouring soil cells counts for this fraction"
+   },
+   "crowdingDivisor": {
+    "value": 2,
+    "class": "CropBlock",
+    "note": "applied when the same crop is adjacent on both axes or on a diagonal"
+   }
+  },
+  "beetroot": {
+   "extraRollDenominator": {
+    "value": 3,
+    "class": "BeetrootBlock",
+    "note": "beetroot skips the shared crop roll unless this extra one-in-N roll passes"
+   },
+   "maxAge": {
+    "value": 3,
+    "class": "BeetrootBlock",
+    "note": null
+   }
+  },
+  "netherWart": {
+   "rollDenominator": {
+    "value": 10,
+    "class": "NetherWartBlock",
+    "note": "nether wart ignores light, moisture and neighbours entirely"
+   },
+   "maxAge": {
+    "value": 3,
+    "class": "NetherWartBlock",
+    "note": null
+   }
+  },
+  "sugarCane": {
+   "maxAge": {
+    "value": 15,
+    "class": "SugarCaneBlock",
+    "note": "age increments once per random tick, so it counts random ticks exactly"
+   }
+  },
+  "cactus": {
+   "maxAge": {
+    "value": 15,
+    "class": "CactusBlock",
+    "note": "age increments once per random tick, so it counts random ticks exactly"
+   }
+  },
+  "bamboo": {
+   "rollDenominator": {
+    "value": 3,
+    "class": "BambooStalkBlock",
+    "note": null
+   }
+  }
+ }
+}

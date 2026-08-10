@@ -1,0 +1,2038 @@
+{
+ "version": "26.2",
+ "generated": "2026-08-10T20:39:07.743Z",
+ "serverJarSha1": "823e2250d24b3ddac457a60c92a6a941943fcd6a",
+ "method": "rcon-e2e",
+ "note": "Exact component timings measured one stepped tick at a time from a frozen game. Tick 1 is the first tick after the setup command that starts the case.",
+ "measured": true,
+ "cases": [
+  {
+   "case": "hopper-to-chest",
+   "description": "full hopper above a minecraft:chest, item count in the destination per tick",
+   "ticks": 60,
+   "series": [
+    {
+     "tick": 1,
+     "value": 1
+    },
+    {
+     "tick": 2,
+     "value": 1
+    },
+    {
+     "tick": 3,
+     "value": 1
+    },
+    {
+     "tick": 4,
+     "value": 1
+    },
+    {
+     "tick": 5,
+     "value": 1
+    },
+    {
+     "tick": 6,
+     "value": 1
+    },
+    {
+     "tick": 7,
+     "value": 1
+    },
+    {
+     "tick": 8,
+     "value": 1
+    },
+    {
+     "tick": 9,
+     "value": 2
+    },
+    {
+     "tick": 10,
+     "value": 2
+    },
+    {
+     "tick": 11,
+     "value": 2
+    },
+    {
+     "tick": 12,
+     "value": 2
+    },
+    {
+     "tick": 13,
+     "value": 2
+    },
+    {
+     "tick": 14,
+     "value": 2
+    },
+    {
+     "tick": 15,
+     "value": 2
+    },
+    {
+     "tick": 16,
+     "value": 2
+    },
+    {
+     "tick": 17,
+     "value": 3
+    },
+    {
+     "tick": 18,
+     "value": 3
+    },
+    {
+     "tick": 19,
+     "value": 3
+    },
+    {
+     "tick": 20,
+     "value": 3
+    },
+    {
+     "tick": 21,
+     "value": 3
+    },
+    {
+     "tick": 22,
+     "value": 3
+    },
+    {
+     "tick": 23,
+     "value": 3
+    },
+    {
+     "tick": 24,
+     "value": 3
+    },
+    {
+     "tick": 25,
+     "value": 4
+    },
+    {
+     "tick": 26,
+     "value": 4
+    },
+    {
+     "tick": 27,
+     "value": 4
+    },
+    {
+     "tick": 28,
+     "value": 4
+    },
+    {
+     "tick": 29,
+     "value": 4
+    },
+    {
+     "tick": 30,
+     "value": 4
+    },
+    {
+     "tick": 31,
+     "value": 4
+    },
+    {
+     "tick": 32,
+     "value": 4
+    },
+    {
+     "tick": 33,
+     "value": 5
+    },
+    {
+     "tick": 34,
+     "value": 5
+    },
+    {
+     "tick": 35,
+     "value": 5
+    },
+    {
+     "tick": 36,
+     "value": 5
+    },
+    {
+     "tick": 37,
+     "value": 5
+    },
+    {
+     "tick": 38,
+     "value": 5
+    },
+    {
+     "tick": 39,
+     "value": 5
+    },
+    {
+     "tick": 40,
+     "value": 5
+    },
+    {
+     "tick": 41,
+     "value": 6
+    },
+    {
+     "tick": 42,
+     "value": 6
+    },
+    {
+     "tick": 43,
+     "value": 6
+    },
+    {
+     "tick": 44,
+     "value": 6
+    },
+    {
+     "tick": 45,
+     "value": 6
+    },
+    {
+     "tick": 46,
+     "value": 6
+    },
+    {
+     "tick": 47,
+     "value": 6
+    },
+    {
+     "tick": 48,
+     "value": 6
+    },
+    {
+     "tick": 49,
+     "value": 7
+    },
+    {
+     "tick": 50,
+     "value": 7
+    },
+    {
+     "tick": 51,
+     "value": 7
+    },
+    {
+     "tick": 52,
+     "value": 7
+    },
+    {
+     "tick": 53,
+     "value": 7
+    },
+    {
+     "tick": 54,
+     "value": 7
+    },
+    {
+     "tick": 55,
+     "value": 7
+    },
+    {
+     "tick": 56,
+     "value": 7
+    },
+    {
+     "tick": 57,
+     "value": 8
+    },
+    {
+     "tick": 58,
+     "value": 8
+    },
+    {
+     "tick": 59,
+     "value": 8
+    },
+    {
+     "tick": 60,
+     "value": 8
+    }
+   ],
+   "transitions": [
+    {
+     "tick": 1,
+     "from": 0,
+     "to": 1
+    },
+    {
+     "tick": 9,
+     "from": 1,
+     "to": 2
+    },
+    {
+     "tick": 17,
+     "from": 2,
+     "to": 3
+    },
+    {
+     "tick": 25,
+     "from": 3,
+     "to": 4
+    },
+    {
+     "tick": 33,
+     "from": 4,
+     "to": 5
+    },
+    {
+     "tick": 41,
+     "from": 5,
+     "to": 6
+    },
+    {
+     "tick": 49,
+     "from": 6,
+     "to": 7
+    },
+    {
+     "tick": 57,
+     "from": 7,
+     "to": 8
+    }
+   ]
+  },
+  {
+   "case": "hopper-to-hopper",
+   "description": "full hopper above a minecraft:hopper[facing=north], item count in the destination per tick",
+   "ticks": 60,
+   "series": [
+    {
+     "tick": 1,
+     "value": 2
+    },
+    {
+     "tick": 2,
+     "value": 2
+    },
+    {
+     "tick": 3,
+     "value": 2
+    },
+    {
+     "tick": 4,
+     "value": 2
+    },
+    {
+     "tick": 5,
+     "value": 2
+    },
+    {
+     "tick": 6,
+     "value": 2
+    },
+    {
+     "tick": 7,
+     "value": 2
+    },
+    {
+     "tick": 8,
+     "value": 2
+    },
+    {
+     "tick": 9,
+     "value": 4
+    },
+    {
+     "tick": 10,
+     "value": 4
+    },
+    {
+     "tick": 11,
+     "value": 4
+    },
+    {
+     "tick": 12,
+     "value": 4
+    },
+    {
+     "tick": 13,
+     "value": 4
+    },
+    {
+     "tick": 14,
+     "value": 4
+    },
+    {
+     "tick": 15,
+     "value": 4
+    },
+    {
+     "tick": 16,
+     "value": 4
+    },
+    {
+     "tick": 17,
+     "value": 6
+    },
+    {
+     "tick": 18,
+     "value": 6
+    },
+    {
+     "tick": 19,
+     "value": 6
+    },
+    {
+     "tick": 20,
+     "value": 6
+    },
+    {
+     "tick": 21,
+     "value": 6
+    },
+    {
+     "tick": 22,
+     "value": 6
+    },
+    {
+     "tick": 23,
+     "value": 6
+    },
+    {
+     "tick": 24,
+     "value": 6
+    },
+    {
+     "tick": 25,
+     "value": 8
+    },
+    {
+     "tick": 26,
+     "value": 8
+    },
+    {
+     "tick": 27,
+     "value": 8
+    },
+    {
+     "tick": 28,
+     "value": 8
+    },
+    {
+     "tick": 29,
+     "value": 8
+    },
+    {
+     "tick": 30,
+     "value": 8
+    },
+    {
+     "tick": 31,
+     "value": 8
+    },
+    {
+     "tick": 32,
+     "value": 8
+    },
+    {
+     "tick": 33,
+     "value": 10
+    },
+    {
+     "tick": 34,
+     "value": 10
+    },
+    {
+     "tick": 35,
+     "value": 10
+    },
+    {
+     "tick": 36,
+     "value": 10
+    },
+    {
+     "tick": 37,
+     "value": 10
+    },
+    {
+     "tick": 38,
+     "value": 10
+    },
+    {
+     "tick": 39,
+     "value": 10
+    },
+    {
+     "tick": 40,
+     "value": 10
+    },
+    {
+     "tick": 41,
+     "value": 12
+    },
+    {
+     "tick": 42,
+     "value": 12
+    },
+    {
+     "tick": 43,
+     "value": 12
+    },
+    {
+     "tick": 44,
+     "value": 12
+    },
+    {
+     "tick": 45,
+     "value": 12
+    },
+    {
+     "tick": 46,
+     "value": 12
+    },
+    {
+     "tick": 47,
+     "value": 12
+    },
+    {
+     "tick": 48,
+     "value": 12
+    },
+    {
+     "tick": 49,
+     "value": 14
+    },
+    {
+     "tick": 50,
+     "value": 14
+    },
+    {
+     "tick": 51,
+     "value": 14
+    },
+    {
+     "tick": 52,
+     "value": 14
+    },
+    {
+     "tick": 53,
+     "value": 14
+    },
+    {
+     "tick": 54,
+     "value": 14
+    },
+    {
+     "tick": 55,
+     "value": 14
+    },
+    {
+     "tick": 56,
+     "value": 14
+    },
+    {
+     "tick": 57,
+     "value": 16
+    },
+    {
+     "tick": 58,
+     "value": 16
+    },
+    {
+     "tick": 59,
+     "value": 16
+    },
+    {
+     "tick": 60,
+     "value": 16
+    }
+   ],
+   "transitions": [
+    {
+     "tick": 1,
+     "from": 0,
+     "to": 2
+    },
+    {
+     "tick": 9,
+     "from": 2,
+     "to": 4
+    },
+    {
+     "tick": 17,
+     "from": 4,
+     "to": 6
+    },
+    {
+     "tick": 25,
+     "from": 6,
+     "to": 8
+    },
+    {
+     "tick": 33,
+     "from": 8,
+     "to": 10
+    },
+    {
+     "tick": 41,
+     "from": 10,
+     "to": 12
+    },
+    {
+     "tick": 49,
+     "from": 12,
+     "to": 14
+    },
+    {
+     "tick": 57,
+     "from": 14,
+     "to": 16
+    }
+   ]
+  },
+  {
+   "case": "hopper-to-furnace",
+   "description": "full hopper above a minecraft:furnace, item count in the destination per tick",
+   "ticks": 60,
+   "series": [
+    {
+     "tick": 1,
+     "value": 1
+    },
+    {
+     "tick": 2,
+     "value": 1
+    },
+    {
+     "tick": 3,
+     "value": 1
+    },
+    {
+     "tick": 4,
+     "value": 1
+    },
+    {
+     "tick": 5,
+     "value": 1
+    },
+    {
+     "tick": 6,
+     "value": 1
+    },
+    {
+     "tick": 7,
+     "value": 1
+    },
+    {
+     "tick": 8,
+     "value": 1
+    },
+    {
+     "tick": 9,
+     "value": 2
+    },
+    {
+     "tick": 10,
+     "value": 2
+    },
+    {
+     "tick": 11,
+     "value": 2
+    },
+    {
+     "tick": 12,
+     "value": 2
+    },
+    {
+     "tick": 13,
+     "value": 2
+    },
+    {
+     "tick": 14,
+     "value": 2
+    },
+    {
+     "tick": 15,
+     "value": 2
+    },
+    {
+     "tick": 16,
+     "value": 2
+    },
+    {
+     "tick": 17,
+     "value": 3
+    },
+    {
+     "tick": 18,
+     "value": 3
+    },
+    {
+     "tick": 19,
+     "value": 3
+    },
+    {
+     "tick": 20,
+     "value": 3
+    },
+    {
+     "tick": 21,
+     "value": 3
+    },
+    {
+     "tick": 22,
+     "value": 3
+    },
+    {
+     "tick": 23,
+     "value": 3
+    },
+    {
+     "tick": 24,
+     "value": 3
+    },
+    {
+     "tick": 25,
+     "value": 4
+    },
+    {
+     "tick": 26,
+     "value": 4
+    },
+    {
+     "tick": 27,
+     "value": 4
+    },
+    {
+     "tick": 28,
+     "value": 4
+    },
+    {
+     "tick": 29,
+     "value": 4
+    },
+    {
+     "tick": 30,
+     "value": 4
+    },
+    {
+     "tick": 31,
+     "value": 4
+    },
+    {
+     "tick": 32,
+     "value": 4
+    },
+    {
+     "tick": 33,
+     "value": 5
+    },
+    {
+     "tick": 34,
+     "value": 5
+    },
+    {
+     "tick": 35,
+     "value": 5
+    },
+    {
+     "tick": 36,
+     "value": 5
+    },
+    {
+     "tick": 37,
+     "value": 5
+    },
+    {
+     "tick": 38,
+     "value": 5
+    },
+    {
+     "tick": 39,
+     "value": 5
+    },
+    {
+     "tick": 40,
+     "value": 5
+    },
+    {
+     "tick": 41,
+     "value": 6
+    },
+    {
+     "tick": 42,
+     "value": 6
+    },
+    {
+     "tick": 43,
+     "value": 6
+    },
+    {
+     "tick": 44,
+     "value": 6
+    },
+    {
+     "tick": 45,
+     "value": 6
+    },
+    {
+     "tick": 46,
+     "value": 6
+    },
+    {
+     "tick": 47,
+     "value": 6
+    },
+    {
+     "tick": 48,
+     "value": 6
+    },
+    {
+     "tick": 49,
+     "value": 7
+    },
+    {
+     "tick": 50,
+     "value": 7
+    },
+    {
+     "tick": 51,
+     "value": 7
+    },
+    {
+     "tick": 52,
+     "value": 7
+    },
+    {
+     "tick": 53,
+     "value": 7
+    },
+    {
+     "tick": 54,
+     "value": 7
+    },
+    {
+     "tick": 55,
+     "value": 7
+    },
+    {
+     "tick": 56,
+     "value": 7
+    },
+    {
+     "tick": 57,
+     "value": 8
+    },
+    {
+     "tick": 58,
+     "value": 8
+    },
+    {
+     "tick": 59,
+     "value": 8
+    },
+    {
+     "tick": 60,
+     "value": 8
+    }
+   ],
+   "transitions": [
+    {
+     "tick": 1,
+     "from": 0,
+     "to": 1
+    },
+    {
+     "tick": 9,
+     "from": 1,
+     "to": 2
+    },
+    {
+     "tick": 17,
+     "from": 2,
+     "to": 3
+    },
+    {
+     "tick": 25,
+     "from": 3,
+     "to": 4
+    },
+    {
+     "tick": 33,
+     "from": 4,
+     "to": 5
+    },
+    {
+     "tick": 41,
+     "from": 5,
+     "to": 6
+    },
+    {
+     "tick": 49,
+     "from": 6,
+     "to": 7
+    },
+    {
+     "tick": 57,
+     "from": 7,
+     "to": 8
+    }
+   ]
+  },
+  {
+   "case": "dropper-fire-delay",
+   "description": "ticks from powering a dropper until the item reaches the chest in front",
+   "ticks": 12,
+   "series": [
+    {
+     "tick": 1,
+     "value": 0
+    },
+    {
+     "tick": 2,
+     "value": 0
+    },
+    {
+     "tick": 3,
+     "value": 0
+    },
+    {
+     "tick": 4,
+     "value": 1
+    },
+    {
+     "tick": 5,
+     "value": 1
+    },
+    {
+     "tick": 6,
+     "value": 1
+    },
+    {
+     "tick": 7,
+     "value": 1
+    },
+    {
+     "tick": 8,
+     "value": 1
+    },
+    {
+     "tick": 9,
+     "value": 1
+    },
+    {
+     "tick": 10,
+     "value": 1
+    },
+    {
+     "tick": 11,
+     "value": 1
+    },
+    {
+     "tick": 12,
+     "value": 1
+    }
+   ],
+   "transitions": [
+    {
+     "tick": 4,
+     "from": 0,
+     "to": 1
+    }
+   ]
+  },
+  {
+   "case": "dispenser-fire-delay",
+   "description": "ticks from powering a dispenser until the ejected item entity exists",
+   "ticks": 12,
+   "series": [
+    {
+     "tick": 1,
+     "value": false
+    },
+    {
+     "tick": 2,
+     "value": false
+    },
+    {
+     "tick": 3,
+     "value": false
+    },
+    {
+     "tick": 4,
+     "value": true
+    },
+    {
+     "tick": 5,
+     "value": true
+    },
+    {
+     "tick": 6,
+     "value": true
+    },
+    {
+     "tick": 7,
+     "value": true
+    },
+    {
+     "tick": 8,
+     "value": true
+    },
+    {
+     "tick": 9,
+     "value": true
+    },
+    {
+     "tick": 10,
+     "value": true
+    },
+    {
+     "tick": 11,
+     "value": true
+    },
+    {
+     "tick": 12,
+     "value": true
+    }
+   ],
+   "transitions": [
+    {
+     "tick": 4,
+     "from": false,
+     "to": true
+    }
+   ]
+  },
+  {
+   "case": "repeater-delay-1",
+   "description": "repeater driven by a redstone block; its own powered state per tick after the input rises and again after it falls",
+   "repeaterDelaySetting": 1,
+   "facing": "facing=west,delay=1",
+   "risingSeries": [
+    {
+     "tick": 1,
+     "value": false
+    },
+    {
+     "tick": 2,
+     "value": true
+    },
+    {
+     "tick": 3,
+     "value": true
+    },
+    {
+     "tick": 4,
+     "value": true
+    },
+    {
+     "tick": 5,
+     "value": true
+    },
+    {
+     "tick": 6,
+     "value": true
+    },
+    {
+     "tick": 7,
+     "value": true
+    },
+    {
+     "tick": 8,
+     "value": true
+    },
+    {
+     "tick": 9,
+     "value": true
+    },
+    {
+     "tick": 10,
+     "value": true
+    },
+    {
+     "tick": 11,
+     "value": true
+    },
+    {
+     "tick": 12,
+     "value": true
+    },
+    {
+     "tick": 13,
+     "value": true
+    },
+    {
+     "tick": 14,
+     "value": true
+    },
+    {
+     "tick": 15,
+     "value": true
+    },
+    {
+     "tick": 16,
+     "value": true
+    }
+   ],
+   "risingTransitions": [
+    {
+     "tick": 2,
+     "from": false,
+     "to": true
+    }
+   ],
+   "fallingSeries": [
+    {
+     "tick": 1,
+     "value": true
+    },
+    {
+     "tick": 2,
+     "value": false
+    },
+    {
+     "tick": 3,
+     "value": false
+    },
+    {
+     "tick": 4,
+     "value": false
+    },
+    {
+     "tick": 5,
+     "value": false
+    },
+    {
+     "tick": 6,
+     "value": false
+    },
+    {
+     "tick": 7,
+     "value": false
+    },
+    {
+     "tick": 8,
+     "value": false
+    },
+    {
+     "tick": 9,
+     "value": false
+    },
+    {
+     "tick": 10,
+     "value": false
+    },
+    {
+     "tick": 11,
+     "value": false
+    },
+    {
+     "tick": 12,
+     "value": false
+    },
+    {
+     "tick": 13,
+     "value": false
+    },
+    {
+     "tick": 14,
+     "value": false
+    },
+    {
+     "tick": 15,
+     "value": false
+    },
+    {
+     "tick": 16,
+     "value": false
+    }
+   ],
+   "fallingTransitions": [
+    {
+     "tick": 2,
+     "from": true,
+     "to": false
+    }
+   ]
+  },
+  {
+   "case": "repeater-delay-2",
+   "description": "repeater driven by a redstone block; its own powered state per tick after the input rises and again after it falls",
+   "repeaterDelaySetting": 2,
+   "facing": "facing=west,delay=2",
+   "risingSeries": [
+    {
+     "tick": 1,
+     "value": false
+    },
+    {
+     "tick": 2,
+     "value": false
+    },
+    {
+     "tick": 3,
+     "value": false
+    },
+    {
+     "tick": 4,
+     "value": true
+    },
+    {
+     "tick": 5,
+     "value": true
+    },
+    {
+     "tick": 6,
+     "value": true
+    },
+    {
+     "tick": 7,
+     "value": true
+    },
+    {
+     "tick": 8,
+     "value": true
+    },
+    {
+     "tick": 9,
+     "value": true
+    },
+    {
+     "tick": 10,
+     "value": true
+    },
+    {
+     "tick": 11,
+     "value": true
+    },
+    {
+     "tick": 12,
+     "value": true
+    },
+    {
+     "tick": 13,
+     "value": true
+    },
+    {
+     "tick": 14,
+     "value": true
+    },
+    {
+     "tick": 15,
+     "value": true
+    },
+    {
+     "tick": 16,
+     "value": true
+    }
+   ],
+   "risingTransitions": [
+    {
+     "tick": 4,
+     "from": false,
+     "to": true
+    }
+   ],
+   "fallingSeries": [
+    {
+     "tick": 1,
+     "value": true
+    },
+    {
+     "tick": 2,
+     "value": true
+    },
+    {
+     "tick": 3,
+     "value": true
+    },
+    {
+     "tick": 4,
+     "value": false
+    },
+    {
+     "tick": 5,
+     "value": false
+    },
+    {
+     "tick": 6,
+     "value": false
+    },
+    {
+     "tick": 7,
+     "value": false
+    },
+    {
+     "tick": 8,
+     "value": false
+    },
+    {
+     "tick": 9,
+     "value": false
+    },
+    {
+     "tick": 10,
+     "value": false
+    },
+    {
+     "tick": 11,
+     "value": false
+    },
+    {
+     "tick": 12,
+     "value": false
+    },
+    {
+     "tick": 13,
+     "value": false
+    },
+    {
+     "tick": 14,
+     "value": false
+    },
+    {
+     "tick": 15,
+     "value": false
+    },
+    {
+     "tick": 16,
+     "value": false
+    }
+   ],
+   "fallingTransitions": [
+    {
+     "tick": 4,
+     "from": true,
+     "to": false
+    }
+   ]
+  },
+  {
+   "case": "repeater-delay-3",
+   "description": "repeater driven by a redstone block; its own powered state per tick after the input rises and again after it falls",
+   "repeaterDelaySetting": 3,
+   "facing": "facing=west,delay=3",
+   "risingSeries": [
+    {
+     "tick": 1,
+     "value": false
+    },
+    {
+     "tick": 2,
+     "value": false
+    },
+    {
+     "tick": 3,
+     "value": false
+    },
+    {
+     "tick": 4,
+     "value": false
+    },
+    {
+     "tick": 5,
+     "value": false
+    },
+    {
+     "tick": 6,
+     "value": true
+    },
+    {
+     "tick": 7,
+     "value": true
+    },
+    {
+     "tick": 8,
+     "value": true
+    },
+    {
+     "tick": 9,
+     "value": true
+    },
+    {
+     "tick": 10,
+     "value": true
+    },
+    {
+     "tick": 11,
+     "value": true
+    },
+    {
+     "tick": 12,
+     "value": true
+    },
+    {
+     "tick": 13,
+     "value": true
+    },
+    {
+     "tick": 14,
+     "value": true
+    },
+    {
+     "tick": 15,
+     "value": true
+    },
+    {
+     "tick": 16,
+     "value": true
+    }
+   ],
+   "risingTransitions": [
+    {
+     "tick": 6,
+     "from": false,
+     "to": true
+    }
+   ],
+   "fallingSeries": [
+    {
+     "tick": 1,
+     "value": true
+    },
+    {
+     "tick": 2,
+     "value": true
+    },
+    {
+     "tick": 3,
+     "value": true
+    },
+    {
+     "tick": 4,
+     "value": true
+    },
+    {
+     "tick": 5,
+     "value": true
+    },
+    {
+     "tick": 6,
+     "value": false
+    },
+    {
+     "tick": 7,
+     "value": false
+    },
+    {
+     "tick": 8,
+     "value": false
+    },
+    {
+     "tick": 9,
+     "value": false
+    },
+    {
+     "tick": 10,
+     "value": false
+    },
+    {
+     "tick": 11,
+     "value": false
+    },
+    {
+     "tick": 12,
+     "value": false
+    },
+    {
+     "tick": 13,
+     "value": false
+    },
+    {
+     "tick": 14,
+     "value": false
+    },
+    {
+     "tick": 15,
+     "value": false
+    },
+    {
+     "tick": 16,
+     "value": false
+    }
+   ],
+   "fallingTransitions": [
+    {
+     "tick": 6,
+     "from": true,
+     "to": false
+    }
+   ]
+  },
+  {
+   "case": "repeater-delay-4",
+   "description": "repeater driven by a redstone block; its own powered state per tick after the input rises and again after it falls",
+   "repeaterDelaySetting": 4,
+   "facing": "facing=west,delay=4",
+   "risingSeries": [
+    {
+     "tick": 1,
+     "value": false
+    },
+    {
+     "tick": 2,
+     "value": false
+    },
+    {
+     "tick": 3,
+     "value": false
+    },
+    {
+     "tick": 4,
+     "value": false
+    },
+    {
+     "tick": 5,
+     "value": false
+    },
+    {
+     "tick": 6,
+     "value": false
+    },
+    {
+     "tick": 7,
+     "value": false
+    },
+    {
+     "tick": 8,
+     "value": true
+    },
+    {
+     "tick": 9,
+     "value": true
+    },
+    {
+     "tick": 10,
+     "value": true
+    },
+    {
+     "tick": 11,
+     "value": true
+    },
+    {
+     "tick": 12,
+     "value": true
+    },
+    {
+     "tick": 13,
+     "value": true
+    },
+    {
+     "tick": 14,
+     "value": true
+    },
+    {
+     "tick": 15,
+     "value": true
+    },
+    {
+     "tick": 16,
+     "value": true
+    }
+   ],
+   "risingTransitions": [
+    {
+     "tick": 8,
+     "from": false,
+     "to": true
+    }
+   ],
+   "fallingSeries": [
+    {
+     "tick": 1,
+     "value": true
+    },
+    {
+     "tick": 2,
+     "value": true
+    },
+    {
+     "tick": 3,
+     "value": true
+    },
+    {
+     "tick": 4,
+     "value": true
+    },
+    {
+     "tick": 5,
+     "value": true
+    },
+    {
+     "tick": 6,
+     "value": true
+    },
+    {
+     "tick": 7,
+     "value": true
+    },
+    {
+     "tick": 8,
+     "value": false
+    },
+    {
+     "tick": 9,
+     "value": false
+    },
+    {
+     "tick": 10,
+     "value": false
+    },
+    {
+     "tick": 11,
+     "value": false
+    },
+    {
+     "tick": 12,
+     "value": false
+    },
+    {
+     "tick": 13,
+     "value": false
+    },
+    {
+     "tick": 14,
+     "value": false
+    },
+    {
+     "tick": 15,
+     "value": false
+    },
+    {
+     "tick": 16,
+     "value": false
+    }
+   ],
+   "fallingTransitions": [
+    {
+     "tick": 8,
+     "from": true,
+     "to": false
+    }
+   ]
+  },
+  {
+   "case": "comparator-compare",
+   "description": "comparator driven by a redstone block; its own powered state per tick after the input rises and again after it falls",
+   "repeaterDelaySetting": null,
+   "facing": "facing=west,mode=compare",
+   "risingSeries": [
+    {
+     "tick": 1,
+     "value": false
+    },
+    {
+     "tick": 2,
+     "value": true
+    },
+    {
+     "tick": 3,
+     "value": true
+    },
+    {
+     "tick": 4,
+     "value": true
+    },
+    {
+     "tick": 5,
+     "value": true
+    },
+    {
+     "tick": 6,
+     "value": true
+    },
+    {
+     "tick": 7,
+     "value": true
+    },
+    {
+     "tick": 8,
+     "value": true
+    },
+    {
+     "tick": 9,
+     "value": true
+    },
+    {
+     "tick": 10,
+     "value": true
+    },
+    {
+     "tick": 11,
+     "value": true
+    },
+    {
+     "tick": 12,
+     "value": true
+    },
+    {
+     "tick": 13,
+     "value": true
+    },
+    {
+     "tick": 14,
+     "value": true
+    },
+    {
+     "tick": 15,
+     "value": true
+    },
+    {
+     "tick": 16,
+     "value": true
+    }
+   ],
+   "risingTransitions": [
+    {
+     "tick": 2,
+     "from": false,
+     "to": true
+    }
+   ],
+   "fallingSeries": [
+    {
+     "tick": 1,
+     "value": true
+    },
+    {
+     "tick": 2,
+     "value": false
+    },
+    {
+     "tick": 3,
+     "value": false
+    },
+    {
+     "tick": 4,
+     "value": false
+    },
+    {
+     "tick": 5,
+     "value": false
+    },
+    {
+     "tick": 6,
+     "value": false
+    },
+    {
+     "tick": 7,
+     "value": false
+    },
+    {
+     "tick": 8,
+     "value": false
+    },
+    {
+     "tick": 9,
+     "value": false
+    },
+    {
+     "tick": 10,
+     "value": false
+    },
+    {
+     "tick": 11,
+     "value": false
+    },
+    {
+     "tick": 12,
+     "value": false
+    },
+    {
+     "tick": 13,
+     "value": false
+    },
+    {
+     "tick": 14,
+     "value": false
+    },
+    {
+     "tick": 15,
+     "value": false
+    },
+    {
+     "tick": 16,
+     "value": false
+    }
+   ],
+   "fallingTransitions": [
+    {
+     "tick": 2,
+     "from": true,
+     "to": false
+    }
+   ]
+  },
+  {
+   "case": "redstone-lamp",
+   "description": "lamp lit state per tick after a redstone block is placed beside it, then removed",
+   "risingSeries": [
+    {
+     "tick": 1,
+     "value": true
+    },
+    {
+     "tick": 2,
+     "value": true
+    },
+    {
+     "tick": 3,
+     "value": true
+    },
+    {
+     "tick": 4,
+     "value": true
+    },
+    {
+     "tick": 5,
+     "value": true
+    },
+    {
+     "tick": 6,
+     "value": true
+    },
+    {
+     "tick": 7,
+     "value": true
+    },
+    {
+     "tick": 8,
+     "value": true
+    }
+   ],
+   "risingTransitions": [
+    {
+     "tick": 1,
+     "from": false,
+     "to": true
+    }
+   ],
+   "fallingSeries": [
+    {
+     "tick": 1,
+     "value": true
+    },
+    {
+     "tick": 2,
+     "value": true
+    },
+    {
+     "tick": 3,
+     "value": true
+    },
+    {
+     "tick": 4,
+     "value": false
+    },
+    {
+     "tick": 5,
+     "value": false
+    },
+    {
+     "tick": 6,
+     "value": false
+    },
+    {
+     "tick": 7,
+     "value": false
+    },
+    {
+     "tick": 8,
+     "value": false
+    }
+   ],
+   "fallingTransitions": [
+    {
+     "tick": 4,
+     "from": true,
+     "to": false
+    }
+   ]
+  },
+  {
+   "case": "observer-pulse",
+   "description": "ticks from changing the watched block until the observer powers up, and how long it stays powered",
+   "facing": "east",
+   "watchedSide": "east",
+   "ticks": 10,
+   "series": [
+    {
+     "tick": 1,
+     "value": false
+    },
+    {
+     "tick": 2,
+     "value": true
+    },
+    {
+     "tick": 3,
+     "value": true
+    },
+    {
+     "tick": 4,
+     "value": false
+    },
+    {
+     "tick": 5,
+     "value": false
+    },
+    {
+     "tick": 6,
+     "value": false
+    },
+    {
+     "tick": 7,
+     "value": false
+    },
+    {
+     "tick": 8,
+     "value": false
+    },
+    {
+     "tick": 9,
+     "value": false
+    },
+    {
+     "tick": 10,
+     "value": false
+    }
+   ],
+   "transitions": [
+    {
+     "tick": 2,
+     "from": false,
+     "to": true
+    },
+    {
+     "tick": 4,
+     "from": true,
+     "to": false
+    }
+   ]
+  },
+  {
+   "case": "piston",
+   "description": "piston head presence and extended state per tick after power on, then off",
+   "extendSeries": [
+    {
+     "tick": 1,
+     "head": false,
+     "moving": true,
+     "extended": true
+    },
+    {
+     "tick": 2,
+     "head": false,
+     "moving": true,
+     "extended": true
+    },
+    {
+     "tick": 3,
+     "head": true,
+     "moving": false,
+     "extended": true
+    },
+    {
+     "tick": 4,
+     "head": true,
+     "moving": false,
+     "extended": true
+    },
+    {
+     "tick": 5,
+     "head": true,
+     "moving": false,
+     "extended": true
+    },
+    {
+     "tick": 6,
+     "head": true,
+     "moving": false,
+     "extended": true
+    },
+    {
+     "tick": 7,
+     "head": true,
+     "moving": false,
+     "extended": true
+    },
+    {
+     "tick": 8,
+     "head": true,
+     "moving": false,
+     "extended": true
+    },
+    {
+     "tick": 9,
+     "head": true,
+     "moving": false,
+     "extended": true
+    },
+    {
+     "tick": 10,
+     "head": true,
+     "moving": false,
+     "extended": true
+    }
+   ],
+   "extendedAtTick": 3,
+   "retractSeries": [
+    {
+     "tick": 1,
+     "head": false,
+     "moving": false,
+     "extended": false
+    },
+    {
+     "tick": 2,
+     "head": false,
+     "moving": false,
+     "extended": false
+    },
+    {
+     "tick": 3,
+     "head": false,
+     "moving": false,
+     "extended": false
+    },
+    {
+     "tick": 4,
+     "head": false,
+     "moving": false,
+     "extended": false
+    },
+    {
+     "tick": 5,
+     "head": false,
+     "moving": false,
+     "extended": false
+    },
+    {
+     "tick": 6,
+     "head": false,
+     "moving": false,
+     "extended": false
+    },
+    {
+     "tick": 7,
+     "head": false,
+     "moving": false,
+     "extended": false
+    },
+    {
+     "tick": 8,
+     "head": false,
+     "moving": false,
+     "extended": false
+    },
+    {
+     "tick": 9,
+     "head": false,
+     "moving": false,
+     "extended": false
+    },
+    {
+     "tick": 10,
+     "head": false,
+     "moving": false,
+     "extended": false
+    }
+   ],
+   "retractedAtTick": 1
+  }
+ ]
+}

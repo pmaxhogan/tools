@@ -1,0 +1,223 @@
+{
+  "method": "source-derived",
+  "generatedFrom": "mc-pipeline/work/<version>/src/net/minecraft/ decompiled server source, read per version. Natural spawning cannot be measured headlessly: the spawn loop only runs for chunks charged by a player, so a server with nobody online produces zero natural spawns no matter how long it ticks. Every constant below was therefore read out of the source rather than measured, and each case records the class and method it came from.",
+  "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+  "constants": [
+    {
+      "id": "min-spawn-distance",
+      "description": "A spawn attempt is rejected when the squared distance to the nearest player is 576 or less, so mobs never spawn within 24 blocks of a player.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 24,
+      "provenance": "NaturalSpawner#isRightDistanceToPlayerAndSpawnPoint: `if (distSq <= 576.0) return false;` (576 = 24 squared). 1.21.11 and 26.2 also name it NaturalSpawner.MIN_SPAWN_DISTANCE = 24."
+    },
+    {
+      "id": "world-spawn-exclusion",
+      "description": "A spawn attempt is rejected within 24 blocks of the world spawn point.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 24,
+      "provenance": "NaturalSpawner#isRightDistanceToPlayerAndSpawnPoint: closerThan(spawnPos, 24.0) in 1.16.5 through 1.21.1; 1.21.11 and 26.2 read the same 24.0 off LevelData.RespawnData and also require the respawn dimension to match."
+    },
+    {
+      "id": "spawn-chunk-radius",
+      "description": "Chunks counted toward the mob cap sit within 8 chunks of a player, measured with Chebyshev distance, so one player charges a 17 by 17 square.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 8,
+      "provenance": "DistanceManager: `new FixedPlayerDistanceChunkTracker(8)` for naturalSpawnChunkCounter; ChunkTracker#checkNeighborsAfterUpdate and #getComputedLevel propagate over all 8 neighbours, which makes the level a Chebyshev distance."
+    },
+    {
+      "id": "mob-cap-divisor",
+      "description": "The global per category cap is maxInstancesPerChunk * spawnableChunkCount / 289, where 289 is 17 squared, the chunk count one player charges.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 289,
+      "provenance": "NaturalSpawner.MAGIC_NUMBER = (int)Math.pow(17.0, 2.0); NaturalSpawner.SpawnState#canSpawnForCategoryGlobal: `category.getMaxInstancesPerChunk() * spawnableChunkCount / MAGIC_NUMBER`."
+    },
+    {
+      "id": "spawning-chunk-player-radius",
+      "description": "A chunk only runs the spawn loop when a non spectator player is within 128 blocks of its centre, measured horizontally.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 128,
+      "provenance": "ChunkMap#playerIsCloseEnoughForSpawning: `euclideanDistanceSquared(chunkPos, player.position()) < 16384.0` (16384 = 128 squared); ChunkMap#euclideanDistanceSquared uses the chunk centre and only the x and z axes. 1.16.5 inlines the same 16384.0 test in anyPlayerCloseEnoughForSpawning."
+    },
+    {
+      "id": "rounds-per-chunk-tick",
+      "description": "Each spawning chunk runs three pack rounds per category per tick, from one shared random position.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 3,
+      "provenance": "NaturalSpawner#spawnCategoryForPosition: `for (int i = 0; i < 3; i++)`. The position comes from a single NaturalSpawner#getRandomPosWithin call in spawnCategoryForChunk, so all three rounds share one y level."
+    },
+    {
+      "id": "pack-attempts-before-type",
+      "description": "Before a mob type is picked, the round tries up to ceil(random * 4) positions, so 1 to 4.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 4,
+      "provenance": "NaturalSpawner#spawnCategoryForPosition: `int attempts = Mth.ceil(level.random.nextFloat() * 4.0F);` then the loop is re-bounded to `minCount + random.nextInt(1 + maxCount - minCount)` once a SpawnerData is chosen."
+    },
+    {
+      "id": "pack-spread",
+      "description": "Each attempt walks the x and z position by nextInt(6) - nextInt(6), a range of minus 5 to plus 5 per axis per step.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 6,
+      "provenance": "NaturalSpawner#spawnCategoryForPosition: `x += random.nextInt(6) - random.nextInt(6); z += random.nextInt(6) - random.nextInt(6);`"
+    },
+    {
+      "id": "max-spawn-cluster-size",
+      "description": "One chunk tick stops adding mobs for a category once four have spawned.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 4,
+      "provenance": "Mob#getMaxSpawnClusterSize returns 4; NaturalSpawner#spawnCategoryForPosition returns when the running total reaches it."
+    },
+    {
+      "id": "no-despawn-distance",
+      "description": "Inside 32 blocks of a player a mob's idle timer resets, so it never random despawns.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 32,
+      "provenance": "MobCategory#getNoDespawnDistance returns 32 for every category; Mob#checkDespawn compares the squared player distance against 32 squared and zeroes noActionTime below it."
+    },
+    {
+      "id": "random-despawn-idle-ticks",
+      "description": "Random despawn only becomes possible after 600 ticks (30 seconds) of no player contact.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 600,
+      "provenance": "Mob#checkDespawn: `if (this.noActionTime > 600 && this.random.nextInt(800) == 0 && distSq > noDespawnSq && this.removeWhenFarAway(distSq))`."
+    },
+    {
+      "id": "random-despawn-chance-denominator",
+      "description": "Once eligible, a mob despawns with probability 1 in 800 per tick, so 40 seconds on average.",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "value": 800,
+      "provenance": "Mob#checkDespawn: `this.random.nextInt(800) == 0`, evaluated once per tick from Mob#baseTick."
+    }
+  ],
+  "categories": [
+    {
+      "id": "monster",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "maxPerChunk": 70,
+      "despawnDistance": 128,
+      "noDespawnDistance": 32,
+      "friendly": false,
+      "persistent": false,
+      "provenance": "MobCategory.MONSTER(\"monster\", 70, false, false, 128); 26.2 adds a debug abbreviation argument and keeps the same numbers."
+    },
+    {
+      "id": "creature",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "maxPerChunk": 10,
+      "despawnDistance": 128,
+      "noDespawnDistance": 32,
+      "friendly": true,
+      "persistent": true,
+      "provenance": "MobCategory.CREATURE(\"creature\", 10, true, true, 128)."
+    },
+    {
+      "id": "ambient",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "maxPerChunk": 15,
+      "despawnDistance": 128,
+      "noDespawnDistance": 32,
+      "friendly": true,
+      "persistent": false,
+      "provenance": "MobCategory.AMBIENT(\"ambient\", 15, true, false, 128)."
+    },
+    {
+      "id": "axolotls",
+      "versions": ["1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "maxPerChunk": 5,
+      "despawnDistance": 128,
+      "noDespawnDistance": 32,
+      "friendly": true,
+      "persistent": false,
+      "provenance": "MobCategory.AXOLOTLS(\"axolotls\", 5, true, false, 128). Absent from the 1.16.5 enum."
+    },
+    {
+      "id": "underground_water_creature",
+      "versions": ["1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "maxPerChunk": 5,
+      "despawnDistance": 128,
+      "noDespawnDistance": 32,
+      "friendly": true,
+      "persistent": false,
+      "provenance": "MobCategory.UNDERGROUND_WATER_CREATURE(\"underground_water_creature\", 5, true, false, 128). Absent from the 1.16.5 enum."
+    },
+    {
+      "id": "water_creature",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "maxPerChunk": 5,
+      "despawnDistance": 128,
+      "noDespawnDistance": 32,
+      "friendly": true,
+      "persistent": false,
+      "provenance": "MobCategory.WATER_CREATURE(\"water_creature\", 5, true, false, 128)."
+    },
+    {
+      "id": "water_ambient",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "maxPerChunk": 20,
+      "despawnDistance": 64,
+      "noDespawnDistance": 32,
+      "friendly": true,
+      "persistent": false,
+      "provenance": "MobCategory.WATER_AMBIENT(\"water_ambient\", 20, true, false, 64). The only category whose instant despawn radius is not 128."
+    }
+  ],
+  "lightRules": [
+    {
+      "id": "1.16.5-all-dimensions",
+      "versions": ["1.16.5"],
+      "dimensions": ["overworld", "nether", "end"],
+      "blockLightLimit": 15,
+      "lightTest": { "type": "uniform", "min": 0, "max": 7 },
+      "skyLightTest": { "type": "uniform", "min": 0, "max": 31 },
+      "provenance": "Monster#isDarkEnoughToSpawn: sky brightness is compared against random.nextInt(32), then the internal brightness against random.nextInt(8). There is no block light gate at all, so a block at light level 7 still spawns monsters part of the time. Not dimension aware in this version."
+    },
+    {
+      "id": "1.18.2-all-dimensions",
+      "versions": ["1.18.2"],
+      "dimensions": ["overworld", "nether", "end"],
+      "blockLightLimit": 0,
+      "lightTest": { "type": "uniform", "min": 0, "max": 7 },
+      "skyLightTest": { "type": "uniform", "min": 0, "max": 31 },
+      "provenance": "Monster#isDarkEnoughToSpawn gains a hard `if (getBrightness(LightLayer.BLOCK, pos) > 0) return false;` between 1.16.5 and 1.18.2. Any block light at all now blocks the spawn, in every dimension, and the light 1 to 7 partial spawning of 1.16.5 is gone."
+    },
+    {
+      "id": "overworld-datadriven",
+      "versions": ["1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "dimensions": ["overworld"],
+      "blockLightLimit": 0,
+      "lightTest": { "type": "uniform", "min": 0, "max": 7 },
+      "skyLightTest": { "type": "uniform", "min": 0, "max": 31 },
+      "provenance": "The hard coded 1.18.2 rule becomes DimensionType.MonsterSettings. DimensionTypes#bootstrap registers the overworld with MonsterSettings(UniformInt.of(0, 7), 0); Monster#isDarkEnoughToSpawn reads monsterSpawnBlockLightLimit() and monsterSpawnLightTest(). Same behaviour as 1.18.2, now data driven."
+    },
+    {
+      "id": "nether-datadriven",
+      "versions": ["1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "dimensions": ["nether"],
+      "blockLightLimit": 15,
+      "lightTest": { "type": "constant", "min": 7, "max": 7 },
+      "skyLightTest": { "type": "uniform", "min": 0, "max": 31 },
+      "provenance": "DimensionTypes#bootstrap registers the nether with MonsterSettings(ConstantInt.of(7), 15). Monster#isDarkEnoughToSpawn skips the block light gate entirely when the limit is 15, so nether monsters that use the dark rule need brightness 7 or less rather than block light 0."
+    },
+    {
+      "id": "end-uniform",
+      "versions": ["1.20.6", "1.21.1"],
+      "dimensions": ["end"],
+      "blockLightLimit": 0,
+      "lightTest": { "type": "uniform", "min": 0, "max": 7 },
+      "skyLightTest": { "type": "uniform", "min": 0, "max": 31 },
+      "provenance": "DimensionTypes#bootstrap registers the end with MonsterSettings(UniformInt.of(0, 7), 0)."
+    },
+    {
+      "id": "end-constant",
+      "versions": ["1.21.11", "26.2"],
+      "dimensions": ["end"],
+      "blockLightLimit": 0,
+      "lightTest": { "type": "constant", "min": 15, "max": 15 },
+      "skyLightTest": { "type": "uniform", "min": 0, "max": 31 },
+      "provenance": "DimensionTypes#bootstrap registers the end with MonsterSettings(ConstantInt.of(15), 0) by 1.21.11. Data level change only: the brightness test now always passes, but the block light limit of 0 still refuses any lit block, and the end has no sky light, so the practical spawn condition is unchanged."
+    }
+  ],
+  "notes": [
+    "The per player mob cap (LocalMobCapCalculator, capping each player's own nearby count at MobCategory#getMaxInstancesPerChunk) exists in 1.18.2 and later. There is no such class in 1.16.5, where only the global cap applies.",
+    "In 26.2 the peaceful difficulty gate moved out of Monster#checkMonsterSpawnRules into SpawnPlacements#checkSpawnRules, where it reads EntityType#isAllowedInPeaceful and therefore applies to every registered type rather than to monsters only."
+  ]
+}
