@@ -177,5 +177,340 @@
    "amount": 10,
    "taken": 0
   }
- ]
+ ],
+ "mobStats": {
+  "note": "Curated mob combat stats read from the decompiled trees for all six versions. Values are identical in every tree that has the mob; class names are 1.21.11 Mojang mappings. attack is the typical hit before difficulty scaling; heldItemBonus is the attack_damage modifier of the mob's held weapon, included in the attack total because Mob#doHurtTarget reads the full ATTACK_DAMAGE attribute.",
+  "mobs": [
+   {
+    "id": "zombie",
+    "attack": 3,
+    "hp": 20,
+    "armor": 2,
+    "classification": "undead",
+    "source": "Zombie#createAttributes: ATTACK_DAMAGE 3, ARMOR 2; MAX_HEALTH default 20 (Attributes.MAX_HEALTH RangedAttribute base)"
+   },
+   {
+    "id": "skeleton",
+    "attack": 4,
+    "kind": "arrow",
+    "hp": 20,
+    "armor": 0,
+    "classification": "undead",
+    "source": "AbstractSkeleton#performRangedAttack launch speed 1.6; AbstractArrow#onHitEntity ceil(speed x baseDamage), baseDamage 2 x power plus a difficulty-seeded random (setBaseDamageFromMob); typical point-blank hit 4"
+   },
+   {
+    "id": "wither-skeleton",
+    "attack": 8,
+    "heldItemBonus": 4,
+    "hp": 20,
+    "armor": 0,
+    "classification": "undead",
+    "source": "WitherSkeleton constructor setBaseValue(ATTACK_DAMAGE, 4) plus stone sword attack_damage modifier 4"
+   },
+   {
+    "id": "spider",
+    "attack": 2,
+    "hp": 16,
+    "armor": 0,
+    "classification": "arthropod",
+    "source": "Spider#createAttributes MAX_HEALTH 16; ATTACK_DAMAGE left at the Attributes.ATTACK_DAMAGE default base 2"
+   },
+   {
+    "id": "cave-spider",
+    "attack": 2,
+    "hp": 12,
+    "armor": 0,
+    "classification": "arthropod",
+    "source": "CaveSpider#createAttributes MAX_HEALTH 12 over Spider attributes"
+   },
+   {
+    "id": "creeper",
+    "attack": 43,
+    "kind": "explosion",
+    "hp": 20,
+    "armor": 0,
+    "classification": "none",
+    "source": "Creeper explosionRadius 3; ExplosionDamageCalculator#getEntityDamageAmount (inline in 1.16.5 Explosion#explode): (x * x + x) / 2 * 7 * diameter + 1 = 43 at point blank (x = 1, diameter = 6)"
+   },
+   {
+    "id": "blaze",
+    "attack": 6,
+    "kind": "melee",
+    "hp": 20,
+    "armor": 0,
+    "classification": "none",
+    "source": "Blaze#createAttributes ATTACK_DAMAGE 6 (melee; the small fireball is a separate 5 fire damage projectile)"
+   },
+   {
+    "id": "enderman",
+    "attack": 7,
+    "hp": 40,
+    "armor": 0,
+    "classification": "none",
+    "source": "EnderMan#createAttributes ATTACK_DAMAGE 7, MAX_HEALTH 40"
+   },
+   {
+    "id": "vindicator",
+    "attack": 13,
+    "heldItemBonus": 8,
+    "hp": 24,
+    "armor": 0,
+    "classification": "none",
+    "source": "Vindicator#createAttributes ATTACK_DAMAGE 5, MAX_HEALTH 24, plus iron axe attack_damage modifier 8"
+   },
+   {
+    "id": "piglin-brute",
+    "attack": 13,
+    "heldItemBonus": 6,
+    "hp": 50,
+    "armor": 0,
+    "classification": "none",
+    "source": "PiglinBrute#createAttributes ATTACK_DAMAGE 7, MAX_HEALTH 50, plus golden axe attack_damage modifier 6"
+   },
+   {
+    "id": "hoglin",
+    "attack": 6,
+    "hp": 40,
+    "armor": 0,
+    "classification": "none",
+    "source": "Hoglin#createAttributes ATTACK_DAMAGE 6, MAX_HEALTH 40"
+   },
+   {
+    "id": "ravager",
+    "attack": 12,
+    "hp": 100,
+    "armor": 0,
+    "classification": "none",
+    "source": "Ravager#createAttributes ATTACK_DAMAGE 12, MAX_HEALTH 100"
+   },
+   {
+    "id": "iron-golem",
+    "attackMin": 7.5,
+    "attackAvg": 14.5,
+    "attackMax": 21.5,
+    "hp": 100,
+    "armor": 0,
+    "classification": "none",
+    "source": "IronGolem#doHurtTarget: attack / 2 + nextInt((int)attack) with ATTACK_DAMAGE 15, so 7.5 to 21.5, average 14.5"
+   },
+   {
+    "id": "warden",
+    "attack": 30,
+    "hp": 500,
+    "armor": 0,
+    "classification": "none",
+    "since": "1.20.6",
+    "source": "Warden#createAttributes ATTACK_DAMAGE 30, MAX_HEALTH 500; the class does not exist in the 1.16.5 or 1.18.2 trees (added in 1.19)"
+   }
+  ],
+  "classificationSource": "1.16.5 Mob#getMobType overrides; 1.21.11 data/minecraft/tags/entity_type/undead.json (skeletons + zombies + wither + phantom) and arthropod.json (spider, cave_spider, silverfish, endermite, bee), read from the server jar"
+ },
+ "difficultyCases": {
+  "note": "Player#hurtServer (Player#hurt in 1.16.5): peaceful 0, easy min(d / 2 + 1, d), normal unchanged, hard d * 3 / 2. Applied only to player defenders. Mob melee scales in every version (legacy EntityDamageSource#scalesWithDifficulty: attacker is a living non-player; modern damage_type/mob_attack.json when_caused_by_living_non_player). Explosions scale in every version (legacy DamageSource.explosion setScalesWithDifficulty; modern damage_type/explosion.json always). Arrows scale only from 1.20.6 on: legacy IndirectEntityDamageSource passes the arrow (not the shooter) into the EntityDamageSource entity field that scalesWithDifficulty checks.",
+  "cases": [
+   {
+    "mob": "zombie",
+    "difficulty": "easy",
+    "dealt": 2.5
+   },
+   {
+    "mob": "zombie",
+    "difficulty": "normal",
+    "dealt": 3
+   },
+   {
+    "mob": "zombie",
+    "difficulty": "hard",
+    "dealt": 4.5
+   },
+   {
+    "mob": "zombie",
+    "difficulty": "peaceful",
+    "dealt": 0
+   },
+   {
+    "mob": "wither-skeleton",
+    "difficulty": "easy",
+    "dealt": 5
+   },
+   {
+    "mob": "wither-skeleton",
+    "difficulty": "normal",
+    "dealt": 8
+   },
+   {
+    "mob": "wither-skeleton",
+    "difficulty": "hard",
+    "dealt": 12
+   },
+   {
+    "mob": "warden",
+    "difficulty": "hard",
+    "dealt": 45,
+    "version": "1.20.6"
+   },
+   {
+    "mob": "creeper",
+    "difficulty": "easy",
+    "dealt": 22.5
+   },
+   {
+    "mob": "creeper",
+    "difficulty": "normal",
+    "dealt": 43
+   },
+   {
+    "mob": "creeper",
+    "difficulty": "hard",
+    "dealt": 64.5
+   },
+   {
+    "mob": "iron-golem",
+    "difficulty": "hard",
+    "dealt": 21.75,
+    "which": "avg"
+   },
+   {
+    "mob": "skeleton",
+    "difficulty": "hard",
+    "dealt": 4,
+    "version": "1.16.5",
+    "note": "arrows do not scale before 1.19.4"
+   },
+   {
+    "mob": "skeleton",
+    "difficulty": "hard",
+    "dealt": 4,
+    "version": "1.18.2"
+   },
+   {
+    "mob": "skeleton",
+    "difficulty": "easy",
+    "dealt": 3,
+    "version": "1.21.11"
+   },
+   {
+    "mob": "skeleton",
+    "difficulty": "hard",
+    "dealt": 6,
+    "version": "1.21.11"
+   },
+   {
+    "mob": "zombie",
+    "difficulty": "hard",
+    "dealt": 3,
+    "defender": "mob",
+    "note": "mob defenders never get scaled damage; scaling lives in Player#hurtServer"
+   }
+  ]
+ },
+ "strikeCases": {
+  "note": "Player#attack composition, identical order in 1.16.5 and 1.21.11: the ATTACK_DAMAGE attribute (base + Strength 3 per level - Weakness 4 per level, floored at 0 by the attribute range 0..2048) takes the 1.5x crit multiplier; the Sharpness / Smite / Bane bonus (DamageEnchantment#getDamageBonus: 1 + 0.5 x (level - 1); 2.5 x level vs the right class) is added after the crit. Strength / Weakness values confirmed in the 1.16.5, 1.18.2, 1.20.6, and 1.21.11 MobEffects.",
+  "cases": [
+   {
+    "baseAttack": 7,
+    "strength": 2,
+    "dealt": 13,
+    "note": "diamond sword + Strength II"
+   },
+   {
+    "baseAttack": 7,
+    "strength": 2,
+    "critical": true,
+    "dealt": 19.5
+   },
+   {
+    "baseAttack": 7,
+    "strength": 2,
+    "critical": true,
+    "enchant": "smite",
+    "enchantLevel": 5,
+    "defenderClass": "undead",
+    "dealt": 32
+   },
+   {
+    "baseAttack": 7,
+    "enchant": "smite",
+    "enchantLevel": 5,
+    "defenderClass": "none",
+    "dealt": 7,
+    "note": "Smite adds nothing against non-undead"
+   },
+   {
+    "baseAttack": 8,
+    "enchant": "sharpness",
+    "enchantLevel": 5,
+    "defenderClass": "none",
+    "dealt": 11,
+    "note": "netherite sword + Sharpness V: 8 + 1 + 4 x 0.5"
+   },
+   {
+    "baseAttack": 9,
+    "critical": true,
+    "enchant": "bane",
+    "enchantLevel": 4,
+    "defenderClass": "arthropod",
+    "dealt": 23.5,
+    "note": "crit multiplies the 9, not the 10"
+   },
+   {
+    "baseAttack": 1,
+    "weakness": 1,
+    "dealt": 0,
+    "note": "fist + Weakness I floors at 0 (attribute minimum)"
+   },
+   {
+    "baseAttack": 4,
+    "weakness": 1,
+    "dealt": 0
+   },
+   {
+    "baseAttack": 6,
+    "weakness": 1,
+    "dealt": 2
+   }
+  ]
+ },
+ "absorptionCases": {
+  "note": "LivingEntity#actuallyHurt (identical in 1.16.5 and 1.21.11): absorption points are subtracted from the post-armor post-effect damage before health, and the pool does not regenerate, so the kill threshold is hp + absorption. AbsorptionMobEffect grants 4 x (amplifier + 1) points: golden apple Absorption I = 4, enchanted golden apple Absorption IV = 16 (Foods.java in 1.16.5; the food component in modern item_components). The enchanted golden apple also grants Resistance I.",
+  "cases": [
+   {
+    "dealt": 10,
+    "absorption": 16,
+    "taken": 10,
+    "absorbed": 10,
+    "healthLost": 0
+   },
+   {
+    "dealt": 10,
+    "absorption": 4,
+    "taken": 10,
+    "absorbed": 4,
+    "healthLost": 6
+   },
+   {
+    "dealt": 10,
+    "armor": 20,
+    "toughness": 8,
+    "absorption": 4,
+    "taken": 3,
+    "absorbed": 3,
+    "healthLost": 0,
+    "note": "full diamond first, then absorption soaks what is left"
+   },
+   {
+    "dealt": 7.2,
+    "hp": 20,
+    "absorption": 16,
+    "hits": 5,
+    "note": "ceil((20 + 16) / 7.2)"
+   },
+   {
+    "dealt": 10,
+    "hp": 20,
+    "absorption": 0,
+    "hits": 2
+   }
+  ]
+ }
 }

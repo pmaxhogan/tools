@@ -1,37 +1,49 @@
 <script setup lang="ts">
 /**
- * Bespoke panel for the Minecraft damage calculator.
+ * Bespoke panel for the Minecraft damage calculator: the matchup card.
  *
- * Three modes on one pure logic layer (src/tools/minecraft-damage-calculator):
- * melee vs an armor build, fall damage, and mace smash damage. The panel owns
- * only the DOM: mode tabs, the per-slot armor piece picker, live results, a
- * per-version fall comparison, and URL-fragment state so a build is
- * shareable. All math stays in the logic layer's exported functions.
+ * Attacker on the left, defender on the right, a swap button between them,
+ * one big live readout (final damage, percent reduced, hearts, hits to
+ * kill) and a breakdown underneath. Both sides can be a mob (curated,
+ * source-derived per-version stats) or a player (custom kit builder with
+ * per-piece armor, enchant applicability gating, and realistic status
+ * effect sources). Fall damage and mace smashes are secondary modes of the
+ * same card. Every number routes through the verified engine in
+ * src/tools/minecraft-damage-calculator; the panel only owns DOM, gating,
+ * and URL-fragment state. Fragment values are untrusted partial input:
+ * everything read from the hash is validated, clamped, and zeroed when the
+ * selected version gates it off, so stale share links cannot smuggle in
+ * values the engine would reject.
  */
 import { computed, onMounted, ref, watch } from "vue";
+import { ArrowLeftRight } from "lucide-vue-next";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
-  buildArmor,
-  fallDamage,
-  hitsToKill,
-  maceDamage,
-  meleeDamage,
+  matchup,
   round2,
-  safeFallHeight,
   type ArmorBuild,
+  type MatchupResult,
 } from "@/tools/minecraft-damage-calculator/index";
 import {
+  ABSORPTION_SOURCES,
   ARMOR_MATERIALS,
   ARMOR_SLOTS,
-  HP_POOLS,
-  MACE,
+  DIFFICULTIES,
+  KIT_PRESETS,
+  MOBS,
+  RESISTANCE_SOURCES,
   VERSIONS,
   VERSION_INFO,
+  WEAPON_ENCHANTS,
   WEAPON_PRESETS,
+  mobInVersion,
   type ArmorSlot,
+  type Difficulty,
   type VersionId,
+  type WeaponEnchantId,
 } from "@/tools/minecraft-damage-calculator/data";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -44,42 +56,107 @@ const props = defineProps<{ meta: ToolMeta }>();
 /* state                                                             */
 /* ---------------------------------------------------------------- */
 
-type Mode = "melee" | "fall" | "mace";
+type Mode = "attack" | "fall" | "mace";
+type SideKind = "mob" | "player";
 
-const mode = ref<Mode>("melee");
+const mode = ref<Mode>("attack");
 const version = ref<VersionId>("1.21.11");
+const difficulty = ref<Difficulty>("normal");
 
-// melee
+// attacker
+const attackerKind = ref<SideKind>("mob");
+const attackerMob = ref("zombie");
 const weapon = ref("diamond-sword");
-const amount = ref(7);
+const weaponEnchant = ref<WeaponEnchantId>("none");
+const weaponEnchantLevel = ref(0);
+const strength = ref(0);
+const weakness = ref(0);
 const critical = ref(false);
 
-// armor build (shared by melee and mace targets)
-const armorMode = ref<"pieces" | "raw">("pieces");
+// defender
+const defenderKind = ref<SideKind>("player");
+const defenderMob = ref("zombie");
+const kitPreset = ref("full-diamond");
 const pieces = ref<Record<ArmorSlot, { material: string; protection: number }>>({
   helmet: { material: "diamond", protection: 0 },
   chestplate: { material: "diamond", protection: 0 },
   leggings: { material: "diamond", protection: 0 },
   boots: { material: "diamond", protection: 0 },
 });
-const rawArmor = ref(20);
-const rawToughness = ref(8);
-const rawProtection = ref(0);
-const resistance = ref(0);
-const breach = ref(0);
-
-// fall
-const height = ref(23.5);
 const featherFalling = ref(0);
+const resistanceSource = ref("none");
+const absorptionSource = ref("none");
+
+// fall mode
+const fallHeight = ref(23.5);
 const slowFalling = ref(false);
 
-// mace
+// mace mode
 const maceFall = ref(5);
 const density = ref(0);
+const maceBreach = ref(0);
+const maceCritical = ref(false);
+const maceEnchant = ref<WeaponEnchantId>("none");
+const maceEnchantLevel = ref(0);
 
 const mounted = ref(false);
 
 const versionInfo = computed(() => VERSION_INFO[version.value]);
+
+/* ---------------------------------------------------------------- */
+/* gating: zero anything the selected version cannot hold            */
+/* ---------------------------------------------------------------- */
+
+function clampInt(v: unknown, lo: number, hi: number, fallback: number): number {
+  const n = Number(v);
+  if (Number.isNaN(n)) return fallback;
+  return Math.min(Math.max(Math.floor(n), lo), hi);
+}
+
+function enforceVersionGates() {
+  const info = VERSION_INFO[version.value];
+  if (!info.mace) {
+    if (mode.value === "mace") mode.value = "attack";
+    maceBreach.value = 0;
+    density.value = 0;
+    maceEnchant.value = "none";
+    maceEnchantLevel.value = 0;
+    const preset = WEAPON_PRESETS.find((w) => w.id === weapon.value);
+    if (preset?.maceOnly) weapon.value = "diamond-sword";
+  }
+  if (!info.copper) {
+    for (const slot of ARMOR_SLOTS) {
+      if (pieces.value[slot].material === "copper") {
+        pieces.value[slot].material = "none";
+        kitPreset.value = "custom";
+      }
+    }
+  }
+  const fallbackMob = (id: string) => {
+    const mob = MOBS.find((m) => m.id === id);
+    return mob && mobInVersion(mob, version.value) ? id : "zombie";
+  };
+  attackerMob.value = fallbackMob(attackerMob.value);
+  defenderMob.value = fallbackMob(defenderMob.value);
+  enforceEnchantGates();
+}
+
+/** Zero enchants the current weapon cannot legally hold. */
+function enforceEnchantGates() {
+  const family = currentWeapon.value.family;
+  if (weaponEnchant.value === "none") {
+    weaponEnchantLevel.value = 0;
+    return;
+  }
+  const swordOrAxe = family === "sword" || family === "axe";
+  const maceSmiteBane =
+    family === "mace" && weaponEnchant.value !== "sharpness" && versionInfo.value.mace;
+  if (!swordOrAxe && !maceSmiteBane) {
+    weaponEnchant.value = "none";
+    weaponEnchantLevel.value = 0;
+  }
+  if (family === "bow") critical.value = false;
+}
 
 /* ---------------------------------------------------------------- */
 /* select specs                                                      */
@@ -89,32 +166,82 @@ const versionSpec = computed(
   () => props.meta.options?.find((o) => o.id === "version") as SelectOptionSpec | undefined,
 );
 
+const difficultySpec: SelectOptionSpec = {
+  kind: "select",
+  id: "difficulty",
+  label: "Difficulty",
+  default: "normal",
+  options: [
+    { value: "peaceful", label: "Peaceful", synonyms: ["no damage"] },
+    { value: "easy", label: "Easy", synonyms: [] },
+    { value: "normal", label: "Normal", synonyms: ["default"] },
+    { value: "hard", label: "Hard", synonyms: ["1.5x"] },
+  ],
+};
+
+function mobSpec(id: string): SelectOptionSpec {
+  return {
+    kind: "select",
+    id,
+    label: "Mob",
+    default: "zombie",
+    options: MOBS.filter((m) => mobInVersion(m, version.value)).map((m) => ({
+      value: m.id,
+      label: m.label,
+      synonyms: [m.classification !== "none" ? m.classification : ""].filter(Boolean),
+    })),
+  };
+}
+
 const weaponSpec = computed<SelectOptionSpec>(() => ({
   kind: "select",
-  id: "weapon",
+  id: "mc-weapon",
   label: "Weapon",
   default: "diamond-sword",
-  options: [
-    { value: "custom", label: "Custom damage", synonyms: ["manual", "raw", "amount"] },
-    ...WEAPON_PRESETS.filter((w) => !w.maceOnly || versionInfo.value.mace).map((w) => ({
-      value: w.id,
-      label: `${w.label} (${w.damage})`,
-      synonyms: [w.id.replace(/-/g, " ")],
-    })),
-  ],
+  options: WEAPON_PRESETS.filter((w) => !w.maceOnly || versionInfo.value.mace).map((w) => ({
+    value: w.id,
+    label: `${w.label} (${w.damage})`,
+    synonyms: [w.family],
+  })),
+}));
+
+const currentWeapon = computed(
+  () => WEAPON_PRESETS.find((w) => w.id === weapon.value) ?? WEAPON_PRESETS[0]!,
+);
+
+/** Damage enchants the current weapon can legally hold in this version. */
+const allowedEnchants = computed(() => {
+  const family = currentWeapon.value.family;
+  return WEAPON_ENCHANTS.filter((e) => {
+    if (e.id === "none") return true;
+    if (family === "sword" || family === "axe") return true;
+    if (family === "mace" && e.id !== "sharpness") return versionInfo.value.mace;
+    return false;
+  });
+});
+
+const enchantSpec = computed<SelectOptionSpec>(() => ({
+  kind: "select",
+  id: "mc-ench",
+  label: "Damage enchant",
+  default: "none",
+  options: allowedEnchants.value.map((e) => ({
+    value: e.id,
+    label: e.label,
+    synonyms: e.id === "bane" ? ["bane of arthropods"] : [],
+  })),
 }));
 
 function materialSpec(slot: ArmorSlot): SelectOptionSpec {
   return {
     kind: "select",
-    id: `material-${slot}`,
+    id: `mc-mat-${slot}`,
     label: slot,
     default: "none",
     options: [
       { value: "none", label: "None", synonyms: ["empty", "bare"] },
       ...ARMOR_MATERIALS.filter(
-        (m) =>
-          m.points[slot] !== null && (m.since !== "copper" || versionInfo.value.copper),
+        (m) => m.points[slot] !== null && (m.since !== "copper" || versionInfo.value.copper),
       ).map((m) => ({
         value: m.id,
         label: `${m.label} (+${m.points[slot]})`,
@@ -124,6 +251,41 @@ function materialSpec(slot: ArmorSlot): SelectOptionSpec {
   };
 }
 
+const kitPresetSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "mc-kit",
+  label: "Kit",
+  default: "full-diamond",
+  options: [
+    { value: "custom", label: "Custom kit", synonyms: ["manual"] },
+    ...KIT_PRESETS.map((k) => ({ value: k.id, label: k.label, synonyms: [k.material] })),
+  ],
+};
+
+const resistanceSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "mc-res",
+  label: "Resistance source",
+  default: "none",
+  options: RESISTANCE_SOURCES.map((r) => ({
+    value: r.id,
+    label: r.label,
+    synonyms: r.id.startsWith("turtle") ? ["turtle master potion"] : [],
+  })),
+};
+
+const absorptionSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "mc-abs",
+  label: "Golden apple",
+  default: "none",
+  options: ABSORPTION_SOURCES.map((a) => ({
+    value: a.id,
+    label: a.label,
+    synonyms: a.id === "egapple" ? ["notch apple", "god apple"] : a.id === "gapple" ? ["gapple"] : [],
+  })),
+};
+
 const SLOT_LABELS: Record<ArmorSlot, string> = {
   helmet: "Helmet",
   chestplate: "Chestplate",
@@ -132,249 +294,314 @@ const SLOT_LABELS: Record<ArmorSlot, string> = {
 };
 
 /* ---------------------------------------------------------------- */
-/* derived values                                                    */
+/* kit presets                                                       */
 /* ---------------------------------------------------------------- */
+
+function applyKitPreset(id: string) {
+  kitPreset.value = id;
+  const preset = KIT_PRESETS.find((k) => k.id === id);
+  if (!preset) return;
+  for (const slot of ARMOR_SLOTS) {
+    pieces.value[slot] = { material: preset.material, protection: preset.protection };
+  }
+}
+
+function onPieceEdit() {
+  kitPreset.value = "custom";
+}
+
+/* ---------------------------------------------------------------- */
+/* swap                                                              */
+/* ---------------------------------------------------------------- */
+
+const swapEnabled = computed(() => mode.value === "attack");
+
+/**
+ * Swap who is attacking: the sides exchange kinds and mob picks. The
+ * weapon loadout stays with the "player as attacker" role and the kit with
+ * the "player as defender" role, so a zombie vs kit matchup becomes the
+ * kitted player striking the zombie. For mob vs mob the interesting part
+ * is what disappears: difficulty scaling only exists for player defenders
+ * (Player#hurtServer), and the defender mob's own armor starts to matter
+ * (a zombie defends with its 2 armor points).
+ */
+function swapSides() {
+  if (!swapEnabled.value) return;
+  const ak = attackerKind.value;
+  const am = attackerMob.value;
+  attackerKind.value = defenderKind.value;
+  attackerMob.value = defenderMob.value;
+  defenderKind.value = ak;
+  defenderMob.value = am;
+}
+
+/* ---------------------------------------------------------------- */
+/* result                                                            */
+/* ---------------------------------------------------------------- */
+
+const effectiveResistance = computed(() => {
+  const source = RESISTANCE_SOURCES.find((r) => r.id === resistanceSource.value);
+  const apple = ABSORPTION_SOURCES.find((a) => a.id === absorptionSource.value);
+  return Math.max(source?.level ?? 0, apple?.resistanceBonus ?? 0);
+});
+
+const absorptionPoints = computed(
+  () => ABSORPTION_SOURCES.find((a) => a.id === absorptionSource.value)?.points ?? 0,
+);
+
+const kitBuild = computed<ArmorBuild>(() => {
+  const build: ArmorBuild = {};
+  for (const slot of ARMOR_SLOTS) {
+    const p = pieces.value[slot];
+    if (p.material !== "none") build[slot] = { material: p.material, protection: p.protection };
+  }
+  return build;
+});
 
 interface CalcError {
   message: string;
   fix?: string;
 }
 
-function toCalcError(e: unknown): CalcError {
-  return e instanceof ToolError
-    ? { message: e.message, fix: e.fix }
-    : { message: e instanceof Error ? e.message : String(e) };
-}
-
-const armorBuild = computed(() => {
-  if (armorMode.value === "raw") {
-    return {
-      armor: rawArmor.value,
-      toughness: rawToughness.value,
-      protectionLevels: rawProtection.value,
-    };
-  }
-  const build: ArmorBuild = {};
-  for (const slot of ARMOR_SLOTS) {
-    const p = pieces.value[slot];
-    if (p.material !== "none") build[slot] = { material: p.material, protection: p.protection };
-  }
-  return buildArmor(version.value, build);
-});
-
-const attackDamage = computed(() => {
-  if (weapon.value === "custom") return amount.value;
-  const preset = WEAPON_PRESETS.find((w) => w.id === weapon.value);
-  return preset ? preset.damage : amount.value;
-});
-
-const result = computed<{ output: Record<string, string> | null; error: CalcError | null }>(() => {
+const result = computed<{ r: MatchupResult | null; error: CalcError | null }>(() => {
   try {
-    if (mode.value === "melee") {
-      const dealt = critical.value ? attackDamage.value * 1.5 : attackDamage.value;
-      const build = armorBuild.value;
-      const r = meleeDamage({
-        version: version.value,
-        amount: dealt,
-        armor: build.armor,
-        toughness: build.toughness,
-        protectionLevels: build.protectionLevels,
-        resistance: resistance.value,
-        breach: versionInfo.value.mace ? breach.value : 0,
-      });
-      const output: Record<string, string> = {
-        "Damage dealt": String(round2(r.dealt)),
-        "Target build": `${build.armor} armor, ${build.toughness} toughness, Protection ${build.protectionLevels}`,
-        "After armor": String(round2(r.afterArmor)),
-        "Damage taken": `${round2(r.taken)} (${round2(r.taken / 2)} hearts)`,
-        "Reduced by": `${round2(r.reducedPercent)}%`,
-      };
-      for (const pool of HP_POOLS) {
-        const hits = hitsToKill(r.taken, pool.hp);
-        output[`Hits vs ${pool.label}`] = hits === Infinity ? "never" : String(hits);
-      }
-      return { output, error: null };
-    }
+    const defender =
+      defenderKind.value === "mob"
+        ? { kind: "mob" as const, mobId: defenderMob.value }
+        : {
+            kind: "player" as const,
+            kit: {
+              build: kitBuild.value,
+              featherFalling: mode.value === "fall" ? featherFalling.value : 0,
+              resistance: effectiveResistance.value,
+              absorption: absorptionPoints.value,
+            },
+          };
     if (mode.value === "fall") {
-      const r = fallDamage({
-        version: version.value,
-        height: height.value,
-        featherFalling: featherFalling.value,
-        slowFalling: slowFalling.value,
-      });
       return {
-        output: {
-          "Fall distance seen by the game": `${round2(r.fallDistance)} blocks`,
-          "Base damage": String(r.baseDamage),
-          "Damage taken": `${round2(r.taken)} (${round2(r.taken / 2)} hearts)`,
-          "Survivable at full health": r.taken < 20 ? "yes" : "no",
-          "Tallest safe drop": `${round2(safeFallHeight(version.value, featherFalling.value))} blocks`,
-        },
+        r: matchup({
+          version: version.value,
+          mode: "fall",
+          fall: { height: fallHeight.value, slowFalling: slowFalling.value },
+          defender,
+        }),
         error: null,
       };
     }
-    const build = armorBuild.value;
-    const r = maceDamage({
-      version: version.value,
-      fallDistance: maceFall.value,
-      density: density.value,
-      breach: breach.value,
-      armor: build.armor,
-      toughness: build.toughness,
-      protectionLevels: build.protectionLevels,
-      resistance: resistance.value,
-    });
-    const output: Record<string, string> = {
-      "Smash attack": r.isSmash ? "yes" : `no (needs a fall over ${MACE.smashThreshold} blocks)`,
-      "Damage dealt": `${round2(r.dealt)} = ${r.baseDamage} base + ${round2(r.smashBonus)} smash + ${round2(r.densityBonus)} Density`,
-      "Damage taken": `${round2(r.taken)} (${round2(r.taken / 2)} hearts)`,
-      "One-shots 20 HP": r.taken >= 20 ? "yes" : "no",
+    if (mode.value === "mace") {
+      return {
+        r: matchup({
+          version: version.value,
+          mode: "mace",
+          mace: {
+            fallDistance: maceFall.value,
+            density: density.value,
+            breach: maceBreach.value,
+            critical: maceCritical.value,
+            enchant: maceEnchant.value,
+            enchantLevel: maceEnchantLevel.value,
+          },
+          defender,
+        }),
+        error: null,
+      };
+    }
+    const attacker =
+      attackerKind.value === "mob"
+        ? { kind: "mob" as const, mobId: attackerMob.value }
+        : {
+            kind: "player" as const,
+            weaponDamage: currentWeapon.value.damage,
+            weaponFamily: currentWeapon.value.family,
+            strength: strength.value,
+            weakness: weakness.value,
+            critical: critical.value,
+            enchant: weaponEnchant.value,
+            enchantLevel: weaponEnchantLevel.value,
+          };
+    return {
+      r: matchup({
+        version: version.value,
+        difficulty: difficulty.value,
+        mode: "attack",
+        attacker,
+        defender,
+      }),
+      error: null,
     };
-    return { output, error: null };
   } catch (e) {
-    return { output: null, error: toCalcError(e) };
+    const error =
+      e instanceof ToolError
+        ? { message: e.message, fix: e.fix }
+        : { message: e instanceof Error ? e.message : String(e) };
+    return { r: null, error };
   }
 });
 
-/** Fall damage across every version for the current height, for the table. */
-const fallTable = computed(() => {
-  if (mode.value !== "fall") return [];
-  return VERSIONS.map((v) => {
-    try {
-      const r = fallDamage({
-        version: v,
-        height: height.value,
-        featherFalling: featherFalling.value,
-        slowFalling: slowFalling.value,
-      });
-      return { version: VERSION_INFO[v].label, taken: String(round2(r.taken)) };
-    } catch {
-      return { version: VERSION_INFO[v].label, taken: "?" };
-    }
-  });
+const breakdownRecord = computed<Record<string, string>>(() => {
+  const r = result.value.r;
+  if (!r) return {};
+  const out: Record<string, string> = {};
+  for (const line of r.breakdown) out[line.label] = line.value;
+  out["Damage dealt"] =
+    r.dealtMin !== r.dealtMax
+      ? `${round2(r.dealtMin)} to ${round2(r.dealtMax)} (avg ${round2(r.dealt)})`
+      : String(round2(r.dealt));
+  out["Damage taken"] =
+    r.takenMin !== r.takenMax
+      ? `${round2(r.takenMin)} to ${round2(r.takenMax)} (avg ${round2(r.taken)})`
+      : String(round2(r.taken));
+  if (r.absorbed > 0) out["Soaked by Absorption"] = String(round2(r.absorbed));
+  out["Health lost"] = `${round2(r.healthLost)} (${round2(r.healthLost / 2)} hearts)`;
+  out["Hits to kill"] =
+    r.hits === Infinity
+      ? "never"
+      : `${r.hits} vs ${r.defenderHp} HP${r.defenderAbsorption > 0 ? ` + ${r.defenderAbsorption} absorption` : ""}`;
+  return out;
 });
 
+const showDifficulty = computed(() => mode.value === "attack" && attackerKind.value === "mob");
+
 const modes = computed<{ id: Mode; label: string }[]>(() => [
-  { id: "melee", label: "Melee vs armor" },
+  { id: "attack", label: "Attack" },
   { id: "fall", label: "Fall damage" },
   ...(versionInfo.value.mace ? [{ id: "mace" as Mode, label: "Mace smash" }] : []),
 ]);
 
-function setMode(m: Mode) {
-  mode.value = m;
-}
-
 function onVersionChange(v: string) {
-  version.value = v as VersionId;
-  if (!VERSION_INFO[version.value].mace) {
-    if (mode.value === "mace") mode.value = "melee";
-    breach.value = 0;
-    if (weapon.value === "mace") weapon.value = "custom";
-  }
-  if (!VERSION_INFO[version.value].copper) {
-    for (const slot of ARMOR_SLOTS) {
-      if (pieces.value[slot].material === "copper") pieces.value[slot].material = "none";
-    }
-  }
-}
-
-function clampInt(v: unknown, lo: number, hi: number, fallback: number): number {
-  const n = Number(v);
-  if (Number.isNaN(n)) return fallback;
-  return Math.min(Math.max(Math.floor(n), lo), hi);
+  if ((VERSIONS as readonly string[]).includes(v)) version.value = v as VersionId;
+  enforceVersionGates();
 }
 
 /* ---------------------------------------------------------------- */
-/* URL fragment: shareable state (rule 6, never localStorage)        */
+/* URL fragment: shareable matchup (rule 6, never localStorage)      */
 /* ---------------------------------------------------------------- */
 
 watch(
   [
     mode,
     version,
+    difficulty,
+    attackerKind,
+    attackerMob,
     weapon,
-    amount,
+    weaponEnchant,
+    weaponEnchantLevel,
+    strength,
+    weakness,
     critical,
-    armorMode,
+    defenderKind,
+    defenderMob,
+    kitPreset,
     pieces,
-    rawArmor,
-    rawToughness,
-    rawProtection,
-    resistance,
-    breach,
-    height,
     featherFalling,
+    resistanceSource,
+    absorptionSource,
+    fallHeight,
     slowFalling,
     maceFall,
     density,
+    maceBreach,
+    maceCritical,
+    maceEnchant,
+    maceEnchantLevel,
   ],
   () => {
     if (!mounted.value) return;
     writeFragment({
       opts: {
         mode: mode.value,
-        version: version.value,
-        weapon: weapon.value,
-        amount: String(amount.value),
+        v: version.value,
+        d: difficulty.value,
+        ak: attackerKind.value,
+        am: attackerMob.value,
+        w: weapon.value,
+        we: weaponEnchant.value,
+        wel: String(weaponEnchantLevel.value),
+        str: String(strength.value),
+        weak: String(weakness.value),
         crit: String(critical.value),
-        armorMode: armorMode.value,
+        dk: defenderKind.value,
+        dm: defenderMob.value,
+        kit: kitPreset.value,
         pieces: ARMOR_SLOTS.map(
           (s) => `${pieces.value[s].material}:${pieces.value[s].protection}`,
         ).join(","),
-        armor: String(rawArmor.value),
-        toughness: String(rawToughness.value),
-        protection: String(rawProtection.value),
-        resistance: String(resistance.value),
-        breach: String(breach.value),
-        height: String(height.value),
         ff: String(featherFalling.value),
-        slow: String(slowFalling.value),
-        maceFall: String(maceFall.value),
-        density: String(density.value),
+        res: resistanceSource.value,
+        abs: absorptionSource.value,
+        fh: String(fallHeight.value),
+        sf: String(slowFalling.value),
+        mf: String(maceFall.value),
+        den: String(density.value),
+        mb: String(maceBreach.value),
+        mc: String(maceCritical.value),
+        me: maceEnchant.value,
+        mel: String(maceEnchantLevel.value),
       },
     });
   },
   { deep: true },
 );
 
+/** Every fragment value is untrusted; validate, clamp, and gate it all. */
 onMounted(() => {
-  const { opts } = readFragment();
-  if (opts.version && (VERSIONS as readonly string[]).includes(opts.version)) {
-    version.value = opts.version as VersionId;
-  }
-  if (opts.mode === "melee" || opts.mode === "fall" || opts.mode === "mace") {
-    if (opts.mode !== "mace" || VERSION_INFO[version.value].mace) mode.value = opts.mode;
-  }
-  if (opts.weapon) weapon.value = opts.weapon;
-  if (opts.amount) amount.value = clampInt(opts.amount, 0, 10000, 7);
-  if (opts.crit !== undefined) critical.value = opts.crit === "true";
-  if (opts.armorMode === "raw" || opts.armorMode === "pieces") armorMode.value = opts.armorMode;
+  const { opts } = readFragment() as { opts: Partial<Record<string, string>> };
+  const pick = <T extends string>(value: string | undefined, allowed: readonly T[]): T | undefined =>
+    allowed.includes(value as T) ? (value as T) : undefined;
+
+  version.value = pick(opts.v, VERSIONS) ?? "1.21.11";
+  mode.value = pick(opts.mode, ["attack", "fall", "mace"] as const) ?? "attack";
+  difficulty.value = pick(opts.d, DIFFICULTIES) ?? "normal";
+  attackerKind.value = pick(opts.ak, ["mob", "player"] as const) ?? "mob";
+  defenderKind.value = pick(opts.dk, ["mob", "player"] as const) ?? "player";
+  if (opts.am && MOBS.some((m) => m.id === opts.am)) attackerMob.value = opts.am;
+  if (opts.dm && MOBS.some((m) => m.id === opts.dm)) defenderMob.value = opts.dm;
+  if (opts.w && WEAPON_PRESETS.some((w) => w.id === opts.w)) weapon.value = opts.w;
+  weaponEnchant.value =
+    pick(opts.we, ["none", "sharpness", "smite", "bane"] as const) ?? "none";
+  weaponEnchantLevel.value = clampInt(opts.wel, 0, 5, 0);
+  strength.value = clampInt(opts.str, 0, 2, 0);
+  weakness.value = clampInt(opts.weak, 0, 1, 0);
+  critical.value = opts.crit === "true";
+  kitPreset.value =
+    opts.kit === "custom" || KIT_PRESETS.some((k) => k.id === opts.kit)
+      ? (opts.kit as string)
+      : kitPreset.value;
   if (opts.pieces) {
     const parts = opts.pieces.split(",");
     ARMOR_SLOTS.forEach((slot, i) => {
       const [material, prot] = (parts[i] ?? "").split(":");
-      if (material) {
+      const known = material === "none" || ARMOR_MATERIALS.some((m) => m.id === material);
+      if (material && known) {
         pieces.value[slot] = { material, protection: clampInt(prot, 0, 4, 0) };
       }
     });
   }
-  if (opts.armor) rawArmor.value = clampInt(opts.armor, 0, 30, 20);
-  if (opts.toughness) rawToughness.value = clampInt(opts.toughness, 0, 20, 8);
-  if (opts.protection) rawProtection.value = clampInt(opts.protection, 0, 16, 0);
-  if (opts.resistance) resistance.value = clampInt(opts.resistance, 0, 5, 0);
-  if (opts.breach) breach.value = clampInt(opts.breach, 0, 4, 0);
-  if (opts.height) height.value = Math.max(0, Number(opts.height) || 23.5);
-  if (opts.ff) featherFalling.value = clampInt(opts.ff, 0, 4, 0);
-  if (opts.slow !== undefined) slowFalling.value = opts.slow === "true";
-  if (opts.maceFall) maceFall.value = Math.max(0, Number(opts.maceFall) || 5);
-  if (opts.density) density.value = clampInt(opts.density, 0, 5, 0);
+  featherFalling.value = clampInt(opts.ff, 0, 4, 0);
+  resistanceSource.value =
+    RESISTANCE_SOURCES.some((r) => r.id === opts.res) ? (opts.res as string) : "none";
+  absorptionSource.value =
+    ABSORPTION_SOURCES.some((a) => a.id === opts.abs) ? (opts.abs as string) : "none";
+  fallHeight.value = Math.min(Math.max(Number(opts.fh) || 23.5, 0), 10000);
+  slowFalling.value = opts.sf === "true";
+  maceFall.value = Math.min(Math.max(Number(opts.mf) || 5, 0), 10000);
+  density.value = clampInt(opts.den, 0, 5, 0);
+  maceBreach.value = clampInt(opts.mb, 0, 4, 0);
+  maceCritical.value = opts.mc === "true";
+  maceEnchant.value = pick(opts.me, ["none", "smite", "bane"] as const) ?? "none";
+  maceEnchantLevel.value = clampInt(opts.mel, 0, 5, 0);
+
+  enforceVersionGates();
   mounted.value = true;
 });
+
+watch(weapon, enforceEnchantGates);
 </script>
 
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
-    <!-- mode + version -->
+    <!-- mode / version / difficulty -->
     <div class="flex flex-wrap items-end justify-between gap-3">
       <div class="flex flex-col gap-1.5">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
@@ -387,370 +614,504 @@ onMounted(() => {
             type="button"
             class="rounded-[10px] border px-3 py-1.5 text-sm transition-colors"
             :class="
-              mode === m.id
-                ? 'border-ring bg-accent font-semibold'
-                : 'bg-secondary hover:bg-accent'
+              mode === m.id ? 'border-ring bg-accent font-semibold' : 'bg-secondary hover:bg-accent'
             "
             :aria-pressed="mode === m.id"
-            @click="setMode(m.id)"
+            @click="mode = m.id"
           >
             {{ m.label }}
           </button>
         </div>
       </div>
-      <div class="flex w-44 flex-col gap-1.5">
-        <Label for="mc-version" class="text-xs text-muted-foreground">Version</Label>
-        <SearchableSelect
-          v-if="versionSpec"
-          id="mc-version"
-          :spec="versionSpec"
-          :model-value="version"
-          @update:model-value="onVersionChange"
-        />
+      <div class="flex flex-wrap gap-3">
+        <div class="flex w-40 flex-col gap-1.5">
+          <Label for="mc-version" class="text-xs text-muted-foreground">Version</Label>
+          <SearchableSelect
+            v-if="versionSpec"
+            id="mc-version"
+            :spec="versionSpec"
+            :model-value="version"
+            @update:model-value="onVersionChange"
+          />
+        </div>
+        <div v-if="showDifficulty" class="flex w-36 flex-col gap-1.5">
+          <Label for="mc-difficulty" class="text-xs text-muted-foreground">Difficulty</Label>
+          <SearchableSelect
+            id="mc-difficulty"
+            :spec="difficultySpec"
+            :model-value="difficulty"
+            @update:model-value="(v: string) => (difficulty = v as Difficulty)"
+          />
+        </div>
       </div>
     </div>
 
-    <!-- melee inputs -->
-    <template v-if="mode === 'melee'">
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div class="flex min-w-0 flex-col gap-1.5">
-          <Label for="mc-weapon" class="text-xs text-muted-foreground">Weapon</Label>
-          <SearchableSelect
-            id="mc-weapon"
-            :spec="weaponSpec"
-            :model-value="weapon"
-            @update:model-value="(v: string) => (weapon = v)"
-          />
-        </div>
-        <div v-if="weapon === 'custom'" class="flex min-w-0 flex-col gap-1.5">
-          <Label for="mc-amount" class="text-xs text-muted-foreground">Attack damage</Label>
-          <Input
-            id="mc-amount"
-            type="number"
-            min="0"
-            max="10000"
-            step="0.5"
-            :model-value="amount"
-            @update:model-value="(v) => (amount = Number(v) || 0)"
-          />
-        </div>
-        <div class="flex min-w-0 flex-col gap-1.5">
-          <Label for="mc-crit" class="w-fit cursor-pointer text-xs text-muted-foreground"
-            >Critical hit (x1.5)</Label
-          >
-          <div class="flex h-9 items-center">
-            <Switch
-              id="mc-crit"
-              :model-value="critical"
-              @update:model-value="(v) => (critical = Boolean(v))"
-            />
-          </div>
-        </div>
-      </div>
-    </template>
-
-    <!-- fall inputs -->
-    <template v-if="mode === 'fall'">
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div class="flex min-w-0 flex-col gap-1.5">
-          <Label for="mc-height" class="text-xs text-muted-foreground">Fall height (blocks)</Label>
-          <Input
-            id="mc-height"
-            type="number"
-            min="0"
-            max="10000"
-            step="0.5"
-            :model-value="height"
-            @update:model-value="(v) => (height = Math.max(0, Number(v) || 0))"
-          />
-        </div>
-        <div class="flex min-w-0 flex-col gap-1.5">
-          <Label for="mc-ff" class="text-xs text-muted-foreground">Feather Falling (0 to 4)</Label>
-          <Input
-            id="mc-ff"
-            type="number"
-            min="0"
-            max="4"
-            step="1"
-            :model-value="featherFalling"
-            @update:model-value="(v) => (featherFalling = clampInt(v, 0, 4, 0))"
-          />
-        </div>
-        <div class="flex min-w-0 flex-col gap-1.5">
-          <Label for="mc-slow" class="w-fit cursor-pointer text-xs text-muted-foreground"
-            >Slow Falling</Label
-          >
-          <div class="flex h-9 items-center">
-            <Switch
-              id="mc-slow"
-              :model-value="slowFalling"
-              @update:model-value="(v) => (slowFalling = Boolean(v))"
-            />
-          </div>
-        </div>
-      </div>
-      <p class="text-xs text-muted-foreground">
-        Landing in water, on hay bales (80% less), honey blocks (80% less), or beds (50% less)
-        softens or cancels the landing; slime blocks bounce you for free. These numbers are for a
-        plain solid landing.
-      </p>
-    </template>
-
-    <!-- mace inputs -->
-    <template v-if="mode === 'mace'">
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div class="flex min-w-0 flex-col gap-1.5">
-          <Label for="mc-macefall" class="text-xs text-muted-foreground"
-            >Fall distance (blocks)</Label
-          >
-          <Input
-            id="mc-macefall"
-            type="number"
-            min="0"
-            max="10000"
-            step="0.5"
-            :model-value="maceFall"
-            @update:model-value="(v) => (maceFall = Math.max(0, Number(v) || 0))"
-          />
-        </div>
-        <div class="flex min-w-0 flex-col gap-1.5">
-          <Label for="mc-density" class="text-xs text-muted-foreground">Density (0 to 5)</Label>
-          <Input
-            id="mc-density"
-            type="number"
-            min="0"
-            max="5"
-            step="1"
-            :model-value="density"
-            @update:model-value="(v) => (density = clampInt(v, 0, 5, 0))"
-          />
-        </div>
-        <div class="flex min-w-0 flex-col gap-1.5">
-          <Label for="mc-breach-mace" class="text-xs text-muted-foreground">Breach (0 to 4)</Label>
-          <Input
-            id="mc-breach-mace"
-            type="number"
-            min="0"
-            max="4"
-            step="1"
-            :model-value="breach"
-            @update:model-value="(v) => (breach = clampInt(v, 0, 4, 0))"
-          />
-        </div>
-      </div>
-    </template>
-
-    <!-- target armor build (melee + mace) -->
-    <template v-if="mode !== 'fall'">
-      <div class="flex flex-col gap-3 rounded-[14px] border p-4">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
-            >Target armor</span
-          >
-          <div class="flex gap-2" role="group" aria-label="Armor input mode">
+    <!-- the matchup -->
+    <div class="grid grid-cols-1 items-stretch gap-3 lg:grid-cols-[1fr_auto_1fr]">
+      <!-- attacker -->
+      <section
+        class="flex flex-col gap-3 rounded-[14px] border p-4"
+        aria-label="Attacker"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            {{ mode === "fall" ? "The fall" : mode === "mace" ? "Mace smash" : "Attacker" }}
+          </span>
+          <div v-if="mode === 'attack'" class="flex gap-1.5" role="group" aria-label="Attacker type">
             <button
+              v-for="k in ['mob', 'player'] as const"
+              :key="k"
               type="button"
-              class="rounded-[8px] border px-2.5 py-1 text-xs transition-colors"
+              class="rounded-[8px] border px-2.5 py-1 text-xs capitalize transition-colors"
               :class="
-                armorMode === 'pieces'
+                attackerKind === k
                   ? 'border-ring bg-accent font-semibold'
                   : 'bg-secondary hover:bg-accent'
               "
-              :aria-pressed="armorMode === 'pieces'"
-              @click="armorMode = 'pieces'"
+              :aria-pressed="attackerKind === k"
+              @click="attackerKind = k"
             >
-              Piece picker
-            </button>
-            <button
-              type="button"
-              class="rounded-[8px] border px-2.5 py-1 text-xs transition-colors"
-              :class="
-                armorMode === 'raw'
-                  ? 'border-ring bg-accent font-semibold'
-                  : 'bg-secondary hover:bg-accent'
-              "
-              :aria-pressed="armorMode === 'raw'"
-              @click="armorMode = 'raw'"
-            >
-              Raw values
+              {{ k }}
             </button>
           </div>
         </div>
 
-        <div v-if="armorMode === 'pieces'" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div
-            v-for="slot in ARMOR_SLOTS"
-            :key="slot"
-            class="flex items-end gap-2 rounded-[10px] bg-secondary p-2.5 shadow-[var(--sh-inset)]"
-          >
-            <div class="flex min-w-0 flex-1 flex-col gap-1">
-              <Label :for="`mc-mat-${slot}`" class="text-xs text-muted-foreground">{{
-                SLOT_LABELS[slot]
-              }}</Label>
-              <SearchableSelect
-                :id="`mc-mat-${slot}`"
-                :spec="materialSpec(slot)"
-                :model-value="pieces[slot].material"
-                @update:model-value="(v: string) => (pieces[slot].material = v)"
+        <!-- fall parameters -->
+        <template v-if="mode === 'fall'">
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-1.5">
+              <Label for="mc-height" class="text-xs text-muted-foreground"
+                >Fall height (blocks)</Label
+              >
+              <Input
+                id="mc-height"
+                type="number"
+                min="0"
+                max="10000"
+                step="0.5"
+                :model-value="fallHeight"
+                @update:model-value="(v) => (fallHeight = Math.max(0, Number(v) || 0))"
               />
             </div>
-            <div class="flex w-20 flex-col gap-1">
-              <Label :for="`mc-prot-${slot}`" class="text-xs text-muted-foreground">Prot</Label>
+            <div class="flex items-center gap-2">
+              <Switch
+                id="mc-slow"
+                :model-value="slowFalling"
+                @update:model-value="(v) => (slowFalling = Boolean(v))"
+              />
+              <Label for="mc-slow" class="cursor-pointer text-xs text-muted-foreground"
+                >Slow Falling</Label
+              >
+            </div>
+            <p class="text-xs text-muted-foreground">
+              Water, slime blocks, and (since 1.19) powder snow cancel the landing; hay bales and
+              honey blocks cut it by 80%, beds by 50%. These numbers are a plain solid landing.
+            </p>
+          </div>
+        </template>
+
+        <!-- mace parameters -->
+        <template v-else-if="mode === 'mace'">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="flex flex-col gap-1.5">
+              <Label for="mc-macefall" class="text-xs text-muted-foreground"
+                >Fall distance</Label
+              >
               <Input
-                :id="`mc-prot-${slot}`"
+                id="mc-macefall"
+                type="number"
+                min="0"
+                max="10000"
+                step="0.5"
+                :model-value="maceFall"
+                @update:model-value="(v) => (maceFall = Math.max(0, Number(v) || 0))"
+              />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <Label for="mc-density" class="text-xs text-muted-foreground">Density (0-5)</Label>
+              <Input
+                id="mc-density"
+                type="number"
+                min="0"
+                max="5"
+                step="1"
+                :model-value="density"
+                @update:model-value="(v) => (density = clampInt(v, 0, 5, 0))"
+              />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <Label for="mc-breach" class="text-xs text-muted-foreground">Breach (0-4)</Label>
+              <Input
+                id="mc-breach"
                 type="number"
                 min="0"
                 max="4"
                 step="1"
-                :disabled="pieces[slot].material === 'none'"
-                :model-value="pieces[slot].protection"
-                @update:model-value="(v) => (pieces[slot].protection = clampInt(v, 0, 4, 0))"
+                :model-value="maceBreach"
+                @update:model-value="(v) => (maceBreach = clampInt(v, 0, 4, 0))"
+              />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <Label for="mc-mace-ench" class="text-xs text-muted-foreground"
+                >Smite or Bane</Label
+              >
+              <div class="flex gap-2">
+                <SearchableSelect
+                  id="mc-mace-ench"
+                  :spec="{
+                    kind: 'select',
+                    id: 'mc-mace-ench',
+                    label: 'Mace enchant',
+                    default: 'none',
+                    options: [
+                      { value: 'none', label: 'None', synonyms: [] },
+                      { value: 'smite', label: 'Smite', synonyms: ['undead'] },
+                      { value: 'bane', label: 'Bane', synonyms: ['arthropods'] },
+                    ],
+                  }"
+                  :model-value="maceEnchant"
+                  class="min-w-0 flex-1"
+                  @update:model-value="(v: string) => (maceEnchant = v as WeaponEnchantId)"
+                />
+                <Input
+                  aria-label="Mace enchant level"
+                  type="number"
+                  min="0"
+                  max="5"
+                  step="1"
+                  class="w-16"
+                  :disabled="maceEnchant === 'none'"
+                  :model-value="maceEnchantLevel"
+                  @update:model-value="(v) => (maceEnchantLevel = clampInt(v, 0, 5, 0))"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <Switch
+              id="mc-mace-crit"
+              :model-value="maceCritical"
+              @update:model-value="(v) => (maceCritical = Boolean(v))"
+            />
+            <Label for="mc-mace-crit" class="cursor-pointer text-xs text-muted-foreground"
+              >Critical hit (x1.5; falling smashes usually crit)</Label
+            >
+          </div>
+        </template>
+
+        <!-- mob attacker -->
+        <template v-else-if="attackerKind === 'mob'">
+          <div class="flex flex-col gap-1.5">
+            <Label for="mc-atk-mob" class="text-xs text-muted-foreground">Mob</Label>
+            <SearchableSelect
+              id="mc-atk-mob"
+              :spec="mobSpec('mc-atk-mob')"
+              :model-value="attackerMob"
+              @update:model-value="(v: string) => (attackerMob = v)"
+            />
+          </div>
+          <p class="text-xs text-muted-foreground">
+            Mob stats are read from the decompiled server code for each version. Difficulty scaling
+            applies only when the defender is a player.
+          </p>
+        </template>
+
+        <!-- player attacker -->
+        <template v-else>
+          <div class="flex flex-col gap-1.5">
+            <Label for="mc-weapon" class="text-xs text-muted-foreground">Weapon</Label>
+            <SearchableSelect
+              id="mc-weapon"
+              :spec="weaponSpec"
+              :model-value="weapon"
+              @update:model-value="(v: string) => (weapon = v)"
+            />
+          </div>
+          <div class="flex gap-2">
+            <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+              <Label for="mc-ench" class="text-xs text-muted-foreground">Damage enchant</Label>
+              <SearchableSelect
+                id="mc-ench"
+                :spec="enchantSpec"
+                :model-value="weaponEnchant"
+                @update:model-value="(v: string) => (weaponEnchant = v as WeaponEnchantId)"
+              />
+            </div>
+            <div class="flex w-16 flex-col gap-1.5">
+              <Label for="mc-ench-lvl" class="text-xs text-muted-foreground">Level</Label>
+              <Input
+                id="mc-ench-lvl"
+                type="number"
+                min="0"
+                max="5"
+                step="1"
+                :disabled="weaponEnchant === 'none'"
+                :model-value="weaponEnchantLevel"
+                @update:model-value="(v) => (weaponEnchantLevel = clampInt(v, 0, 5, 0))"
               />
             </div>
           </div>
-        </div>
-
-        <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div class="flex min-w-0 flex-col gap-1.5">
-            <Label for="mc-armor" class="text-xs text-muted-foreground">Armor points (0-30)</Label>
-            <Input
-              id="mc-armor"
-              type="number"
-              min="0"
-              max="30"
-              step="1"
-              :model-value="rawArmor"
-              @update:model-value="(v) => (rawArmor = clampInt(v, 0, 30, 0))"
-            />
+          <p
+            v-if="currentWeapon.family === 'bow'"
+            class="text-xs text-muted-foreground"
+          >
+            Bows cannot hold Sharpness, Smite, or Bane, and arrow crits are random, so the crit
+            toggle is off for the bow.
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="flex flex-col gap-1.5">
+              <Label for="mc-str" class="text-xs text-muted-foreground"
+                >Strength (potion or beacon, 0-2)</Label
+              >
+              <Input
+                id="mc-str"
+                type="number"
+                min="0"
+                max="2"
+                step="1"
+                :model-value="strength"
+                @update:model-value="(v) => (strength = clampInt(v, 0, 2, 0))"
+              />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <Label for="mc-weak" class="text-xs text-muted-foreground">Weakness (0-1)</Label>
+              <Input
+                id="mc-weak"
+                type="number"
+                min="0"
+                max="1"
+                step="1"
+                :model-value="weakness"
+                @update:model-value="(v) => (weakness = clampInt(v, 0, 1, 0))"
+              />
+            </div>
           </div>
-          <div class="flex min-w-0 flex-col gap-1.5">
-            <Label for="mc-tough" class="text-xs text-muted-foreground">Toughness (0-20)</Label>
-            <Input
-              id="mc-tough"
-              type="number"
-              min="0"
-              max="20"
-              step="1"
-              :model-value="rawToughness"
-              @update:model-value="(v) => (rawToughness = clampInt(v, 0, 20, 0))"
+          <div class="flex items-center gap-2">
+            <Switch
+              id="mc-crit"
+              :disabled="currentWeapon.family === 'bow'"
+              :model-value="critical"
+              @update:model-value="(v) => (critical = Boolean(v))"
             />
-          </div>
-          <div class="flex min-w-0 flex-col gap-1.5">
-            <Label for="mc-protlv" class="text-xs text-muted-foreground"
-              >Protection levels (0-16)</Label
+            <Label for="mc-crit" class="cursor-pointer text-xs text-muted-foreground"
+              >Critical hit (x1.5 on the attribute, enchants excluded)</Label
             >
-            <Input
-              id="mc-protlv"
-              type="number"
-              min="0"
-              max="16"
-              step="1"
-              :model-value="rawProtection"
-              @update:model-value="(v) => (rawProtection = clampInt(v, 0, 16, 0))"
-            />
           </div>
-        </div>
+        </template>
+      </section>
 
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div class="flex min-w-0 flex-col gap-1.5">
-            <Label for="mc-resist" class="text-xs text-muted-foreground"
-              >Resistance effect (0-5)</Label
-            >
-            <Input
-              id="mc-resist"
-              type="number"
-              min="0"
-              max="5"
-              step="1"
-              :model-value="resistance"
-              @update:model-value="(v) => (resistance = clampInt(v, 0, 5, 0))"
-            />
-          </div>
-          <div v-if="mode === 'melee' && versionInfo.mace" class="flex min-w-0 flex-col gap-1.5">
-            <Label for="mc-breach" class="text-xs text-muted-foreground"
-              >Attacker Breach (0-4)</Label
-            >
-            <Input
-              id="mc-breach"
-              type="number"
-              min="0"
-              max="4"
-              step="1"
-              :model-value="breach"
-              @update:model-value="(v) => (breach = clampInt(v, 0, 4, 0))"
-            />
-          </div>
-        </div>
-
-        <p class="text-xs text-muted-foreground">
-          Only the plain Protection enchantment reduces melee hits (4% per level per piece). Fire,
-          Blast and Projectile Protection guard their own damage types and add nothing here.
-        </p>
+      <!-- swap -->
+      <div class="flex items-center justify-center">
+        <Button
+          variant="outline"
+          size="icon"
+          :disabled="!swapEnabled"
+          :title="
+            swapEnabled
+              ? 'Swap attacker and defender'
+              : 'Swap applies to attack mode; falls and smashes only go one way'
+          "
+          aria-label="Swap attacker and defender"
+          @click="swapSides"
+        >
+          <ArrowLeftRight class="size-4" />
+        </Button>
       </div>
-    </template>
+
+      <!-- defender -->
+      <section class="flex flex-col gap-3 rounded-[14px] border p-4" aria-label="Defender">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+            >Defender</span
+          >
+          <div class="flex gap-1.5" role="group" aria-label="Defender type">
+            <button
+              v-for="k in ['mob', 'player'] as const"
+              :key="k"
+              type="button"
+              class="rounded-[8px] border px-2.5 py-1 text-xs capitalize transition-colors"
+              :class="
+                defenderKind === k
+                  ? 'border-ring bg-accent font-semibold'
+                  : 'bg-secondary hover:bg-accent'
+              "
+              :aria-pressed="defenderKind === k"
+              @click="defenderKind = k"
+            >
+              {{ k }}
+            </button>
+          </div>
+        </div>
+
+        <template v-if="defenderKind === 'mob'">
+          <div class="flex flex-col gap-1.5">
+            <Label for="mc-def-mob" class="text-xs text-muted-foreground">Mob</Label>
+            <SearchableSelect
+              id="mc-def-mob"
+              :spec="mobSpec('mc-def-mob')"
+              :model-value="defenderMob"
+              @update:model-value="(v: string) => (defenderMob = v)"
+            />
+          </div>
+          <p class="text-xs text-muted-foreground">
+            Mob defenders use their real HP and armor attribute (a zombie has 2 armor points) and
+            never receive difficulty-scaled damage.
+          </p>
+        </template>
+
+        <template v-else>
+          <div class="flex flex-col gap-1.5">
+            <Label for="mc-kit" class="text-xs text-muted-foreground">Kit</Label>
+            <SearchableSelect
+              id="mc-kit"
+              :spec="kitPresetSpec"
+              :model-value="kitPreset"
+              @update:model-value="applyKitPreset"
+            />
+          </div>
+          <div class="grid grid-cols-1 gap-2">
+            <div
+              v-for="slot in ARMOR_SLOTS"
+              :key="slot"
+              class="flex items-end gap-2 rounded-[10px] bg-secondary p-2 shadow-[var(--sh-inset)]"
+            >
+              <div class="flex min-w-0 flex-1 flex-col gap-1">
+                <Label :for="`mc-mat-${slot}`" class="text-xs text-muted-foreground">{{
+                  SLOT_LABELS[slot]
+                }}</Label>
+                <SearchableSelect
+                  :id="`mc-mat-${slot}`"
+                  :spec="materialSpec(slot)"
+                  :model-value="pieces[slot].material"
+                  @update:model-value="
+                    (v: string) => {
+                      pieces[slot].material = v;
+                      onPieceEdit();
+                    }
+                  "
+                />
+              </div>
+              <div class="flex w-16 flex-col gap-1">
+                <Label :for="`mc-prot-${slot}`" class="text-xs text-muted-foreground">Prot</Label>
+                <Input
+                  :id="`mc-prot-${slot}`"
+                  type="number"
+                  min="0"
+                  max="4"
+                  step="1"
+                  :disabled="pieces[slot].material === 'none'"
+                  :model-value="pieces[slot].protection"
+                  @update:model-value="
+                    (v) => {
+                      pieces[slot].protection = clampInt(v, 0, 4, 0);
+                      onPieceEdit();
+                    }
+                  "
+                />
+              </div>
+              <div v-if="slot === 'boots' && mode === 'fall'" class="flex w-16 flex-col gap-1">
+                <Label for="mc-ff" class="text-xs text-muted-foreground">FF</Label>
+                <Input
+                  id="mc-ff"
+                  type="number"
+                  min="0"
+                  max="4"
+                  step="1"
+                  title="Feather Falling (boots only)"
+                  :model-value="featherFalling"
+                  @update:model-value="(v) => (featherFalling = clampInt(v, 0, 4, 0))"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="flex min-w-0 flex-col gap-1.5">
+              <Label for="mc-res" class="text-xs text-muted-foreground">Resistance source</Label>
+              <SearchableSelect
+                id="mc-res"
+                :spec="resistanceSpec"
+                :model-value="resistanceSource"
+                @update:model-value="(v: string) => (resistanceSource = v)"
+              />
+            </div>
+            <div class="flex min-w-0 flex-col gap-1.5">
+              <Label for="mc-abs" class="text-xs text-muted-foreground">Golden apple</Label>
+              <SearchableSelect
+                id="mc-abs"
+                :spec="absorptionSpec"
+                :model-value="absorptionSource"
+                @update:model-value="(v: string) => (absorptionSource = v)"
+              />
+            </div>
+          </div>
+          <p class="text-xs text-muted-foreground">
+            Only plain Protection reduces these hits (Feather Falling joins in for falls, on boots
+            only). Fire, Blast, and Projectile Protection guard other damage types and are not
+            modeled here.
+          </p>
+        </template>
+      </section>
+    </div>
 
     <!-- error -->
     <div
       v-if="result.error"
-      class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
+      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
       role="alert"
     >
-      <p class="font-medium">{{ result.error.message }}</p>
+      <p class="font-medium text-destructive">{{ result.error.message }}</p>
       <p v-if="result.error.fix" class="text-muted-foreground">{{ result.error.fix }}</p>
     </div>
 
-    <!-- results -->
-    <OutputView v-if="result.output" :output="result.output" />
-
-    <!-- fall: per-version comparison -->
-    <div v-if="mode === 'fall' && fallTable.length" class="flex flex-col gap-2">
-      <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
-        >Damage by version</span
-      >
-      <div class="overflow-x-auto rounded-[10px] bg-secondary p-1 shadow-[var(--sh-inset)]">
-        <table class="w-full text-sm">
-          <thead>
-            <tr>
-              <th
-                v-for="row in fallTable"
-                :key="row.version"
-                scope="col"
-                class="px-3 py-1.5 text-left text-xs font-semibold text-muted-foreground"
-              >
-                {{ row.version }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td
-                v-for="row in fallTable"
-                :key="row.version"
-                class="px-3 py-1.5 font-mono tabular-nums"
-                :class="row.version === versionInfo.label ? 'font-semibold text-primary' : ''"
-              >
-                {{ row.taken }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- readout -->
+    <div v-if="result.r" class="flex flex-col gap-3" aria-live="polite">
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="rounded-[14px] border bg-card p-3 text-center shadow-[var(--sh-sm)]">
+          <p class="text-xs text-muted-foreground">Damage taken</p>
+          <p class="font-mono text-2xl font-semibold tabular-nums">
+            {{ round2(result.r.taken) }}
+          </p>
+          <p
+            v-if="result.r.takenMin !== result.r.takenMax"
+            class="font-mono text-xs text-muted-foreground tabular-nums"
+          >
+            {{ round2(result.r.takenMin) }} to {{ round2(result.r.takenMax) }}
+          </p>
+        </div>
+        <div class="rounded-[14px] border bg-card p-3 text-center shadow-[var(--sh-sm)]">
+          <p class="text-xs text-muted-foreground">Hearts</p>
+          <p class="font-mono text-2xl font-semibold tabular-nums">
+            {{ round2(result.r.taken / 2) }}
+          </p>
+        </div>
+        <div class="rounded-[14px] border bg-card p-3 text-center shadow-[var(--sh-sm)]">
+          <p class="text-xs text-muted-foreground">Reduced by</p>
+          <p class="font-mono text-2xl font-semibold tabular-nums">
+            {{ round2(result.r.reducedPercent) }}%
+          </p>
+        </div>
+        <div class="rounded-[14px] border bg-card p-3 text-center shadow-[var(--sh-sm)]">
+          <p class="text-xs text-muted-foreground">Hits to kill</p>
+          <p class="font-mono text-2xl font-semibold tabular-nums">
+            {{ result.r.hits === Infinity ? "never" : result.r.hits }}
+          </p>
+          <p class="font-mono text-xs text-muted-foreground tabular-nums">
+            vs {{ result.r.defenderHp }} HP{{
+              result.r.defenderAbsorption > 0 ? ` + ${result.r.defenderAbsorption} abs` : ""
+            }}
+          </p>
+        </div>
       </div>
-      <p class="text-xs text-muted-foreground">
-        Versions through 1.21.1 accumulate fall distance per tick and miss the landing tick, so
-        long falls register short; 1.21.2 and later measure real positions. Both eras were
-        verified against live servers.
-      </p>
+
+      <OutputView :output="breakdownRecord" />
     </div>
 
-    <p v-if="mode === 'mace'" class="text-xs text-muted-foreground">
-      Smash bonus: 4 damage per block for the first 3 blocks, 2 per block to 8, then 1 per block,
-      on top of the mace's 6 attack damage. Density adds 0.5 damage per level per fallen block;
-      Breach removes 15% of the target's armor effectiveness per level.
-    </p>
-
     <p class="text-xs text-muted-foreground">
-      Verified against real dedicated servers per version and decompiled game code. Not an
-      official Minecraft product. Not approved by or associated with Mojang or Microsoft.
+      Armor, Protection, and Resistance math is measured against real dedicated servers per
+      version; mob stats and effect semantics are derived from decompiled or unobfuscated game
+      code.
+      <span>Not an official Minecraft product.</span>
+      <span>Not approved by or associated with Mojang or Microsoft.</span>
     </p>
   </div>
 </template>

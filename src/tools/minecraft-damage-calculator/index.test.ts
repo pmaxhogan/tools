@@ -3,20 +3,29 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { ToolError } from "../types";
 import {
+  applyDefenses,
+  attackScalesWithDifficulty,
   buildArmor,
   damageAfterArmor,
   damageAfterEffects,
+  enchantFitsWeapon,
   fallDamage,
   fallDistanceForDrop,
   hitsToKill,
+  hitsToKillWithAbsorption,
   maceDamage,
+  matchup,
   meleeDamage,
+  mobStrike,
+  playerStrike,
   round2,
   run,
   safeFallHeight,
+  scaleWithDifficulty,
   smashBonus,
+  weaponEnchantBonus,
 } from "./index";
-import type { VersionId } from "./data";
+import { MOBS, mobInVersion, type Difficulty, type MobClassification, type VersionId } from "./data";
 
 /* ------------------------------------------------------------------ */
 /* Golden vectors: measured on real dedicated servers over RCON        */
@@ -378,5 +387,351 @@ describe("hitsToKill", () => {
     expect(hitsToKill(7, 20)).toBe(3);
     expect(hitsToKill(20, 20)).toBe(1);
     expect(hitsToKill(0, 20)).toBe(Infinity);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Source-derived matchup vectors (mobs, difficulty, strikes,          */
+/* absorption)                                                         */
+/* ------------------------------------------------------------------ */
+
+interface DerivedMatchupSections {
+  mobStats: {
+    mobs: {
+      id: string;
+      attack?: number;
+      attackMin?: number;
+      attackAvg?: number;
+      attackMax?: number;
+      hp: number;
+      armor: number;
+      classification: MobClassification;
+      since?: string;
+    }[];
+  };
+  difficultyCases: {
+    cases: {
+      mob: string;
+      difficulty: Difficulty;
+      dealt: number;
+      version?: string;
+      defender?: string;
+      which?: string;
+    }[];
+  };
+  strikeCases: {
+    cases: {
+      baseAttack: number;
+      strength?: number;
+      weakness?: number;
+      critical?: boolean;
+      enchant?: "sharpness" | "smite" | "bane";
+      enchantLevel?: number;
+      defenderClass?: MobClassification;
+      dealt: number;
+    }[];
+  };
+  absorptionCases: {
+    cases: {
+      dealt: number;
+      armor?: number;
+      toughness?: number;
+      absorption: number;
+      taken?: number;
+      absorbed?: number;
+      healthLost?: number;
+      hp?: number;
+      hits?: number;
+    }[];
+  };
+}
+
+describe("source-derived matchup vectors", () => {
+  const derived = JSON.parse(
+    readFileSync(`${VECTORS}damage-derived/source-derived.json`, "utf8"),
+  ) as DerivedMatchupSections;
+
+  it("MOBS in data.ts matches the committed mob stats exactly", () => {
+    for (const v of derived.mobStats.mobs) {
+      const mob = MOBS.find((m) => m.id === v.id);
+      expect(mob, v.id).toBeDefined();
+      expect(mob!.hp, v.id).toBe(v.hp);
+      expect(mob!.armor, v.id).toBe(v.armor);
+      expect(mob!.classification, v.id).toBe(v.classification);
+      if (v.attackAvg !== undefined) {
+        expect(mob!.attack.amount, v.id).toBe(v.attackAvg);
+        expect(mob!.attack.min, v.id).toBe(v.attackMin);
+        expect(mob!.attack.max, v.id).toBe(v.attackMax);
+      } else {
+        expect(mob!.attack.amount, v.id).toBe(v.attack);
+      }
+      expect(mob!.since, v.id).toBe(v.since as VersionId | undefined);
+    }
+    expect(derived.mobStats.mobs.length).toBe(MOBS.length);
+  });
+
+  it("reproduces every difficulty scaling case", () => {
+    for (const c of derived.difficultyCases.cases) {
+      const version = (c.version ?? "1.21.11") as VersionId;
+      const strike = mobStrike(version, c.mob, c.difficulty, c.defender !== "mob");
+      const got = c.which === "avg" || c.which === undefined ? strike.dealt : strike.dealt;
+      expect(round2(got), JSON.stringify(c)).toBe(c.dealt);
+    }
+  });
+
+  it("reproduces every strike case", () => {
+    for (const c of derived.strikeCases.cases) {
+      const r = playerStrike({
+        version: "1.21.11",
+        baseAttack: c.baseAttack,
+        weaponFamily: "sword",
+        strength: c.strength,
+        weakness: c.weakness,
+        critical: c.critical,
+        enchant: c.enchant ?? "none",
+        enchantLevel: c.enchantLevel ?? 0,
+        defenderClass: c.defenderClass ?? "none",
+      });
+      expect(round2(r.dealt), JSON.stringify(c)).toBe(c.dealt);
+    }
+  });
+
+  it("reproduces every absorption case", () => {
+    for (const c of derived.absorptionCases.cases) {
+      if (c.hits !== undefined) {
+        expect(hitsToKillWithAbsorption(c.dealt, c.hp ?? 20, c.absorption)).toBe(c.hits);
+        continue;
+      }
+      const r = applyDefenses(c.dealt, {
+        armor: c.armor ?? 0,
+        toughness: c.toughness ?? 0,
+        absorption: c.absorption,
+      });
+      const label = JSON.stringify(c);
+      expect(round2(r.taken), label).toBe(c.taken);
+      expect(round2(r.absorbed), label).toBe(c.absorbed);
+      expect(round2(r.healthLost), label).toBe(c.healthLost);
+    }
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Matchup engine                                                      */
+/* ------------------------------------------------------------------ */
+
+describe("difficulty scaling rules", () => {
+  it("mob melee and explosions scale in every version, arrows only from 1.20.6", () => {
+    for (const v of ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"] as const) {
+      expect(attackScalesWithDifficulty(v, "melee", true), v).toBe(true);
+      expect(attackScalesWithDifficulty(v, "explosion", true), v).toBe(true);
+      const legacy = v === "1.16.5" || v === "1.18.2";
+      expect(attackScalesWithDifficulty(v, "arrow", true), v).toBe(!legacy);
+    }
+  });
+
+  it("never scales against mob defenders", () => {
+    for (const kind of ["melee", "arrow", "explosion"] as const) {
+      expect(attackScalesWithDifficulty("1.21.11", kind, false)).toBe(false);
+    }
+  });
+
+  it("uses the exact Player#hurtServer expressions", () => {
+    expect(scaleWithDifficulty(3, "easy")).toBe(2.5);
+    expect(scaleWithDifficulty(3, "hard")).toBe(4.5);
+    expect(scaleWithDifficulty(1, "easy")).toBe(1); // min(d/2+1, d) keeps small hits
+    expect(scaleWithDifficulty(30, "peaceful")).toBe(0);
+  });
+});
+
+describe("weapon enchant gating", () => {
+  it("Sharpness fits swords and axes only", () => {
+    expect(enchantFitsWeapon("1.16.5", "sword", "sharpness")).toBe(true);
+    expect(enchantFitsWeapon("1.16.5", "axe", "sharpness")).toBe(true);
+    expect(enchantFitsWeapon("1.21.11", "mace", "sharpness")).toBe(false);
+    expect(enchantFitsWeapon("1.21.11", "bow", "sharpness")).toBe(false);
+  });
+
+  it("Smite fits the mace from 1.21 on", () => {
+    expect(enchantFitsWeapon("1.21.11", "mace", "smite")).toBe(true);
+    expect(enchantFitsWeapon("1.20.6", "mace", "smite")).toBe(false);
+  });
+
+  it("bonus values match DamageEnchantment", () => {
+    expect(weaponEnchantBonus("sharpness", 1, "none")).toBe(1);
+    expect(weaponEnchantBonus("sharpness", 5, "none")).toBe(3);
+    expect(weaponEnchantBonus("smite", 5, "undead")).toBe(12.5);
+    expect(weaponEnchantBonus("smite", 5, "arthropod")).toBe(0);
+    expect(weaponEnchantBonus("bane", 4, "arthropod")).toBe(10);
+  });
+
+  it("playerStrike rejects illegal enchant and weapon pairs", () => {
+    expect(() =>
+      playerStrike({
+        version: "1.21.11",
+        baseAttack: 6,
+        weaponFamily: "bow",
+        enchant: "sharpness",
+        enchantLevel: 5,
+      }),
+    ).toThrowError(ToolError);
+  });
+});
+
+describe("matchup", () => {
+  it("zombie vs unarmored player on hard: 4.5 dealt, armor 0 taken in full", () => {
+    const r = matchup({
+      version: "1.21.11",
+      difficulty: "hard",
+      mode: "attack",
+      attacker: { kind: "mob", mobId: "zombie" },
+      defender: { kind: "player", kit: { build: {} } },
+    });
+    expect(round2(r.dealt)).toBe(4.5);
+    expect(round2(r.taken)).toBe(4.5);
+    expect(r.scaled).toBe(true);
+    expect(r.hits).toBe(Math.ceil(20 / 4.5));
+  });
+
+  it("swap insight: zombie as defender never gets scaled damage and keeps its armor 2", () => {
+    const r = matchup({
+      version: "1.21.11",
+      difficulty: "hard",
+      mode: "attack",
+      attacker: { kind: "mob", mobId: "warden" },
+      defender: { kind: "mob", mobId: "zombie" },
+    });
+    // 30 raw (no scaling vs mobs), reduced by the zombie's 2 armor points.
+    expect(round2(r.dealt)).toBe(30);
+    expect(r.scaled).toBe(false);
+    expect(round2(r.taken)).toBe(round2(damageAfterArmor(30, 2, 0)));
+  });
+
+  it("iron golem carries its swing range through the defenses", () => {
+    const r = matchup({
+      version: "1.21.11",
+      difficulty: "normal",
+      mode: "attack",
+      attacker: { kind: "mob", mobId: "iron-golem" },
+      defender: {
+        kind: "player",
+        kit: {
+          build: {
+            helmet: { material: "diamond", protection: 0 },
+            chestplate: { material: "diamond", protection: 0 },
+            leggings: { material: "diamond", protection: 0 },
+            boots: { material: "diamond", protection: 0 },
+          },
+        },
+      },
+    });
+    expect(r.takenMin).toBeLessThan(r.taken);
+    expect(r.takenMax).toBeGreaterThan(r.taken);
+    expect(round2(r.takenMin)).toBe(round2(damageAfterArmor(7.5, 20, 8)));
+    expect(round2(r.takenMax)).toBe(round2(damageAfterArmor(21.5, 20, 8)));
+  });
+
+  it("player smite V crit vs zombie routes the strike through the armor formula", () => {
+    const r = matchup({
+      version: "1.21.11",
+      difficulty: "normal",
+      mode: "attack",
+      attacker: {
+        kind: "player",
+        weaponDamage: 7,
+        weaponFamily: "sword",
+        critical: true,
+        enchant: "smite",
+        enchantLevel: 5,
+      },
+      defender: { kind: "mob", mobId: "zombie" },
+    });
+    expect(round2(r.dealt)).toBe(23); // 7 * 1.5 + 12.5
+    expect(round2(r.taken)).toBe(round2(damageAfterArmor(23, 2, 0)));
+  });
+
+  it("fall mode stacks Feather Falling and Protection under the EPF cap", () => {
+    const kit = {
+      build: {
+        helmet: { material: "netherite", protection: 4 },
+        chestplate: { material: "netherite", protection: 4 },
+        leggings: { material: "netherite", protection: 4 },
+        boots: { material: "netherite", protection: 4 },
+      },
+      featherFalling: 4,
+    };
+    const r = matchup({
+      version: "1.21.11",
+      mode: "fall",
+      fall: { height: 100 },
+      defender: { kind: "player", kit },
+    });
+    // Base 97; EPF 12 + 16 = 28 caps at 20 (80% off); armor is bypassed.
+    expect(round2(r.taken)).toBe(round2(damageAfterEffects(97, 0, 20)));
+    const bare = matchup({
+      version: "1.21.11",
+      mode: "fall",
+      fall: { height: 100 },
+      defender: { kind: "player", kit: { build: {}, featherFalling: 4 } },
+    });
+    expect(round2(bare.taken)).toBe(
+      round2(fallDamage({ version: "1.21.11", height: 100, featherFalling: 4 }).taken),
+    );
+  });
+
+  it("mace crit multiplies the smash total before the enchant bonus (Player#attack order)", () => {
+    const base = matchup({
+      version: "1.21.11",
+      mode: "mace",
+      mace: { fallDistance: 10, density: 5 },
+      defender: { kind: "player", kit: { build: {} } },
+    });
+    expect(round2(base.dealt)).toBe(55);
+    const crit = matchup({
+      version: "1.21.11",
+      mode: "mace",
+      mace: { fallDistance: 10, density: 5, critical: true, enchant: "smite", enchantLevel: 5 },
+      defender: { kind: "mob", mobId: "zombie" },
+    });
+    expect(round2(crit.dealt)).toBe(55 * 1.5 + 12.5);
+  });
+
+  it("egapple absorption soaks before health and stretches hits to kill", () => {
+    const r = matchup({
+      version: "1.21.11",
+      difficulty: "normal",
+      mode: "attack",
+      attacker: { kind: "mob", mobId: "ravager" },
+      defender: { kind: "player", kit: { build: {}, absorption: 16, resistance: 1 } },
+    });
+    // 12 dealt, resistance 1 leaves 9.6, all soaked by the 16 absorption.
+    expect(round2(r.taken)).toBe(9.6);
+    expect(round2(r.absorbed)).toBe(9.6);
+    expect(round2(r.healthLost)).toBe(0);
+    expect(r.hits).toBe(Math.ceil((20 + 16) / 9.6));
+  });
+
+  it("rejects the warden before 1.20.6 and stale mob ids", () => {
+    expect(() =>
+      matchup({
+        version: "1.16.5",
+        mode: "attack",
+        attacker: { kind: "mob", mobId: "warden" },
+        defender: { kind: "player", kit: { build: {} } },
+      }),
+    ).toThrowError(/does not exist in 1.16.5/);
+    expect(() =>
+      matchup({
+        version: "1.21.11",
+        mode: "attack",
+        attacker: { kind: "mob", mobId: "herobrine" },
+        defender: { kind: "player", kit: { build: {} } },
+      }),
+    ).toThrowError(ToolError);
+  });
+
+  it("mobInVersion gates the warden list entry", () => {
+    const warden = MOBS.find((m) => m.id === "warden")!;
+    expect(mobInVersion(warden, "1.18.2")).toBe(false);
+    expect(mobInVersion(warden, "1.20.6")).toBe(true);
   });
 });
