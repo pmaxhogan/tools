@@ -1,0 +1,181 @@
+{
+ "versions": [
+  "1.16.5",
+  "1.18.2"
+ ],
+ "generated": "2026-08-10T17:07:13.118Z",
+ "method": "source-derived",
+ "note": "The /damage command does not exist before 1.19.4, so these cases are hand-derived by executing the armor formula exactly as written in the decompiled server source for 1.16.5 and 1.18.2 (mc-pipeline/work/<v>/src/), in float32. The formula is unchanged since 1.9 and identical to the RCON-measured 1.20.6+ versions, whose vectors in mc-pipeline/vectors/damage/ agree with the same math.",
+ "sources": {
+  "armor": "net.minecraft.world.damagesource.CombatRules#getDamageAfterAbsorb (1.16.5 and 1.18.2 trees, identical): f = clamp(armor - amount / (2 + toughness / 4), armor * 0.2, 20); damage = amount * (1 - f / 25)",
+  "protection": "net.minecraft.world.item.enchantment.ProtectionEnchantment#getDamageProtection (Type.ALL returns the level) and net.minecraft.world.entity.LivingEntity#getDamageAfterMagicAbsorb via CombatRules#getDamageAfterMagicAbsorb: EPF sum clamped to 20, damage * (1 - epf / 25)",
+  "resistance": "net.minecraft.world.entity.LivingEntity#getDamageAfterMagicAbsorb: j = 25 - (amplifier + 1) * 5; damage = max(damage * j / 25, 0)"
+ },
+ "armorSamples": [
+  {
+   "armor": 0,
+   "toughness": 0,
+   "amount": 7,
+   "taken": 7
+  },
+  {
+   "armor": 2,
+   "toughness": 0,
+   "amount": 7,
+   "taken": 6.89
+  },
+  {
+   "armor": 5,
+   "toughness": 0,
+   "amount": 7,
+   "taken": 6.58
+  },
+  {
+   "armor": 7,
+   "toughness": 0,
+   "amount": 4,
+   "taken": 3.2
+  },
+  {
+   "armor": 10,
+   "toughness": 0,
+   "amount": 7,
+   "taken": 5.18
+  },
+  {
+   "armor": 12,
+   "toughness": 0,
+   "amount": 7,
+   "taken": 4.62
+  },
+  {
+   "armor": 15,
+   "toughness": 0,
+   "amount": 7,
+   "taken": 3.78
+  },
+  {
+   "armor": 15,
+   "toughness": 6,
+   "amount": 7,
+   "taken": 3.36
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 7,
+   "taken": 2.38
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 7,
+   "taken": 1.89
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 15,
+   "taken": 5.25
+  },
+  {
+   "armor": 20,
+   "toughness": 12,
+   "amount": 36,
+   "taken": 17.57
+  },
+  {
+   "armor": 24,
+   "toughness": 8,
+   "amount": 3,
+   "taken": 0.6
+  },
+  {
+   "armor": 25,
+   "toughness": 20,
+   "amount": 100,
+   "taken": 57.14
+  },
+  {
+   "armor": 30,
+   "toughness": 0,
+   "amount": 20,
+   "taken": 4
+  },
+  {
+   "armor": 30,
+   "toughness": 20,
+   "amount": 100,
+   "taken": 37.14
+  },
+  {
+   "armor": 2,
+   "toughness": 0,
+   "amount": 0.5,
+   "taken": 0.47
+  },
+  {
+   "armor": 20,
+   "toughness": 0,
+   "amount": 1,
+   "taken": 0.22
+  }
+ ],
+ "protectionSamples": [
+  {
+   "armor": 15,
+   "toughness": 0,
+   "amount": 7,
+   "protectionLevels": 4,
+   "taken": 3.18
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 7,
+   "protectionLevels": 16,
+   "taken": 0.68
+  },
+  {
+   "armor": 20,
+   "toughness": 8,
+   "amount": 7,
+   "protectionLevels": 28,
+   "taken": 0.38
+  },
+  {
+   "armor": 0,
+   "toughness": 0,
+   "amount": 10,
+   "protectionLevels": 8,
+   "taken": 6.8
+  }
+ ],
+ "resistanceSamples": [
+  {
+   "resistance": 1,
+   "amount": 10,
+   "taken": 8
+  },
+  {
+   "resistance": 2,
+   "amount": 10,
+   "taken": 6
+  },
+  {
+   "resistance": 3,
+   "amount": 10,
+   "taken": 4
+  },
+  {
+   "resistance": 4,
+   "amount": 10,
+   "taken": 2
+  },
+  {
+   "resistance": 5,
+   "amount": 10,
+   "taken": 0
+  }
+ ]
+}

@@ -1,0 +1,1012 @@
+{
+  "method": "source-derived",
+  "generatedFrom": "mc-pipeline/work/<version>/src/net/minecraft/world/inventory/AnvilMenu.java createResult() and calculateIncreasedRepairCost(), plus enchantment registrations and data files per version",
+  "note": "Enchantment iteration follows the sacrifice enchant list order (the game iterates NBT or component map order). Every multi-enchant case here is order independent so totals are game exact regardless. Versions groups: old = 1.16.5, 1.18.2 (rarity costs); mid = 1.20.6; new = 1.21.1, 1.21.11, 26.2 (data-driven costs).",
+  "cases": [
+    {
+      "id": "book-sharpness1-fresh-sword",
+      "description": "Sharpness I book onto a fresh sword: fee 1 per level, halved to minimum 1 for books",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 1 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 1,
+        "work": 1,
+        "resultEnchants": { "sharpness": 1 },
+        "resultPriorWork": 1
+      },
+      "provenance": "createResult enchant loop: fee = anvilCost(sharpness)=1 (rarity COMMON in old, anvil_cost=1 in data), book halving Math.max(1, fee/2)=1; new prior work = calculateIncreasedRepairCost(0)=1"
+    },
+    {
+      "id": "book-mending-fresh-pickaxe",
+      "description": "Mending book onto a fresh pickaxe costs 2 (fee 4 halved)",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "pickaxe", "enchants": [], "priorWork": 0, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "mending", "level": 1 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 2,
+        "work": 2,
+        "resultEnchants": { "mending": 1 },
+        "resultPriorWork": 1
+      },
+      "provenance": "mending is Rarity.RARE=4 in old Enchantments.java, anvilCost 4 in 1.20.6 definition and anvil_cost 4 in data packs; book halving 4/2=2"
+    },
+    {
+      "id": "book-protection4-fresh-helmet",
+      "description": "Protection IV book onto a fresh helmet costs 4",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "helmet", "enchants": [], "priorWork": 0, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "protection", "level": 4 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 4,
+        "work": 4,
+        "resultEnchants": { "protection": 4 },
+        "resultPriorWork": 1
+      },
+      "provenance": "protection COMMON=1 / anvil_cost 1; book halving Math.max(1, 1/2)=1; 1*4 levels"
+    },
+    {
+      "id": "book-sharpness5-on-sharpness5-max-cap",
+      "description": "Sharpness V book onto a Sharpness V sword: equal levels bump to VI then cap back to V; fee still charged on the capped level",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "sword",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 5,
+        "work": 5,
+        "resultEnchants": { "sharpness": 5 },
+        "resultPriorWork": 1
+      },
+      "provenance": "level = (equal ? level+1 : max) computed before the maxLevel cap; cost fee*cappedLevel = 1*5"
+    },
+    {
+      "id": "book-sharpness4-on-sharpness4-bump",
+      "description": "Same-level bump: Sharpness IV + Sharpness IV = Sharpness V, cost 5",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "sword",
+        "enchants": [{ "id": "sharpness", "level": 4 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 4 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 5,
+        "work": 5,
+        "resultEnchants": { "sharpness": 5 },
+        "resultPriorWork": 1
+      },
+      "provenance": "equal-level branch bumps to 5, under the cap; cost 1*5"
+    },
+    {
+      "id": "book-sharpness3-on-sharpness5-keeps-max",
+      "description": "Lower sacrifice level: target keeps V but the fee is charged at the kept level",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "sword",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 5,
+        "work": 5,
+        "resultEnchants": { "sharpness": 5 },
+        "resultPriorWork": 1
+      },
+      "provenance": "unequal branch takes Math.max(3,5)=5; fee*level = 1*5 despite no improvement"
+    },
+    {
+      "id": "book-unbreaking3-on-unbreaking3-elytra-cap",
+      "description": "Unbreaking III + III on an elytra bumps to IV then caps at III; fee 2 halved to 1",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "elytra",
+        "enchants": [{ "id": "unbreaking", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "unbreaking", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 3,
+        "work": 3,
+        "resultEnchants": { "unbreaking": 3 },
+        "resultPriorWork": 1
+      },
+      "provenance": "unbreaking UNCOMMON=2 / anvil_cost 2; halved to 1; cap getMaxLevel()=3; elytra allowed via DigDurability canEnchant isDamageableItem / enchantable/durability tag"
+    },
+    {
+      "id": "book-smite-only-on-sharpness-sword-no-result",
+      "description": "Incompatible-only sacrifice yields no result: smite drops against sharpness and nothing else transfers",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "sword",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "smite", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "no-result", "displayedCost": 0 },
+      "provenance": "compat loop adds the +1 penalty and drops smite; then the anyIncompatible && !anyCompatible early return empties the slot and sets cost 0"
+    },
+    {
+      "id": "book-smite-plus-unbreaking-partial-transfer",
+      "description": "Mixed book: smite drops with a +1 penalty, unbreaking still transfers",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "sword",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [
+          { "id": "smite", "level": 5 },
+          { "id": "unbreaking", "level": 3 }
+        ],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 4,
+        "work": 4,
+        "resultEnchants": { "sharpness": 5, "unbreaking": 3 },
+        "resultPriorWork": 1,
+        "droppedEnchants": ["smite"]
+      },
+      "provenance": "penalty +1 for the smite/sharpness pair; unbreaking book fee 2/2=1 times 3 levels; order independent (smite drops regardless of position)"
+    },
+    {
+      "id": "item-item-sharpness5-transfer-full-fee",
+      "description": "Sword onto sword: enchantment fees are NOT halved for item sacrifices",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "sword",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "sword",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 5,
+        "work": 5,
+        "resultEnchants": { "sharpness": 5 },
+        "resultPriorWork": 1
+      },
+      "provenance": "usingBook=false skips the halving; both pristine so the durability branch changes nothing (newDamage clamps below current 0)"
+    },
+    {
+      "id": "item-item-durability-12pct-bonus",
+      "description": "Sacrifice repair: remaining durabilities add plus 12 percent of max damage (integer math)",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 800 },
+      "sacrifice": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 1000 },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 2,
+        "work": 2,
+        "resultDamage": 52,
+        "resultPriorWork": 1
+      },
+      "provenance": "maxDamage 1561; bonus = (1561-1000) + 1561*12/100 = 561+187 = 748; newDamage = 1561 - ((1561-800)+748) = 52; +2 levels (COST_REPAIR_SACRIFICE)"
+    },
+    {
+      "id": "item-item-durability-clamps-to-zero",
+      "description": "Sacrifice repair overshoot clamps damage at 0",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 200 },
+      "sacrifice": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 200 },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 2,
+        "work": 2,
+        "resultDamage": 0,
+        "resultPriorWork": 1
+      },
+      "provenance": "newDamage = 1561 - (1361 + 1361 + 187) < 0 clamps to 0; still cheaper than current 200 so the +2 applies"
+    },
+    {
+      "id": "unit-repair-one-diamond",
+      "description": "Repair by material: one unit restores min(damage, maxDamage/4) for +1 level",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 700 },
+      "materials": 1,
+      "expect": {
+        "status": "ok",
+        "displayedCost": 1,
+        "work": 1,
+        "resultDamage": 310,
+        "materialsUsed": 1,
+        "resultPriorWork": 1
+      },
+      "provenance": "repairAmount = min(700, 1561/4=390) = 390; one unit, +1 level (COST_REPAIR_MATERIAL)"
+    },
+    {
+      "id": "unit-repair-stops-when-fixed",
+      "description": "Only the needed units are consumed: 4 offered, 2 used",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 700 },
+      "materials": 4,
+      "expect": {
+        "status": "ok",
+        "displayedCost": 2,
+        "work": 2,
+        "resultDamage": 0,
+        "materialsUsed": 2,
+        "resultPriorWork": 1
+      },
+      "provenance": "unit 1: 700-390=310; unit 2: repairAmount=min(310,390)=310, damage 0; loop exits on repairAmount<=0; repairItemCountCost=2"
+    },
+    {
+      "id": "unit-repair-undamaged-no-change",
+      "description": "Repair material on an undamaged item: no result, cost 0 in every version",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 3, "damage": 0 },
+      "materials": 1,
+      "expect": { "status": "no-change", "displayedCost": 0 },
+      "provenance": "repairAmount <= 0 early return: result slot emptied and cost.set(0) before the prior-work sum is ever applied"
+    },
+    {
+      "id": "unit-repair-carries-prior-work",
+      "description": "Unit repair pays the prior-work penalty and doubles it after",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 7, "damage": 700 },
+      "materials": 1,
+      "expect": {
+        "status": "ok",
+        "displayedCost": 8,
+        "work": 1,
+        "resultDamage": 310,
+        "resultPriorWork": 15
+      },
+      "provenance": "cost = j + i = 7 + 1; calculateIncreasedRepairCost(7) = 15"
+    },
+    {
+      "id": "crossbow-unit-repair-1165",
+      "description": "Crossbow durability is 326 in 1.16.5, so a unit repairs floor(326/4)=81",
+      "versions": ["1.16.5"],
+      "target": { "kind": "crossbow", "enchants": [], "priorWork": 0, "damage": 300 },
+      "materials": 1,
+      "expect": {
+        "status": "ok",
+        "displayedCost": 1,
+        "work": 1,
+        "resultDamage": 219,
+        "materialsUsed": 1,
+        "resultPriorWork": 1
+      },
+      "provenance": "Items.java 1.16.5 registers crossbow with durability(326); 300 - min(300, 81) = 219"
+    },
+    {
+      "id": "crossbow-unit-repair-1182-plus",
+      "description": "Crossbow durability became 465 in 1.18.2, so a unit repairs floor(465/4)=116",
+      "versions": ["1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "crossbow", "enchants": [], "priorWork": 0, "damage": 300 },
+      "materials": 1,
+      "expect": {
+        "status": "ok",
+        "displayedCost": 1,
+        "work": 1,
+        "resultDamage": 184,
+        "materialsUsed": 1,
+        "resultPriorWork": 1
+      },
+      "provenance": "Items.java 1.18.2 registers durability(465); item_components confirms 465 for 1.20.6 through 26.2; 300 - min(300, 116) = 184"
+    },
+    {
+      "id": "rename-only-fresh",
+      "description": "Rename with an empty second slot costs 1 and does NOT raise prior work",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 0 },
+      "rename": "set",
+      "expect": { "status": "ok", "displayedCost": 1, "work": 1, "resultPriorWork": 0 },
+      "provenance": "k == i && k > 0 is the rename-only path: calculateIncreasedRepairCost is skipped (the k != i || k == 0 guard)"
+    },
+    {
+      "id": "rename-only-pw31",
+      "description": "Rename pays the prior-work penalty but leaves it unchanged",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 31, "damage": 0 },
+      "rename": "set",
+      "expect": { "status": "ok", "displayedCost": 32, "work": 1, "resultPriorWork": 31 },
+      "provenance": "cost = 31 + 1; prior work untouched on the rename-only path"
+    },
+    {
+      "id": "rename-only-clamps-to-39",
+      "description": "Rename-only cost clamps to 39, so renaming never goes Too Expensive",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 62, "damage": 0 },
+      "rename": "set",
+      "expect": { "status": "ok", "displayedCost": 39, "work": 1, "resultPriorWork": 62 },
+      "provenance": "if (k == i && k > 0 && cost >= 40) cost.set(39); the >= 40 removal check then no longer fires"
+    },
+    {
+      "id": "rename-clear-costs-one",
+      "description": "Clearing a custom name is also a +1 rename",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "sword",
+        "enchants": [],
+        "priorWork": 0,
+        "damage": 0,
+        "customName": true
+      },
+      "rename": "clear",
+      "expect": { "status": "ok", "displayedCost": 1, "work": 1, "resultPriorWork": 0 },
+      "provenance": "blank itemName with hasCustomHoverName(): k=1, resetHoverName / remove CUSTOM_NAME"
+    },
+    {
+      "id": "rename-plus-combine-grows-prior-work",
+      "description": "Rename during a combine is not rename-only: prior work doubles as usual",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "rename": "set",
+      "expect": {
+        "status": "ok",
+        "displayedCost": 6,
+        "work": 6,
+        "resultEnchants": { "sharpness": 5 },
+        "resultPriorWork": 1
+      },
+      "provenance": "work = 5 (sharpness) + 1 (rename); k != i so calculateIncreasedRepairCost applies"
+    },
+    {
+      "id": "prior-work-1-plus-book",
+      "description": "Prior work growth: a once-worked item (1) pays 1 extra and lands on 3",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 1, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "fire_aspect", "level": 2 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 5,
+        "work": 4,
+        "resultEnchants": { "fire_aspect": 2 },
+        "resultPriorWork": 3
+      },
+      "provenance": "j = 1 + 0; fire aspect fee 4/2=2 times 2 levels = 4; calculateIncreasedRepairCost(1) = 3"
+    },
+    {
+      "id": "prior-work-15-plus-book",
+      "description": "Prior work growth: 15 pays 15 extra and lands on 31",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 15, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "mending", "level": 1 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 17,
+        "work": 2,
+        "resultEnchants": { "mending": 1 },
+        "resultPriorWork": 31
+      },
+      "provenance": "j = 15; work 2; calculateIncreasedRepairCost(15) = 31"
+    },
+    {
+      "id": "prior-work-sacrifice-side-counts",
+      "description": "The sacrifice's prior work is paid too and feeds the max before doubling",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 1, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "mending", "level": 1 }],
+        "priorWork": 7,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 10,
+        "work": 2,
+        "resultEnchants": { "mending": 1 },
+        "resultPriorWork": 15
+      },
+      "provenance": "j = 1 + 7 = 8; cost 10; new prior work = 2*max(1,7)+1 = 15"
+    },
+    {
+      "id": "pw31-work8-just-affordable",
+      "description": "Prior work 31 with 8 levels of work lands exactly on 39",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 31, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [
+          { "id": "smite", "level": 5 },
+          { "id": "unbreaking", "level": 3 }
+        ],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 39,
+        "work": 8,
+        "resultEnchants": { "smite": 5, "unbreaking": 3 },
+        "resultPriorWork": 63
+      },
+      "provenance": "smite book fee 2/2=1 times 5 plus unbreaking 2/2=1 times 3 = 8; 31+8 = 39 < 40; prior work 2*31+1 = 63"
+    },
+    {
+      "id": "pw31-work9-too-expensive",
+      "description": "Prior work 31 with 9 levels of work hits 40: Too Expensive",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 31, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [
+          { "id": "smite", "level": 5 },
+          { "id": "fire_aspect", "level": 2 }
+        ],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "too-expensive", "displayedCost": 40 },
+      "provenance": "work = 5 + (4/2)*2 = 9; 31+9 = 40 >= 40 and the player is not creative: result slot emptied"
+    },
+    {
+      "id": "pw31-work9-creative-bypass",
+      "description": "The same 40 level combine succeeds in creative",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 31, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [
+          { "id": "smite", "level": 5 },
+          { "id": "fire_aspect", "level": 2 }
+        ],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "creative": true,
+      "expect": {
+        "status": "ok",
+        "displayedCost": 40,
+        "work": 9,
+        "resultEnchants": { "smite": 5, "fire_aspect": 2 },
+        "resultPriorWork": 63
+      },
+      "provenance": "the >= 40 removal is gated on !instabuild / !hasInfiniteMaterials"
+    },
+    {
+      "id": "pw63-anything-too-expensive",
+      "description": "At prior work 63 even a 1 level book is Too Expensive",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 63, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 1 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "too-expensive", "displayedCost": 64 },
+      "provenance": "cost = 63 + 1 = 64 >= 40"
+    },
+    {
+      "id": "book-book-merge",
+      "description": "Book onto book: the target book accepts anything, sacrifice fees halved",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "looting", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 6,
+        "work": 6,
+        "resultEnchants": { "sharpness": 5, "looting": 3 },
+        "resultPriorWork": 1
+      },
+      "provenance": "canEnchant bypass when the target is Items.ENCHANTED_BOOK; looting fee 4/2=2 times 3"
+    },
+    {
+      "id": "impaling-sharpness-books-old-compatible",
+      "description": "Version split: impaling and sharpness coexist on a book before 1.20.5",
+      "versions": ["1.16.5", "1.18.2"],
+      "target": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "impaling", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 10,
+        "work": 10,
+        "resultEnchants": { "sharpness": 5, "impaling": 5 },
+        "resultPriorWork": 1
+      },
+      "provenance": "1.16.5/1.18.2 impaling is TridentImpalerEnchantment extends Enchantment with default checkCompatibility; fee RARE=4 halved 2 times 5"
+    },
+    {
+      "id": "impaling-sharpness-books-modern-incompatible",
+      "description": "Version split: from 1.20.6 impaling joined the damage group and clashes with sharpness",
+      "versions": ["1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "impaling", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "no-result", "displayedCost": 0 },
+      "provenance": "1.20.6 registers impaling as DamageEnchantment (checkCompatibility rejects any DamageEnchantment); 1.21+ puts impaling in #minecraft:exclusive_set/damage"
+    },
+    {
+      "id": "silk-touch-looting-books-old-incompatible",
+      "description": "Version split: silk touch clashed with looting through 1.20.6",
+      "versions": ["1.16.5", "1.18.2", "1.20.6"],
+      "target": {
+        "kind": "book",
+        "enchants": [{ "id": "looting", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "silk_touch", "level": 1 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "no-result", "displayedCost": 0 },
+      "provenance": "LootBonusEnchantment.checkCompatibility excludes SILK_TOUCH and looting is a LootBonusEnchantment; isCompatibleWith checks both directions"
+    },
+    {
+      "id": "silk-touch-looting-books-new-compatible",
+      "description": "Version split: from 1.21.1 the mining exclusive set only pairs silk touch with fortune",
+      "versions": ["1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "book",
+        "enchants": [{ "id": "looting", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "silk_touch", "level": 1 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 4,
+        "work": 4,
+        "resultEnchants": { "looting": 3, "silk_touch": 1 },
+        "resultPriorWork": 1
+      },
+      "provenance": "#minecraft:exclusive_set/mining = [fortune, silk_touch] only; silk touch fee 8/2=4"
+    },
+    {
+      "id": "sharpness-book-on-axe",
+      "description": "Sharpness applies to axes via anvil in every supported version",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "axe", "enchants": [], "priorWork": 0, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 5,
+        "work": 5,
+        "resultEnchants": { "sharpness": 5 },
+        "resultPriorWork": 1
+      },
+      "provenance": "old: DamageEnchantment.canEnchant override accepts AxeItem; modern: #minecraft:enchantable/sharp_weapon includes axes"
+    },
+    {
+      "id": "sweeping-edge-book-on-axe-rejected",
+      "description": "Sweeping Edge is sword-only in every version: the lone enchant drops, no result",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "axe", "enchants": [], "priorWork": 0, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "sweeping_edge", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "no-result", "displayedCost": 0 },
+      "provenance": "old: SweepingEdgeEnchantment category WEAPON (SwordItem only, registered as \"sweeping\"); modern: #minecraft:enchantable/sword or sweeping tag excludes axes"
+    },
+    {
+      "id": "multishot-vs-piercing",
+      "description": "Multishot clashes with Piercing in every version",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "crossbow",
+        "enchants": [{ "id": "piercing", "level": 4 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "multishot", "level": 1 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "no-result", "displayedCost": 0 },
+      "provenance": "MultiShotEnchantment.checkCompatibility excludes PIERCING / #minecraft:exclusive_set/crossbow"
+    },
+    {
+      "id": "riptide-exclusive-set-is-asymmetric",
+      "description": "Loyalty book onto a Riptide trident fails: riptide declares the exclusivity, loyalty does not, and the check runs both ways",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "trident",
+        "enchants": [{ "id": "riptide", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "loyalty", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "no-result", "displayedCost": 0 },
+      "provenance": "old: TridentRiptideEnchantment.checkCompatibility excludes LOYALTY and CHANNELING, isCompatibleWith is symmetric; 1.21+: riptide's exclusive_set tag lists loyalty/channeling and Enchantment.areCompatible checks both holders' sets"
+    },
+    {
+      "id": "loyalty-channeling-compatible",
+      "description": "Loyalty and Channeling coexist in every version",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "trident",
+        "enchants": [{ "id": "loyalty", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "channeling", "level": 1 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 4,
+        "work": 4,
+        "resultEnchants": { "loyalty": 3, "channeling": 1 },
+        "resultPriorWork": 1
+      },
+      "provenance": "neither excludes the other (only riptide does); channeling VERY_RARE=8 / anvil_cost 8, halved to 4"
+    },
+    {
+      "id": "feather-falling-exempt-from-protection-group",
+      "description": "Protection stacks with Feather Falling in every version",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "boots",
+        "enchants": [{ "id": "feather_falling", "level": 4 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "protection", "level": 4 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 4,
+        "work": 4,
+        "resultEnchants": { "feather_falling": 4, "protection": 4 },
+        "resultPriorWork": 1
+      },
+      "provenance": "ProtectionEnchantment.checkCompatibility passes when either type is FALL; feather_falling is absent from #minecraft:exclusive_set/armor"
+    },
+    {
+      "id": "protection-vs-blast-protection",
+      "description": "The four damage protections are mutually exclusive",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "helmet",
+        "enchants": [{ "id": "protection", "level": 4 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "blast_protection", "level": 4 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "no-result", "displayedCost": 0 },
+      "provenance": "ProtectionEnchantment type mismatch without FALL / #minecraft:exclusive_set/armor"
+    },
+    {
+      "id": "infinity-vs-mending",
+      "description": "Infinity clashes with Mending in every version",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "bow",
+        "enchants": [{ "id": "infinity", "level": 1 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "mending", "level": 1 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "no-result", "displayedCost": 0 },
+      "provenance": "ArrowInfiniteEnchantment.checkCompatibility rejects MendingEnchantment; 1.21+: #minecraft:exclusive_set/bow = [infinity, mending]"
+    },
+    {
+      "id": "repair-plus-incompatible-only-still-empty",
+      "description": "A durability combine is discarded when every sacrifice enchant is incompatible",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "sword",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 800
+      },
+      "sacrifice": {
+        "kind": "sword",
+        "enchants": [{ "id": "smite", "level": 5 }],
+        "priorWork": 0,
+        "damage": 1000
+      },
+      "expect": { "status": "no-result", "displayedCost": 0 },
+      "provenance": "the anyIncompatible && !anyCompatible early return fires AFTER the durability branch, discarding the whole combine"
+    },
+    {
+      "id": "double-conflict-counts-twice",
+      "description": "The incompatibility penalty is per conflicting pair, not per enchant",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "sword",
+        "enchants": [
+          { "id": "sharpness", "level": 5 },
+          { "id": "smite", "level": 5 }
+        ],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [
+          { "id": "bane_of_arthropods", "level": 5 },
+          { "id": "unbreaking", "level": 3 }
+        ],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 5,
+        "work": 5,
+        "resultEnchants": { "sharpness": 5, "smite": 5, "unbreaking": 3 },
+        "resultPriorWork": 1,
+        "droppedEnchants": ["bane_of_arthropods"]
+      },
+      "provenance": "bane conflicts with both sharpness and smite: +1 each inside the inner keySet loop; unbreaking transfers for 3; target state is creative-made but the combine itself is survival-legal"
+    },
+    {
+      "id": "empty-book-sacrifice-invalid",
+      "description": "A book with no stored enchantments is not a valid sacrifice for a sword",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 0 },
+      "sacrifice": { "kind": "book", "enchants": [], "priorWork": 0, "damage": 0 },
+      "expect": { "status": "invalid-pair", "displayedCost": 0 },
+      "provenance": "old: usingBook requires !EnchantedBookItem.getEnchantments(book).isEmpty(); then item mismatch empties the result"
+    },
+    {
+      "id": "cross-kind-invalid",
+      "description": "A sword cannot repair a pickaxe",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "pickaxe", "enchants": [], "priorWork": 0, "damage": 100 },
+      "sacrifice": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 0 },
+      "expect": { "status": "invalid-pair", "displayedCost": 0 },
+      "provenance": "!usingBook && !target.is(sacrifice.getItem()) early return"
+    },
+    {
+      "id": "item-onto-book-invalid",
+      "description": "An enchanted sword cannot be sacrificed onto a book",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "sacrifice": {
+        "kind": "sword",
+        "enchants": [{ "id": "looting", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "invalid-pair", "displayedCost": 0 },
+      "provenance": "sacrifice is not a stored-enchantment book, kinds differ, and a book is not damageable: the same early return"
+    },
+    {
+      "id": "no-change-display-old-shows-sum",
+      "description": "Nothing-changes combine: 1.16.5 through 1.21.1 still display the prior-work sum",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 3, "damage": 0 },
+      "sacrifice": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 0 },
+      "expect": { "status": "no-change", "displayedCost": 3 },
+      "provenance": "cost.set(j + i) with i = 0 shows 3; the result is discarded by the i <= 0 check (mayPickup also blocks nothing-changed pickups elsewhere)"
+    },
+    {
+      "id": "no-change-display-new-shows-zero",
+      "description": "Nothing-changes combine: 1.21.11 and 26.2 display 0 instead",
+      "versions": ["1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 3, "damage": 0 },
+      "sacrifice": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 0 },
+      "expect": { "status": "no-change", "displayedCost": 0 },
+      "provenance": "finalPrice = price <= 0 ? 0 : clamp(tax + price) in the 1.21.11/26.2 createResult"
+    },
+    {
+      "id": "stacked-target-forces-40",
+      "description": "Enchanting a stack of more than one item forces the 40 level fail cost",
+      "versions": ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "sword", "enchants": [], "priorWork": 0, "damage": 0, "count": 2 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "sharpness", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": { "status": "too-expensive", "displayedCost": 40 },
+      "provenance": "if (input.getCount() > 1) price = 40 inside the transfer loop"
+    },
+    {
+      "id": "density-book-on-mace",
+      "description": "Density V book onto a mace (1.21.1 onward)",
+      "versions": ["1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "mace", "enchants": [], "priorWork": 0, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "density", "level": 5 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 5,
+        "work": 5,
+        "resultEnchants": { "density": 5 },
+        "resultPriorWork": 1
+      },
+      "provenance": "density anvil_cost 2 in the 1.21+ data (the flagged 1.20.6 code said 1, but the shipped 1.21 data pack says 2), halved to 1, times 5 levels; mace is UPDATE_1_21 flagged in 1.20.6 and excluded there"
+    },
+    {
+      "id": "lunge-book-on-spear",
+      "description": "Lunge III book onto a spear (1.21.11 onward)",
+      "versions": ["1.21.11", "26.2"],
+      "target": { "kind": "spear", "enchants": [], "priorWork": 0, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "lunge", "level": 3 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 3,
+        "work": 3,
+        "resultEnchants": { "lunge": 3 },
+        "resultPriorWork": 1
+      },
+      "provenance": "lunge anvil_cost 2, max_level 3 from the 1.21.11/26.2 data; #minecraft:enchantable/lunge resolves to #minecraft:spears"
+    },
+    {
+      "id": "mending-book-on-brush",
+      "description": "Mending applies to the brush from 1.20.6 onward",
+      "versions": ["1.20.6", "1.21.1", "1.21.11", "26.2"],
+      "target": { "kind": "brush", "enchants": [], "priorWork": 0, "damage": 0 },
+      "sacrifice": {
+        "kind": "book",
+        "enchants": [{ "id": "mending", "level": 1 }],
+        "priorWork": 0,
+        "damage": 0
+      },
+      "expect": {
+        "status": "ok",
+        "displayedCost": 2,
+        "work": 2,
+        "resultEnchants": { "mending": 1 },
+        "resultPriorWork": 1
+      },
+      "provenance": "brush (durability 64) is in #minecraft:enchantable/durability; fee 4/2=2"
+    }
+  ]
+}

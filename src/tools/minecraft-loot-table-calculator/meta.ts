@@ -1,0 +1,112 @@
+import type { ToolMeta } from "../types";
+import { LOOT_VERSIONS, TABLE_GROUPS } from "./tables";
+
+const VERSION_SYNONYMS: Record<string, string[]> = {
+  "1.16.5": ["nether update", "1.16"],
+  "1.18.2": ["caves and cliffs", "1.18"],
+  "1.20.6": ["trails and tales", "1.20"],
+  "1.21.1": ["tricky trials", "1.21"],
+  "1.21.11": ["1.21"],
+  "26.2": ["latest", "newest", "current"],
+};
+
+export const meta: ToolMeta = {
+  slug: "minecraft-loot-table-calculator",
+  icon: "Gem",
+  name: "Minecraft Loot Table Calculator",
+  description:
+    "Exact drop chances and expected counts computed from the game's real per-version loot tables.",
+  category: "Minecraft",
+  keywords: [
+    "minecraft loot table calculator",
+    "minecraft drop chances",
+    "minecraft fortune 3 diamond drops",
+    "minecraft looting drop rates",
+    "minecraft mob drop calculator",
+    "minecraft fishing loot odds",
+    "minecraft dungeon chest loot",
+  ],
+  searchTerms: [
+    "diamond ore fortune",
+    "flint chance gravel",
+    "wither skeleton skull chance",
+    "ender pearl drop rate",
+    "luck of the sea odds",
+    "drop probability",
+    "expected drops per block",
+    "loot table odds",
+    "blaze rod drop chance",
+    "wheat seeds drops",
+  ],
+  input: "none",
+  output: "application/json",
+  options: [
+    {
+      kind: "select",
+      id: "version",
+      label: "Minecraft version",
+      default: LOOT_VERSIONS[LOOT_VERSIONS.length - 1],
+      options: LOOT_VERSIONS.map((v) => ({
+        value: v,
+        label: v,
+        synonyms: VERSION_SYNONYMS[v] ?? [],
+      })),
+    },
+    {
+      kind: "select",
+      id: "table",
+      label: "Loot table",
+      default: "blocks/diamond_ore",
+      groups: TABLE_GROUPS,
+    },
+    {
+      kind: "select",
+      id: "tool",
+      label: "Tool",
+      default: "pickaxe",
+      options: [
+        { value: "pickaxe", label: "Pickaxe", synonyms: ["pick", "mine"] },
+        { value: "shovel", label: "Shovel", synonyms: ["spade", "dig"] },
+        { value: "axe", label: "Axe", synonyms: ["chop"] },
+        { value: "hoe", label: "Hoe", synonyms: ["harvest", "leaves"] },
+        { value: "sword", label: "Sword", synonyms: ["weapon"] },
+        { value: "shears", label: "Shears", synonyms: ["leaves", "wool"] },
+        { value: "none", label: "Bare hand", synonyms: ["fist", "no tool", "empty hand"] },
+      ],
+    },
+    { kind: "number", id: "fortune", label: "Fortune level", default: 0, min: 0, max: 3, step: 1 },
+    { kind: "boolean", id: "silkTouch", label: "Silk Touch", default: false },
+    { kind: "number", id: "looting", label: "Looting level", default: 0, min: 0, max: 3, step: 1 },
+    { kind: "boolean", id: "killedByPlayer", label: "Killed by a player", default: true },
+    {
+      kind: "number",
+      id: "luckOfTheSea",
+      label: "Luck of the Sea level",
+      default: 0,
+      min: 0,
+      max: 3,
+      step: 1,
+    },
+    { kind: "boolean", id: "openWater", label: "Fishing in open water", default: true },
+    { kind: "boolean", id: "cropMature", label: "Crop fully grown", default: true },
+  ],
+  copy: {
+    what: "Computes exact drop probabilities, expected counts, and full outcome distributions for Minecraft loot tables: ore and crop blocks, mob kills, fishing, and structure chests. The numbers are not community estimates; they are calculated from the loot table JSON that ships inside each game version, for 1.16.5, 1.18.2, 1.20.6, 1.21.1, 1.21.11, and 26.2. Fortune, Silk Touch, Looting, and Luck of the Sea are applied with the game's real formulas, verified against decompiled game code. Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.",
+    how: "Pick a game version, then search for a loot table by block, mob, or chest name. Set the context: tool and Fortune or Silk Touch for blocks, Looting and killed-by-player for mobs, Luck of the Sea and open water for fishing. The results show each item's drop chance, average per roll, count range, and the exact distribution; where tractable you also get every possible outcome of a single roll with its exact probability.",
+    why: "Drop-rate sites and wikis usually quote a single rounded percentage with no version awareness and no source. This calculator derives every number from the actual per-version game data files, and the engine's math was validated against roughly 290,000 real loot rolls measured on real dedicated servers (about 48,000 per version) run by this site's own test pipeline. It runs entirely in your browser, with no ads and no accounts, and your files and inputs never leave your device.",
+    faq: [
+      {
+        q: "How are these numbers verified?",
+        a: "Two ways. The engine's formulas (Fortune ore multipliers, Looting bonuses, weighted pool selection) were cross-checked against decompiled game source per version. Then a test harness booted real dedicated servers for all six versions and measured hundreds of thousands of actual loot rolls; the engine's exact distributions are asserted against those measurements within tight statistical bounds. Looting attribution and fishing were verified structurally against the data files rather than by server measurement.",
+      },
+      {
+        q: "Why do results change between versions?",
+        a: "Mojang edits loot tables between releases: new blocks and mobs appear, weights shift, and the condition system itself changed shape in 1.20.5 with the move to item components. This tool loads the exact table JSON for the version you pick, so a 1.16.5 answer can legitimately differ from a 26.2 answer.",
+      },
+      {
+        q: "What is not modeled?",
+        a: "Conditions this tool cannot know about are treated as never true and reported in the notes: biome checks (like jungle bamboo while fishing), the specific cause of death (like a creeper killed by a skeleton dropping a music disc), and explosion decay. Cooked variants of mob drops (a burning mob smelting its meat) are counted as the raw item, since smelting changes the item but not the amount. Chest tables with very wide roll ranges show per-item statistics instead of the full outcome list once the outcome count becomes intractable.",
+      },
+    ],
+  },
+};
