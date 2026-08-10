@@ -17,7 +17,7 @@ export const GET: APIRoute = async ({ params }) => {
       title: "tools.maxhogan.dev",
       description: SITE_DESCRIPTION,
     });
-    return new Response(png, { headers: { "Content-Type": "image/png" } });
+    return new Response(new Uint8Array(png), { headers: { "Content-Type": "image/png" } });
   }
 
   const tool = tools.find((t) => t.slug === slug);
@@ -30,5 +30,5 @@ export const GET: APIRoute = async ({ params }) => {
     description: tool.description,
     category: tool.category,
   });
-  return new Response(png, { headers: { "Content-Type": "image/png" } });
+  return new Response(new Uint8Array(png), { headers: { "Content-Type": "image/png" } });
 };

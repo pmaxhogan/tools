@@ -1,4 +1,5 @@
 import { fileTypeFromBuffer } from "file-type";
+import { formatByteCount, formatBytes as formatByteSize } from "@/lib/format";
 import { ToolError, type ToolLogic } from "../types";
 
 export interface FileIdOpts {
@@ -73,15 +74,7 @@ function labelFor(ext: string, mime: string): string {
 /** Human-readable byte size, e.g. "1.21 KB (1,234 bytes)". */
 function humanSize(n: number): string {
   if (n < 1024) return `${n} B`;
-  const units = ["KB", "MB", "GB", "TB"];
-  let value = n;
-  let unitIndex = -1;
-  do {
-    value /= 1024;
-    unitIndex++;
-  } while (value >= 1024 && unitIndex < units.length - 1);
-  const rounded = value < 10 ? value.toFixed(2) : value.toFixed(1);
-  return `${rounded} ${units[unitIndex]} (${n.toLocaleString("en-US")} bytes)`;
+  return `${formatByteSize(n, { precision: 2, largePrecision: 1 })} (${formatByteCount(n)})`;
 }
 
 /** First 16 bytes as spaced, uppercase hex, e.g. "89 50 4E 47 ...". */

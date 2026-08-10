@@ -3,6 +3,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import SiteHeader from "@/components/SiteHeader.astro";
 import { iconFor } from "@/lib/tool-icons";
 import type { ToolMeta } from "@/tools/types";
+import type { LucideIcon } from "lucide-vue-next";
 
 export interface Props {
   meta: ToolMeta;
@@ -11,7 +12,10 @@ export interface Props {
 const { meta } = Astro.props;
 const title = `${meta.name}: free, private, in your browser`;
 // Server-rendered to static SVG (no client directive, no hydration).
-const Icon = iconFor(meta.icon);
+// iconFor is typed to the broad Vue `Component` union, but every entry it can
+// return (the curated map plus the Wrench fallback) is actually a lucide
+// FunctionalComponent, which is what Astro's JSX check needs to accept it.
+const Icon = iconFor(meta.icon) as LucideIcon;
 
 const jsonLd = {
   "@context": "https://schema.org",
