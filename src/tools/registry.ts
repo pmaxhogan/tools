@@ -63,8 +63,15 @@ import { meta as keycode } from "./keycode/meta";
 import { meta as lineSorter } from "./line-sorter/meta";
 import { meta as midiInspector } from "./midi-inspector/meta";
 import { meta as minecraftAnvilCalculator } from "./minecraft-anvil-calculator/meta";
+import { meta as minecraftCropGrowthCalculator } from "./minecraft-crop-growth-calculator/meta";
 import { meta as minecraftDamageCalculator } from "./minecraft-damage-calculator/meta";
+import { meta as minecraftElytraCalculator } from "./minecraft-elytra-calculator/meta";
+import { meta as minecraftHungerCalculator } from "./minecraft-hunger-calculator/meta";
 import { meta as minecraftLootTableCalculator } from "./minecraft-loot-table-calculator/meta";
+import { meta as minecraftMobSpawningCalculator } from "./minecraft-mob-spawning-calculator/meta";
+import { meta as minecraftProjectileCalculator } from "./minecraft-projectile-calculator/meta";
+import { meta as minecraftRedstoneTimingCalculator } from "./minecraft-redstone-timing-calculator/meta";
+import { meta as minecraftVillagerTradeCalculator } from "./minecraft-villager-trade-calculator/meta";
 import { meta as minecraftXpCalculator } from "./minecraft-xp-calculator/meta";
 import { meta as mobileSensors } from "./mobile-sensors/meta";
 import { meta as mojibakeFixer } from "./mojibake-fixer/meta";
@@ -149,8 +156,15 @@ export const tools: ToolMeta[] = [
   lineSorter,
   midiInspector,
   minecraftAnvilCalculator,
+  minecraftCropGrowthCalculator,
   minecraftDamageCalculator,
+  minecraftElytraCalculator,
+  minecraftHungerCalculator,
   minecraftLootTableCalculator,
+  minecraftMobSpawningCalculator,
+  minecraftProjectileCalculator,
+  minecraftRedstoneTimingCalculator,
+  minecraftVillagerTradeCalculator,
   minecraftXpCalculator,
   mobileSensors,
   mojibakeFixer,
@@ -242,12 +256,25 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "midi-inspector": () => import("./midi-inspector/index").then((m) => m.default),
   "minecraft-anvil-calculator": () =>
     import("./minecraft-anvil-calculator/index").then((m) => m.default),
+  "minecraft-crop-growth-calculator": () =>
+    import("./minecraft-crop-growth-calculator/index").then((m) => m.default),
   "minecraft-damage-calculator": () =>
     import("./minecraft-damage-calculator/index").then((m) => m.default),
+  "minecraft-elytra-calculator": () =>
+    import("./minecraft-elytra-calculator/index").then((m) => m.default),
+  "minecraft-hunger-calculator": () =>
+    import("./minecraft-hunger-calculator/index").then((m) => m.default),
   "minecraft-loot-table-calculator": () =>
     import("./minecraft-loot-table-calculator/index").then((m) => m.default),
-  "minecraft-xp-calculator": () =>
-    import("./minecraft-xp-calculator/index").then((m) => m.default),
+  "minecraft-mob-spawning-calculator": () =>
+    import("./minecraft-mob-spawning-calculator/index").then((m) => m.default),
+  "minecraft-projectile-calculator": () =>
+    import("./minecraft-projectile-calculator/index").then((m) => m.default),
+  "minecraft-redstone-timing-calculator": () =>
+    import("./minecraft-redstone-timing-calculator/index").then((m) => m.default),
+  "minecraft-villager-trade-calculator": () =>
+    import("./minecraft-villager-trade-calculator/index").then((m) => m.default),
+  "minecraft-xp-calculator": () => import("./minecraft-xp-calculator/index").then((m) => m.default),
   "mobile-sensors": () => import("./mobile-sensors/index").then((m) => m.default),
   "mojibake-fixer": () => import("./mojibake-fixer/index").then((m) => m.default),
   "oauth-scope-decoder": () => import("./oauth-scope-decoder/index").then((m) => m.default),

@@ -1,0 +1,216 @@
+import type { ToolMeta } from "../types";
+
+export const meta: ToolMeta = {
+  slug: "minecraft-projectile-calculator",
+  matrixSlug: "minecraft-projectile",
+  icon: "Crosshair",
+  name: "Minecraft Projectile Trajectory Calculator",
+  description:
+    "Plots arrow, trident, pearl and potion flight paths tick by tick per Minecraft version, with aim angles, range, drop and flight time.",
+  category: "Minecraft",
+  keywords: [
+    "minecraft projectile calculator",
+    "minecraft arrow trajectory",
+    "minecraft bow range calculator",
+    "minecraft arrow drop calculator",
+    "minecraft ender pearl distance",
+    "minecraft crossbow vs bow range",
+    "how far does an arrow travel in minecraft",
+  ],
+  searchTerms: [
+    "arrow physics gravity drag",
+    "what angle to aim a bow",
+    "maximum arrow range blocks",
+    "trident throw distance",
+    "snowball range",
+    "splash potion throw distance",
+    "bottle o enchanting throw",
+    "firework rocket crossbow speed",
+    "ender pearl teleport landing spot",
+    "arrow flight time to target",
+    "punch knockback blocks",
+    "power enchantment arrow damage",
+  ],
+  input: "none",
+  output: "application/json",
+  options: [
+    {
+      kind: "select",
+      id: "mode",
+      label: "Mode",
+      default: "aim",
+      options: [
+        {
+          value: "aim",
+          label: "Aim at a target",
+          synonyms: ["angle", "lead", "hit a target", "elevation"],
+        },
+        {
+          value: "range",
+          label: "Maximum range",
+          synonyms: ["how far", "furthest", "distance", "best angle"],
+        },
+        {
+          value: "drop",
+          label: "Drop over distance",
+          synonyms: ["bullet drop", "sight in", "aim above", "compensation"],
+        },
+        {
+          value: "pearl",
+          label: "Ender pearl landing",
+          synonyms: ["teleport", "pearl clutch", "where do i land"],
+        },
+      ],
+    },
+    {
+      kind: "select",
+      id: "version",
+      label: "Version",
+      default: "1.21.11",
+      options: [
+        { value: "1.16.5", label: "1.16.5", synonyms: ["nether update"] },
+        { value: "1.18.2", label: "1.18.2", synonyms: ["caves and cliffs"] },
+        { value: "1.20.6", label: "1.20.6", synonyms: ["trails and tales"] },
+        { value: "1.21.1", label: "1.21.1", synonyms: ["tricky trials"] },
+        { value: "1.21.11", label: "1.21.11", synonyms: ["copper age"] },
+        { value: "26.2", label: "26.2 (latest)", synonyms: ["latest", "newest", "current"] },
+      ],
+    },
+    {
+      kind: "select",
+      id: "projectile",
+      label: "Projectile",
+      default: "arrow",
+      groups: [
+        {
+          label: "Arrows and tridents",
+          synonyms: ["bow", "crossbow", "spear"],
+          options: [
+            { value: "arrow", label: "Arrow", synonyms: ["normal arrow", "flint arrow"] },
+            {
+              value: "tipped_arrow",
+              label: "Tipped arrow",
+              synonyms: ["potion arrow", "poison arrow"],
+            },
+            {
+              value: "spectral_arrow",
+              label: "Spectral arrow",
+              synonyms: ["glowing arrow", "glow arrow"],
+            },
+            { value: "trident", label: "Trident", synonyms: ["spear", "loyalty", "impaling"] },
+          ],
+        },
+        {
+          label: "Thrown items",
+          synonyms: ["hand", "throw", "consumable"],
+          options: [
+            { value: "snowball", label: "Snowball", synonyms: ["snow ball", "blaze"] },
+            { value: "egg", label: "Egg", synonyms: ["chicken egg"] },
+            {
+              value: "ender_pearl",
+              label: "Ender pearl",
+              synonyms: ["pearl", "teleport", "enderpearl"],
+            },
+            {
+              value: "splash_potion",
+              label: "Splash potion",
+              synonyms: ["potion", "harming", "healing"],
+            },
+            {
+              value: "lingering_potion",
+              label: "Lingering potion",
+              synonyms: ["lingering", "area effect cloud"],
+            },
+            {
+              value: "experience_bottle",
+              label: "Bottle o' Enchanting",
+              synonyms: ["xp bottle", "exp bottle", "experience bottle"],
+            },
+          ],
+        },
+        {
+          label: "Rockets",
+          synonyms: ["firework", "crossbow", "elytra"],
+          options: [
+            {
+              value: "firework_rocket",
+              label: "Firework rocket (crossbow)",
+              synonyms: ["rocket", "firework"],
+            },
+            {
+              value: "firework_rocket_free",
+              label: "Firework rocket (placed or dispensed)",
+              synonyms: ["elytra boost", "rocket boost", "dispenser firework"],
+            },
+          ],
+        },
+        {
+          label: "Mob fireballs",
+          synonyms: ["ghast", "blaze", "deflect"],
+          options: [
+            { value: "fireball", label: "Ghast fireball", synonyms: ["ghast", "large fireball"] },
+            {
+              value: "small_fireball",
+              label: "Blaze fireball",
+              synonyms: ["blaze", "small fireball", "fire charge"],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      kind: "select",
+      id: "launcher",
+      label: "Launcher",
+      default: "bow",
+      options: [
+        { value: "bow", label: "Bow", synonyms: ["draw", "charge", "longbow"] },
+        { value: "crossbow", label: "Crossbow", synonyms: ["quick charge", "multishot"] },
+        { value: "throw", label: "Thrown trident", synonyms: ["spear throw"] },
+        { value: "hand", label: "Thrown by hand", synonyms: ["throw", "toss"] },
+        {
+          value: "free",
+          label: "Launched on its own",
+          synonyms: ["ghast", "blaze", "dispenser", "placed"],
+        },
+      ],
+    },
+    {
+      kind: "select",
+      id: "medium",
+      label: "Medium",
+      default: "air",
+      options: [
+        { value: "air", label: "Air", synonyms: ["above water", "normal", "surface"] },
+        { value: "water", label: "Water", synonyms: ["underwater", "submerged", "ocean"] },
+      ],
+    },
+    { kind: "number", id: "drawTicks", label: "Bow draw (ticks)", default: 20, min: 0, max: 60, step: 1 },
+    { kind: "number", id: "distance", label: "Target distance (blocks)", default: 30, min: 0.5, max: 500, step: 0.5 },
+    { kind: "number", id: "deltaY", label: "Target height above you (blocks)", default: 0, min: -320, max: 320, step: 0.5 },
+    { kind: "number", id: "pitch", label: "Throw pitch (degrees, negative is up)", default: 0, min: -90, max: 90, step: 1 },
+    { kind: "number", id: "power", label: "Power level", default: 0, min: 0, max: 5, step: 1 },
+    { kind: "number", id: "punch", label: "Punch level", default: 0, min: 0, max: 2, step: 1 },
+    { kind: "number", id: "quickCharge", label: "Quick Charge level", default: 0, min: 0, max: 3, step: 1 },
+    { kind: "number", id: "impaling", label: "Impaling level", default: 0, min: 0, max: 5, step: 1 },
+  ],
+  copy: {
+    what: "Simulates a Minecraft projectile one game tick at a time using the real per type gravity and drag constants, so an arrow, a trident, a snowball, an ender pearl, a splash potion, a Bottle o' Enchanting, a firework rocket and a ghast fireball each fly the way the game actually flies them. It answers the practical questions: what angle do I aim to hit a target at a given distance and height, how far can this thing possibly go, how many blocks does it drop over 40 blocks, how long is it in the air, and where exactly does an ender pearl put me. Aim angles are solved by searching over full simulations rather than the textbook ballistic formula, because 1 percent drag per tick makes the closed form wrong by whole blocks. Every constant was reimplemented from decompiled or unobfuscated server source for six versions (1.16.5 through the current release), and only real weapon and enchantment combinations are offered. Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.",
+    how: "Pick a version, a projectile and how it is launched. In aim mode, type how far away the target is and how far above or below you it sits, and you get the flat shot and the lobbed shot: the angle above the horizon, the flight time, the impact speed and the damage. In range mode you get the maximum distance and the angle that achieves it, which drag pulls under 45 degrees. Drop mode gives a table of how far below your crosshair a level shot has fallen at each distance, and pearl mode gives the landing spot plus the 5 damage a pearl always costs you. The plot updates live and the URL fragment keeps your setup shareable.",
+    why: "Search results for Minecraft trajectory questions are thin AI written pages that quote one number with no version and use the vacuum projectile formula, which does not describe a game that multiplies motion by 0.99 every tick. This tool steps the real physics, reproduces measured server positions to full double precision, and tells you which versions changed: the 1.21.2 movement rewrite alone moves every thrown item and every ender pearl landing spot. It runs entirely in your browser, has no ads or signup, and your files and inputs never leave your device.",
+    faq: [
+      {
+        q: "How were these numbers verified?",
+        a: "The physics was reimplemented from decompiled or unobfuscated server source for all six covered versions, reading AbstractArrow.tick, ThrowableProjectile.tick, AbstractHurtingProjectile.tick, FireworkRocketEntity.tick, Projectile.shootFromRotation, BowItem.getPowerForTime and CrossbowItem.getChargeDuration, and never transcribing Java. It is then checked against per tick positions and motions measured on real dedicated servers, where each projectile is summoned with an exact starting motion and the tick loop is stepped one tick at a time. An arrow spawned at 0.5/110/0.5 with motion 3, 0, 0 sits at exactly 6.4700000286102295 after two ticks and 9.410300085258484 after three, and the test suite asserts every measured tick of every projectile as an exact double rather than a rounded approximation. Even the game's 65536 entry sine lookup table is reproduced, because it is what limits how finely you can aim.",
+      },
+      {
+        q: "What changed between versions?",
+        a: "Three boundaries. Through 1.18.2 gravity is subtracted as a Java float, so an arrow falls by 0.05000000074505806 per tick instead of 0.05, and long flights drift from the modern versions by a fraction of a block. From 1.20.6 Entity.applyGravity takes over with a true double. The big one is the 1.21.2 movement rewrite, present in 1.21.11 and 26.2: thrown items now take gravity and drag before they move instead of after, which shortens every snowball, egg, pearl, potion and Bottle o' Enchanting throw; arrows in water take their 0.6 drag before the move rather than after; and an ender pearl teleports you to its position at the start of the tick it hit on rather than the impact point, leaving you close to a block short of the wall you aimed at. Ghast and blaze fireballs moved too: through 1.20.6 their acceleration is a vector stored at launch, and from 1.21.1 it is recomputed from the current motion each tick, which is why a fireball summoned by command coasts on the older versions but speeds up on the newer ones.",
+      },
+      {
+        q: "Why is the best angle not 45 degrees?",
+        a: "Because Minecraft is not a vacuum. Every tick the game multiplies a projectile's motion by 0.99 and then subtracts gravity, so a shot loses speed the whole way and a steeper arc spends longer bleeding it off. A fully drawn bow arrow peaks around 37.7 degrees above the horizon at about 117 blocks, not 45 degrees, and a slower projectile like a snowball peaks a little higher because it has less speed to lose. That is also why the aim solver searches over simulations instead of solving an equation.",
+      },
+    ],
+  },
+};

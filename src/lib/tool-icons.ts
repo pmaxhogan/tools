@@ -11,6 +11,7 @@ import {
   ArrowDownAZ,
   ArrowRightLeft,
   AudioWaveform,
+  Beef,
   Binary,
   Bluetooth,
   Braces,
@@ -24,6 +25,7 @@ import {
   Code,
   CopyCheck,
   Cpu,
+  Crosshair,
   Database,
   Dices,
   Eraser,
@@ -45,6 +47,7 @@ import {
   GitCompare,
   Grid3x3,
   Gem,
+  HandCoins,
   HardDrive,
   Hash,
   Hourglass,
@@ -78,6 +81,7 @@ import {
   Snowflake,
   SquareScissors,
   Sparkles,
+  Sprout,
   SquareTerminal,
   Swords,
   Table2,
@@ -91,6 +95,7 @@ import {
   WholeWord,
   Workflow,
   Wrench,
+  Zap,
 } from "lucide-vue-next";
 
 const ICONS: Record<string, Component> = {
@@ -99,6 +104,7 @@ const ICONS: Record<string, Component> = {
   ArrowDownAZ,
   ArrowRightLeft,
   AudioWaveform,
+  Beef,
   Binary,
   Bluetooth,
   Braces,
@@ -112,6 +118,7 @@ const ICONS: Record<string, Component> = {
   Code,
   CopyCheck,
   Cpu,
+  Crosshair,
   Database,
   Dices,
   Eraser,
@@ -133,6 +140,7 @@ const ICONS: Record<string, Component> = {
   GitCompare,
   Grid3x3,
   Gem,
+  HandCoins,
   HardDrive,
   Hash,
   Hourglass,
@@ -166,6 +174,7 @@ const ICONS: Record<string, Component> = {
   Snowflake,
   SquareScissors,
   Sparkles,
+  Sprout,
   SquareTerminal,
   Swords,
   Table2,
@@ -178,6 +187,7 @@ const ICONS: Record<string, Component> = {
   Watch,
   WholeWord,
   Workflow,
+  Zap,
 };
 
 /** Fallback for tools without an icon or with an unrecognized name. */

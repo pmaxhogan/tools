@@ -43,9 +43,36 @@ const panels: Record<string, Component> = {
   "jinja-template-tester": defineAsyncComponent(() => import("./panels/JinjaTesterPanel.vue")),
   keycode: defineAsyncComponent(() => import("./panels/KeycodePanel.vue")),
   "midi-inspector": defineAsyncComponent(() => import("./panels/MidiPanel.vue")),
-  "minecraft-anvil-calculator": defineAsyncComponent(() => import("./panels/MinecraftAnvilPanel.vue")),
-  "minecraft-damage-calculator": defineAsyncComponent(() => import("./panels/MinecraftDamagePanel.vue")),
-  "minecraft-loot-table-calculator": defineAsyncComponent(() => import("./panels/MinecraftLootPanel.vue")),
+  "minecraft-anvil-calculator": defineAsyncComponent(
+    () => import("./panels/MinecraftAnvilPanel.vue"),
+  ),
+  "minecraft-crop-growth-calculator": defineAsyncComponent(
+    () => import("./panels/MinecraftGrowthPanel.vue"),
+  ),
+  "minecraft-damage-calculator": defineAsyncComponent(
+    () => import("./panels/MinecraftDamagePanel.vue"),
+  ),
+  "minecraft-elytra-calculator": defineAsyncComponent(
+    () => import("./panels/MinecraftElytraPanel.vue"),
+  ),
+  "minecraft-hunger-calculator": defineAsyncComponent(
+    () => import("./panels/MinecraftHungerPanel.vue"),
+  ),
+  "minecraft-loot-table-calculator": defineAsyncComponent(
+    () => import("./panels/MinecraftLootPanel.vue"),
+  ),
+  "minecraft-mob-spawning-calculator": defineAsyncComponent(
+    () => import("./panels/MinecraftSpawningPanel.vue"),
+  ),
+  "minecraft-projectile-calculator": defineAsyncComponent(
+    () => import("./panels/MinecraftProjectilePanel.vue"),
+  ),
+  "minecraft-redstone-timing-calculator": defineAsyncComponent(
+    () => import("./panels/MinecraftRedstonePanel.vue"),
+  ),
+  "minecraft-villager-trade-calculator": defineAsyncComponent(
+    () => import("./panels/MinecraftVillagerPanel.vue"),
+  ),
   "minecraft-xp-calculator": defineAsyncComponent(() => import("./panels/MinecraftXpPanel.vue")),
   "mobile-sensors": defineAsyncComponent(() => import("./panels/MobileSensorsPanel.vue")),
   "pdf-toolbox": defineAsyncComponent(() => import("./panels/PdfToolboxPanel.vue")),

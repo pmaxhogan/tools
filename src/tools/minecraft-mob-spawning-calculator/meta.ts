@@ -1,0 +1,148 @@
+import type { ToolMeta } from "../types";
+import { BIOME_GROUPS, SPAWN_VERSIONS } from "./biomes";
+
+const VERSION_SYNONYMS: Record<string, string[]> = {
+  "1.16.5": ["nether update", "1.16"],
+  "1.18.2": ["caves and cliffs", "1.18"],
+  "1.20.6": ["trails and tales", "1.20"],
+  "1.21.1": ["tricky trials", "1.21"],
+  "1.21.11": ["1.21"],
+  "26.2": ["latest", "newest", "current"],
+};
+
+export const meta: ToolMeta = {
+  slug: "minecraft-mob-spawning-calculator",
+  matrixSlug: "minecraft-spawning",
+  icon: "Ghost",
+  name: "Minecraft Mob Spawning Simulator",
+  description:
+    "What spawns in a biome, what the mob cap allows, and what a farm will actually produce, per game version.",
+  category: "Minecraft",
+  keywords: [
+    "minecraft mob spawning calculator",
+    "minecraft mob cap",
+    "minecraft mob farm rates",
+    "minecraft spawn proofing light level",
+    "minecraft afk spot distance",
+    "minecraft biome spawn list",
+    "minecraft despawn radius",
+  ],
+  searchTerms: [
+    "spawn rules",
+    "light level 7",
+    "block light 0",
+    "24 to 128 blocks",
+    "128 despawn sphere",
+    "32 block no despawn",
+    "289 chunks",
+    "simulation distance spawns",
+    "mob farm rate",
+    "why is my mob farm slow",
+    "enderman farm warped forest",
+    "spawn weights per biome",
+    "mushroom fields no monsters",
+  ],
+  input: "none",
+  output: "application/json",
+  options: [
+    {
+      kind: "select",
+      id: "version",
+      label: "Minecraft version",
+      default: SPAWN_VERSIONS[SPAWN_VERSIONS.length - 1],
+      options: SPAWN_VERSIONS.map((v) => ({
+        value: v,
+        label: v,
+        synonyms: VERSION_SYNONYMS[v] ?? [],
+      })),
+    },
+    {
+      kind: "select",
+      id: "biome",
+      label: "Biome",
+      default: "plains",
+      groups: BIOME_GROUPS,
+    },
+    {
+      kind: "select",
+      id: "category",
+      label: "Mob category",
+      default: "monster",
+      options: [
+        { value: "monster", label: "Monster", synonyms: ["hostile", "mob", "zombie", "skeleton"] },
+        { value: "creature", label: "Creature", synonyms: ["passive", "animal", "cow", "sheep"] },
+        { value: "ambient", label: "Ambient", synonyms: ["bat"] },
+        { value: "axolotls", label: "Axolotls", synonyms: ["axolotl"] },
+        {
+          value: "underground_water_creature",
+          label: "Underground water creature",
+          synonyms: ["glow squid", "cave water"],
+        },
+        {
+          value: "water_creature",
+          label: "Water creature",
+          synonyms: ["squid", "dolphin", "ocean"],
+        },
+        { value: "water_ambient", label: "Water ambient", synonyms: ["fish", "cod", "salmon"] },
+      ],
+    },
+    {
+      kind: "select",
+      id: "world",
+      label: "Time of day",
+      default: "night",
+      options: [
+        { value: "night", label: "Midnight", synonyms: ["dark", "night time"] },
+        { value: "day", label: "Noon", synonyms: ["daytime", "bright"] },
+        { value: "thunder", label: "Thunderstorm", synonyms: ["storm", "rain", "lightning"] },
+      ],
+    },
+    { kind: "number", id: "skyLight", label: "Sky light", default: 0, min: 0, max: 15, step: 1 },
+    {
+      kind: "number",
+      id: "blockLight",
+      label: "Block light",
+      default: 0,
+      min: 0,
+      max: 15,
+      step: 1,
+    },
+    {
+      kind: "number",
+      id: "players",
+      label: "Players online",
+      default: 1,
+      min: 1,
+      max: 20,
+      step: 1,
+    },
+    {
+      kind: "number",
+      id: "simulationDistance",
+      label: "Simulation distance",
+      default: 10,
+      min: 2,
+      max: 32,
+      step: 1,
+    },
+  ],
+  copy: {
+    what: "Answers the four questions mob farm builders actually have. What can spawn here: the real weighted spawn list for any biome in 1.16.5, 1.18.2, 1.20.6, 1.21.1, 1.21.11 and 26.2, with each mob's weight, its share of picks, its pack size, and whether light gates it. What the cap allows: the exact mob cap arithmetic, 70 monsters for every 289 chunks a player charges, plus the per player cap added in 1.18. What a farm will make: an estimate broken into its terms, with the bottleneck named. And whether a block is spawn safe: the light rule for that exact version, including the 1.18 change from light level 7 to block light 0. Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.",
+    how: "Pick the version first, since it gates everything else, then the dimension and biome. The spawn table updates live with the real weights and pack sizes from that version's biome data. Set sky light, block light and time of day to see the exact per attempt probability the light rule gives you, and use the spawn proofing panel to check how far one light source reaches. For farm planning, enter the number of spawnable blocks, the chunks the build spans, the height of whatever sits above it, and your AFK distance; the result names which term is holding the rate down.",
+    why: "Search results for mob spawning are full of pages that repeat the same rounded numbers with no version awareness, and most of them still say monsters need light level 7 or less, which stopped being true in 1.18. Every number here is derived from the decompiled server source for the version you pick, and every spawn weight and pack size comes from that version's own biome data files. Nothing is guessed and nothing is averaged across versions. It runs entirely in your browser, with no ads and no accounts, and your files and inputs never leave your device.",
+    faq: [
+      {
+        q: "How were these numbers verified?",
+        a: "They are source derived, not measured. Natural spawning cannot be tested headlessly: the spawn loop only runs for chunks charged by a player, so a dedicated server with nobody online ticks all night and produces zero mobs. Every constant here was instead read out of the decompiled server source for each of the six versions, recorded in this project's committed test vectors with the class and method each number came from, and asserted against the shipped code by the test suite. The biome spawn lists are a different kind of evidence: those are the real data files that ship inside the game, so weights and pack sizes are exact. The farm rate is explicitly a model, and the page shows every term that goes into it.",
+      },
+      {
+        q: "Which versions changed the mechanic?",
+        a: "Between 1.16.5 and 1.18.2, Monster.isDarkEnoughToSpawn gained a hard rejection when block light is above 0, so the old light level 7 rule became block light 0. The same releases added LocalMobCapCalculator, the per player mob cap, which 1.16.5 does not have, and added the AXOLOTLS and UNDERGROUND_WATER_CREATURE categories to MobCategory. By 1.20.6 that hard coded light rule moved into DimensionType.MonsterSettings, which is how the nether opts out of the block light gate and fixes its brightness sample at 7. By 1.21.11 the End's sampled light test became a constant 15 rather than a range of 0 to 7, a data level change with no practical effect since the End has no sky light and its block light limit is still 0. In 26.2 the peaceful difficulty gate moved from Monster.checkMonsterSpawnRules into SpawnPlacements.checkSpawnRules, where it reads EntityType.isAllowedInPeaceful and so applies to every type rather than to monsters only. Everything else, including the 24 block exclusion sphere, the 128 block chunk gate, the 289 chunk cap divisor, and the 32 block no despawn sphere, is identical in all six versions.",
+      },
+      {
+        q: "Why is my mob farm slower than the numbers here?",
+        a: "Usually one of three things the model cannot see. The chunk picks a single random y between the world floor and the surface heightmap each tick and all three pack rounds reuse it, so anything tall above the farm dilutes the roll; lowering the terrain or the build height is often the biggest single win. Caves and dark surfaces in the same loaded area compete for the same cap, which the tool models only through the number of live mobs you enter. And the individual position checks, valid spawn block, collision, and biome spawn costs, still have to pass, which this tool does not simulate block by block.",
+      },
+    ],
+  },
+};
