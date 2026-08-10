@@ -2,21 +2,36 @@ import { describe, expect, it } from "vitest";
 import { ToolError } from "../types";
 import {
   DB_FLOOR,
+  LOG_MIN_HZ,
   MAGMA_STOPS,
   VIRIDIS_STOPS,
+  binIndexAt,
+  buildColorLut,
+  columnIndexAt,
+  computeRowBins,
   computeSpectrogram,
   computeSpectrogramColumns,
   computeWaveformPeaks,
   dbToColor,
+  describeSampleRate,
   fft,
+  fractionAtFreq,
+  freqAtFraction,
+  freqAxis,
+  freqTicks,
   freqToLabel,
   hannWindow,
   isPowerOfTwo,
+  paintSpectrogram,
+  pickTimeStep,
   planSpectrogram,
   run,
   secondsToLabel,
+  sniffAudioFormat,
   sniffSampleRate,
+  timeTicks,
   type ColorScheme,
+  type FreqAxis,
   type SpectrogramOptions,
 } from "./index";
 
@@ -438,6 +453,419 @@ describe("audio-spectrogram: dbToColor", () => {
 });
 
 /* ------------------------------------------------------------------ */
+/* frequency axis                                                      */
+/* ------------------------------------------------------------------ */
+
+describe("audio-spectrogram: freqAxis", () => {
+  it("tops the axis out at Nyquist", () => {
+    expect(freqAxis(48000, "linear").nyquist).toBe(24000);
+    expect(freqAxis(8000, "log").nyquist).toBe(4000);
+  });
+
+  it("starts a log axis at 20 Hz, or lower when Nyquist is low", () => {
+    expect(LOG_MIN_HZ).toBe(20);
+    expect(freqAxis(48000, "log").bottom).toBe(20);
+    expect(freqAxis(8000, "log").bottom).toBe(20);
+    // A 100 Hz recording has a 50 Hz Nyquist, so the quarter Nyquist cap wins
+    // and the axis still spans two octaves instead of one and a bit.
+    expect(freqAxis(100, "log").bottom).toBe(12.5);
+  });
+
+  it("starts a linear axis at DC", () => {
+    expect(freqAxis(48000, "linear").bottom).toBe(0);
+  });
+});
+
+describe("audio-spectrogram: freqAtFraction and fractionAtFreq", () => {
+  const linear = freqAxis(48000, "linear");
+  const log = freqAxis(48000, "log");
+
+  it("reads Nyquist at the top edge and the axis bottom at the bottom", () => {
+    expect(freqAtFraction(linear, 0)).toBe(24000);
+    expect(freqAtFraction(linear, 1)).toBe(0);
+    expect(freqAtFraction(log, 0)).toBeCloseTo(24000, 6);
+    expect(freqAtFraction(log, 1)).toBeCloseTo(20, 9);
+  });
+
+  it("halves linearly, and takes the geometric mean on a log axis", () => {
+    expect(freqAtFraction(linear, 0.5)).toBe(12000);
+    // Half way up a log axis is the geometric mean of its two ends, which for
+    // 20 Hz to 24 kHz is about 693 Hz rather than 12 kHz.
+    expect(freqAtFraction(log, 0.5)).toBeCloseTo(Math.sqrt(20 * 24000), 6);
+    expect(freqAtFraction(log, 0.5)).toBeCloseTo(692.82, 2);
+  });
+
+  it("gives every octave the same height on a log axis, and does not on a linear one", () => {
+    expect(fractionAtFreq(log, 200) - fractionAtFreq(log, 100)).toBeCloseTo(
+      fractionAtFreq(log, 800) - fractionAtFreq(log, 400),
+      12,
+    );
+    expect(fractionAtFreq(linear, 200) - fractionAtFreq(linear, 100)).not.toBeCloseTo(
+      fractionAtFreq(linear, 800) - fractionAtFreq(linear, 400),
+      12,
+    );
+  });
+
+  it("round trips a frequency through its fraction and back", () => {
+    for (const hz of [20, 100, 440, 1000, 12000, 24000]) {
+      expect(freqAtFraction(log, fractionAtFreq(log, hz))).toBeCloseTo(hz, 6);
+    }
+    for (const hz of [0, 440, 12000, 24000]) {
+      expect(freqAtFraction(linear, fractionAtFreq(linear, hz))).toBeCloseTo(hz, 6);
+    }
+  });
+
+  it("clamps at both ends rather than running off the plot", () => {
+    expect(freqAtFraction(linear, -1)).toBe(24000);
+    expect(freqAtFraction(linear, 2)).toBe(0);
+    expect(freqAtFraction(log, -1)).toBeCloseTo(24000, 6);
+    expect(freqAtFraction(log, 2)).toBeCloseTo(20, 9);
+    expect(fractionAtFreq(linear, -100)).toBe(1);
+    expect(fractionAtFreq(linear, 1e9)).toBe(0);
+    // Nothing below the log floor has a position, so the floor is the answer.
+    expect(fractionAtFreq(log, 0)).toBe(1);
+    expect(fractionAtFreq(log, 1e9)).toBe(0);
+  });
+});
+
+describe("audio-spectrogram: columnIndexAt and binIndexAt", () => {
+  const axis = freqAxis(48000, "linear");
+
+  it("spreads the columns across the plot and clamps at both ends", () => {
+    expect(columnIndexAt(0, 10)).toBe(0);
+    expect(columnIndexAt(0.55, 10)).toBe(5);
+    expect(columnIndexAt(0.999, 10)).toBe(9);
+    // The right edge is one past the last column, so it reads the last one.
+    expect(columnIndexAt(1, 10)).toBe(9);
+    expect(columnIndexAt(-0.5, 10)).toBe(0);
+  });
+
+  it("maps a frequency onto the bin that holds it", () => {
+    // Bin k of a 1024 bin analysis covers k * nyquist / 1024 hertz.
+    expect(binIndexAt(axis, (64 * 24000) / 1024, 1024)).toBe(64);
+    expect(binIndexAt(axis, 0, 1024)).toBe(0);
+    expect(binIndexAt(axis, 24000, 1024)).toBe(1023);
+    expect(binIndexAt(axis, 1e9, 1024)).toBe(1023);
+    // A frequency below the axis clamps onto the first bin instead of indexing
+    // off the front of the array. It rounds to a signed zero on the way, which
+    // reads the same slot.
+    expect(binIndexAt(axis, -5, 1024)).toBeCloseTo(0, 10);
+  });
+
+  it("finds the bin a known tone actually landed in", () => {
+    // The same tone as the spectrogram test above: 64 cycles per 1024 samples,
+    // which at 48 kHz is 3 kHz. The readout has to name the bin the transform
+    // put the peak in, or hovering a bright line reports the wrong level.
+    const { columns, freqBins } = computeSpectrogram(sine(8192, 64 / 1024), SPEC);
+    const hz = (64 / 1024) * 48000;
+    expect(hz).toBe(3000);
+    expect(binIndexAt(axis, hz, freqBins)).toBe(argmax(columns[0]!));
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* axis ticks                                                          */
+/* ------------------------------------------------------------------ */
+
+describe("audio-spectrogram: freqTicks", () => {
+  it("labels a linear axis on round steps up to Nyquist", () => {
+    expect(freqTicks(freqAxis(48000, "linear"), 320)).toEqual([0, 5000, 10000, 15000, 20000]);
+    expect(freqTicks(freqAxis(8000, "linear"), 320)).toEqual([0, 1000, 2000, 3000, 4000]);
+  });
+
+  it("never labels a frequency the file cannot contain", () => {
+    for (const rate of [8000, 11025, 16000, 44100, 48000, 96000]) {
+      for (const scale of ["linear", "log"] as const) {
+        const axis = freqAxis(rate, scale);
+        for (const hz of freqTicks(axis, 320)) expect(hz).toBeLessThanOrEqual(axis.nyquist);
+      }
+    }
+  });
+
+  it("keeps at least three labels on a very short plot", () => {
+    // The tick budget floors at 3, so a squeezed axis still says what it is.
+    expect(freqTicks(freqAxis(48000, "linear"), 20).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("thins a crowded log axis from the top down", () => {
+    const axis = freqAxis(48000, "log");
+    const ticks = freqTicks(axis, 320);
+    expect(ticks).toEqual([20000, 10000, 5000, 3000, 1000, 500, 300, 100, 50, 30]);
+
+    // Descending, because the walk starts at Nyquist and works downward.
+    for (let i = 1; i < ticks.length; i++) expect(ticks[i]!).toBeLessThan(ticks[i - 1]!);
+    // Every label that survived has a line of room under the one above it.
+    const ys = ticks.map((hz) => fractionAtFreq(axis, hz) * 320);
+    for (let i = 1; i < ys.length; i++) expect(ys[i]! - ys[i - 1]!).toBeGreaterThanOrEqual(22);
+    // 2000 is dropped because 3000 sits 18 pixels above it, while 1000 and the
+    // other decade marks survive: on a log axis the gaps grow going down.
+    expect(ticks).toContain(3000);
+    expect(ticks).not.toContain(2000);
+    expect(ticks).toContain(1000);
+  });
+
+  it("keeps more of the ladder when the axis spans fewer decades", () => {
+    // 4 kHz of Nyquist is a third of the decades of a 48 kHz file, so labels
+    // that collided there have room here: both 2000 and 200 survive.
+    const ticks = freqTicks(freqAxis(8000, "log"), 320);
+    expect(ticks).toEqual([3000, 2000, 1000, 500, 300, 200, 100, 50, 30, 20]);
+  });
+});
+
+describe("audio-spectrogram: timeTicks", () => {
+  it("picks the finest step that fits the tick budget", () => {
+    expect(pickTimeStep(10, 5)).toBe(2);
+    expect(pickTimeStep(10, 10)).toBe(1);
+    expect(pickTimeStep(600, 3)).toBe(300);
+    // Past the end of the ladder the coarsest step is all there is.
+    expect(pickTimeStep(1e9, 3)).toBe(600);
+  });
+
+  it("walks a ten second clip in two second steps", () => {
+    const ticks = timeTicks(10, 5);
+    expect(ticks.step).toBe(2);
+    expect(ticks.decimals).toBe(0);
+    expect(ticks.times).toEqual([0, 2, 4, 6, 8, 10]);
+  });
+
+  it("keeps one decimal once the step drops below a second", () => {
+    const ticks = timeTicks(2, 5);
+    expect(ticks.step).toBe(0.5);
+    expect(ticks.decimals).toBe(1);
+    expect(ticks.times).toEqual([0, 0.5, 1, 1.5, 2]);
+  });
+
+  it("always reaches the end of the clip without passing it", () => {
+    for (const duration of [0.3, 0.45, 1, 2.5, 7, 63, 125, 599, 600]) {
+      const { times, step } = timeTicks(duration, 6);
+      const last = times[times.length - 1]!;
+      expect(times[0]).toBe(0);
+      expect(duration - last).toBeLessThan(step);
+      expect(last).toBeLessThanOrEqual(duration + 1e-6);
+    }
+  });
+
+  it("draws no axis for a clip with no length", () => {
+    expect(timeTicks(0, 5).times).toEqual([]);
+    // A non finite duration would otherwise walk the loop forever.
+    expect(timeTicks(Number.POSITIVE_INFINITY, 5).times).toEqual([]);
+    expect(timeTicks(Number.NaN, 5).times).toEqual([]);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* bitmap                                                              */
+/* ------------------------------------------------------------------ */
+
+describe("audio-spectrogram: buildColorLut", () => {
+  it("holds 256 stops of flat r, g, b bytes", () => {
+    expect(buildColorLut("viridis")).toHaveLength(768);
+  });
+
+  it("ramps gray straight from 0 to 255", () => {
+    // The ramp covers DB_FLOOR to 0 dB in 256 even steps and the gray map is
+    // the identity on that fraction, so entry i is exactly i.
+    const lut = buildColorLut("gray");
+    for (let i = 0; i < 256; i++) {
+      expect(lut[i * 3]).toBe(i);
+      expect(lut[i * 3 + 1]).toBe(i);
+      expect(lut[i * 3 + 2]).toBe(i);
+    }
+  });
+
+  it("agrees with dbToColor at both ends and on a table stop", () => {
+    const lut = buildColorLut("viridis");
+    expect([lut[0], lut[1], lut[2]]).toEqual(VIRIDIS_STOPS[0]);
+    expect([lut[765], lut[766], lut[767]]).toEqual(VIRIDIS_STOPS[15]);
+    // Entry 85 of 255 is a third of the way up, which is table stop 5 of 15.
+    expect([lut[255], lut[256], lut[257]]).toEqual(VIRIDIS_STOPS[5]);
+
+    const magma = buildColorLut("magma");
+    expect([magma[0], magma[1], magma[2]]).toEqual(MAGMA_STOPS[0]);
+    expect([magma[765], magma[766], magma[767]]).toEqual(MAGMA_STOPS[15]);
+  });
+
+  it("rejects a scheme it does not know", () => {
+    expect(() => buildColorLut("plasma" as ColorScheme)).toThrow(ToolError);
+  });
+});
+
+describe("audio-spectrogram: computeRowBins", () => {
+  it("gives each row one bin when the plot is as tall as the bin count", () => {
+    // Row 0 is the top of the plot and holds the highest bin: the picture runs
+    // low frequency at the bottom, the way every spectrogram is read.
+    const { lo, hi } = computeRowBins(freqAxis(48000, "linear"), 4, 4);
+    expect(Array.from(lo)).toEqual([3, 2, 1, 0]);
+    expect(Array.from(hi)).toEqual([4, 3, 2, 1]);
+  });
+
+  it("folds several bins into a row when the plot is shorter than the analysis", () => {
+    const { lo, hi } = computeRowBins(freqAxis(48000, "linear"), 2, 4);
+    expect(Array.from(lo)).toEqual([2, 0]);
+    expect(Array.from(hi)).toEqual([4, 2]);
+  });
+
+  it("covers every bin on a linear axis", () => {
+    const bins = 512;
+    const { lo, hi } = computeRowBins(freqAxis(48000, "linear"), bins, bins);
+    const seen = new Set<number>();
+    for (let y = 0; y < bins; y++) for (let k = lo[y]!; k < hi[y]!; k++) seen.add(k);
+    expect(seen.size).toBe(bins);
+  });
+
+  it("crowds the top of a log axis and never leaves a row empty", () => {
+    const bins = 512;
+    const height = 320;
+    const { lo, hi } = computeRowBins(freqAxis(48000, "log"), height, bins);
+    for (let y = 0; y < height; y++) {
+      expect(hi[y]!).toBeGreaterThan(lo[y]!);
+      expect(lo[y]!).toBeGreaterThanOrEqual(0);
+      expect(hi[y]!).toBeLessThanOrEqual(bins);
+      // Frequency falls as the row index grows, so the bins do too.
+      if (y > 0) expect(lo[y]!).toBeLessThanOrEqual(lo[y - 1]!);
+    }
+    // The top row of a log plot stacks bins together while the bottom row is
+    // narrower than a single bin; a linear plot spreads them evenly instead.
+    expect(hi[0]! - lo[0]!).toBeGreaterThan(5 * (hi[height - 1]! - lo[height - 1]!));
+    expect(hi[height - 1]! - lo[height - 1]!).toBe(1);
+    const flat = computeRowBins(freqAxis(48000, "linear"), height, bins);
+    const first = flat.hi[0]! - flat.lo[0]!;
+    const last = flat.hi[height - 1]! - flat.lo[height - 1]!;
+    expect(Math.abs(first - last)).toBeLessThanOrEqual(1);
+  });
+
+  it("rejects a plot with no pixels in it", () => {
+    expect(() => computeRowBins(freqAxis(48000, "linear"), 0, 512)).toThrow(ToolError);
+    expect(() => computeRowBins(freqAxis(48000, "linear"), 320, 0)).toThrow(ToolError);
+    expect(() => computeRowBins(freqAxis(48000, "linear"), 2.5, 512)).toThrow(/whole number/);
+  });
+});
+
+describe("audio-spectrogram: paintSpectrogram", () => {
+  const gray = buildColorLut("gray");
+
+  /** Paint into a fresh buffer with the gray ramp, where level maps to level. */
+  function paint(
+    columns: Float32Array[],
+    width: number,
+    height: number,
+    axis: FreqAxis = freqAxis(4, "linear"),
+  ): Uint8ClampedArray {
+    const target = new Uint8ClampedArray(width * height * 4);
+    paintSpectrogram(
+      { columns, freqBins: columns[0]!.length, width, height, axis, lut: gray },
+      target,
+    );
+    return target;
+  }
+
+  /** The RGBA of one pixel. */
+  function pixel(target: Uint8ClampedArray, width: number, x: number, y: number): number[] {
+    const at = (y * width + x) * 4;
+    return [target[at]!, target[at + 1]!, target[at + 2]!, target[at + 3]!];
+  }
+
+  it("puts time across and frequency up, with low frequencies at the bottom", () => {
+    // Two bins over a 4 Hz rate: bin 0 is DC to 1 Hz, bin 1 is 1 Hz to 2 Hz.
+    // The first column is loud in bin 0, the second in bin 1.
+    const columns = [Float32Array.from([0, DB_FLOOR]), Float32Array.from([DB_FLOOR, 0])];
+    const target = paint(columns, 2, 2);
+    expect(pixel(target, 2, 0, 1)).toEqual([255, 255, 255, 255]);
+    expect(pixel(target, 2, 0, 0)).toEqual([0, 0, 0, 255]);
+    expect(pixel(target, 2, 1, 0)).toEqual([255, 255, 255, 255]);
+    expect(pixel(target, 2, 1, 1)).toEqual([0, 0, 0, 255]);
+  });
+
+  it("takes the loudest column in a pixel, not the average or the last one", () => {
+    // Four columns into two pixels. Each pixel covers one loud column and one
+    // silent one, and the loud one is first in the left pixel and last in the
+    // right, so neither averaging (which would paint -70 dB, gray 77) nor
+    // simply keeping the last column can pass this.
+    const columns = [
+      Float32Array.from([-40]),
+      Float32Array.from([DB_FLOOR]),
+      Float32Array.from([DB_FLOOR]),
+      Float32Array.from([-20]),
+    ];
+    const target = paint(columns, 2, 1, freqAxis(2, "linear"));
+    expect(pixel(target, 2, 0, 0)).toEqual([153, 153, 153, 255]);
+    expect(pixel(target, 2, 1, 0)).toEqual([204, 204, 204, 255]);
+  });
+
+  it("takes the loudest bin in a row rather than the average", () => {
+    // One row over four bins, only one of which is loud: a thin line has to
+    // survive the squeeze instead of being averaged down to nothing.
+    const columns = [Float32Array.from([DB_FLOOR, DB_FLOOR, -10, DB_FLOOR])];
+    const target = paint(columns, 1, 1, freqAxis(8, "linear"));
+    expect(pixel(target, 1, 0, 0)).toEqual([230, 230, 230, 255]);
+  });
+
+  it("repeats a column when the plot is wider than the clip is long", () => {
+    const target = paint([Float32Array.from([-50])], 3, 1, freqAxis(2, "linear"));
+    for (let x = 0; x < 3; x++) expect(pixel(target, 3, x, 0)).toEqual([128, 128, 128, 255]);
+  });
+
+  it("clamps levels outside the ramp instead of wrapping them", () => {
+    const columns = [Float32Array.from([-500, 20])];
+    const target = paint(columns, 1, 2);
+    expect(pixel(target, 1, 0, 0)).toEqual([255, 255, 255, 255]);
+    expect(pixel(target, 1, 0, 1)).toEqual([0, 0, 0, 255]);
+  });
+
+  it("spreads a low tone over more rows on a log axis than on a linear one", () => {
+    const column = new Float32Array(512).fill(DB_FLOOR);
+    // Bin 1 of a 512 bin analysis at 48 kHz is about 47 to 94 Hz.
+    column[1] = -10;
+    const height = 64;
+    const litRows = (axis: FreqAxis) => {
+      const target = paint([column], 1, height, axis);
+      let count = 0;
+      for (let y = 0; y < height; y++) if (pixel(target, 1, 0, y)[0]! > 0) count += 1;
+      return count;
+    };
+    const linear = litRows(freqAxis(48000, "linear"));
+    const log = litRows(freqAxis(48000, "log"));
+    expect(linear).toBeGreaterThanOrEqual(1);
+    expect(log).toBeGreaterThan(linear);
+  });
+
+  it("rejects a buffer, a bin count, or a size that does not match", () => {
+    const columns = [Float32Array.from([0, DB_FLOOR])];
+    const axis = freqAxis(4, "linear");
+    const good = { columns, freqBins: 2, width: 2, height: 2, axis, lut: gray };
+    expect(() => paintSpectrogram(good, new Uint8ClampedArray(4))).toThrow(/buffer holds/);
+    expect(() => paintSpectrogram({ ...good, width: 0 }, new Uint8ClampedArray(0))).toThrow(
+      ToolError,
+    );
+    expect(() => paintSpectrogram({ ...good, freqBins: 4 }, new Uint8ClampedArray(16))).toThrow(
+      /bins were declared/,
+    );
+    expect(() => paintSpectrogram({ ...good, columns: [] }, new Uint8ClampedArray(16))).toThrow(
+      /no spectrogram columns/,
+    );
+    expect(() =>
+      paintSpectrogram({ ...good, lut: new Uint8Array(3) }, new Uint8ClampedArray(16)),
+    ).toThrow(/color ramp/);
+  });
+
+  it("paints a real analysis with the peak brighter than the noise floor", () => {
+    const { columns, freqBins } = computeSpectrogram(sine(8192, 64 / 1024), SPEC);
+    const axis = freqAxis(48000, "linear");
+    const width = 8;
+    const height = freqBins;
+    const target = new Uint8ClampedArray(width * height * 4);
+    paintSpectrogram({ columns, freqBins, width, height, axis, lut: gray }, target);
+
+    // One row per bin, so the tone's row is the mirror of its bin index.
+    const toneRow = height - 1 - 64;
+    expect(pixel(target, width, 0, toneRow)[0]).toBeGreaterThan(250);
+    expect(pixel(target, width, 0, toneRow - 20)[0]).toBeLessThan(60);
+    // Alpha is opaque everywhere, or the canvas would show through.
+    for (let i = 3; i < target.length; i += 4) expect(target[i]).toBe(255);
+  });
+});
+
+/* ------------------------------------------------------------------ */
 /* labels                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -482,6 +910,32 @@ describe("audio-spectrogram: freqToLabel", () => {
   it("treats negatives and non numbers as zero", () => {
     expect(freqToLabel(-100)).toBe("0 Hz");
     expect(freqToLabel(Number.POSITIVE_INFINITY)).toBe("0 Hz");
+  });
+});
+
+describe("audio-spectrogram: describeSampleRate", () => {
+  it("prints one number when the header and the decoder agree", () => {
+    const text = describeSampleRate(44100, 44100);
+    expect(text).toMatch(/^44.?100 Hz$/);
+    expect(text).not.toContain("resampled");
+  });
+
+  it("prints both numbers when the browser resampled the file", () => {
+    const text = describeSampleRate(8000, 48000);
+    expect(text).toMatch(/^8.?000 Hz source/);
+    expect(text).toContain("decoded at");
+    expect(text).toMatch(/48.?000 Hz \(browser resampled\)$/);
+  });
+
+  it("claims nothing about the file when the header could not be read", () => {
+    const text = describeSampleRate(null, 48000);
+    expect(text).toMatch(/^decoded at 48.?000 Hz \(browser resampled\)$/);
+    expect(text).not.toContain("source");
+  });
+
+  it("treats rates that round to the same hertz as agreeing", () => {
+    expect(describeSampleRate(44100.4, 44100)).not.toContain("resampled");
+    expect(describeSampleRate(44101, 44100)).toContain("resampled");
   });
 });
 
@@ -862,5 +1316,55 @@ describe("audio-spectrogram: sniffSampleRate, unknown containers", () => {
     // Only a sync in the first two bytes would start an MP3 scan at all.
     bytes[0] = 0x00;
     expect(sniffSampleRate(bytes)).toBeNull();
+  });
+});
+
+describe("audio-spectrogram: sniffAudioFormat", () => {
+  const EXT_44100 = [0x40, 0x0e, 0xac, 0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+
+  it("names the containers the rate sniffer also reads", () => {
+    expect(sniffAudioFormat(wav(wavFmt(44100)))).toBe("WAV");
+    expect(sniffAudioFormat(flac(44100))).toBe("FLAC");
+    expect(sniffAudioFormat(oggPage(vorbisIdent(44100)))).toBe("Ogg");
+    expect(sniffAudioFormat(aiff("AIFF", aiffComm(EXT_44100)))).toBe("AIFF");
+    expect(sniffAudioFormat(aiff("AIFC", aiffComm(EXT_44100)))).toBe("AIFF");
+    expect(sniffAudioFormat(join(id3(8), new Array(8).fill(0x00), [0xff, 0xfb, 0x90, 0x00]))).toBe(
+      "MP3",
+    );
+  });
+
+  it("names containers whose sample rate it cannot read, which is the point", () => {
+    // A decode failure on one of these is a codec problem, and the message has
+    // to say so even though the rate sniffer had nothing to offer.
+    const m4a = join(be32(32), ascii("ftypM4A "), le32(0), ascii("M4A mp42isom"));
+    expect(sniffSampleRate(m4a)).toBeNull();
+    expect(sniffAudioFormat(m4a)).toBe("MP4 or M4A");
+
+    const webm = join([0x1a, 0x45, 0xdf, 0xa3], new Array(40).fill(0x00));
+    expect(sniffSampleRate(webm)).toBeNull();
+    expect(sniffAudioFormat(webm)).toBe("WebM or Matroska");
+
+    expect(sniffAudioFormat(join(ascii("caff"), new Array(16).fill(0x00)))).toBe("CAF");
+    expect(sniffAudioFormat(join(ascii("MThd"), new Array(16).fill(0x00)))).toBe("MIDI");
+    expect(sniffAudioFormat(join(ascii("wvpk"), new Array(16).fill(0x00)))).toBe("WavPack");
+    expect(sniffAudioFormat(join(ascii("MAC "), new Array(16).fill(0x00)))).toBe("APE");
+  });
+
+  it("says nothing for bytes that are not audio", () => {
+    expect(sniffAudioFormat(new Uint8Array(0))).toBe("");
+    expect(sniffAudioFormat(new Uint8Array(64))).toBe("");
+    expect(sniffAudioFormat(Uint8Array.from(ascii("hello world, not audio")))).toBe("");
+    // RIFF alone is not enough: an AVI is a RIFF file with no audio container.
+    expect(sniffAudioFormat(join(ascii("RIFF"), le32(100), ascii("AVI "), wavFmt(44100)))).toBe("");
+  });
+
+  it("wants twelve bytes before it will name anything", () => {
+    // Every check reads inside the first twelve bytes, so a shorter file is
+    // unidentifiable even when the rate sniffer can still answer.
+    const frame = [0xff, 0xfb, 0x90, 0x00];
+    expect(sniffSampleRate(Uint8Array.from(frame))).toBe(44100);
+    expect(sniffAudioFormat(Uint8Array.from(frame))).toBe("");
+    expect(sniffAudioFormat(join(frame, new Array(8).fill(0x00)))).toBe("MP3");
+    expect(sniffAudioFormat(wav(wavFmt(44100)).slice(0, 11))).toBe("");
   });
 });
