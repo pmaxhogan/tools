@@ -43,6 +43,7 @@ const panels: Record<string, Component> = {
   "jinja-template-tester": defineAsyncComponent(() => import("./panels/JinjaTesterPanel.vue")),
   keycode: defineAsyncComponent(() => import("./panels/KeycodePanel.vue")),
   "midi-inspector": defineAsyncComponent(() => import("./panels/MidiPanel.vue")),
+  "minecraft-loot-table-calculator": defineAsyncComponent(() => import("./panels/MinecraftLootPanel.vue")),
   "mobile-sensors": defineAsyncComponent(() => import("./panels/MobileSensorsPanel.vue")),
   "pdf-toolbox": defineAsyncComponent(() => import("./panels/PdfToolboxPanel.vue")),
   pipelines: defineAsyncComponent(() => import("./panels/PipelinesPanel.vue")),
