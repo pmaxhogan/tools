@@ -1,7 +1,14 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "mc-pipeline"],
+  "exclude": [
+    "dist",
+    "mc-pipeline",
+    "public/ffmpeg",
+    "public/models",
+    "public/pyodide",
+    "public/tesseract"
+  ],
   "compilerOptions": {
     "jsx": "preserve",
     "paths": {
