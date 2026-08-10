@@ -6,6 +6,7 @@ import { readFragment, writeFragment } from "@/lib/fragment";
 import {
   PROFESSION_INFO,
   calculate,
+  carrySelection,
   professionsFor,
   type PricedTrade,
   type VillagerResult,
@@ -48,6 +49,8 @@ const ready = ref(false);
 
 const result = ref<VillagerResult | null>(null);
 const error = ref<{ message: string; fix?: string } | null>(null);
+/** Explains anything a version change had to move, instead of doing it silently. */
+const carryNotice = ref<string | null>(null);
 
 const versionSpec = computed<SelectOptionSpec>(() => ({
   kind: "select",
@@ -257,21 +260,57 @@ const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(mi
 
 // Version first: switching versions keeps the profession when it still exists
 // and always resets the trade selection, because pool indexes are not stable
-// across versions. These resets are gated on `ready`, which only flips a tick
-// after the fragment restore, so a shared link that sets version, profession,
-// level and trade in one pass does not wipe its own trade selection when the
-// watcher queue flushes.
-watch(version, (v) => {
-  if (!professionsFor(v).includes(profession.value)) profession.value = professionsFor(v)[0];
+// across versions. A version change keeps the selected trade when the new
+// version still has it, matched by identity rather than by list index because
+// pool order and contents both move between versions, and carries a pinned
+// roll across, clamped into the new range. Only a trade the new version really
+// does not have falls back, and it says so rather than silently resetting.
+//
+// The reset paths are gated on `ready`, which only flips a tick after the
+// fragment restore, so a shared link that sets version, profession, level and
+// trade in one pass does not wipe its own trade selection when the watcher
+// queue flushes.
+watch(version, (to, from) => {
+  const previousProfession = profession.value;
+  const professionExists = professionsFor(to).includes(previousProfession);
+  if (!professionExists) profession.value = professionsFor(to)[0];
   if (!ready.value) return;
-  tradeIndex.value = 0;
-  rolledPrice.value = 0;
+  if (!professionExists) {
+    tradeIndex.value = 0;
+    rolledPrice.value = 0;
+    carryNotice.value = `Minecraft ${to} has no ${PROFESSION_INFO[previousProfession]?.name ?? previousProfession}, so the selection was reset.`;
+    return;
+  }
+  const carried = carrySelection(
+    {
+      version: from,
+      profession: previousProfession,
+      level: level.value,
+      tradeIndex: tradeIndex.value,
+      rolledPrice: rolledPrice.value,
+    },
+    to,
+  );
+  tradeIndex.value = carried.tradeIndex;
+  rolledPrice.value = carried.rolledPrice;
+  carryNotice.value = carried.message;
 });
 watch([profession, level], () => {
   if (!ready.value) return;
   tradeIndex.value = 0;
   rolledPrice.value = 0;
+  carryNotice.value = null;
 });
+
+/**
+ * Picking a trade by hand acknowledges whatever the last version change said.
+ * This is a handler rather than a watcher on tradeIndex, because the version
+ * watcher sets tradeIndex itself and would otherwise clear its own notice.
+ */
+function selectTrade(index: number) {
+  tradeIndex.value = index;
+  carryNotice.value = null;
+}
 watch(isRolled, (rolled) => {
   if (ready.value && !rolled) rolledPrice.value = 0;
 });
@@ -374,7 +413,7 @@ onMounted(() => {
           v-if="result && result.trades.length"
           :spec="tradeSpec"
           :model-value="String(tradeIndex)"
-          @update:model-value="tradeIndex = Number($event)"
+          @update:model-value="selectTrade(Number($event))"
         />
         <OptionControl
           v-if="isRolled"
@@ -512,6 +551,14 @@ onMounted(() => {
         </div>
 
         <template v-else-if="result">
+          <p
+            v-if="carryNotice"
+            class="rounded-[10px] bg-secondary px-3 py-2 text-xs shadow-[var(--sh-inset)]"
+            role="status"
+          >
+            {{ carryNotice }}
+          </p>
+
           <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <h2 class="text-sm font-semibold">
               {{ result.professionName }} level {{ result.level }} ({{ result.levelName }})
@@ -589,14 +636,14 @@ onMounted(() => {
                     :key="trade.index"
                     class="cursor-pointer border-b border-border/60 hover:bg-accent"
                     :class="trade.index === tradeIndex ? 'bg-accent' : undefined"
-                    @click="tradeIndex = trade.index"
+                    @click="selectTrade(trade.index)"
                   >
                     <td class="py-2 pr-3">
                       <button
                         type="button"
                         class="text-left font-medium hover:text-primary"
                         :aria-pressed="trade.index === tradeIndex"
-                        @click.stop="tradeIndex = trade.index"
+                        @click.stop="selectTrade(trade.index)"
                       >
                         {{ trade.label }}
                       </button>

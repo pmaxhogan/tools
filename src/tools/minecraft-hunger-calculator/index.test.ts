@@ -15,6 +15,7 @@ import {
   rankFoods,
   regenPlan,
   run,
+  saturationDrain,
   simulate,
   stepTick,
   sustainPlan,
@@ -28,6 +29,7 @@ import {
   ACTIVITY_PRESETS,
   HUNGER_VERSIONS,
   MECHANICS,
+  PEACEFUL_REGEN,
   activitiesFor,
   foodById,
   foodsFor,
@@ -240,6 +242,122 @@ describe("drain planning", () => {
   it("reports no sprint delay when the bar is already at or below 6", () => {
     expect(drainPlan(6, 0, 1).secondsToSprintLost).toBe(0);
     expect(drainPlan(3, 0, 1).secondsToSprintLost).toBe(0);
+  });
+});
+
+/**
+ * The Peaceful saturation refill is the one real version boundary in the
+ * whole mechanic: Player#aiStep gained setSaturation(sat + 1.0F) every 20
+ * ticks in 1.21, and 1.21.2 moved the block to
+ * ServerPlayer#tickRegeneration. Before 1.21 Peaceful refills health and the
+ * hunger bar but never saturation, so the hidden pool still burns to zero.
+ * These tests exist because a panel once showed "never" on every version.
+ */
+describe("the Peaceful saturation refill boundary", () => {
+  const BEFORE = ["1.16.5", "1.18.2", "1.20.6"] as const;
+  const AFTER = ["1.21.1", "1.21.11", "26.2"] as const;
+
+  /** The rate QA reproduced with: the default 337 blocks sprinted per minute. */
+  const sprintExh = exhaustionPerSecond([{ activityId: "sprint", perMinute: 337 }]);
+
+  function drain(
+    v: VersionId,
+    exhPerSecond: number,
+    difficulty: "peaceful" | "normal" = "peaceful",
+  ) {
+    return saturationDrain(
+      { food: 20, saturation: 5, exhaustion: 0, health: 10, tickTimer: 0, tickCount: 0 },
+      {
+        version: v,
+        difficulty,
+        naturalRegen: true,
+        maxHealth: 20,
+        exhaustionPerTick: exhPerSecond / 20,
+      },
+    );
+  }
+
+  it("splits the versions exactly where the source does", () => {
+    for (const v of BEFORE) expect(PEACEFUL_REGEN[v]!.saturationEvery, v).toBe(0);
+    for (const v of AFTER) expect(PEACEFUL_REGEN[v]!.saturationEvery, v).toBe(20);
+    // Health and hunger refills are unchanged across the boundary.
+    for (const v of HUNGER_VERSIONS) {
+      expect(PEACEFUL_REGEN[v]!.healEvery, v).toBe(20);
+      expect(PEACEFUL_REGEN[v]!.foodEvery, v).toBe(10);
+    }
+  });
+
+  it("burns saturation to zero on Peaceful before 1.21", () => {
+    for (const v of BEFORE) {
+      const d = drain(v, sprintExh);
+      expect(d.refilling, v).toBe(false);
+      // 5 saturation is 5 burns of 4 exhaustion at 0.1 x 337 / 60 per second.
+      expect(d.seconds, v).toBeCloseTo(20 / sprintExh, 6);
+      expect(d.seconds, v).toBeCloseTo(35.61, 1);
+    }
+  });
+
+  it("never empties saturation on Peaceful from 1.21 at an ordinary rate", () => {
+    for (const v of AFTER) {
+      const d = drain(v, sprintExh);
+      expect(d.refilling, v).toBe(true);
+      expect(d.seconds, v).toBeNull();
+    }
+  });
+
+  it("still empties saturation from 1.21 when the burn outruns the refill", () => {
+    // The refill is 1 saturation per second, so it takes more than 4
+    // exhaustion per second to out-burn it. This proves the answer is
+    // simulated rather than a hardcoded "never".
+    for (const v of AFTER) {
+      const d = drain(v, 12);
+      expect(d.refilling, v).toBe(true);
+      expect(d.seconds, v).not.toBeNull();
+      expect(d.seconds!, v).toBeGreaterThan(0);
+    }
+  });
+
+  it("does not change any non-Peaceful difficulty on any version", () => {
+    for (const v of HUNGER_VERSIONS) {
+      const d = drain(v, sprintExh, "normal");
+      expect(d.refilling, v).toBe(false);
+      expect(d.seconds, v).toBeCloseTo(20 / sprintExh, 6);
+    }
+  });
+
+  it("reports the boundary through run() drain mode too", () => {
+    const at = (v: VersionId) =>
+      run(
+        undefined,
+        opts({
+          mode: "drain",
+          version: v,
+          difficulty: "peaceful",
+          startFood: 20,
+          startSaturation: 5,
+          sprintBlocksPerMinute: 337,
+        }),
+      )["Saturation gone after"]!;
+    for (const v of BEFORE) expect(at(v), v).toBe("35.6 s");
+    for (const v of AFTER) expect(at(v), v).toContain("never");
+    // The hunger bar itself is pinned by Peaceful on every version.
+    for (const v of HUNGER_VERSIONS) {
+      const rows = run(
+        undefined,
+        opts({ mode: "drain", version: v, difficulty: "peaceful", sprintBlocksPerMinute: 337 }),
+      );
+      expect(rows["Hunger bar empty after"], v).toContain("never");
+      expect(rows["Sprinting stops after"], v).toContain("never");
+    }
+  });
+
+  it("keeps the FAQ copy on the same side of the boundary as the data", () => {
+    const faq = meta.copy.faq.map((f) => f.a).join(" ");
+    // The copy must name 1.21 as the release that added the refill, and the
+    // data must agree. If either moves, this fails.
+    expect(faq).toMatch(/1\.21 .*Peaceful a saturation refill/);
+    const firstWithRefill = HUNGER_VERSIONS.find((v) => PEACEFUL_REGEN[v]!.saturationEvery > 0);
+    expect(firstWithRefill).toBe("1.21.1");
   });
 });
 

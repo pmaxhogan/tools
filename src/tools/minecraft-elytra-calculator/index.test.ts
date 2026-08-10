@@ -3,6 +3,15 @@ import { ToolError } from "../types";
 import {
   applyRocketBoost,
   bestGlidePitch,
+  CUSTOM_PROFILE_ID,
+  CUSTOM_PROFILE_LABEL,
+  FLIGHT_PROFILE_GROUPS,
+  flightProfileLabel,
+  flightProfileSelectGroups,
+  flightProfiles,
+  matchFlightProfile,
+  setupMatchesProfile,
+  type FlightSetup,
   cruisePlan,
   durabilityPlan,
   fireworkSelfDamage,
@@ -407,6 +416,152 @@ describe("run", () => {
     const normal = run(undefined, opts({ mode: "cruise", slowFalling: false }));
     const slow = run(undefined, opts({ mode: "cruise", slowFalling: true }));
     expect(normal["Cruise speed"]).not.toBe(slow["Cruise speed"]);
+  });
+});
+
+describe("flight profiles", () => {
+  /**
+   * The panel's initial state, kept in step with the refs in
+   * MinecraftElytraPanel.vue. The picker rendered an empty box on a clean
+   * load because nothing mapped this setup to a preset, so these tests pin
+   * that the default state always resolves to a real, labelled option.
+   */
+  const PANEL_DEFAULT: FlightSetup = {
+    pitchDeg: 0,
+    rockets: false,
+    chain: true,
+    intervalTicks: 60,
+    dive: null,
+  };
+
+  it("resolves the panel's default state to the level glide preset", () => {
+    expect(matchFlightProfile(PANEL_DEFAULT)).toBe("level");
+  });
+
+  it("never resolves any setup to an unlabelled option", () => {
+    // The exact browser defect: a selection id with no label renders a blank
+    // trigger. Every id this module can return must produce visible text.
+    const setups: FlightSetup[] = [
+      PANEL_DEFAULT,
+      { ...PANEL_DEFAULT, rockets: true },
+      { ...PANEL_DEFAULT, pitchDeg: 7.5 },
+      { ...PANEL_DEFAULT, dive: { pitchDeg: 45, ticks: 100 } },
+      { ...PANEL_DEFAULT, rockets: true, chain: false, intervalTicks: 137 },
+    ];
+    for (const s of setups) {
+      const id = matchFlightProfile(s);
+      expect(id).not.toBe("");
+      const label = flightProfileLabel(id);
+      expect(label.length).toBeGreaterThan(0);
+      expect(label.trim()).toBe(label);
+    }
+  });
+
+  it("round-trips: applying a profile matches that profile", () => {
+    for (const profile of flightProfiles()) {
+      expect(setupMatchesProfile(profile, profile)).toBe(true);
+      // and the id a fresh match returns is labelled, even when an earlier
+      // profile in the list shares the same parameters
+      expect(flightProfileLabel(matchFlightProfile(profile)).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("falls back to Custom for a setup that matches nothing", () => {
+    expect(matchFlightProfile({ ...PANEL_DEFAULT, pitchDeg: 7.5 })).toBe(CUSTOM_PROFILE_ID);
+    expect(flightProfileLabel(CUSTOM_PROFILE_ID)).toBe(CUSTOM_PROFILE_LABEL);
+    expect(flightProfileLabel("not-a-profile")).toBe(CUSTOM_PROFILE_LABEL);
+  });
+
+  it("distinguishes chained rockets from interval rockets", () => {
+    const chained: FlightSetup = { ...PANEL_DEFAULT, rockets: true, chain: true };
+    const thrifty: FlightSetup = {
+      ...PANEL_DEFAULT,
+      rockets: true,
+      chain: false,
+      intervalTicks: 60,
+    };
+    expect(matchFlightProfile(chained)).toBe("cruise");
+    expect(matchFlightProfile(thrifty)).toBe("cruise_thrifty");
+    // an off-preset interval is Custom, not silently the 3 second preset
+    expect(matchFlightProfile({ ...thrifty, intervalTicks: 137 })).toBe(CUSTOM_PROFILE_ID);
+  });
+
+  it("ignores rocket details while gliding, since those controls are hidden", () => {
+    expect(matchFlightProfile({ ...PANEL_DEFAULT, chain: false, intervalTicks: 137 })).toBe(
+      "level",
+    );
+  });
+
+  it("matches the dive maneuver only with both dive parameters", () => {
+    const dive: FlightSetup = { ...PANEL_DEFAULT, dive: { pitchDeg: 45, ticks: 100 } };
+    expect(matchFlightProfile(dive)).toBe("dive_level");
+    expect(matchFlightProfile({ ...dive, dive: { pitchDeg: 45, ticks: 99 } })).toBe(
+      CUSTOM_PROFILE_ID,
+    );
+  });
+
+  it("offers a selectable option for every id the matcher can return", () => {
+    // The invariant that actually broke in the browser: the control showed an
+    // empty box because the selected value had no option behind it. Flatten
+    // the picker's groups and prove every reachable selection is present.
+    const values = new Set<string>();
+    const walk = (groups: ReturnType<typeof flightProfileSelectGroups>) => {
+      for (const g of groups) {
+        for (const o of g.options ?? []) values.add(o.value);
+        if (g.groups) walk(g.groups);
+      }
+    };
+    walk(flightProfileSelectGroups());
+
+    const reachable = [
+      matchFlightProfile(PANEL_DEFAULT),
+      matchFlightProfile({ ...PANEL_DEFAULT, pitchDeg: 7.5 }),
+      ...flightProfiles().map((p) => matchFlightProfile(p)),
+      ...flightProfiles().map((p) => p.id),
+      CUSTOM_PROFILE_ID,
+    ];
+    for (const id of reachable) {
+      expect(values.has(id), `no option renders the selection "${id}"`).toBe(true);
+    }
+  });
+
+  it("gives every selectable option a non-empty label", () => {
+    for (const g of flightProfileSelectGroups()) {
+      expect(g.label.length).toBeGreaterThan(0);
+      for (const o of g.options ?? []) {
+        expect(o.label.length).toBeGreaterThan(0);
+        expect(o.value.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("gives every profile a unique id, a label, synonyms, and a real group", () => {
+    const profiles = flightProfiles();
+    const groups = new Set(FLIGHT_PROFILE_GROUPS.map((g) => g.label));
+    expect(new Set(profiles.map((p) => p.id)).size).toBe(profiles.length);
+    expect(profiles.some((p) => p.id === CUSTOM_PROFILE_ID)).toBe(false);
+    for (const p of profiles) {
+      expect(p.id).not.toBe("");
+      expect(p.label.length).toBeGreaterThan(0);
+      expect(p.synonyms.length).toBeGreaterThan(0);
+      expect(groups.has(p.group)).toBe(true);
+      expect(p.pitchDeg).toBeGreaterThanOrEqual(-90);
+      expect(p.pitchDeg).toBeLessThanOrEqual(90);
+    }
+  });
+
+  it("keeps no em or en dashes in picker copy", () => {
+    for (const p of flightProfiles()) {
+      expect(`${p.label} ${p.synonyms.join(" ")}`).not.toMatch(/[–—]/);
+    }
+    for (const g of FLIGHT_PROFILE_GROUPS) {
+      expect(`${g.label} ${g.synonyms.join(" ")}`).not.toMatch(/[–—]/);
+    }
+  });
+
+  it("still resolves the default under Slow Falling, where best glide is recomputed", () => {
+    expect(matchFlightProfile(PANEL_DEFAULT, SLOW_FALLING_GRAVITY)).toBe("level");
+    expect(flightProfileLabel("best", SLOW_FALLING_GRAVITY).length).toBeGreaterThan(0);
   });
 });
 

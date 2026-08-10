@@ -131,6 +131,8 @@ export interface GossipLine {
 
 export interface PricedTrade {
   index: number;
+  /** Stable across versions, see tradeIdentity(). */
+  identity: string;
   label: string;
   wants: string;
   wantsName: string;
@@ -242,6 +244,35 @@ export function professionsFor(version: string): string[] {
 }
 
 /**
+ * A trade's identity, stable across versions.
+ *
+ * Pool order and pool contents both move between versions, so a list index is
+ * not a usable handle. What does survive is what the trade costs, what it
+ * hands over, and which villager types offer it. A few pools hold rows that
+ * agree on all of that and differ only in something this tool does not model
+ * (the six suspicious stew effects, the two Journeyman explorer map
+ * destinations), so an occurrence ordinal disambiguates them. Costs and counts
+ * are deliberately left out: they are exactly the things that get rebalanced.
+ */
+export function tradeIdentity(pool: TradeRow[], index: number): string {
+  const row = pool[index];
+  if (!row) return "";
+  const key = `${row[0]}|${row[8]}|${row[3]}|${row[11]}`;
+  let ordinal = 0;
+  for (let i = 0; i < index; i++) {
+    const other = pool[i];
+    if (`${other[0]}|${other[8]}|${other[3]}|${other[11]}` === key) ordinal++;
+  }
+  return `${key}#${ordinal}`;
+}
+
+/** Index of the trade with this identity, or -1 when the version dropped it. */
+export function findTradeIndex(pool: TradeRow[], identity: string): number {
+  for (let i = 0; i < pool.length; i++) if (tradeIdentity(pool, i) === identity) return i;
+  return -1;
+}
+
+/**
  * Max stack size of an item in this version, which is the ceiling the price
  * formula clamps a trade cost to. Only items that do not stack to 64 are
  * shipped in the data, so anything else answers 64.
@@ -269,6 +300,92 @@ export function poolFor(version: string, profession: string, level: number): Tra
     );
   }
   return prof.levels[String(level)] ?? [];
+}
+
+export interface Selection {
+  version: string;
+  profession: string;
+  level: number;
+  tradeIndex: number;
+  /** 0 when no specific roll is pinned. */
+  rolledPrice: number;
+}
+
+export interface CarriedSelection {
+  tradeIndex: number;
+  rolledPrice: number;
+  /** True when the same trade exists in the target version. */
+  preserved: boolean;
+  /** The rolled price before it was moved into the new range, when it moved. */
+  clampedFrom: number | null;
+  /** Plain explanation of anything the version change had to change. */
+  message: string | null;
+}
+
+/**
+ * Move a selected trade from one version to another.
+ *
+ * Switching versions must not silently drop what the user picked. The trade is
+ * matched by identity rather than by list index, and a pinned roll is carried
+ * over and clamped into the new version's range rather than discarded, since
+ * rebalances move prices without removing the trade. Only a trade the target
+ * version genuinely does not have falls back, and it says so.
+ */
+export function carrySelection(from: Selection, toVersion: string): CarriedSelection {
+  const fallback: CarriedSelection = {
+    tradeIndex: 0,
+    rolledPrice: 0,
+    preserved: false,
+    clampedFrom: null,
+    message: null,
+  };
+
+  let fromPool: TradeRow[];
+  let toPool: TradeRow[];
+  try {
+    fromPool = poolFor(from.version, from.profession, from.level);
+    toPool = poolFor(toVersion, from.profession, from.level);
+  } catch {
+    return {
+      ...fallback,
+      message: `${PROFESSION_INFO[from.profession]?.name ?? from.profession} has no trades at this level in Minecraft ${toVersion}, so the selection was reset.`,
+    };
+  }
+
+  const identity = tradeIdentity(fromPool, from.tradeIndex);
+  const target = identity ? findTradeIndex(toPool, identity) : -1;
+  if (target < 0) {
+    const previous = fromPool[from.tradeIndex];
+    const label = previous ? `${itemName(previous[0])} for ${itemName(previous[3])}` : "that trade";
+    return {
+      ...fallback,
+      message: `Minecraft ${toVersion} has no ${label} trade here, so the first trade is selected instead.`,
+    };
+  }
+
+  const row = toPool[target];
+  const rolls = row[1] !== row[2];
+  if (!from.rolledPrice || from.rolledPrice <= 0 || !rolls) {
+    return {
+      tradeIndex: target,
+      rolledPrice: 0,
+      preserved: true,
+      clampedFrom: null,
+      message: null,
+    };
+  }
+
+  const clamped = Math.min(Math.max(from.rolledPrice, row[1]), row[2]);
+  return {
+    tradeIndex: target,
+    rolledPrice: clamped,
+    preserved: true,
+    clampedFrom: clamped === from.rolledPrice ? null : from.rolledPrice,
+    message:
+      clamped === from.rolledPrice
+        ? null
+        : `Minecraft ${toVersion} prices this trade between ${row[1]} and ${row[2]}, so the pinned roll moved from ${from.rolledPrice} to ${clamped}.`,
+  };
 }
 
 // ------------------------------------------------------------ reputation --
@@ -468,13 +585,14 @@ function restockInfo(
 
 function priceTrade(
   version: string,
-  row: TradeRow,
+  pool: TradeRow[],
   index: number,
   reputation: number,
   heroLevel: number,
   demand: number,
   rolledPrice?: number,
 ): PricedTrade {
+  const row = pool[index];
   const [wants, wMinRaw, wMaxRaw, gives, gCount, maxUses, xp, mult, w2, w2Count, variable, biomes] =
     row;
   const hasRoll = typeof rolledPrice === "number" && Number.isFinite(rolledPrice);
@@ -495,6 +613,7 @@ function priceTrade(
 
   return {
     index,
+    identity: tradeIdentity(pool, index),
     label,
     wants,
     wantsName,
@@ -537,7 +656,7 @@ export function calculate(opts: VillagerOptions): VillagerResult {
   const trades = pool.map((row, i) =>
     priceTrade(
       version,
-      row,
+      pool,
       i,
       reputation,
       heroLevel,

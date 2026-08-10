@@ -10,9 +10,12 @@ import {
   itemName,
   poolFor,
   priceFor,
+  carrySelection,
+  findTradeIndex,
   professionsFor,
   run,
   stackSizeFor,
+  tradeIdentity,
 } from "./index";
 
 const PRE_NERF = ["1.16.5", "1.18.2"];
@@ -303,6 +306,130 @@ describe("trade pools", () => {
     for (const version of VILLAGER_VERSIONS) {
       expect(Object.keys(VILLAGER_DATA[version].professions)).not.toContain("wandering_trader");
     }
+  });
+});
+
+describe("carrying a selection across a version change", () => {
+  it("gives every trade in a pool a unique, round-tripping identity", () => {
+    for (const version of VILLAGER_VERSIONS) {
+      for (const profession of professionsFor(version)) {
+        for (let level = 1; level <= 5; level++) {
+          const rows = poolFor(version, profession, level);
+          const ids = rows.map((_, i) => tradeIdentity(rows, i));
+          expect(
+            new Set(ids).size,
+            `${version}/${profession}/${level} has duplicate identities`,
+          ).toBe(ids.length);
+          ids.forEach((id, i) => expect(findTradeIndex(rows, id)).toBe(i));
+        }
+      }
+    }
+  });
+
+  it("keeps the selected trade and its pinned roll when the new version still has it", () => {
+    // The coordinator's repro: the Expert librarian enchanted book trade, with
+    // a roll pinned at 38 emeralds, moving from 1.21.11 back to 1.18.2.
+    const bookIndex = calculate({
+      version: "1.21.11",
+      profession: "librarian",
+      level: 4,
+    }).trades.findIndex((t) => t.variable === "book");
+    const carried = carrySelection(
+      {
+        version: "1.21.11",
+        profession: "librarian",
+        level: 4,
+        tradeIndex: bookIndex,
+        rolledPrice: 38,
+      },
+      "1.18.2",
+    );
+    expect(carried.preserved).toBe(true);
+    expect(carried.message).toBeNull();
+    expect(carried.rolledPrice).toBe(38);
+    const landed = calculate({
+      version: "1.18.2",
+      profession: "librarian",
+      level: 4,
+      tradeIndex: carried.tradeIndex,
+    }).selected!;
+    expect(landed.variable).toBe("book");
+    expect(landed.secondary?.item).toBe("book");
+  });
+
+  it("follows a trade that moved to a different index in the new version", () => {
+    // The shepherd's Journeyman red bed sits at index 7 in 1.21.11 and index
+    // 19 in 26.2, so an index carried straight over would land on the wrong
+    // trade entirely.
+    const rows = poolFor("1.21.11", "shepherd", 3);
+    const from = rows.findIndex((r) => r[3] === "red_bed");
+    expect(from).toBeGreaterThanOrEqual(0);
+    const carried = carrySelection(
+      { version: "1.21.11", profession: "shepherd", level: 3, tradeIndex: from, rolledPrice: 0 },
+      "26.2",
+    );
+    expect(carried.preserved).toBe(true);
+    expect(carried.tradeIndex).not.toBe(from);
+    expect(poolFor("26.2", "shepherd", 3)[carried.tradeIndex][3]).toBe("red_bed");
+  });
+
+  it("clamps a pinned roll into the new version's range instead of discarding it", () => {
+    const bookIndex = calculate({
+      version: "1.18.2",
+      profession: "librarian",
+      level: 4,
+    }).trades.findIndex((t) => t.variable === "book");
+    const base = { version: "1.18.2", profession: "librarian", level: 4, tradeIndex: bookIndex };
+
+    const high = carrySelection({ ...base, rolledPrice: 100 }, "1.21.11");
+    expect(high.preserved).toBe(true);
+    expect(high.rolledPrice).toBe(64);
+    expect(high.clampedFrom).toBe(100);
+    expect(high.message).toContain("64");
+
+    const low = carrySelection({ ...base, rolledPrice: 3 }, "1.21.11");
+    expect(low.rolledPrice).toBe(5);
+    expect(low.clampedFrom).toBe(3);
+
+    const inside = carrySelection({ ...base, rolledPrice: 30 }, "1.21.11");
+    expect(inside.rolledPrice).toBe(30);
+    expect(inside.clampedFrom).toBeNull();
+  });
+
+  it("drops a pinned roll when the trade it lands on has a fixed price", () => {
+    const rows = poolFor("1.21.11", "farmer", 1);
+    const wheat = rows.findIndex((r) => r[0] === "wheat");
+    const carried = carrySelection(
+      { version: "1.21.11", profession: "farmer", level: 1, tradeIndex: wheat, rolledPrice: 38 },
+      "1.16.5",
+    );
+    expect(carried.preserved).toBe(true);
+    expect(carried.rolledPrice).toBe(0);
+    expect(carried.clampedFrom).toBeNull();
+  });
+
+  it("falls back with an explanation when the new version dropped the trade", () => {
+    // The Master librarian's name tag trade became two candle trades in 26.x.
+    const carried = carrySelection(
+      { version: "1.21.11", profession: "librarian", level: 5, tradeIndex: 0, rolledPrice: 0 },
+      "26.2",
+    );
+    expect(carried.preserved).toBe(false);
+    expect(carried.tradeIndex).toBe(0);
+    expect(carried.rolledPrice).toBe(0);
+    expect(carried.message).toContain("26.2");
+    expect(carried.message).toContain("Name Tag");
+  });
+
+  it("falls back safely from an out of range selection", () => {
+    const carried = carrySelection(
+      { version: "1.21.11", profession: "farmer", level: 1, tradeIndex: 99, rolledPrice: 12 },
+      "26.2",
+    );
+    expect(carried.preserved).toBe(false);
+    expect(carried.tradeIndex).toBe(0);
+    expect(carried.rolledPrice).toBe(0);
+    expect(carried.message).not.toBeNull();
   });
 });
 

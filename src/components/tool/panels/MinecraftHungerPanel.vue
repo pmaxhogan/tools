@@ -26,6 +26,7 @@ import {
   healthPerItem,
   rankFoods,
   regenPlan,
+  saturationDrain,
   sustainPlan,
   type ActivityRate,
   type HungerState,
@@ -237,10 +238,39 @@ const contributions = computed(() =>
 
 const peacefulNow = computed(() => difficulty.value === "peaceful");
 
+/** The player's starting state and world, shared by every card below. */
+const startState = computed<HungerState>(() => ({
+  food: startFood.value,
+  saturation: startSaturation.value,
+  exhaustion: 0,
+  health: startHealth.value,
+  tickTimer: 0,
+  tickCount: 0,
+}));
+
+const env = computed<SimEnv>(() => ({
+  version: version.value,
+  difficulty: difficulty.value,
+  naturalRegen: naturalRegen.value,
+  maxHealth: 20,
+  exhaustionPerTick: exhPerSecond.value / 20,
+}));
+
 const plan = computed(() => drainPlan(startFood.value, startSaturation.value, exhPerSecond.value));
 
+/**
+ * Saturation is the one number Peaceful can put back, and only from 1.21
+ * (ServerPlayer#tickRegeneration, Player#aiStep before 1.21.2). On 1.16.5,
+ * 1.18.2 and 1.20.6 Peaceful refills health and the hunger bar but never
+ * saturation, so the pool still burns to zero on a normal Peaceful sprint.
+ */
+const saturation = computed(() => saturationDrain(startState.value, env.value));
+
 const tiles = computed(() => {
-  const drains = !peacefulNow.value;
+  // The hunger BAR is what Peaceful pins: FoodData#tick guards the food drop
+  // with difficulty != PEACEFUL, and the Peaceful branch refills it too.
+  const barDrains = !peacefulNow.value;
+  const sat = saturation.value;
   return [
     {
       label: "Exhaustion per second",
@@ -249,18 +279,29 @@ const tiles = computed(() => {
     },
     {
       label: "Saturation gone after",
-      value: drains ? duration(plan.value.secondsToSaturationGone) : "never",
-      sub: drains ? "then the bar starts moving" : "Peaceful refills instead",
+      // A null with no refill means the rate itself is zero, which reads the
+      // same way as the other tiles; a null WITH a refill is a real "never".
+      value:
+        sat.seconds === null ? (sat.refilling ? "never" : duration(null)) : duration(sat.seconds),
+      sub: sat.refilling
+        ? sat.seconds === null
+          ? "Peaceful refills it faster than you burn it"
+          : "you outburn the Peaceful refill"
+        : barDrains
+          ? "then the bar starts moving"
+          : "Peaceful adds no saturation before 1.21",
     },
     {
       label: "Sprinting stops after",
-      value: drains ? duration(plan.value.secondsToSprintLost) : "never",
-      sub: `sprinting needs hunger above ${MECHANICS.sprintLevel}`,
+      value: barDrains ? duration(plan.value.secondsToSprintLost) : "never",
+      sub: barDrains
+        ? `sprinting needs hunger above ${MECHANICS.sprintLevel}`
+        : "Peaceful never drains the hunger bar",
     },
     {
       label: "Hunger bar empty after",
-      value: drains ? duration(plan.value.secondsToEmpty) : "never",
-      sub: drains ? "starvation starts here" : "Peaceful never drains hunger",
+      value: barDrains ? duration(plan.value.secondsToEmpty) : "never",
+      sub: barDrains ? "starvation starts here" : "Peaceful refills the bar instead",
     },
   ];
 });
@@ -270,15 +311,6 @@ const tiles = computed(() => {
 /* ---------------------------------------------------------------- */
 
 const selectedFood = computed<FoodItem | undefined>(() => foodById(version.value, foodId.value));
-
-const startState = computed<HungerState>(() => ({
-  food: startFood.value,
-  saturation: startSaturation.value,
-  exhaustion: 0,
-  health: startHealth.value,
-  tickTimer: 0,
-  tickCount: 0,
-}));
 
 const foodRows = computed<Record<string, string>>(() => {
   const item = selectedFood.value;
@@ -346,14 +378,6 @@ const sustainRows = computed<RowsOrError>(() => {
 /* ---------------------------------------------------------------- */
 /* regeneration                                                      */
 /* ---------------------------------------------------------------- */
-
-const env = computed<SimEnv>(() => ({
-  version: version.value,
-  difficulty: difficulty.value,
-  naturalRegen: naturalRegen.value,
-  maxHealth: 20,
-  exhaustionPerTick: exhPerSecond.value / 20,
-}));
 
 const regen = computed(() => regenPlan(startState.value, env.value, hearts.value));
 

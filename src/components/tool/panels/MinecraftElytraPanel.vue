@@ -12,15 +12,21 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
+  CUSTOM_PROFILE_ID,
   bestGlidePitch,
   cruisePlan,
   durabilityPlan,
   fireworkSelfDamage,
+  flightProfileSelectGroups,
+  flightProfiles,
+  matchFlightProfile,
   MAX_FIREWORK_STARS,
   MAX_UNBREAKING,
   simulateFlight,
+  setupMatchesProfile,
   steadyState,
   travelPlan,
+  type FlightSetup,
   type SimResult,
 } from "@/tools/minecraft-elytra-calculator/index";
 import {
@@ -75,7 +81,15 @@ const unbreaking = ref(0);
 const mending = ref(false);
 const stars = ref(1);
 const slowFalling = ref(false);
-const profile = ref("");
+/**
+ * The preset the user last picked explicitly. It is honoured only while the
+ * setup still matches it, so it can never disagree with the controls; the
+ * displayed selection is always `activeProfile` below, which falls back to a
+ * match against the live setup and then to "Custom". That is what keeps the
+ * trigger from rendering an empty box on a clean load, where the default
+ * setup is exactly the level glide preset.
+ */
+const explicitProfile = ref<string | null>(null);
 
 const mounted = ref(false);
 
@@ -151,156 +165,6 @@ const durationSpec: SelectOptionSpec = {
 };
 
 /**
- * The flight profile picker: long enough to earn the shared searchable
- * select's search field, grouped by what the profile is for.
- */
-const profileSpec: SelectOptionSpec = {
-  kind: "select",
-  id: "profile",
-  label: "Flight profile",
-  default: "",
-  groups: [
-    {
-      label: "Gliding, no rockets",
-      synonyms: ["glide", "unpowered", "no fireworks", "free flight"],
-      options: [
-        {
-          value: "level",
-          label: "Level glide (0 degrees)",
-          synonyms: ["flat", "straight ahead", "best range"],
-        },
-        {
-          value: "best",
-          label: "Best glide ratio",
-          synonyms: ["furthest", "maximum distance", "optimal"],
-        },
-        {
-          value: "shallow",
-          label: "Shallow descent (5 degrees)",
-          synonyms: ["gentle", "slight down"],
-        },
-        {
-          value: "standard",
-          label: "Standard descent (15 degrees)",
-          synonyms: ["normal", "cruise down"],
-        },
-        {
-          value: "steep",
-          label: "Steep dive (45 degrees)",
-          synonyms: ["fast", "speed run", "plunge"],
-        },
-        {
-          value: "vertical",
-          label: "Vertical drop (90 degrees)",
-          synonyms: ["straight down", "terminal velocity"],
-        },
-        {
-          value: "climb",
-          label: "Pitch up to climb (10 degrees up)",
-          synonyms: ["gain height", "trade speed", "flare"],
-        },
-      ],
-    },
-    {
-      label: "With firework rockets",
-      synonyms: ["rockets", "fireworks", "boost", "powered"],
-      options: [
-        {
-          value: "cruise",
-          label: "Level cruise, rockets chained",
-          synonyms: ["top speed", "highway", "back to back"],
-        },
-        {
-          value: "cruise_climb",
-          label: "Rocket climb (5 degrees up)",
-          synonyms: ["gain altitude", "takeoff"],
-        },
-        {
-          value: "cruise_thrifty",
-          label: "One rocket every 3 seconds",
-          synonyms: ["save fireworks", "cheap travel", "interval"],
-        },
-      ],
-    },
-    {
-      label: "Maneuvers",
-      synonyms: ["tricks", "technique", "advanced"],
-      options: [
-        {
-          value: "dive_level",
-          label: "Dive then level off (the speed spike)",
-          synonyms: ["swoop", "pump", "speed boost", "energy trade"],
-        },
-      ],
-    },
-  ],
-};
-
-function applyProfile(id: string) {
-  profile.value = id;
-  divePreamble.value = false;
-  switch (id) {
-    case "level":
-      pitch.value = 0;
-      useRockets.value = false;
-      break;
-    case "best":
-      pitch.value = bestGlidePitch(0.5, gravity.value).pitchDeg;
-      useRockets.value = false;
-      break;
-    case "shallow":
-      pitch.value = 5;
-      useRockets.value = false;
-      break;
-    case "standard":
-      pitch.value = 15;
-      useRockets.value = false;
-      break;
-    case "steep":
-      pitch.value = 45;
-      useRockets.value = false;
-      break;
-    case "vertical":
-      pitch.value = 90;
-      useRockets.value = false;
-      break;
-    case "climb":
-      pitch.value = -10;
-      useRockets.value = false;
-      break;
-    case "cruise":
-      pitch.value = 0;
-      useRockets.value = true;
-      chainRockets.value = true;
-      break;
-    case "cruise_climb":
-      pitch.value = -5;
-      useRockets.value = true;
-      chainRockets.value = true;
-      break;
-    case "cruise_thrifty":
-      pitch.value = 0;
-      useRockets.value = true;
-      chainRockets.value = false;
-      rocketInterval.value = 60;
-      break;
-    case "dive_level":
-      pitch.value = 0;
-      divePitch.value = 45;
-      diveTicks.value = 100;
-      divePreamble.value = true;
-      useRockets.value = false;
-      break;
-    default:
-      break;
-  }
-}
-
-/* ---------------------------------------------------------------- */
-/* the simulation                                                    */
-/* ---------------------------------------------------------------- */
-
-/**
  * Rocket cruise and the trip planner are about flying on rockets, so their
  * chart always shows a powered flight and the toggle only decides whether
  * rockets are chained or fired on an interval. Glide mode is the one place
@@ -309,6 +173,66 @@ function applyProfile(id: string) {
 const powered = computed(
   () => mode.value === "cruise" || mode.value === "travel" || useRockets.value,
 );
+
+/** The live setup, in the shape the logic layer matches profiles against. */
+const setup = computed<FlightSetup>(() => ({
+  pitchDeg: pitch.value,
+  rockets: powered.value,
+  chain: chainRockets.value,
+  intervalTicks: rocketInterval.value,
+  dive: divePreamble.value ? { pitchDeg: divePitch.value, ticks: diveTicks.value } : null,
+}));
+
+const profiles = computed(() => flightProfiles(gravity.value));
+
+/**
+ * The selection the picker shows. An explicit pick wins while it still
+ * describes the setup (so "Best glide ratio" stays selected even though it
+ * resolves to the same pitch as level glide), otherwise the setup is matched
+ * against the presets, and anything unmatched reads "Custom". This is always
+ * a non-empty id, which is the property the trigger needs to render a label.
+ */
+const activeProfile = computed(() => {
+  const picked = explicitProfile.value
+    ? profiles.value.find((p) => p.id === explicitProfile.value)
+    : undefined;
+  if (picked && setupMatchesProfile(setup.value, picked)) return picked.id;
+  return matchFlightProfile(setup.value, gravity.value);
+});
+
+/**
+ * The flight profile picker: long enough to earn the shared searchable
+ * select's search field, grouped by what the profile is for. "Custom" is a
+ * real option so the trigger always has something to display, the same way
+ * the XP panel offers "Custom weights".
+ */
+const profileSpec = computed<SelectOptionSpec>(() => ({
+  kind: "select",
+  id: "profile",
+  label: "Flight profile",
+  default: CUSTOM_PROFILE_ID,
+  groups: flightProfileSelectGroups(gravity.value),
+}));
+
+function applyProfile(id: string) {
+  explicitProfile.value = id;
+  const def = profiles.value.find((p) => p.id === id);
+  // "Custom" describes the setup rather than changing it.
+  if (!def) return;
+  pitch.value = def.pitchDeg;
+  useRockets.value = def.rockets;
+  chainRockets.value = def.chain;
+  rocketInterval.value = def.intervalTicks;
+  divePreamble.value = def.dive !== null;
+  if (def.dive) {
+    divePitch.value = def.dive.pitchDeg;
+    diveTicks.value = def.dive.ticks;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* the simulation                                                    */
+/* ---------------------------------------------------------------- */
 
 const simulation = computed<{ result: SimResult | null; error: CalcError | null }>(() => {
   try {
@@ -749,7 +673,7 @@ watch(
     mending,
     stars,
     slowFalling,
-    profile,
+    activeProfile,
   ],
   () => {
     if (!mounted.value) return;
@@ -773,7 +697,7 @@ watch(
         mnd: String(mending.value),
         st: String(stars.value),
         sf: String(slowFalling.value),
-        pr: profile.value,
+        pr: activeProfile.value,
       },
     });
   },
@@ -802,7 +726,9 @@ onMounted(() => {
   if (opts.mnd !== undefined) mending.value = opts.mnd === "true";
   if (opts.st) stars.value = clampInt(opts.st, 0, MAX_FIREWORK_STARS, 1);
   if (opts.sf !== undefined) slowFalling.value = opts.sf === "true";
-  if (opts.pr) profile.value = opts.pr;
+  // Restored as a hint only: activeProfile re-derives it if the rest of
+  // the fragment does not actually describe that preset.
+  if (opts.pr) explicitProfile.value = opts.pr;
   mounted.value = true;
 });
 </script>
@@ -856,7 +782,7 @@ onMounted(() => {
             <SearchableSelect
               id="mce-profile"
               :spec="profileSpec"
-              :model-value="profile"
+              :model-value="activeProfile"
               @update:model-value="applyProfile"
             />
           </div>
@@ -876,7 +802,6 @@ onMounted(() => {
                 @update:model-value="
                   (v) => {
                     pitch = clampNum(v, -90, 90, 0);
-                    profile = '';
                   }
                 "
               />
@@ -928,7 +853,6 @@ onMounted(() => {
               @update:model-value="
                 (v) => {
                   useRockets = Boolean(v);
-                  profile = '';
                 }
               "
             />
@@ -959,7 +883,6 @@ onMounted(() => {
                 @update:model-value="
                   (v) => {
                     chainRockets = Boolean(v);
-                    profile = '';
                   }
                 "
               />
@@ -990,7 +913,6 @@ onMounted(() => {
               @update:model-value="
                 (v) => {
                   divePreamble = Boolean(v);
-                  profile = '';
                 }
               "
             />

@@ -459,6 +459,8 @@ export interface SurvivalRun {
   emptyAtTick: number | null;
   /** Tick sprinting became impossible (food at or below 6), or null. */
   sprintLostAtTick: number | null;
+  /** Tick saturation first reached zero, or null when it never did. */
+  saturationGoneAtTick: number | null;
   /** True when the player died. */
   died: boolean;
 }
@@ -471,6 +473,7 @@ export function simulate(start: HungerState, env: SimEnv, ticks: number): Surviv
   let healed = 0;
   let emptyAtTick: number | null = null;
   let sprintLostAtTick: number | null = null;
+  let saturationGoneAtTick: number | null = start.saturation <= 0 ? 0 : null;
   let i = 0;
   for (; i < limit; i++) {
     const out = stepTick(state, env);
@@ -479,6 +482,7 @@ export function simulate(start: HungerState, env: SimEnv, ticks: number): Surviv
     healed += out.healed;
     if (sprintLostAtTick === null && state.food <= MECHANICS.sprintLevel) sprintLostAtTick = i + 1;
     if (emptyAtTick === null && state.food <= 0) emptyAtTick = i + 1;
+    if (saturationGoneAtTick === null && state.saturation <= 0) saturationGoneAtTick = i + 1;
     if (state.health <= 0) {
       i++;
       break;
@@ -492,7 +496,70 @@ export function simulate(start: HungerState, env: SimEnv, ticks: number): Surviv
     healed,
     emptyAtTick,
     sprintLostAtTick,
+    saturationGoneAtTick,
     died: state.health <= 0,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* saturation drain, including the Peaceful refill                     */
+/* ------------------------------------------------------------------ */
+
+export interface SaturationDrain {
+  /** Seconds until saturation reaches zero, or null when it never does. */
+  seconds: number | null;
+  /**
+   * True when a Peaceful saturation refill is competing with the burn, which
+   * only happens from 1.21 on. Before that Peaceful refills health and the
+   * hunger bar but never touches saturation.
+   */
+  refilling: boolean;
+  /** True when the answer came from the tick simulation, not a closed form. */
+  simulated: boolean;
+}
+
+/** Ticks the saturation drain simulation may run before giving up: one hour. */
+const SATURATION_HORIZON_TICKS = 20 * 60 * 60;
+
+/**
+ * How long the hidden saturation pool lasts.
+ *
+ * Outside Peaceful nothing ever adds saturation, so the closed form is exact:
+ * each 4 exhaustion burns one whole point and a partial point still soaks a
+ * full burn. On Peaceful the answer depends on the version. From 1.21 the
+ * game grants one saturation point per second (Player#aiStep, moved to
+ * ServerPlayer#tickRegeneration in 1.21.2), which competes with the burn, so
+ * this simulates rather than guessing. That refill outruns any burn below 4
+ * exhaustion per second, which is why an ordinary Peaceful sprint never
+ * empties saturation on 1.21 or later but does on 1.16.5, 1.18.2 and 1.20.6.
+ */
+export function saturationDrain(
+  start: HungerState,
+  env: SimEnv,
+  horizonTicks = SATURATION_HORIZON_TICKS,
+): SaturationDrain {
+  const refill = PEACEFUL_REGEN[env.version];
+  const refilling =
+    env.difficulty === "peaceful" && env.naturalRegen && (refill?.saturationEvery ?? 0) > 0;
+
+  if (start.saturation <= 0) return { seconds: 0, refilling, simulated: false };
+
+  if (!refilling) {
+    const perSecond = env.exhaustionPerTick * TICKS_PER_SECOND;
+    if (perSecond <= 0) return { seconds: null, refilling, simulated: false };
+    const burns = Math.ceil(start.saturation);
+    return {
+      seconds: (burns * MECHANICS.exhaustionDrop) / perSecond,
+      refilling,
+      simulated: false,
+    };
+  }
+
+  const run = simulate(start, env, horizonTicks);
+  return {
+    seconds: run.saturationGoneAtTick === null ? null : run.saturationGoneAtTick / TICKS_PER_SECOND,
+    refilling,
+    simulated: true,
   };
 }
 
@@ -627,13 +694,29 @@ function runDrain(opts: McHungerOpts): McHungerResult {
     0,
     MECHANICS.maxSaturation,
   );
+  const version = getVersion(opts);
   const difficulty = getDifficulty(opts);
   const exh = exhaustionPerSecond(mixFrom(opts));
   const plan = drainPlan(food, saturation, exh);
+  // Saturation is the one number Peaceful can add back, and only from 1.21,
+  // so it goes through the version aware planner rather than the closed form.
+  const sat = saturationDrain(
+    { food, saturation, exhaustion: 0, health: 20, tickTimer: 0, tickCount: 0 },
+    {
+      version,
+      difficulty,
+      naturalRegen: true,
+      maxHealth: 20,
+      exhaustionPerTick: exh / TICKS_PER_SECOND,
+    },
+  );
   const rows: McHungerResult = {
     "Exhaustion per second": `${dec(exh, 4)}`,
     "Points burned per hour": `${dec(plan.pointsPerHour)} hunger or saturation points`,
-    "Saturation gone after": duration(plan.secondsToSaturationGone),
+    "Saturation gone after":
+      sat.refilling && sat.seconds === null
+        ? "never: from 1.21 Peaceful grants 1 saturation per second, faster than you burn it"
+        : duration(sat.seconds),
     "Sprinting stops after": duration(plan.secondsToSprintLost),
     "Hunger bar empty after": duration(plan.secondsToEmpty),
   };

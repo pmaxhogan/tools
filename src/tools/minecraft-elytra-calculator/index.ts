@@ -1,4 +1,4 @@
-import { ToolError, type ToolLogic } from "../types";
+import { ToolError, type SelectGroup, type ToolLogic } from "../types";
 import {
   BOOST_ADD,
   BOOST_PULL,
@@ -512,6 +512,208 @@ export function bestGlidePitch(
     if (state.glideRatio > best.state.glideRatio) best = { pitchDeg: pitch, state };
   }
   return best;
+}
+
+// ---------------------------------------------------------------------------
+// Flight profiles
+//
+// The named setups the picker offers. These live in the logic layer, not in
+// the panel, because "which preset does this setup correspond to" is a pure
+// question about flight parameters (rule 27) and because a preset list that
+// cannot answer it is how a picker ends up rendering nothing at all.
+// ---------------------------------------------------------------------------
+
+export interface FlightSetup {
+  pitchDeg: number;
+  /** True when rockets are being fired at all. */
+  rockets: boolean;
+  /** Chained back to back, as opposed to fired on an interval. */
+  chain: boolean;
+  intervalTicks: number;
+  /** A dive held before settling onto the main pitch, or null for none. */
+  dive: { pitchDeg: number; ticks: number } | null;
+}
+
+export interface FlightProfile extends FlightSetup {
+  id: string;
+  label: string;
+  group: string;
+  synonyms: string[];
+}
+
+/** Group ordering and search aliases for the picker. */
+export const FLIGHT_PROFILE_GROUPS: { label: string; synonyms: string[] }[] = [
+  { label: "Gliding, no rockets", synonyms: ["glide", "unpowered", "no fireworks", "free flight"] },
+  { label: "With firework rockets", synonyms: ["rockets", "fireworks", "boost", "powered"] },
+  { label: "Maneuvers", synonyms: ["tricks", "technique", "advanced"] },
+];
+
+/** The id used when a setup matches no named profile. Never an empty string. */
+export const CUSTOM_PROFILE_ID = "custom";
+export const CUSTOM_PROFILE_LABEL = "Custom";
+
+const GLIDE = "Gliding, no rockets";
+const POWERED = "With firework rockets";
+const MANEUVER = "Maneuvers";
+
+function glideProfile(
+  id: string,
+  label: string,
+  pitchDeg: number,
+  synonyms: string[],
+): FlightProfile {
+  return {
+    id,
+    label,
+    group: GLIDE,
+    synonyms,
+    pitchDeg,
+    rockets: false,
+    chain: true,
+    intervalTicks: 60,
+    dive: null,
+  };
+}
+
+/**
+ * The named profiles, in picker order. Depends on gravity only through the
+ * best-glide search, which is why this is a function rather than a constant.
+ */
+export function flightProfiles(gravity?: number): FlightProfile[] {
+  return [
+    glideProfile("level", "Level glide (0 degrees)", 0, ["flat", "straight ahead", "best range"]),
+    glideProfile("best", "Best glide ratio", bestGlidePitch(0.5, gravity).pitchDeg, [
+      "furthest",
+      "maximum distance",
+      "optimal",
+    ]),
+    glideProfile("shallow", "Shallow descent (5 degrees)", 5, ["gentle", "slight down"]),
+    glideProfile("standard", "Standard descent (15 degrees)", 15, ["normal", "cruise down"]),
+    glideProfile("steep", "Steep dive (45 degrees)", 45, ["fast", "speed run", "plunge"]),
+    glideProfile("vertical", "Vertical drop (90 degrees)", 90, [
+      "straight down",
+      "terminal velocity",
+    ]),
+    glideProfile("climb", "Pitch up to climb (10 degrees up)", -10, [
+      "gain height",
+      "trade speed",
+      "flare",
+    ]),
+    {
+      id: "cruise",
+      label: "Level cruise, rockets chained",
+      group: POWERED,
+      synonyms: ["top speed", "highway", "back to back"],
+      pitchDeg: 0,
+      rockets: true,
+      chain: true,
+      intervalTicks: 60,
+      dive: null,
+    },
+    {
+      id: "cruise_climb",
+      label: "Rocket climb (5 degrees up)",
+      group: POWERED,
+      synonyms: ["gain altitude", "takeoff"],
+      pitchDeg: -5,
+      rockets: true,
+      chain: true,
+      intervalTicks: 60,
+      dive: null,
+    },
+    {
+      id: "cruise_thrifty",
+      label: "One rocket every 3 seconds",
+      group: POWERED,
+      synonyms: ["save fireworks", "cheap travel", "interval"],
+      pitchDeg: 0,
+      rockets: true,
+      chain: false,
+      intervalTicks: 60,
+      dive: null,
+    },
+    {
+      id: "dive_level",
+      label: "Dive then level off (the speed spike)",
+      group: MANEUVER,
+      synonyms: ["swoop", "pump", "speed boost", "energy trade"],
+      pitchDeg: 0,
+      rockets: false,
+      chain: true,
+      intervalTicks: 60,
+      dive: { pitchDeg: 45, ticks: 100 },
+    },
+  ];
+}
+
+function near(a: number, b: number): boolean {
+  return Math.abs(a - b) < 1e-9;
+}
+
+/** True when `setup` is exactly what applying `profile` would produce. */
+export function setupMatchesProfile(setup: FlightSetup, profile: FlightProfile): boolean {
+  if (!near(setup.pitchDeg, profile.pitchDeg)) return false;
+  if (setup.rockets !== profile.rockets) return false;
+  if (setup.dive === null || profile.dive === null) {
+    if (setup.dive !== profile.dive) return false;
+  } else if (
+    !near(setup.dive.pitchDeg, profile.dive.pitchDeg) ||
+    setup.dive.ticks !== profile.dive.ticks
+  ) {
+    return false;
+  }
+  // Chaining and the interval only exist while rockets are being fired, and
+  // the interval only matters when they are not chained.
+  if (profile.rockets) {
+    if (setup.chain !== profile.chain) return false;
+    if (!profile.chain && setup.intervalTicks !== profile.intervalTicks) return false;
+  }
+  return true;
+}
+
+/**
+ * The profile id a setup corresponds to, or CUSTOM_PROFILE_ID. Never returns
+ * an empty string, so a picker always has something to render.
+ */
+export function matchFlightProfile(setup: FlightSetup, gravity?: number): string {
+  const found = flightProfiles(gravity).find((p) => setupMatchesProfile(setup, p));
+  return found ? found.id : CUSTOM_PROFILE_ID;
+}
+
+/**
+ * The grouped options for the picker, built from the same list the matcher
+ * searches. Constructed here rather than in the panel so that the set of
+ * selectable ids and the set of matchable ids cannot drift apart: a selection
+ * with no corresponding option is exactly what renders an empty control.
+ */
+export function flightProfileSelectGroups(gravity?: number): SelectGroup[] {
+  const profiles = flightProfiles(gravity);
+  return [
+    ...FLIGHT_PROFILE_GROUPS.map((g) => ({
+      label: g.label,
+      synonyms: g.synonyms,
+      options: profiles
+        .filter((p) => p.group === g.label)
+        .map((p) => ({ value: p.id, label: p.label, synonyms: p.synonyms })),
+    })),
+    {
+      label: "Anything else",
+      synonyms: ["custom", "manual", "your own"],
+      options: [
+        {
+          value: CUSTOM_PROFILE_ID,
+          label: CUSTOM_PROFILE_LABEL,
+          synonyms: ["manual", "hand tuned", "none"],
+        },
+      ],
+    },
+  ];
+}
+
+/** The label a picker should show for a setup. Never empty. */
+export function flightProfileLabel(id: string, gravity?: number): string {
+  if (id === CUSTOM_PROFILE_ID) return CUSTOM_PROFILE_LABEL;
+  return flightProfiles(gravity).find((p) => p.id === id)?.label ?? CUSTOM_PROFILE_LABEL;
 }
 
 // ---------------------------------------------------------------------------
