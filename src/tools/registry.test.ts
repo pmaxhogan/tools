@@ -54,6 +54,18 @@ function loaderDirs(): Map<string, string> {
   return new Map([...matches].map((m) => [m[1] ?? m[2]!, m[3]!]));
 }
 
+/**
+ * Tool directories whose logic has landed but which are deliberately not on the
+ * site yet. The workflow builds a tool's pure layer first and wires the
+ * registry, PanelHost, and icons in a later pass, so an unwired directory is a
+ * tool in progress rather than a mistake.
+ *
+ * Adding a name here has to be deliberate, and shipping the tool means deleting
+ * it again: the test below fails if an entry is registered after all, so this
+ * list cannot rot into a permanent exemption.
+ */
+const UNWIRED = new Set(["minecraft-anvil-calculator", "minecraft-damage-calculator"]);
+
 /** Tool directories on disk that ship runnable logic. */
 function toolDirs(): string[] {
   return readdirSync(root + "src/tools", { withFileTypes: true })
@@ -91,7 +103,13 @@ describe("registry", () => {
 
   it("registers every tool directory that ships an index.ts", () => {
     const loaded = new Set(dirs.values());
-    expect(toolDirs().filter((dir) => !loaded.has(dir))).toEqual([]);
+    const unwired = toolDirs().filter((dir) => !loaded.has(dir) && !UNWIRED.has(dir));
+    expect(unwired).toEqual([]);
+  });
+
+  it("does not list a tool as unwired once it is registered", () => {
+    const loaded = new Set(dirs.values());
+    expect([...UNWIRED].filter((dir) => loaded.has(dir))).toEqual([]);
   });
 });
 
