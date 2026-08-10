@@ -17,7 +17,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["scripts/**", "worker/**", "*.config.{js,mjs,ts}"],
+    files: ["scripts/**", "worker/**", "mc-pipeline/**", "*.config.{js,mjs,ts}"],
     languageOptions: {
       globals: { ...globals.node, ...globals.serviceworker },
     },
@@ -60,6 +60,7 @@ export default tseslint.config(
       "public/models/",
       "public/pyodide/",
       "public/tesseract/",
+      "mc-pipeline/work/",
     ],
   },
   // Last: turn off every stylistic rule that Prettier owns, so eslint and

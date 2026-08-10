@@ -62,6 +62,8 @@ import { meta as jinjaTemplateTester } from "./jinja-template-tester/meta";
 import { meta as keycode } from "./keycode/meta";
 import { meta as lineSorter } from "./line-sorter/meta";
 import { meta as midiInspector } from "./midi-inspector/meta";
+import { meta as minecraftAnvilCalculator } from "./minecraft-anvil-calculator/meta";
+import { meta as minecraftDamageCalculator } from "./minecraft-damage-calculator/meta";
 import { meta as minecraftLootTableCalculator } from "./minecraft-loot-table-calculator/meta";
 import { meta as minecraftXpCalculator } from "./minecraft-xp-calculator/meta";
 import { meta as mobileSensors } from "./mobile-sensors/meta";
@@ -146,6 +148,8 @@ export const tools: ToolMeta[] = [
   keycode,
   lineSorter,
   midiInspector,
+  minecraftAnvilCalculator,
+  minecraftDamageCalculator,
   minecraftLootTableCalculator,
   minecraftXpCalculator,
   mobileSensors,
@@ -236,6 +240,10 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   keycode: () => import("./keycode/index").then((m) => m.default),
   "line-sorter": () => import("./line-sorter/index").then((m) => m.default),
   "midi-inspector": () => import("./midi-inspector/index").then((m) => m.default),
+  "minecraft-anvil-calculator": () =>
+    import("./minecraft-anvil-calculator/index").then((m) => m.default),
+  "minecraft-damage-calculator": () =>
+    import("./minecraft-damage-calculator/index").then((m) => m.default),
   "minecraft-loot-table-calculator": () =>
     import("./minecraft-loot-table-calculator/index").then((m) => m.default),
   "minecraft-xp-calculator": () =>

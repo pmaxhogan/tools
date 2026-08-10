@@ -30,24 +30,6 @@ function loadVectors(family: "damage" | "fall", version: string) {
   };
 }
 
-/**
- * Harness quirks in the committed vectors, diagnosed from
- * mc-pipeline/04-harness.mjs and lib/era.mjs:
- *
- * On 1.20.6 and 1.21.1 the attribute-prefix probe picked the 1.21.2+ ids
- * ("minecraft:armor"), which those servers reject, so every
- * `attribute ... set` silently failed. The vector zombies therefore kept
- * their default 20 max health and their species armor of 2
- * (Zombie#createAttributes ARMOR base 2), and `taken` was recorded as
- * 1000 - health, i.e. real damage + 980. Mobs died (null) whenever real
- * damage reached their actual 20 HP. The recorded armor/toughness fields
- * for those two files describe what the harness intended, not what the mob
- * had: the real build was always armor 2, toughness 0.
- */
-const BROKEN_ATTR_VERSIONS = new Set(["1.20.6", "1.21.1"]);
-const OFFSET = 980;
-const MOB_HP = 20;
-
 /** Damage types tagged bypasses_armor in every covered version. */
 const BYPASSES_ARMOR = new Set(["magic", "out_of_world", "generic"]);
 
@@ -56,37 +38,20 @@ interface DamageSample {
   toughness: number | null;
   amount: number;
   type: string;
-  taken: number | null;
+  taken: number;
   resistance?: number;
   equipped?: { material: string; pieces: number; protection: number };
 }
 
 /**
- * Two equipped-protection samples on the broken-attribute versions came back
- * with the diamond pieces' own armor modifiers applied (the other thirty
- * were measured with attribute-stripped pieces, EPF only). For these two the
- * model must include the piece armor on top of the zombie's base 2:
- * diamond helmet 3 (1 piece) or full set 20 (4 pieces), toughness 2 per
- * piece. Both readings reproduce the measurements exactly.
+ * The recorded armor / toughness fields are the mob's actual attribute
+ * totals as read back by the harness (`attribute ... get`), so every sample
+ * decodes uniformly: armor formula on those totals, then Resistance, then
+ * the equipped pieces' Protection EPF (pieces x level, x1 vs melee).
  */
-function equippedArmorApplied(version: string, s: DamageSample): boolean {
-  if (!s.equipped) return false;
-  if (version === "1.20.6") return s.equipped.pieces === 1 && s.equipped.protection === 2;
-  if (version === "1.21.1") return s.equipped.pieces === 4 && s.equipped.protection === 2;
-  return false;
-}
-
-const DIAMOND_PER_PIECE = [3, 8, 6, 3]; // helmet, chest, legs, boots (equip order in the harness)
-
-function expectedDamage(version: string, s: DamageSample): number {
-  const broken = BROKEN_ATTR_VERSIONS.has(version);
-  let armor = broken ? 2 : (s.armor ?? 0);
-  let toughness = broken ? 0 : (s.toughness ?? 0);
-  if (equippedArmorApplied(version, s)) {
-    const pieces = s.equipped!.pieces;
-    armor += DIAMOND_PER_PIECE.slice(0, pieces).reduce((a, b) => a + b, 0);
-    toughness += 2 * pieces;
-  }
+function expectedDamage(s: DamageSample): number {
+  const armor = s.armor ?? 0;
+  const toughness = s.toughness ?? 0;
   let a = BYPASSES_ARMOR.has(s.type) ? s.amount : damageAfterArmor(s.amount, armor, toughness);
   if (s.resistance) a = damageAfterEffects(a, s.resistance, 0);
   if (s.equipped) a = damageAfterEffects(a, 0, s.equipped.pieces * s.equipped.protection);
@@ -97,22 +62,10 @@ describe("golden damage vectors (rcon-e2e)", () => {
   for (const version of ["1.20.6", "1.21.1", "1.21.11", "26.2"]) {
     it(`reproduces every ${version} sample exactly`, () => {
       const { samples } = loadVectors("damage", version);
-      const broken = BROKEN_ATTR_VERSIONS.has(version);
       expect(samples.length).toBeGreaterThan(300);
       for (const raw of samples) {
         const s = raw as unknown as DamageSample;
-        const model = expectedDamage(version, s);
-        const label = JSON.stringify(s);
-        if (broken) {
-          if (s.taken === null) {
-            // The mob really had 20 HP; null means it died.
-            expect(model, label).toBeGreaterThanOrEqual(MOB_HP);
-          } else {
-            expect(round2(model + OFFSET), label).toBe(s.taken);
-          }
-        } else {
-          expect(round2(model), label).toBe(s.taken);
-        }
+        expect(round2(expectedDamage(s)), JSON.stringify(s)).toBe(s.taken);
       }
     });
   }
@@ -122,32 +75,13 @@ interface FallSample {
   height: number;
   featherFalling: number;
   slowFalling: boolean;
-  taken: number | null;
+  taken: number;
 }
-
-/**
- * One committed sample is a measurement flake: vectors/fall/1.16.5.json
- * records 0 for the bare 3.5 block drop, but re-running the same drop five
- * times on a live 1.16.5 dedicated server (2026-08-10, same harness arena
- * and commands) dealt 1 damage every time, exactly like 1.18.2 through
- * 1.21.1 (whose vectors all read 1 for the same drop, and whose movement
- * code is byte-identical to 1.16.5 in the decompiled trees). The model
- * asserts the re-measured value.
- */
-const REMEASURED: Record<string, { match: (s: FallSample) => boolean; taken: number }[]> = {
-  "1.16.5": [
-    {
-      match: (s) => s.height === 3.5 && s.featherFalling === 0 && !s.slowFalling,
-      taken: 1,
-    },
-  ],
-};
 
 describe("golden fall vectors (rcon-e2e)", () => {
   for (const version of ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"]) {
     it(`reproduces every ${version} sample exactly`, () => {
       const { samples } = loadVectors("fall", version);
-      const broken = BROKEN_ATTR_VERSIONS.has(version);
       expect(samples.length).toBe(14);
       for (const raw of samples) {
         const s = raw as unknown as FallSample;
@@ -157,19 +91,7 @@ describe("golden fall vectors (rcon-e2e)", () => {
           featherFalling: s.featherFalling,
           slowFalling: s.slowFalling,
         }).taken;
-        const label = `${version} ${JSON.stringify(s)}`;
-        const flake = REMEASURED[version]?.find((f) => f.match(s));
-        if (flake) {
-          expect(round2(model), label).toBe(flake.taken);
-        } else if (broken) {
-          if (s.taken === null) {
-            expect(model, label).toBeGreaterThanOrEqual(MOB_HP);
-          } else {
-            expect(round2(model + OFFSET), label).toBe(s.taken);
-          }
-        } else {
-          expect(round2(model), label).toBe(s.taken);
-        }
+        expect(round2(model), `${version} ${JSON.stringify(s)}`).toBe(s.taken);
       }
     });
   }
