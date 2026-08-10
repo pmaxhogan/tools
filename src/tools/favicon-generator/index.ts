@@ -193,7 +193,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
   for (let i = 0; i < bytes.length; i += CHUNK) {
     binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
   }
-  return globalThis.btoa(binary);
+  return btoa(binary);
 }
 
 /** Normalize a user-supplied hex color, or throw an actionable error. */

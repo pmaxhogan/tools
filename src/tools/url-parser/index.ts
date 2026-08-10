@@ -64,7 +64,6 @@ function safeDecode(s: string): string {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: UrlParserOpts): UrlParserResult {
   const raw = (input ?? "").trim();
   if (!raw) throw new ToolError("empty-input", "Enter a URL to parse.");

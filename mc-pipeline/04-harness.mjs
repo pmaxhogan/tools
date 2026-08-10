@@ -179,7 +179,7 @@ async function runDamage() {
 
 // ------------------------------------------------------------------ fall --
 async function runFall() {
-  const prefix = await (async () => {
+  const _prefix = await (async () => {
     await freshMob();
     return attrPrefix();
   })();

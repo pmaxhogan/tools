@@ -142,7 +142,6 @@ function describeEntry(entry: ClipboardEntrySnapshot): string {
  * run
  * ------------------------------------------------------------------ */
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: ClipboardOpts): Record<string, string> {
   const raw = input ?? "";
   if (!raw.trim()) {

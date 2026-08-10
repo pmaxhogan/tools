@@ -68,7 +68,6 @@ function summaryKeyLabel(key: unknown): string {
   return key.length === 1 ? key.toUpperCase() : key;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: Record<string, unknown>): KeycodeResult {
   const raw = (input ?? "").trim();
   if (!raw)

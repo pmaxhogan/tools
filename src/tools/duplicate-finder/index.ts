@@ -456,9 +456,8 @@ const USAGE_ROWS: Record<string, string> = {
  * which drives the exported functions above.
  */
 export function run(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _input: string = "",
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   _opts: DuplicateFinderOpts = {},
 ): Record<string, string> {
   return { ...USAGE_ROWS };

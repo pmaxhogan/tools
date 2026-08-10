@@ -9,3 +9,8 @@ public/ffmpeg/
 public/models/
 public/pyodide/
 public/tesseract/
+
+# Minecraft pipeline outputs: extracted game data and golden vectors, written
+# by mc-pipeline/*.mjs. Generated, huge, and diffed as data rather than read.
+mc-pipeline/extracted/
+mc-pipeline/vectors/

@@ -57,7 +57,6 @@ function fmt(d: Date): DiscordTimestampResult {
   return out;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: Record<string, unknown>): DiscordTimestampResult {
   return fmt(parse(input ?? ""));
 }

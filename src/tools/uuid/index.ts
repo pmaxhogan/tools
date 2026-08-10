@@ -14,7 +14,7 @@ export interface UuidOpts {
  */
 function bytes(n: number): Uint8Array {
   const b = new Uint8Array(n);
-  globalThis.crypto.getRandomValues(b);
+  crypto.getRandomValues(b);
   return b;
 }
 

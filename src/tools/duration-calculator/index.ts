@@ -178,7 +178,6 @@ function humanizeDuration(ms: number): string {
   return sign + parts.join(" ");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: Record<string, unknown>): DurationResult {
   const raw = input ?? "";
   if (!raw.trim()) {

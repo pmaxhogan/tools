@@ -124,7 +124,7 @@ async function subtleHex(
   algorithm: "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512",
   data: Uint8Array,
 ): Promise<string> {
-  const buf = await globalThis.crypto.subtle.digest(algorithm, data as BufferSource);
+  const buf = await crypto.subtle.digest(algorithm, data as BufferSource);
   return bufToHex(buf);
 }
 

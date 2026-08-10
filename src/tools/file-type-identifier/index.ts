@@ -215,7 +215,6 @@ function classifyText(text: string): string {
   return "Plain text";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function run(input: Uint8Array | string, _opts: FileIdOpts): Promise<FileIdResult> {
   const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input;
 

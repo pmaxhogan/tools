@@ -63,7 +63,7 @@ function makeXorshift128(seed: string): () => number {
 function makeCryptoRng(): () => number {
   return function next(): number {
     const buf = new Uint32Array(1);
-    globalThis.crypto.getRandomValues(buf);
+    crypto.getRandomValues(buf);
     return buf[0] as number;
   };
 }
