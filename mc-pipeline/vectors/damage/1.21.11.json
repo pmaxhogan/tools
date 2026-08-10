@@ -1,6 +1,6 @@
 {
  "version": "1.21.11",
- "generated": "2026-08-10T16:29:21.742Z",
+ "generated": "2026-08-10T17:18:42.852Z",
  "serverJarSha1": "64bb6d763bed0a9f1d632ec347938594144943ed",
  "method": "rcon-e2e",
  "samples": [
@@ -2430,11 +2430,11 @@
     "pieces": 4,
     "protection": 4
    },
-   "armor": 0,
-   "toughness": 0,
+   "armor": 11,
+   "toughness": 4,
    "amount": 10,
    "type": "mob_attack",
-   "taken": 3.6
+   "taken": 2.5
   },
   {
    "resistance": 1,

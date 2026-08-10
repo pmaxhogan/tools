@@ -100,6 +100,7 @@ export default tseslint.config(
       "public/tesseract/",
       "mc-pipeline/extracted/",
       "mc-pipeline/vectors/",
+      "mc-pipeline/work/",
     ],
   },
   // Last: turn off every stylistic rule that Prettier owns, so eslint and

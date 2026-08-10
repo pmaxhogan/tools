@@ -64,7 +64,7 @@ function loaderDirs(): Map<string, string> {
  * it again: the test below fails if an entry is registered after all, so this
  * list cannot rot into a permanent exemption.
  */
-const UNWIRED = new Set(["minecraft-anvil-calculator", "minecraft-damage-calculator"]);
+const UNWIRED = new Set<string>([]);
 
 /** Tool directories on disk that ship runnable logic. */
 function toolDirs(): string[] {

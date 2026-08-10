@@ -55,7 +55,7 @@ export const meta: ToolMeta = {
         {
           value: "1.18.2",
           label: "1.18.2",
-          synonyms: ["1.18", "1.19", "caves and cliffs", "wild update"],
+          synonyms: ["1.18", "caves and cliffs"],
         },
         {
           value: "1.16.5",

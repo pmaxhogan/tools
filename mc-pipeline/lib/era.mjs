@@ -35,11 +35,17 @@ export async function probeEnchantSyntax(rcon, chest, ore) {
   throw new Error("no enchantment syntax accepted");
 }
 
-/** Attribute id per era: probe once with a harmless "get" on an entity. */
+/**
+ * Attribute id per era: probe once with a harmless "get" on an entity.
+ * Success is judged by the reply ending in a numeric value: error strings
+ * vary per era ("Can't find element ...", "Unknown attribute", ...) and an
+ * error-keyword denylist silently passed bad prefixes on 1.20.6/1.21.1,
+ * which corrupted a whole vector run.
+ */
 export async function probeAttrPrefix(rcon, selector) {
   for (const prefix of ["minecraft:armor", "minecraft:generic.armor"]) {
     const res = await rcon.cmd(`attribute ${selector} ${prefix} get`);
-    if (!/Unknown|Incorrect|Expected|No such/i.test(res)) {
+    if (!Number.isNaN(parseNum(res))) {
       return prefix === "minecraft:armor" ? "minecraft:" : "minecraft:generic.";
     }
   }

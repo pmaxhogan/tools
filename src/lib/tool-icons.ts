@@ -6,6 +6,7 @@
  */
 import type { Component } from "vue";
 import {
+  Anvil,
   AppWindow,
   ArrowDownAZ,
   ArrowRightLeft,
@@ -78,6 +79,7 @@ import {
   SquareScissors,
   Sparkles,
   SquareTerminal,
+  Swords,
   Table2,
   TableProperties,
   Terminal,
@@ -92,6 +94,7 @@ import {
 } from "lucide-vue-next";
 
 const ICONS: Record<string, Component> = {
+  Anvil,
   AppWindow,
   ArrowDownAZ,
   ArrowRightLeft,
@@ -164,6 +167,7 @@ const ICONS: Record<string, Component> = {
   SquareScissors,
   Sparkles,
   SquareTerminal,
+  Swords,
   Table2,
   TableProperties,
   Terminal,

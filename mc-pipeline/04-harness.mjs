@@ -109,6 +109,18 @@ async function readHealth() {
   return parseNum(await rcon.cmd(`data get entity ${SEL} Health`));
 }
 
+/** Fail fast if attribute writes are not actually landing on this version. */
+async function assertAttributesWork() {
+  await freshMob();
+  const h = await readHealth();
+  if (Math.abs(h - 1000) > 0.01)
+    throw new Error(
+      `attribute sanity check failed: fresh mob health ${h}, expected 1000; ` +
+        "attribute prefix probe is wrong for this version",
+    );
+}
+await assertAttributesWork();
+
 // ---------------------------------------------------------------- damage --
 async function runDamage() {
   const probe = await rcon.cmd("damage @e[tag=nothing,limit=1] 1");
@@ -144,6 +156,9 @@ async function runDamage() {
       const items = { head: "diamond_helmet", chest: "diamond_chestplate", legs: "diamond_leggings", feet: "diamond_boots" };
       for (const slot of slots)
         await equipItem(slot, enchantedItem(items[slot], "protection", level, syntax));
+      // Equipment attribute modifiers apply on the entity's next tick on
+      // some versions; wait one tick so the recorded attributes are final.
+      await new Promise((r) => setTimeout(r, 120));
       const armorAttr = parseNum(await rcon.cmd(`attribute ${SEL} ${prefix}armor get`));
       const toughAttr = parseNum(await rcon.cmd(`attribute ${SEL} ${prefix}armor_toughness get`));
       await rcon.cmd(`damage ${SEL} 10 minecraft:mob_attack`);
@@ -179,10 +194,7 @@ async function runDamage() {
 
 // ------------------------------------------------------------------ fall --
 async function runFall() {
-  const _prefix = await (async () => {
-    await freshMob();
-    return attrPrefix();
-  })();
+  await freshMob();
   const samples = [];
   const cases = [];
   for (const h of [2, 3, 3.5, 4, 5, 10, 23.5, 50, 100]) cases.push({ h });
