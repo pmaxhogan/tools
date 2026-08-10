@@ -140,10 +140,20 @@ publicly). Game code is reimplemented, never copied.
 
 - [x] Interview complete, decisions locked
 - [x] Manifest ground truth verified
-- [ ] Pipeline: download + JDK provisioning
-- [ ] Pipeline: decompile (remap + Vineflower)
-- [ ] Pipeline: data extraction to data.ts
-- [ ] Pipeline: harness vectors (1.21.11 proof first)
-- [ ] Four tools implemented, tested against vectors
-- [ ] Registry, icons, panels wired; matrix rows added
-- [ ] Deployed; browser QA passed per tool
+- [x] Pipeline: download + JDK provisioning
+- [x] Pipeline: decompile (remap + Vineflower)
+- [x] Pipeline: data extraction to data.ts
+- [x] Pipeline: harness vectors (1.21.11 proof first, then all six)
+- [x] Four tools implemented, tested against vectors
+- [x] Registry, icons, panels wired; matrix rows added
+- [x] Deployed; browser QA passed per tool
+- [x] Design pass: loot split workbench with tiles and searchable table
+      picker, anvil two-pane workbench with merge tree, damage matchup card
+      with mob attackers and custom kits, XP Option D panel with Mending
+      sustainability and weighted source mixtures
+- [x] Enchant applicability gating across all panels (no impossible
+      enchant/tool combos are ever shown)
+
+Later sessions pick up the eight remaining matrix rows (hunger, villager,
+spawning, projectile, elytra, growth, redstone timing) with the pipeline,
+vectors, and gotchas documented above and in the mc-pipeline README notes.
