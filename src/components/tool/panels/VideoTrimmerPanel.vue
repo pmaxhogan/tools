@@ -21,6 +21,8 @@
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { X } from "lucide-vue-next";
 import { ToolError, type ToolMeta } from "@/tools/types";
+import { formatBytes } from "@/lib/format";
+import { downloadUrl } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -125,18 +127,6 @@ const progressPercent = computed(() => Math.round(captureProgress.value * 100));
 /* ---------------------------------------------------------------- */
 /* helpers                                                           */
 /* ---------------------------------------------------------------- */
-
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
 
 function baseName(name: string): string {
   const dot = name.lastIndexOf(".");
@@ -460,12 +450,7 @@ function cancelTrim() {
 
 function download() {
   if (!outputUrl.value) return;
-  const a = document.createElement("a");
-  a.href = outputUrl.value;
-  a.download = outputName.value;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  downloadUrl(outputUrl.value, outputName.value);
 }
 
 /* ---------------------------------------------------------------- */
@@ -511,7 +496,9 @@ onUnmounted(() => {
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
           <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground tabular-nums">{{ humanSize(fileSize) }}</span>
+          <span class="shrink-0 text-muted-foreground tabular-nums">{{
+            formatBytes(fileSize)
+          }}</span>
           <button
             type="button"
             aria-label="Remove video"
@@ -726,7 +713,7 @@ onUnmounted(() => {
                 {{ outputName }}
               </div>
               <div class="text-xs text-muted-foreground tabular-nums">
-                {{ humanSize(outputSize) }} from {{ humanSize(fileSize) }} of source
+                {{ formatBytes(outputSize) }} from {{ formatBytes(fileSize) }} of source
               </div>
             </div>
             <Button size="sm" variant="outline" @click="download"> Download </Button>

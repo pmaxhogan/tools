@@ -25,7 +25,9 @@ defineProps<{ meta: ToolMeta }>();
 
 type Mode = "camera" | "upload";
 const mode = ref<Mode>("camera");
-const inversionStill = ref<"attemptBoth" | "dontInvert" | "onlyInvert">("attemptBoth");
+/** Subset of QrOpts['inversion'] the UI offers; 'invertFirst' has no control here. */
+type Inversion = "attemptBoth" | "dontInvert" | "onlyInvert";
+const inversionStill = ref<Inversion>("attemptBoth");
 
 const inversionSpec: SelectOptionSpec = {
   kind: "select",
@@ -111,10 +113,11 @@ async function startCamera() {
     });
     videoTrack = stream.getVideoTracks()[0] ?? null;
 
-    // Torch is a Chromium-on-mobile extension and is not in the DOM types.
-    const caps = (
-      videoTrack as (MediaStreamTrack & { getCapabilities?: () => { torch?: boolean } }) | null
-    )?.getCapabilities?.();
+    // Torch is a Chromium-on-mobile extension and is not in the DOM types, and
+    // MediaTrackCapabilities itself has no runtime global (unlike
+    // MediaStreamTrack), so referencing it by name trips eslint's no-undef.
+    // Assert only the one field this panel reads instead.
+    const caps = videoTrack?.getCapabilities?.() as { torch?: boolean } | undefined;
     torchSupported.value = Boolean(caps?.torch);
     torchOn.value = false;
 
@@ -431,7 +434,7 @@ onUnmounted(() => {
           :spec="inversionSpec"
           :model-value="inversionStill"
           class="w-full bg-card"
-          @update:model-value="(v) => (inversionStill = v as typeof inversionStill.value)"
+          @update:model-value="(v) => (inversionStill = v as Inversion)"
         />
       </div>
     </div>

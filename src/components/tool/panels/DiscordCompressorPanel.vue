@@ -29,6 +29,8 @@ import {
   runJob,
   terminateEngine,
 } from "@/lib/ffmpeg";
+import { formatBytes } from "@/lib/format";
+import { downloadUrl } from "@/lib/download";
 import {
   MAX_CAP_MB,
   OVERHEAD_FLOOR_BYTES,
@@ -135,18 +137,6 @@ const error = ref<{ message: string; fix?: string; log: string[] } | null>(null)
 /* ---------------------------------------------------------------- */
 /* formatting                                                        */
 /* ---------------------------------------------------------------- */
-
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
 
 function megabytes(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1);
@@ -548,12 +538,8 @@ async function cancel() {
 function download() {
   const out = result.value;
   if (!out) return;
-  const a = document.createElement("a");
-  a.href = out.url;
-  a.download = out.name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  // out.url is an object URL owned by `result`, revoked in clearResult/unmount.
+  downloadUrl(out.url, out.name);
 }
 
 /* ---------------------------------------------------------------- */
@@ -609,7 +595,7 @@ onUnmounted(clearResult);
           >
             <span class="truncate font-medium">{{ file.name }}</span>
             <span class="shrink-0 text-muted-foreground tabular-nums">
-              {{ humanSize(file.size) }}
+              {{ formatBytes(file.size) }}
             </span>
             <button
               type="button"
@@ -668,13 +654,11 @@ onUnmounted(clearResult);
           </p>
         </div>
 
-        <Button
-          v-else
-          class="self-start"
-          size="sm"
-          :disabled="engineState === 'loading'"
-          @click="loadEngine"
-        >
+        <!-- This branch only ever renders while engineState is 'idle' (the
+             sibling v-if already covers 'loading', the wrapper covers
+             'ready'), and loadEngine itself guards re-entrancy, so there is
+             nothing left here worth disabling on. -->
+        <Button v-else class="self-start" size="sm" @click="loadEngine">
           {{ engineButtonLabel }}
         </Button>
       </div>

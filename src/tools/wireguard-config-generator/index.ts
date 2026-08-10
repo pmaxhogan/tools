@@ -45,7 +45,7 @@ export function toBase64(bytes: Uint8Array): string {
 
 function randomBytesFromCrypto(n: number): Uint8Array {
   const buf = new Uint8Array(n);
-  globalThis.crypto.getRandomValues(buf);
+  crypto.getRandomValues(buf);
   return buf;
 }
 
@@ -311,12 +311,11 @@ export function buildPeerConfig(o: PeerConfigOptions): string {
  * call generates a brand-new keypair so nobody is tempted to paste a "sample"
  * key from documentation into a real tunnel.
  */
-/* eslint-disable @typescript-eslint/no-unused-vars -- both params are intentionally unused */
+
 export async function run(
   _input: undefined,
   _opts: WireguardOpts,
 ): Promise<Record<string, string>> {
-  /* eslint-enable @typescript-eslint/no-unused-vars */
   const { privateKey, publicKey } = generateKeypair();
   const presharedKey = generatePsk();
   return {

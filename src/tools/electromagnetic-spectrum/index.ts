@@ -226,21 +226,37 @@ function bandLogWidth(band: Band): number {
 }
 
 /**
+ * The narrowest band among siblings that contains a frequency, or undefined when
+ * none does. Narrowest wins so the readout is the most specific reading of an
+ * overlap (congested application bands do overlap). Ties keep the first sibling,
+ * matching the order the dataset declares.
+ */
+function narrowestContaining(level: Band[], freqHz: number): Band | undefined {
+  let best: Band | undefined;
+  for (const band of level) {
+    if (!inBand(freqHz, band)) continue;
+    if (best === undefined || bandLogWidth(band) < bandLogWidth(best)) best = band;
+  }
+  return best;
+}
+
+/**
  * The path of bands from the top level down to the most specific band that
- * contains a frequency, for example [Radio, VHF, FM broadcast]. When sibling
- * bands overlap (congested application bands can), the narrowest match wins so
- * the readout is the most specific. Returns [] when nothing contains it.
+ * contains a frequency, for example [Radio, VHF, FM broadcast]. Returns [] when
+ * nothing contains it.
+ *
+ * The per-level pick is a named function rather than a filter and sort inside
+ * the loop for a type reason: `level` is reassigned from the chosen band's
+ * children, so inlining the pick makes its type depend on itself and the
+ * checker gives up (TS7022). An annotated helper cuts the cycle.
  */
 export function bandPathAt(freqHz: number): Band[] {
   const path: Band[] = [];
   let level: Band[] | undefined = BANDS;
 
   while (level) {
-    const matches = level.filter((b) => inBand(freqHz, b));
-    if (matches.length === 0) break;
-    // Narrowest containing band wins ties from overlapping application bands.
-    matches.sort((a, b) => bandLogWidth(a) - bandLogWidth(b));
-    const chosen = matches[0]!;
+    const chosen = narrowestContaining(level, freqHz);
+    if (!chosen) break;
     path.push(chosen);
     level = chosen.children;
   }

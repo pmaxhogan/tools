@@ -1,4 +1,5 @@
 import { optimize, type Config } from "svgo/browser";
+import { formatByteCount, formatBytes as formatByteSize } from "@/lib/format";
 import { ToolError, type ToolLogic } from "../types";
 
 export interface SvgoOpts {
@@ -27,15 +28,9 @@ function byteLength(s: string): number {
   return new TextEncoder().encode(s).length;
 }
 
-function humanSize(bytes: number): string {
-  const abs = Math.abs(bytes);
-  if (abs < 1024) return `${bytes} B`;
-  if (abs < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
 function formatBytes(n: number): string {
-  return `${n.toLocaleString()} bytes (${humanSize(n)})`;
+  const size = formatByteSize(n, { maxUnit: "MB", precision: 1, largePrecision: 1, clamp: false });
+  return `${formatByteCount(n)} (${size})`;
 }
 
 function formatSaved(before: number, after: number): string {

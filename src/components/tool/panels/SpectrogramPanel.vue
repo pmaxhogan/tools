@@ -4,6 +4,9 @@ import { X } from "lucide-vue-next";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { isEngineReady, isMediaSupported, runJob } from "@/lib/ffmpeg";
 import { isMetered, shouldAutoDownload } from "@/lib/connection";
+import { formatBytes } from "@/lib/format";
+import { downloadBlob } from "@/lib/download";
+import type { ColorScheme, FreqAxis, FreqScale } from "@/tools/audio-spectrogram/index";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -14,8 +17,9 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
  *
  * The generic ToolShell cannot render this tool: the output is a picture with
  * two axes, a hover readout, and a playhead, none of which fit a text or
- * record shape. The DSP still lives in the pure logic layer, so this file
- * only decodes audio, drives the analysis in chunks, and paints canvases.
+ * record shape. The DSP and the plot geometry still live in the pure logic
+ * layer, so this file only decodes audio, drives the analysis in chunks, and
+ * paints canvases.
  *
  * Nothing touches the DOM or the audio stack until a file arrives, so the
  * component renders inert on the server.
@@ -39,8 +43,6 @@ function loadLogic(): Promise<SpecLogic> {
 const MAX_ANALYSIS_SECONDS = 600;
 /** Column budget handed to the logic layer. Two screens wide is plenty. */
 const MAX_COLUMNS = 2000;
-/** Bottom of the logarithmic frequency axis. Below this is mostly rumble. */
-const LOG_MIN_HZ = 20;
 /**
  * Rates an OfflineAudioContext is asked to run at. The spec allows 8000 to
  * 96000 everywhere and browsers accept far more, but a header can hold any
@@ -199,18 +201,6 @@ const plotWidth = computed(() =>
 /* small helpers                                                     */
 /* ---------------------------------------------------------------- */
 
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
-
 function baseName(name: string): string {
   const dot = name.lastIndexOf(".");
   return dot > 0 ? name.slice(0, dot) : name || "audio";
@@ -224,44 +214,6 @@ function toToolError(e: unknown): { message: string; fix?: string } {
   return e instanceof ToolError
     ? { message: e.message, fix: e.fix }
     : { message: e instanceof Error ? e.message : String(e) };
-}
-
-function triggerDownload(url: string, name: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
-function ascii(bytes: Uint8Array, at: number, length: number): string {
-  let out = "";
-  for (let i = at; i < at + length && i < bytes.length; i++) out += String.fromCharCode(bytes[i]!);
-  return out;
-}
-
-/**
- * Name the container from its magic bytes so a decode failure can say what
- * the file actually is instead of blaming the user for a "bad file".
- */
-function sniffAudioFormat(bytes: Uint8Array): string {
-  if (bytes.length < 12) return "";
-  if (ascii(bytes, 0, 4) === "RIFF" && ascii(bytes, 8, 4) === "WAVE") return "WAV";
-  if (ascii(bytes, 0, 4) === "fLaC") return "FLAC";
-  if (ascii(bytes, 0, 4) === "OggS") return "Ogg";
-  if (ascii(bytes, 0, 4) === "FORM" && ascii(bytes, 8, 4).startsWith("AIF")) return "AIFF";
-  if (ascii(bytes, 4, 4) === "ftyp") return "MP4 or M4A";
-  if (ascii(bytes, 0, 3) === "ID3") return "MP3";
-  if (bytes[0] === 0xff && (bytes[1]! & 0xe0) === 0xe0) return "MP3";
-  if (ascii(bytes, 0, 4) === "caff") return "CAF";
-  if (ascii(bytes, 0, 4) === "MThd") return "MIDI";
-  if (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3) {
-    return "WebM or Matroska";
-  }
-  if (ascii(bytes, 0, 4) === "wvpk") return "WavPack";
-  if (ascii(bytes, 0, 3) === "MAC") return "APE";
-  return "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -556,7 +508,9 @@ async function decodeAndAnalyze(bytes: Uint8Array, token: number) {
   } catch (e) {
     if (token !== analysisToken) return;
     stage.value = "idle";
-    const format = sniffAudioFormat(bytes);
+    // The module is loaded by the line above unless the import itself failed,
+    // which is not a decode problem and gets the generic message.
+    const format = logic.value?.sniffAudioFormat(bytes) ?? "";
     if (e instanceof ToolError) {
       error.value = toToolError(e);
     } else {
@@ -741,28 +695,16 @@ function clearFile() {
 /* ---------------------------------------------------------------- */
 
 const nyquist = computed(() => sampleRate.value / 2);
-/** Log axis never starts below 20 Hz, and never above a quarter of Nyquist. */
-const logBottom = computed(() => Math.min(LOG_MIN_HZ, nyquist.value / 4));
 
-/** Frequency at a fraction of the spectrogram height, 0 at the top. */
-function freqAtFraction(fraction: number): number {
-  const f = clamp(fraction, 0, 1);
-  if (axisScale.value === "log") {
-    const low = logBottom.value;
-    return low * Math.pow(nyquist.value / low, 1 - f);
-  }
-  return nyquist.value * (1 - f);
-}
-
-/** Inverse of freqAtFraction: where a frequency sits down the plot. */
-function fractionAtFreq(hz: number): number {
-  if (axisScale.value === "log") {
-    const low = logBottom.value;
-    const value = clamp(hz, low, nyquist.value);
-    return 1 - Math.log(value / low) / Math.log(nyquist.value / low);
-  }
-  return 1 - clamp(hz, 0, nyquist.value) / nyquist.value;
-}
+/**
+ * The axis every frequency is mapped through, built by the logic layer so the
+ * log floor rule lives with the maths that uses it. Null until the module has
+ * loaded, which is also before there is anything to plot.
+ */
+const axis = computed<FreqAxis | null>(() => {
+  const mod = logic.value;
+  return mod ? mod.freqAxis(sampleRate.value, axisScale.value as FreqScale) : null;
+});
 
 /* ---------------------------------------------------------------- */
 /* spectrogram image                                                 */
@@ -770,31 +712,18 @@ function fractionAtFreq(hz: number): number {
 
 let specImage: HTMLCanvasElement | null = null;
 
-/** 256 entry color ramp so the pixel loop never calls into the colormap. */
-function buildColorLut(mod: SpecLogic): Uint8Array {
-  const lut = new Uint8Array(256 * 3);
-  const scheme = colors.value as "viridis" | "magma" | "gray";
-  for (let i = 0; i < 256; i++) {
-    const [r, g, b] = mod.dbToColor(mod.DB_FLOOR + (-mod.DB_FLOOR * i) / 255, scheme);
-    lut[i * 3] = r;
-    lut[i * 3 + 1] = g;
-    lut[i * 3 + 2] = b;
-  }
-  return lut;
-}
-
 /**
  * Paint the columns into an offscreen bitmap once, so hover, playback, and
  * axis redraws are a single drawImage rather than a million pixel writes.
  *
- * The Y remap happens here: each output row covers a frequency band, and the
- * loudest bin inside that band wins so a thin loud line survives the squeeze
- * that the logarithmic axis puts on the top of the spectrum.
+ * The pooling and the frequency remap are the logic layer's; this function
+ * only owns the canvas the pixels land in.
  */
 function renderSpecImage() {
   const mod = logic.value;
+  const plot = axis.value;
   const cols = columns.value;
-  if (!mod || cols.length === 0) {
+  if (!mod || !plot || cols.length === 0) {
     specImage = null;
     return;
   }
@@ -808,49 +737,18 @@ function renderSpecImage() {
   const ctx = specImage.getContext("2d");
   if (!ctx) return;
 
-  const bins = freqBins.value;
   const image = ctx.createImageData(w, h);
-  const data = image.data;
-  const lut = buildColorLut(mod);
-  const floor = mod.DB_FLOOR;
-  const span = -floor;
-
-  // Bin range per output row, computed once and reused for every column.
-  const rowLo = new Int32Array(h);
-  const rowHi = new Int32Array(h);
-  const perBin = nyquist.value / bins;
-  for (let y = 0; y < h; y++) {
-    const top = freqAtFraction(y / h);
-    const bottom = freqAtFraction((y + 1) / h);
-    let lo = Math.floor(bottom / perBin);
-    let hi = Math.ceil(top / perBin);
-    lo = clamp(lo, 0, bins - 1);
-    hi = clamp(hi, lo + 1, bins);
-    rowLo[y] = lo;
-    rowHi[y] = hi;
-  }
-
-  const pooled = new Float32Array(bins);
-  for (let x = 0; x < w; x++) {
-    const from = Math.min(cols.length - 1, Math.floor((x * cols.length) / w));
-    const to = Math.max(from + 1, Math.min(cols.length, Math.floor(((x + 1) * cols.length) / w)));
-    pooled.set(cols[from]!);
-    for (let c = from + 1; c < to; c++) {
-      const column = cols[c]!;
-      for (let k = 0; k < bins; k++) if (column[k]! > pooled[k]!) pooled[k] = column[k]!;
-    }
-    for (let y = 0; y < h; y++) {
-      let db = floor;
-      const hi = rowHi[y]!;
-      for (let k = rowLo[y]!; k < hi; k++) if (pooled[k]! > db) db = pooled[k]!;
-      const index = clamp(Math.round(((db - floor) / span) * 255), 0, 255) * 3;
-      const at = (y * w + x) * 4;
-      data[at] = lut[index]!;
-      data[at + 1] = lut[index + 1]!;
-      data[at + 2] = lut[index + 2]!;
-      data[at + 3] = 255;
-    }
-  }
+  mod.paintSpectrogram(
+    {
+      columns: cols,
+      freqBins: freqBins.value,
+      width: w,
+      height: h,
+      axis: plot,
+      lut: mod.buildColorLut(colors.value as ColorScheme),
+    },
+    image.data,
+  );
   ctx.putImageData(image, 0, 0);
 }
 
@@ -880,45 +778,6 @@ function readTheme(el: HTMLElement): Theme {
   };
 }
 
-const TIME_STEPS = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600];
-const LINEAR_FREQ_STEPS = [50, 100, 200, 500, 1000, 2000, 2500, 5000, 10000];
-const LOG_FREQ_TICKS = [20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000, 5000, 10000, 20000];
-
-function pickTimeStep(duration: number, maxTicks: number): number {
-  for (const step of TIME_STEPS) if (duration / step <= maxTicks) return step;
-  return TIME_STEPS[TIME_STEPS.length - 1]!;
-}
-
-function freqTicks(): number[] {
-  const top = nyquist.value;
-  if (axisScale.value === "log") {
-    const out: number[] = [];
-    let lastY = Number.POSITIVE_INFINITY;
-    for (let i = LOG_FREQ_TICKS.length - 1; i >= 0; i--) {
-      const hz = LOG_FREQ_TICKS[i]!;
-      if (hz > top || hz < logBottom.value) continue;
-      const y = fractionAtFreq(hz) * SPEC_H;
-      // Decades crowd together at the bottom of a log axis, so drop any tick
-      // that would collide with the one already placed.
-      if (Math.abs(y - lastY) < 22) continue;
-      out.push(hz);
-      lastY = y;
-    }
-    return out;
-  }
-  const maxTicks = Math.max(3, Math.floor(SPEC_H / 46));
-  let step = LINEAR_FREQ_STEPS[LINEAR_FREQ_STEPS.length - 1]!;
-  for (const candidate of LINEAR_FREQ_STEPS) {
-    if (top / candidate <= maxTicks) {
-      step = candidate;
-      break;
-    }
-  }
-  const out: number[] = [];
-  for (let hz = 0; hz <= top + 1; hz += step) out.push(hz);
-  return out;
-}
-
 /**
  * Paint the whole figure: legend, waveform strip, spectrogram, both axes, and
  * optionally the crosshair and playhead. The export path calls this with the
@@ -938,6 +797,7 @@ function drawAll(ctx: CanvasRenderingContext2D, theme: Theme, overlays: boolean)
   ctx.font = '11px "Geist Mono", ui-monospace, "Cascadia Code", "Source Code Pro", monospace';
 
   const mod = logic.value;
+  const plot = axis.value;
 
   // Designed empty state: axes for a file that is not loaded would be a lie.
   if (!hasAudio.value) {
@@ -1017,32 +877,29 @@ function drawAll(ctx: CanvasRenderingContext2D, theme: Theme, overlays: boolean)
   ctx.fillStyle = theme.muted;
   ctx.strokeStyle = theme.border;
   ctx.textAlign = "right";
-  for (const hz of freqTicks()) {
-    const y = top + fractionAtFreq(hz) * SPEC_H;
-    ctx.beginPath();
-    ctx.moveTo(GUTTER_LEFT - 4, Math.round(y) + 0.5);
-    ctx.lineTo(GUTTER_LEFT, Math.round(y) + 0.5);
-    ctx.stroke();
-    ctx.fillText(
-      mod ? mod.freqToLabel(hz) : `${Math.round(hz)}`,
-      GUTTER_LEFT - 8,
-      clamp(y, top + 6, top + SPEC_H - 6),
-    );
+  if (mod && plot) {
+    for (const hz of mod.freqTicks(plot, SPEC_H)) {
+      const y = top + mod.fractionAtFreq(plot, hz) * SPEC_H;
+      ctx.beginPath();
+      ctx.moveTo(GUTTER_LEFT - 4, Math.round(y) + 0.5);
+      ctx.lineTo(GUTTER_LEFT, Math.round(y) + 0.5);
+      ctx.stroke();
+      ctx.fillText(mod.freqToLabel(hz), GUTTER_LEFT - 8, clamp(y, top + 6, top + SPEC_H - 6));
+    }
   }
 
   // Time axis underneath.
   if (duration > 0 && mod) {
-    const step = pickTimeStep(duration, Math.max(3, Math.floor(plotW / 84)));
-    const places = step < 1 ? 1 : 0;
+    const ticks = mod.timeTicks(duration, Math.max(3, Math.floor(plotW / 84)));
     ctx.textAlign = "center";
-    for (let t = 0; t <= duration + 1e-6; t += step) {
+    for (const t of ticks.times) {
       const x = GUTTER_LEFT + (t / duration) * plotW;
       ctx.beginPath();
       ctx.moveTo(Math.round(x) + 0.5, top + SPEC_H);
       ctx.lineTo(Math.round(x) + 0.5, top + SPEC_H + 4);
       ctx.stroke();
       ctx.fillText(
-        mod.secondsToLabel(t, places),
+        mod.secondsToLabel(t, ticks.decimals),
         clamp(x, GUTTER_LEFT + 16, GUTTER_LEFT + plotW - 16),
         top + SPEC_H + 14,
       );
@@ -1119,9 +976,7 @@ function exportPng() {
       };
       return;
     }
-    const url = URL.createObjectURL(blob);
-    triggerDownload(url, `${baseName(fileName.value)}-spectrogram.png`);
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `${baseName(fileName.value)}-spectrogram.png`);
   }, "image/png");
 }
 
@@ -1166,12 +1021,15 @@ function onPointerMove(e: PointerEvent) {
     }
     return;
   }
+  const mod = logic.value;
+  const plot = axis.value;
+  if (!mod || !plot) return;
   const cols = columns.value;
   const fraction = (point.x - GUTTER_LEFT) / plotWidth.value;
   const time = fraction * analyzedDuration.value;
-  const freq = freqAtFraction((point.y - specTop.value) / SPEC_H);
-  const columnIndex = clamp(Math.floor(fraction * cols.length), 0, cols.length - 1);
-  const bin = clamp(Math.round((freq / nyquist.value) * freqBins.value), 0, freqBins.value - 1);
+  const freq = mod.freqAtFraction(plot, (point.y - specTop.value) / SPEC_H);
+  const columnIndex = mod.columnIndexAt(fraction, cols.length);
+  const bin = mod.binIndexAt(plot, freq, freqBins.value);
   hover.value = {
     x: point.x,
     y: point.y,
@@ -1278,25 +1136,10 @@ watch(fftSize, () => {
   analyze();
 });
 
-/**
- * The rate part of the file info line.
- *
- * Three cases, and all three have to be told apart. The header rate and the
- * decoded rate agree: print the one number. They disagree, which happens when
- * the offline decode was refused and the shared context resampled: print both.
- * The header could not be read at all: print only what the decode produced and
- * say so, rather than passing a browser default off as a fact about the file.
- */
+/** The rate part of the file info line. The logic layer words all three cases. */
 const rateSummary = computed(() => {
-  const decoded = sampleRate.value;
-  const source = sourceRate.value;
-  if (source === null) {
-    return `decoded at ${decoded.toLocaleString()} Hz (browser resampled)`;
-  }
-  if (Math.round(source) === Math.round(decoded)) {
-    return `${source.toLocaleString()} Hz`;
-  }
-  return `${source.toLocaleString()} Hz source, decoded at ${decoded.toLocaleString()} Hz (browser resampled)`;
+  const mod = logic.value;
+  return mod ? mod.describeSampleRate(sourceRate.value, sampleRate.value) : "";
 });
 
 const summary = computed(() => {
@@ -1420,7 +1263,7 @@ const hoverChipStyle = computed(() => {
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
           <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ humanSize(fileSize) }}</span>
+          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
           <span v-if="summary" class="shrink-0 text-muted-foreground tabular-nums">{{
             summary
           }}</span>

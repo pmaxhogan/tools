@@ -42,6 +42,7 @@ npm run dev        # dev server
 npm test           # vitest suite for all tool logic
 npm run build      # static build + service worker generation
 npm run lint       # eslint, including purity rules for src/tools
+npm run typecheck  # astro check (.astro, .ts) + vue-tsc (.vue)
 ```
 
 Adding a tool: see `.claude/tool-authoring.md` for the logic contract and

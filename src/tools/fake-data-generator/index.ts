@@ -40,7 +40,7 @@ export function hashSeed(s: string): number {
 /** A cryptographically random uint32, used when the user left the seed blank. */
 function randomSeed(): number {
   const a = new Uint32Array(1);
-  globalThis.crypto.getRandomValues(a);
+  crypto.getRandomValues(a);
   return a[0]!;
 }
 

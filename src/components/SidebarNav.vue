@@ -37,7 +37,7 @@ const sections = computed(() => {
       { heading: null as string | null, items: flat.map((r, i) => ({ tool: r.tool, index: i })) },
     ];
   }
-  const out: { heading: string | null; items: { tool: SearchTool; index: number }[] }[] = [];
+  const out: { heading: string | null; items: { tool: SidebarTool; index: number }[] }[] = [];
   flat.forEach((r, i) => {
     const last = out[out.length - 1];
     if (last && last.heading === r.tool.category) last.items.push({ tool: r.tool, index: i });

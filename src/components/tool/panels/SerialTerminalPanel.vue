@@ -16,6 +16,7 @@ import {
   type LineEnding,
   type SendMode,
 } from "@/tools/serial-terminal/index";
+import { downloadText } from "@/lib/download";
 
 /**
  * Bespoke panel for the serial terminal. The Web Serial API only exists in a
@@ -660,15 +661,7 @@ function downloadLog() {
   const rows = liveRow && view.value === "text" ? [...store, liveRow] : store;
   const body = rows.map((r) => `${r.time} ${rowBody(r)}`).join("\n");
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  const blob = new Blob([`${body}\n`], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `serial-log-${stamp}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  downloadText(`${body}\n`, `serial-log-${stamp}.txt`);
 }
 
 /* ---------------------------------------------------------------- */

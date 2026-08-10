@@ -77,6 +77,8 @@ import {
   type MediaFile,
 } from "@/lib/ffmpeg";
 import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
+import { formatBytes } from "@/lib/format";
+import { downloadUrl } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 
 const props = withDefaults(
@@ -161,18 +163,6 @@ const error = ref<{ message: string; fix?: string; log: string[] } | null>(null)
 /* ---------------------------------------------------------------- */
 /* formatting                                                        */
 /* ---------------------------------------------------------------- */
-
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
 
 function megabytes(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1);
@@ -464,12 +454,8 @@ async function cancel() {
 }
 
 function download(out: OutputFile) {
-  const a = document.createElement("a");
-  a.href = out.url;
-  a.download = out.name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  // out.url is an object URL owned by `outputs`, revoked in clearOutputs/unmount.
+  downloadUrl(out.url, out.name);
 }
 
 /* ---------------------------------------------------------------- */
@@ -548,7 +534,7 @@ onUnmounted(() => {
           >
             <span class="truncate font-medium">{{ item.file.name }}</span>
             <span class="shrink-0 text-muted-foreground tabular-nums">
-              {{ humanSize(item.file.size) }}
+              {{ formatBytes(item.file.size) }}
             </span>
             <button
               type="button"
@@ -607,13 +593,11 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <Button
-          v-else
-          class="self-start"
-          size="sm"
-          :disabled="engineState === 'loading'"
-          @click="loadEngine"
-        >
+        <!-- This branch only ever renders while engineState is 'idle' (the
+             sibling v-if already covers 'loading', the wrapper covers
+             'ready'), and loadEngine itself guards re-entrancy, so there is
+             nothing left here worth disabling on. -->
+        <Button v-else class="self-start" size="sm" @click="loadEngine">
           {{ engineButtonLabel }}
         </Button>
       </div>
@@ -712,7 +696,7 @@ onUnmounted(() => {
                   {{ out.name }}
                 </div>
                 <div class="text-xs text-muted-foreground tabular-nums">
-                  {{ humanSize(out.size) }}
+                  {{ formatBytes(out.size) }}
                 </div>
               </div>
               <Button size="sm" variant="outline" @click="download(out)"> Download </Button>

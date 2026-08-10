@@ -4,6 +4,8 @@ import { ChevronLeft, ChevronRight, Download, Play, X } from "lucide-vue-next";
 import initSqlJs from "sql.js";
 import wasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { ToolError, type ToolMeta } from "@/tools/types";
+import { formatBytes } from "@/lib/format";
+import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -84,19 +86,6 @@ let runSeq = 0;
 /* ---------------------------------------------------------------- */
 /* formatting                                                        */
 /* ---------------------------------------------------------------- */
-
-function humanSize(bytes: number): string {
-  const n = Math.max(0, Math.round(bytes));
-  if (n < 1024) return `${n} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = n / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
 
 function rowLabel(count: number): string {
   if (count < 0) return "rows unknown";
@@ -393,23 +382,12 @@ function runSql() {
 /* downloads                                                         */
 /* ---------------------------------------------------------------- */
 
-function download(blob: Blob, name: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
 function exportDatabase() {
   const database = db.value;
   if (!database) return;
   try {
     const bytes = database.export();
-    download(
+    downloadBlob(
       new Blob([bytes.slice().buffer as ArrayBuffer], { type: "application/vnd.sqlite3" }),
       `${baseName(fileName.value)}-modified.db`,
     );
@@ -424,7 +402,7 @@ function exportCsv(pane: Pane) {
   if (!mod) return;
   const csv = mod.toCsv(pane.result);
   const stem = pane.title.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "result";
-  download(new Blob([csv], { type: "text/csv" }), `${stem}.csv`);
+  downloadBlob(new Blob([csv], { type: "text/csv" }), `${stem}.csv`);
 }
 </script>
 
@@ -453,7 +431,7 @@ function exportCsv(pane: Pane) {
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
           <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ humanSize(fileSize) }}</span>
+          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
           <button
             type="button"
             aria-label="Close this database"
@@ -499,7 +477,7 @@ function exportCsv(pane: Pane) {
         <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
           <div class="text-xs text-muted-foreground">File size</div>
           <div class="font-mono text-lg tabular-nums">
-            {{ humanSize(fileSize) }}
+            {{ formatBytes(fileSize) }}
           </div>
         </div>
         <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">

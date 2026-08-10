@@ -29,6 +29,22 @@ export default tseslint.config(
     },
   },
   {
+    // A leading underscore marks a parameter as deliberately unused. Tool `run`
+    // functions must accept (input, opts) to satisfy the ToolLogic contract even
+    // when a tool reads neither, so this is the normal case, not an exception.
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
+  {
     files: ["src/tools/**/*.ts"],
     ignores: ["src/tools/**/*.test.ts"],
     rules: {
@@ -39,7 +55,29 @@ export default tseslint.config(
         "document",
         "navigator",
         "localStorage",
+        "sessionStorage",
         "fetch",
+        "indexedDB",
+        "caches",
+        "XMLHttpRequest",
+        "WebSocket",
+        "EventSource",
+        "importScripts",
+        // The bare-global bans above would be trivially sidestepped by reaching
+        // through globalThis/self, so ban the object itself. Tool logic has no
+        // legitimate use for it: the pure globals it does rely on (crypto, btoa)
+        // are available unprefixed in every runtime the tools target, so an
+        // allowlist of permitted properties would only be a maintenance burden.
+        {
+          name: "globalThis",
+          message:
+            "Rule 27: tool logic stays pure. Reaching through globalThis does not make a DOM, storage, or network global allowed. Pure globals (crypto, btoa) work unprefixed in browsers, Workers, and Node.",
+        },
+        {
+          name: "self",
+          message:
+            "Rule 27: tool logic stays pure. Reaching through self does not make a DOM, storage, or network global allowed. Pure globals (crypto, btoa) work unprefixed in browsers, Workers, and Node.",
+        },
       ],
       "no-restricted-imports": ["error", { patterns: ["vue", "@/components/*", "astro:*"] }],
     },
@@ -60,6 +98,8 @@ export default tseslint.config(
       "public/models/",
       "public/pyodide/",
       "public/tesseract/",
+      "mc-pipeline/extracted/",
+      "mc-pipeline/vectors/",
       "mc-pipeline/work/",
     ],
   },

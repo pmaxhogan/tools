@@ -25,7 +25,6 @@ function deviceLabel(device: { vendor?: string; model?: string; type?: string })
   return type ? `${parts || "Unknown"} (${type})` : parts || "Unknown";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: Record<string, unknown>): UserAgentParserResult {
   const ua = (input ?? "").trim();
   if (!ua)

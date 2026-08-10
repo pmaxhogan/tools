@@ -12,6 +12,7 @@
  * `TranscriberPanel.vue` decodes the file, drives the pipeline, and calls
  * `formatTranscript` with the chunks the model returned.
  */
+import { formatBytes as formatByteSize } from "@/lib/format";
 import { ToolError, type ToolLogic } from "../types";
 
 /* ------------------------------------------------------------------ */
@@ -279,15 +280,7 @@ const MODEL_SIZES: Record<string, string> = {
 };
 
 function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
+  return formatByteSize(bytes, { maxUnit: "GB" });
 }
 
 export type TranscriberResult = Record<string, string>;

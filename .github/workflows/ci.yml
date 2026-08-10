@@ -1,0 +1,35 @@
+name: CI
+
+# The Cloudflare Worker deploys straight from main, so this is the only gate
+# between a push and production. Keep it fast: no builds, no browsers, just the
+# three checks that catch the mistakes reviews miss.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Lets a run be replayed from the Actions tab without an empty commit, which
+  # matters when a run is needed against an unchanged tree (a flake, or a
+  # queue that dropped the original).
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # `npm ci` fails loudly when package.json and the lockfile disagree, which
+      # is the whole point: it is also what Workers Builds runs, so a lockfile
+      # that installs here installs there. See the lockfile rule in CLAUDE.md.
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      - run: npm test

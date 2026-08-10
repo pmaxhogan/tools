@@ -35,8 +35,7 @@ function fits(size: number): boolean {
   el.style.fontSize = `${size}px`;
   // A 0.5px slack absorbs sub-pixel rounding so a snug fit is not rejected.
   return (
-    el.scrollWidth <= container.clientWidth + 0.5 &&
-    el.scrollHeight <= container.clientHeight + 0.5
+    el.scrollWidth <= container.clientWidth + 0.5 && el.scrollHeight <= container.clientHeight + 0.5
   );
 }
 

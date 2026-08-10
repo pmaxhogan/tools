@@ -125,7 +125,6 @@ function convertLine(line: string): Record<Label, string> {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: CaseOpts): CaseResult {
   const raw = input ?? "";
   if (!raw.trim())

@@ -3,9 +3,10 @@ import { ToolError, type ToolLogic } from "../types";
 /**
  * Spectrogram Viewer: the pure DSP layer.
  *
- * Everything here is plain arithmetic on typed arrays. Decoding audio and
- * painting pixels belong to the panel; this file only turns samples into
- * decibel columns, waveform envelopes, colors, and axis labels.
+ * Everything here is plain arithmetic on typed arrays. Owning a canvas,
+ * decoding audio, and following the pointer belong to the panel; this file
+ * turns samples into decibel columns and waveform envelopes, lays out the two
+ * axes, and fills a pixel buffer with the picture.
  */
 
 /* ------------------------------------------------------------------ */
@@ -477,6 +478,330 @@ export function dbToColor(db: number, scheme: ColorScheme): Rgb {
 }
 
 /* ------------------------------------------------------------------ */
+/* Frequency axis                                                      */
+/* ------------------------------------------------------------------ */
+
+export type FreqScale = "linear" | "log";
+
+/**
+ * Bottom of a logarithmic frequency axis.
+ *
+ * A log axis has no position for DC at all, so it needs a floor, and below
+ * roughly 20 Hz there is nothing to look at but rumble and DC offset. Starting
+ * here spends the pixels on the octaves that carry speech and music instead.
+ */
+export const LOG_MIN_HZ = 20;
+
+export interface FreqAxis {
+  /** Top of the axis in hertz: half the sample rate. */
+  nyquist: number;
+  scale: FreqScale;
+  /** Frequency at the bottom edge: 0 on a linear axis, LOG_MIN_HZ or less on a log one. */
+  bottom: number;
+}
+
+/**
+ * The frequency axis for a decoded sample rate.
+ *
+ * The log floor is capped at a quarter of Nyquist so a narrowband recording
+ * still gets a usable axis. An 80 Hz Nyquist against a fixed 20 Hz floor would
+ * leave two octaves to draw, and the tick thinning would then throw most of
+ * them away.
+ */
+export function freqAxis(sampleRate: number, scale: FreqScale): FreqAxis {
+  const nyquist = sampleRate / 2;
+  return {
+    nyquist,
+    scale,
+    bottom: scale === "log" ? Math.min(LOG_MIN_HZ, nyquist / 4) : 0,
+  };
+}
+
+/**
+ * Frequency at a fraction of the plot height, 0 at the top edge and 1 at the
+ * bottom. Fractions outside that range clamp, so a pointer a pixel past the
+ * edge reads the edge rather than a frequency the plot never showed.
+ *
+ * The log branch is a geometric interpolation: equal distances on screen are
+ * equal frequency ratios, which is what puts every octave at the same height.
+ */
+export function freqAtFraction(axis: FreqAxis, fraction: number): number {
+  const f = clamp(fraction, 0, 1);
+  if (axis.scale === "log") {
+    return axis.bottom * Math.pow(axis.nyquist / axis.bottom, 1 - f);
+  }
+  return axis.nyquist * (1 - f);
+}
+
+/** Inverse of freqAtFraction: where a frequency sits down the plot. */
+export function fractionAtFreq(axis: FreqAxis, hz: number): number {
+  if (axis.scale === "log") {
+    const value = clamp(hz, axis.bottom, axis.nyquist);
+    return 1 - Math.log(value / axis.bottom) / Math.log(axis.nyquist / axis.bottom);
+  }
+  return 1 - clamp(hz, 0, axis.nyquist) / axis.nyquist;
+}
+
+/** Which column sits at a fraction across the plot, for the hover readout. */
+export function columnIndexAt(fraction: number, columnCount: number): number {
+  return clamp(Math.floor(fraction * columnCount), 0, columnCount - 1);
+}
+
+/**
+ * Which FFT bin holds a frequency.
+ *
+ * Bins are always linear in frequency, whatever the axis is drawing: they come
+ * from the transform rather than from the picture, so bin k covers
+ * k * nyquist / binCount hertz on a log axis as much as on a linear one.
+ */
+export function binIndexAt(axis: FreqAxis, hz: number, binCount: number): number {
+  return clamp(Math.round((hz / axis.nyquist) * binCount), 0, binCount - 1);
+}
+
+/* ------------------------------------------------------------------ */
+/* Axis ticks                                                          */
+/* ------------------------------------------------------------------ */
+
+/** Steps that read as time rather than as arithmetic: no 3 or 7 second grid. */
+const TIME_STEPS = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600];
+/** Steps that land on round frequencies, coarsest last. */
+const LINEAR_FREQ_STEPS = [50, 100, 200, 500, 1000, 2000, 2500, 5000, 10000];
+/** Frequencies worth a label on a log axis, one to three per decade. */
+const LOG_FREQ_TICKS = [20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000, 5000, 10000, 20000];
+
+/** Vertical room one frequency label needs to itself, in pixels. */
+const FREQ_LABEL_HEIGHT = 22;
+/** Pixels of plot a linear frequency tick is given before another is added. */
+const FREQ_TICK_SPACING = 46;
+
+/** The finest step from the ladder that keeps the axis under maxTicks labels. */
+export function pickTimeStep(duration: number, maxTicks: number): number {
+  for (const step of TIME_STEPS) if (duration / step <= maxTicks) return step;
+  return TIME_STEPS[TIME_STEPS.length - 1]!;
+}
+
+export interface TimeTicks {
+  /** Seconds between ticks. */
+  step: number;
+  /** Decimal places the labels need: only a sub second step shows fractions. */
+  decimals: number;
+  /** Tick positions in seconds, starting at 0. */
+  times: number[];
+}
+
+/**
+ * Tick positions for the time axis under the plot.
+ *
+ * The last tick is the one that says how long the clip runs, and a step like
+ * 0.05 is not representable in binary, so repeated addition lands a hair short
+ * of the duration and a plain `t <= duration` would drop it. Hence the slack.
+ */
+export function timeTicks(duration: number, maxTicks: number): TimeTicks {
+  const step = pickTimeStep(duration, maxTicks);
+  const decimals = step < 1 ? 1 : 0;
+  // A clip with no length has no axis. Refusing a non finite duration here is
+  // also what stops the loop below from running forever.
+  if (!Number.isFinite(duration) || duration <= 0) return { step, decimals, times: [] };
+  const times: number[] = [];
+  for (let t = 0; t <= duration + 1e-6; t += step) times.push(t);
+  return { step, decimals, times };
+}
+
+/**
+ * Frequencies to label down the left edge, ordered from the top of the plot
+ * down.
+ *
+ * The log branch walks the ladder downward from Nyquist because that is the
+ * end where the ticks are furthest apart: it keeps the highest frequency it
+ * can and drops whatever would collide with the label already placed. Walking
+ * up from the bottom would instead keep 20, 30 and 50 and throw away the
+ * decade marks that make a log axis readable.
+ */
+export function freqTicks(axis: FreqAxis, plotHeight: number): number[] {
+  if (axis.scale === "log") {
+    const out: number[] = [];
+    let lastY = Number.POSITIVE_INFINITY;
+    for (let i = LOG_FREQ_TICKS.length - 1; i >= 0; i--) {
+      const hz = LOG_FREQ_TICKS[i]!;
+      if (hz > axis.nyquist || hz < axis.bottom) continue;
+      const y = fractionAtFreq(axis, hz) * plotHeight;
+      if (Math.abs(y - lastY) < FREQ_LABEL_HEIGHT) continue;
+      out.push(hz);
+      lastY = y;
+    }
+    return out;
+  }
+  const maxTicks = Math.max(3, Math.floor(plotHeight / FREQ_TICK_SPACING));
+  let step = LINEAR_FREQ_STEPS[LINEAR_FREQ_STEPS.length - 1]!;
+  for (const candidate of LINEAR_FREQ_STEPS) {
+    if (axis.nyquist / candidate <= maxTicks) {
+      step = candidate;
+      break;
+    }
+  }
+  const out: number[] = [];
+  // The 1 Hz slack keeps the top tick when repeated addition of the step lands
+  // a hair under Nyquist.
+  for (let hz = 0; hz <= axis.nyquist + 1; hz += step) out.push(hz);
+  return out;
+}
+
+/* ------------------------------------------------------------------ */
+/* Bitmap                                                              */
+/* ------------------------------------------------------------------ */
+
+/** Ramp entries: one per level once a decibel value is quantized to a byte. */
+const LUT_SIZE = 256;
+
+function positiveInt(value: number, name: string): number {
+  if (!Number.isInteger(value) || value < 1) {
+    throw new ToolError(
+      "bad-plot-size",
+      `${name} must be a whole number of at least 1, but ${value} was given.`,
+      "Pass the pixel size of the bitmap you are about to draw.",
+    );
+  }
+  return value;
+}
+
+/**
+ * A 256 entry RGB ramp spanning DB_FLOOR to 0 dB, as flat r, g, b bytes.
+ *
+ * The pixel loop below reaches for a color once per point, which is millions
+ * of times on a wide plot, so the colormap is evaluated 256 times up front and
+ * the loop then only reads bytes.
+ */
+export function buildColorLut(scheme: ColorScheme): Uint8Array {
+  const lut = new Uint8Array(LUT_SIZE * 3);
+  for (let i = 0; i < LUT_SIZE; i++) {
+    const [r, g, b] = dbToColor(DB_FLOOR + (-DB_FLOOR * i) / (LUT_SIZE - 1), scheme);
+    lut[i * 3] = r;
+    lut[i * 3 + 1] = g;
+    lut[i * 3 + 2] = b;
+  }
+  return lut;
+}
+
+export interface RowBins {
+  /** First bin each row covers. */
+  lo: Int32Array;
+  /** One past the last bin each row covers. */
+  hi: Int32Array;
+}
+
+/**
+ * The bin range every pixel row covers, top row first.
+ *
+ * Rows are worked out once and reused for every column, which is the
+ * difference between a few hundred divisions and a few million. Every range
+ * holds at least one bin: at the bottom of a log axis a row is narrower than a
+ * bin is wide, and an empty range would paint those rows at the noise floor.
+ */
+export function computeRowBins(axis: FreqAxis, height: number, bins: number): RowBins {
+  positiveInt(height, "The bitmap height");
+  positiveInt(bins, "The bin count");
+  const lo = new Int32Array(height);
+  const hi = new Int32Array(height);
+  const perBin = axis.nyquist / bins;
+  for (let y = 0; y < height; y++) {
+    const top = freqAtFraction(axis, y / height);
+    const bottom = freqAtFraction(axis, (y + 1) / height);
+    const first = clamp(Math.floor(bottom / perBin), 0, bins - 1);
+    lo[y] = first;
+    hi[y] = clamp(Math.ceil(top / perBin), first + 1, bins);
+  }
+  return { lo, hi };
+}
+
+export interface SpectrogramImage {
+  /** Decibel columns from computeSpectrogram, earliest first. */
+  columns: Float32Array[];
+  /** Values per column, which is the plan's freqBins. */
+  freqBins: number;
+  /** Bitmap width in pixels. */
+  width: number;
+  /** Bitmap height in pixels. */
+  height: number;
+  axis: FreqAxis;
+  /** Color ramp from buildColorLut. */
+  lut: Uint8Array;
+}
+
+/**
+ * Paint the decibel columns into an RGBA pixel buffer, one row per band of
+ * bins and one pixel column per slice of time.
+ *
+ * Both reductions take the maximum rather than the mean. A clip normally has
+ * more columns than the plot has pixels, and each row covers a range of bins;
+ * averaging either one would erase a thin loud line, which on a spectrogram is
+ * usually the thing being looked for. The buffer is filled in place because it
+ * is normally the `data` of a canvas ImageData, and copying several megabytes
+ * per redraw would buy nothing.
+ */
+export function paintSpectrogram(image: SpectrogramImage, target: Uint8ClampedArray): void {
+  const { columns, axis, lut } = image;
+  const width = positiveInt(image.width, "The bitmap width");
+  const height = positiveInt(image.height, "The bitmap height");
+  const bins = positiveInt(image.freqBins, "The bin count");
+  const count = columns.length;
+  if (count === 0) {
+    throw new ToolError(
+      "empty-spectrogram",
+      "There are no spectrogram columns to draw.",
+      "Run computeSpectrogram first and pass the columns it returns.",
+    );
+  }
+  if (columns[0]!.length !== bins) {
+    throw new ToolError(
+      "bin-count-mismatch",
+      `The columns hold ${columns[0]!.length} values each, but ${bins} bins were declared.`,
+      "Pass the freqBins from the same plan that produced the columns.",
+    );
+  }
+  if (lut.length < LUT_SIZE * 3) {
+    throw new ToolError(
+      "short-color-ramp",
+      `The color ramp holds ${lut.length} bytes, but ${LUT_SIZE * 3} are needed.`,
+      "Build it with buildColorLut rather than by hand.",
+    );
+  }
+  if (target.length !== width * height * 4) {
+    throw new ToolError(
+      "bad-pixel-buffer",
+      `A ${width} by ${height} bitmap needs ${width * height * 4} bytes, but the buffer holds ${target.length}.`,
+      "Size the buffer as width * height * 4, which a canvas ImageData of the same size already is.",
+    );
+  }
+
+  const { lo: rowLo, hi: rowHi } = computeRowBins(axis, height, bins);
+  const span = -DB_FLOOR;
+  const pooled = new Float32Array(bins);
+  for (let x = 0; x < width; x++) {
+    // Columns per pixel is fractional, so the range comes from the pixel
+    // edges. When the plot is wider than the clip is long, the same column
+    // lands in several pixels rather than leaving gaps between them.
+    const from = Math.min(count - 1, Math.floor((x * count) / width));
+    const to = Math.max(from + 1, Math.min(count, Math.floor(((x + 1) * count) / width)));
+    pooled.set(columns[from]!);
+    for (let c = from + 1; c < to; c++) {
+      const column = columns[c]!;
+      for (let k = 0; k < bins; k++) if (column[k]! > pooled[k]!) pooled[k] = column[k]!;
+    }
+    for (let y = 0; y < height; y++) {
+      let db = DB_FLOOR;
+      const hi = rowHi[y]!;
+      for (let k = rowLo[y]!; k < hi; k++) if (pooled[k]! > db) db = pooled[k]!;
+      const index = clamp(Math.round(((db - DB_FLOOR) / span) * 255), 0, 255) * 3;
+      const at = (y * width + x) * 4;
+      target[at] = lut[index]!;
+      target[at + 1] = lut[index + 1]!;
+      target[at + 2] = lut[index + 2]!;
+      target[at + 3] = 255;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Labels                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -509,6 +834,27 @@ export function freqToLabel(hz: number): string {
   const k = safe / 1000;
   const text = k < 100 ? k.toFixed(1) : k.toFixed(0);
   return `${text.replace(/\.0$/, "")} kHz`;
+}
+
+/**
+ * The sample rate part of the file summary line.
+ *
+ * Three cases have to be told apart. The header rate and the decoded rate
+ * agree, so one number is the whole truth. They disagree, which is what
+ * happens when the browser refused to decode at the file's own rate and
+ * resampled, and then both numbers matter because the frequency axis follows
+ * the decoded one. Or the header could not be read at all, in which case the
+ * only honest thing to print is what the decoder produced, labelled as such
+ * rather than passed off as a fact about the file.
+ */
+export function describeSampleRate(sourceRate: number | null, decodedRate: number): string {
+  if (sourceRate === null) {
+    return `decoded at ${decodedRate.toLocaleString()} Hz (browser resampled)`;
+  }
+  if (Math.round(sourceRate) === Math.round(decodedRate)) {
+    return `${sourceRate.toLocaleString()} Hz`;
+  }
+  return `${sourceRate.toLocaleString()} Hz source, decoded at ${decodedRate.toLocaleString()} Hz (browser resampled)`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -725,6 +1071,35 @@ export function sniffSampleRate(bytes: Uint8Array): number | null {
   return (
     sniffWav(bytes) ?? sniffFlac(bytes) ?? sniffOgg(bytes) ?? sniffAiff(bytes) ?? sniffMp3(bytes)
   );
+}
+
+/**
+ * Name the container from its magic bytes, or "" when nothing matches.
+ *
+ * Deliberately wider than the rate sniffer above, and answering a different
+ * question: this one exists so a failed decode can say what the file actually
+ * is. "This browser could not decode this FLAC file" points at the codec,
+ * while no match at all points at the file, and those are different fixes.
+ */
+export function sniffAudioFormat(bytes: Uint8Array): string {
+  // Every check below reads within the first 12 bytes, so one length guard
+  // covers all of them.
+  if (bytes.length < 12) return "";
+  if (tag(bytes, 0, 4) === "RIFF" && tag(bytes, 8, 4) === "WAVE") return "WAV";
+  if (tag(bytes, 0, 4) === "fLaC") return "FLAC";
+  if (tag(bytes, 0, 4) === "OggS") return "Ogg";
+  if (tag(bytes, 0, 4) === "FORM" && tag(bytes, 8, 4).startsWith("AIF")) return "AIFF";
+  if (tag(bytes, 4, 4) === "ftyp") return "MP4 or M4A";
+  if (tag(bytes, 0, 3) === "ID3") return "MP3";
+  if (bytes[0] === 0xff && (bytes[1]! & 0xe0) === 0xe0) return "MP3";
+  if (tag(bytes, 0, 4) === "caff") return "CAF";
+  if (tag(bytes, 0, 4) === "MThd") return "MIDI";
+  if (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3) {
+    return "WebM or Matroska";
+  }
+  if (tag(bytes, 0, 4) === "wvpk") return "WavPack";
+  if (tag(bytes, 0, 3) === "MAC") return "APE";
+  return "";
 }
 
 /* ------------------------------------------------------------------ */

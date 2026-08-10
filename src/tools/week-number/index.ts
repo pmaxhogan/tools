@@ -122,7 +122,6 @@ function format(d: Date): WeekNumberResult {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: WeekNumberOpts): WeekNumberResult {
   return format(parseDate(input));
 }

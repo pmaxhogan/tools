@@ -14,6 +14,7 @@ import { ImageDown, Printer, Shuffle } from "lucide-vue-next";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { cleanItems, generateBoards } from "@/tools/bingo-card-generator/index";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -280,14 +281,7 @@ async function exportCardPng(index: number) {
   const canvas = renderCardCanvas(grid, cardTitle, hasFreeSpace.value);
   canvas.toBlob((blob) => {
     if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${slugFileName(title.value || "bingo-card")}-${index + 1}.png`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadBlob(blob, `${slugFileName(title.value || "bingo-card")}-${index + 1}.png`);
   }, "image/png");
 }
 </script>

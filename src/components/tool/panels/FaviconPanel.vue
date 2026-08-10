@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import { buildIco, buildLinkTags, buildManifest } from "@/tools/favicon-generator/index";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -435,17 +436,6 @@ function onBgText(value: string) {
   if (hex) bgColor.value = hex;
 }
 
-function triggerDownload(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -456,7 +446,7 @@ async function downloadAll() {
   try {
     const queue = allFiles.value;
     for (let i = 0; i < queue.length; i += 1) {
-      triggerDownload(queue[i]!.blob, queue[i]!.name);
+      downloadBlob(queue[i]!.blob, queue[i]!.name);
       if (i < queue.length - 1) await wait(DOWNLOAD_GAP_MS);
     }
   } finally {
@@ -694,7 +684,7 @@ onUnmounted(() => {
             :key="file.name"
             variant="outline"
             size="sm"
-            @click="triggerDownload(file.blob, file.name)"
+            @click="downloadBlob(file.blob, file.name)"
           >
             {{ file.name }}
           </Button>

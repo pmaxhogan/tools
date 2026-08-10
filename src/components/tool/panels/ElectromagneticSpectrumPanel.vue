@@ -2,13 +2,10 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch, type Component } from "vue";
 import type { ToolMeta } from "@/tools/types";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import { downloadBlob } from "@/lib/download";
 import {
   AXIS_DECADES,
-  BANDS,
-  VISIBLE_MAX_NM,
-  VISIBLE_MIN_NM,
   describeFrequency,
-  flattenBands,
   formatEnergyEv,
   formatFrequency,
   formatKelvin,
@@ -16,12 +13,30 @@ import {
   frequencyToPosition,
   interpretQuery,
   positionToFrequency,
-  rgbToHex,
-  wavelengthNmToRgb,
-  type Band,
   type Interpretation,
   type Readout,
 } from "@/tools/electromagnetic-spectrum/index";
+import {
+  MIN_SPAN,
+  axisLengthPx,
+  axisPxToFreq,
+  axisPxToPos,
+  buildBandLabels,
+  buildScene,
+  centerHoldingAnchor,
+  clampAxisPx,
+  clampWindow,
+  freqToAxisPx,
+  mapHeightPx,
+  packBands,
+  sceneToSvg,
+  spectralStops,
+  withAlpha,
+  type AxisView,
+  type Orientation,
+  type Scene,
+  type SceneRect,
+} from "@/tools/electromagnetic-spectrum/layout";
 import { Button } from "@/components/ui/button";
 import CopyButton from "../CopyButton.vue";
 import FitText from "../FitText.vue";
@@ -66,12 +81,13 @@ import {
  * Bespoke panel for the Electromagnetic Spectrum explorer.
  *
  * All physics, the log10 position mapping, the band lookup and the search brain
- * (interpretQuery) live in the pure logic layer. This panel owns only
- * presentation: the canvas renderer, the DOM band-label overlay (auto-fit via
- * FitText), pointer and keyboard interaction (drag-select to zoom, scroll pan,
- * ctrl and scroll zoom, touch scrub and pinch), the lockable readout tooltip,
- * the combined number and search bar, PNG and SVG export, and the shareable URL
- * fragment.
+ * (interpretQuery) live in the pure logic layer; the lane packing, the axis
+ * coordinate transforms and the scene description live beside them in
+ * layout.ts. This panel owns only what needs a browser: the canvas painter, the
+ * DOM band-label overlay (auto-fit via FitText), pointer and keyboard
+ * interaction (drag-select to zoom, scroll pan, ctrl and scroll zoom, touch
+ * scrub and pinch), the lockable readout tooltip, the combined number and search
+ * bar, the export downloads, and the shareable URL fragment.
  *
  * Fragment schema: f = center frequency in hertz, d = decades visible,
  * q = optional locked frequency in hertz, o = manual orientation override
@@ -120,102 +136,25 @@ function iconFor(name?: string): Component | null {
 /* ------------------------------------------------------------------ */
 
 /**
- * A band placed into a specific stacked sub-lane. Lanes are grouped by tree
- * depth (all depth 0 lanes first, then depth 1, and so on), so a child always
- * sits below its parent and nests visually under it.
+ * The lane assignment for every band. It depends only on the static band ranges,
+ * never on the view, so it is computed once at module load and reused for every
+ * frame, every label pass and every export.
  */
-interface PackedBand {
-  band: Band;
-  depth: number;
-  lane: number;
-}
-
-/**
- * Greedy interval packing per depth level. Within a depth, bands are sorted by
- * their low frequency edge and each is placed in the first sub-lane whose last
- * placed band ends at or before this band starts; otherwise a new sub-lane
- * opens. Sibling bands that overlap in frequency (the 2.4 GHz ISM band, whose
- * Wi-Fi, Bluetooth, Zigbee and oven children all overlap) land in separate
- * stacked rows instead of colliding. Bands that only touch at an exact shared
- * edge (a clean partition, for example the color bands) still share one lane.
- *
- * The packing depends only on the static band ranges, never on the view, so it
- * is computed once at module load. The result drives both the total lane count
- * (which grows automatically as the data gains depth) and each band's row.
- */
-function packBands(): { packed: PackedBand[]; totalLanes: number } {
-  const flat = flattenBands(BANDS);
-  const byDepth = new Map<number, Band[]>();
-  for (const { band, depth } of flat) {
-    const arr = byDepth.get(depth);
-    if (arr) arr.push(band);
-    else byDepth.set(depth, [band]);
-  }
-
-  const packed: PackedBand[] = [];
-  let laneCursor = 0;
-  for (const depth of [...byDepth.keys()].sort((a, b) => a - b)) {
-    const bands = byDepth.get(depth)!.slice().sort((a, b) => a.fLow - b.fLow);
-
-    // Depth 0 (Gamma, X-rays, Ultraviolet, Visible, Infrared, Microwave, Radio)
-    // is conceptually a partition, so it always occupies a single lane. The tiny
-    // UV / Visible overlap (the 380 to 400 nm sliver) double-draws an
-    // imperceptible region rather than bumping Ultraviolet onto a second lane and
-    // leaving a gap in the top row. Sub-lane packing applies only at depth >= 1.
-    if (depth === 0) {
-      for (const band of bands) packed.push({ band, depth, lane: laneCursor });
-      laneCursor += 1;
-      continue;
-    }
-
-    // The highest fHigh placed so far in each sub-lane at this depth.
-    const laneEnds: number[] = [];
-    for (const band of bands) {
-      // A tiny relative slack so a band that starts exactly where another ends
-      // (a shared partition edge) still counts as non overlapping.
-      const startSlack = band.fLow * (1 + 1e-9);
-      let slot = laneEnds.findIndex((end) => end <= startSlack);
-      if (slot === -1) {
-        slot = laneEnds.length;
-        laneEnds.push(band.fHigh);
-      } else {
-        laneEnds[slot] = band.fHigh;
-      }
-      packed.push({ band, depth, lane: laneCursor + slot });
-    }
-    laneCursor += laneEnds.length;
-  }
-  return { packed, totalLanes: laneCursor };
-}
-
 const { packed: PACKED, totalLanes: TOTAL_LANES } = packBands();
 
-/** Target lane thickness (CSS px) along the cross axis, for readable labels. */
-const LANE_TARGET_PX = 38;
-/** Hard cap on the horizontal map height so a deep tree cannot overrun a page. */
-const MAP_HEIGHT_CAP = 660;
 /**
- * The horizontal map height: tall enough to give every packed lane its target
- * thickness (plus the tick strip), floored and capped for sane page layout. A
- * static value, since the lane count is static. In fullscreen the browser's own
- * `:fullscreen` rule overrides the height to fill the screen.
+ * The horizontal map height, driven by the lane count so a deeper band tree
+ * grows the map instead of crushing rows. Static, since the lane count is. In
+ * fullscreen the browser's own `:fullscreen` rule overrides it to fill the
+ * screen.
  */
-const HORIZONTAL_MAP_PX = Math.min(
-  MAP_HEIGHT_CAP,
-  Math.max(300, TOTAL_LANES * LANE_TARGET_PX + 26),
-);
+const HORIZONTAL_MAP_PX = mapHeightPx(TOTAL_LANES);
 
-/** Narrowest allowed view span, normalized. ~0.036 decade, below FM width. */
-const MIN_SPAN = 0.0015;
+/** The visible-light gradient stops, identical on every frame and every export. */
+const SPECTRAL_STOPS = spectralStops();
+
 /** Mouse move past this many CSS px turns a press into a drag-select zoom. */
 const DRAG_THRESHOLD = 5;
-/** Minimum drawn extents (CSS px) before a band's full label is shown. */
-const MIN_LABEL_ALONG = 30;
-const MIN_LABEL_CROSS = 12;
-/** Narrower than a full label but wide enough for the icon glyph plus its
- * padding (14px glyph plus the cell's 8px horizontal padding), so a lone icon
- * never bleeds past its box into a neighboring cell. */
-const ICON_ONLY_ALONG = 22;
 
 const containerRef = ref<HTMLDivElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -225,11 +164,9 @@ const isFullscreen = ref(false);
 
 // Orientation: an auto choice from the viewport, plus an optional manual
 // override that a shared link can carry. The effective orientation is derived.
-const autoOrientation = ref<"horizontal" | "vertical">("horizontal");
-const orientationOverride = ref<"horizontal" | "vertical" | null>(null);
-const orientation = computed<"horizontal" | "vertical">(
-  () => orientationOverride.value ?? autoOrientation.value,
-);
+const autoOrientation = ref<Orientation>("horizontal");
+const orientationOverride = ref<Orientation | null>(null);
+const orientation = computed<Orientation>(() => orientationOverride.value ?? autoOrientation.value);
 
 /**
  * The map container size. Horizontal height is driven by the packed lane count
@@ -237,7 +174,11 @@ const orientation = computed<"horizontal" | "vertical">(
  * keeps a tall, viewport-relative window for the frequency axis. In fullscreen
  * the browser's `:fullscreen` rule fills the screen and overrides this.
  */
-const containerStyle = computed<Record<string, string>>(() => {
+// The return type is annotated on the getter, not on computed<T>: without it TS
+// infers the union of the two literal shapes, normalizes the empty branch to
+// `{ height?: undefined }`, and that optional-undefined property is not
+// assignable to Record<string, string>.
+const containerStyle = computed((): Record<string, string> => {
   // In fullscreen the element fills the screen; leave the height to the browser.
   if (isFullscreen.value) return {};
   return orientation.value === "vertical"
@@ -292,53 +233,25 @@ function refreshColors() {
   scheduleDraw();
 }
 
-/** Parse "#rrggbb" (or shorthand) to an rgba() string with the given alpha. */
-function withAlpha(hex: string, a: number): string {
-  const h = hex.replace("#", "");
-  const full =
-    h.length === 3
-      ? h
-          .split("")
-          .map((c) => c + c)
-          .join("")
-      : h;
-  const r = parseInt(full.slice(0, 2), 16) || 0;
-  const g = parseInt(full.slice(2, 4), 16) || 0;
-  const b = parseInt(full.slice(4, 6), 16) || 0;
-  return `rgba(${r}, ${g}, ${b}, ${a})`;
-}
-
 /* ------------------------------------------------------------------ */
 /* View math                                                           */
 /* ------------------------------------------------------------------ */
 
+/** Apply the zoom and pan limits to the live view. */
 function clampView() {
-  span.value = Math.min(1, Math.max(MIN_SPAN, span.value));
-  const half = span.value / 2;
-  center.value = Math.min(1 - half, Math.max(half, center.value));
+  const held = clampWindow({ center: center.value, span: span.value });
+  center.value = held.center;
+  span.value = held.span;
 }
-
-const v0 = () => center.value - span.value / 2;
 
 /** Axis length in CSS pixels (the long dimension). */
 function axisLength(): number {
-  return orientation.value === "horizontal" ? cssW.value : cssH.value;
+  return axisLengthPx(cssW.value, cssH.value, orientation.value);
 }
 
-/** Normalized axis position (0..1 full range) to a pixel along the axis. */
-function posToAxisPx(pos: number): number {
-  return ((pos - v0()) / span.value) * axisLength();
-}
-
-/** Inverse: an axis pixel to a frequency in hertz. */
-function axisPxToFreq(px: number): number {
-  const pos = v0() + (px / axisLength()) * span.value;
-  return positionToFrequency(pos);
-}
-
-/** The axis pixel for a given frequency, in the current view. */
-function freqToAxisPx(freqHz: number): number {
-  return posToAxisPx(frequencyToPosition(freqHz));
+/** The live view as the plain value the layout transforms take. */
+function currentView(): AxisView {
+  return { center: center.value, span: span.value, lengthPx: axisLength() };
 }
 
 /** Pointer event offset to the axis coordinate for the current orientation. */
@@ -347,285 +260,55 @@ function eventAxisPx(e: PointerEvent): number {
   return orientation.value === "horizontal" ? e.clientX - rect.left : e.clientY - rect.top;
 }
 
-function clampPx(px: number): number {
-  return Math.max(0, Math.min(axisLength(), px));
+/** The frequency under an axis pixel, held inside the drawn axis. */
+function freqAtAxisPx(px: number): number {
+  const view = currentView();
+  return axisPxToFreq(clampAxisPx(px, view), view);
 }
 
 /* ------------------------------------------------------------------ */
 /* Scene building (shared by canvas, PNG and SVG)                      */
 /* ------------------------------------------------------------------ */
 
-interface SceneRect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  fill: string;
-  stroke: string;
-  /** Present for the visible band: a spectral gradient vector and stops. */
-  spectral?: { x1: number; y1: number; x2: number; y2: number };
-}
-interface SceneText {
-  x: number;
-  y: number;
-  text: string;
-  color: string;
-  size: number;
-  align: "center" | "start";
-  plate?: { x: number; y: number; w: number; h: number };
-}
-interface SceneLine {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  color: string;
-  dash: boolean;
-  width: number;
-}
-interface Scene {
-  rects: SceneRect[];
-  lines: SceneLine[];
-  /** Tick labels, always painted on the live canvas. */
-  texts: SceneText[];
-  /** Band labels, painted on canvas only for export (live uses a DOM overlay). */
-  bandTexts: SceneText[];
-  w: number;
-  h: number;
-}
-
-const TICK_MARGIN_H = 26;
-const TICK_MARGIN_V = 58;
-
-/** Approximate whether a label fits, truncating with an ellipsis if needed. */
-function fitLabel(text: string, maxPx: number, size: number): string | null {
-  const charPx = size * 0.58;
-  const maxChars = Math.floor((maxPx - 6) / charPx);
-  if (maxChars >= text.length) return text;
-  if (maxChars < 3) return null;
-  return text.slice(0, maxChars - 1) + "…";
-}
-
 /**
- * The background fill for a band cell. Visible sub-bands keep their real color
- * swatch; every other cell gets a low-opacity violet-brand tint that deepens
- * with depth, so each cell (including the top-level row) reads as a discrete box
- * against the card surface, and label text keeps AA contrast in both themes.
+ * Describe the current view as a scene. The geometry lives in the logic layer;
+ * this only gathers the reactive state it reads from.
  */
-function laneFill(depth: number, band: Band): string {
-  if (band.color) return band.color;
-  const alpha = depth === 0 ? 0.1 : depth === 1 ? 0.16 : depth === 2 ? 0.22 : 0.28;
-  return withAlpha(colors.primary, alpha);
-}
-
-function buildScene(w: number, h: number): Scene {
-  const horizontal = orientation.value === "horizontal";
-  const L = horizontal ? w : h;
-  const tickMargin = horizontal ? TICK_MARGIN_H : TICK_MARGIN_V;
-  const lanesExtent = (horizontal ? h : w) - tickMargin;
-  const laneSize = lanesExtent / TOTAL_LANES;
-
-  const rects: SceneRect[] = [];
-  const texts: SceneText[] = [];
-  const bandTexts: SceneText[] = [];
-  const lines: SceneLine[] = [];
-
-  // Lane origin along the cross axis. Ticks sit after the lanes.
-  const laneBase = horizontal ? 0 : tickMargin;
-
-  for (const { band, depth, lane } of PACKED) {
-    const a0 = posToAxisPx(frequencyToPosition(band.fHigh)); // start (high freq)
-    const a1 = posToAxisPx(frequencyToPosition(band.fLow)); // end (low freq)
-    if (a1 < 0 || a0 > L) continue;
-    const s0 = Math.max(0, a0);
-    const s1 = Math.min(L, a1);
-    const wpx = s1 - s0;
-    if (wpx < 0.5) continue;
-
-    const laneOff = laneBase + lane * laneSize;
-    const rx = horizontal ? s0 : laneOff;
-    const ry = horizontal ? laneOff : s0;
-    const rw = horizontal ? wpx : laneSize;
-    const rh = horizontal ? laneSize : wpx;
-
-    const isVisible = band.id === "visible";
-    const colored = !!band.color;
-    const fill = laneFill(depth, band);
-
-    const rect: SceneRect = { x: rx, y: ry, w: rw, h: rh, fill, stroke: colors.border };
-    if (isVisible) {
-      // Spectral gradient runs violet (start, high freq) to red (end, low freq).
-      rect.spectral = horizontal
-        ? { x1: a0, y1: 0, x2: a1, y2: 0 }
-        : { x1: 0, y1: a0, x2: 0, y2: a1 };
-    }
-    rects.push(rect);
-
-    // Band label for export only: centered, skipped when it cannot fit.
-    const size = depth === 0 ? 13 : 11;
-    const maxPx = horizontal ? wpx : laneSize;
-    const label = fitLabel(band.name, maxPx, size);
-    if (label && (horizontal ? wpx : rh) > size * 1.4) {
-      const cx = rx + rw / 2;
-      const cy = ry + rh / 2;
-      const needPlate = isVisible || colored;
-      const textW = label.length * size * 0.58;
-      bandTexts.push({
-        x: cx,
-        y: cy,
-        text: label,
-        color: colors.fg,
-        size,
-        align: "center",
-        plate: needPlate
-          ? { x: cx - textW / 2 - 4, y: cy - size / 2 - 2, w: textW + 8, h: size + 4 }
-          : undefined,
-      });
-    }
-  }
-
-  // Frequency ticks: decade lines, plus 2 and 5 subticks when zoomed in.
-  const lowFreq = axisPxToFreq(L);
-  const highFreq = axisPxToFreq(0);
-  const decadesInView = Math.log10(highFreq / lowFreq);
-  const mantissas = decadesInView < 6 ? [1, 2, 5] : [1];
-  const kMin = Math.floor(Math.log10(lowFreq));
-  const kMax = Math.ceil(Math.log10(highFreq));
-  const tickColor = colors.border;
-  for (let k = kMin; k <= kMax; k++) {
-    for (const mant of mantissas) {
-      const f = mant * Math.pow(10, k);
-      if (f < lowFreq * 0.999 || f > highFreq * 1.001) continue;
-      const apx = posToAxisPx(frequencyToPosition(f));
-      if (apx < 0 || apx > L) continue;
-      if (horizontal) {
-        lines.push({
-          x1: apx,
-          y1: 0,
-          x2: apx,
-          y2: lanesExtent,
-          color: tickColor,
-          dash: false,
-          width: 1,
-        });
-        texts.push({
-          x: apx + 3,
-          y: lanesExtent + 15,
-          text: formatFrequency(f),
-          color: colors.muted,
-          size: 10,
-          align: "start",
-        });
-      } else {
-        lines.push({
-          x1: tickMargin,
-          y1: apx,
-          x2: w,
-          y2: apx,
-          color: tickColor,
-          dash: false,
-          width: 1,
-        });
-        texts.push({
-          x: 4,
-          y: apx + 12,
-          text: formatFrequency(f),
-          color: colors.muted,
-          size: 10,
-          align: "start",
-        });
-      }
-    }
-  }
-
-  // Locked marker (dashed) and the live cursor (solid).
-  const marker = (freq: number, color: string, dash: boolean) => {
-    const apx = posToAxisPx(frequencyToPosition(freq));
-    if (apx < -1 || apx > L + 1) return;
-    if (horizontal) lines.push({ x1: apx, y1: 0, x2: apx, y2: lanesExtent, color, dash, width: 2 });
-    else lines.push({ x1: tickMargin, y1: apx, x2: w, y2: apx, color, dash, width: 2 });
-  };
-  if (pinnedFreq.value != null) marker(pinnedFreq.value, colors.positive, true);
-  const cur = activeFreq.value;
-  if (cur != null && cur !== pinnedFreq.value) marker(cur, colors.primary, false);
-
-  return { rects, lines, texts, bandTexts, w, h };
+function sceneFor(w: number, h: number): Scene {
+  return buildScene({
+    width: w,
+    height: h,
+    orientation: orientation.value,
+    window: { center: center.value, span: span.value },
+    packed: PACKED,
+    totalLanes: TOTAL_LANES,
+    colors,
+    pinnedFreqHz: pinnedFreq.value,
+    cursorFreqHz: activeFreq.value,
+  });
 }
 
 /* ------------------------------------------------------------------ */
 /* DOM band-label overlay (auto-fit via FitText)                       */
 /* ------------------------------------------------------------------ */
 
-interface BandLabel {
-  key: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  name: string;
-  icon?: string;
-  showIcon: boolean;
-  /** The box is too narrow for a label, so only the icon is drawn. */
-  iconOnly: boolean;
-  plate: boolean;
-  max: number;
-}
-
 /**
  * The band labels to overlay on the canvas, positioned in CSS px. Reactive on
- * the view and orientation, so labels reflow as the user pans and zooms. A band
- * whose drawn extent is below the legibility threshold is dropped entirely
- * (never shrunk to an unreadable size); FitText scales the rest to fill.
+ * the view and orientation, so labels reflow as the user pans and zooms; the
+ * decision of which labels survive at this zoom, and where their boxes go, is
+ * layout arithmetic and lives in the logic layer. FitText scales the survivors
+ * to fill their box.
  */
-const bandLabels = computed<BandLabel[]>(() => {
-  const horizontal = orientation.value === "horizontal";
-  const w = cssW.value;
-  const h = cssH.value;
-  const L = horizontal ? w : h;
-  const tickMargin = horizontal ? TICK_MARGIN_H : TICK_MARGIN_V;
-  const lanesExtent = (horizontal ? h : w) - tickMargin;
-  const laneSize = lanesExtent / TOTAL_LANES;
-  const laneBase = horizontal ? 0 : tickMargin;
-  if (laneSize < MIN_LABEL_CROSS) return [];
-
-  const out: BandLabel[] = [];
-  for (const { band, depth, lane } of PACKED) {
-    const a0 = posToAxisPx(frequencyToPosition(band.fHigh));
-    const a1 = posToAxisPx(frequencyToPosition(band.fLow));
-    if (a1 < 0 || a0 > L) continue;
-    // Clip to the visible portion so a half-scrolled band centers its label in
-    // what is on screen, matching how the canvas draws the rect.
-    const s0 = Math.max(0, a0);
-    const s1 = Math.min(L, a1);
-    const wpx = s1 - s0;
-
-    // Full label when wide enough; otherwise the icon alone when there is one
-    // and the lane is tall enough; otherwise nothing. Packing already guarantees
-    // no two boxes in a lane overlap, so labels confined to their own box never
-    // collide with a neighbor.
-    const hasIcon = !!band.icon;
-    const fullLabel = wpx >= MIN_LABEL_ALONG;
-    const iconOnly = !fullLabel && hasIcon && wpx >= ICON_ONLY_ALONG && laneSize > 16;
-    if (!fullLabel && !iconOnly) continue;
-
-    const laneOff = laneBase + lane * laneSize;
-    const along = wpx;
-    out.push({
-      key: band.id,
-      x: horizontal ? s0 : laneOff,
-      y: horizontal ? laneOff : s0,
-      w: horizontal ? along : laneSize,
-      h: horizontal ? laneSize : along,
-      name: band.name,
-      icon: band.icon,
-      showIcon: hasIcon && (iconOnly || (along > 64 && laneSize > 16)),
-      iconOnly,
-      plate: !!band.color || band.id === "visible",
-      max: depth === 0 ? 15 : 12,
-    });
-  }
-  return out;
-});
+const bandLabels = computed(() =>
+  buildBandLabels({
+    width: cssW.value,
+    height: cssH.value,
+    orientation: orientation.value,
+    window: { center: center.value, span: span.value },
+    packed: PACKED,
+    totalLanes: TOTAL_LANES,
+  }),
+);
 
 /* ------------------------------------------------------------------ */
 /* Canvas painting                                                     */
@@ -636,12 +319,7 @@ function spectralGradient(
   s: NonNullable<SceneRect["spectral"]>,
 ): CanvasGradient {
   const grad = make(s.x1, s.y1, s.x2, s.y2);
-  const steps = 24;
-  for (let i = 0; i <= steps; i++) {
-    const nm = VISIBLE_MIN_NM + ((VISIBLE_MAX_NM - VISIBLE_MIN_NM) * i) / steps;
-    const rgb = wavelengthNmToRgb(nm);
-    if (rgb) grad.addColorStop(i / steps, rgbToHex(rgb));
-  }
+  for (const stop of SPECTRAL_STOPS) grad.addColorStop(stop.offset, stop.color);
   return grad;
 }
 
@@ -715,7 +393,7 @@ function draw() {
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
   }
-  const scene = buildScene(w, h);
+  const scene = sceneFor(w, h);
   paintCanvas(ctx, scene, dpr, false);
 }
 
@@ -766,7 +444,7 @@ const copyableText = computed(() => {
  */
 const tooltipAnchor = computed<{ x: number; y: number } | null>(() => {
   if (hoverFreq.value == null && pinnedFreq.value != null) {
-    const apx = freqToAxisPx(pinnedFreq.value);
+    const apx = freqToAxisPx(pinnedFreq.value, currentView());
     return orientation.value === "horizontal"
       ? { x: apx, y: cssH.value * 0.4 }
       : { x: cssW.value * 0.5, y: apx };
@@ -890,7 +568,7 @@ function setPointerPxFromClient(clientX: number, clientY: number) {
 }
 
 function readAt(e: PointerEvent, pin: boolean) {
-  const freq = axisPxToFreq(clampPx(eventAxisPx(e)));
+  const freq = freqAtAxisPx(eventAxisPx(e));
   if (pin) pinnedFreq.value = freq;
   else hoverFreq.value = freq;
   setPointerPxFromClient(e.clientX, e.clientY);
@@ -912,7 +590,7 @@ function onPointerDown(e: PointerEvent) {
       orientation.value === "horizontal"
         ? (pts[0]!.x + pts[1]!.x) / 2 - rect.left
         : (pts[0]!.y + pts[1]!.y) / 2 - rect.top;
-    pinchAnchorPos = v0() + (midClient / axisLength()) * span.value;
+    pinchAnchorPos = axisPxToPos(midClient, currentView());
     mouseDown = false;
     selecting.value = false;
     return;
@@ -947,7 +625,7 @@ function onPointerMove(e: PointerEvent) {
           ? (pts[0]!.x + pts[1]!.x) / 2 - rect.left
           : (pts[0]!.y + pts[1]!.y) / 2 - rect.top;
       // Keep the anchor frequency under the midpoint.
-      center.value = pinchAnchorPos - (midPx / axisLength()) * span.value + span.value / 2;
+      center.value = centerHoldingAnchor(pinchAnchorPos, midPx, currentView());
       clampView();
       scheduleDraw();
       scheduleFragmentWrite();
@@ -999,8 +677,9 @@ function onPointerLeave(e: PointerEvent) {
 
 /** Zoom the view so it fits the axis-pixel span the user swept. */
 function zoomToAxisPx(a: number, b: number) {
-  const posA = v0() + (clampPx(a) / axisLength()) * span.value;
-  const posB = v0() + (clampPx(b) / axisLength()) * span.value;
+  const view = currentView();
+  const posA = axisPxToPos(clampAxisPx(a, view), view);
+  const posB = axisPxToPos(clampAxisPx(b, view), view);
   const lo = Math.min(posA, posB);
   const hi = Math.max(posA, posB);
   animateTo((lo + hi) / 2, hi - lo);
@@ -1014,7 +693,7 @@ function toggleLockAt(apx: number, e: PointerEvent) {
   lastClickAt = now;
   if (isDouble) return; // the dblclick handler resets the view instead
 
-  const freq = axisPxToFreq(clampPx(apx));
+  const freq = freqAtAxisPx(apx);
   if (locked.value) {
     // Unlock and return to hover-follow from this point.
     locked.value = false;
@@ -1055,11 +734,11 @@ function onWheel(e: WheelEvent) {
   const apx = orientation.value === "horizontal" ? e.clientX - rect.left : e.clientY - rect.top;
   if (e.ctrlKey || e.metaKey) {
     // Zoom centered on the pointer.
-    const anchorPos = v0() + (apx / axisLength()) * span.value;
+    const anchorPos = axisPxToPos(apx, currentView());
     const factor = Math.exp(e.deltaY * 0.0016);
     span.value = span.value * factor;
     clampView();
-    center.value = anchorPos - (apx / axisLength()) * span.value + span.value / 2;
+    center.value = centerHoldingAnchor(anchorPos, apx, currentView());
     clampView();
   } else {
     // Pan along the axis.
@@ -1249,15 +928,6 @@ function onDocumentPointerDown(e: PointerEvent) {
 /* Export                                                              */
 /* ------------------------------------------------------------------ */
 
-function triggerDownload(url: string, filename: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
 function exportPng() {
   const canvas = document.createElement("canvas");
   const scale = 2;
@@ -1266,76 +936,15 @@ function exportPng() {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   // Bake the band labels into the exported raster (FitText cannot run here).
-  paintCanvas(ctx, buildScene(cssW.value, cssH.value), scale, true);
+  paintCanvas(ctx, sceneFor(cssW.value, cssH.value), scale, true);
   canvas.toBlob((blob) => {
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    triggerDownload(url, "electromagnetic-spectrum.png");
-    URL.revokeObjectURL(url);
+    if (blob) downloadBlob(blob, "electromagnetic-spectrum.png");
   }, "image/png");
 }
 
-function esc(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
 function exportSvg() {
-  const w = cssW.value;
-  const h = cssH.value;
-  const scene = buildScene(w, h);
-  const parts: string[] = [];
-  const defs: string[] = [];
-  let gid = 0;
-
-  parts.push(`<rect x="0" y="0" width="${w}" height="${h}" fill="${colors.card}"/>`);
-
-  for (const r of scene.rects) {
-    let fill = r.fill;
-    if (r.spectral) {
-      const id = `spec${gid++}`;
-      const stops: string[] = [];
-      const steps = 24;
-      for (let i = 0; i <= steps; i++) {
-        const nm = VISIBLE_MIN_NM + ((VISIBLE_MAX_NM - VISIBLE_MIN_NM) * i) / steps;
-        const rgb = wavelengthNmToRgb(nm);
-        if (rgb)
-          stops.push(
-            `<stop offset="${((i / steps) * 100).toFixed(1)}%" stop-color="${rgbToHex(rgb)}"/>`,
-          );
-      }
-      defs.push(
-        `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${r.spectral.x1.toFixed(1)}" y1="${r.spectral.y1.toFixed(1)}" x2="${r.spectral.x2.toFixed(1)}" y2="${r.spectral.y2.toFixed(1)}">${stops.join("")}</linearGradient>`,
-      );
-      fill = `url(#${id})`;
-    }
-    parts.push(
-      `<rect x="${r.x.toFixed(1)}" y="${r.y.toFixed(1)}" width="${r.w.toFixed(1)}" height="${r.h.toFixed(1)}" fill="${fill}" stroke="${r.stroke}" stroke-width="1"/>`,
-    );
-  }
-
-  for (const l of scene.lines) {
-    parts.push(
-      `<line x1="${l.x1.toFixed(1)}" y1="${l.y1.toFixed(1)}" x2="${l.x2.toFixed(1)}" y2="${l.y2.toFixed(1)}" stroke="${l.color}" stroke-width="${l.width}"${l.dash ? ' stroke-dasharray="4 3"' : ""}/>`,
-    );
-  }
-
-  for (const t of [...scene.texts, ...scene.bandTexts]) {
-    if (t.plate) {
-      parts.push(
-        `<rect x="${t.plate.x.toFixed(1)}" y="${t.plate.y.toFixed(1)}" width="${t.plate.w.toFixed(1)}" height="${t.plate.h.toFixed(1)}" fill="${withAlpha(colors.card, 0.72)}"/>`,
-      );
-    }
-    const anchor = t.align === "center" ? "middle" : "start";
-    parts.push(
-      `<text x="${t.x.toFixed(1)}" y="${t.y.toFixed(1)}" fill="${t.color}" font-family="system-ui, sans-serif" font-size="${t.size}" text-anchor="${anchor}" dominant-baseline="middle">${esc(t.text)}</text>`,
-    );
-  }
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs>${defs.join("")}</defs>${parts.join("")}</svg>`;
-  const blob = new Blob([svg], { type: "image/svg+xml" });
-  const url = URL.createObjectURL(blob);
-  triggerDownload(url, "electromagnetic-spectrum.svg");
-  URL.revokeObjectURL(url);
+  const svg = sceneToSvg(sceneFor(cssW.value, cssH.value), colors);
+  downloadBlob(new Blob([svg], { type: "image/svg+xml" }), "electromagnetic-spectrum.svg");
 }
 
 /* ------------------------------------------------------------------ */
@@ -1434,10 +1043,7 @@ onUnmounted(() => {
           aria-label="Search results"
           class="absolute top-[calc(100%+4px)] right-0 left-0 z-30 max-h-72 overflow-auto rounded-[12px] border bg-popover p-1 shadow-[var(--sh-lg)]"
         >
-          <li
-            v-if="!results.length"
-            class="px-2.5 py-2 text-sm text-muted-foreground"
-          >
+          <li v-if="!results.length" class="px-2.5 py-2 text-sm text-muted-foreground">
             No matches. Try 2.45 GHz, 550 nm, 10 keV, VHF, or wifi channel 6.
           </li>
           <li
@@ -1474,7 +1080,9 @@ onUnmounted(() => {
           variant="outline"
           size="sm"
           :aria-label="
-            orientation === 'horizontal' ? 'Switch to vertical layout' : 'Switch to horizontal layout'
+            orientation === 'horizontal'
+              ? 'Switch to vertical layout'
+              : 'Switch to horizontal layout'
           "
           @click="toggleOrientation"
         >
@@ -1620,7 +1228,9 @@ onUnmounted(() => {
           variant="outline"
           size="sm"
           :aria-label="
-            orientation === 'horizontal' ? 'Switch to vertical layout' : 'Switch to horizontal layout'
+            orientation === 'horizontal'
+              ? 'Switch to vertical layout'
+              : 'Switch to horizontal layout'
           "
           class="bg-popover"
           @click="toggleOrientation"

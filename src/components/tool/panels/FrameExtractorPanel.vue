@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { formatBytes } from "@/lib/format";
+import { downloadUrl } from "@/lib/download";
 
 /**
  * Bespoke panel for the frame extractor. There is no pure transform that turns
@@ -154,30 +156,9 @@ const totalCapturedBytes = computed(() => frames.value.reduce((sum, frame) => su
 /* helpers                                                           */
 /* ---------------------------------------------------------------- */
 
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
-
 function clampTime(seconds: number): number {
   const end = duration.value > 0 ? duration.value : seconds;
   return Math.min(Math.max(0, seconds), end);
-}
-
-function triggerDownload(url: string, name: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
 }
 
 function delay(ms: number): Promise<void> {
@@ -463,7 +444,7 @@ async function captureBurst() {
 /* ---------------------------------------------------------------- */
 
 function downloadFrame(frame: CapturedFrame) {
-  triggerDownload(frame.url, frame.name);
+  downloadUrl(frame.url, frame.name);
 }
 
 async function downloadAll() {
@@ -473,7 +454,7 @@ async function downloadAll() {
     // Saved one at a time rather than zipped, so nothing has to be held twice
     // in memory. Browsers throttle back to back downloads, hence the spacing.
     for (const frame of [...frames.value]) {
-      triggerDownload(frame.url, frame.name);
+      downloadUrl(frame.url, frame.name);
       await delay(250);
     }
   } finally {
@@ -563,7 +544,9 @@ onUnmounted(() => {
     <!-- Player and capture controls -->
     <div v-if="hasVideo" class="flex flex-col gap-4">
       <div class="overflow-hidden rounded-[10px] bg-black shadow-[var(--sh-inset)]">
-        <!-- eslint-disable-next-line vuejs-accessibility/media-has-caption -->
+        <!-- No captions track: this is a scrub-and-capture surface over
+             whatever video the visitor drops in, not a video player showing
+             known content, so there is no track for this tool to author. -->
         <video
           ref="videoEl"
           :src="videoUrl ?? ''"
@@ -755,7 +738,7 @@ onUnmounted(() => {
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Captured frames
             <span v-if="frames.length" class="tabular-nums"
-              >({{ frames.length }}, {{ humanSize(totalCapturedBytes) }})</span
+              >({{ frames.length }}, {{ formatBytes(totalCapturedBytes) }})</span
             >
           </span>
           <div v-if="frames.length" class="flex items-center gap-2">
@@ -794,7 +777,7 @@ onUnmounted(() => {
                 {{ formatTimecode(frame.time, assumedFps) }}
               </div>
               <div class="truncate text-[11px] text-muted-foreground tabular-nums">
-                {{ frame.width }} x {{ frame.height }}, {{ humanSize(frame.size) }}
+                {{ frame.width }} x {{ frame.height }}, {{ formatBytes(frame.size) }}
               </div>
               <div class="truncate text-[11px] text-muted-foreground">
                 {{ frame.name }}

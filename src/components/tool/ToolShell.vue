@@ -4,6 +4,7 @@ import type { ToolMeta } from "@/tools/types";
 import { ToolError, type ToolLogic } from "@/tools/types";
 import { loaders } from "@/tools/registry";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import { formatBytes } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-vue-next";
@@ -67,18 +68,6 @@ const placeholder = computed(() =>
     ? "Drop or pick a file, or paste text here…"
     : `Paste or drop ${props.meta.input === "text/plain" ? "text" : props.meta.input} here…`,
 );
-
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
 
 let logic: ToolLogic | null = null;
 let debounce: ReturnType<typeof setTimeout> | undefined;
@@ -218,7 +207,7 @@ function onPickFile(e: Event) {
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
           <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ humanSize(fileSize) }}</span>
+          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
           <button
             type="button"
             aria-label="Remove file"

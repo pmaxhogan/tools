@@ -729,8 +729,12 @@ onMounted(() => {
       if (Array.isArray(s.books)) {
         // Accept both the current {priorWork, enchants} shape and the older
         // plain enchant-array shape from previously shared links.
-        plannerBooks.value = s.books.map((b: EditBook | EditEnchant[]) =>
-          Array.isArray(b) ? { priorWork: 0, enchants: b } : { priorWork: 0, ...b },
+        // A fragment is untrusted input, so an older or hand-edited link can be
+        // missing either field. Partial says so, which makes the defaults real
+        // rather than dead code, and a missing enchants array would otherwise
+        // reach the template as undefined.
+        plannerBooks.value = s.books.map((b: Partial<EditBook> | EditEnchant[]) =>
+          Array.isArray(b) ? { priorWork: 0, enchants: b } : { priorWork: 0, enchants: [], ...b },
         );
       }
       if (typeof s.horizon === "number") horizonPriorWork.value = s.horizon;

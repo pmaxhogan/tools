@@ -42,6 +42,12 @@ the plan for all 168 tools.
 - `npm test` / `npx vitest run src/tools/<slug>` — logic tests
 - `npm run build` — astro build + `scripts/generate-sw.mjs` (service worker)
 - `npm run lint` — includes purity rules for `src/tools`
+- `npm run typecheck` — `astro check` then `vue-tsc`. Both are needed: astro
+  check covers `.astro` and `.ts` and silently skips `.vue`, which is most of
+  the UI. Neither runs during `npm run build`, so this is the only thing that
+  reads `tsconfig.json`'s strict settings.
+- CI (`.github/workflows/ci.yml`) runs lint, typecheck, and tests on every pull
+  request and on main. It is the only gate before the deploy, so keep it green.
 - Deploy: push to main; the git-connected Cloudflare Worker "tools" builds and
   deploys automatically (`wrangler.jsonc` is the config).
 - **Lockfile rule:** Workers Builds runs npm 10.9.2, which requires `@emnapi/*`
@@ -68,3 +74,9 @@ the plan for all 168 tools.
 5. Parallel tool agents never edit `registry.ts` or `package.json`.
 6. The privacy claim is exactly "your files and inputs never leave your
    device"; never claim "zero network requests".
+7. Do not hand-roll a byte formatter or a download. `src/lib/format.ts` and
+   `src/lib/download.ts` own those. Both started as one panel's local helper
+   and ended up copy-pasted into 22 and 23 files respectively, in variants
+   that disagreed, so the same file reported a different size depending on
+   which tool you opened. `format.ts` is pure, so tool logic may import it
+   too; `download.ts` touches the DOM, so only components may.

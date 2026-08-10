@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ToolError } from "../types";
 import {
+  AXIS_DECADES,
   AXIS_MAX_HZ,
   AXIS_MIN_HZ,
   BANDS,
@@ -34,6 +35,37 @@ import {
   wavelengthToFrequency,
   type Band,
 } from "./index";
+import {
+  ICON_ONLY_ALONG,
+  MIN_LABEL_ALONG,
+  MIN_LABEL_CROSS,
+  MIN_SPAN,
+  TICK_MARGIN_H,
+  TICK_MARGIN_V,
+  axisLengthPx,
+  axisPxToFreq,
+  axisPxToPos,
+  buildBandLabels,
+  buildScene,
+  centerHoldingAnchor,
+  clampAxisPx,
+  clampWindow,
+  fitLabel,
+  freqToAxisPx,
+  laneFill,
+  mapHeightPx,
+  packBands,
+  posToAxisPx,
+  sceneToSvg,
+  spectralStops,
+  withAlpha,
+  type AxisView,
+  type BandLabelInput,
+  type PackedBand,
+  type Scene,
+  type SceneColors,
+  type SceneInput,
+} from "./layout";
 
 /** Relative closeness helper for physics anchors. */
 function closeRel(actual: number, expected: number, rel = 1e-4): void {
@@ -738,5 +770,603 @@ describe("describeFrequency shows the most specific uses (deliverable 3)", () =>
     expect(bandPathLabel(bandPathAt(162.4e6))).toBe(
       "Radio > VHF > NOAA weather radio > Weather channel WX2",
     );
+  });
+});
+
+/* ================================================================== */
+/* Layout: lane packing, axis transforms, labels, colors, scene        */
+/* ================================================================== */
+
+/** A minimal band. Only the range and the tree shape matter to the layout. */
+function testBand(id: string, fLow: number, fHigh: number, children?: Band[]): Band {
+  const band: Band = { id, name: id, fLow, fHigh, uses: [] };
+  if (children) band.children = children;
+  return band;
+}
+
+/** lane by band id, so packing assertions read as a table. */
+function laneById(packed: PackedBand[]): Record<string, number> {
+  return Object.fromEntries(packed.map((p) => [p.band.id, p.lane]));
+}
+
+describe("lane packing: siblings", () => {
+  it("shares one lane between siblings that do not overlap", () => {
+    const { packed, totalLanes } = packBands([
+      testBand("root", 1, 1000, [
+        testBand("a", 1, 10),
+        testBand("b", 20, 100),
+        testBand("c", 200, 900),
+      ]),
+    ]);
+    expect(laneById(packed)).toEqual({ root: 0, a: 1, b: 1, c: 1 });
+    expect(totalLanes).toBe(2);
+  });
+
+  it("stacks overlapping siblings into one lane each", () => {
+    const { packed, totalLanes } = packBands([
+      testBand("root", 1, 1000, [
+        testBand("wide", 1, 500),
+        testBand("inner", 10, 20),
+        testBand("also", 15, 30),
+      ]),
+    ]);
+    // Three mutually overlapping ranges cannot share a row at any assignment.
+    expect(laneById(packed)).toEqual({ root: 0, wide: 1, inner: 2, also: 3 });
+    expect(totalLanes).toBe(4);
+  });
+
+  it("reuses a lane once the band occupying it has ended", () => {
+    const { packed, totalLanes } = packBands([
+      testBand("root", 1, 1000, [testBand("a", 1, 10), testBand("b", 2, 3), testBand("c", 20, 30)]),
+    ]);
+    // b is forced onto a second row by a, but c starts after a ends and drops
+    // back onto a's row. Without the reuse the lane count would grow forever.
+    expect(laneById(packed)).toEqual({ root: 0, a: 1, b: 2, c: 1 });
+    expect(totalLanes).toBe(3);
+  });
+
+  it("treats an exactly shared edge as no overlap", () => {
+    const { packed, totalLanes } = packBands([
+      testBand("root", 1, 1000, [
+        testBand("x", 1, 10),
+        testBand("y", 10, 100),
+        testBand("z", 100, 1000),
+      ]),
+    ]);
+    // A clean partition (the color bands are one) must not stack three deep.
+    expect(laneById(packed)).toEqual({ root: 0, x: 1, y: 1, z: 1 });
+    expect(totalLanes).toBe(2);
+  });
+
+  it("keeps overlapping top-level bands in a single lane", () => {
+    // Depth 0 is drawn as one continuous strip. An overlap there double-draws a
+    // sliver rather than opening a second row and leaving a gap in the top row.
+    const { packed, totalLanes } = packBands([testBand("a", 1, 100), testBand("b", 90, 1000)]);
+    expect(packed.every((p) => p.lane === 0)).toBe(true);
+    expect(totalLanes).toBe(1);
+  });
+
+  it("allocates lanes depth by depth, so a child never sits above its parent", () => {
+    const { packed } = packBands([
+      testBand("root", 1, 1e6, [
+        testBand("mid", 1, 1000, [testBand("leafA", 1, 10), testBand("leafB", 5, 20)]),
+      ]),
+    ]);
+    const byDepth = new Map<number, number[]>();
+    for (const p of packed) byDepth.set(p.depth, [...(byDepth.get(p.depth) ?? []), p.lane]);
+    for (const depth of [...byDepth.keys()].sort((a, b) => a - b)) {
+      const shallower = byDepth.get(depth - 1);
+      if (shallower)
+        expect(Math.min(...byDepth.get(depth)!)).toBeGreaterThan(Math.max(...shallower));
+    }
+  });
+});
+
+describe("lane packing: the real band tree", () => {
+  const { packed, totalLanes } = packBands();
+
+  it("places every band in the tree exactly once", () => {
+    expect(packed).toHaveLength(flattenBands().length);
+    expect(new Set(packed.map((p) => p.band.id)).size).toBe(packed.length);
+  });
+
+  it("reports a lane count that covers every lane used", () => {
+    expect(totalLanes).toBe(Math.max(...packed.map((p) => p.lane)) + 1);
+  });
+
+  it("puts all seven top-level bands in lane 0, overlap and all", () => {
+    const top = packed.filter((p) => p.depth === 0);
+    expect(top).toHaveLength(BANDS.length);
+    expect(top.every((p) => p.lane === 0)).toBe(true);
+    // The rule earns its keep only because a real overlap exists up there: the
+    // 380 to 400 nm sliver where ultraviolet and visible meet.
+    const uv = BANDS.find((b) => b.id === "uv")!;
+    const visible = BANDS.find((b) => b.id === "visible")!;
+    expect(uv.fLow).toBeLessThan(visible.fHigh);
+    expect(visible.fLow).toBeLessThan(uv.fHigh);
+  });
+
+  it("never mixes depths inside one lane", () => {
+    const depthOfLane = new Map<number, number>();
+    for (const p of packed) {
+      const seen = depthOfLane.get(p.lane);
+      if (seen === undefined) depthOfLane.set(p.lane, p.depth);
+      else expect(p.depth).toBe(seen);
+    }
+  });
+
+  it("never overlaps two bands drawn in the same sub-lane", () => {
+    const byLane = new Map<number, Band[]>();
+    for (const p of packed) {
+      if (p.lane === 0) continue; // depth 0 is the deliberate exception above
+      byLane.set(p.lane, [...(byLane.get(p.lane) ?? []), p.band]);
+    }
+    for (const bands of byLane.values()) {
+      const sorted = [...bands].sort((a, b) => a.fLow - b.fLow);
+      for (let i = 1; i < sorted.length; i++) {
+        expect(sorted[i - 1]!.fHigh).toBeLessThanOrEqual(sorted[i]!.fLow * (1 + 1e-9));
+      }
+    }
+  });
+});
+
+describe("map height", () => {
+  it("gives every lane its target thickness plus the tick strip", () => {
+    expect(mapHeightPx(10)).toBe(10 * 38 + TICK_MARGIN_H);
+  });
+
+  it("floors a shallow tree and caps a deep one", () => {
+    expect(mapHeightPx(1)).toBe(300);
+    expect(mapHeightPx(100)).toBe(660);
+  });
+});
+
+describe("view window clamping", () => {
+  it("never zooms out past the whole axis", () => {
+    expect(clampWindow({ center: 0.5, span: 4 })).toEqual({ center: 0.5, span: 1 });
+  });
+
+  it("never zooms in past the minimum span", () => {
+    expect(clampWindow({ center: 0.5, span: 0 }).span).toBe(MIN_SPAN);
+    expect(clampWindow({ center: 0.5, span: -1 }).span).toBe(MIN_SPAN);
+  });
+
+  it("pulls a window that hangs off either end back inside", () => {
+    expect(clampWindow({ center: 0, span: 0.2 })).toEqual({ center: 0.1, span: 0.2 });
+    expect(clampWindow({ center: 1, span: 0.2 })).toEqual({ center: 0.9, span: 0.2 });
+  });
+
+  it("leaves a window that already fits alone", () => {
+    expect(clampWindow({ center: 0.42, span: 0.2 })).toEqual({ center: 0.42, span: 0.2 });
+  });
+
+  it("clamps the span first, so an over-wide off-center window recenters", () => {
+    // Clamping the center first would leave center 0.99 with span 1, which hangs
+    // half the window off the low frequency end.
+    expect(clampWindow({ center: 0.99, span: 5 })).toEqual({ center: 0.5, span: 1 });
+  });
+});
+
+describe("axis coordinate transforms", () => {
+  const full: AxisView = { center: 0.5, span: 1, lengthPx: 800 };
+  const zoomed: AxisView = { center: frequencyToPosition(2.45e9), span: 0.05, lengthPx: 640 };
+
+  it("picks the long dimension by orientation", () => {
+    expect(axisLengthPx(800, 400, "horizontal")).toBe(800);
+    expect(axisLengthPx(800, 400, "vertical")).toBe(400);
+  });
+
+  it("draws gamma at pixel zero and ELF at the far end", () => {
+    expect(freqToAxisPx(AXIS_MAX_HZ, full)).toBeCloseTo(0, 9);
+    expect(freqToAxisPx(AXIS_MIN_HZ, full)).toBeCloseTo(800, 6);
+  });
+
+  it("round-trips frequency through pixels, zoomed out and zoomed in", () => {
+    for (const view of [full, zoomed]) {
+      for (const f of [3, 1e5, 100e6, 2.45e9, 5.45e14, 1e20, 3e24]) {
+        closeRel(axisPxToFreq(freqToAxisPx(f, view), view), f, 1e-9);
+      }
+    }
+  });
+
+  it("puts the leading edge of the window at pixel zero", () => {
+    const view: AxisView = { center: 0.25, span: 0.1, lengthPx: 800 };
+    expect(posToAxisPx(0.2, view)).toBeCloseTo(0, 9);
+    expect(posToAxisPx(0.3, view)).toBeCloseTo(800, 6);
+    expect(axisPxToPos(400, view)).toBeCloseTo(0.25, 12);
+    // Positions outside the window map to pixels outside the drawing.
+    expect(posToAxisPx(0.15, view)).toBeCloseTo(-400, 6);
+  });
+
+  it("clamps a pixel to the drawn axis at both ends", () => {
+    expect(clampAxisPx(-50, full)).toBe(0);
+    expect(clampAxisPx(1200, full)).toBe(800);
+    expect(clampAxisPx(123, full)).toBe(123);
+  });
+
+  it("reads the axis ends rather than off it for out-of-range pixels", () => {
+    closeRel(axisPxToFreq(-500, full), AXIS_MAX_HZ, 1e-9);
+    closeRel(axisPxToFreq(5000, full), AXIS_MIN_HZ, 1e-9);
+  });
+
+  it("keeps the anchored frequency under the pointer while zooming", () => {
+    const px = 200;
+    const anchorFreq = axisPxToFreq(px, full);
+    // What the ctrl and scroll handler does: change the span, then recenter.
+    const after: AxisView = { center: 0, span: full.span / 4, lengthPx: full.lengthPx };
+    after.center = centerHoldingAnchor(axisPxToPos(px, full), px, after);
+    closeRel(axisPxToFreq(px, after), anchorFreq, 1e-9);
+  });
+
+  it("keeps the anchor when zooming out as well", () => {
+    const px = 610;
+    const anchorFreq = axisPxToFreq(px, zoomed);
+    const after: AxisView = { center: 0, span: zoomed.span * 3, lengthPx: zoomed.lengthPx };
+    after.center = centerHoldingAnchor(axisPxToPos(px, zoomed), px, after);
+    closeRel(axisPxToFreq(px, after), anchorFreq, 1e-9);
+  });
+});
+
+describe("label fitting", () => {
+  it("returns the text untouched when it fits", () => {
+    expect(fitLabel("FM broadcast", 400, 11)).toBe("FM broadcast");
+  });
+
+  it("truncates with an ellipsis when it does not", () => {
+    expect(fitLabel("Ultraviolet", 40, 11)).toBe("Ultr…");
+  });
+
+  it("keeps the truncated label inside the box it was given", () => {
+    const out = fitLabel("Ultraviolet", 40, 11)!;
+    expect(out.length * 11 * 0.58).toBeLessThanOrEqual(40);
+  });
+
+  it("gives up rather than print a single letter and an ellipsis", () => {
+    expect(fitLabel("ABCDEF", 24, 10)).toBe("AB…"); // three characters fit
+    expect(fitLabel("ABCDEF", 23, 10)).toBeNull(); // only two would
+  });
+
+  it("gives up on a box narrower than the padding", () => {
+    expect(fitLabel("Radio", 6, 11)).toBeNull();
+    expect(fitLabel("Radio", 0, 11)).toBeNull();
+    expect(fitLabel("Radio", -20, 11)).toBeNull();
+  });
+
+  it("scales the estimate with the font size", () => {
+    expect(fitLabel("Microwave", 60, 8)).toBe("Microwave");
+    expect(fitLabel("Microwave", 60, 16)).toBe("Micr…");
+  });
+});
+
+describe("color helpers", () => {
+  it("expands a six digit hex to rgba", () => {
+    expect(withAlpha("#5b4bd6", 0.16)).toBe("rgba(91, 75, 214, 0.16)");
+  });
+
+  it("expands a three digit shorthand", () => {
+    expect(withAlpha("#fff", 1)).toBe("rgba(255, 255, 255, 1)");
+    expect(withAlpha("#0a0", 0.5)).toBe("rgba(0, 170, 0, 0.5)");
+  });
+
+  it("does not require the leading hash", () => {
+    expect(withAlpha("2f7d5b", 0.5)).toBe("rgba(47, 125, 91, 0.5)");
+  });
+
+  it("falls back to black rather than NaN on an unreadable color", () => {
+    expect(withAlpha("#zzzzzz", 0.5)).toBe("rgba(0, 0, 0, 0.5)");
+  });
+
+  it("keeps a band's own swatch at any depth", () => {
+    const swatch: Band = { ...testBand("green", 1, 2), color: "#22c55e" };
+    expect(laneFill(0, swatch, "#5b4bd6")).toBe("#22c55e");
+    expect(laneFill(3, swatch, "#5b4bd6")).toBe("#22c55e");
+  });
+
+  it("deepens the brand tint with depth, then holds", () => {
+    const plain = testBand("plain", 1, 2);
+    const fills = [0, 1, 2, 3, 9].map((d) => laneFill(d, plain, "#5b4bd6"));
+    expect(fills).toEqual([
+      "rgba(91, 75, 214, 0.1)",
+      "rgba(91, 75, 214, 0.16)",
+      "rgba(91, 75, 214, 0.22)",
+      "rgba(91, 75, 214, 0.28)",
+      "rgba(91, 75, 214, 0.28)",
+    ]);
+  });
+
+  it("samples the visible curve from violet through green to red", () => {
+    const stops = spectralStops();
+    expect(stops).toHaveLength(25);
+    expect(stops[0]).toEqual({ offset: 0, color: "#610061" }); // 380 nm, dimmed violet
+    expect(stops[12]).toEqual({ offset: 0.5, color: "#d2ff00" }); // 565 nm, green dominant
+    expect(stops[24]).toEqual({ offset: 1, color: "#610000" }); // 750 nm, dimmed red
+  });
+
+  it("takes a step count and spaces the offsets evenly", () => {
+    expect(spectralStops(4).map((s) => s.offset)).toEqual([0, 0.25, 0.5, 0.75, 1]);
+  });
+});
+
+/* Scene building. */
+
+const SCENE_COLORS: SceneColors = {
+  fg: "#111111",
+  muted: "#888888",
+  border: "#cccccc",
+  card: "#ffffff",
+  primary: "#5b4bd6",
+  positive: "#2f7d5b",
+};
+
+const REAL_PACKING = packBands();
+
+/** The full-axis horizontal scene, with any field overridden per test. */
+function scene(over: Partial<SceneInput> = {}): Scene {
+  return buildScene({
+    width: 800,
+    height: 400,
+    orientation: "horizontal",
+    window: { center: 0.5, span: 1 },
+    packed: REAL_PACKING.packed,
+    totalLanes: REAL_PACKING.totalLanes,
+    colors: SCENE_COLORS,
+    pinnedFreqHz: null,
+    cursorFreqHz: null,
+    ...over,
+  });
+}
+
+describe("scene building", () => {
+  it("keeps every band box inside the map and clear of the tick strip", () => {
+    const lanesExtent = 400 - TICK_MARGIN_H;
+    for (const r of scene().rects) {
+      expect(r.x).toBeGreaterThanOrEqual(0);
+      expect(r.x + r.w).toBeLessThanOrEqual(800 + 1e-9);
+      expect(r.y).toBeGreaterThanOrEqual(0);
+      expect(r.y + r.h).toBeLessThanOrEqual(lanesExtent + 1e-9);
+    }
+  });
+
+  it("gives every lane the same thickness", () => {
+    const laneSize = (400 - TICK_MARGIN_H) / REAL_PACKING.totalLanes;
+    for (const r of scene().rects) expect(r.h).toBeCloseTo(laneSize, 9);
+  });
+
+  it("marks only the visible band with a spectral gradient, violet end first", () => {
+    const spectral = scene().rects.filter((r) => r.spectral);
+    expect(spectral).toHaveLength(1);
+    const s = spectral[0]!.spectral!;
+    expect(s.x1).toBeLessThan(s.x2); // high frequency start to low frequency end
+    expect(s.y1).toBe(0);
+    expect(s.y2).toBe(0);
+  });
+
+  it("culls bands that fall outside the view", () => {
+    const tree = [testBand("low", 3, 30), testBand("high", 1e24, 3e24)];
+    const { packed, totalLanes } = packBands(tree);
+    const zoomed = scene({
+      packed,
+      totalLanes,
+      window: { center: frequencyToPosition(10), span: 0.02 },
+    });
+    expect(zoomed.rects).toHaveLength(1);
+    expect(scene({ packed, totalLanes }).rects).toHaveLength(2);
+  });
+
+  it("draws the locked marker dashed and the live cursor solid", () => {
+    const markers = scene({ pinnedFreqHz: 100e6, cursorFreqHz: 2.45e9 }).lines.filter(
+      (l) => l.width === 2,
+    );
+    expect(markers).toHaveLength(2);
+    expect(markers.find((l) => l.dash)!.color).toBe(SCENE_COLORS.positive);
+    expect(markers.find((l) => !l.dash)!.color).toBe(SCENE_COLORS.primary);
+  });
+
+  it("draws one marker when the cursor sits on the lock", () => {
+    const s = scene({ pinnedFreqHz: 100e6, cursorFreqHz: 100e6 });
+    expect(s.lines.filter((l) => l.width === 2)).toHaveLength(1);
+  });
+
+  it("omits a marker that has been scrolled off screen", () => {
+    const s = scene({
+      window: { center: frequencyToPosition(2.45e9), span: 0.01 },
+      pinnedFreqHz: AXIS_MIN_HZ,
+    });
+    expect(s.lines.filter((l) => l.width === 2)).toHaveLength(0);
+  });
+
+  it("labels one tick per decade across the whole axis", () => {
+    const s = scene();
+    // 3 Hz to 3e24 Hz: the decade ticks 10^1 through 10^24 fall inside.
+    expect(s.texts).toHaveLength(24);
+    expect(s.texts[0]!.text).toBe("10 Hz");
+    expect(s.texts[23]!.text).toBe("1 YHz");
+    expect(s.texts.map((t) => t.text)).toContain("1 GHz");
+    // Every label reads back as the exact power of ten it marks, which also
+    // proves the SI prefix on it is the right one.
+    for (const t of s.texts) {
+      const decade = Math.log10(parseJump(t.text));
+      expect(decade).toBeCloseTo(Math.round(decade), 9);
+    }
+  });
+
+  it("adds the 2 and 5 subticks once the view is under six decades", () => {
+    const s = scene({
+      window: { center: frequencyToPosition(2.45e9), span: 5 / AXIS_DECADES },
+    });
+    const texts = s.texts.map((t) => t.text);
+    expect(texts).toContain("2 GHz");
+    expect(texts).toContain("5 GHz");
+  });
+
+  it("moves the ticks to the other axis when rotated", () => {
+    const v = scene({ orientation: "vertical" });
+    const laneSize = (800 - TICK_MARGIN_V) / REAL_PACKING.totalLanes;
+    for (const r of v.rects) expect(r.w).toBeCloseTo(laneSize, 9);
+    for (const l of v.lines.filter((l) => l.width === 1)) expect(l.x1).toBe(TICK_MARGIN_V);
+    for (const t of v.texts) expect(t.x).toBe(4);
+    // Horizontal keeps its tick labels on a single baseline under the lanes.
+    for (const t of scene().texts) expect(t.y).toBe(400 - TICK_MARGIN_H + 15);
+  });
+
+  it("plates a band label only where it sits on a color swatch", () => {
+    // Zoomed onto the visible band, where the colored sub-bands are drawn: a
+    // label on a saturated swatch needs the card-colored plate behind it to keep
+    // its contrast, and a label on a brand tint does not.
+    const s = scene({ window: { center: frequencyToPosition(5.4e14), span: 0.02 } });
+    const plated = s.bandTexts.filter((t) => t.plate);
+    expect(plated.map((t) => t.text)).toContain("Visible light");
+    expect(s.bandTexts.filter((t) => !t.plate).map((t) => t.text)).toContain("Ultraviolet");
+    for (const t of plated) {
+      expect(t.plate!.w).toBeCloseTo(t.text.length * t.size * 0.58 + 8, 9);
+      expect(t.plate!.h).toBe(t.size + 4);
+    }
+  });
+});
+
+describe("SVG serialization", () => {
+  it("emits the background, every rect, and every text plate", () => {
+    const s = scene();
+    const plates = [...s.texts, ...s.bandTexts].filter((t) => t.plate).length;
+    const svg = sceneToSvg(s, SCENE_COLORS);
+    expect(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"')).toBe(true);
+    expect(svg.endsWith("</svg>")).toBe(true);
+    expect(svg.match(/<rect /g)).toHaveLength(1 + s.rects.length + plates);
+    expect(svg.match(/<line /g)).toHaveLength(s.lines.length);
+    expect(svg.match(/<text /g)).toHaveLength(s.texts.length + s.bandTexts.length);
+  });
+
+  it("defines and references a gradient for the visible band", () => {
+    const svg = sceneToSvg(scene(), SCENE_COLORS);
+    expect(svg).toContain('<linearGradient id="spec0"');
+    expect(svg).toContain('fill="url(#spec0)"');
+    expect(svg.match(/<stop /g)).toHaveLength(25);
+  });
+
+  it("dashes the locked marker", () => {
+    const svg = sceneToSvg(scene({ pinnedFreqHz: 100e6 }), SCENE_COLORS);
+    expect(svg).toContain('stroke-dasharray="4 3"');
+  });
+
+  it("escapes markup characters in label text", () => {
+    const hostile: Scene = {
+      rects: [],
+      lines: [],
+      texts: [{ x: 1, y: 2, text: 'a & b <c> "d"', color: "#000000", size: 10, align: "start" }],
+      bandTexts: [],
+      w: 10,
+      h: 10,
+    };
+    const svg = sceneToSvg(hostile, SCENE_COLORS);
+    expect(svg).toContain('a &amp; b &lt;c&gt; "d"');
+    expect(svg).not.toContain("<c>");
+  });
+});
+
+describe("band label overlay", () => {
+  const NARROW_ICON = "Wifi";
+  const narrow: Band = { ...testBand("narrow", 1e9, 1.02e9), icon: NARROW_ICON };
+  const tree = [testBand("root", AXIS_MIN_HZ, AXIS_MAX_HZ, [narrow])];
+  const { packed, totalLanes } = packBands(tree);
+
+  /** The normalized width of the narrow band, and its center. */
+  const bandWidth = frequencyToPosition(narrow.fLow) - frequencyToPosition(narrow.fHigh);
+  const bandCenter = (frequencyToPosition(narrow.fLow) + frequencyToPosition(narrow.fHigh)) / 2;
+
+  /** The span that draws the narrow band exactly `px` wide at 800px of axis. */
+  const spanDrawing = (px: number) => (bandWidth * 800) / px;
+
+  function labels(span: number, over: Partial<BandLabelInput> = {}) {
+    return buildBandLabels({
+      width: 800,
+      height: 400,
+      orientation: "horizontal",
+      window: { center: bandCenter, span },
+      packed,
+      totalLanes,
+      ...over,
+    });
+  }
+
+  it("shows a full label once the box clears the legibility threshold", () => {
+    const l = labels(spanDrawing(MIN_LABEL_ALONG * 2)).find((x) => x.key === "narrow")!;
+    expect(l).toBeDefined();
+    expect(l.iconOnly).toBe(false);
+    expect(l.w).toBeCloseTo(MIN_LABEL_ALONG * 2, 6);
+    expect(l.name).toBe("narrow");
+  });
+
+  it("falls back to the icon alone in the band between the thresholds", () => {
+    const px = (MIN_LABEL_ALONG + ICON_ONLY_ALONG) / 2;
+    const l = labels(spanDrawing(px)).find((x) => x.key === "narrow")!;
+    expect(l).toBeDefined();
+    expect(l.iconOnly).toBe(true);
+    expect(l.showIcon).toBe(true);
+    expect(l.icon).toBe(NARROW_ICON);
+  });
+
+  it("drops the label entirely below the icon threshold", () => {
+    const px = ICON_ONLY_ALONG - 2;
+    expect(labels(spanDrawing(px)).some((x) => x.key === "narrow")).toBe(false);
+  });
+
+  it("shows the icon beside the name only in a wide box", () => {
+    expect(labels(spanDrawing(50)).find((x) => x.key === "narrow")!.showIcon).toBe(false);
+    expect(labels(spanDrawing(120)).find((x) => x.key === "narrow")!.showIcon).toBe(true);
+  });
+
+  it("returns nothing at all when the lanes are too thin to read", () => {
+    const thin = (MIN_LABEL_CROSS - 1) * totalLanes + TICK_MARGIN_H;
+    expect(labels(1, { height: thin })).toEqual([]);
+    expect(labels(1, { height: 400 }).length).toBeGreaterThan(0);
+  });
+
+  it("positions each label box exactly on the rect the canvas paints", () => {
+    // The overlay and the canvas are two renderers of one geometry; if they ever
+    // disagree the labels visibly slide off their bands.
+    const only = packBands([{ ...testBand("only", 1e9, 1e12), icon: NARROW_ICON }]);
+    const window = { center: 0.5, span: 1 };
+    const s = buildScene({
+      width: 800,
+      height: 400,
+      orientation: "horizontal",
+      window,
+      packed: only.packed,
+      totalLanes: only.totalLanes,
+      colors: SCENE_COLORS,
+      pinnedFreqHz: null,
+      cursorFreqHz: null,
+    });
+    const [label] = buildBandLabels({
+      width: 800,
+      height: 400,
+      orientation: "horizontal",
+      window,
+      packed: only.packed,
+      totalLanes: only.totalLanes,
+    });
+    expect(label).toBeDefined();
+    expect(label!.x).toBeCloseTo(s.rects[0]!.x, 9);
+    expect(label!.y).toBeCloseTo(s.rects[0]!.y, 9);
+    expect(label!.w).toBeCloseTo(s.rects[0]!.w, 9);
+    expect(label!.h).toBeCloseTo(s.rects[0]!.h, 9);
+  });
+
+  it("swaps the axes when rotated", () => {
+    // A band covering the whole axis draws long along it and one lane thick
+    // across it, whichever way the map is turned.
+    const h = labels(1).find((x) => x.key === "root")!;
+    const v = labels(1, { orientation: "vertical", width: 400, height: 800 }).find(
+      (x) => x.key === "root",
+    )!;
+    expect(h.w).toBeGreaterThan(h.h);
+    expect(v.h).toBeGreaterThan(v.w);
+    expect(v.w).toBeCloseTo((400 - TICK_MARGIN_V) / totalLanes, 9);
+  });
+
+  it("asks for a larger label on a top-level band", () => {
+    const found = labels(1);
+    expect(found.find((x) => x.key === "root")!.max).toBe(15);
+    expect(labels(spanDrawing(120)).find((x) => x.key === "narrow")!.max).toBe(12);
   });
 });

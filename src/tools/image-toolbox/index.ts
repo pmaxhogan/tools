@@ -1,4 +1,5 @@
 import exifr from "exifr";
+import { formatByteCount, formatBytes as formatByteSize } from "@/lib/format";
 import { ToolError, type ToolLogic } from "../types";
 
 export interface ImageToolboxOpts {
@@ -109,17 +110,9 @@ function concatBytes(parts: Uint8Array[]): Uint8Array {
 
 /** "1,234 bytes (1.21 KB)". */
 function humanSize(n: number): string {
-  const exact = `${n.toLocaleString("en-US")} bytes`;
-  if (n < 1024) return exact;
-  const units = ["KB", "MB", "GB"];
-  let value = n;
-  let unit = -1;
-  do {
-    value /= 1024;
-    unit++;
-  } while (value >= 1024 && unit < units.length - 1);
-  const rounded = value < 10 ? value.toFixed(2) : value.toFixed(1);
-  return `${exact} (${rounded} ${units[unit]})`;
+  if (n < 1024) return formatByteCount(n);
+  const size = formatByteSize(n, { maxUnit: "GB", precision: 2, largePrecision: 1 });
+  return `${formatByteCount(n)} (${size})`;
 }
 
 function gcd(a: number, b: number): number {

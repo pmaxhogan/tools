@@ -477,7 +477,6 @@ export function describeScreenDetail(screen: ScreenSummary, index = 0): Record<s
  * run
  * ------------------------------------------------------------------ */
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function run(input: string, _opts: DisplayInfoOpts): DisplayInfoResult {
   const raw = input ?? "";
   if (!raw.trim()) {

@@ -25,6 +25,8 @@ import {
   type FolderDiff,
   type ReportRow,
 } from "@/tools/folder-diff/index";
+import { formatBytes } from "@/lib/format";
+import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -124,19 +126,6 @@ let ignoreTimer: ReturnType<typeof setTimeout> | null = null;
 /* ---------------------------------------------------------------- */
 /* formatting                                                        */
 /* ---------------------------------------------------------------- */
-
-function humanSize(bytes: number): string {
-  const n = Math.max(0, Math.round(bytes));
-  if (n < 1024) return `${n} B`;
-  const units = ["KB", "MB", "GB", "TB"];
-  let value = n / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
-}
 
 function plural(count: number, one: string, many: string): string {
   return `${count.toLocaleString()} ${count === 1 ? one : many}`;
@@ -323,11 +312,11 @@ function sizeLabel(row: ReportRow): string {
   if (row.kind === "directory") return "";
   if (row.sizeA !== null && row.sizeB !== null) {
     return row.sizeA === row.sizeB
-      ? humanSize(row.sizeA)
-      : `${humanSize(row.sizeA)} to ${humanSize(row.sizeB)}`;
+      ? formatBytes(row.sizeA)
+      : `${formatBytes(row.sizeA)} to ${formatBytes(row.sizeB)}`;
   }
-  if (row.sizeA !== null) return humanSize(row.sizeA);
-  if (row.sizeB !== null) return humanSize(row.sizeB);
+  if (row.sizeA !== null) return formatBytes(row.sizeA);
+  if (row.sizeB !== null) return formatBytes(row.sizeB);
   return "";
 }
 
@@ -428,7 +417,7 @@ async function openPair(row: ReportRow) {
 
   try {
     if (pair.a.size > MAX_TEXT_DIFF_BYTES || pair.b.size > MAX_TEXT_DIFF_BYTES) {
-      textNote.value = `This file is over ${humanSize(MAX_TEXT_DIFF_BYTES)}, which is past the inline diff limit. Use Resolve same-size files to confirm whether it changed.`;
+      textNote.value = `This file is over ${formatBytes(MAX_TEXT_DIFF_BYTES)}, which is past the inline diff limit. Use Resolve same-size files to confirm whether it changed.`;
       return;
     }
 
@@ -466,14 +455,10 @@ function downloadReport() {
     const blob = new Blob([csv ? text : `${text}\n`], {
       type: csv ? "text/csv;charset=utf-8" : "text/plain;charset=utf-8",
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `folder-diff-${fileSlug(current.rootA)}-${fileSlug(current.rootB)}.${csv ? "csv" : "txt"}`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    downloadBlob(
+      blob,
+      `folder-diff-${fileSlug(current.rootA)}-${fileSlug(current.rootB)}.${csv ? "csv" : "txt"}`,
+    );
   } catch (e) {
     setError(e);
   }
@@ -568,7 +553,7 @@ onUnmounted(() => {
               class="text-xs text-muted-foreground tabular-nums"
             >
               {{ plural((side === "a" ? scanA : scanB)?.fileCount ?? 0, "file", "files") }} ·
-              {{ humanSize((side === "a" ? scanA : scanB)?.totalBytes ?? 0) }}
+              {{ formatBytes((side === "a" ? scanA : scanB)?.totalBytes ?? 0) }}
             </span>
           </div>
           <p v-else class="mt-2 text-sm text-muted-foreground">
@@ -669,7 +654,7 @@ onUnmounted(() => {
           {{ counts.unresolved }} same size, not read yet
         </span>
         <span class="text-xs text-muted-foreground tabular-nums">
-          {{ humanSize(counts.bytesAdded) }} added, {{ humanSize(counts.bytesRemoved) }} removed
+          {{ formatBytes(counts.bytesAdded) }} added, {{ formatBytes(counts.bytesRemoved) }} removed
         </span>
       </div>
 
