@@ -7,6 +7,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Lets a run be replayed from the Actions tab without an empty commit, which
+  # matters when a run is needed against an unchanged tree (a flake, or a
+  # queue that dropped the original).
+  workflow_dispatch:
 
 jobs:
   check:
