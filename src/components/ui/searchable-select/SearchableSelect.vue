@@ -62,13 +62,22 @@ function onOpenChange(next: boolean) {
 }
 
 /**
- * reka fills the auto-focused input with the current selection's label when the
- * panel opens. Select it so the first keystroke replaces it instead of
- * concatenating (which otherwise turns "Morse code" + "b64" into no matches).
+ * Belt and braces with :display-value below: if anything still seeds the
+ * auto-focused input (reka resyncs on open in some paths), select it so the
+ * first keystroke replaces it instead of concatenating.
  */
 function onSearchFocus(e: FocusEvent) {
   (e.target as HTMLInputElement | null)?.select?.();
 }
+
+/**
+ * reka's ComboboxInput renders the SELECTED item into the input when the
+ * panel opens, and without a display-value it stringifies the option's CODE
+ * value (not its label), so an open dropdown started life pre-searched for
+ * e.g. "blocks/diamond_ore" and showed no matches. The input is a pure
+ * search field here (the trigger shows the selection), so display nothing.
+ */
+const emptyDisplayValue = () => "";
 
 function onSelect(value: string) {
   emit("update:modelValue", value);
@@ -121,6 +130,7 @@ function onSelect(value: string) {
             <ComboboxInput
               v-model="search"
               auto-focus
+              :display-value="emptyDisplayValue"
               :aria-label="`Filter ${spec.label} options`"
               :placeholder="showSearch ? 'Search options' : undefined"
               @focus="onSearchFocus"
