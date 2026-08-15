@@ -212,6 +212,16 @@ export function controllerName(controller: number): string {
   return CONTROLLER_NAMES[controller] ?? `Controller ${controller}`;
 }
 
+/**
+ * The defined meaning of a controller, or "" for the numbers MIDI leaves free
+ * for a device to use however it likes. Unlike `controllerName` this does not
+ * invent a fallback, so a caller can tell "this is the volume knob" apart from
+ * "this is whatever CC 37 does on your controller".
+ */
+function definedControllerName(controller: number): string {
+  return CONTROLLER_NAMES[controller] ?? "";
+}
+
 const TEXT_META_LABELS: Record<number, string> = {
   0x01: "Text",
   0x02: "Copyright",
@@ -329,6 +339,166 @@ export function decodeLiveMessage(data: Uint8Array): LiveMessage {
     default:
       return { kind: "unknown", status };
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* live control meters                                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The latest reading of one continuous control the live monitor has seen.
+ *
+ * A scrolling log answers "what just happened" but not "where is everything
+ * sitting right now": a controller sweeping CC 37 buries the fact that CC 59,
+ * 60 and 61 are also in play. One meter per control, keyed by channel and
+ * number, turns that history into current state.
+ *
+ * Only controls that carry a level get a meter. Note on and note off are
+ * moments rather than positions, and program change picks a patch rather than
+ * setting an amount, so none of them belong on a bar.
+ */
+export interface ControlMeter {
+  /** Identity of the control: same channel and number means the same meter. */
+  id: string;
+  kind: "controlChange" | "polyAftertouch" | "channelAftertouch" | "pitchBend";
+  /** 1 based, matching the channel numbering the log prints. */
+  channel: number;
+  /** Controller or note number, or -1 for a control that has no number. */
+  number: number;
+  /** Short name for the chip, e.g. "CC 37" or "Pitch bend". */
+  label: string;
+  /** What the control means, or "" when MIDI leaves that up to the device. */
+  detail: string;
+  /** The latest raw value, in the units the log prints. */
+  value: number;
+  min: number;
+  max: number;
+  /** Where the value sits in its range, 0 at the minimum and 1 at the maximum. */
+  level: number;
+  /** Where the bar grows from: 0.5 for pitch bend, which is centred at rest. */
+  origin: number;
+  /** How many messages this control has sent since the log was last cleared. */
+  count: number;
+}
+
+/**
+ * Rank per kind so meters keep a stable order rather than reshuffling per
+ * message. The one-per-channel controls come first because a controller with
+ * forty CC assignments would otherwise bury the pitch wheel below the fold,
+ * and poly aftertouch comes last because it can run to one meter per key.
+ */
+const METER_KIND_RANK: Record<ControlMeter["kind"], number> = {
+  pitchBend: 0,
+  channelAftertouch: 1,
+  controlChange: 2,
+  polyAftertouch: 3,
+};
+
+/**
+ * The meter a live message updates, or null when the message carries no level.
+ * `count` is always 1 here; `applyControlMeter` carries the running total.
+ */
+export function controlMeterFor(message: LiveMessage, middleC = 4): ControlMeter | null {
+  switch (message.kind) {
+    case "controlChange":
+      return {
+        id: `cc:${message.channel}:${message.controller}`,
+        kind: "controlChange",
+        channel: message.channel + 1,
+        number: message.controller,
+        label: `CC ${message.controller}`,
+        detail: definedControllerName(message.controller),
+        value: message.value,
+        min: 0,
+        max: 127,
+        level: message.value / 127,
+        origin: 0,
+        count: 1,
+      };
+    case "polyAftertouch":
+      return {
+        id: `pat:${message.channel}:${message.note}`,
+        kind: "polyAftertouch",
+        channel: message.channel + 1,
+        number: message.note,
+        label: noteName(message.note, middleC),
+        detail: "Key pressure",
+        value: message.pressure,
+        min: 0,
+        max: 127,
+        level: message.pressure / 127,
+        origin: 0,
+        count: 1,
+      };
+    case "channelAftertouch":
+      return {
+        id: `cat:${message.channel}`,
+        kind: "channelAftertouch",
+        channel: message.channel + 1,
+        number: -1,
+        label: "Pressure",
+        detail: "Channel aftertouch",
+        value: message.pressure,
+        min: 0,
+        max: 127,
+        level: message.pressure / 127,
+        origin: 0,
+        count: 1,
+      };
+    case "pitchBend":
+      return {
+        id: `pb:${message.channel}`,
+        kind: "pitchBend",
+        channel: message.channel + 1,
+        number: -1,
+        label: "Pitch bend",
+        detail: "Centred at rest",
+        value: message.value,
+        min: -8192,
+        max: 8191,
+        // The wheel rests at 0 in the middle of a range that is one step wider
+        // below than above, so the two halves are scaled separately. Without
+        // that, a wheel at rest would read a hair off centre.
+        level: message.value < 0 ? 0.5 + message.value / 16384 : 0.5 + message.value / 16382,
+        origin: 0.5,
+        count: 1,
+      };
+    default:
+      return null;
+  }
+}
+
+/**
+ * Fold one live message into a map of meters keyed by `ControlMeter.id`.
+ * Mutates `meters` because this runs once per incoming message on a wire that
+ * can carry thousands a second. Returns true when the map changed, so a caller
+ * can skip a redraw for messages that carry no level.
+ */
+export function applyControlMeter(
+  meters: Map<string, ControlMeter>,
+  message: LiveMessage,
+  middleC = 4,
+): boolean {
+  const next = controlMeterFor(message, middleC);
+  if (!next) return false;
+  const previous = meters.get(next.id);
+  if (previous) next.count = previous.count + 1;
+  meters.set(next.id, next);
+  return true;
+}
+
+/**
+ * Meters in reading order: channel first, then kind, then number. Sorting on
+ * the way out rather than on insert keeps the order stable as new controls
+ * appear, so a chip never jumps because something else moved.
+ */
+export function sortedControlMeters(meters: Iterable<ControlMeter>): ControlMeter[] {
+  return [...meters].sort(
+    (a, b) =>
+      a.channel - b.channel ||
+      METER_KIND_RANK[a.kind] - METER_KIND_RANK[b.kind] ||
+      a.number - b.number,
+  );
 }
 
 /* ------------------------------------------------------------------ */

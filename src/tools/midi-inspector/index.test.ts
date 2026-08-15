@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyControlMeter,
+  controlMeterFor,
   decodeLiveMessage,
   durationSeconds,
   keySignatureName,
@@ -8,7 +10,9 @@ import {
   parseMidi,
   readVarInt,
   run,
+  sortedControlMeters,
   writeVarInt,
+  type ControlMeter,
   type MidiOpts,
 } from "./index";
 import { ToolError } from "../types";
@@ -312,5 +316,113 @@ describe("midi-inspector run", () => {
       0x90, // then nothing
     ]);
     expect(() => parseMidi(bytes)).toThrow(ToolError);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* live control meters                                                */
+/* ------------------------------------------------------------------ */
+
+/** A raw control change on the wire: status 0xB0 | channel. */
+function cc(channel: number, controller: number, value: number) {
+  return decodeLiveMessage(Uint8Array.from([0xb0 | channel, controller, value]));
+}
+
+describe("control meters", () => {
+  it("gives a control change a meter keyed by channel and controller", () => {
+    const meter = controlMeterFor(cc(0, 37, 69));
+    expect(meter).toMatchObject({
+      id: "cc:0:37",
+      kind: "controlChange",
+      channel: 1,
+      number: 37,
+      label: "CC 37",
+      value: 69,
+      min: 0,
+      max: 127,
+      origin: 0,
+      count: 1,
+    });
+    expect(meter?.level).toBeCloseTo(69 / 127, 10);
+  });
+
+  it("keeps the same controller on different channels apart", () => {
+    expect(controlMeterFor(cc(0, 37, 1))?.id).toBe("cc:0:37");
+    expect(controlMeterFor(cc(4, 37, 1))?.id).toBe("cc:4:37");
+  });
+
+  it("names the controller where MIDI defines one, and stays quiet where it does not", () => {
+    expect(controlMeterFor(cc(0, 7, 100))?.detail).toBe("Channel Volume");
+    expect(controlMeterFor(cc(0, 37, 100))?.detail).toBe("");
+  });
+
+  it("centres pitch bend and scales each half to its own end", () => {
+    const rest = controlMeterFor(decodeLiveMessage(Uint8Array.from([0xe0, 0x00, 0x40])));
+    expect(rest?.value).toBe(0);
+    expect(rest?.level).toBeCloseTo(0.5, 10);
+    expect(rest?.origin).toBe(0.5);
+
+    const down = controlMeterFor(decodeLiveMessage(Uint8Array.from([0xe0, 0x00, 0x00])));
+    expect(down?.value).toBe(-8192);
+    expect(down?.level).toBeCloseTo(0, 10);
+
+    const up = controlMeterFor(decodeLiveMessage(Uint8Array.from([0xe0, 0x7f, 0x7f])));
+    expect(up?.value).toBe(8191);
+    expect(up?.level).toBeCloseTo(1, 10);
+  });
+
+  it("meters both flavours of aftertouch", () => {
+    const poly = controlMeterFor(decodeLiveMessage(Uint8Array.from([0xa0, 60, 64])));
+    expect(poly).toMatchObject({ id: "pat:0:60", kind: "polyAftertouch", label: "C4", value: 64 });
+
+    const channel = controlMeterFor(decodeLiveMessage(Uint8Array.from([0xd0, 90])));
+    expect(channel).toMatchObject({ id: "cat:0", kind: "channelAftertouch", value: 90 });
+  });
+
+  it("respects the middle-C convention in poly aftertouch labels", () => {
+    expect(controlMeterFor(decodeLiveMessage(Uint8Array.from([0xa0, 60, 1])), 3)?.label).toBe("C3");
+  });
+
+  it("gives no meter to messages that carry no level", () => {
+    // Notes are moments, program change picks a patch, clock is a tick.
+    expect(controlMeterFor(decodeLiveMessage(Uint8Array.from([0x90, 60, 100])))).toBeNull();
+    expect(controlMeterFor(decodeLiveMessage(Uint8Array.from([0x80, 60, 0])))).toBeNull();
+    expect(controlMeterFor(decodeLiveMessage(Uint8Array.from([0xc0, 5])))).toBeNull();
+    expect(controlMeterFor(decodeLiveMessage(Uint8Array.from([0xf8])))).toBeNull();
+  });
+
+  it("keeps one meter per control and counts the messages", () => {
+    const meters = new Map<string, ControlMeter>();
+    expect(applyControlMeter(meters, cc(0, 37, 69))).toBe(true);
+    expect(applyControlMeter(meters, cc(0, 37, 90))).toBe(true);
+    expect(applyControlMeter(meters, cc(0, 60, 127))).toBe(true);
+
+    expect(meters.size).toBe(2);
+    expect(meters.get("cc:0:37")).toMatchObject({ value: 90, count: 2 });
+    expect(meters.get("cc:0:60")).toMatchObject({ value: 127, count: 1 });
+  });
+
+  it("reports no change for a message with no level", () => {
+    const meters = new Map<string, ControlMeter>();
+    expect(applyControlMeter(meters, decodeLiveMessage(Uint8Array.from([0xf8])))).toBe(false);
+    expect(meters.size).toBe(0);
+  });
+
+  it("orders meters by channel, then kind, then number", () => {
+    const meters = new Map<string, ControlMeter>();
+    // The order the sample log saw them: 61, 60, 59, then 37.
+    for (const controller of [61, 60, 59, 37]) applyControlMeter(meters, cc(0, controller, 64));
+    applyControlMeter(meters, decodeLiveMessage(Uint8Array.from([0xe0, 0x00, 0x40])));
+    applyControlMeter(meters, cc(1, 7, 100));
+
+    // Pitch bend leads its channel, then the CC bank in numeric order.
+    expect(sortedControlMeters(meters.values()).map((m) => m.id)).toEqual([
+      "pb:0",
+      "cc:0:37",
+      "cc:0:59",
+      "cc:0:60",
+      "cc:0:61",
+      "cc:1:7",
+    ]);
   });
 });

@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import CopyButton from "@/components/tool/CopyButton.vue";
 import {
+  applyControlMeter,
   controllerName,
   decodeLiveMessage,
   durationSeconds,
@@ -19,7 +20,9 @@ import {
   noteCount,
   noteName,
   parseMidi,
+  sortedControlMeters,
   tempoMap,
+  type ControlMeter,
   type LiveMessage,
   type MidiEvent,
   type MidiFile,
@@ -309,6 +312,37 @@ const logEmpty = computed(() => visibleRows.value.length === 0);
 // The monitor stays pinned to the newest message unless the reader scrolls up.
 const { el: liveLogEl, onScroll: onLiveLogScroll } = useStickToBottom(revision);
 
+// One live meter per continuous control, so a knob that moved twenty seconds
+// ago still shows where it was left. Like the log, this is a plain Map rather
+// than reactive state: the rAF revision above is what redraws it.
+const meterStore = new Map<string, ControlMeter>();
+
+const meters = computed<ControlMeter[]>(() => {
+  void revision.value;
+  return sortedControlMeters(meterStore.values());
+});
+
+/** The full story of one meter, for the tooltip and the screen reader label. */
+function meterTitle(meter: ControlMeter): string {
+  const parts = [meter.label];
+  if (meter.detail) parts.push(meter.detail);
+  parts.push(`channel ${meter.channel}`);
+  parts.push(`${meter.count} ${meter.count === 1 ? "message" : "messages"}`);
+  return parts.join(", ");
+}
+
+/** Where the bar starts and how wide it is, as percentages of the track. */
+function barStyle(meter: ControlMeter): { left: string; width: string } {
+  const from = Math.min(meter.origin, meter.level);
+  const to = Math.max(meter.origin, meter.level);
+  return {
+    left: `${from * 100}%`,
+    // A control sitting exactly on its origin would otherwise vanish, so leave
+    // a sliver behind to show the meter is live and reading zero.
+    width: `${Math.max(to - from, 0.015) * 100}%`,
+  };
+}
+
 function clock(): string {
   const now = new Date();
   const pad = (n: number, w = 2) => String(n).padStart(w, "0");
@@ -374,6 +408,8 @@ function handleMessage(deviceName: string, event: MidiMessageEventLike) {
   const message = decodeLiveMessage(data);
   if (!showClock.value && (message.kind === "clock" || message.kind === "activeSensing")) return;
 
+  applyControlMeter(meterStore, message);
+
   const line = liveLine(message);
   rowKey += 1;
   logStore.push({
@@ -424,6 +460,7 @@ async function grantAccess() {
 
 function clearLog() {
   logStore.length = 0;
+  meterStore.clear();
   revision.value++;
 }
 
@@ -823,33 +860,81 @@ onUnmounted(() => {
           </span>
         </div>
 
-        <!-- Live log -->
-        <div
-          v-if="access"
-          ref="liveLogEl"
-          class="max-h-[26rem] overflow-auto rounded-[10px] bg-secondary p-3 font-mono text-xs shadow-[var(--sh-inset)]"
-          @scroll.passive="onLiveLogScroll"
-        >
-          <p v-if="logEmpty" class="text-muted-foreground">
-            Play a note on a connected device to see messages here.
-          </p>
-          <template v-else>
-            <p v-if="hiddenLogCount > 0" class="mb-1 text-muted-foreground">
-              {{ hiddenLogCount }} earlier messages scrolled off.
+        <!-- Live log, with the control meters alongside it -->
+        <div v-if="access" class="flex flex-col gap-4 lg:flex-row lg:items-start">
+          <div
+            ref="liveLogEl"
+            class="max-h-[26rem] min-w-0 flex-1 overflow-auto rounded-[10px] bg-secondary p-3 font-mono text-xs shadow-[var(--sh-inset)]"
+            @scroll.passive="onLiveLogScroll"
+          >
+            <p v-if="logEmpty" class="text-muted-foreground">
+              Play a note on a connected device to see messages here.
             </p>
-            <div
-              v-for="row in visibleRows"
-              :key="row.key"
-              class="flex gap-3 py-0.5"
-              :class="row.kind === 'note' ? 'text-foreground' : 'text-muted-foreground'"
-            >
-              <span class="shrink-0 tabular-nums text-muted-foreground">{{ row.time }}</span>
-              <span class="shrink-0 truncate text-muted-foreground max-w-[8rem]">{{
-                row.device
-              }}</span>
-              <span class="break-words whitespace-pre-wrap">{{ row.text }}</span>
+            <template v-else>
+              <p v-if="hiddenLogCount > 0" class="mb-1 text-muted-foreground">
+                {{ hiddenLogCount }} earlier messages scrolled off.
+              </p>
+              <div
+                v-for="row in visibleRows"
+                :key="row.key"
+                class="flex gap-3 py-0.5"
+                :class="row.kind === 'note' ? 'text-foreground' : 'text-muted-foreground'"
+              >
+                <span class="shrink-0 tabular-nums text-muted-foreground">{{ row.time }}</span>
+                <span class="shrink-0 truncate text-muted-foreground max-w-[8rem]">{{
+                  row.device
+                }}</span>
+                <span class="break-words whitespace-pre-wrap">{{ row.text }}</span>
+              </div>
+            </template>
+          </div>
+
+          <!-- Control meters: where every knob, wheel and pedal is sitting now -->
+          <div
+            class="flex max-h-[26rem] shrink-0 flex-col gap-2 overflow-auto rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)] lg:w-[22rem]"
+          >
+            <div class="flex items-baseline justify-between gap-2">
+              <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+                Controls
+              </span>
+              <span v-if="meters.length" class="font-mono text-xs text-muted-foreground">
+                {{ meters.length }}
+              </span>
             </div>
-          </template>
+            <p v-if="meters.length === 0" class="font-mono text-xs text-muted-foreground">
+              Move a knob, wheel or pedal and it gets a meter here.
+            </p>
+            <!--
+              One row per control, level drawn as the row's own fill rather than
+              a separate bar underneath. A controller with fifty assignments
+              fits on screen that way, where a stacked label-and-bar chip put
+              most of them below the fold.
+            -->
+            <div
+              class="grid gap-x-2 gap-y-px [grid-template-columns:repeat(auto-fill,minmax(9rem,1fr))]"
+            >
+              <div
+                v-for="meter in meters"
+                :key="meter.id"
+                class="relative flex items-center gap-2 overflow-hidden rounded-[4px] bg-card px-1.5 font-mono text-[11px] leading-[1.15rem]"
+                :title="meterTitle(meter)"
+                role="meter"
+                :aria-label="meterTitle(meter)"
+                :aria-valuenow="meter.value"
+                :aria-valuemin="meter.min"
+                :aria-valuemax="meter.max"
+              >
+                <div
+                  class="absolute inset-y-0 bg-primary/35 transition-[left,width] duration-75"
+                  :style="barStyle(meter)"
+                />
+                <span class="relative truncate">{{ meter.label }}</span>
+                <span class="relative ml-auto shrink-0 tabular-nums text-muted-foreground">
+                  {{ meter.value }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <p class="text-xs text-muted-foreground">

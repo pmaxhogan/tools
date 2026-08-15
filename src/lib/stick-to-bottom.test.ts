@@ -2,13 +2,23 @@ import { describe, expect, it } from "vitest";
 import { effectScope, nextTick, ref } from "vue";
 import { useStickToBottom } from "./stick-to-bottom";
 
-/** A stand in for the log box: enough of an element to drive the scroll math. */
-function fakeBox(opts: { clientHeight?: number } = {}) {
-  return {
-    scrollTop: 0,
-    scrollHeight: 0,
-    clientHeight: opts.clientHeight ?? 100,
-  } as unknown as HTMLElement;
+/**
+ * A stand in for the log box: enough of an element to drive the scroll math,
+ * with the three measurements writable so a test can grow the content.
+ */
+interface FakeBox {
+  scrollTop: number;
+  scrollHeight: number;
+  clientHeight: number;
+}
+
+function fakeBox(opts: { clientHeight?: number } = {}): FakeBox {
+  return { scrollTop: 0, scrollHeight: 0, clientHeight: opts.clientHeight ?? 100 };
+}
+
+/** The composable only reads scroll geometry, so a fake box stands in fine. */
+function asElement(box: FakeBox): HTMLElement {
+  return box as unknown as HTMLElement;
 }
 
 /** Runs `body` inside an effect scope so the watchers are torn down after. */
@@ -27,7 +37,7 @@ describe("useStickToBottom", () => {
       const rows = ref<string[]>([]);
       const { el } = useStickToBottom(() => rows.value.length);
       const box = fakeBox();
-      el.value = box;
+      el.value = asElement(box);
       await nextTick();
 
       rows.value.push("first");
@@ -44,7 +54,7 @@ describe("useStickToBottom", () => {
       const rows = ref<string[]>([]);
       const { el, onScroll, stuck } = useStickToBottom(() => rows.value.length);
       const box = fakeBox();
-      el.value = box;
+      el.value = asElement(box);
       await nextTick();
 
       // The reader drags the bar well clear of the bottom.
@@ -67,7 +77,7 @@ describe("useStickToBottom", () => {
       const rows = ref<string[]>([]);
       const { el, onScroll, stuck } = useStickToBottom(() => rows.value.length);
       const box = fakeBox();
-      el.value = box;
+      el.value = asElement(box);
       await nextTick();
 
       box.scrollHeight = 500;
@@ -93,7 +103,7 @@ describe("useStickToBottom", () => {
       const rows = ref<string[]>([]);
       const { el, onScroll, stuck } = useStickToBottom(() => rows.value.length);
       const box = fakeBox();
-      el.value = box;
+      el.value = asElement(box);
       await nextTick();
 
       // 12 px short of the end, which fractional scroll positions produce at
@@ -112,7 +122,7 @@ describe("useStickToBottom", () => {
 
       const box = fakeBox();
       box.scrollHeight = 300;
-      el.value = box;
+      el.value = asElement(box);
       await nextTick();
       await nextTick();
 
