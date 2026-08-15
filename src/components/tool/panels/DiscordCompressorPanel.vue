@@ -31,6 +31,7 @@ import {
 } from "@/lib/ffmpeg";
 import { formatBytes } from "@/lib/format";
 import { downloadUrl } from "@/lib/download";
+import { useStickToBottom } from "@/lib/stick-to-bottom";
 import {
   MAX_CAP_MB,
   OVERHEAD_FLOOR_BYTES,
@@ -121,6 +122,9 @@ const jobRatio = ref<number | null>(null);
 const jobTimeMs = ref<number | null>(null);
 const logLines = ref<string[]>([]);
 const showLog = ref(false);
+
+// The log tail stays pinned to the newest line unless the reader scrolls up.
+const { el: logEl, onScroll: onLogScroll } = useStickToBottom(() => logLines.value.length);
 
 interface Result {
   name: string;
@@ -850,7 +854,9 @@ onUnmounted(clearResult);
           ffmpeg log
         </summary>
         <pre
+          ref="logEl"
           class="mt-2 max-h-56 overflow-auto font-mono text-xs whitespace-pre-wrap break-all text-muted-foreground"
+          @scroll.passive="onLogScroll"
           >{{ logLines.slice(-30).join("\n") }}</pre>
       </details>
 

@@ -4,6 +4,7 @@ import { CircleAlert, FileMusic, Music4, Radio, Trash2, X } from "lucide-vue-nex
 import type { ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import { formatBytes } from "@/lib/format";
+import { useStickToBottom } from "@/lib/stick-to-bottom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -304,6 +305,9 @@ const hiddenLogCount = computed(() => {
   return Math.max(0, logStore.length - MAX_RENDER);
 });
 const logEmpty = computed(() => visibleRows.value.length === 0);
+
+// The monitor stays pinned to the newest message unless the reader scrolls up.
+const { el: liveLogEl, onScroll: onLiveLogScroll } = useStickToBottom(revision);
 
 function clock(): string {
   const now = new Date();
@@ -822,7 +826,9 @@ onUnmounted(() => {
         <!-- Live log -->
         <div
           v-if="access"
+          ref="liveLogEl"
           class="max-h-[26rem] overflow-auto rounded-[10px] bg-secondary p-3 font-mono text-xs shadow-[var(--sh-inset)]"
+          @scroll.passive="onLiveLogScroll"
         >
           <p v-if="logEmpty" class="text-muted-foreground">
             Play a note on a connected device to see messages here.

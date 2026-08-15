@@ -17,6 +17,7 @@ import {
   type ChipKey,
   type FlashRegion,
 } from "@/tools/firmware-flasher/index";
+import { useStickToBottom } from "@/lib/stick-to-bottom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -259,6 +260,13 @@ const terminal = {
     log.value[log.value.length - 1] += data;
   },
 };
+
+// Reading every line here means the watch below also fires for `write`, which
+// extends the last line in place rather than appending a new one.
+const logText = computed(() => log.value.join("\n"));
+
+// The esptool output stays pinned to the newest line unless the reader scrolls up.
+const { el: logEl, onScroll: onLogScroll } = useStickToBottom(logText);
 
 /* ---------------------------------------------------------------- */
 /* build the plan                                                    */
@@ -884,8 +892,10 @@ onUnmounted(() => {
     >
       <summary class="cursor-pointer text-sm text-muted-foreground">esptool output</summary>
       <pre
+        ref="logEl"
         class="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-[10px] bg-secondary px-3 py-2 font-mono text-xs shadow-[var(--sh-inset)]"
-        >{{ log.join("\n") }}</pre>
+        @scroll.passive="onLogScroll"
+        >{{ logText }}</pre>
     </details>
   </div>
 </template>

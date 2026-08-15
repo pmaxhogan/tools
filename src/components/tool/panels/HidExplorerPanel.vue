@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { useStickToBottom } from "@/lib/stick-to-bottom";
 import OutputView from "../OutputView.vue";
 import {
   decodeInputReport,
@@ -148,6 +149,9 @@ const visibleLog = computed(() =>
     ? log.value
     : log.value.filter((e) => String(e.reportId) === reportFilter.value),
 );
+
+// The report log stays pinned to the newest entry unless the reader scrolls up.
+const { el: logEl, onScroll: onLogScroll } = useStickToBottom(() => visibleLog.value.length);
 
 /** The report-ID filter choices, rebuilt as the device's report layouts change. */
 const reportFilterSpec = computed<SelectOptionSpec>(() => ({
@@ -485,7 +489,12 @@ onUnmounted(() => {
         Waiting for input reports. Move the device or press one of its controls.
       </p>
 
-      <ol v-else class="flex max-h-[520px] flex-col gap-2 overflow-y-auto">
+      <ol
+        v-else
+        ref="logEl"
+        class="flex max-h-[520px] flex-col gap-2 overflow-y-auto"
+        @scroll.passive="onLogScroll"
+      >
         <li
           v-for="entry in visibleLog"
           :key="entry.key"

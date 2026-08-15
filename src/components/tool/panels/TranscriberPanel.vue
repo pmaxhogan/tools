@@ -5,6 +5,7 @@ import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
 import { formatBytes } from "@/lib/format";
 import { downloadText } from "@/lib/download";
+import { useStickToBottom } from "@/lib/stick-to-bottom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -249,6 +250,10 @@ const running = ref(false);
 const progress = ref(0);
 const elapsed = ref(0);
 const live = ref("");
+
+// The running transcript stays pinned to the newest words unless the reader
+// scrolls up.
+const { el: liveEl, onScroll: onLiveScroll } = useStickToBottom(live);
 const chunks = shallowRef<TranscriptRow[]>([]);
 const copied = ref(false);
 
@@ -977,7 +982,9 @@ onUnmounted(() => {
           </span>
         </div>
         <pre
+          ref="liveEl"
           class="max-h-56 overflow-auto px-3 py-2 font-mono text-xs whitespace-pre-wrap text-muted-foreground"
+          @scroll.passive="onLiveScroll"
           >{{ live || "Listening to the first window…" }}</pre>
       </div>
 

@@ -79,6 +79,7 @@ import {
 import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
 import { formatBytes } from "@/lib/format";
 import { downloadUrl } from "@/lib/download";
+import { useStickToBottom } from "@/lib/stick-to-bottom";
 import { Button } from "@/components/ui/button";
 
 const props = withDefaults(
@@ -199,6 +200,9 @@ const canRun = computed(
 );
 
 const visibleLog = computed(() => logLines.value.slice(-30));
+
+// The log tail stays pinned to the newest line unless the reader scrolls up.
+const { el: logEl, onScroll: onLogScroll } = useStickToBottom(() => logLines.value.length);
 
 /* ---------------------------------------------------------------- */
 /* files                                                             */
@@ -659,7 +663,9 @@ onUnmounted(() => {
           ffmpeg log
         </summary>
         <pre
+          ref="logEl"
           class="mt-2 max-h-56 overflow-auto font-mono text-xs whitespace-pre-wrap break-all text-muted-foreground"
+          @scroll.passive="onLogScroll"
           >{{ visibleLog.join("\n") }}</pre>
       </details>
 

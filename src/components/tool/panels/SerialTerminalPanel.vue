@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { Download, Plug, Send, Trash2, Usb } from "lucide-vue-next";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   type SendMode,
 } from "@/tools/serial-terminal/index";
 import { downloadText } from "@/lib/download";
+import { useStickToBottom } from "@/lib/stick-to-bottom";
 
 /**
  * Bespoke panel for the serial terminal. The Web Serial API only exists in a
@@ -668,21 +669,11 @@ function downloadLog() {
 /* auto scroll                                                       */
 /* ---------------------------------------------------------------- */
 
-const logEl = ref<HTMLElement | null>(null);
-const stickToBottom = ref(true);
-
-function onLogScroll() {
-  const el = logEl.value;
-  if (!el) return;
-  stickToBottom.value = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-}
-
-watch(visibleRows, async () => {
-  if (!stickToBottom.value) return;
-  await nextTick();
-  const el = logEl.value;
-  if (el) el.scrollTop = el.scrollHeight;
-});
+const {
+  el: logEl,
+  stuck: stickToBottom,
+  onScroll: onLogScroll,
+} = useStickToBottom(visibleRows);
 
 watch([dtr, rts], () => {
   if (connected.value) void applySignals();
