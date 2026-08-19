@@ -10,6 +10,7 @@
  * tool-matrix.csv stays the planning doc.
  */
 import type { ToolMeta } from "./types";
+import { meta as audioDataCodec } from "./audio-data-codec/meta";
 import { meta as audioSpectrogram } from "./audio-spectrogram/meta";
 import { meta as audioTranscriber } from "./audio-transcriber/meta";
 import { meta as audioTrimmer } from "./audio-trimmer/meta";
@@ -23,6 +24,7 @@ import { meta as bedMeshVisualizer } from "./bed-mesh-visualizer/meta";
 import { meta as bingoCardGenerator } from "./bingo-card-generator/meta";
 import { meta as bleSensorDashboard } from "./ble-sensor-dashboard/meta";
 import { meta as bookmarklets } from "./bookmarklets/meta";
+import { meta as bpmKeyDetector } from "./bpm-key-detector/meta";
 import { meta as browserPrivacyCheck } from "./browser-privacy-check/meta";
 import { meta as bulkRename } from "./bulk-rename/meta";
 import { meta as calc } from "./calc/meta";
@@ -35,6 +37,7 @@ import { meta as clipboardPipelines } from "./clipboard-pipelines/meta";
 import { meta as colorBlindnessSimulator } from "./color-blindness-simulator/meta";
 import { meta as colorPicker } from "./color-picker/meta";
 import { meta as coordinateConverter } from "./coordinate-converter/meta";
+import { meta as countdownTimer } from "./countdown-timer/meta";
 import { meta as cronParser } from "./cron-parser/meta";
 import { meta as cssAnchorPositioningBuilder } from "./css-anchor-positioning-builder/meta";
 import { meta as csvViewer } from "./csv-viewer/meta";
@@ -44,6 +47,7 @@ import { meta as diffChecker } from "./diff-checker/meta";
 import { meta as discordTimestamp } from "./discord-timestamp/meta";
 import { meta as discordVideoCompressor } from "./discord-video-compressor/meta";
 import { meta as displayInfo } from "./display-info/meta";
+import { meta as distanceBearingCalculator } from "./distance-bearing-calculator/meta";
 import { meta as dmarcReportViewer } from "./dmarc-report-viewer/meta";
 import { meta as dnsLookup } from "./dns-lookup/meta";
 import { meta as dnsPropagation } from "./dns-propagation/meta";
@@ -53,6 +57,7 @@ import { meta as duplicateFinder } from "./duplicate-finder/meta";
 import { meta as durationCalculator } from "./duration-calculator/meta";
 import { meta as echo } from "./echo/meta";
 import { meta as electromagneticSpectrum } from "./electromagnetic-spectrum/meta";
+import { meta as elementRecorder } from "./element-recorder/meta";
 import { meta as emailHeaderAnalyzer } from "./email-header-analyzer/meta";
 import { meta as epochConverter } from "./epoch-converter/meta";
 import { meta as escapeUnescape } from "./escape-unescape/meta";
@@ -64,7 +69,10 @@ import { meta as figlet } from "./figlet/meta";
 import { meta as fileTypeIdentifier } from "./file-type-identifier/meta";
 import { meta as firmwareFlasher } from "./firmware-flasher/meta";
 import { meta as folderDiff } from "./folder-diff/meta";
+import { meta as fontSubsetter } from "./font-subsetter/meta";
 import { meta as gamCommandBuilder } from "./gam-command-builder/meta";
+import { meta as gamepadTester } from "./gamepad-tester/meta";
+import { meta as gcodeViewer } from "./gcode-viewer/meta";
 import { meta as gifEditor } from "./gif-editor/meta";
 import { meta as gpuInspector } from "./gpu-inspector/meta";
 import { meta as gpxViewer } from "./gpx-viewer/meta";
@@ -72,6 +80,7 @@ import { meta as gzipCompressionTest } from "./gzip-compression-test/meta";
 import { meta as harViewer } from "./har-viewer/meta";
 import { meta as hashGenerator } from "./hash-generator/meta";
 import { meta as hashIdentifier } from "./hash-identifier/meta";
+import { meta as hexViewer } from "./hex-viewer/meta";
 import { meta as hidReportExplorer } from "./hid-report-explorer/meta";
 import { meta as htmlToMarkdown } from "./html-to-markdown/meta";
 import { meta as httpHeaderInspector } from "./http-header-inspector/meta";
@@ -80,6 +89,7 @@ import { meta as imageDiff } from "./image-diff/meta";
 import { meta as imageDithering } from "./image-dithering/meta";
 import { meta as imageRedactor } from "./image-redactor/meta";
 import { meta as imageSteganography } from "./image-steganography/meta";
+import { meta as imageToAscii } from "./image-to-ascii/meta";
 import { meta as imageToText } from "./image-to-text/meta";
 import { meta as imageToolbox } from "./image-toolbox/meta";
 import { meta as invisibleCharacterDetector } from "./invisible-character-detector/meta";
@@ -91,7 +101,9 @@ import { meta as jwtVulnerabilityCheck } from "./jwt-vulnerability-check/meta";
 import { meta as keyRolloverTester } from "./key-rollover-tester/meta";
 import { meta as keyboardHeatmap } from "./keyboard-heatmap/meta";
 import { meta as keycode } from "./keycode/meta";
+import { meta as lightMeter } from "./light-meter/meta";
 import { meta as lineSorter } from "./line-sorter/meta";
+import { meta as markdownTableEditor } from "./markdown-table-editor/meta";
 import { meta as mcpInspector } from "./mcp-inspector/meta";
 import { meta as mediaKeyTester } from "./media-key-tester/meta";
 import { meta as midiInspector } from "./midi-inspector/meta";
@@ -109,6 +121,8 @@ import { meta as minecraftXpCalculator } from "./minecraft-xp-calculator/meta";
 import { meta as mobileSensors } from "./mobile-sensors/meta";
 import { meta as mojibakeFixer } from "./mojibake-fixer/meta";
 import { meta as monitorTest } from "./monitor-test/meta";
+import { meta as mouseTester } from "./mouse-tester/meta";
+import { meta as multitouchTester } from "./multitouch-tester/meta";
 import { meta as nfcTagTool } from "./nfc-tag-tool/meta";
 import { meta as oauthScopeDecoder } from "./oauth-scope-decoder/meta";
 import { meta as ohmsLawCalculator } from "./ohms-law-calculator/meta";
@@ -121,10 +135,13 @@ import { meta as pdfToolbox } from "./pdf-toolbox/meta";
 import { meta as photographyCalculator } from "./photography-calculator/meta";
 import { meta as pipelines } from "./pipelines/meta";
 import { meta as placeholderImage } from "./placeholder-image/meta";
+import { meta as pomodoroTimer } from "./pomodoro-timer/meta";
+import { meta as printCostCalculator } from "./print-cost-calculator/meta";
 import { meta as promqlFormatter } from "./promql-formatter/meta";
 import { meta as protobufDecoder } from "./protobuf-decoder/meta";
 import { meta as qrCodeGenerator } from "./qr-code-generator/meta";
 import { meta as qrCodeScanner } from "./qr-code-scanner/meta";
+import { meta as qrFileTransfer } from "./qr-file-transfer/meta";
 import { meta as raidzCalculator } from "./raidz-calculator/meta";
 import { meta as randomPicker } from "./random-picker/meta";
 import { meta as resistorColorCodeCalculator } from "./resistor-color-code-calculator/meta";
@@ -132,10 +149,12 @@ import { meta as reverseProxyConfigGenerator } from "./reverse-proxy-config-gene
 import { meta as screenRecorder } from "./screen-recorder/meta";
 import { meta as screenRuler } from "./screen-ruler/meta";
 import { meta as screenshotAnnotator } from "./screenshot-annotator/meta";
+import { meta as screenshotBeautifier } from "./screenshot-beautifier/meta";
 import { meta as serialTerminal } from "./serial-terminal/meta";
 import { meta as smartctlAnalyzer } from "./smartctl-analyzer/meta";
 import { meta as snowflakeDecoder } from "./snowflake-decoder/meta";
 import { meta as speculationRulesGenerator } from "./speculation-rules-generator/meta";
+import { meta as spriteSheetPacker } from "./sprite-sheet-packer/meta";
 import { meta as sqlFormatter } from "./sql-formatter/meta";
 import { meta as sqliteViewer } from "./sqlite-viewer/meta";
 import { meta as subnetCalculator } from "./subnet-calculator/meta";
@@ -168,6 +187,7 @@ import { meta as wireGaugeCalculator } from "./wire-gauge-calculator/meta";
 import { meta as wireguardConfigGenerator } from "./wireguard-config-generator/meta";
 
 export const tools: ToolMeta[] = [
+  audioDataCodec,
   audioSpectrogram,
   audioTranscriber,
   audioTrimmer,
@@ -181,6 +201,7 @@ export const tools: ToolMeta[] = [
   bingoCardGenerator,
   bleSensorDashboard,
   bookmarklets,
+  bpmKeyDetector,
   browserPrivacyCheck,
   bulkRename,
   calc,
@@ -193,6 +214,7 @@ export const tools: ToolMeta[] = [
   colorBlindnessSimulator,
   colorPicker,
   coordinateConverter,
+  countdownTimer,
   cronParser,
   cssAnchorPositioningBuilder,
   csvViewer,
@@ -202,6 +224,7 @@ export const tools: ToolMeta[] = [
   discordTimestamp,
   discordVideoCompressor,
   displayInfo,
+  distanceBearingCalculator,
   dmarcReportViewer,
   dnsLookup,
   dnsPropagation,
@@ -211,6 +234,7 @@ export const tools: ToolMeta[] = [
   durationCalculator,
   echo,
   electromagneticSpectrum,
+  elementRecorder,
   emailHeaderAnalyzer,
   epochConverter,
   escapeUnescape,
@@ -222,7 +246,10 @@ export const tools: ToolMeta[] = [
   fileTypeIdentifier,
   firmwareFlasher,
   folderDiff,
+  fontSubsetter,
   gamCommandBuilder,
+  gamepadTester,
+  gcodeViewer,
   gifEditor,
   gpuInspector,
   gpxViewer,
@@ -230,6 +257,7 @@ export const tools: ToolMeta[] = [
   harViewer,
   hashGenerator,
   hashIdentifier,
+  hexViewer,
   hidReportExplorer,
   htmlToMarkdown,
   httpHeaderInspector,
@@ -238,6 +266,7 @@ export const tools: ToolMeta[] = [
   imageDithering,
   imageRedactor,
   imageSteganography,
+  imageToAscii,
   imageToText,
   imageToolbox,
   invisibleCharacterDetector,
@@ -249,7 +278,9 @@ export const tools: ToolMeta[] = [
   keyRolloverTester,
   keyboardHeatmap,
   keycode,
+  lightMeter,
   lineSorter,
+  markdownTableEditor,
   mcpInspector,
   mediaKeyTester,
   midiInspector,
@@ -267,6 +298,8 @@ export const tools: ToolMeta[] = [
   mobileSensors,
   mojibakeFixer,
   monitorTest,
+  mouseTester,
+  multitouchTester,
   nfcTagTool,
   oauthScopeDecoder,
   ohmsLawCalculator,
@@ -279,10 +312,13 @@ export const tools: ToolMeta[] = [
   photographyCalculator,
   pipelines,
   placeholderImage,
+  pomodoroTimer,
+  printCostCalculator,
   promqlFormatter,
   protobufDecoder,
   qrCodeGenerator,
   qrCodeScanner,
+  qrFileTransfer,
   raidzCalculator,
   randomPicker,
   resistorColorCodeCalculator,
@@ -290,10 +326,12 @@ export const tools: ToolMeta[] = [
   screenRecorder,
   screenRuler,
   screenshotAnnotator,
+  screenshotBeautifier,
   serialTerminal,
   smartctlAnalyzer,
   snowflakeDecoder,
   speculationRulesGenerator,
+  spriteSheetPacker,
   sqlFormatter,
   sqliteViewer,
   subnetCalculator,
@@ -328,6 +366,7 @@ export const tools: ToolMeta[] = [
 
 /** Lazy loaders for tool logic, keyed by URL slug. */
 export const loaders: Record<string, () => Promise<unknown>> = {
+  "audio-data-codec": () => import("./audio-data-codec/index").then((m) => m.default),
   "audio-spectrogram": () => import("./audio-spectrogram/index").then((m) => m.default),
   "audio-transcriber": () => import("./audio-transcriber/index").then((m) => m.default),
   "audio-trimmer": () => import("./audio-trimmer/index").then((m) => m.default),
@@ -341,6 +380,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "bingo-card-generator": () => import("./bingo-card-generator/index").then((m) => m.default),
   "ble-sensor-dashboard": () => import("./ble-sensor-dashboard/index").then((m) => m.default),
   bookmarklets: () => import("./bookmarklets/index").then((m) => m.default),
+  "bpm-key-detector": () => import("./bpm-key-detector/index").then((m) => m.default),
   "browser-privacy-check": () => import("./browser-privacy-check/index").then((m) => m.default),
   "bulk-rename": () => import("./bulk-rename/index").then((m) => m.default),
   calc: () => import("./calc/index").then((m) => m.default),
@@ -354,6 +394,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
     import("./color-blindness-simulator/index").then((m) => m.default),
   "color-picker": () => import("./color-picker/index").then((m) => m.default),
   "coordinate-converter": () => import("./coordinate-converter/index").then((m) => m.default),
+  "countdown-timer": () => import("./countdown-timer/index").then((m) => m.default),
   "cron-parser": () => import("./cron-parser/index").then((m) => m.default),
   "css-anchor-positioning-builder": () =>
     import("./css-anchor-positioning-builder/index").then((m) => m.default),
@@ -365,6 +406,8 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "discord-video-compressor": () =>
     import("./discord-video-compressor/index").then((m) => m.default),
   "display-info": () => import("./display-info/index").then((m) => m.default),
+  "distance-bearing-calculator": () =>
+    import("./distance-bearing-calculator/index").then((m) => m.default),
   "dmarc-report-viewer": () => import("./dmarc-report-viewer/index").then((m) => m.default),
   "dns-lookup": () => import("./dns-lookup/index").then((m) => m.default),
   "dns-propagation": () => import("./dns-propagation/index").then((m) => m.default),
@@ -376,6 +419,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   echo: () => import("./echo/index").then((m) => m.default),
   "electromagnetic-spectrum": () =>
     import("./electromagnetic-spectrum/index").then((m) => m.default),
+  "element-recorder": () => import("./element-recorder/index").then((m) => m.default),
   "email-header-analyzer": () => import("./email-header-analyzer/index").then((m) => m.default),
   "epoch-converter": () => import("./epoch-converter/index").then((m) => m.default),
   "escape-unescape": () => import("./escape-unescape/index").then((m) => m.default),
@@ -388,7 +432,10 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "file-type-identifier": () => import("./file-type-identifier/index").then((m) => m.default),
   "firmware-flasher": () => import("./firmware-flasher/index").then((m) => m.default),
   "folder-diff": () => import("./folder-diff/index").then((m) => m.default),
+  "font-subsetter": () => import("./font-subsetter/index").then((m) => m.default),
   "gam-command-builder": () => import("./gam-command-builder/index").then((m) => m.default),
+  "gamepad-tester": () => import("./gamepad-tester/index").then((m) => m.default),
+  "gcode-viewer": () => import("./gcode-viewer/index").then((m) => m.default),
   "gif-editor": () => import("./gif-editor/index").then((m) => m.default),
   "gpu-inspector": () => import("./gpu-inspector/index").then((m) => m.default),
   "gpx-viewer": () => import("./gpx-viewer/index").then((m) => m.default),
@@ -396,6 +443,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "har-viewer": () => import("./har-viewer/index").then((m) => m.default),
   "hash-generator": () => import("./hash-generator/index").then((m) => m.default),
   "hash-identifier": () => import("./hash-identifier/index").then((m) => m.default),
+  "hex-viewer": () => import("./hex-viewer/index").then((m) => m.default),
   "hid-report-explorer": () => import("./hid-report-explorer/index").then((m) => m.default),
   "html-to-markdown": () => import("./html-to-markdown/index").then((m) => m.default),
   "http-header-inspector": () => import("./http-header-inspector/index").then((m) => m.default),
@@ -404,6 +452,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "image-dithering": () => import("./image-dithering/index").then((m) => m.default),
   "image-redactor": () => import("./image-redactor/index").then((m) => m.default),
   "image-steganography": () => import("./image-steganography/index").then((m) => m.default),
+  "image-to-ascii": () => import("./image-to-ascii/index").then((m) => m.default),
   "image-to-text": () => import("./image-to-text/index").then((m) => m.default),
   "image-toolbox": () => import("./image-toolbox/index").then((m) => m.default),
   "invisible-character-detector": () =>
@@ -416,7 +465,9 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "key-rollover-tester": () => import("./key-rollover-tester/index").then((m) => m.default),
   "keyboard-heatmap": () => import("./keyboard-heatmap/index").then((m) => m.default),
   keycode: () => import("./keycode/index").then((m) => m.default),
+  "light-meter": () => import("./light-meter/index").then((m) => m.default),
   "line-sorter": () => import("./line-sorter/index").then((m) => m.default),
+  "markdown-table-editor": () => import("./markdown-table-editor/index").then((m) => m.default),
   "mcp-inspector": () => import("./mcp-inspector/index").then((m) => m.default),
   "media-key-tester": () => import("./media-key-tester/index").then((m) => m.default),
   "midi-inspector": () => import("./midi-inspector/index").then((m) => m.default),
@@ -444,6 +495,8 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "mobile-sensors": () => import("./mobile-sensors/index").then((m) => m.default),
   "mojibake-fixer": () => import("./mojibake-fixer/index").then((m) => m.default),
   "monitor-test": () => import("./monitor-test/index").then((m) => m.default),
+  "mouse-tester": () => import("./mouse-tester/index").then((m) => m.default),
+  "multitouch-tester": () => import("./multitouch-tester/index").then((m) => m.default),
   "nfc-tag-tool": () => import("./nfc-tag-tool/index").then((m) => m.default),
   "oauth-scope-decoder": () => import("./oauth-scope-decoder/index").then((m) => m.default),
   "ohms-law-calculator": () => import("./ohms-law-calculator/index").then((m) => m.default),
@@ -456,10 +509,13 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "photography-calculator": () => import("./photography-calculator/index").then((m) => m.default),
   pipelines: () => import("./pipelines/index").then((m) => m.default),
   "placeholder-image": () => import("./placeholder-image/index").then((m) => m.default),
+  "pomodoro-timer": () => import("./pomodoro-timer/index").then((m) => m.default),
+  "print-cost-calculator": () => import("./print-cost-calculator/index").then((m) => m.default),
   "promql-formatter": () => import("./promql-formatter/index").then((m) => m.default),
   "protobuf-decoder": () => import("./protobuf-decoder/index").then((m) => m.default),
   "qr-code-generator": () => import("./qr-code-generator/index").then((m) => m.default),
   "qr-code-scanner": () => import("./qr-code-scanner/index").then((m) => m.default),
+  "qr-file-transfer": () => import("./qr-file-transfer/index").then((m) => m.default),
   "raidz-calculator": () => import("./raidz-calculator/index").then((m) => m.default),
   "random-picker": () => import("./random-picker/index").then((m) => m.default),
   "resistor-color-code-calculator": () =>
@@ -469,11 +525,13 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "screen-recorder": () => import("./screen-recorder/index").then((m) => m.default),
   "screen-ruler": () => import("./screen-ruler/index").then((m) => m.default),
   "screenshot-annotator": () => import("./screenshot-annotator/index").then((m) => m.default),
+  "screenshot-beautifier": () => import("./screenshot-beautifier/index").then((m) => m.default),
   "serial-terminal": () => import("./serial-terminal/index").then((m) => m.default),
   "smartctl-analyzer": () => import("./smartctl-analyzer/index").then((m) => m.default),
   "snowflake-decoder": () => import("./snowflake-decoder/index").then((m) => m.default),
   "speculation-rules-generator": () =>
     import("./speculation-rules-generator/index").then((m) => m.default),
+  "sprite-sheet-packer": () => import("./sprite-sheet-packer/index").then((m) => m.default),
   "sql-formatter": () => import("./sql-formatter/index").then((m) => m.default),
   "sqlite-viewer": () => import("./sqlite-viewer/index").then((m) => m.default),
   "subnet-calculator": () => import("./subnet-calculator/index").then((m) => m.default),

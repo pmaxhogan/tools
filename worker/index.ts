@@ -133,6 +133,14 @@ import { meta as keyboardHeatmapMeta } from "../src/tools/keyboard-heatmap/meta"
 import { run as keyboardHeatmapRun } from "../src/tools/keyboard-heatmap/index";
 import { meta as wireGaugeCalculatorMeta } from "../src/tools/wire-gauge-calculator/meta";
 import { run as wireGaugeCalculatorRun } from "../src/tools/wire-gauge-calculator/index";
+import { meta as audioDataCodecMeta } from "../src/tools/audio-data-codec/meta";
+import { run as audioDataCodecRun } from "../src/tools/audio-data-codec/index";
+import { meta as distanceBearingCalculatorMeta } from "../src/tools/distance-bearing-calculator/meta";
+import { run as distanceBearingCalculatorRun } from "../src/tools/distance-bearing-calculator/index";
+import { meta as markdownTableEditorMeta } from "../src/tools/markdown-table-editor/meta";
+import { run as markdownTableEditorRun } from "../src/tools/markdown-table-editor/index";
+import { meta as printCostCalculatorMeta } from "../src/tools/print-cost-calculator/meta";
+import { run as printCostCalculatorRun } from "../src/tools/print-cost-calculator/index";
 
 export interface Env {
   /** Static assets from the Astro build. */
@@ -351,6 +359,20 @@ const ALL: Endpoint[] = [
   expose(wireGaugeCalculatorMeta, wireGaugeCalculatorRun, {
     sample: "12 awg",
     sampleQuery: "mode=lookup",
+  }),
+  expose(audioDataCodecMeta, audioDataCodecRun, {
+    sample: "SOS",
+    sampleQuery: "mode=text-to-morse",
+  }),
+  expose(distanceBearingCalculatorMeta, distanceBearingCalculatorRun, {
+    sample: "40.7128, -74.0060; 51.5074, -0.1278",
+  }),
+  expose(markdownTableEditorMeta, markdownTableEditorRun, {
+    sample: "name,qty\nwidget,3\ngadget,12",
+    sampleQuery: "output=markdown",
+  }),
+  expose(printCostCalculatorMeta, printCostCalculatorRun, {
+    sampleQuery: "grams=25&material=pla&hours=3",
   }),
 ];
 
