@@ -1,0 +1,88 @@
+import type { ToolMeta } from "../types";
+
+export const meta: ToolMeta = {
+  slug: "exif-time-shifter",
+  matrixSlug: "exif-shift",
+  icon: "Camera",
+  name: "EXIF Time Shifter",
+  description: "Fix a wrong camera clock by shifting the Exif timestamps in your photos.",
+  category: "Docs",
+  keywords: [
+    "exif time shifter",
+    "change photo date",
+    "fix camera clock",
+    "shift exif timestamp",
+    "exif date editor",
+    "photo timestamp fix",
+    "adjust date taken",
+  ],
+  searchTerms: [
+    "camera clock wrong time zone",
+    "photo taken date wrong",
+    "change date taken on jpeg",
+    "batch fix photo timestamps",
+    "exif datetimeoriginal editor",
+    "shift photo times by an hour",
+    "daylight saving photo dates",
+    "merge photos from two cameras",
+  ],
+  input: "File",
+  output: "application/json",
+  options: [
+    {
+      kind: "number",
+      id: "days",
+      label: "Days",
+      default: 0,
+      min: -3650,
+      max: 3650,
+      step: 1,
+    },
+    {
+      kind: "number",
+      id: "hours",
+      label: "Hours",
+      default: 0,
+      min: -720,
+      max: 720,
+      step: 1,
+    },
+    {
+      kind: "number",
+      id: "minutes",
+      label: "Minutes",
+      default: 0,
+      min: -1440,
+      max: 1440,
+      step: 1,
+    },
+    {
+      kind: "number",
+      id: "seconds",
+      label: "Seconds",
+      default: 0,
+      min: -3600,
+      max: 3600,
+      step: 1,
+    },
+  ],
+  copy: {
+    what: "Shifts the Exif capture times inside a photo by any amount of days, hours, minutes and seconds, forwards or backwards. It rewrites DateTime, DateTimeOriginal and DateTimeDigitized in JPEG and TIFF files, so the wrong time zone, a forgotten daylight saving change, or a camera that was never set at all can be corrected across a whole shoot. Every value is patched in place at its existing offset, which means the file length never changes and thumbnails, maker notes and the image data itself come out byte for byte identical.",
+    how: "Drop a photo onto the panel, then enter how far the clock was off: negative numbers move the timestamps earlier, positive numbers move them later. The result lists each field with its old and new value so you can check the arithmetic before saving, and the download button writes the patched copy. A camera that was six hours behind because it was still on home time is a shift of 6 hours; a camera stuck on its factory date needs days.",
+    why: "Desktop metadata editors want an install and a license, and the free web ones upload your photos to a server just to move a number. This one runs the patch in your browser, so your files and inputs never leave your device, there is no size cap and no watermark, and you can see exactly which three fields changed rather than trusting a black box that quietly rewrites the whole file.",
+    faq: [
+      {
+        q: "Does it change the GPS timestamps too?",
+        a: "No, and that is deliberate. GPS time comes from the satellites, so it was correct even when your camera clock was not, and the GPS date and time live in two separate fields that would fall out of step if a shift crossed midnight. Only the three camera datetime fields are touched.",
+      },
+      {
+        q: "Will this re-encode or degrade my photo?",
+        a: "No. An Exif datetime is a fixed 19 character string stored at a fixed offset, so shifting it rewrites those characters and nothing else. The image data is never decoded, so there is no quality loss and the file stays exactly the same size.",
+      },
+      {
+        q: "Which files does it support?",
+        a: "JPEG files and raw TIFF files, in either byte order. PNG, WebP and HEIC store metadata differently and are rejected with a clear message rather than being silently mangled.",
+      },
+    ],
+  },
+};

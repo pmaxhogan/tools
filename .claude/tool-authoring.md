@@ -108,7 +108,10 @@ Preinstalled and allowed: `qrcode`, `figlet`, `@faker-js/faker`, `ua-parser-js`,
 `gpt-tokenizer`, `file-type` (main entry is portable), `exifr`, `mathjs`,
 `@noble/hashes` (subpaths carry the `.js` suffix: `@noble/hashes/hmac.js`,
 `@noble/hashes/sha2.js`, `@noble/hashes/legacy.js`), `urlpattern-polyfill`
-(side-effect import installs the global only where absent), `@js-temporal/polyfill`.
+(side-effect import installs the global only where absent), `@js-temporal/polyfill`,
+`cbor-x` (import { decode } from "cbor-x"), `@msgpack/msgpack`, `@peculiar/x509`
+(requires `import "reflect-metadata";` as the FIRST import of any module that
+imports it, in tests too).
 Import them
 normally — the registry lazy-loads your whole module per page, so the dependency
 never touches the shell bundle. Everything else: standard library only.

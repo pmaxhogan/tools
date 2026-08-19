@@ -20,6 +20,7 @@ import { ToolError, type OptionSpec, type ToolMeta } from "../src/tools/types";
 import { flattenSelectOptions } from "../src/lib/select-options";
 import { SIGNAL_PATH_PREFIX } from "../src/tools/p2p-file-transfer/index";
 import { handleSignalRequest, type DurableObjectNamespace } from "./drop-room";
+import { handleMcpRelay } from "./mcp-relay";
 
 export { DropRoom } from "./drop-room";
 
@@ -99,6 +100,16 @@ import { meta as hashIdentifierMeta } from "../src/tools/hash-identifier/meta";
 import { run as hashIdentifierRun } from "../src/tools/hash-identifier/index";
 import { meta as raidzCalculatorMeta } from "../src/tools/raidz-calculator/meta";
 import { run as raidzCalculatorRun } from "../src/tools/raidz-calculator/index";
+import { meta as certificateDecoderMeta } from "../src/tools/certificate-decoder/meta";
+import { run as certificateDecoderRun } from "../src/tools/certificate-decoder/index";
+import { meta as dockerComposeConverterMeta } from "../src/tools/docker-compose-converter/meta";
+import { run as dockerComposeConverterRun } from "../src/tools/docker-compose-converter/index";
+import { meta as ohmsLawCalculatorMeta } from "../src/tools/ohms-law-calculator/meta";
+import { run as ohmsLawCalculatorRun } from "../src/tools/ohms-law-calculator/index";
+import { meta as promqlFormatterMeta } from "../src/tools/promql-formatter/meta";
+import { run as promqlFormatterRun } from "../src/tools/promql-formatter/index";
+import { meta as subnetCalculatorMeta } from "../src/tools/subnet-calculator/meta";
+import { run as subnetCalculatorRun } from "../src/tools/subnet-calculator/index";
 
 export interface Env {
   /** Static assets from the Astro build. */
@@ -266,6 +277,23 @@ const ALL: Endpoint[] = [
   }),
   expose(raidzCalculatorMeta, raidzCalculatorRun, {
     sampleQuery: "disks=6&diskSize=4&diskSizeUnit=TB&level=raidz2",
+  }),
+  expose(certificateDecoderMeta, certificateDecoderRun, {
+    sample: "the PEM text of a certificate (curl -X POST --data-binary @cert.pem ...)",
+  }),
+  expose(dockerComposeConverterMeta, dockerComposeConverterRun, {
+    sample: "docker run -d --name web -p 8080:80 -v data:/var/lib/app nginx:alpine",
+  }),
+  expose(ohmsLawCalculatorMeta, ohmsLawCalculatorRun, {
+    sample: "12V 100mA",
+    sampleQuery: "mode=ohms-law",
+  }),
+  expose(promqlFormatterMeta, promqlFormatterRun, {
+    sample: 'sum by (job) (rate(http_requests_total{job="api"}[5m]))',
+  }),
+  expose(subnetCalculatorMeta, subnetCalculatorRun, {
+    sample: "192.168.1.0/24",
+    sampleQuery: "split=4",
   }),
 ];
 
@@ -635,6 +663,10 @@ export default {
 
     if (path.startsWith(SIGNAL_PATH_PREFIX)) {
       return handleSignalRequest(request, path, env.DROP_ROOMS);
+    }
+
+    if (path === "/api/mcp-relay") {
+      return handleMcpRelay(request);
     }
 
     let slug = path.slice("/api/".length).replace(/\/+$/, "");
