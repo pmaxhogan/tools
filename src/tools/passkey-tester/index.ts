@@ -201,6 +201,8 @@ interface AuthData {
   credentialId?: Uint8Array;
   coseKey?: Map<unknown, unknown>;
   extensions?: unknown;
+  /** Bytes past the parsed structure that no flag accounts for. */
+  trailingBytes?: number;
 }
 
 function notWebauthn(detail: string): never {
@@ -242,7 +244,9 @@ function parseAuthData(bytes: Uint8Array): AuthData {
   if (flags & 0x80) {
     const ext = readCborItem(bytes, p);
     data.extensions = ext.value;
+    p = ext.next;
   }
+  if (p < bytes.length) data.trailingBytes = bytes.length - p;
   return data;
 }
 
@@ -362,6 +366,10 @@ function addAuthDataRows(rows: PasskeyTesterResult, data: AuthData, full: boolea
     if (full) rows["Credential ID (hex)"] = toHex(data.credentialId);
   }
   if (data.coseKey) addCoseRows(rows, data.coseKey, full);
+  if (data.trailingBytes) {
+    rows["Trailing bytes"] =
+      `${data.trailingBytes} unexpected byte(s) follow the authenticator data. Real authenticator data ends after the last flagged section; this may be padding or a truncated paste of something else.`;
+  }
   if (data.extensions !== undefined) {
     rows["Extensions"] = JSON.stringify(jsonSafe(data.extensions));
   }

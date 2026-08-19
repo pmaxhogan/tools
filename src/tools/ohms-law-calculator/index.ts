@@ -420,11 +420,11 @@ function runLedResistor(fields: Partial<Record<Field, number>>, count: number | 
   if (ledCount > 1) result["LED count"] = String(ledCount);
   result["Total forward voltage"] = formatEng(vfTotal, "V");
   result["Exact resistor value"] = formatEng(exactR, "ohm");
-  result["Nearest E12 resistor"] = formatEng(e12, "ohm");
+  result["Next E12 value up"] = formatEng(e12, "ohm");
   result["E12 actual current"] = formatEng(e12Info.actualI, "A");
   result["E12 resistor power"] = formatEng(e12Info.p, "W");
   result["E12 recommended wattage"] = e12Info.rating;
-  result["Nearest E24 resistor"] = formatEng(e24, "ohm");
+  result["Next E24 value up"] = formatEng(e24, "ohm");
   result["E24 actual current"] = formatEng(e24Info.actualI, "A");
   result["E24 resistor power"] = formatEng(e24Info.p, "W");
   result["E24 recommended wattage"] = e24Info.rating;

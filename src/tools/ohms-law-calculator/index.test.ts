@@ -126,10 +126,10 @@ describe("ohms-law-calculator: led-resistor mode", () => {
   it("computes the exact resistor and nearest E12/E24 for a single LED", () => {
     const out = led("vin=12 vf=2.1 if=20mA");
     expect(out["Exact resistor value"]).toBe("495 ohm");
-    expect(out["Nearest E24 resistor"]).toBe("510 ohm");
+    expect(out["Next E24 value up"]).toBe("510 ohm");
     expect(out["E24 actual current"]).toBe("19.4 mA");
     expect(out["E24 recommended wattage"]).toBe("0.5 W");
-    expect(out["Nearest E12 resistor"]).toBe("560 ohm");
+    expect(out["Next E12 value up"]).toBe("560 ohm");
     expect(out["E12 recommended wattage"]).toBe("0.5 W");
     expect(out["LED count"]).toBeUndefined();
   });

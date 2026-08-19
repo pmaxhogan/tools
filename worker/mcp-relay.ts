@@ -170,7 +170,10 @@ export async function handleMcpRelay(request: Request): Promise<Response> {
       method: "POST",
       headers,
       body: JSON.stringify(msg),
-      redirect: "error",
+      // Workers fetch accepts only "follow" or "manual"; "error" throws at the
+      // edge. Manual plus an explicit status check gives the same guarantee:
+      // the relay never follows a redirect to a host it did not vet.
+      redirect: "manual",
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
   } catch (err) {
@@ -180,6 +183,15 @@ export async function handleMcpRelay(request: Request): Promise<Response> {
       502,
       "upstream-unreachable",
       `Could not reach the server: ${reason}`,
+    );
+  }
+
+  if (upstream.status >= 300 && upstream.status < 400) {
+    return relayError(
+      request,
+      502,
+      "upstream-redirect",
+      `The server answered with a ${upstream.status} redirect, which the relay does not follow. Use the final URL directly.`,
     );
   }
 

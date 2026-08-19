@@ -6,12 +6,7 @@ export type IceComponent = 1 | 2;
 export type IceCandidateType = "host" | "srflx" | "prflx" | "relay";
 
 export type AddressClass =
-  | "ipv4-private"
-  | "ipv4-public"
-  | "ipv6-link-local"
-  | "ipv6-ula"
-  | "ipv6-global"
-  | "mdns";
+  "ipv4-private" | "ipv4-public" | "ipv6-link-local" | "ipv6-ula" | "ipv6-global" | "mdns";
 
 export interface AddressClassification {
   class: AddressClass;
@@ -124,7 +119,7 @@ export function parseCandidate(line: string): ParsedCandidate {
     throw new ToolError(
       "bad-candidate",
       "Candidate line is empty.",
-      'Paste a line like: candidate:842163049 1 udp 1677729535 192.168.1.5 54321 typ host',
+      "Paste a line like: candidate:842163049 1 udp 1677729535 192.168.1.5 54321 typ host",
     );
   }
 
@@ -137,12 +132,21 @@ export function parseCandidate(line: string): ParsedCandidate {
     throw new ToolError(
       "bad-candidate",
       `Candidate line has too few fields: "${trimmed}".`,
-      "An ICE candidate needs foundation, component, protocol, priority, address, port, the literal \"typ\", and a type.",
+      'An ICE candidate needs foundation, component, protocol, priority, address, port, the literal "typ", and a type.',
     );
   }
 
-  const [foundationTok, componentTok, protocolTok, priorityTok, addressTok, portTok, typTok, typeTok, ...rest] =
-    tokens;
+  const [
+    foundationTok,
+    componentTok,
+    protocolTok,
+    priorityTok,
+    addressTok,
+    portTok,
+    typTok,
+    typeTok,
+    ...rest
+  ] = tokens;
 
   if (componentTok !== "1" && componentTok !== "2") {
     throw new ToolError(
@@ -268,9 +272,7 @@ export function interpretGathering(
     return out;
   }
 
-  const srflxIdx = candidates
-    .map((c, i) => ({ c, i }))
-    .filter((x) => x.c.type === "srflx");
+  const srflxIdx = candidates.map((c, i) => ({ c, i })).filter((x) => x.c.type === "srflx");
   const relay = candidates.filter((c) => c.type === "relay");
   const srflx = srflxIdx.map((x) => x.c);
 
@@ -290,9 +292,17 @@ export function interpretGathering(
 
     const groups = new Map<string, { addr: string; port: number; url?: string }[]>();
     srflxIdx.forEach(({ c, i }) => {
-      const key = c.relatedAddress
-        ? `${c.relatedAddress}:${c.relatedPort ?? "?"}`
-        : `unknown-base-${i}`;
+      // Chrome with mDNS candidate obfuscation (the default) redacts the
+      // srflx base to 0.0.0.0:0 (or [::]:0). That is a placeholder, not a
+      // shared local socket, so grouping on it would make every reflexive
+      // candidate look like the same base and misreport symmetric NAT.
+      const placeholderBase =
+        !c.relatedAddress ||
+        c.relatedAddress === "0.0.0.0" ||
+        c.relatedAddress === "::" ||
+        c.relatedAddress === "[::]" ||
+        !c.relatedPort;
+      const key = placeholderBase ? `unknown-base-${i}` : `${c.relatedAddress}:${c.relatedPort}`;
       const arr = groups.get(key) ?? [];
       arr.push({ addr: c.address, port: c.port, url: opts.sourceUrls?.[i] });
       groups.set(key, arr);
@@ -317,7 +327,7 @@ export function interpretGathering(
       }
     } else if (srflx.length > 1) {
       out["STUN consistency"] =
-        "Multiple reflexive candidates were found but none share a recognizable local base (raddr/rport), so no cross-server comparison could be made.";
+        "Multiple reflexive candidates were found but none share a recognizable local base (raddr/rport), so no cross-server comparison could be made. Chrome hides the base behind 0.0.0.0:0 when mDNS obfuscation is on, which is the default; the NAT type cannot be inferred from this alone.";
     }
   }
 
@@ -413,7 +423,7 @@ export function run(input: string, _opts: WebrtcTesterOpts = {}): Record<string,
     throw new ToolError(
       "no-candidates",
       "The input was parsed but no ICE candidate lines were found in it.",
-      'Paste lines starting with candidate: or a=candidate:, a full SDP, or a JSON array of {candidate, url?} objects.',
+      "Paste lines starting with candidate: or a=candidate:, a full SDP, or a JSON array of {candidate, url?} objects.",
     );
   }
 
