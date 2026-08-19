@@ -18,6 +18,15 @@
       "custom_domain": true,
     },
   ],
+  // The signaling relay for Local File Drop: the one sanctioned exception to
+  // the no-server rule (PROJECT.md server policy, rule 4). Rooms live in the
+  // object's memory only; storage is never written. The SQLite-backed class
+  // type is required for new Durable Objects on every plan, but the object
+  // never touches it.
+  "durable_objects": {
+    "bindings": [{ "name": "DROP_ROOMS", "class_name": "DropRoom" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DropRoom"] }],
   // No user content is ever logged (PROJECT.md rule 2), and there is nothing
   // stateful to observe.
   "observability": {

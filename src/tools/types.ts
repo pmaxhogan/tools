@@ -150,6 +150,13 @@ export interface ToolMeta {
   http?: { method: "GET" | "POST"; contentType: string };
   /** Gates the UI with an honest message instead of breaking (rule 15). */
   requires?: Capability[];
+  /**
+   * Replaces the footer's default privacy sentence ("Your files and inputs
+   * never leave your device") on the rare tool where that exact claim would be
+   * false, such as one that hands files to another device on purpose. Must
+   * still be honest and specific; never used to soften the default.
+   */
+  privacyNote?: string;
   /** Page copy (rule 23): real, thin, collapsed. */
   copy: {
     /** "What it does" — 2-4 sentences. */

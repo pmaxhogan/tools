@@ -2,10 +2,14 @@
  * The curl API for tools.maxhogan.dev.
  *
  * PROJECT.md sections 1 to 3: server code is stateless and pure request to
- * response. Nothing is stored, nothing is logged, no accounts, no bindings
- * beyond the static asset fetcher. Every endpoint here is the exact same pure
- * `run()` the web page calls, so the third surface is free rather than a
- * reimplementation (rule 27).
+ * response. Nothing is stored, nothing is logged, no accounts. Every endpoint
+ * here is the exact same pure `run()` the web page calls, so the third
+ * surface is free rather than a reimplementation (rule 27).
+ *
+ * The one named exception (server policy, rule 4) is the WebRTC signaling
+ * relay for Local File Drop, an in-memory Durable Object in ./drop-room.ts
+ * that forwards SDP and ICE between two browsers for a few minutes and never
+ * touches storage or file bytes.
  *
  * Routing: /api and /api/* are handled here. Everything else is served
  * straight from the static Astro build by the assets binding, with one
@@ -14,6 +18,10 @@
  */
 import { ToolError, type OptionSpec, type ToolMeta } from "../src/tools/types";
 import { flattenSelectOptions } from "../src/lib/select-options";
+import { SIGNAL_PATH_PREFIX } from "../src/tools/p2p-file-transfer/index";
+import { handleSignalRequest, type DurableObjectNamespace } from "./drop-room";
+
+export { DropRoom } from "./drop-room";
 
 import { meta as baseConverterMeta } from "../src/tools/base-converter/meta";
 import { run as baseConverterRun } from "../src/tools/base-converter/index";
@@ -85,8 +93,10 @@ import { meta as weekNumberMeta } from "../src/tools/week-number/meta";
 import { run as weekNumberRun } from "../src/tools/week-number/index";
 
 export interface Env {
-  /** Static assets from the Astro build. The only binding this worker has. */
+  /** Static assets from the Astro build. */
   ASSETS: { fetch(request: Request): Promise<Response> };
+  /** Signaling rooms for Local File Drop (see ./drop-room.ts). */
+  DROP_ROOMS: DurableObjectNamespace;
 }
 
 type Options = Record<string, unknown>;
@@ -599,6 +609,10 @@ export default {
 
     if (path === "/api" || path === "/api/") {
       return text(indexBody(baseUrl(url)), 200, "public, max-age=3600");
+    }
+
+    if (path.startsWith(SIGNAL_PATH_PREFIX)) {
+      return handleSignalRequest(request, path, env.DROP_ROOMS);
     }
 
     let slug = path.slice("/api/".length).replace(/\/+$/, "");

@@ -75,6 +75,7 @@ const panels: Record<string, Component> = {
   ),
   "minecraft-xp-calculator": defineAsyncComponent(() => import("./panels/MinecraftXpPanel.vue")),
   "mobile-sensors": defineAsyncComponent(() => import("./panels/MobileSensorsPanel.vue")),
+  "p2p-file-transfer": defineAsyncComponent(() => import("./panels/FileDropPanel.vue")),
   "pdf-toolbox": defineAsyncComponent(() => import("./panels/PdfToolboxPanel.vue")),
   pipelines: defineAsyncComponent(() => import("./panels/PipelinesPanel.vue")),
   "qr-code-generator": defineAsyncComponent(() => import("./panels/QrPanel.vue")),

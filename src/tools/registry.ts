@@ -77,6 +77,7 @@ import { meta as mobileSensors } from "./mobile-sensors/meta";
 import { meta as mojibakeFixer } from "./mojibake-fixer/meta";
 import { meta as oauthScopeDecoder } from "./oauth-scope-decoder/meta";
 import { meta as oryxLayoutDiff } from "./oryx-layout-diff/meta";
+import { meta as p2pFileTransfer } from "./p2p-file-transfer/meta";
 import { meta as passwordGenerator } from "./password-generator/meta";
 import { meta as pdfToolbox } from "./pdf-toolbox/meta";
 import { meta as pipelines } from "./pipelines/meta";
@@ -170,6 +171,7 @@ export const tools: ToolMeta[] = [
   mojibakeFixer,
   oauthScopeDecoder,
   oryxLayoutDiff,
+  p2pFileTransfer,
   passwordGenerator,
   pdfToolbox,
   pipelines,
@@ -279,6 +281,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "mojibake-fixer": () => import("./mojibake-fixer/index").then((m) => m.default),
   "oauth-scope-decoder": () => import("./oauth-scope-decoder/index").then((m) => m.default),
   "oryx-layout-diff": () => import("./oryx-layout-diff/index").then((m) => m.default),
+  "p2p-file-transfer": () => import("./p2p-file-transfer/index").then((m) => m.default),
   "password-generator": () => import("./password-generator/index").then((m) => m.default),
   "pdf-toolbox": () => import("./pdf-toolbox/index").then((m) => m.default),
   pipelines: () => import("./pipelines/index").then((m) => m.default),
