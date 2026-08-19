@@ -125,6 +125,14 @@ import { meta as resistorColorCodeCalculatorMeta } from "../src/tools/resistor-c
 import { run as resistorColorCodeCalculatorRun } from "../src/tools/resistor-color-code-calculator/index";
 import { meta as reverseProxyConfigGeneratorMeta } from "../src/tools/reverse-proxy-config-generator/meta";
 import { run as reverseProxyConfigGeneratorRun } from "../src/tools/reverse-proxy-config-generator/index";
+import { meta as barcodeGeneratorMeta } from "../src/tools/barcode-generator/meta";
+import { run as barcodeGeneratorRun } from "../src/tools/barcode-generator/index";
+import { meta as coordinateConverterMeta } from "../src/tools/coordinate-converter/meta";
+import { run as coordinateConverterRun } from "../src/tools/coordinate-converter/index";
+import { meta as keyboardHeatmapMeta } from "../src/tools/keyboard-heatmap/meta";
+import { run as keyboardHeatmapRun } from "../src/tools/keyboard-heatmap/index";
+import { meta as wireGaugeCalculatorMeta } from "../src/tools/wire-gauge-calculator/meta";
+import { run as wireGaugeCalculatorRun } from "../src/tools/wire-gauge-calculator/index";
 
 export interface Env {
   /** Static assets from the Astro build. */
@@ -330,6 +338,19 @@ const ALL: Endpoint[] = [
   expose(reverseProxyConfigGeneratorMeta, reverseProxyConfigGeneratorRun, {
     sample: "app.example.com -> http://127.0.0.1:3000",
     sampleQuery: "server=both",
+  }),
+  expose(barcodeGeneratorMeta, barcodeGeneratorRun, {
+    sample: "4006381333931",
+    sampleQuery: "type=ean13",
+  }),
+  expose(coordinateConverterMeta, coordinateConverterRun, { sample: "40.7128, -74.0060" }),
+  expose(keyboardHeatmapMeta, keyboardHeatmapRun, {
+    sample: "the quick brown fox jumps over the lazy dog",
+    sampleQuery: "layout=qwerty&mode=analyze",
+  }),
+  expose(wireGaugeCalculatorMeta, wireGaugeCalculatorRun, {
+    sample: "12 awg",
+    sampleQuery: "mode=lookup",
   }),
 ];
 
