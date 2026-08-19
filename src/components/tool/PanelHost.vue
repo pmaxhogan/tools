@@ -26,17 +26,24 @@ const panels: Record<string, Component> = {
   "background-remover": defineAsyncComponent(() => import("./panels/BackgroundRemoverPanel.vue")),
   "batch-processor": defineAsyncComponent(() => import("./panels/BatchProcessorPanel.vue")),
   "bingo-card-generator": defineAsyncComponent(() => import("./panels/BingoBoardPanel.vue")),
+  bookmarklets: defineAsyncComponent(() => import("./panels/BookmarkletsPanel.vue")),
+  "browser-privacy-check": defineAsyncComponent(() => import("./panels/PrivacyCheckPanel.vue")),
   "ble-sensor-dashboard": defineAsyncComponent(() => import("./panels/BleDashboardPanel.vue")),
   "bulk-rename": defineAsyncComponent(() => import("./panels/BulkRenamePanel.vue")),
   "clipboard-inspector": defineAsyncComponent(() => import("./panels/ClipboardPanel.vue")),
+  "color-blindness-simulator": defineAsyncComponent(
+    () => import("./panels/ColorBlindnessPanel.vue"),
+  ),
   "discord-video-compressor": defineAsyncComponent(
     () => import("./panels/DiscordCompressorPanel.vue"),
   ),
   "display-info": defineAsyncComponent(() => import("./panels/DisplayInfoPanel.vue")),
+  "dns-lookup": defineAsyncComponent(() => import("./panels/DnsLookupPanel.vue")),
   "duplicate-finder": defineAsyncComponent(() => import("./panels/DuplicateFinderPanel.vue")),
   "electromagnetic-spectrum": defineAsyncComponent(
     () => import("./panels/ElectromagneticSpectrumPanel.vue"),
   ),
+  "exif-time-shifter": defineAsyncComponent(() => import("./panels/ExifShiftPanel.vue")),
   "favicon-generator": defineAsyncComponent(() => import("./panels/FaviconPanel.vue")),
   "firmware-flasher": defineAsyncComponent(() => import("./panels/FirmwareFlasherPanel.vue")),
   "folder-diff": defineAsyncComponent(() => import("./panels/FolderDiffPanel.vue")),
@@ -49,6 +56,7 @@ const panels: Record<string, Component> = {
   "jinja-template-tester": defineAsyncComponent(() => import("./panels/JinjaTesterPanel.vue")),
   keycode: defineAsyncComponent(() => import("./panels/KeycodePanel.vue")),
   "midi-inspector": defineAsyncComponent(() => import("./panels/MidiPanel.vue")),
+  "mcp-inspector": defineAsyncComponent(() => import("./panels/McpInspectorPanel.vue")),
   "minecraft-anvil-calculator": defineAsyncComponent(
     () => import("./panels/MinecraftAnvilPanel.vue"),
   ),
@@ -82,6 +90,7 @@ const panels: Record<string, Component> = {
   "minecraft-xp-calculator": defineAsyncComponent(() => import("./panels/MinecraftXpPanel.vue")),
   "mobile-sensors": defineAsyncComponent(() => import("./panels/MobileSensorsPanel.vue")),
   "p2p-file-transfer": defineAsyncComponent(() => import("./panels/FileDropPanel.vue")),
+  "passkey-tester": defineAsyncComponent(() => import("./panels/PasskeyPanel.vue")),
   "pdf-toolbox": defineAsyncComponent(() => import("./panels/PdfToolboxPanel.vue")),
   pipelines: defineAsyncComponent(() => import("./panels/PipelinesPanel.vue")),
   "qr-code-generator": defineAsyncComponent(() => import("./panels/QrPanel.vue")),
@@ -93,6 +102,7 @@ const panels: Record<string, Component> = {
   "video-frame-extractor": defineAsyncComponent(() => import("./panels/FrameExtractorPanel.vue")),
   "video-to-gif": defineAsyncComponent(() => import("./panels/VideoToGifPanel.vue")),
   "video-trimmer": defineAsyncComponent(() => import("./panels/VideoTrimmerPanel.vue")),
+  "webrtc-tester": defineAsyncComponent(() => import("./panels/WebrtcTesterPanel.vue")),
   "wireguard-config-generator": defineAsyncComponent(() => import("./panels/WireguardPanel.vue")),
 };
 
