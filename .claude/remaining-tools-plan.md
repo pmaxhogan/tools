@@ -44,7 +44,56 @@ annotate, parquet, heatmap, tracks (gpx-viewer, no basemap), barcode, coords,
 bed-mesh, ruler, rollover, monitor, doc-convert, tuner, stego, wire-gauge,
 dither, nfc. Browser QA launched right after deploy.
 
-## Batch 5 (FINAL buildable batch, in flight 2026-08-19): 19 tools
+## Batch 5 (FINAL buildable batch): LOGIC DONE, committed cf28885 LOCALLY (not pushed)
+
+State at checkpoint (2026-08-19, usage limit hit): all 19 logic layers green
+(8124 tests, lint 0, typecheck 0, 175 tools registered, 4 worker endpoints).
+Icons added. NOT pushed: batch 5 needs its bespoke panels first because the
+document/qr/audio/font copy promises panel features.
+
+REMAINING FOR BATCH 5 (in order):
+1. Build 17 panels (one agent each, same prompt style as batches 2-4; prompts
+   must say: read DESIGN.md, the tool's index.ts + meta.ts, a reference panel;
+   create EXACTLY ONE file src/components/tool/panels/<Name>Panel.vue; SSR-safe;
+   click-to-start for mic/camera/audio; no em/en dashes; verify typecheck+eslint):
+   HexViewerPanel (virtualized hex grid, template editor, go-to-offset, search,
+     entropy sparkline), MarkdownTablePanel (grid editing, paste, column drag,
+     align buttons, live markdown), BeautifierPanel (image drop/paste, canvas
+     composite via renderFrameSvg + data-screenshot-slot, export 1x/2x),
+     GamepadPanel (getGamepads rAF poll, drift test 3 s, circularity, vibration),
+     CountdownPanel (big digits, presets, laps, target date, chime, title,
+     fragment state via encodeTimerState), MouseTesterPanel (coalesced events,
+     Hz graph, pointer-lock DPI, click grid, scroll log, acceleration),
+     BpmKeyPanel (file drop -> decodeAudioData -> analyzeTrack with progress,
+     tap tempo, camelot neighbours), LightMeterPanel (rear camera, 5 Hz frame
+     sampling, lux readout, CCT swatch, calibration, try track exposure
+     settings), QrTransferPanel (sender canvas animation pinning plan.version,
+     receiver camera + jsQR -> Receiver.ingest, download), AudioDataPanel (play
+     morse/DTMF/FSK, WAV download, mic decode live for all three), AsciiArtPanel
+     (image drop, live pre preview, columns slider, copy/download, PNG render),
+     MultitouchPanel (pointer capture surface, circles per pointer, coverage
+     grid, pressure bar, fullscreen), PomodoroPanel (phase clock, start/pause/
+     skip, chime, title, fragment state via encodeState for the pop-out),
+     GcodePanel (file drop, layer slider + play, canvas/SVG renderer, stats,
+     travel toggle, color by), SpritePackerPanel (multi-image drop, atlas
+     preview, PNG + JSON/CSS/XML + zip via fflate), FontSubsetterPanel (font
+     drop, FontFace preview before/after, presets, size bar, download; MUST
+     browser-smoke-test wawoff2 loading under Vite), ElementRecorderPanel
+     (region overlay, element pick, CropTarget when available else canvas
+     crop, MediaRecorder, patchWebmDuration, download).
+   Generic shell is fine for: distance-bearing-calculator, print-cost-calculator.
+2. Wire PanelHost.vue (alphabetical defineAsyncComponent entries), run the gate
+   (vitest, lint, typecheck, build), commit, push main, watch CI + deploy.
+3. Curl-check the 4 new endpoints (audio-data-codec, distance-bearing-
+   calculator, markdown-table-editor, print-cost-calculator).
+4. claude-in-chrome QA subagent over all 19 live pages (same brief style as
+   batches 2-4), fix findings, push.
+5. Batch 4 QA report (agent a829711f0cdbb302f) may still be pending: read its
+   result when it arrives and fix any blockers/bugs it reports.
+6. Update memory tools-project-state.md; then the only remaining matrix rows are
+   the "Needs Max" three (scan, upscale, handwriting): ask him.
+
+## (historical) Batch 5 list
 
 hex-viewer, markdown-table-editor, screenshot-beautifier, gamepad-tester,
 distance-bearing-calculator, countdown-timer, mouse-tester, bpm-key-detector,
