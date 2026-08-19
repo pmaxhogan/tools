@@ -233,10 +233,16 @@ async function hashMode(password: string, opts: BcryptOpts): Promise<BcryptResul
       costFactor: cost,
       outputType: "encoded",
     });
+    // hash-wasm labels its output $2a$. The $2b$ revision is the same
+    // algorithm for any password bcrypt actually hashes (the $2a$ vs $2b$
+    // difference only concerns a wraparound bug on inputs over 255 bytes,
+    // which the 72 byte truncation above rules out), and $2b$ is what every
+    // current bcrypt library emits, so the modern prefix is used here.
+    const modern = encoded.startsWith("$2a$") ? `$2b$${encoded.slice(4)}` : encoded;
     const result: BcryptResult = {
       Algorithm: "bcrypt",
       Parameters: bcryptParams(cost),
-      Hash: encoded,
+      Hash: modern,
       "Time hint": bcryptTimeHint(cost),
       "Verify hint": VERIFY_HINT,
     };

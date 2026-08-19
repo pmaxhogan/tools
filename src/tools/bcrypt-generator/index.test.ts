@@ -11,7 +11,7 @@ import { fromB64, looksLikeHash, run, toB64, type BcryptOpts } from "./index";
  */
 const SALT = "000102030405060708090a0b0c0d0e0f";
 
-const BCRYPT_C4 = "$2a$04$..CA.uOD/eaGAOmJB.yMBurkTM.teJW4P/NXJXOT49X8IHvXALk4i";
+const BCRYPT_C4 = "$2b$04$..CA.uOD/eaGAOmJB.yMBurkTM.teJW4P/NXJXOT49X8IHvXALk4i";
 const ARGON2ID_M8192 =
   "$argon2id$v=19$m=8192,t=1,p=1$AAECAwQFBgcICQoLDA0ODw$iTVhb4LxLVJcfxU4kJmKfQvNC1JpjC791oXEDmFjAys";
 const SCRYPT_LN10 =
@@ -84,7 +84,7 @@ describe("hash mode", () => {
   it("defaults to bcrypt cost 10 and reports the 100 ms estimate", async () => {
     const out = await run("hunter2", opts({ algorithm: "", cost: 10 }));
     expect(out.Algorithm).toBe("bcrypt");
-    expect(out.Hash).toMatch(/^\$2a\$10\$/);
+    expect(out.Hash).toMatch(/^\$2b\$10\$/);
     expect(out.Parameters).toBe("cost 10 (2^10 = 1024 rounds), 16 byte salt");
     expect(out["Time hint"]).toContain("about 100 ms");
   });
@@ -132,7 +132,7 @@ describe("hash mode", () => {
     const a = await run("hunter2", opts({ salt: undefined }));
     const b = await run("hunter2", opts({ salt: undefined }));
     expect(a.Hash).not.toBe(b.Hash);
-    expect(a.Hash).toMatch(/^\$2a\$04\$[./A-Za-z0-9]{53}$/);
+    expect(a.Hash).toMatch(/^\$2b\$04\$[./A-Za-z0-9]{53}$/);
   });
 
   it("warns and truncates when the password is longer than 72 bytes", async () => {
@@ -164,7 +164,7 @@ describe("verify mode", () => {
   it("matches a correct bcrypt password and rejects a wrong one", async () => {
     const ok = await run(`hunter2\n${BCRYPT_C4}`, opts({ mode: "verify" }));
     expect(ok).toEqual({
-      "Algorithm detected": "bcrypt ($2a$ prefix)",
+      "Algorithm detected": "bcrypt ($2b$ prefix)",
       Parameters: "cost 4 (2^4 = 16 rounds), 16 byte salt",
       Match: "yes",
     });

@@ -93,8 +93,9 @@ function scheduleRun() {
   debounce = setTimeout(() => {
     run();
     writeFragment({
-      // File bytes are never shareable state, so they are simply not persisted.
-      input: hasInput && !fileBytes.value ? input.value : undefined,
+      // File bytes are never shareable state, so they are simply not
+      // persisted; neither is a secret input (passwords, signing keys).
+      input: hasInput && !fileBytes.value && !props.meta.sensitiveInput ? input.value : undefined,
       opts: Object.fromEntries(Object.entries(opts.value).map(([k, v]) => [k, String(v)])),
     });
   }, 150);

@@ -152,6 +152,12 @@ export interface ToolMeta {
   /** Gates the UI with an honest message instead of breaking (rule 15). */
   requires?: Capability[];
   /**
+   * The input is a secret (a password, a signing key). The generic shell then
+   * keeps it out of the URL fragment, so it never lands in browser history or
+   * a shared link; options still sync as usual.
+   */
+  sensitiveInput?: boolean;
+  /**
    * Replaces the footer's default privacy sentence ("Your files and inputs
    * never leave your device") on the rare tool where that exact claim would be
    * false, such as one that hands files to another device on purpose. Must

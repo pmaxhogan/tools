@@ -8,6 +8,7 @@ export const meta: ToolMeta = {
   description:
     "Hash and verify passwords with bcrypt, argon2, and scrypt, entirely in your browser.",
   category: "Crypto",
+  sensitiveInput: true,
   keywords: [
     "bcrypt generator",
     "bcrypt online",
