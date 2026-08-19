@@ -91,6 +91,14 @@ import { meta as uuidMeta } from "../src/tools/uuid/meta";
 import { run as uuidRun } from "../src/tools/uuid/index";
 import { meta as weekNumberMeta } from "../src/tools/week-number/meta";
 import { run as weekNumberRun } from "../src/tools/week-number/index";
+import { meta as terminalQrCodeMeta } from "../src/tools/terminal-qr-code/meta";
+import { run as terminalQrCodeRun } from "../src/tools/terminal-qr-code/index";
+import { meta as systemdUnitBuilderMeta } from "../src/tools/systemd-unit-builder/meta";
+import { run as systemdUnitBuilderRun } from "../src/tools/systemd-unit-builder/index";
+import { meta as hashIdentifierMeta } from "../src/tools/hash-identifier/meta";
+import { run as hashIdentifierRun } from "../src/tools/hash-identifier/index";
+import { meta as raidzCalculatorMeta } from "../src/tools/raidz-calculator/meta";
+import { run as raidzCalculatorRun } from "../src/tools/raidz-calculator/index";
 
 export interface Env {
   /** Static assets from the Astro build. */
@@ -245,6 +253,20 @@ const ALL: Endpoint[] = [
   }),
   expose(uuidMeta, uuidRun, { sampleQuery: "version=v4&count=3" }),
   expose(weekNumberMeta, weekNumberRun, { sample: "2026-08-06" }),
+  expose(terminalQrCodeMeta, terminalQrCodeRun, {
+    sample: "https://tools.maxhogan.dev",
+    sampleQuery: "ecc=M",
+  }),
+  expose(systemdUnitBuilderMeta, systemdUnitBuilderRun, {
+    sampleQuery: "description=My%20app&exec=%2Fusr%2Fbin%2Fmyapp&restart=on-failure",
+  }),
+  expose(hashIdentifierMeta, hashIdentifierRun, {
+    sample: "5f4dcc3b5aa765d61d8327deb882cf99",
+    sampleQuery: "hashcatMode=true",
+  }),
+  expose(raidzCalculatorMeta, raidzCalculatorRun, {
+    sampleQuery: "disks=6&diskSize=4&diskSizeUnit=TB&level=raidz2",
+  }),
 ];
 
 const ENDPOINTS: Endpoint[] = ALL.filter((e) => e.meta.http);

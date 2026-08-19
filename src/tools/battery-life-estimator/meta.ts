@@ -1,0 +1,114 @@
+import type { ToolMeta } from "../types";
+
+export const meta: ToolMeta = {
+  slug: "battery-life-estimator",
+  matrixSlug: "battery-life",
+  icon: "BatteryCharging",
+  name: "Battery Life Estimator",
+  description:
+    "Model runtime from battery capacity, sleep draw, and active draw, in whatever units your datasheet uses.",
+  category: "Hardware",
+  keywords: [
+    "battery life calculator",
+    "runtime estimator",
+    "mAh to hours",
+    "battery runtime",
+    "power draw calculator",
+    "how long will my battery last",
+  ],
+  searchTerms: [
+    "battery capacity calculator",
+    "mah to wh converter",
+    "sleep current battery drain",
+    "iot device battery life",
+    "power budget calculator",
+    "milliamp hour calculator",
+    "standby time calculator",
+  ],
+  input: "none",
+  output: "application/json",
+  options: [
+    { kind: "number", id: "capacity", label: "Battery capacity", default: 3000, min: 1, step: 1 },
+    {
+      kind: "select",
+      id: "capacityUnit",
+      label: "Capacity unit",
+      default: "mAh",
+      options: [
+        { value: "mAh", label: "mAh", synonyms: ["milliamp hour", "milliamp hours"] },
+        { value: "Wh", label: "Wh", synonyms: ["watt hour", "watt hours"] },
+        { value: "mWh", label: "mWh", synonyms: ["milliwatt hour", "milliwatt hours"] },
+      ],
+    },
+    {
+      kind: "number",
+      id: "voltage",
+      label: "Nominal voltage (V)",
+      default: 3.7,
+      min: 0.1,
+      max: 60,
+      step: 0.1,
+    },
+    { kind: "number", id: "activeDraw", label: "Active draw", default: 500, min: 0, step: 1 },
+    {
+      kind: "select",
+      id: "drawUnit",
+      label: "Active draw unit",
+      default: "mA",
+      options: [
+        { value: "mA", label: "mA", synonyms: ["milliamp", "milliamps", "current"] },
+        { value: "mW", label: "mW", synonyms: ["milliwatt", "milliwatts"] },
+        { value: "W", label: "W", synonyms: ["watt", "watts", "power"] },
+      ],
+    },
+    { kind: "number", id: "sleepDraw", label: "Sleep/idle draw", default: 5, min: 0, step: 0.1 },
+    {
+      kind: "select",
+      id: "sleepDrawUnit",
+      label: "Sleep draw unit",
+      default: "mA",
+      options: [
+        { value: "mA", label: "mA", synonyms: ["milliamp", "milliamps", "current"] },
+        { value: "mW", label: "mW", synonyms: ["milliwatt", "milliwatts"] },
+        { value: "W", label: "W", synonyms: ["watt", "watts", "power"] },
+      ],
+    },
+    {
+      kind: "number",
+      id: "activeHoursPerDay",
+      label: "Active hours per day",
+      default: 4,
+      min: 0,
+      max: 24,
+      step: 0.5,
+    },
+    {
+      kind: "number",
+      id: "efficiency",
+      label: "Usable capacity %",
+      default: 85,
+      min: 1,
+      max: 100,
+      step: 1,
+    },
+  ],
+  copy: {
+    what: "Estimates how long a battery will run from its capacity, nominal voltage, and separate active and sleep power draws. Mixes active hours per day with the remaining idle hours to model a realistic daily energy budget, then reports both the blended runtime and the continuous best and worst case.",
+    how: "Enter the battery capacity and voltage from the datasheet, then the active and sleep draw in whatever units you have (mA, mW, or W). Set how many hours per day the device is active; the rest is treated as sleep. Adjust usable capacity percent to model real-world derating, and the estimate updates instantly.",
+    why: "Most battery calculators online only handle a single constant draw and force you to convert units by hand first. This one accepts mAh, Wh, or mWh and mA, mW, or W directly, mixes active and sleep power into one daily budget, and runs entirely on your device with no signup or ad-supported popups.",
+    faq: [
+      {
+        q: "Why is my real runtime lower than the estimate?",
+        a: "Nameplate capacity is rarely fully usable: temperature, discharge rate, and battery aging all cut into it, which is why the usable capacity percent field defaults to 85 instead of 100. Lower it further for cold environments or an aged battery.",
+      },
+      {
+        q: "How does the unit conversion work?",
+        a: "Capacity in mAh or mWh and draw in mA are converted to watt hours and watts using the nominal voltage you enter (Wh = mAh / 1000 x V). If your datasheet already gives Wh or W, pick those units and voltage is only used for the equivalent mAh readout.",
+      },
+      {
+        q: "What is the difference between estimated runtime and continuous active?",
+        a: "Estimated runtime blends your active and sleep hours into one daily average, matching real usage. Continuous active and continuous standby are the two extremes: how long the battery lasts if the device never left active mode, or never left sleep mode.",
+      },
+    ],
+  },
+};

@@ -105,7 +105,11 @@ one has a fixed contract:
 Preinstalled and allowed: `qrcode`, `figlet`, `@faker-js/faker`, `ua-parser-js`,
 `cronstrue`, `croner`, `svgo` (import from `svgo/browser`), `papaparse`, `yaml`,
 `smol-toml`, `diff`, `sql-formatter`, `@cfworker/json-schema`, `turndown`,
-`gpt-tokenizer`, `file-type` (main entry is portable), `exifr`. Import them
+`gpt-tokenizer`, `file-type` (main entry is portable), `exifr`, `mathjs`,
+`@noble/hashes` (subpaths carry the `.js` suffix: `@noble/hashes/hmac.js`,
+`@noble/hashes/sha2.js`, `@noble/hashes/legacy.js`), `urlpattern-polyfill`
+(side-effect import installs the global only where absent), `@js-temporal/polyfill`.
+Import them
 normally — the registry lazy-loads your whole module per page, so the dependency
 never touches the shell bundle. Everything else: standard library only.
 

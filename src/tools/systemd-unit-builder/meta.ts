@@ -1,0 +1,186 @@
+import type { ToolMeta } from "../types";
+
+export const meta: ToolMeta = {
+  slug: "systemd-unit-builder",
+  matrixSlug: "systemd",
+  icon: "Server",
+  name: "systemd Unit Builder",
+  description:
+    "Generate a production-ready systemd service unit with sane restart, ordering, and security hardening.",
+  category: "Homelab",
+  keywords: [
+    "systemd unit generator",
+    "systemd service file",
+    "systemd timer generator",
+    "systemd restart policy",
+    "service unit builder",
+    "systemd hardening",
+  ],
+  searchTerms: [
+    "systemctl service file",
+    ".service file generator",
+    "systemd config generator",
+    "restart on failure systemd",
+    "systemd ExecStart generator",
+    "linux service unit",
+    "systemd security sandbox",
+    "cron alternative systemd timer",
+    "wantedby multi-user target",
+    "systemd oneshot service",
+  ],
+  input: "text/plain",
+  output: "text/plain",
+  http: { method: "GET", contentType: "text/plain" },
+  options: [
+    { kind: "text", id: "description", label: "Description", default: "My service" },
+    {
+      kind: "text",
+      id: "exec",
+      label: "ExecStart command",
+      default: "/usr/bin/myapp",
+      placeholder: "/usr/bin/myapp --flag",
+    },
+    { kind: "text", id: "execStop", label: "ExecStop (optional)", default: "" },
+    { kind: "text", id: "workingDir", label: "WorkingDirectory (optional)", default: "" },
+    { kind: "text", id: "user", label: "User (optional)", default: "" },
+    { kind: "text", id: "group", label: "Group (optional)", default: "" },
+    {
+      kind: "select",
+      id: "type",
+      label: "Type",
+      default: "simple",
+      options: [
+        { value: "simple", label: "simple", synonyms: ["default", "foreground process"] },
+        { value: "exec", label: "exec", synonyms: ["exec into process"] },
+        { value: "forking", label: "forking", synonyms: ["daemonizes", "double fork"] },
+        { value: "oneshot", label: "oneshot", synonyms: ["one shot", "run once", "script"] },
+        { value: "notify", label: "notify", synonyms: ["sd_notify", "readiness notification"] },
+        { value: "dbus", label: "dbus", synonyms: ["d-bus", "bus name"] },
+      ],
+    },
+    {
+      kind: "select",
+      id: "restart",
+      label: "Restart",
+      default: "on-failure",
+      options: [
+        {
+          value: "on-failure",
+          label: "on-failure",
+          synonyms: ["restart on crash", "restart on nonzero exit"],
+        },
+        { value: "always", label: "always", synonyms: ["restart always", "always restart"] },
+        { value: "no", label: "no", synonyms: ["never restart", "no restart"] },
+        {
+          value: "on-abnormal",
+          label: "on-abnormal",
+          synonyms: ["restart on abnormal exit", "signal or timeout"],
+        },
+        {
+          value: "on-success",
+          label: "on-success",
+          synonyms: ["restart on clean exit", "restart on success"],
+        },
+        {
+          value: "on-watchdog",
+          label: "on-watchdog",
+          synonyms: ["watchdog timeout", "restart on watchdog"],
+        },
+      ],
+    },
+    {
+      kind: "number",
+      id: "restartSec",
+      label: "RestartSec (seconds)",
+      default: 5,
+      min: 0,
+      max: 300,
+    },
+    {
+      kind: "select",
+      id: "wantedBy",
+      label: "Install target",
+      default: "multi-user.target",
+      options: [
+        {
+          value: "multi-user.target",
+          label: "multi-user.target",
+          synonyms: ["normal boot", "server target", "non graphical"],
+        },
+        {
+          value: "default.target",
+          label: "default.target",
+          synonyms: ["whatever the system default is"],
+        },
+        {
+          value: "graphical.target",
+          label: "graphical.target",
+          synonyms: ["desktop boot", "gui target"],
+        },
+      ],
+    },
+    {
+      kind: "select",
+      id: "after",
+      label: "Order after",
+      default: "network-online.target",
+      options: [
+        {
+          value: "network-online.target",
+          label: "network-online.target",
+          synonyms: ["wait for network", "internet ready", "adds Wants="],
+        },
+        {
+          value: "network.target",
+          label: "network.target",
+          synonyms: ["network stack up", "basic networking"],
+        },
+        { value: "none", label: "none", synonyms: ["no ordering", "no dependency"] },
+      ],
+    },
+    {
+      kind: "text",
+      id: "environment",
+      label: "Environment vars (KEY=val, one per line)",
+      default: "",
+      placeholder: "NODE_ENV=production\nPORT=3000",
+    },
+    { kind: "boolean", id: "hardening", label: "Add security hardening", default: true },
+    { kind: "boolean", id: "timer", label: "Also generate a .timer", default: false },
+    {
+      kind: "select",
+      id: "onCalendar",
+      label: "Timer schedule",
+      default: "daily",
+      options: [
+        { value: "daily", label: "Daily", synonyms: ["once a day", "midnight"] },
+        { value: "hourly", label: "Hourly", synonyms: ["once an hour", "every hour"] },
+        { value: "weekly", label: "Weekly", synonyms: ["once a week"] },
+        {
+          value: "*-*-* 03:00:00",
+          label: "Daily at 3:00 AM",
+          synonyms: ["3am", "custom time", "overnight job"],
+        },
+      ],
+    },
+  ],
+  copy: {
+    what: "Builds a complete systemd .service unit file from a form: description, ExecStart/ExecStop, working directory, user and group, restart policy with a configurable RestartSec, ordering against the network target, environment variables, and a security hardening block (NoNewPrivileges, ProtectSystem=strict, ProtectHome, PrivateTmp, and more) turned on by default. It can also generate a matching .timer unit as a systemd-native alternative to cron.",
+    how: "Enter the command to run and adjust the restart, ordering, and hardening options to match your service. Copy the rendered unit into /etc/systemd/system/yourservice.service, then run systemctl daemon-reload, systemctl enable --now yourservice. Turn on the timer option to also get a .timer skeleton for scheduled jobs instead of a long-running daemon.",
+    why: "Most systemd unit examples online are stale gists copy-pasted from a decade-old blog post, with no hardening and no thought given to the restart policy. This generator produces a current, opinionated unit with security hardening on by default, built entirely in your browser: your files and inputs never leave your device.",
+    faq: [
+      {
+        q: "What does Restart=on-failure do?",
+        a: "It restarts the service automatically when it exits with a nonzero code, is killed by a signal, or times out, but not when it exits cleanly (code 0) or is stopped intentionally with systemctl stop. That makes it the safest default for long-running daemons: crashes recover on their own, deliberate stops stay stopped.",
+      },
+      {
+        q: "Is the hardening safe to leave on?",
+        a: "The defaults here are a sane, conservative baseline that works for most services out of the box. The one directive to watch is ProtectSystem=strict, which makes almost the entire filesystem read-only to the service: if your app writes files outside /var, you will need to add ReadWritePaths=/your/path to the unit.",
+      },
+      {
+        q: "Can it make a timer instead of a long-running service?",
+        a: 'Yes. Turn on "Also generate a .timer" and pick a schedule (daily, hourly, weekly, or a fixed time). The output appends a matching .timer unit with Persistent=true, so a missed run fires as soon as the system is back up, similar to anacron.',
+      },
+    ],
+  },
+};

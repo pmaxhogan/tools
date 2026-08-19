@@ -15,6 +15,12 @@ import PopoutButton from "./PopoutButton.vue";
  */
 const panels: Record<string, Component> = {
   "audio-spectrogram": defineAsyncComponent(() => import("./panels/SpectrogramPanel.vue")),
+  calc: defineAsyncComponent(() => import("./panels/CalcPanel.vue")),
+  "clipboard-pipelines": defineAsyncComponent(() => import("./panels/ClipboardPipelinesPanel.vue")),
+  "dns-propagation": defineAsyncComponent(() => import("./panels/DnsPropagationPanel.vue")),
+  "gpu-inspector": defineAsyncComponent(() => import("./panels/GpuInspectorPanel.vue")),
+  "screen-recorder": defineAsyncComponent(() => import("./panels/ScreenRecorderPanel.vue")),
+  "totp-generator": defineAsyncComponent(() => import("./panels/TotpPanel.vue")),
   "audio-transcriber": defineAsyncComponent(() => import("./panels/TranscriberPanel.vue")),
   "audio-trimmer": defineAsyncComponent(() => import("./panels/AudioTrimmerPanel.vue")),
   "background-remover": defineAsyncComponent(() => import("./panels/BackgroundRemoverPanel.vue")),

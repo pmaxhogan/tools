@@ -1,0 +1,36 @@
+// Auto-generated FX snapshot from the European Central Bank via frankfurter.dev.
+// Rates are relative to USD. Regenerate by re-fetching frankfurter.dev/v1/latest?base=USD.
+export const FX_DATE = "2026-08-18";
+export const FX_BASE = "USD";
+export const FX_RATES: Record<string, number> = {
+  USD: 1,
+  AUD: 1.4062,
+  BRL: 5.2074,
+  CAD: 1.3874,
+  CHF: 0.81254,
+  CNY: 6.7423,
+  CZK: 20.887,
+  DKK: 6.4581,
+  EUR: 0.86386,
+  GBP: 0.73933,
+  HKD: 7.8437,
+  HUF: 314.7,
+  IDR: 17862,
+  ILS: 2.992,
+  INR: 95.69,
+  ISK: 122.84,
+  JPY: 159.7,
+  KRW: 1410.07,
+  MXN: 17.0535,
+  MYR: 4.059,
+  NOK: 9.4182,
+  NZD: 1.6994,
+  PHP: 61.78,
+  PLN: 3.731,
+  RON: 4.5303,
+  SEK: 9.5249,
+  SGD: 1.2777,
+  THB: 33.06,
+  TRY: 47.912,
+  ZAR: 16.2196,
+};
