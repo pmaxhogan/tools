@@ -38,7 +38,7 @@ const CLOUDFLARE_A = {
 };
 
 /** A stale cache still serving the old address. */
-const QUAD9_STALE = {
+const DNSSB_STALE = {
   Status: 0,
   Answer: [{ name: "example.com", type: 1, TTL: 120, data: "198.51.100.7" }],
 };
@@ -59,15 +59,15 @@ describe("buildQueryUrl", () => {
   });
 
   it("accepts a resolver object and encodes underscore labels", () => {
-    const quad9 = RESOLVERS.find((r) => r.id === "quad9")!;
-    expect(buildQueryUrl(quad9, "_dmarc.example.com", "TXT")).toBe(
-      "https://dns.quad9.net/dns-query?name=_dmarc.example.com&type=TXT&ct=application%2Fdns-json",
+    const cloudflare = RESOLVERS.find((r) => r.id === "cloudflare")!;
+    expect(buildQueryUrl(cloudflare, "_dmarc.example.com", "TXT")).toBe(
+      "https://cloudflare-dns.com/dns-query?name=_dmarc.example.com&type=TXT&ct=application%2Fdns-json",
     );
   });
 
   it("builds one URL per resolver in order", () => {
     const urls = buildAllQueryUrls("example.com", "MX");
-    expect(urls.map((u) => u.id)).toEqual(["cloudflare", "google", "quad9"]);
+    expect(urls.map((u) => u.id)).toEqual(["cloudflare", "google", "dnssb"]);
     expect(urls.every((u) => u.url.includes("type=MX"))).toBe(true);
   });
 
@@ -170,10 +170,10 @@ describe("compareAnswers", () => {
     const summary = compareAnswers([
       { id: "cloudflare", parsed: parseDohResponse(CLOUDFLARE_A) },
       { id: "google", parsed: parseDohResponse(GOOGLE_A) },
-      { id: "quad9", parsed: parseDohResponse(QUAD9_STALE) },
+      { id: "dnssb", parsed: parseDohResponse(DNSSB_STALE) },
     ]);
     expect(summary.agree).toBe(false);
-    expect(summary.record).toContain("Quad9: 198.51.100.7");
+    expect(summary.record).toContain("dns.sb: 198.51.100.7");
     expect(summary.note).toContain("still propagating");
   });
 
@@ -219,9 +219,7 @@ describe("run with a domain name", () => {
       "https://cloudflare-dns.com/dns-query?name=example.com&type=A&ct=application%2Fdns-json",
     );
     expect(out["Google"]).toBe("https://dns.google/resolve?name=example.com&type=A");
-    expect(out["Quad9"]).toBe(
-      "https://dns.quad9.net/dns-query?name=example.com&type=A&ct=application%2Fdns-json",
-    );
+    expect(out["dns.sb"]).toBe("https://doh.sb/dns-query?name=example.com&type=A");
     expect(out["Note"]).toContain("example.com");
   });
 
@@ -249,7 +247,7 @@ describe("run with a domain name", () => {
 describe("run with a JSON bundle", () => {
   it("reports agreement when all three resolvers match", () => {
     const out = run(
-      JSON.stringify({ cloudflare: CLOUDFLARE_A, google: GOOGLE_A, quad9: CLOUDFLARE_A }),
+      JSON.stringify({ cloudflare: CLOUDFLARE_A, google: GOOGLE_A, dnssb: CLOUDFLARE_A }),
       {},
     );
     expect(out["Propagation"]).toBe("all resolvers agree");
@@ -260,16 +258,16 @@ describe("run with a JSON bundle", () => {
 
   it("reports a difference when one resolver is stale", () => {
     const out = run(
-      JSON.stringify({ cloudflare: CLOUDFLARE_A, google: GOOGLE_A, quad9: QUAD9_STALE }),
+      JSON.stringify({ cloudflare: CLOUDFLARE_A, google: GOOGLE_A, dnssb: DNSSB_STALE }),
       {},
     );
     expect(out["Propagation"]).toBe("answers differ (still propagating)");
-    expect(out["Quad9"]).toBe("198.51.100.7 (A, TTL 120s)");
+    expect(out["dns.sb"]).toBe("198.51.100.7 (A, TTL 120s)");
   });
 
   it("renders an NXDOMAIN row without answers", () => {
     const out = run(
-      JSON.stringify({ cloudflare: NXDOMAIN, google: NXDOMAIN, quad9: NXDOMAIN }),
+      JSON.stringify({ cloudflare: NXDOMAIN, google: NXDOMAIN, dnssb: NXDOMAIN }),
       {},
     );
     expect(out["Cloudflare"]).toBe("no records returned (NXDOMAIN (the domain does not exist))");

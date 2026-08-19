@@ -4,14 +4,14 @@ export const meta: ToolMeta = {
   slug: "dns-propagation",
   icon: "Globe",
   name: "DNS Propagation",
-  description: "Compare live DNS answers from Cloudflare, Google, and Quad9 side by side.",
+  description: "Compare live DNS answers from Cloudflare, Google, and dns.sb side by side.",
   category: "Network",
   keywords: [
     "dns propagation checker",
     "compare dns resolvers",
     "doh lookup",
     "is my dns propagated",
-    "cloudflare google quad9 dns",
+    "cloudflare google dns.sb doh",
     "dns record check",
   ],
   searchTerms: [
@@ -27,7 +27,7 @@ export const meta: ToolMeta = {
   input: "text/plain",
   output: "application/json",
   privacyNote:
-    "Lookups are sent from your browser directly to Cloudflare, Google, and Quad9 DNS. Those resolvers see the domain you look up. Nothing is sent to this site's server.",
+    "Lookups are sent from your browser directly to Cloudflare, Google, and dns.sb DNS. Those resolvers see the domain you look up. Nothing is sent to this site's server.",
   options: [
     {
       kind: "select",
@@ -84,13 +84,13 @@ export const meta: ToolMeta = {
     },
   ],
   copy: {
-    what: "Looks up one record at three public resolvers at once, Cloudflare, Google, and Quad9, and puts their answers next to each other so you can see whether a DNS change has actually landed. Each resolver reports its own cached copy with its own TTL, so when they all return the same data the record has propagated, and when one still holds the old value it tells you which one and what it is serving. It handles A, AAAA, CNAME, MX, TXT, NS, SOA, and CAA lookups, and reads the DNS status code so an NXDOMAIN or SERVFAIL shows up as plain English instead of a number.",
+    what: "Looks up one record at three public resolvers at once, Cloudflare, Google, and dns.sb, and puts their answers next to each other so you can see whether a DNS change has actually landed. Each resolver reports its own cached copy with its own TTL, so when they all return the same data the record has propagated, and when one still holds the old value it tells you which one and what it is serving. It handles A, AAAA, CNAME, MX, TXT, NS, SOA, and CAA lookups, and reads the DNS status code so an NXDOMAIN or SERVFAIL shows up as plain English instead of a number.",
     how: "Type a domain name, pick the record type, and the page queries all three resolvers over DNS-over-HTTPS from your browser. Paste a full URL if that is what you have on the clipboard; the hostname is pulled out for you. The propagation row is the verdict: all resolvers agree, or answers differ and something is still cached. You can also paste a JSON bundle of saved DoH responses keyed by resolver name to compare a capture you took earlier.",
     why: "The usual propagation checkers wrap a one line answer in banner ads, a newsletter box, and an upsell to a paid monitoring plan, and every lookup goes through their servers first. This one queries the resolvers directly from your browser, so there is no middleman collecting your domain list, no account, and no rate limit beyond what the public resolvers themselves apply. It is honest about the tradeoff: those three resolvers do see the domain you look up, because that is what a DNS query is.",
     faq: [
       {
         q: "Who sees my lookups?",
-        a: "Cloudflare, Google, and Quad9. The queries go from your browser straight to those three public resolvers over DNS-over-HTTPS, so each of them sees the domain you asked about, the same way they would if you had set them as your system resolver. Nothing is sent to this site's server, and no lookup history is stored.",
+        a: "Cloudflare, Google, and dns.sb. The queries go from your browser straight to those three public resolvers over DNS-over-HTTPS, so each of them sees the domain you asked about, the same way they would if you had set them as your system resolver. Nothing is sent to this site's server, and no lookup history is stored.",
       },
       {
         q: "Why do resolvers disagree?",

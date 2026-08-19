@@ -35,10 +35,9 @@ export const RESOLVERS: Resolver[] = [
     dohUrl: "https://dns.google/resolve",
   },
   {
-    id: "quad9",
-    label: "Quad9",
-    dohUrl: "https://dns.quad9.net/dns-query",
-    needsContentTypeParam: true,
+    id: "dnssb",
+    label: "dns.sb",
+    dohUrl: "https://doh.sb/dns-query",
   },
 ];
 
@@ -476,7 +475,7 @@ function runBundle(
     throw new ToolError(
       "empty-bundle",
       "That JSON has no resolver responses in it.",
-      'Use an object keyed by resolver, like {"cloudflare": {...}, "google": {...}, "quad9": {...}}, or just type a domain name.',
+      'Use an object keyed by resolver, like {"cloudflare": {...}, "google": {...}, "dnssb": {...}}, or just type a domain name.',
     );
   }
 
