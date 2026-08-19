@@ -21,6 +21,7 @@ import { flattenSelectOptions } from "../src/lib/select-options";
 import { SIGNAL_PATH_PREFIX } from "../src/tools/p2p-file-transfer/index";
 import { handleSignalRequest, type DurableObjectNamespace } from "./drop-room";
 import { handleMcpRelay } from "./mcp-relay";
+import { handleEcho, handleHeaderInspector } from "./reflect";
 
 export { DropRoom } from "./drop-room";
 
@@ -110,6 +111,20 @@ import { meta as promqlFormatterMeta } from "../src/tools/promql-formatter/meta"
 import { run as promqlFormatterRun } from "../src/tools/promql-formatter/index";
 import { meta as subnetCalculatorMeta } from "../src/tools/subnet-calculator/meta";
 import { run as subnetCalculatorRun } from "../src/tools/subnet-calculator/index";
+import { meta as chartMakerMeta } from "../src/tools/chart-maker/meta";
+import { run as chartMakerRun } from "../src/tools/chart-maker/index";
+import { meta as colorPickerMeta } from "../src/tools/color-picker/meta";
+import { run as colorPickerRun } from "../src/tools/color-picker/index";
+import { meta as echoMeta } from "../src/tools/echo/meta";
+import { run as echoRun } from "../src/tools/echo/index";
+import { meta as httpHeaderInspectorMeta } from "../src/tools/http-header-inspector/meta";
+import { run as httpHeaderInspectorRun } from "../src/tools/http-header-inspector/index";
+import { meta as photographyCalculatorMeta } from "../src/tools/photography-calculator/meta";
+import { run as photographyCalculatorRun } from "../src/tools/photography-calculator/index";
+import { meta as resistorColorCodeCalculatorMeta } from "../src/tools/resistor-color-code-calculator/meta";
+import { run as resistorColorCodeCalculatorRun } from "../src/tools/resistor-color-code-calculator/index";
+import { meta as reverseProxyConfigGeneratorMeta } from "../src/tools/reverse-proxy-config-generator/meta";
+import { run as reverseProxyConfigGeneratorRun } from "../src/tools/reverse-proxy-config-generator/index";
 
 export interface Env {
   /** Static assets from the Astro build. */
@@ -294,6 +309,27 @@ const ALL: Endpoint[] = [
   expose(subnetCalculatorMeta, subnetCalculatorRun, {
     sample: "192.168.1.0/24",
     sampleQuery: "split=4",
+  }),
+  expose(chartMakerMeta, chartMakerRun, {
+    sample: "month,sales\nJan,120\nFeb,180\nMar,150",
+    sampleQuery: "type=bar",
+  }),
+  expose(colorPickerMeta, colorPickerRun, { sample: "#ff6600", sampleQuery: "mode=convert" }),
+  // /api/echo and /api/http-header-inspector are answered by worker/reflect.ts
+  // before the generic router; these entries keep them in the index.
+  expose(echoMeta, echoRun, {}),
+  expose(httpHeaderInspectorMeta, httpHeaderInspectorRun, {}),
+  expose(photographyCalculatorMeta, photographyCalculatorRun, {
+    sample: "50mm f/2.8 3m",
+    sampleQuery: "mode=dof&sensor=full-frame",
+  }),
+  expose(resistorColorCodeCalculatorMeta, resistorColorCodeCalculatorRun, {
+    sample: "brown black red gold",
+    sampleQuery: "mode=decode",
+  }),
+  expose(reverseProxyConfigGeneratorMeta, reverseProxyConfigGeneratorRun, {
+    sample: "app.example.com -> http://127.0.0.1:3000",
+    sampleQuery: "server=both",
   }),
 ];
 
@@ -667,6 +703,15 @@ export default {
 
     if (path === "/api/mcp-relay") {
       return handleMcpRelay(request);
+    }
+
+    // Reflection endpoints answer before the generic tool router so the
+    // request itself (not an "input" param) is what gets described.
+    if (path === "/api/echo") {
+      return handleEcho(request, url);
+    }
+    if (path === "/api/http-header-inspector") {
+      return handleHeaderInspector(request);
     }
 
     let slug = path.slice("/api/".length).replace(/\/+$/, "");

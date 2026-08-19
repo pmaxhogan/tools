@@ -17,6 +17,7 @@ import { meta as backgroundRemover } from "./background-remover/meta";
 import { meta as baseConverter } from "./base-converter/meta";
 import { meta as batchProcessor } from "./batch-processor/meta";
 import { meta as batteryLifeEstimator } from "./battery-life-estimator/meta";
+import { meta as bcryptGenerator } from "./bcrypt-generator/meta";
 import { meta as bingoCardGenerator } from "./bingo-card-generator/meta";
 import { meta as bleSensorDashboard } from "./ble-sensor-dashboard/meta";
 import { meta as bookmarklets } from "./bookmarklets/meta";
@@ -26,10 +27,13 @@ import { meta as calc } from "./calc/meta";
 import { meta as caseConverter } from "./case-converter/meta";
 import { meta as certificateDecoder } from "./certificate-decoder/meta";
 import { meta as characterCounter } from "./character-counter/meta";
+import { meta as chartMaker } from "./chart-maker/meta";
 import { meta as clipboardInspector } from "./clipboard-inspector/meta";
 import { meta as clipboardPipelines } from "./clipboard-pipelines/meta";
 import { meta as colorBlindnessSimulator } from "./color-blindness-simulator/meta";
+import { meta as colorPicker } from "./color-picker/meta";
 import { meta as cronParser } from "./cron-parser/meta";
+import { meta as cssAnchorPositioningBuilder } from "./css-anchor-positioning-builder/meta";
 import { meta as csvViewer } from "./csv-viewer/meta";
 import { meta as dataFormatConverter } from "./data-format-converter/meta";
 import { meta as decodeAnything } from "./decode-anything/meta";
@@ -43,6 +47,7 @@ import { meta as dnsPropagation } from "./dns-propagation/meta";
 import { meta as dockerComposeConverter } from "./docker-compose-converter/meta";
 import { meta as duplicateFinder } from "./duplicate-finder/meta";
 import { meta as durationCalculator } from "./duration-calculator/meta";
+import { meta as echo } from "./echo/meta";
 import { meta as electromagneticSpectrum } from "./electromagnetic-spectrum/meta";
 import { meta as emailHeaderAnalyzer } from "./email-header-analyzer/meta";
 import { meta as epochConverter } from "./epoch-converter/meta";
@@ -64,7 +69,9 @@ import { meta as hashGenerator } from "./hash-generator/meta";
 import { meta as hashIdentifier } from "./hash-identifier/meta";
 import { meta as hidReportExplorer } from "./hid-report-explorer/meta";
 import { meta as htmlToMarkdown } from "./html-to-markdown/meta";
+import { meta as httpHeaderInspector } from "./http-header-inspector/meta";
 import { meta as icsInspector } from "./ics-inspector/meta";
+import { meta as imageDiff } from "./image-diff/meta";
 import { meta as imageRedactor } from "./image-redactor/meta";
 import { meta as imageToText } from "./image-to-text/meta";
 import { meta as imageToolbox } from "./image-toolbox/meta";
@@ -77,6 +84,7 @@ import { meta as jwtVulnerabilityCheck } from "./jwt-vulnerability-check/meta";
 import { meta as keycode } from "./keycode/meta";
 import { meta as lineSorter } from "./line-sorter/meta";
 import { meta as mcpInspector } from "./mcp-inspector/meta";
+import { meta as mediaKeyTester } from "./media-key-tester/meta";
 import { meta as midiInspector } from "./midi-inspector/meta";
 import { meta as minecraftAnvilCalculator } from "./minecraft-anvil-calculator/meta";
 import { meta as minecraftCropGrowthCalculator } from "./minecraft-crop-growth-calculator/meta";
@@ -98,6 +106,7 @@ import { meta as p2pFileTransfer } from "./p2p-file-transfer/meta";
 import { meta as passkeyTester } from "./passkey-tester/meta";
 import { meta as passwordGenerator } from "./password-generator/meta";
 import { meta as pdfToolbox } from "./pdf-toolbox/meta";
+import { meta as photographyCalculator } from "./photography-calculator/meta";
 import { meta as pipelines } from "./pipelines/meta";
 import { meta as placeholderImage } from "./placeholder-image/meta";
 import { meta as promqlFormatter } from "./promql-formatter/meta";
@@ -106,6 +115,8 @@ import { meta as qrCodeGenerator } from "./qr-code-generator/meta";
 import { meta as qrCodeScanner } from "./qr-code-scanner/meta";
 import { meta as raidzCalculator } from "./raidz-calculator/meta";
 import { meta as randomPicker } from "./random-picker/meta";
+import { meta as resistorColorCodeCalculator } from "./resistor-color-code-calculator/meta";
+import { meta as reverseProxyConfigGenerator } from "./reverse-proxy-config-generator/meta";
 import { meta as screenRecorder } from "./screen-recorder/meta";
 import { meta as serialTerminal } from "./serial-terminal/meta";
 import { meta as smartctlAnalyzer } from "./smartctl-analyzer/meta";
@@ -115,12 +126,15 @@ import { meta as sqlFormatter } from "./sql-formatter/meta";
 import { meta as sqliteViewer } from "./sqlite-viewer/meta";
 import { meta as subnetCalculator } from "./subnet-calculator/meta";
 import { meta as subtitleEditor } from "./subtitle-editor/meta";
+import { meta as sunriseSunsetCalculator } from "./sunrise-sunset-calculator/meta";
 import { meta as svgOptimizer } from "./svg-optimizer/meta";
 import { meta as systemdUnitBuilder } from "./systemd-unit-builder/meta";
 import { meta as temporalPlayground } from "./temporal-playground/meta";
 import { meta as terminalQrCode } from "./terminal-qr-code/meta";
 import { meta as timezonePlanner } from "./timezone-planner/meta";
+import { meta as toneGenerator } from "./tone-generator/meta";
 import { meta as totpGenerator } from "./totp-generator/meta";
+import { meta as uf2Inspector } from "./uf2-inspector/meta";
 import { meta as unicodePicker } from "./unicode-picker/meta";
 import { meta as urlParser } from "./url-parser/meta";
 import { meta as urlpatternTester } from "./urlpattern-tester/meta";
@@ -130,7 +144,9 @@ import { meta as videoConverter } from "./video-converter/meta";
 import { meta as videoFrameExtractor } from "./video-frame-extractor/meta";
 import { meta as videoToGif } from "./video-to-gif/meta";
 import { meta as videoTrimmer } from "./video-trimmer/meta";
+import { meta as wasmFeatureDetector } from "./wasm-feature-detector/meta";
 import { meta as wasmInspector } from "./wasm-inspector/meta";
+import { meta as webcamMicTest } from "./webcam-mic-test/meta";
 import { meta as webrtcTester } from "./webrtc-tester/meta";
 import { meta as weekNumber } from "./week-number/meta";
 import { meta as wireguardConfigGenerator } from "./wireguard-config-generator/meta";
@@ -143,6 +159,7 @@ export const tools: ToolMeta[] = [
   baseConverter,
   batchProcessor,
   batteryLifeEstimator,
+  bcryptGenerator,
   bingoCardGenerator,
   bleSensorDashboard,
   bookmarklets,
@@ -152,10 +169,13 @@ export const tools: ToolMeta[] = [
   caseConverter,
   certificateDecoder,
   characterCounter,
+  chartMaker,
   clipboardInspector,
   clipboardPipelines,
   colorBlindnessSimulator,
+  colorPicker,
   cronParser,
+  cssAnchorPositioningBuilder,
   csvViewer,
   dataFormatConverter,
   decodeAnything,
@@ -169,6 +189,7 @@ export const tools: ToolMeta[] = [
   dockerComposeConverter,
   duplicateFinder,
   durationCalculator,
+  echo,
   electromagneticSpectrum,
   emailHeaderAnalyzer,
   epochConverter,
@@ -190,7 +211,9 @@ export const tools: ToolMeta[] = [
   hashIdentifier,
   hidReportExplorer,
   htmlToMarkdown,
+  httpHeaderInspector,
   icsInspector,
+  imageDiff,
   imageRedactor,
   imageToText,
   imageToolbox,
@@ -203,6 +226,7 @@ export const tools: ToolMeta[] = [
   keycode,
   lineSorter,
   mcpInspector,
+  mediaKeyTester,
   midiInspector,
   minecraftAnvilCalculator,
   minecraftCropGrowthCalculator,
@@ -224,6 +248,7 @@ export const tools: ToolMeta[] = [
   passkeyTester,
   passwordGenerator,
   pdfToolbox,
+  photographyCalculator,
   pipelines,
   placeholderImage,
   promqlFormatter,
@@ -232,6 +257,8 @@ export const tools: ToolMeta[] = [
   qrCodeScanner,
   raidzCalculator,
   randomPicker,
+  resistorColorCodeCalculator,
+  reverseProxyConfigGenerator,
   screenRecorder,
   serialTerminal,
   smartctlAnalyzer,
@@ -241,12 +268,15 @@ export const tools: ToolMeta[] = [
   sqliteViewer,
   subnetCalculator,
   subtitleEditor,
+  sunriseSunsetCalculator,
   svgOptimizer,
   systemdUnitBuilder,
   temporalPlayground,
   terminalQrCode,
   timezonePlanner,
+  toneGenerator,
   totpGenerator,
+  uf2Inspector,
   unicodePicker,
   urlParser,
   urlpatternTester,
@@ -256,7 +286,9 @@ export const tools: ToolMeta[] = [
   videoFrameExtractor,
   videoToGif,
   videoTrimmer,
+  wasmFeatureDetector,
   wasmInspector,
+  webcamMicTest,
   webrtcTester,
   weekNumber,
   wireguardConfigGenerator,
@@ -271,6 +303,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "base-converter": () => import("./base-converter/index").then((m) => m.default),
   "batch-processor": () => import("./batch-processor/index").then((m) => m.default),
   "battery-life-estimator": () => import("./battery-life-estimator/index").then((m) => m.default),
+  "bcrypt-generator": () => import("./bcrypt-generator/index").then((m) => m.default),
   "bingo-card-generator": () => import("./bingo-card-generator/index").then((m) => m.default),
   "ble-sensor-dashboard": () => import("./ble-sensor-dashboard/index").then((m) => m.default),
   bookmarklets: () => import("./bookmarklets/index").then((m) => m.default),
@@ -280,11 +313,15 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "case-converter": () => import("./case-converter/index").then((m) => m.default),
   "certificate-decoder": () => import("./certificate-decoder/index").then((m) => m.default),
   "character-counter": () => import("./character-counter/index").then((m) => m.default),
+  "chart-maker": () => import("./chart-maker/index").then((m) => m.default),
   "clipboard-inspector": () => import("./clipboard-inspector/index").then((m) => m.default),
   "clipboard-pipelines": () => import("./clipboard-pipelines/index").then((m) => m.default),
   "color-blindness-simulator": () =>
     import("./color-blindness-simulator/index").then((m) => m.default),
+  "color-picker": () => import("./color-picker/index").then((m) => m.default),
   "cron-parser": () => import("./cron-parser/index").then((m) => m.default),
+  "css-anchor-positioning-builder": () =>
+    import("./css-anchor-positioning-builder/index").then((m) => m.default),
   "csv-viewer": () => import("./csv-viewer/index").then((m) => m.default),
   "data-format-converter": () => import("./data-format-converter/index").then((m) => m.default),
   "decode-anything": () => import("./decode-anything/index").then((m) => m.default),
@@ -300,6 +337,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
     import("./docker-compose-converter/index").then((m) => m.default),
   "duplicate-finder": () => import("./duplicate-finder/index").then((m) => m.default),
   "duration-calculator": () => import("./duration-calculator/index").then((m) => m.default),
+  echo: () => import("./echo/index").then((m) => m.default),
   "electromagnetic-spectrum": () =>
     import("./electromagnetic-spectrum/index").then((m) => m.default),
   "email-header-analyzer": () => import("./email-header-analyzer/index").then((m) => m.default),
@@ -323,7 +361,9 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "hash-identifier": () => import("./hash-identifier/index").then((m) => m.default),
   "hid-report-explorer": () => import("./hid-report-explorer/index").then((m) => m.default),
   "html-to-markdown": () => import("./html-to-markdown/index").then((m) => m.default),
+  "http-header-inspector": () => import("./http-header-inspector/index").then((m) => m.default),
   "ics-inspector": () => import("./ics-inspector/index").then((m) => m.default),
+  "image-diff": () => import("./image-diff/index").then((m) => m.default),
   "image-redactor": () => import("./image-redactor/index").then((m) => m.default),
   "image-to-text": () => import("./image-to-text/index").then((m) => m.default),
   "image-toolbox": () => import("./image-toolbox/index").then((m) => m.default),
@@ -337,6 +377,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   keycode: () => import("./keycode/index").then((m) => m.default),
   "line-sorter": () => import("./line-sorter/index").then((m) => m.default),
   "mcp-inspector": () => import("./mcp-inspector/index").then((m) => m.default),
+  "media-key-tester": () => import("./media-key-tester/index").then((m) => m.default),
   "midi-inspector": () => import("./midi-inspector/index").then((m) => m.default),
   "minecraft-anvil-calculator": () =>
     import("./minecraft-anvil-calculator/index").then((m) => m.default),
@@ -368,6 +409,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "passkey-tester": () => import("./passkey-tester/index").then((m) => m.default),
   "password-generator": () => import("./password-generator/index").then((m) => m.default),
   "pdf-toolbox": () => import("./pdf-toolbox/index").then((m) => m.default),
+  "photography-calculator": () => import("./photography-calculator/index").then((m) => m.default),
   pipelines: () => import("./pipelines/index").then((m) => m.default),
   "placeholder-image": () => import("./placeholder-image/index").then((m) => m.default),
   "promql-formatter": () => import("./promql-formatter/index").then((m) => m.default),
@@ -376,6 +418,10 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "qr-code-scanner": () => import("./qr-code-scanner/index").then((m) => m.default),
   "raidz-calculator": () => import("./raidz-calculator/index").then((m) => m.default),
   "random-picker": () => import("./random-picker/index").then((m) => m.default),
+  "resistor-color-code-calculator": () =>
+    import("./resistor-color-code-calculator/index").then((m) => m.default),
+  "reverse-proxy-config-generator": () =>
+    import("./reverse-proxy-config-generator/index").then((m) => m.default),
   "screen-recorder": () => import("./screen-recorder/index").then((m) => m.default),
   "serial-terminal": () => import("./serial-terminal/index").then((m) => m.default),
   "smartctl-analyzer": () => import("./smartctl-analyzer/index").then((m) => m.default),
@@ -386,12 +432,16 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "sqlite-viewer": () => import("./sqlite-viewer/index").then((m) => m.default),
   "subnet-calculator": () => import("./subnet-calculator/index").then((m) => m.default),
   "subtitle-editor": () => import("./subtitle-editor/index").then((m) => m.default),
+  "sunrise-sunset-calculator": () =>
+    import("./sunrise-sunset-calculator/index").then((m) => m.default),
   "svg-optimizer": () => import("./svg-optimizer/index").then((m) => m.default),
   "systemd-unit-builder": () => import("./systemd-unit-builder/index").then((m) => m.default),
   "temporal-playground": () => import("./temporal-playground/index").then((m) => m.default),
   "terminal-qr-code": () => import("./terminal-qr-code/index").then((m) => m.default),
   "timezone-planner": () => import("./timezone-planner/index").then((m) => m.default),
+  "tone-generator": () => import("./tone-generator/index").then((m) => m.default),
   "totp-generator": () => import("./totp-generator/index").then((m) => m.default),
+  "uf2-inspector": () => import("./uf2-inspector/index").then((m) => m.default),
   "unicode-picker": () => import("./unicode-picker/index").then((m) => m.default),
   "url-parser": () => import("./url-parser/index").then((m) => m.default),
   "urlpattern-tester": () => import("./urlpattern-tester/index").then((m) => m.default),
@@ -401,7 +451,9 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "video-frame-extractor": () => import("./video-frame-extractor/index").then((m) => m.default),
   "video-to-gif": () => import("./video-to-gif/index").then((m) => m.default),
   "video-trimmer": () => import("./video-trimmer/index").then((m) => m.default),
+  "wasm-feature-detector": () => import("./wasm-feature-detector/index").then((m) => m.default),
   "wasm-inspector": () => import("./wasm-inspector/index").then((m) => m.default),
+  "webcam-mic-test": () => import("./webcam-mic-test/index").then((m) => m.default),
   "webrtc-tester": () => import("./webrtc-tester/index").then((m) => m.default),
   "week-number": () => import("./week-number/index").then((m) => m.default),
   "wireguard-config-generator": () =>

@@ -111,7 +111,7 @@ Preinstalled and allowed: `qrcode`, `figlet`, `@faker-js/faker`, `ua-parser-js`,
 (side-effect import installs the global only where absent), `@js-temporal/polyfill`,
 `cbor-x` (import { decode } from "cbor-x"), `@msgpack/msgpack`, `@peculiar/x509`
 (requires `import "reflect-metadata";` as the FIRST import of any module that
-imports it, in tests too).
+imports it, in tests too), `hash-wasm` (bcrypt, argon2id, and fast hashes; async, wasm inline).
 Import them
 normally — the registry lazy-loads your whole module per page, so the dependency
 never touches the shell bundle. Everything else: standard library only.

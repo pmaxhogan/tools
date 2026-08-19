@@ -6,9 +6,21 @@
  */
 import type { Component } from "vue";
 import {
+  Anchor,
   Anvil,
+  Aperture,
   AppWindow,
   Bookmark,
+  Cable,
+  ChartColumn,
+  FileSearch,
+  ImageMinus,
+  LockKeyhole,
+  Palette,
+  Play,
+  Radio,
+  Sunrise,
+  Webcam,
   Camera,
   CircuitBoard,
   Clock3,
@@ -120,9 +132,21 @@ import {
 } from "lucide-vue-next";
 
 const ICONS: Record<string, Component> = {
+  Anchor,
   Anvil,
+  Aperture,
   AppWindow,
   Bookmark,
+  Cable,
+  ChartColumn,
+  FileSearch,
+  ImageMinus,
+  LockKeyhole,
+  Palette,
+  Play,
+  Radio,
+  Sunrise,
+  Webcam,
   Camera,
   CircuitBoard,
   Clock3,
