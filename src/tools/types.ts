@@ -32,7 +32,8 @@ export type Capability =
   | "clipboard-read"
   | "camera"
   | "desktop"
-  | "chromium";
+  | "chromium"
+  | "nfc";
 
 /**
  * One selectable value in a dropdown.

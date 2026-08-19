@@ -13,7 +13,11 @@ popout, palette, api, share-target, qr-decode (qr-code-scanner), pipelines,
 usb-midi (midi-inspector covers MIDI; USB half folded into hid-report-explorer),
 minecraft-fall (merged into damage), all minecraft-* rows (built).
 
-## Batch 3 (next 16, matrix order): buildable unattended
+## Batch 3: SHIPPED 2026-08-19 (commits 7771bc5 + 86029ed + QA fixes), 142 pages live
+
+Browser QA of batch 3 pending/in progress at time of writing; see memory.
+
+### Batch 3 table (historical)
 
 | row | matrix slug | proposed URL slug | model | panel? | notes |
 |-----|-------------|-------------------|-------|--------|-------|

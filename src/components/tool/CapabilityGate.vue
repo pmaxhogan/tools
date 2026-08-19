@@ -100,6 +100,12 @@ const CHECKS: Partial<Record<Capability, CapabilityInfo>> = {
     detail:
       "This tool needs the Web Bluetooth API, available in Chromium browsers such as Chrome, Edge and Opera. Firefox and Safari do not support it.",
   },
+  nfc: {
+    supported: () => "NDEFReader" in window,
+    label: "NFC access",
+    detail:
+      "This tool needs the Web NFC API, which only Chrome for Android ships today. Open it in Chrome on an Android phone with NFC switched on; desktop browsers and iPhones cannot read or write tags from a web page.",
+  },
   camera: {
     supported: () => !!navigator.mediaDevices?.getUserMedia,
     label: "camera access",
