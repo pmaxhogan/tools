@@ -67,6 +67,40 @@ export function padMargin(grid: string, margin: number): string {
   return [...top, ...padded, ...bottom].join("\n");
 }
 
+/** Non-inverted, margin-0 unicode half-block grid: two modules per printed row. */
+const BLOCK_CHAR = { WW: " ", WB: "▄", BB: "█", BW: "▀" } as const;
+
+function getBlockChar(top: boolean, bottom: boolean): string {
+  if (top && bottom) return BLOCK_CHAR.BB;
+  if (top && !bottom) return BLOCK_CHAR.BW;
+  if (!top && bottom) return BLOCK_CHAR.WB;
+  return BLOCK_CHAR.WW;
+}
+
+/**
+ * Render the QR matrix ourselves from `QRCode.create`, which is present in the
+ * package's browser build. `QRCode.toString(..., { type: "utf8" })` only exists
+ * in the Node build, so it works in vitest but returns SVG in the Cloudflare
+ * Worker and the browser page. Building the grid from the module matrix behaves
+ * identically everywhere. Mapping matches the package's own utf8 renderer.
+ */
+function renderMatrix(text: string, errorCorrectionLevel: EccLevel): string {
+  const qr = QRCode.create(text, { errorCorrectionLevel });
+  const size = qr.modules.size;
+  const data = qr.modules.data;
+  const rows: string[] = [];
+  for (let i = 0; i < size; i += 2) {
+    let row = "";
+    for (let j = 0; j < size; j++) {
+      const top = Boolean(data[i * size + j]);
+      const bottom = i + 1 < size ? Boolean(data[(i + 1) * size + j]) : false;
+      row += getBlockChar(top, bottom);
+    }
+    rows.push(row);
+  }
+  return rows.join("\n");
+}
+
 export async function run(input: string, opts: TerminalQrOpts): Promise<string> {
   const text = (input ?? "").trim();
   if (!text)
@@ -81,11 +115,7 @@ export async function run(input: string, opts: TerminalQrOpts): Promise<string> 
 
   let raw: string;
   try {
-    raw = await QRCode.toString(text, {
-      type: "utf8",
-      errorCorrectionLevel,
-      margin: 0,
-    });
+    raw = renderMatrix(text, errorCorrectionLevel);
   } catch {
     throw new ToolError(
       "too-long",
