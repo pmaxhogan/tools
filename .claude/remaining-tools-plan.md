@@ -38,7 +38,22 @@ Browser QA of batch 3 pending/in progress at time of writing; see memory.
 | 115 | chart | chart-maker | opus | yes | CSV -> SVG chart (own renderer, no deps) + PNG via canvas in panel; dataviz skill for palette |
 | 120 | media-keys | media-key-tester | sonnet | yes | Media Session handlers; logic = event log formatter |
 
-## Batch 4+ candidates in order (classify at batch time)
+## Batch 4: SHIPPED 2026-08-19 (fbee0b8 logic, 89599fb panels), 158 pages live
+
+annotate, parquet, heatmap, tracks (gpx-viewer, no basemap), barcode, coords,
+bed-mesh, ruler, rollover, monitor, doc-convert, tuner, stego, wire-gauge,
+dither, nfc. Browser QA launched right after deploy.
+
+## Batch 5 (FINAL buildable batch, in flight 2026-08-19): 19 tools
+
+hex-viewer, markdown-table-editor, screenshot-beautifier, gamepad-tester,
+distance-bearing-calculator, countdown-timer, mouse-tester, bpm-key-detector,
+light-meter, print-cost-calculator, qr-file-transfer, audio-data-codec,
+image-to-ascii, multitouch-tester, pomodoro-timer, gcode-viewer,
+sprite-sheet-packer, font-subsetter (opentype.js + wawoff2), element-recorder.
+After batch 5 only the "Needs Max" rows remain (scan, upscale, handwriting).
+
+## (historical) Batch 4+ candidates in order
 
 121 annotate (panel-heavy, canvas), 122 parquet (needs a parquet reader dep:
 hyparquet is small and pure JS; ok), 123 heatmap, 125 subset (font subsetting:
