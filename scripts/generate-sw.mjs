@@ -34,6 +34,8 @@ const files = walk(dist)
   .filter(
     (f) => !f.startsWith("/models/") && !f.startsWith("/tesseract/") && !f.startsWith("/pyodide/"),
   )
+  // example inputs load on demand from the tool page that offers them
+  .filter((f) => !f.startsWith("/samples/") && !f.startsWith("/data/") && !f.startsWith("/wawoff2/"))
   .map((f) => f.replace(/\/index\.html$/, "/").replace(/^\/index\.html$/, "/"));
 
 const hash = createHash("sha256");

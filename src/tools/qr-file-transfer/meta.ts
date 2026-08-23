@@ -37,7 +37,7 @@ export const meta: ToolMeta = {
   input: "File",
   output: "application/json",
   privacyNote:
-    "Nothing is uploaded and no network is used: the file leaves one device as light on a screen and enters the other through its camera.",
+    "Your file is never uploaded: it leaves one device as light on a screen and enters the other through its camera, with no server in between.",
   options: [
     {
       kind: "select",

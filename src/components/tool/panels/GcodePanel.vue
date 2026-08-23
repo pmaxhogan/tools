@@ -961,6 +961,8 @@ onBeforeUnmount(() => {
           placeholder="Paste G-code here, for example G28 then G1 X10 Y10 E1 F1200…"
           class="resize-y bg-card font-mono text-xs"
           @update:model-value="onPaste"
+          @dragover.prevent="dragging = true"
+          @drop.prevent="onDrop"
         />
       </div>
     </div>

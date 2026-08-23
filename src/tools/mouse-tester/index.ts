@@ -8,14 +8,7 @@ import { ToolError, type ToolLogic } from "../types";
 const STANDARD_POLLING_RATES = [125, 250, 500, 1000, 2000, 4000, 8000] as const;
 
 export type PollingClassification =
-  | "125 Hz"
-  | "250 Hz"
-  | "500 Hz"
-  | "1000 Hz"
-  | "2000 Hz"
-  | "4000 Hz"
-  | "8000 Hz"
-  | "unknown";
+  "125 Hz" | "250 Hz" | "500 Hz" | "1000 Hz" | "2000 Hz" | "4000 Hz" | "8000 Hz" | "unknown";
 
 export interface PollingRateResult {
   /** Measured rate in Hz, derived from the median inter-event interval. */
@@ -295,7 +288,7 @@ export interface ClickStatsResult {
 }
 
 /** Two downs this close together on the same button cannot be an intentional double click. */
-const BOUNCE_THRESHOLD_MS = 80;
+const BOUNCE_THRESHOLD_MS = 25;
 /** Consecutive downs within this window count as a double click (matches common OS defaults). */
 const DOUBLE_CLICK_MAX_MS = 500;
 
@@ -395,7 +388,10 @@ const DELTA_MODE_LABELS: Record<number, string> = { 0: "pixel", 1: "line", 2: "p
 export function scrollStats(events: ScrollEvent[]): ScrollStatsResult {
   const clean = (events ?? []).filter(
     (e): e is ScrollEvent =>
-      !!e && typeof e.deltaY === "number" && Number.isFinite(e.deltaY) && typeof e.deltaMode === "number",
+      !!e &&
+      typeof e.deltaY === "number" &&
+      Number.isFinite(e.deltaY) &&
+      typeof e.deltaMode === "number",
   );
 
   if (clean.length === 0) {
@@ -443,7 +439,10 @@ export interface MouseTesterOpts {
 const CM_PER_INCH = 2.54;
 
 /** Resolves the physical distance to use for the DPI run, in inches, from options or an explicit override. */
-function resolveDistanceInches(travel: { physicalDistanceInches?: unknown }, opts: MouseTesterOpts): number {
+function resolveDistanceInches(
+  travel: { physicalDistanceInches?: unknown },
+  opts: MouseTesterOpts,
+): number {
   if (typeof travel.physicalDistanceInches === "number" && travel.physicalDistanceInches > 0) {
     return travel.physicalDistanceInches;
   }
@@ -457,10 +456,14 @@ function resolveDistanceInches(travel: { physicalDistanceInches?: unknown }, opt
 const INSTRUCTIONS: Record<string, string> = {
   "How this tool works":
     "This page needs a JSON report produced by the live test panel, not typed text. Run the tests below, then the panel sends its report through automatically.",
-  "Polling rate": "Move the mouse continuously for about 5 seconds; the panel records pointermove timestamps (using getCoalescedEvents when the browser provides it) and reports the median interval as a Hz reading.",
-  "DPI test": "The panel requests pointer lock, then you move the mouse exactly the physical distance set in the options, measured with a ruler; it sums movementX counts to compute DPI.",
-  Acceleration: "Move the mouse across the same physical distance twice: once slowly, once quickly. The panel compares total counts between the two runs to check for OS-level pointer acceleration.",
-  "Click test": "Click each button in the click grid to record down and up timing, double-click intervals, and switch bounce.",
+  "Polling rate":
+    "Move the mouse continuously for about 5 seconds; the panel records pointermove timestamps (using getCoalescedEvents when the browser provides it) and reports the median interval as a Hz reading.",
+  "DPI test":
+    "The panel requests pointer lock, then you move the mouse exactly the physical distance set in the options, measured with a ruler; it sums movementX counts to compute DPI.",
+  Acceleration:
+    "Move the mouse across the same physical distance twice: once slowly, once quickly. The panel compares total counts between the two runs to check for OS-level pointer acceleration.",
+  "Click test":
+    "Click each button in the click grid to record down and up timing, double-click intervals, and switch bounce.",
   "Scroll test": "Scroll the wheel to record deltaY per notch and delta mode.",
 };
 
@@ -486,9 +489,7 @@ export function summarize(report: MouseReport, opts: MouseTesterOpts): Record<st
     }
     const rate = pollingRateFromTimestamps(report.moveTimestamps as number[]);
     out["Polling rate"] =
-      rate.classification === "unknown"
-        ? `Unknown (measured ~${rate.hz} Hz)`
-        : rate.classification;
+      rate.classification === "unknown" ? `Unknown (measured ~${rate.hz} Hz)` : rate.classification;
     out["Measured Hz"] = String(rate.hz);
     out["Median interval"] = `${rate.median} ms`;
     out["95th percentile interval"] = `${rate.p95intervalMs} ms`;
@@ -505,7 +506,10 @@ export function summarize(report: MouseReport, opts: MouseTesterOpts): Record<st
       );
     }
     const distanceInches = resolveDistanceInches(report.travel, opts);
-    const dpi = dpiFromTravel({ counts: report.travel.counts, physicalDistanceInches: distanceInches });
+    const dpi = dpiFromTravel({
+      counts: report.travel.counts,
+      physicalDistanceInches: distanceInches,
+    });
     out["Measured DPI"] = String(dpi.dpi);
     out["Nearest common DPI"] = String(dpi.nearestCommonDpi);
     out["DPI note"] = dpi.note;
@@ -565,7 +569,8 @@ export function summarize(report: MouseReport, opts: MouseTesterOpts): Record<st
     out["Scroll delta mode"] = s.deltaModeConsistent
       ? s.deltaModeLabel
       : `mixed (not consistently ${s.deltaModeLabel})`;
-    out["Scroll notch size"] = s.notchSizeY !== null ? `${s.notchSizeY} per notch` : "no notches detected";
+    out["Scroll notch size"] =
+      s.notchSizeY !== null ? `${s.notchSizeY} per notch` : "no notches detected";
   }
 
   if (!any) {

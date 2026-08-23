@@ -101,18 +101,31 @@ interface OpenTypeModule {
 const opentype = opentypeRaw as OpenTypeModule;
 
 /** wawoff2 is a wasm build of Google's woff2 codec. It ships no types. */
-interface Woff2Codec {
+export interface Woff2Codec {
   compress(bytes: Uint8Array): Promise<Uint8Array>;
   decompress(bytes: Uint8Array): Promise<Uint8Array>;
 }
 
 let woff2Codec: Promise<Woff2Codec> | null = null;
+let injectedCodec: Woff2Codec | null = null;
+
+/**
+ * Browser panels inject a working codec (src/lib/woff2.ts runs the glue in
+ * dedicated workers) because wawoff2's emscripten build only wires up
+ * `module.exports` under Node: bundled directly in a browser it imports as a
+ * dead object and its init promise never settles. Node (vitest, scripts)
+ * needs no injection; the dynamic import below works there.
+ */
+export function setWoff2Codec(codec: Woff2Codec): void {
+  injectedCodec = codec;
+}
 
 /**
  * The codec is close to a megabyte of emscripten output with its wasm inlined
  * as a data URL, so it loads on first use instead of on import.
  */
 function loadWoff2(): Promise<Woff2Codec> {
+  if (injectedCodec) return Promise.resolve(injectedCodec);
   // @ts-expect-error: wawoff2 ships no type declarations.
   woff2Codec ??= import("wawoff2") as Promise<Woff2Codec>;
   return woff2Codec;

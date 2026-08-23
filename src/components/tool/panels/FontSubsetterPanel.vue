@@ -246,7 +246,15 @@ let logicPromise: Promise<Logic> | null = null;
 let woff2Loaded = false;
 
 function loadLogic(): Promise<Logic> {
-  logicPromise ??= import("@/tools/font-subsetter/index");
+  logicPromise ??= (async () => {
+    const logic = await import("@/tools/font-subsetter/index");
+    // The bundled wawoff2 package cannot initialize in a browser (its glue
+    // only exports under Node), so hand the logic a worker-backed codec from
+    // the self-hosted glue under /wawoff2/ before any WOFF2 call happens.
+    const { getWoff2Codec } = await import("@/lib/woff2");
+    logic.setWoff2Codec(getWoff2Codec());
+    return logic;
+  })();
   return logicPromise;
 }
 
