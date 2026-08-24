@@ -343,5 +343,13 @@ real components:
       x4plus 66MB chunked, pinned BSD-3, onnxruntime-web now direct dep),
       wikidata-cities panel, gpx-viewer OSM basemap (click-only; PROJECT.md
       rule 8 gained the second named exception). 8752 tests, 214 pages.
-- [ ] Wave 4 browser QA + fixes
-- [ ] Memory + final report
+- [x] Wave 4 browser QA: 0 blockers, 3 bugs all fixed and pushed
+      (typo-ranked chemical suggestions via bounded Damerau-Levenshtein, GHS
+      filter change resets to the first result page, scanner keyboard nudge
+      scales with the preview + canvas focuses on click). Two environment
+      notes left as-is: onnxruntime logs benign diagnostics via
+      console.error; Windows Chrome shows country flag emoji as letters.
+      NEEDS A HAND: scanner corner-drag could not be exercised by synthetic
+      pointer events; verify once with a real mouse (keyboard path 1-4 +
+      arrows now visibly works as the fallback).
+- [x] Memory updated (tools-project-state.md); final report delivered in chat
