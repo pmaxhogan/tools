@@ -333,8 +333,15 @@ real components:
       (max 2-3 concurrent, Sonnet-first, Opus only for tricky panels).
 - [ ] Wave 2+3 QA on live site (incl font-subsetter WOFF2 recheck, category
       pages, palette, sidebar resize, RAIDZ sim, resistor picker)
-- [ ] Wave 4: new tools (chemistry x5, wikidata x4, scanner, handwriting pad,
-      PDF sign, upscaler, gpx basemap) built + deployed + QA'd. CI needs the
-      prepare scripts before typecheck once tools import _generated (see
-      Wave 4 build notes).
+- [x] Wave 4 part 1 SHIPPED (1a89ce0): 5 Chemistry + 4 Wikidata tools, wired,
+      CI green, live, molar-mass API verified. Dataset snapshots + GHS art
+      committed (DEVIATION from build-time fetch: Workers Builds ~20 min cap
+      vs ~19 min cold fetch; prepare scripts remain the refresh path). CI
+      needs NO prepare step now (snapshots are tracked).
+- [x] Wave 4 part 2 SHIPPED (9017ef9): document-scanner, handwriting-pad +
+      InkCanvas, pdf-toolbox Sign op, image-upscaler (x4v3 4.9MB default +
+      x4plus 66MB chunked, pinned BSD-3, onnxruntime-web now direct dep),
+      wikidata-cities panel, gpx-viewer OSM basemap (click-only; PROJECT.md
+      rule 8 gained the second named exception). 8752 tests, 214 pages.
+- [ ] Wave 4 browser QA + fixes
 - [ ] Memory + final report

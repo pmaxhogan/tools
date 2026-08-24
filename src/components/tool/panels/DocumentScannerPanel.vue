@@ -650,6 +650,7 @@ function onPointerDown(e: PointerEvent): void {
   });
   if (nearest === -1) return;
 
+  canvas.focus();
   canvas.setPointerCapture(e.pointerId);
   e.preventDefault();
   activeCorner.value = nearest;
@@ -674,7 +675,11 @@ function onPointerUp(e: PointerEvent): void {
 
 function onCanvasKeydown(e: KeyboardEvent): void {
   if (!source.value) return;
-  const step = e.shiftKey ? 10 : 1;
+  // A one image-pixel nudge is invisible once a large photo is scaled down to
+  // the preview, so the base step tracks the downscale and Shift multiplies.
+  const canvasWidth = canvasEl.value?.getBoundingClientRect().width || source.value.width;
+  const base = Math.max(1, Math.round(source.value.width / canvasWidth));
+  const step = e.shiftKey ? base * 10 : base;
   const index = selectedCorner.value;
   const corner = corners.value[index]!;
   const keys: Record<string, [number, number]> = {

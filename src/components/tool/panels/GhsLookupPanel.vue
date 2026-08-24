@@ -175,6 +175,13 @@ const results = computed<Chemical[]>(() => {
 
 const visible = computed(() => results.value.slice(0, showAll.value ? EXPANDED_CAP : VISIBLE_CAP));
 
+// A changed filter is a new result set: drop back to the first page so the
+// toggle re-renders 30 rows, not 300 (an expanded list froze the tab for
+// seconds when flipping all/any in QA).
+watch(results, () => {
+  showAll.value = false;
+});
+
 const common = computed(() => commonHCodes(results.value, COMMON_CAP));
 
 const resultText = computed(() => results.value.map((c) => c.name).join("\n"));

@@ -110,10 +110,40 @@ export function lookup(text: string, limit = 10): ChemicalMatch[] {
  * Only ever runs on the error path.
  */
 export function suggestions(text: string, limit = 3): Chemical[] {
-  const words = String(text ?? "")
+  const query = String(text ?? "")
     .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter((w) => w.length >= 4);
+    .trim();
+  if (query.length < 4) return [];
+
+  // First preference: names (or short synonyms) within a small edit distance
+  // of the whole query, so "acetne" reaches Acetone instead of whatever
+  // shares a four letter stem. The distance is bounded, and candidates whose
+  // length differs by more than the bound are skipped before any cell of the
+  // matrix is computed, which keeps the scan linear in practice.
+  const MAX_DISTANCE = Math.min(3, Math.max(1, Math.floor(query.length / 3)));
+  const scored: { c: Chemical; distance: number; length: number }[] = [];
+  for (const c of CHEMICALS) {
+    let best = Number.POSITIVE_INFINITY;
+    const candidates = [c.name, ...c.synonyms.filter((s) => s.length <= 24).slice(0, 4)];
+    for (const candidate of candidates) {
+      const lower = candidate.toLowerCase();
+      if (Math.abs(lower.length - query.length) > MAX_DISTANCE) continue;
+      const d = boundedEditDistance(query, lower, MAX_DISTANCE);
+      if (d < best) best = d;
+      if (best === 0) break;
+    }
+    if (best <= MAX_DISTANCE) scored.push({ c, distance: best, length: c.name.length });
+  }
+  if (scored.length) {
+    scored.sort(
+      (a, b) => a.distance - b.distance || a.length - b.length || (a.c.name < b.c.name ? -1 : 1),
+    );
+    return scored.slice(0, limit).map((s) => s.c);
+  }
+
+  // Fallback: shorten each word until any chemical name contains the stem, so
+  // a mangled or partial query still gets pointed somewhere sensible.
+  const words = query.split(/[^a-z0-9]+/).filter((w) => w.length >= 4);
   for (const word of words) {
     for (let length = word.length; length >= 4; length--) {
       const stem = word.slice(0, length);
@@ -122,6 +152,36 @@ export function suggestions(text: string, limit = 3): Chemical[] {
     }
   }
   return [];
+}
+
+/**
+ * Damerau-Levenshtein distance (adjacent transpositions count as one edit),
+ * capped: any row whose minimum exceeds `bound` aborts with Infinity so a
+ * hopeless candidate costs almost nothing.
+ */
+function boundedEditDistance(a: string, b: string, bound: number): number {
+  if (a === b) return 0;
+  const rows = a.length + 1;
+  const cols = b.length + 1;
+  let prevPrev: number[] = [];
+  let prev = Array.from({ length: cols }, (_, j) => j);
+  for (let i = 1; i < rows; i += 1) {
+    const current = [i];
+    let rowMin = i;
+    for (let j = 1; j < cols; j += 1) {
+      const substitution = prev[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1);
+      let value = Math.min(prev[j]! + 1, current[j - 1]! + 1, substitution);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        value = Math.min(value, prevPrev[j - 2]! + 1);
+      }
+      current.push(value);
+      if (value < rowMin) rowMin = value;
+    }
+    if (rowMin > bound) return Number.POSITIVE_INFINITY;
+    prevPrev = prev;
+    prev = current;
+  }
+  return prev[cols - 1]!;
 }
 
 export function wikipediaUrl(c: Chemical): string | undefined {
