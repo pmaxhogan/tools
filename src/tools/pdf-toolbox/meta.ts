@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   icon: "FileText",
   matrixSlug: "pdf",
   name: "PDF Toolbox",
-  description: "Merge, split, rotate, reorder, watermark and fill PDFs in your browser.",
+  description: "Merge, split, rotate, reorder, watermark, fill and sign PDFs in your browser.",
   category: "Docs",
   keywords: [
     "merge pdf online free",
@@ -13,9 +13,9 @@ export const meta: ToolMeta = {
     "rotate pdf",
     "watermark pdf",
     "fill pdf form online",
+    "sign pdf online free",
     "pdf editor no upload",
     "delete pages from pdf",
-    "reorder pdf pages",
   ],
   searchTerms: [
     "combine pdf files",
@@ -34,6 +34,11 @@ export const meta: ToolMeta = {
     "join pdf files online",
     "pdf watermark tool",
     "pdf form filler online",
+    "add signature to pdf",
+    "draw signature on pdf",
+    "esign a document",
+    "fill and sign",
+    "reorder pdf pages",
     "pdf joiner",
     "adobe acrobat alternative",
     "pdf page organizer",
@@ -42,8 +47,8 @@ export const meta: ToolMeta = {
   input: "File",
   output: "text/plain",
   copy: {
-    what: "Six PDF jobs in one panel: merge several files into one, split or extract page ranges like 1-3,7,9-end, rotate pages a quarter turn at a time, reorder or delete pages, stamp a text watermark across every page, and fill in interactive form fields. Every file you load gets a first page thumbnail and a page strip so you can see what you are working on before you commit to it. The results come back as ordinary PDF downloads, named for what they contain. It does not compress PDFs and it does not add digital signatures, because doing either one properly needs more than a browser can honestly promise.",
-    how: "Drop one or more PDF files onto the panel, or pick them. Choose an operation from the tabs: merge uses the file list order, so use the arrows to arrange it first. Split and rotate take a page range in the same 1-3,7,9-end shape, checked live against the real page count. Watermark gives you text, size, opacity, angle, color and placement controls. Fill form reads the fields out of the document and renders one input per field, with an option to flatten the values in so they cannot be edited back out.",
+    what: "Seven PDF jobs in one panel: merge several files into one, split or extract page ranges like 1-3,7,9-end, rotate pages a quarter turn at a time, reorder or delete pages, stamp a text watermark across every page, fill in interactive form fields, and place a signature on a page. Every file you load gets a first page thumbnail and a page strip so you can see what you are working on before you commit to it. The results come back as ordinary PDF downloads, named for what they contain. The signature is a visual one, a mark you draw, type, or upload that gets flattened into the page like signing a printout, not a cryptographic signature that proves who signed. It does not compress PDFs, because doing that properly needs more than a browser can honestly promise.",
+    how: "Drop one or more PDF files onto the panel, or pick them. Choose an operation from the tabs: merge uses the file list order, so use the arrows to arrange it first. Split and rotate take a page range in the same 1-3,7,9-end shape, checked live against the real page count. Watermark gives you text, size, opacity, angle, color and placement controls. Fill form reads the fields out of the document and renders one input per field, with an option to flatten the values in so they cannot be edited back out. Sign lets you draw a signature with a stylus or a mouse, type your name in a script face, or upload a transparent PNG, then drag it onto the page preview and pull a corner to size it before applying.",
     why: "The big PDF sites upload your document to their servers to do work a browser can already do. That is a strange trade for the files people actually run through them: contracts, bank statements, tax forms, medical paperwork. Then they meter it, two files an hour unless you subscribe, and stamp their own watermark on the way out. This one does the whole job in the tab: your files and inputs never leave your device. No account, no queue, no daily limit, and no watermark you did not ask for.",
     faq: [
       {

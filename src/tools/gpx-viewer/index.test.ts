@@ -4,16 +4,22 @@ import {
   detectFormat,
   downsample,
   elevationProfile,
+  lonLatToTile,
   parseTrack,
+  projectBounds,
   renderElevationSvg,
   renderTrackSvg,
   run,
+  tileToLonLat,
+  tilesForBounds,
   toCsv,
   toGeoJson,
   toGpx,
   trackStats,
   trimByTime,
   trimTrack,
+  zoomForBounds,
+  type BoundingBox,
   type Track,
 } from "./index";
 import { ToolError } from "../types";
@@ -561,5 +567,138 @@ describe("gpx-viewer model", () => {
     expect(toGpx(track)).toContain('<trkpt lat="1" lon="2">');
     expect(toGeoJson(track)).toContain('"LineString"');
     expect(toCsv(track).split("\n")).toHaveLength(4);
+  });
+});
+
+describe("gpx-viewer map tiles", () => {
+  it("places the world origin at the top-left tile", () => {
+    // z = 0 is a single world tile; (-180, 0) is its west edge, mid height.
+    const origin = lonLatToTile(-180, 0, 0);
+    expect(origin.x).toBeCloseTo(0, 9);
+    expect(origin.y).toBeCloseTo(0.5, 9);
+  });
+
+  it("finds London in the northwest quadrant at zoom 1", () => {
+    const tile = lonLatToTile(-0.12, 51.5, 1);
+    expect(Math.floor(tile.x)).toBe(0);
+    expect(Math.floor(tile.y)).toBe(0);
+  });
+
+  it("round trips lonLatToTile and tileToLonLat", () => {
+    const cases: { lon: number; lat: number; z: number }[] = [
+      { lon: 0, lat: 0, z: 0 },
+      { lon: -122.3321, lat: 47.6062, z: 12 },
+      { lon: 179.9, lat: -41.3, z: 8 },
+      { lon: -179.9, lat: 70.2, z: 5 },
+    ];
+    for (const { lon, lat, z } of cases) {
+      const tile = lonLatToTile(lon, lat, z);
+      const back = tileToLonLat(tile.x, tile.y, z);
+      expect(back.lon).toBeCloseTo(lon, 6);
+      expect(back.lat).toBeCloseTo(lat, 6);
+    }
+  });
+
+  it("clamps latitude short of the poles instead of producing NaN or Infinity", () => {
+    const tile = lonLatToTile(0, 90, 5);
+    expect(Number.isFinite(tile.x)).toBe(true);
+    expect(Number.isFinite(tile.y)).toBe(true);
+  });
+
+  it("covers exactly the tiles a bounding box spans, in north-to-south, west-to-east order", () => {
+    // Build the bounds from two points well inside tiles (10,10) and (11,11) at z = 5,
+    // using the module's own inverse, so the expected grid follows from tilesForBounds'
+    // own coordinate system rather than an independently hand computed Mercator value.
+    const z = 5;
+    const nw = tileToLonLat(10.5, 10.5, z);
+    const se = tileToLonLat(11.5, 11.5, z);
+    const bounds: BoundingBox = { minLon: nw.lon, maxLat: nw.lat, maxLon: se.lon, minLat: se.lat };
+
+    const tiles = tilesForBounds(bounds, z, 30);
+    expect(tiles).toEqual([
+      { x: 10, y: 10, z },
+      { x: 11, y: 10, z },
+      { x: 10, y: 11, z },
+      { x: 11, y: 11, z },
+    ]);
+  });
+
+  it("returns a single tile for a single point", () => {
+    const bounds: BoundingBox = { minLon: -90.2, maxLon: -90.2, minLat: 38.6, maxLat: 38.6 };
+    const tiles = tilesForBounds(bounds, 10, 30);
+    expect(tiles).toHaveLength(1);
+  });
+
+  it("never returns more than the cap even for a huge bounding box", () => {
+    const world: BoundingBox = { minLon: -179, maxLon: 179, minLat: -80, maxLat: 80 };
+    const tiles = tilesForBounds(world, 14, 30);
+    expect(tiles.length).toBeLessThanOrEqual(30);
+    for (const tile of tiles) {
+      expect(tile.z).toBe(14);
+      expect(tile.x).toBeGreaterThanOrEqual(0);
+      expect(tile.y).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("picks a zoom that fills the viewport without exceeding maxZoom", () => {
+    const bounds: BoundingBox = { minLon: -90.3, maxLon: -90.1, minLat: 38.5, maxLat: 38.7 };
+    const zoom = zoomForBounds(bounds, { width: 640, height: 420 }, 256, 17);
+    expect(Number.isFinite(zoom)).toBe(true);
+    expect(zoom).toBeGreaterThanOrEqual(0);
+    expect(zoom).toBeLessThanOrEqual(17);
+  });
+
+  it("never produces NaN or Infinity for a single point bounding box", () => {
+    const point: BoundingBox = { minLon: -90.2, maxLon: -90.2, minLat: 38.6, maxLat: 38.6 };
+    const zoom = zoomForBounds(point, { width: 640, height: 420 }, 256, 17);
+    expect(Number.isFinite(zoom)).toBe(true);
+    expect(zoom).toBe(17);
+  });
+
+  it("zooms in further for a smaller bounding box than a larger one in the same viewport", () => {
+    const viewport = { width: 640, height: 420 };
+    const small: BoundingBox = { minLon: -90.21, maxLon: -90.19, minLat: 38.59, maxLat: 38.61 };
+    const large: BoundingBox = { minLon: -95, maxLon: -85, minLat: 35, maxLat: 42 };
+    expect(zoomForBounds(small, viewport)).toBeGreaterThanOrEqual(zoomForBounds(large, viewport));
+  });
+
+  it("projects a bounding box onto the exact rectangle renderTrackSvg draws it in", () => {
+    const track: Track = {
+      source: "geojson",
+      waypoints: [],
+      points: [
+        { lat: 10, lon: 10, seg: 0 },
+        { lat: 20, lon: 30, seg: 0 },
+        { lat: 15, lon: 20, seg: 0 },
+      ],
+    };
+    const bounds = trackStats(track).bounds;
+    expect(bounds).toBeDefined();
+    if (!bounds) return;
+
+    const rect = projectBounds(bounds, { width: 400, height: 300 });
+    const svg = renderTrackSvg(track, { width: 400, height: 300 });
+    const path = /class="track-line" d="([^"]*)"/.exec(svg);
+    expect(path).not.toBeNull();
+    const first = /M(-?[\d.]+)\s+(-?[\d.]+)/.exec(path?.[1] ?? "");
+    expect(first).not.toBeNull();
+
+    const point = track.points[0];
+    const expectedX =
+      rect.x + ((point.lon - bounds.minLon) / (bounds.maxLon - bounds.minLon)) * rect.width;
+    const expectedY =
+      rect.y + ((bounds.maxLat - point.lat) / (bounds.maxLat - bounds.minLat)) * rect.height;
+
+    expect(Number(first?.[1])).toBeCloseTo(expectedX, 1);
+    expect(Number(first?.[2])).toBeCloseTo(expectedY, 1);
+  });
+
+  it("keeps the projected rectangle inside the requested canvas", () => {
+    const bounds: BoundingBox = { minLon: -90.3, maxLon: -90.1, minLat: 38.5, maxLat: 38.7 };
+    const rect = projectBounds(bounds, { width: 640, height: 420 });
+    expect(rect.x).toBeGreaterThanOrEqual(0);
+    expect(rect.y).toBeGreaterThanOrEqual(0);
+    expect(rect.x + rect.width).toBeLessThanOrEqual(640);
+    expect(rect.y + rect.height).toBeLessThanOrEqual(420);
   });
 });

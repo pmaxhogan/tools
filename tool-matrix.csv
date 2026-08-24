@@ -188,3 +188,6 @@ Country Code Lookup,country-code-lookup,ISO 3166 codes with calling codes and cu
 Airport Code Lookup,airport-code-lookup,IATA and ICAO codes with distance between two airports,Geo,Yes,B,B+,B,B,3.0
 Language Code Lookup,language-code-lookup,ISO 639 and ISO 15924 codes with scripts and directions,Text,Yes,B,B,B,B-,2.8
 Wikidata Cities Database,wikidata-cities-database,Query a baked SQLite of world cities in the browser,Data,Yes,B+,B,A-,B-,2.8
+Document Scanner,document-scanner,Photo to a deskewed cropped multi page PDF,Docs,Yes,A-,A-,B+,B+,3.2
+Handwriting Pad,handwriting-pad,Pressure aware ink canvas with SVG and PNG export,Images,Yes,B,B-,B,B-,2.6
+Image Upscaler,image-upscaler,Real-ESRGAN 4x upscaling on WebGPU with a WASM fallback,Local AI,Yes,A-,B+,B,B,3.0

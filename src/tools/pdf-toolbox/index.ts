@@ -752,6 +752,328 @@ export async function getPdfInfo(doc: Uint8Array): Promise<PdfInfo> {
 }
 
 /* ------------------------------------------------------------------ */
+/* signing: a visual signature flattened into a page                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A quarter turn a PDF page can carry in its /Rotate entry. Unlike
+ * `RotationAngle` above, which is a turn to apply, 0 is a legal value here:
+ * it is the rotation most pages already have.
+ */
+export type PageRotation = 0 | 90 | 180 | 270;
+
+/**
+ * A rectangle measured on a rendered preview of a page: origin at the top
+ * left of the picture the reader is looking at, y growing downward, in
+ * whatever unit the preview is laid out in (CSS pixels, for the panel).
+ */
+export interface ViewRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * A page's size the way pdf-lib reports it: the unrotated MediaBox, in
+ * points. `originX` and `originY` carry a MediaBox whose lower left corner
+ * is not at 0,0, which is rare but legal and shifts every drawing on the page.
+ */
+export interface PdfPageSize {
+  width: number;
+  height: number;
+  originX?: number;
+  originY?: number;
+}
+
+/** A rectangle in PDF user space: origin at the lower left, y growing upward. */
+export interface PdfRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Arguments for pdf-lib's `drawImage`. `x` and `y` are the anchor the image is
+ * rotated around, which for a rotated page is a corner of the target rectangle
+ * rather than its lower left.
+ */
+export interface SignaturePlacement extends PdfRect {
+  rotate: PageRotation;
+}
+
+export interface PageGeometry {
+  /** Unrotated MediaBox width in points. */
+  width: number;
+  /** Unrotated MediaBox height in points. */
+  height: number;
+  rotation: PageRotation;
+  originX: number;
+  originY: number;
+  /** Width of the page as a reader sees it, after the rotation is applied. */
+  displayWidth: number;
+  /** Height of the page as a reader sees it, after the rotation is applied. */
+  displayHeight: number;
+}
+
+function normalizeRotation(angle: number): PageRotation {
+  const turned = (((Math.round(angle) % 360) + 360) % 360) as PageRotation;
+  if (turned !== 0 && turned !== 90 && turned !== 180 && turned !== 270) {
+    throw new ToolError(
+      "invalid-page-rotation",
+      `This page reports a rotation of ${angle} degrees, which is not a quarter turn.`,
+      "PDF viewers only honor 0, 90, 180, and 270. Open the file in a viewer, save a copy, and the rotation will usually be normalized.",
+    );
+  }
+  return turned;
+}
+
+/**
+ * What a page is, before anything is drawn on it: its unrotated box, the
+ * quarter turn a viewer will apply to it, and the size that turn makes it
+ * look. The panel needs all of this to line a preview up with the real page,
+ * and reading it here keeps the panel out of pdf-lib's object model.
+ */
+export async function getPageGeometry(doc: Uint8Array, pageNumber: number): Promise<PageGeometry> {
+  const source = await loadPdf(doc);
+  const pageCount = source.getPageCount();
+  checkPages([pageNumber], pageCount, "the signature");
+  const page = source.getPage(pageNumber - 1);
+  const box = page.getMediaBox();
+  const rotation = normalizeRotation(page.getRotation().angle);
+  const quarter = rotation === 90 || rotation === 270;
+  return {
+    width: box.width,
+    height: box.height,
+    rotation,
+    originX: box.x,
+    originY: box.y,
+    displayWidth: quarter ? box.height : box.width,
+    displayHeight: quarter ? box.width : box.height,
+  };
+}
+
+function checkPlacementInputs(view: ViewRect, viewportScale: number) {
+  if (!Number.isFinite(viewportScale) || viewportScale <= 0) {
+    throw new ToolError(
+      "invalid-scale",
+      `A preview scale of ${String(viewportScale)} cannot be mapped back to the page.`,
+      "The scale is preview size divided by page size in points, so it has to be a positive number.",
+    );
+  }
+  if (
+    !Number.isFinite(view?.x) ||
+    !Number.isFinite(view?.y) ||
+    !Number.isFinite(view?.width) ||
+    !Number.isFinite(view?.height) ||
+    view.width <= 0 ||
+    view.height <= 0
+  ) {
+    throw new ToolError(
+      "empty-signature-box",
+      "The signature box has no size, so there is nowhere to put the signature.",
+      "Drag a box on the page preview, or drag a corner handle until it has some width and height.",
+    );
+  }
+}
+
+/**
+ * Turn a rectangle drawn on a page preview into the same rectangle in PDF
+ * user space.
+ *
+ * Two coordinate systems have to be reconciled. A preview has its origin at
+ * the top left and y grows downward; PDF user space has its origin at the
+ * lower left of the MediaBox and y grows upward. On top of that, a page with
+ * a /Rotate entry is shown turned, so the preview's axes are not the page's
+ * axes at all.
+ *
+ * The inverses below are pdfjs's own viewport transform read backwards, with
+ * `s` the preview scale, `W` and `H` the unrotated page size, and (u, v) the
+ * point in user space:
+ *
+ *   rotate 0    u = x / s          v = H - y / s
+ *   rotate 90   u = y / s          v = x / s
+ *   rotate 180  u = W - x / s      v = y / s
+ *   rotate 270  u = W - y / s      v = H - x / s
+ *
+ * Because every rotation is a quarter turn, an axis aligned box stays axis
+ * aligned, so mapping two opposite corners and taking the extremes is exact
+ * rather than an approximation.
+ */
+export function viewRectToPdfRect(
+  view: ViewRect,
+  pageSize: PdfPageSize,
+  viewportScale: number,
+  rotation: number,
+): PdfRect {
+  checkPlacementInputs(view, viewportScale);
+  const turn = normalizeRotation(rotation);
+  const s = viewportScale;
+  const W = pageSize.width;
+  const H = pageSize.height;
+
+  const toUser = (xv: number, yv: number): { u: number; v: number } => {
+    if (turn === 0) return { u: xv / s, v: H - yv / s };
+    if (turn === 90) return { u: yv / s, v: xv / s };
+    if (turn === 180) return { u: W - xv / s, v: yv / s };
+    return { u: W - yv / s, v: H - xv / s };
+  };
+
+  const a = toUser(view.x, view.y);
+  const b = toUser(view.x + view.width, view.y + view.height);
+  return {
+    x: Math.min(a.u, b.u) + (pageSize.originX ?? 0),
+    y: Math.min(a.v, b.v) + (pageSize.originY ?? 0),
+    width: Math.abs(a.u - b.u),
+    height: Math.abs(a.v - b.v),
+  };
+}
+
+/**
+ * Everything `page.drawImage` needs to land a signature inside the box the
+ * user dragged, on a page that may be rotated.
+ *
+ * A rotated page is displayed turned, so an image drawn straight into user
+ * space comes out sideways to the reader. The fix is to pre-rotate it by the
+ * page's own rotation: pdf-lib's `rotate` is counterclockwise (its operator
+ * stream emits the matrix cos, sin, -sin, cos), and the viewer's /Rotate is
+ * clockwise, so the two cancel and the signature reads upright.
+ *
+ * pdf-lib rotates about the point it is told to draw at, not about the
+ * image's center: `drawImage` emits translate, then rotate, then scale, so
+ * the unit square lands with its own lower left corner on (x, y). For a
+ * quarter turn that corner is no longer the lower left of the target
+ * rectangle, and the width and height arguments swap, which is what the
+ * table below encodes.
+ *
+ *   rotate 0    anchor (x, y)          size w x h
+ *   rotate 90   anchor (x + w, y)      size h x w
+ *   rotate 180  anchor (x + w, y + h)  size w x h
+ *   rotate 270  anchor (x, y + h)      size h x w
+ */
+export function signaturePlacement(
+  view: ViewRect,
+  pageSize: PdfPageSize,
+  viewportScale: number,
+  rotation: number,
+): SignaturePlacement {
+  const turn = normalizeRotation(rotation);
+  const rect = viewRectToPdfRect(view, pageSize, viewportScale, turn);
+  const { x, y, width: w, height: h } = rect;
+  if (turn === 90) return { x: x + w, y, width: h, height: w, rotate: 90 };
+  if (turn === 180) return { x: x + w, y: y + h, width: w, height: h, rotate: 180 };
+  if (turn === 270) return { x, y: y + h, width: h, height: w, rotate: 270 };
+  return { x, y, width: w, height: h, rotate: 0 };
+}
+
+/** PNG and JPEG are the two formats a PDF can carry an image in directly. */
+export type SignatureImageType = "png" | "jpeg";
+
+/** Sniff a signature image by its magic bytes rather than trusting a name. */
+export function signatureImageType(bytes: Uint8Array): SignatureImageType {
+  if (
+    bytes.length > 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47
+  ) {
+    return "png";
+  }
+  if (bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return "jpeg";
+  }
+  throw new ToolError(
+    "unsupported-image",
+    "That signature image is neither a PNG nor a JPEG, and those are the only two kinds of picture a PDF can carry.",
+    "Export the signature as a PNG, which also keeps the transparent background, or as a JPEG. SVG, WebP, HEIC, and AVIF have to be converted first.",
+  );
+}
+
+export interface SignatureOptions {
+  /** 1 based page number the signature goes on. */
+  page: number;
+  /** PNG or JPEG bytes. PNG keeps transparency, which is what ink wants. */
+  image: Uint8Array;
+  /** The box the user dragged, in the coordinates of the page preview. */
+  rect: ViewRect;
+  /** Preview size divided by displayed page size in points. */
+  viewportScale: number;
+  /** 0 to 1. Below 1 the page shows through the signature. */
+  opacity?: number;
+}
+
+/**
+ * Draw a signature image onto one page and hand back the whole document.
+ *
+ * This is a visual signature: a picture painted into the page content, the
+ * digital equivalent of signing a printout and scanning it. It is not a
+ * cryptographic signature, it carries no certificate, and nothing about it
+ * proves who applied it or that the rest of the file is unchanged. The page
+ * copy says so too, because a tool that blurs that line is lying about what
+ * a reader is getting.
+ *
+ * Once applied it is part of the page content, so it cannot be selected or
+ * deleted in a viewer the way an annotation can.
+ */
+export async function signPdf(doc: Uint8Array, options: SignatureOptions): Promise<Uint8Array> {
+  const image = options?.image;
+  if (!(image instanceof Uint8Array) || image.length === 0) {
+    throw new ToolError(
+      "no-signature",
+      "There is no signature to place yet.",
+      "Draw one, type your name, or upload a picture of your signature first.",
+    );
+  }
+  const kind = signatureImageType(image);
+
+  const opacity = options.opacity ?? 1;
+  if (!Number.isFinite(opacity) || opacity <= 0 || opacity > 1) {
+    throw new ToolError(
+      "invalid-opacity",
+      `An opacity of ${String(options.opacity)} cannot be drawn.`,
+      "Use a value above 0 and up to 1. A signature usually wants the full 1.",
+    );
+  }
+
+  const source = await loadPdf(doc);
+  const pageCount = source.getPageCount();
+  checkPages([options.page], pageCount, "the signature");
+  const page = source.getPage(options.page - 1);
+  const box = page.getMediaBox();
+  const rotation = normalizeRotation(page.getRotation().angle);
+
+  const placement = signaturePlacement(
+    options.rect,
+    { width: box.width, height: box.height, originX: box.x, originY: box.y },
+    options.viewportScale,
+    rotation,
+  );
+
+  let embedded;
+  try {
+    embedded = kind === "png" ? await source.embedPng(image) : await source.embedJpg(image);
+  } catch (e) {
+    throw new ToolError(
+      "bad-signature-image",
+      `That signature image could not be read. ${e instanceof Error ? e.message : String(e)}`,
+      "Re-export it as a plain PNG or JPEG. Some editors write PNG variants that PDF cannot carry, such as 16 bit or interlaced files.",
+    );
+  }
+
+  page.drawImage(embedded, {
+    x: placement.x,
+    y: placement.y,
+    width: placement.width,
+    height: placement.height,
+    rotate: degrees(placement.rotate),
+    opacity,
+  });
+  return source.save();
+}
+
+/* ------------------------------------------------------------------ */
 /* generic shell fallback                                              */
 /* ------------------------------------------------------------------ */
 
@@ -762,7 +1084,11 @@ const USAGE = [
   "what is inside it. The toolbox on the page can then merge several PDFs,",
   "split or extract page ranges like 1-3,7,9-end, rotate pages by a quarter",
   "turn, reorder or delete pages, stamp a text watermark across every page,",
-  "and fill in interactive form fields.",
+  "fill in interactive form fields, and place a signature on a page.",
+  "",
+  "That signature is a picture, drawn or typed or uploaded, flattened into",
+  "the page. It is not a cryptographic signature and proves nothing about",
+  "who applied it.",
   "",
   "Everything runs in this tab: your files and inputs never leave your device.",
 ].join("\n");

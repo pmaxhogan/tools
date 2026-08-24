@@ -26,9 +26,19 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
  * `renderElevationSvg` used, so the overlay cannot drift from the picture
  * underneath it.
  *
- * There is no basemap on purpose. Map tiles come from a third party server, so
- * the track is drawn on a plain canvas instead. Nothing here touches the DOM
- * until a file arrives, so the panel renders inert on the server.
+ * There is no basemap by default. Map tiles come from a third party server,
+ * so the track is drawn on a plain canvas until the user explicitly asks for
+ * one with the "Load map tiles" button: nothing basemap related is fetched
+ * on mount, on file load, or ever remembered across visits. The tile images
+ * load through a plain `Image` element (never `fetch`), because that keeps
+ * the request independent of whether tile.openstreetmap.org sends a CORS
+ * header: this panel never reads tile pixels back, only draws them, and
+ * `<img>` loading has never needed permission for that. The tile layer is a
+ * canvas painted underneath the track's own SVG, fit to the same screen
+ * rectangle the track's bounding box projects to (`projectBounds`), so it
+ * lines up with the track despite the two using different projections; see
+ * the map tiles section below for the arithmetic. Nothing here touches the
+ * DOM until a file arrives, so the panel renders inert on the server.
  */
 const props = defineProps<{ meta: ToolMeta }>();
 
@@ -36,6 +46,7 @@ type GpxLogic = typeof import("@/tools/gpx-viewer/index");
 type Track = import("@/tools/gpx-viewer/index").Track;
 type TrackStats = import("@/tools/gpx-viewer/index").TrackStats;
 type ElevationSample = import("@/tools/gpx-viewer/index").ElevationSample;
+type BoundingBox = import("@/tools/gpx-viewer/index").BoundingBox;
 
 /** Loaded on the first track rather than on page load, then cached. */
 let logicPromise: Promise<GpxLogic> | null = null;
@@ -62,6 +73,14 @@ const MIN_WIDTH = 260;
  * maths and the drawing on the same width. */
 const MAX_WIDTH = 4000;
 const MAX_ZOOM = 40;
+
+/** The pixel size OpenStreetMap's raster tiles ship at. */
+const TILE_SIZE = 256;
+/** Hard ceiling on one "Load map tiles" click, so an accidental huge track cannot fetch hundreds of tiles. */
+const MAX_TILES = 30;
+/** Loaded tile images survive a hide and a track swap, up to this many, so re-showing rarely refetches. */
+const TILE_CACHE_LIMIT = 80;
+const MAX_TILE_ZOOM = 17;
 
 /* ---------------------------------------------------------------- */
 /* options                                                           */
@@ -136,6 +155,27 @@ const panning = ref(false);
 const hoverIndex = ref<number | null>(null);
 const hoverLeft = ref(0);
 const hoverTop = ref(0);
+
+/* ---------------------------------------------------------------- */
+/* the optional OpenStreetMap basemap                                */
+/* ---------------------------------------------------------------- */
+
+interface LoadedTile {
+  x: number;
+  y: number;
+  img: HTMLImageElement;
+}
+
+const mapCanvas = ref<HTMLCanvasElement>();
+const mapEnabled = ref(false);
+const mapLoading = ref(false);
+const mapError = ref<string | null>(null);
+const mapTiles = shallowRef<LoadedTile[]>([]);
+const mapZoom = ref<number | null>(null);
+
+/** Keyed "z/x/y" to "an image already at this address". A Map keeps insertion order, so the
+ * oldest entry is always the first one, which is what makes eviction below a cheap LRU. */
+const tileImageCache = new Map<string, HTMLImageElement>();
 
 /* ---------------------------------------------------------------- */
 /* formatting                                                        */
@@ -215,6 +255,12 @@ function resetView() {
   centerX.value = 0.5;
   centerY.value = 0.5;
   hoverIndex.value = null;
+  // A new or cleared track has a different bounding box, so a previously loaded
+  // map would either be blank or, worse, sit under the wrong track.
+  mapEnabled.value = false;
+  mapError.value = null;
+  mapTiles.value = [];
+  mapZoom.value = null;
 }
 
 async function parseText(text: string, name: string, size: number) {
@@ -323,6 +369,9 @@ const stats = computed<TrackStats | null>(() => {
   if (!mod || !track) return null;
   return mod.trackStats(track, { smoothing: smoothing.value });
 });
+
+/** The same bounding box the statistics row already reports, reused for the map. */
+const mapBounds = computed<BoundingBox | null>(() => stats.value?.bounds ?? null);
 
 const distances = computed<number[]>(() => {
   const mod = logic.value;
@@ -517,6 +566,160 @@ function onPointerUp(e: PointerEvent) {
 }
 
 /* ---------------------------------------------------------------- */
+/* the optional OpenStreetMap basemap, continued                     */
+/* ---------------------------------------------------------------- */
+
+/**
+ * Loads through a plain `Image`, never `fetch`. This panel only ever draws a
+ * tile, it never reads its pixels back, so the request needs no CORS header
+ * to succeed, unlike a `fetch` whose response body this script would touch.
+ * `Image` also sends no custom headers of its own, the same as any other
+ * image tag on any page, which is the "standard fetch, no custom headers"
+ * OpenStreetMap's tile usage policy asks for.
+ */
+function loadTileImage(x: number, y: number, z: number): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("tile-load-failed"));
+    img.src = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+  });
+}
+
+function cacheKey(x: number, y: number, z: number): string {
+  return `${z}/${x}/${y}`;
+}
+
+/** Re-inserts the entry so the Map's iteration order keeps least-recently-used first. */
+function touchCache(key: string, img: HTMLImageElement) {
+  tileImageCache.delete(key);
+  tileImageCache.set(key, img);
+  while (tileImageCache.size > TILE_CACHE_LIMIT) {
+    const oldest = tileImageCache.keys().next().value;
+    if (oldest === undefined) break;
+    tileImageCache.delete(oldest);
+  }
+}
+
+async function fetchTile(x: number, y: number, z: number): Promise<LoadedTile | null> {
+  const key = cacheKey(x, y, z);
+  const cached = tileImageCache.get(key);
+  if (cached) {
+    touchCache(key, cached);
+    return { x, y, img: cached };
+  }
+  try {
+    const img = await loadTileImage(x, y, z);
+    touchCache(key, img);
+    return { x, y, img };
+  } catch {
+    return null;
+  }
+}
+
+/** Draws the currently loaded tiles into the canvas, following the same pan and zoom
+ * window (`viewBox`) the track's own SVG uses, and the same bounds-to-rectangle fit
+ * (`projectBounds`) the track's own projection produces, so the two line up. */
+function drawMapCanvas() {
+  const canvas = mapCanvas.value;
+  const ctx = canvas?.getContext("2d");
+  if (!canvas || !ctx) return;
+  if (canvas.width !== baseW.value) canvas.width = baseW.value;
+  if (canvas.height !== TRACK_HEIGHT) canvas.height = TRACK_HEIGHT;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const mod = logic.value;
+  const bounds = mapBounds.value;
+  const z = mapZoom.value;
+  const tiles = mapTiles.value;
+  if (!mapEnabled.value || !mod || !bounds || z === null || tiles.length === 0) return;
+
+  const rect = mod.projectBounds(bounds, { width: baseW.value, height: TRACK_HEIGHT });
+  const nw = mod.lonLatToTile(bounds.minLon, bounds.maxLat, z);
+  const se = mod.lonLatToTile(bounds.maxLon, bounds.minLat, z);
+  const mercSpanX = Math.max((se.x - nw.x) * TILE_SIZE, 1e-6);
+  const mercSpanY = Math.max((se.y - nw.y) * TILE_SIZE, 1e-6);
+
+  const [vx, vy, vw, vh] = viewBox.value.split(" ").map(Number);
+
+  ctx.save();
+  // Outer transform: the same crop and zoom window the track's SVG viewBox shows.
+  ctx.scale(canvas.width / vw, canvas.height / vh);
+  ctx.translate(-vx, -vy);
+  // Inner transform: fit the tiles' own Mercator bounding box onto the rectangle the
+  // track's bounding box projects to, landing the four corners on top of each other.
+  ctx.translate(rect.x, rect.y);
+  ctx.scale(rect.width / mercSpanX, rect.height / mercSpanY);
+  ctx.translate(-nw.x * TILE_SIZE, -nw.y * TILE_SIZE);
+  for (const tile of tiles) {
+    ctx.drawImage(tile.img, tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+  }
+  ctx.restore();
+}
+
+watchEffect(
+  () => {
+    void viewBox.value;
+    void mapEnabled.value;
+    void mapTiles.value;
+    void baseW.value;
+    drawMapCanvas();
+  },
+  { flush: "post" },
+);
+
+/**
+ * Fires only from the button's click handler below, never on mount, never on a track
+ * load, and never remembered across visits. Picks a zoom, then backs it off until the
+ * full tile grid already fits MAX_TILES, so a normal click gets a complete map rather
+ * than one thinned by tilesForBounds' own stride fallback.
+ */
+async function loadMapTiles() {
+  const mod = logic.value;
+  const bounds = mapBounds.value;
+  if (!mod || !bounds) return;
+  mapLoading.value = true;
+  mapError.value = null;
+  try {
+    let z = mod.zoomForBounds(
+      bounds,
+      { width: baseW.value, height: TRACK_HEIGHT },
+      TILE_SIZE,
+      MAX_TILE_ZOOM,
+    );
+    let wanted = mod.tilesForBounds(bounds, z, Number.POSITIVE_INFINITY);
+    while (wanted.length > MAX_TILES && z > 0) {
+      z -= 1;
+      wanted = mod.tilesForBounds(bounds, z, Number.POSITIVE_INFINITY);
+    }
+    if (wanted.length > MAX_TILES) wanted = mod.tilesForBounds(bounds, z, MAX_TILES);
+
+    const results = await Promise.all(wanted.map((t) => fetchTile(t.x, t.y, t.z)));
+    const loaded = results.filter((t): t is LoadedTile => t !== null);
+
+    if (loaded.length === 0) {
+      mapError.value =
+        "The map tiles could not be loaded. OpenStreetMap's tile server may be unreachable, or this network may be blocking it.";
+      return;
+    }
+    mapZoom.value = z;
+    mapTiles.value = loaded;
+    mapEnabled.value = true;
+    mapError.value =
+      loaded.length < wanted.length
+        ? `${wanted.length - loaded.length} of ${wanted.length} map tiles failed to load, so the map may have gaps.`
+        : null;
+  } finally {
+    mapLoading.value = false;
+  }
+}
+
+function hideMap() {
+  mapEnabled.value = false;
+  mapError.value = null;
+}
+
+/* ---------------------------------------------------------------- */
 /* the elevation crosshair                                           */
 /* ---------------------------------------------------------------- */
 
@@ -681,6 +884,7 @@ onBeforeUnmount(() => {
   observer?.disconnect();
   observer = null;
   clearTimeout(pasteTimer);
+  tileImageCache.clear();
 });
 
 /** A different set of points means a held hover index would point elsewhere. */
@@ -873,12 +1077,22 @@ watch([viewTrack, boxWidth], () => {
           <Button variant="outline" size="sm" @click="zoomButton(1 / 1.6)"> Zoom out </Button>
           <Button variant="outline" size="sm" @click="zoomButton(1.6)"> Zoom in </Button>
           <Button variant="ghost" size="sm" @click="resetView"> Reset view </Button>
+          <Button
+            v-if="!mapEnabled"
+            variant="outline"
+            size="sm"
+            :disabled="mapLoading || !mapBounds"
+            @click="loadMapTiles"
+          >
+            {{ mapLoading ? "Loading map tiles…" : "Load map tiles" }}
+          </Button>
+          <Button v-else variant="outline" size="sm" @click="hideMap"> Hide map </Button>
         </div>
       </div>
 
       <div
         ref="trackBox"
-        class="track-canvas relative overflow-hidden rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
+        class="track-canvas relative isolate overflow-hidden rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
         :class="panning ? 'cursor-grabbing' : 'cursor-grab'"
         @wheel="onWheel"
         @pointerdown="onPointerDown"
@@ -886,6 +1100,12 @@ watch([viewTrack, boxWidth], () => {
         @pointerup="onPointerUp"
         @pointercancel="onPointerUp"
       >
+        <canvas
+          v-show="mapEnabled"
+          ref="mapCanvas"
+          class="pointer-events-none absolute inset-0 -z-10 h-full w-full"
+          aria-hidden="true"
+        />
         <!-- eslint-disable-next-line vue/no-v-html -- the markup is built by this tool's own pure logic layer from parsed coordinates, with every interpolated value escaped there -->
         <div ref="trackFigure" class="track-figure" v-html="trackSvg" />
         <svg
@@ -904,12 +1124,26 @@ watch([viewTrack, boxWidth], () => {
           />
           <circle :cx="trackMarker.x" :cy="trackMarker.y" :r="2.5 / zoom" fill="currentColor" />
         </svg>
+        <span
+          v-if="mapEnabled"
+          class="pointer-events-none absolute right-1.5 bottom-1.5 rounded bg-card/85 px-1.5 py-0.5 text-[10px] text-muted-foreground shadow-[var(--sh-sm)]"
+        >
+          © OpenStreetMap contributors
+        </span>
       </div>
 
-      <p class="text-xs text-muted-foreground">
-        There is no map background behind the track, by design: tiles would have to come from a
-        third party server, which would tell that server where you have been. The scale bar and the
-        north arrow carry the orientation instead. Scroll to zoom, drag to pan.
+      <p v-if="mapError" role="alert" class="text-xs text-destructive">
+        {{ mapError }}
+      </p>
+
+      <p v-if="mapEnabled" class="text-xs text-muted-foreground">
+        Map tiles are from OpenStreetMap, for reference only. Scroll to zoom, drag to pan.
+      </p>
+      <p v-else class="text-xs text-muted-foreground">
+        There is no map background behind the track by default: tiles would have to come from a
+        third party server. The scale bar and the north arrow carry the orientation instead. Loading
+        map tiles requests them from openstreetmap.org and shares your track's rough area with that
+        server; nothing is fetched until you click. Scroll to zoom, drag to pan.
       </p>
 
       <!-- Elevation profile -->

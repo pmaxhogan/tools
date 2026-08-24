@@ -20,6 +20,7 @@
  *   models/whisper-tiny/**          transformers.js repo layout, onnx/ included
  *   models/whisper-base/**          same
  *   models/modnet/onnx/model_quantized.onnx
+ *   models/upscaler/*.onnx           bare Real-ESRGAN graphs for onnxruntime-web
  *   models/ort/*.wasm               onnxruntime-web runtime, set as wasmPaths
  *   tesseract/*.js, *.wasm          tesseract.js worker and core
  *   tesseract/lang/*.traineddata.gz language data
@@ -164,6 +165,37 @@ const ENTRIES = [
     to: "models/modnet/onnx/model_quantized.onnx",
     expectedBytes: 6_632_188,
     sha256: "92e49898c3e05a6d7a944fc67a8cb87c4aad754ffb6ebd949528c7d1105fee3a",
+  },
+
+  // Real-ESRGAN 4x super resolution for the image upscaler. Unlike the
+  // transformers.js repos above these are bare ONNX graphs, loaded straight
+  // through onnxruntime-web: input "input" as NCHW float32 RGB in 0 to 1,
+  // output "output" at 4x, unclipped, both dimensions dynamic.
+  //
+  // fp32 on purpose, even though an fp16 export of x4plus exists and is half
+  // the size. onnxruntime-web's WebAssembly execution provider has no float16
+  // Conv kernel, so an fp16 graph runs on WebGPU and fails to start on the
+  // fallback path, which is the path every visitor without WebGPU is on.
+  // Both weight sets are BSD 3-Clause, inherited from Real-ESRGAN by Xintao
+  // Wang (https://github.com/xinntao/Real-ESRGAN).
+  {
+    // SRVGGNetCompact, 1.2M parameters. Documented export from the official
+    // v0.2.5.0 release .pth, opset 17, with the export script in the repo.
+    source: "url",
+    from: hf("CoderViking/realesr-general-x4v3-onnx", "realesr-general-x4v3.onnx"),
+    to: "models/upscaler/realesr-general-x4v3.onnx",
+    expectedBytes: 4_866_417,
+    sha256: "1940a93ee08283a0a7286183186357b1688fe9fa8ede74604b424586aaddf112",
+  },
+  {
+    // RRDBNet, 16.7M parameters: the full RealESRGAN_x4plus. Over the 25 MiB
+    // asset cap, so this one ships as five parts plus a chunks manifest and is
+    // reassembled by handleModelAsset in worker/index.ts.
+    source: "url",
+    from: hf("wide-video/real-esrgan-v1.0.0", "real_esrgan_x4.onnx"),
+    to: "models/upscaler/real-esrgan-x4plus.onnx",
+    expectedBytes: 69_539_503,
+    sha256: "afa7fa42eed0315a3d7b2a54e79e4e44a672d3c0889c2828c4f84c9ab91edb0b",
   },
 
   // onnxruntime-web runtime. The plain build is what runs when the page has

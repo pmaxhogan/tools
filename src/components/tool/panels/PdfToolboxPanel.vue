@@ -11,6 +11,8 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
+import InkCanvas from "../InkCanvas.vue";
 
 /**
  * Bespoke panel for the PDF toolbox.
@@ -31,6 +33,8 @@ defineProps<{ meta: ToolMeta }>();
 
 type PdfLogic = typeof import("@/tools/pdf-toolbox/index");
 type PdfJs = typeof import("pdfjs-dist");
+// Type only, so the logic module still loads lazily with the first file.
+type PageGeometry = import("@/tools/pdf-toolbox/index").PageGeometry;
 
 /** Width of a page thumbnail in CSS pixels, before device pixel ratio. */
 const THUMB_WIDTH = 120;
@@ -476,6 +480,11 @@ function clearAll() {
   formFields.value = [];
   formValues.value = {};
   formLoaded.value = false;
+  clearSignPreview();
+  setSignature(null, signAspect.value);
+  signStrokes.value = 0;
+  typedName.value = "";
+  signPage.value = 1;
   if (fileInput.value) fileInput.value.value = "";
 }
 
@@ -687,6 +696,468 @@ function runFill() {
   });
 }
 
+/* ---------------------------------------------------------------- */
+/* sign: a visual signature placed on a page                         */
+/* ---------------------------------------------------------------- */
+
+/**
+ * The Sign tab is three ways of making the same thing, a transparent PNG of a
+ * signature, plus one way of placing it. Draw uses the shared InkCanvas, the
+ * same surface the Handwriting Pad is built on. Type renders the name into a
+ * canvas in a script face and says out loud that it is typed. Upload takes a
+ * PNG or JPEG someone already has.
+ *
+ * Placement is done on a rendered preview of the real page, so the box the
+ * user drags is measured in preview pixels and handed to the logic layer with
+ * the scale that maps it back to points. Everything about the Y axis flip and
+ * the page rotation lives there, tested, rather than here.
+ */
+type SignSource = "draw" | "type" | "upload";
+
+/** Widest the page preview gets, in CSS pixels. */
+const STAGE_MAX_WIDTH = 620;
+/** Width the page preview is rendered at, before the device pixel ratio. */
+const STAGE_RENDER_WIDTH = 900;
+/** Aspect ratio of the drawing strip, wide like a signature line. */
+const SIGN_PAD_ASPECT = "3 / 1";
+
+const SIGN_SOURCES: SegmentedOption[] = [
+  { value: "draw", label: "Draw" },
+  { value: "type", label: "Type" },
+  { value: "upload", label: "Upload image" },
+];
+
+const SIGN_INKS: SegmentedOption[] = [
+  { value: "#1b1917", label: "Black" },
+  { value: "#1c3f94", label: "Blue" },
+];
+
+const SIGN_FACES: { value: string; label: string; font: string }[] = [
+  {
+    value: "script",
+    label: "Script",
+    font: 'italic 120px "Segoe Script", "Bradley Hand", "Snell Roundhand", "Apple Chancery", cursive',
+  },
+  { value: "serif", label: "Serif", font: 'italic 120px Georgia, "Times New Roman", serif' },
+  { value: "sans", label: "Sans", font: 'italic 120px "Segoe UI", Helvetica, Arial, sans-serif' },
+];
+const SIGN_FACE_OPTIONS: SegmentedOption[] = SIGN_FACES.map((f) => ({
+  value: f.value,
+  label: f.label,
+}));
+
+const signSource = ref<SignSource>("draw");
+const signInk = ref("#1b1917");
+const signFace = ref("script");
+const typedName = ref("");
+const signPad = ref<InstanceType<typeof InkCanvas>>();
+const signStrokes = ref(0);
+const signFileInput = ref<HTMLInputElement>();
+const signNote = ref("");
+
+/** The signature itself: one PNG or JPEG, whichever way it was made. */
+const signBlob = shallowRef<Blob | null>(null);
+const signUrl = ref<string | null>(null);
+/** Width divided by height of that image, which the placed box preserves. */
+const signAspect = ref(3);
+
+/** The page being signed, and its preview. */
+const signPage = ref(1);
+const signPreview = ref<string | null>(null);
+const signGeometry = ref<PageGeometry | null>(null);
+const signStage = ref<HTMLDivElement>();
+const stageWidth = ref(0);
+const stageHeight = ref(0);
+let stageObserver: ResizeObserver | null = null;
+/** Bumped per preview render so a stale one can bail out silently. */
+let signToken = 0;
+
+/**
+ * The signature box as fractions of the preview, so resizing the window
+ * moves it with the page instead of leaving it behind. Only x, y and width
+ * are state: the height follows from the signature's own aspect ratio.
+ */
+const signBox = ref({ x: 0.08, y: 0.7, w: 0.34 });
+
+const signBoxHeight = computed(() => {
+  if (stageWidth.value <= 0 || stageHeight.value <= 0 || signAspect.value <= 0) return 0.1;
+  return (signBox.value.w * stageWidth.value) / signAspect.value / stageHeight.value;
+});
+
+const canSign = computed(
+  () => signBlob.value !== null && signGeometry.value !== null && stageWidth.value > 0,
+);
+
+function revokeSignUrl() {
+  if (signUrl.value) URL.revokeObjectURL(signUrl.value);
+  signUrl.value = null;
+}
+
+function clearSignPreview() {
+  signToken += 1;
+  if (signPreview.value) URL.revokeObjectURL(signPreview.value);
+  signPreview.value = null;
+  signGeometry.value = null;
+}
+
+function setSignature(blob: Blob | null, aspect: number) {
+  revokeSignUrl();
+  signBlob.value = blob;
+  if (!blob) return;
+  signAspect.value = aspect > 0 ? aspect : 3;
+  signUrl.value = URL.createObjectURL(blob);
+}
+
+/**
+ * Read the real pixel size of an image blob, which sets the box's shape.
+ *
+ * Orientation is deliberately ignored. A photo of a signature carries an EXIF
+ * orientation tag that browsers honor by default and pdf-lib does not read at
+ * all, so measuring the turned picture and embedding the untouched one would
+ * land the signature stretched. Measuring what pdf-lib will actually embed
+ * keeps the two in step.
+ */
+async function aspectOf(blob: Blob): Promise<number> {
+  try {
+    const bitmap = await createImageBitmap(blob, { imageOrientation: "none" });
+    const ratio = bitmap.width / bitmap.height;
+    bitmap.close();
+    return Number.isFinite(ratio) && ratio > 0 ? ratio : 3;
+  } catch {
+    return 3;
+  }
+}
+
+/* -- draw -- */
+
+async function refreshDrawnSignature() {
+  const pad = signPad.value;
+  if (!pad || signStrokes.value === 0) {
+    setSignature(null, signAspect.value);
+    return;
+  }
+  // 2x so the ink stays crisp when the signature is placed larger than the
+  // strip it was drawn on.
+  const blob = await pad.toPngBlob(2);
+  if (!blob) return;
+  setSignature(blob, await aspectOf(blob));
+}
+
+function onSignStrokes(strokes: unknown[]) {
+  signStrokes.value = strokes.length;
+  void refreshDrawnSignature();
+}
+
+function clearSignPad() {
+  signPad.value?.clear();
+}
+
+function undoSignPad() {
+  signPad.value?.undo();
+}
+
+/* -- type -- */
+
+/**
+ * Draw the typed name into a canvas and keep the PNG.
+ *
+ * The face comes from whatever script or italic font the reader's system
+ * already has, because loading a handwriting webfont would be a third party
+ * request and this page does not make those. It is typed text in a script
+ * style, and the note under the field says exactly that.
+ */
+async function refreshTypedSignature() {
+  const text = typedName.value.trim();
+  if (text === "") {
+    setSignature(null, signAspect.value);
+    return;
+  }
+  const face = SIGN_FACES.find((f) => f.value === signFace.value) ?? SIGN_FACES[0]!;
+  const measurer = document.createElement("canvas").getContext("2d");
+  if (!measurer) return;
+  measurer.font = face.font;
+  const metrics = measurer.measureText(text);
+  const size = 120;
+  const pad = size * 0.22;
+  const ascent = metrics.actualBoundingBoxAscent || size * 0.78;
+  const descent = metrics.actualBoundingBoxDescent || size * 0.32;
+  const width = Math.max(1, Math.ceil(metrics.width + pad * 2));
+  const height = Math.max(1, Math.ceil(ascent + descent + pad * 2));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.font = face.font;
+  ctx.fillStyle = signInk.value;
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText(text, pad, pad + ascent);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+  if (!blob) return;
+  setSignature(blob, width / height);
+}
+
+/* -- upload -- */
+
+async function onPickSignature(e: Event) {
+  const picker = e.target as HTMLInputElement;
+  const file = picker.files?.[0];
+  picker.value = "";
+  if (!file) return;
+  signNote.value = "";
+  if (!/^image\/(png|jpeg)$/.test(file.type) && !/\.(png|jpe?g)$/i.test(file.name)) {
+    signNote.value =
+      "A PDF can only carry a PNG or a JPEG. Convert the picture first, and use PNG if you want the paper to show through around the ink.";
+    setSignature(null, signAspect.value);
+    return;
+  }
+  setSignature(file, await aspectOf(file));
+}
+
+function refreshSignature() {
+  signNote.value = "";
+  if (signSource.value === "draw") void refreshDrawnSignature();
+  else if (signSource.value === "type") void refreshTypedSignature();
+}
+
+/* -- the page preview -- */
+
+/**
+ * Draw the page being signed, and read its real geometry.
+ *
+ * The preview picture comes from pdfjs and the placement math from pdf-lib.
+ * pdfjs renders the CropBox while pdf-lib measures the MediaBox, so on the
+ * rare file where those differ the picture and the coordinates drift apart by
+ * the difference; on every ordinary PDF they are the same rectangle.
+ */
+async function renderSignPage() {
+  const file = activeFile.value;
+  if (!file || file.error) return;
+  const token = (signToken += 1);
+  clearSignPreview();
+  signToken = token;
+  try {
+    const lib = logic.value ?? (await loadLogic());
+    logic.value = lib;
+    const geometry = await lib.getPageGeometry(file.bytes, signPage.value);
+    const { task, pdf } = await openForPreview(file.bytes);
+    try {
+      const url = await renderPage(pdf, signPage.value, STAGE_RENDER_WIDTH);
+      if (token !== signToken) {
+        if (url) URL.revokeObjectURL(url);
+        return;
+      }
+      signGeometry.value = geometry;
+      signPreview.value = url;
+    } finally {
+      await task.destroy();
+    }
+  } catch (e) {
+    if (token === signToken) error.value = toToolError(e);
+  }
+}
+
+function measureStage() {
+  const el = signStage.value;
+  if (!el) return;
+  stageWidth.value = el.clientWidth;
+  stageHeight.value = el.clientHeight;
+}
+
+/* -- moving and sizing the box -- */
+
+/**
+ * Keep the box on the page.
+ *
+ * Only the width is state: the height follows from the signature's aspect
+ * ratio, so a tall signature runs out of page height long before it runs out
+ * of page width. Clamping the height alone would leave the width untouched
+ * and the box hanging off the bottom, so the width cap is whatever keeps the
+ * derived height inside the page, and the height is recomputed from it.
+ */
+function clampBox() {
+  const box = signBox.value;
+  if (stageWidth.value <= 0 || stageHeight.value <= 0 || signAspect.value <= 0) return;
+  const maxW = (stageHeight.value * signAspect.value) / stageWidth.value;
+  const w = Math.max(0.01, Math.min(1, maxW, Math.max(0.04, box.w)));
+  const h = (w * stageWidth.value) / signAspect.value / stageHeight.value;
+  signBox.value = {
+    w,
+    x: Math.min(1 - w, Math.max(0, box.x)),
+    y: Math.min(1 - h, Math.max(0, box.y)),
+  };
+}
+
+let dragMode: "move" | "resize" | null = null;
+let dragCorner = { x: 0, y: 0 };
+let dragOffset = { x: 0, y: 0 };
+
+function stagePoint(e: PointerEvent): { x: number; y: number } {
+  const el = signStage.value;
+  if (!el) return { x: 0, y: 0 };
+  const rect = el.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function onBoxDown(e: PointerEvent) {
+  if (e.button !== 0 || !signStage.value) return;
+  e.preventDefault();
+  (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  const p = stagePoint(e);
+  dragMode = "move";
+  dragOffset = {
+    x: p.x - signBox.value.x * stageWidth.value,
+    y: p.y - signBox.value.y * stageHeight.value,
+  };
+}
+
+/**
+ * Start a corner drag. The corner opposite the handle is pinned, and the box
+ * grows or shrinks toward the pointer keeping the signature's aspect ratio,
+ * because a stretched signature reads as a fake one.
+ */
+function onHandleDown(e: PointerEvent, cornerX: 0 | 1, cornerY: 0 | 1) {
+  if (e.button !== 0 || !signStage.value) return;
+  e.preventDefault();
+  e.stopPropagation();
+  (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  const box = signBox.value;
+  dragMode = "resize";
+  dragCorner = {
+    x: (cornerX === 0 ? box.x + box.w : box.x) * stageWidth.value,
+    y: (cornerY === 0 ? box.y + signBoxHeight.value : box.y) * stageHeight.value,
+  };
+}
+
+function onStageMove(e: PointerEvent) {
+  if (!dragMode || stageWidth.value <= 0 || stageHeight.value <= 0) return;
+  const p = stagePoint(e);
+  if (dragMode === "move") {
+    signBox.value = {
+      ...signBox.value,
+      x: (p.x - dragOffset.x) / stageWidth.value,
+      y: (p.y - dragOffset.y) / stageHeight.value,
+    };
+    clampBox();
+    return;
+  }
+  const widthPx = Math.abs(p.x - dragCorner.x);
+  const w = Math.min(1, Math.max(0.04, widthPx / stageWidth.value));
+  const heightPx = (w * stageWidth.value) / signAspect.value;
+  signBox.value = {
+    w,
+    x: (p.x < dragCorner.x ? dragCorner.x - widthPx : dragCorner.x) / stageWidth.value,
+    y: (p.y < dragCorner.y ? dragCorner.y - heightPx : dragCorner.y) / stageHeight.value,
+  };
+  clampBox();
+}
+
+function onStageUp() {
+  dragMode = null;
+}
+
+/** Arrow keys nudge, shift plus left or right resizes. */
+function onBoxKey(e: KeyboardEvent) {
+  const step = e.shiftKey ? 0.05 : 0.01;
+  const box = signBox.value;
+  if (e.shiftKey && (e.key === "ArrowRight" || e.key === "ArrowLeft")) {
+    e.preventDefault();
+    signBox.value = { ...box, w: box.w + (e.key === "ArrowRight" ? step : -step) };
+    clampBox();
+    return;
+  }
+  const moves: Record<string, [number, number]> = {
+    ArrowLeft: [-step, 0],
+    ArrowRight: [step, 0],
+    ArrowUp: [0, -step],
+    ArrowDown: [0, step],
+  };
+  const move = moves[e.key];
+  if (!move) return;
+  e.preventDefault();
+  signBox.value = { ...box, x: box.x + move[0], y: box.y + move[1] };
+  clampBox();
+}
+
+/* -- applying -- */
+
+function runSign() {
+  const file = activeFile.value;
+  const geometry = signGeometry.value;
+  const blob = signBlob.value;
+  if (!file || !geometry || !blob) return;
+  const scale = stageWidth.value / geometry.displayWidth;
+  const rect = {
+    x: signBox.value.x * stageWidth.value,
+    y: signBox.value.y * stageHeight.value,
+    width: signBox.value.w * stageWidth.value,
+    height: signBoxHeight.value * stageHeight.value,
+  };
+  void withBusy("Signing", async (lib) => {
+    const bytes = await lib.signPdf(file.bytes, {
+      page: signPage.value,
+      image: new Uint8Array(await blob.arrayBuffer()),
+      rect,
+      viewportScale: scale,
+    });
+    return [
+      {
+        name: `${baseName(file.name)}-signed.pdf`,
+        blob: toPdfBlob(bytes),
+        note: `signature flattened onto page ${signPage.value}`,
+      },
+    ];
+  });
+}
+
+/* -- reacting -- */
+
+watch(signStage, (el) => {
+  stageObserver?.disconnect();
+  stageObserver = null;
+  if (!el) return;
+  if (typeof ResizeObserver !== "undefined") {
+    stageObserver = new ResizeObserver(() => measureStage());
+    stageObserver.observe(el);
+  }
+  measureStage();
+});
+
+watch([signInk, signFace, typedName], () => {
+  if (signSource.value === "type") void refreshTypedSignature();
+});
+
+watch(signSource, () => {
+  signNote.value = "";
+  // Switching source unmounts the pad, so the ink goes with it and the count
+  // has to follow, or a stale one would leave the export button armed.
+  signStrokes.value = 0;
+  setSignature(null, signAspect.value);
+  refreshSignature();
+});
+
+// A new signature has a new shape, and a resized stage has new room: either
+// can push the box off the page, so re-seat it whenever they change.
+watch([signAspect, stageWidth, stageHeight], () => clampBox());
+
+watch([operation, () => activeFile.value?.id ?? null, signPage], () => {
+  if (operation.value !== "sign") {
+    clearSignPreview();
+    return;
+  }
+  const pages = activePageCount.value;
+  if (pages > 0 && signPage.value > pages) {
+    signPage.value = pages;
+    return;
+  }
+  if (signPage.value < 1) {
+    signPage.value = 1;
+    return;
+  }
+  void renderSignPage();
+});
+
 function downloadAll() {
   results.value.forEach((file, i) => {
     setTimeout(() => downloadBlob(file.blob, file.name), i * 250);
@@ -696,6 +1167,10 @@ function downloadAll() {
 onUnmounted(() => {
   for (const entry of files.value) if (entry.thumbUrl) URL.revokeObjectURL(entry.thumbUrl);
   clearStrip();
+  clearSignPreview();
+  revokeSignUrl();
+  stageObserver?.disconnect();
+  stageObserver = null;
 });
 </script>
 
@@ -840,6 +1315,7 @@ onUnmounted(() => {
         <TabsTrigger value="pages"> Pages </TabsTrigger>
         <TabsTrigger value="watermark"> Watermark </TabsTrigger>
         <TabsTrigger value="form"> Fill form </TabsTrigger>
+        <TabsTrigger value="sign"> Sign </TabsTrigger>
       </TabsList>
 
       <!-- Merge -->
@@ -1215,11 +1691,256 @@ onUnmounted(() => {
           <p v-else class="text-sm text-muted-foreground">Reading the form fields.</p>
         </div>
       </TabsContent>
+      <!-- Sign -->
+      <TabsContent value="sign" class="pt-4">
+        <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
+          <Segmented
+            :model-value="signSource"
+            :options="SIGN_SOURCES"
+            label="How to make the signature"
+            size="sm"
+            @update:model-value="(v) => (signSource = v as 'draw' | 'type' | 'upload')"
+          />
+
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-start">
+            <!-- Making the signature -->
+            <div class="flex min-w-0 flex-1 flex-col gap-3">
+              <template v-if="signSource === 'draw'">
+                <InkCanvas
+                  ref="signPad"
+                  :color="signInk"
+                  :base-width="3"
+                  :aspect-ratio="SIGN_PAD_ASPECT"
+                  guides="signature"
+                  background="transparent"
+                  label="Signature pad. Sign here with a stylus, a finger, or a mouse."
+                  note="Sign above the line with a stylus, a finger, a trackpad, or a mouse. Focus the pad and press Ctrl+Z to undo the last stroke."
+                  @change="onSignStrokes"
+                />
+                <div class="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    :disabled="signStrokes === 0"
+                    @click="undoSignPad"
+                  >
+                    Undo
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    :disabled="signStrokes === 0"
+                    @click="clearSignPad"
+                  >
+                    Clear
+                  </Button>
+                  <Segmented
+                    :model-value="signInk"
+                    :options="SIGN_INKS"
+                    label="Signature ink"
+                    size="sm"
+                    @update:model-value="(v) => (signInk = v)"
+                  />
+                </div>
+              </template>
+
+              <template v-else-if="signSource === 'type'">
+                <div class="flex flex-col gap-1.5">
+                  <Label for="pdf-sign-name" class="text-xs text-muted-foreground">
+                    Name to render
+                  </Label>
+                  <Input
+                    id="pdf-sign-name"
+                    v-model="typedName"
+                    placeholder="Ada Lovelace"
+                    class="h-9 bg-card"
+                  />
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <Segmented
+                    :model-value="signFace"
+                    :options="SIGN_FACE_OPTIONS"
+                    label="Lettering"
+                    size="sm"
+                    @update:model-value="(v) => (signFace = v)"
+                  />
+                  <Segmented
+                    :model-value="signInk"
+                    :options="SIGN_INKS"
+                    label="Signature ink"
+                    size="sm"
+                    @update:model-value="(v) => (signInk = v)"
+                  />
+                </div>
+                <p class="text-xs text-muted-foreground">
+                  This is typed text in a script face, not your handwriting, and it is drawn with a
+                  font your own device already has, so it may look different on someone else's
+                  screen. Draw the signature instead if you want it to be yours.
+                </p>
+              </template>
+
+              <template v-else>
+                <div class="flex flex-wrap items-center gap-2">
+                  <Button variant="outline" size="sm" @click="signFileInput?.click()">
+                    Choose a signature image
+                  </Button>
+                  <input
+                    ref="signFileInput"
+                    type="file"
+                    class="hidden"
+                    accept="image/png,image/jpeg"
+                    @change="onPickSignature"
+                  />
+                </div>
+                <p class="text-xs text-muted-foreground">
+                  A PNG with a transparent background sits on the page cleanly. A JPEG works too,
+                  but it carries its own white rectangle with it, which will cover whatever it is
+                  placed over.
+                </p>
+              </template>
+
+              <div
+                v-if="signUrl"
+                class="flex items-center gap-3 rounded-[8px] bg-card p-2 shadow-[var(--sh-sm)]"
+              >
+                <img
+                  :src="signUrl"
+                  alt="The signature that will be placed"
+                  class="max-h-14 max-w-40 object-contain"
+                />
+                <span class="text-xs text-muted-foreground">
+                  Drag this onto the page, then pull a corner to size it.
+                </span>
+              </div>
+              <p v-if="signNote" class="text-xs text-destructive">{{ signNote }}</p>
+            </div>
+
+            <!-- Placing it -->
+            <div class="flex min-w-0 flex-1 flex-col gap-2">
+              <div class="flex flex-wrap items-end gap-2">
+                <div class="flex w-28 flex-col gap-1.5">
+                  <Label for="pdf-sign-page" class="text-xs text-muted-foreground">Page</Label>
+                  <Input
+                    id="pdf-sign-page"
+                    type="number"
+                    min="1"
+                    :max="activePageCount"
+                    :model-value="signPage"
+                    class="h-9 bg-card"
+                    @update:model-value="(v) => (signPage = Math.max(1, Number(v) || 1))"
+                  />
+                </div>
+                <span class="pb-2 font-mono text-xs text-muted-foreground tabular-nums">
+                  of {{ activePageCount }}
+                </span>
+              </div>
+
+              <div v-if="stripThumbs.length > 1" class="flex gap-2 overflow-x-auto pb-1">
+                <button
+                  v-for="thumb in stripThumbs"
+                  :key="`sign-${thumb.page}`"
+                  type="button"
+                  class="shrink-0 rounded-[4px] p-0.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  :class="thumb.page === signPage ? 'ring-2 ring-ring' : ''"
+                  :aria-label="`Sign page ${thumb.page}`"
+                  :aria-pressed="thumb.page === signPage"
+                  @click="signPage = thumb.page"
+                >
+                  <img
+                    :src="thumb.url"
+                    :alt="`Page ${thumb.page}`"
+                    class="w-11 rounded-[3px] bg-background"
+                  />
+                </button>
+              </div>
+
+              <div
+                v-if="signPreview && signGeometry"
+                ref="signStage"
+                class="relative w-full touch-none overflow-hidden rounded-[6px] bg-background shadow-[var(--sh-inset)]"
+                :style="{
+                  aspectRatio: `${signGeometry.displayWidth} / ${signGeometry.displayHeight}`,
+                  maxWidth: `${STAGE_MAX_WIDTH}px`,
+                }"
+                @pointermove="onStageMove"
+                @pointerup="onStageUp"
+                @pointercancel="onStageUp"
+              >
+                <img
+                  :src="signPreview"
+                  :alt="`Page ${signPage} of ${activeFile?.name ?? 'the document'}`"
+                  class="pointer-events-none absolute inset-0 h-full w-full"
+                />
+                <div
+                  v-if="signUrl"
+                  tabindex="0"
+                  role="group"
+                  aria-label="Signature position. Arrow keys move it; hold shift with the left or right arrow to resize it."
+                  class="absolute cursor-move rounded-[2px] ring-1 ring-[color:var(--primary)] outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  :style="{
+                    left: `${signBox.x * 100}%`,
+                    top: `${signBox.y * 100}%`,
+                    width: `${signBox.w * 100}%`,
+                    height: `${signBoxHeight * 100}%`,
+                  }"
+                  @pointerdown="onBoxDown"
+                  @keydown="onBoxKey"
+                >
+                  <img
+                    :src="signUrl"
+                    alt=""
+                    class="pointer-events-none h-full w-full object-fill"
+                  />
+                  <span
+                    class="absolute -top-1.5 -left-1.5 size-3 cursor-nwse-resize rounded-full bg-[color:var(--primary)]"
+                    @pointerdown="onHandleDown($event, 0, 0)"
+                  />
+                  <span
+                    class="absolute -top-1.5 -right-1.5 size-3 cursor-nesw-resize rounded-full bg-[color:var(--primary)]"
+                    @pointerdown="onHandleDown($event, 1, 0)"
+                  />
+                  <span
+                    class="absolute -bottom-1.5 -left-1.5 size-3 cursor-nesw-resize rounded-full bg-[color:var(--primary)]"
+                    @pointerdown="onHandleDown($event, 0, 1)"
+                  />
+                  <span
+                    class="absolute -right-1.5 -bottom-1.5 size-3 cursor-nwse-resize rounded-full bg-[color:var(--primary)]"
+                    @pointerdown="onHandleDown($event, 1, 1)"
+                  />
+                </div>
+              </div>
+              <p v-else class="text-sm text-muted-foreground">Drawing the page.</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <Button size="sm" :disabled="!canSign || busy" @click="runSign">
+              Apply signature
+            </Button>
+            <span v-if="!signBlob" class="text-xs text-muted-foreground">
+              Draw, type, or upload a signature first.
+            </span>
+          </div>
+
+          <p class="text-xs text-muted-foreground">
+            This is a visual signature: a picture flattened into the page, the same thing as signing
+            a printout and scanning it. It is not a cryptographic signature, it carries no
+            certificate, and nothing in the file proves who applied it. Once applied it is part of
+            the page content, so it cannot be selected or deleted in a viewer.
+          </p>
+        </div>
+      </TabsContent>
     </Tabs>
 
     <!-- Page strip -->
     <div
-      v-if="activeFile && operation !== 'merge' && operation !== 'pages' && operation !== 'form'"
+      v-if="
+        activeFile &&
+        operation !== 'merge' &&
+        operation !== 'pages' &&
+        operation !== 'form' &&
+        operation !== 'sign'
+      "
       class="flex flex-col gap-2 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
     >
       <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">

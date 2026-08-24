@@ -63,6 +63,7 @@ const panels: Record<string, Component> = {
   "gif-editor": defineAsyncComponent(() => import("./panels/GifEditorPanel.vue")),
   "gpu-inspector": defineAsyncComponent(() => import("./panels/GpuInspectorPanel.vue")),
   "gpx-viewer": defineAsyncComponent(() => import("./panels/GpxViewerPanel.vue")),
+  "handwriting-pad": defineAsyncComponent(() => import("./panels/HandwritingPanel.vue")),
   "har-viewer": defineAsyncComponent(() => import("./panels/HarViewerPanel.vue")),
   "hex-viewer": defineAsyncComponent(() => import("./panels/HexViewerPanel.vue")),
   "hid-report-explorer": defineAsyncComponent(() => import("./panels/HidExplorerPanel.vue")),
@@ -73,6 +74,7 @@ const panels: Record<string, Component> = {
   "image-steganography": defineAsyncComponent(() => import("./panels/SteganographyPanel.vue")),
   "image-to-ascii": defineAsyncComponent(() => import("./panels/AsciiArtPanel.vue")),
   "image-to-text": defineAsyncComponent(() => import("./panels/OcrPanel.vue")),
+  "image-upscaler": defineAsyncComponent(() => import("./panels/UpscalerPanel.vue")),
   "image-toolbox": defineAsyncComponent(() => import("./panels/ImageToolboxPanel.vue")),
   "jinja-template-tester": defineAsyncComponent(() => import("./panels/JinjaTesterPanel.vue")),
   "key-rollover-tester": defineAsyncComponent(() => import("./panels/RolloverPanel.vue")),
@@ -146,6 +148,9 @@ const panels: Record<string, Component> = {
   "wasm-feature-detector": defineAsyncComponent(() => import("./panels/WasmFeaturePanel.vue")),
   "webcam-mic-test": defineAsyncComponent(() => import("./panels/WebcamMicPanel.vue")),
   "webrtc-tester": defineAsyncComponent(() => import("./panels/WebrtcTesterPanel.vue")),
+  "wikidata-cities-database": defineAsyncComponent(
+    () => import("./panels/WikidataCitiesPanel.vue"),
+  ),
   "wireguard-config-generator": defineAsyncComponent(() => import("./panels/WireguardPanel.vue")),
   "raidz-calculator": defineAsyncComponent(() => import("./panels/RaidzPanel.vue")),
   "resistor-color-code-calculator": defineAsyncComponent(
@@ -163,6 +168,7 @@ const panels: Record<string, Component> = {
   "chemical-lookup": defineAsyncComponent(() => import("./panels/ChemicalLookupPanel.vue")),
   "ghs-pictogram-lookup": defineAsyncComponent(() => import("./panels/GhsLookupPanel.vue")),
   "periodic-table": defineAsyncComponent(() => import("./panels/PeriodicTablePanel.vue")),
+  "document-scanner": defineAsyncComponent(() => import("./panels/DocumentScannerPanel.vue")),
   "coordinate-converter": defineAsyncComponent(
     () => import("./panels/CoordinateConverterPanel.vue"),
   ),

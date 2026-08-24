@@ -56,6 +56,7 @@ import { meta as dnsLookup } from "./dns-lookup/meta";
 import { meta as dnsPropagation } from "./dns-propagation/meta";
 import { meta as dockerComposeConverter } from "./docker-compose-converter/meta";
 import { meta as documentConverter } from "./document-converter/meta";
+import { meta as documentScanner } from "./document-scanner/meta";
 import { meta as duplicateFinder } from "./duplicate-finder/meta";
 import { meta as durationCalculator } from "./duration-calculator/meta";
 import { meta as echo } from "./echo/meta";
@@ -81,6 +82,7 @@ import { meta as gifEditor } from "./gif-editor/meta";
 import { meta as gpuInspector } from "./gpu-inspector/meta";
 import { meta as gpxViewer } from "./gpx-viewer/meta";
 import { meta as gzipCompressionTest } from "./gzip-compression-test/meta";
+import { meta as handwritingPad } from "./handwriting-pad/meta";
 import { meta as harViewer } from "./har-viewer/meta";
 import { meta as hashGenerator } from "./hash-generator/meta";
 import { meta as hashIdentifier } from "./hash-identifier/meta";
@@ -96,6 +98,7 @@ import { meta as imageSteganography } from "./image-steganography/meta";
 import { meta as imageToAscii } from "./image-to-ascii/meta";
 import { meta as imageToText } from "./image-to-text/meta";
 import { meta as imageToolbox } from "./image-toolbox/meta";
+import { meta as imageUpscaler } from "./image-upscaler/meta";
 import { meta as invisibleCharacterDetector } from "./invisible-character-detector/meta";
 import { meta as jinjaTemplateTester } from "./jinja-template-tester/meta";
 import { meta as jsonFormatter } from "./json-formatter/meta";
@@ -242,6 +245,7 @@ export const tools: ToolMeta[] = [
   dnsPropagation,
   dockerComposeConverter,
   documentConverter,
+  documentScanner,
   duplicateFinder,
   durationCalculator,
   echo,
@@ -267,6 +271,7 @@ export const tools: ToolMeta[] = [
   gpuInspector,
   gpxViewer,
   gzipCompressionTest,
+  handwritingPad,
   harViewer,
   hashGenerator,
   hashIdentifier,
@@ -282,6 +287,7 @@ export const tools: ToolMeta[] = [
   imageToAscii,
   imageToText,
   imageToolbox,
+  imageUpscaler,
   invisibleCharacterDetector,
   jinjaTemplateTester,
   jsonFormatter,
@@ -435,6 +441,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "docker-compose-converter": () =>
     import("./docker-compose-converter/index").then((m) => m.default),
   "document-converter": () => import("./document-converter/index").then((m) => m.default),
+  "document-scanner": () => import("./document-scanner/index").then((m) => m.default),
   "duplicate-finder": () => import("./duplicate-finder/index").then((m) => m.default),
   "duration-calculator": () => import("./duration-calculator/index").then((m) => m.default),
   echo: () => import("./echo/index").then((m) => m.default),
@@ -462,6 +469,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "gpu-inspector": () => import("./gpu-inspector/index").then((m) => m.default),
   "gpx-viewer": () => import("./gpx-viewer/index").then((m) => m.default),
   "gzip-compression-test": () => import("./gzip-compression-test/index").then((m) => m.default),
+  "handwriting-pad": () => import("./handwriting-pad/index").then((m) => m.default),
   "har-viewer": () => import("./har-viewer/index").then((m) => m.default),
   "hash-generator": () => import("./hash-generator/index").then((m) => m.default),
   "hash-identifier": () => import("./hash-identifier/index").then((m) => m.default),
@@ -477,6 +485,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "image-to-ascii": () => import("./image-to-ascii/index").then((m) => m.default),
   "image-to-text": () => import("./image-to-text/index").then((m) => m.default),
   "image-toolbox": () => import("./image-toolbox/index").then((m) => m.default),
+  "image-upscaler": () => import("./image-upscaler/index").then((m) => m.default),
   "invisible-character-detector": () =>
     import("./invisible-character-detector/index").then((m) => m.default),
   "jinja-template-tester": () => import("./jinja-template-tester/index").then((m) => m.default),

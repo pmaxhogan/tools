@@ -59,6 +59,7 @@
     "mammoth": "^1.12.1",
     "marked": "^18.0.10",
     "mathjs": "^15.2.0",
+    "onnxruntime-web": "1.27.0",
     "opentype.js": "^2.0.0",
     "papaparse": "^5.5.4",
     "pdf-lib": "^1.17.1",

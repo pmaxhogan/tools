@@ -32,6 +32,10 @@ stop and raise it rather than working around it.
 7. `localStorage` holds preferences only. Never content.
 8. No third-party requests at runtime. Self-host fonts and libraries. The privacy claim dies
    the moment a Google Fonts request fires.
+   **Exception (named, narrow):** the GPX viewer may fetch OpenStreetMap raster
+   tiles, but only after an explicit "Load map tiles" click, capped to a few
+   dozen tiles, with the request disclosed next to the button and in the FAQ
+   and the required attribution shown. Nothing map-related fires by default.
 
 ### The pledge
 

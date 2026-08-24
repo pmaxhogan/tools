@@ -6,6 +6,7 @@ import {
   extractPages,
   fillForm,
   formatPdfInfo,
+  getPageGeometry,
   getPdfInfo,
   listFormFields,
   loadPdf,
@@ -14,7 +15,11 @@ import {
   reorderPages,
   rotatePages,
   run,
+  signPdf,
+  signatureImageType,
+  signaturePlacement,
   splitPdf,
+  viewRectToPdfRect,
   watermarkPdf,
 } from "./index";
 
@@ -611,5 +616,326 @@ describe("run", () => {
 
   it("surfaces a parse failure as a ToolError", async () => {
     await expect(run(new Uint8Array([1, 2, 3]))).rejects.toBeInstanceOf(ToolError);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* signing                                                             */
+/* ------------------------------------------------------------------ */
+
+/** A 1x1 PNG, the smallest thing pdf-lib will accept as a signature image. */
+const TINY_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+function pngBytes(): Uint8Array {
+  const binary = atob(TINY_PNG_BASE64);
+  return Uint8Array.from(binary, (c) => c.charCodeAt(0));
+}
+
+/** A page of known size, optionally carrying a /Rotate entry. */
+async function makeRotatedDoc(angle: number, size: [number, number] = [612, 792]) {
+  const doc = await PDFDocument.create();
+  const page = doc.addPage(size);
+  if (angle !== 0) page.setRotation(degrees(angle));
+  return doc.save();
+}
+
+/**
+ * Where pdf-lib will actually put the image, derived independently of the
+ * function under test: `drawImage` emits translate, rotate, scale, so the
+ * unit square is scaled by (width, height), turned counterclockwise by
+ * `rotate`, and dropped with its own origin on (x, y).
+ */
+function drawnRegion(p: { x: number; y: number; width: number; height: number; rotate: number }): {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} {
+  const radians = (p.rotate * Math.PI) / 180;
+  const cos = Math.round(Math.cos(radians));
+  const sin = Math.round(Math.sin(radians));
+  const corners: [number, number][] = [
+    [0, 0],
+    [p.width, 0],
+    [0, p.height],
+    [p.width, p.height],
+  ];
+  const mapped = corners.map(([lx, ly]) => [p.x + cos * lx - sin * ly, p.y + sin * lx + cos * ly]);
+  const xs = mapped.map((c) => c[0]!);
+  const ys = mapped.map((c) => c[1]!);
+  return {
+    x: Math.min(...xs),
+    y: Math.min(...ys),
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys),
+  };
+}
+
+const LETTER = { width: 612, height: 792 };
+const BOX = { x: 100, y: 100, width: 200, height: 50 };
+
+describe("getPageGeometry", () => {
+  it("reports the unrotated box and the size a reader sees", async () => {
+    const upright = await getPageGeometry(await makeRotatedDoc(0), 1);
+    expect(upright).toEqual({
+      width: 612,
+      height: 792,
+      rotation: 0,
+      originX: 0,
+      originY: 0,
+      displayWidth: 612,
+      displayHeight: 792,
+    });
+  });
+
+  it("swaps the displayed size on a quarter turn", async () => {
+    const turned = await getPageGeometry(await makeRotatedDoc(90), 1);
+    expect(turned.rotation).toBe(90);
+    expect(turned.width).toBe(612);
+    expect(turned.displayWidth).toBe(792);
+    expect(turned.displayHeight).toBe(612);
+
+    const half = await getPageGeometry(await makeRotatedDoc(180), 1);
+    expect(half.displayWidth).toBe(612);
+    expect(half.displayHeight).toBe(792);
+  });
+
+  it("normalizes a rotation written the long way round", async () => {
+    expect((await getPageGeometry(await makeRotatedDoc(450), 1)).rotation).toBe(90);
+    expect((await getPageGeometry(await makeRotatedDoc(-90), 1)).rotation).toBe(270);
+  });
+
+  it("rejects a page that does not exist", async () => {
+    await expect(getPageGeometry(await makeRotatedDoc(0), 4)).rejects.toBeInstanceOf(ToolError);
+  });
+});
+
+describe("viewRectToPdfRect", () => {
+  it("flips the y axis on an upright page", () => {
+    expect(viewRectToPdfRect(BOX, LETTER, 1, 0)).toEqual({
+      x: 100,
+      y: 642,
+      width: 200,
+      height: 50,
+    });
+  });
+
+  it("turns the box with the page on a quarter turn", () => {
+    expect(viewRectToPdfRect(BOX, LETTER, 1, 90)).toEqual({
+      x: 100,
+      y: 100,
+      width: 50,
+      height: 200,
+    });
+    expect(viewRectToPdfRect(BOX, LETTER, 1, 180)).toEqual({
+      x: 312,
+      y: 100,
+      width: 200,
+      height: 50,
+    });
+    expect(viewRectToPdfRect(BOX, LETTER, 1, 270)).toEqual({
+      x: 462,
+      y: 492,
+      width: 50,
+      height: 200,
+    });
+  });
+
+  it("divides out the preview scale", () => {
+    const doubled = { x: 200, y: 200, width: 400, height: 100 };
+    expect(viewRectToPdfRect(doubled, LETTER, 2, 0)).toEqual(viewRectToPdfRect(BOX, LETTER, 1, 0));
+  });
+
+  it("keeps a whole page box inside the page on every rotation", () => {
+    for (const rotation of [0, 90, 180, 270]) {
+      const quarter = rotation === 90 || rotation === 270;
+      const full = {
+        x: 0,
+        y: 0,
+        width: quarter ? LETTER.height : LETTER.width,
+        height: quarter ? LETTER.width : LETTER.height,
+      };
+      expect(viewRectToPdfRect(full, LETTER, 1, rotation)).toEqual({
+        x: 0,
+        y: 0,
+        width: 612,
+        height: 792,
+      });
+    }
+  });
+
+  it("shifts by a media box that does not start at the origin", () => {
+    const offset = { ...LETTER, originX: 20, originY: 30 };
+    expect(viewRectToPdfRect(BOX, offset, 1, 0)).toEqual({
+      x: 120,
+      y: 672,
+      width: 200,
+      height: 50,
+    });
+  });
+
+  it("rejects a scale or a box it cannot use", () => {
+    expect(() => viewRectToPdfRect(BOX, LETTER, 0, 0)).toThrow(ToolError);
+    expect(() => viewRectToPdfRect(BOX, LETTER, Number.NaN, 0)).toThrow(/cannot be mapped back/);
+    expect(() => viewRectToPdfRect({ ...BOX, width: 0 }, LETTER, 1, 0)).toThrow(/no size/);
+    expect(() => viewRectToPdfRect({ ...BOX, height: -5 }, LETTER, 1, 0)).toThrow(/no size/);
+  });
+
+  it("rejects a rotation that is not a quarter turn", () => {
+    expect(() => viewRectToPdfRect(BOX, LETTER, 1, 45)).toThrow(/not a quarter turn/);
+  });
+});
+
+describe("signaturePlacement", () => {
+  it("draws straight into the box on an upright page", () => {
+    expect(signaturePlacement(BOX, LETTER, 1, 0)).toEqual({
+      x: 100,
+      y: 642,
+      width: 200,
+      height: 50,
+      rotate: 0,
+    });
+  });
+
+  it("anchors on the corner the rotation swings around", () => {
+    expect(signaturePlacement(BOX, LETTER, 1, 90)).toEqual({
+      x: 150,
+      y: 100,
+      width: 200,
+      height: 50,
+      rotate: 90,
+    });
+    expect(signaturePlacement(BOX, LETTER, 1, 180)).toEqual({
+      x: 512,
+      y: 150,
+      width: 200,
+      height: 50,
+      rotate: 180,
+    });
+    expect(signaturePlacement(BOX, LETTER, 1, 270)).toEqual({
+      x: 462,
+      y: 692,
+      width: 200,
+      height: 50,
+      rotate: 270,
+    });
+  });
+
+  it("lands exactly on the target rectangle at every rotation", () => {
+    for (const rotation of [0, 90, 180, 270]) {
+      const target = viewRectToPdfRect(BOX, LETTER, 1, rotation);
+      const drawn = drawnRegion(signaturePlacement(BOX, LETTER, 1, rotation));
+      expect(drawn.x).toBeCloseTo(target.x, 9);
+      expect(drawn.y).toBeCloseTo(target.y, 9);
+      expect(drawn.width).toBeCloseTo(target.width, 9);
+      expect(drawn.height).toBeCloseTo(target.height, 9);
+    }
+  });
+
+  it("keeps the signature's own aspect ratio on a quarter turn", () => {
+    // The box is 4:1 on screen, so the image is drawn 4:1 and then turned.
+    const placed = signaturePlacement(BOX, LETTER, 1, 90);
+    expect(placed.width / placed.height).toBeCloseTo(BOX.width / BOX.height, 9);
+  });
+});
+
+describe("signatureImageType", () => {
+  it("recognizes PNG and JPEG by their magic bytes", () => {
+    expect(signatureImageType(pngBytes())).toBe("png");
+    expect(signatureImageType(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0]))).toBe("jpeg");
+  });
+
+  it("refuses anything else instead of guessing", () => {
+    expect(() => signatureImageType(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9]))).toThrow(
+      ToolError,
+    );
+    expect(() => signatureImageType(new Uint8Array())).toThrow(/neither a PNG nor a JPEG/);
+  });
+});
+
+describe("signPdf", () => {
+  it("returns a document with the same pages and one more picture on it", async () => {
+    const before = await makeRotatedDoc(0);
+    const after = await signPdf(before, {
+      page: 1,
+      image: pngBytes(),
+      rect: BOX,
+      viewportScale: 1,
+    });
+    const info = await getPdfInfo(after);
+    expect(info.pageCount).toBe(1);
+    expect(after.length).toBeGreaterThan(before.length);
+  });
+
+  it("signs a rotated page without failing on the coordinate flip", async () => {
+    for (const rotation of [0, 90, 180, 270]) {
+      const signed = await signPdf(await makeRotatedDoc(rotation), {
+        page: 1,
+        image: pngBytes(),
+        rect: BOX,
+        viewportScale: 1.5,
+      });
+      const geometry = await getPageGeometry(signed, 1);
+      // Signing never changes the page itself.
+      expect(geometry.rotation).toBe(rotation);
+      expect(geometry.width).toBe(612);
+    }
+  });
+
+  it("signs a page other than the first", async () => {
+    const doc = await makeDoc(3);
+    const signed = await signPdf(doc, {
+      page: 3,
+      image: pngBytes(),
+      rect: { x: 10, y: 10, width: 40, height: 20 },
+      viewportScale: 1,
+    });
+    expect((await getPdfInfo(signed)).pageCount).toBe(3);
+  });
+
+  it("accepts a partly transparent signature", async () => {
+    const signed = await signPdf(await makeRotatedDoc(0), {
+      page: 1,
+      image: pngBytes(),
+      rect: BOX,
+      viewportScale: 1,
+      opacity: 0.5,
+    });
+    expect((await getPdfInfo(signed)).pageCount).toBe(1);
+  });
+
+  it("reports every way the request can be wrong", async () => {
+    const doc = await makeRotatedDoc(0);
+    const base = { page: 1, image: pngBytes(), rect: BOX, viewportScale: 1 };
+    await expect(signPdf(doc, { ...base, image: new Uint8Array() })).rejects.toThrow(
+      /no signature to place/,
+    );
+    await expect(
+      signPdf(doc, { ...base, image: new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9]) }),
+    ).rejects.toThrow(/neither a PNG nor a JPEG/);
+    await expect(signPdf(doc, { ...base, page: 9 })).rejects.toThrow(/does not exist/);
+    await expect(signPdf(doc, { ...base, opacity: 0 })).rejects.toThrow(/cannot be drawn/);
+    await expect(signPdf(doc, { ...base, viewportScale: 0 })).rejects.toThrow(
+      /cannot be mapped back/,
+    );
+    await expect(
+      signPdf(doc, { ...base, rect: { x: 0, y: 0, width: 0, height: 0 } }),
+    ).rejects.toThrow(/no size/);
+  });
+
+  it("leaves the original bytes untouched", async () => {
+    const doc = await makeRotatedDoc(0);
+    const copy = doc.slice();
+    await signPdf(doc, { page: 1, image: pngBytes(), rect: BOX, viewportScale: 1 });
+    expect(doc).toEqual(copy);
+  });
+});
+
+describe("run, on the signing copy", () => {
+  it("says plainly that the signature is not cryptographic", async () => {
+    const text = await run("hello");
+    expect(text).toContain("place a signature on a page");
+    expect(text).toContain("not a cryptographic signature");
   });
 });

@@ -1328,6 +1328,192 @@ export function renderElevationSvg(track: Track, options: RenderOptions = {}): s
   return parts.join("");
 }
 
+/* -------------------------------------------------------------- map tiles -- */
+
+/**
+ * Optional OpenStreetMap basemap math. Pure tile arithmetic only: nothing
+ * here fetches a tile, that happens in the panel, and only after an explicit
+ * click. The formulas are the standard "slippy map" tilenames conversions
+ * (see the OpenStreetMap wiki page of that name), which project with Web
+ * Mercator, a different projection than the equirectangular one
+ * renderTrackSvg uses above. The two agree closely at the scale of a single
+ * track, so projectBounds below hands the panel a screen rectangle it can
+ * stretch the tile layer into, landing the tile layer's bounding box on the
+ * same four corners as the track's own, without reconciling the two
+ * projections point for point.
+ */
+
+/** Web Mercator is undefined at the poles, so latitude is clamped short of them. */
+const MAX_MERCATOR_LAT = 85.05112878;
+/** The pixel size OpenStreetMap's raster tiles ship at. */
+const TILE_PX = 256;
+const MIN_MERCATOR_FRACTION = 1e-9;
+
+export interface TileCoord {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface ViewportPx {
+  width: number;
+  height: number;
+}
+
+export interface ProjectedRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+function clampMercatorLat(lat: number): number {
+  return Math.min(Math.max(lat, -MAX_MERCATOR_LAT), MAX_MERCATOR_LAT);
+}
+
+function mercatorYFraction(latDeg: number): number {
+  const latRad = toRadians(clampMercatorLat(latDeg));
+  return (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2;
+}
+
+/**
+ * Fractional tile coordinates for a coordinate at zoom `z`. The integer part
+ * of the result is the tile index; the fractional part is where inside that
+ * tile the point falls, which tilesForBounds and the panel both use to place
+ * a tile precisely rather than just to pick which one to request.
+ */
+export function lonLatToTile(lon: number, lat: number, z: number): { x: number; y: number } {
+  const n = 2 ** Math.max(0, z);
+  return { x: ((lon + 180) / 360) * n, y: mercatorYFraction(lat) * n };
+}
+
+/** Inverse of lonLatToTile. Fractional x and y address a point inside a tile, not just its corner. */
+export function tileToLonLat(x: number, y: number, z: number): { lon: number; lat: number } {
+  const n = 2 ** Math.max(0, z);
+  const lon = (x / n) * 360 - 180;
+  const latRad = Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / n)));
+  return { lon, lat: (latRad * 180) / Math.PI };
+}
+
+/** Every integer from `min` to `max` inclusive, `stride` apart, always including `max` itself. */
+function strideRange(min: number, max: number, stride: number): number[] {
+  const out: number[] = [];
+  for (let v = min; v < max; v += stride) out.push(v);
+  if (out.length === 0 || out[out.length - 1] !== max) out.push(max);
+  return out;
+}
+
+/**
+ * Every tile needed to cover `bounds` at zoom `z`, north row first and west
+ * column first within each row. `maxTiles` is a hard ceiling: when the full
+ * grid would exceed it, the grid is thinned by an even stride, keeping both
+ * edges, rather than silently returning more tiles than the caller asked
+ * for. That thinning is a last resort safety net: a caller that wants a
+ * complete map instead of a gappy one should lower `z` until the untrimmed
+ * grid already fits the cap, then call this once more.
+ */
+export function tilesForBounds(bounds: BoundingBox, z: number, maxTiles: number): TileCoord[] {
+  const zoom = Math.max(0, Math.trunc(z));
+  const n = 2 ** zoom;
+  const cap = Number.isFinite(maxTiles)
+    ? Math.max(1, Math.trunc(maxTiles))
+    : Number.POSITIVE_INFINITY;
+
+  const nw = lonLatToTile(bounds.minLon, bounds.maxLat, zoom);
+  const se = lonLatToTile(bounds.maxLon, bounds.minLat, zoom);
+  const clampIndex = (v: number): number => Math.min(Math.max(Math.floor(v), 0), n - 1);
+
+  let minX = clampIndex(nw.x);
+  let maxX = clampIndex(se.x);
+  let minY = clampIndex(nw.y);
+  let maxY = clampIndex(se.y);
+  if (minX > maxX) [minX, maxX] = [maxX, minX];
+  if (minY > maxY) [minY, maxY] = [maxY, minY];
+
+  const totalX = maxX - minX + 1;
+  const totalY = maxY - minY + 1;
+  const maxStride = Math.max(totalX, totalY);
+
+  let stride = Math.max(1, Math.ceil(Math.sqrt((totalX * totalY) / cap)));
+  while (
+    stride < maxStride &&
+    strideRange(minX, maxX, stride).length * strideRange(minY, maxY, stride).length > cap
+  ) {
+    stride += 1;
+  }
+
+  const xs = strideRange(minX, maxX, stride);
+  const ys = strideRange(minY, maxY, stride);
+  const out: TileCoord[] = [];
+  for (const y of ys) {
+    for (const x of xs) out.push({ x, y, z: zoom });
+  }
+  return out.length <= cap ? out : out.slice(0, cap);
+}
+
+/**
+ * The integer zoom whose tiles come closest to filling `viewportPx` with
+ * `bounds`, without asking for more resolution than the display can show.
+ * Rounds to the nearer integer rather than always flooring, so a track that
+ * almost exactly fits the viewport does not draw noticeably smaller than it
+ * has to; tilesForBounds' own cap keeps the worst case tile count bounded
+ * regardless. Clamped to [0, maxZoom].
+ */
+export function zoomForBounds(
+  bounds: BoundingBox,
+  viewportPx: ViewportPx,
+  tileSize = TILE_PX,
+  maxZoom = 17,
+): number {
+  const ceiling = Math.max(0, Math.trunc(maxZoom));
+  const size = Math.max(1, tileSize);
+  const width = Math.max(1, viewportPx.width);
+  const height = Math.max(1, viewportPx.height);
+
+  const fracX = Math.max((bounds.maxLon - bounds.minLon) / 360, MIN_MERCATOR_FRACTION);
+  const fracY = Math.max(
+    Math.abs(mercatorYFraction(bounds.minLat) - mercatorYFraction(bounds.maxLat)),
+    MIN_MERCATOR_FRACTION,
+  );
+
+  const zoomX = Math.log2(width / (size * fracX));
+  const zoomY = Math.log2(height / (size * fracY));
+  const raw = Math.min(zoomX, zoomY, ceiling);
+  return Math.min(Math.max(Math.round(raw), 0), ceiling);
+}
+
+/**
+ * The screen rectangle renderTrackSvg would place `bounds` in, for the same
+ * width, height and padding: same equirectangular projection, same fit and
+ * center logic. A caller that also wants a Mercator tile layer to line up
+ * with the track can fit that layer's own bounding box onto this rectangle's
+ * four corners instead of reprojecting every tile, which is what the panel
+ * does.
+ */
+export function projectBounds(
+  bounds: BoundingBox,
+  options: { width?: number; height?: number; padding?: number } = {},
+): ProjectedRect {
+  const width = clampInt(options.width ?? 640, 80, 4000);
+  const height = clampInt(options.height ?? 420, 80, 4000);
+  const pad = clampInt(options.padding ?? 28, 4, Math.floor(Math.min(width, height) / 4));
+
+  const midLat = (bounds.minLat + bounds.maxLat) / 2;
+  const kx = Math.max(Math.cos(toRadians(midLat)), 0.01);
+  const spanX = Math.max((bounds.maxLon - bounds.minLon) * kx, 1e-5);
+  const spanY = Math.max(bounds.maxLat - bounds.minLat, 1e-5);
+  const innerW = Math.max(width - pad * 2, 1);
+  const innerH = Math.max(height - pad * 2, 1);
+  const scale = Math.min(innerW / spanX, innerH / spanY);
+
+  return {
+    x: pad + (innerW - spanX * scale) / 2,
+    y: pad + (innerH - spanY * scale) / 2,
+    width: spanX * scale,
+    height: spanY * scale,
+  };
+}
+
 /* ------------------------------------------------------------ formatting -- */
 
 function pad2(value: number): string {
