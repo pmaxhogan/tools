@@ -1,3 +1,5 @@
-*
-!.gitignore
-!README.md
+# The .cache/ tree (raw fetches) never lands in git; the emitted snapshot
+# modules DO: Workers Builds caps builds around 20 minutes and a cold refetch
+# takes ~19, so deploys import the committed, dated snapshots and
+# scripts/prepare-chem-data.mjs / prepare-wikidata.mjs are the refresh path.
+.cache/

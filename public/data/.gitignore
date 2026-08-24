@@ -1,2 +1,5 @@
+# wikidata-cities.sqlite is a committed, dated snapshot (see
+# scripts/prepare-wikidata.mjs to refresh). Nothing else lands here.
 *
 !.gitignore
+!wikidata-cities.sqlite
