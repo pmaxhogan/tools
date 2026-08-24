@@ -369,7 +369,9 @@ onBeforeUnmount(() => {
         />
       </div>
 
-      <div class="flex max-h-[min(60vh,24rem)] min-h-0 sm:h-[min(75vh,40rem)] sm:max-h-none">
+      <div
+        class="flex w-full min-w-0 max-h-[min(60vh,24rem)] min-h-0 sm:h-[min(75vh,40rem)] sm:max-h-none"
+      >
         <div class="w-full min-w-0 overflow-y-auto p-1 sm:w-[55%]">
           <p v-if="flat.length === 0" class="px-3 py-6 text-center text-sm text-muted-foreground">
             Nothing matches "{{ query }}".
@@ -410,7 +412,10 @@ onBeforeUnmount(() => {
                 aria-hidden="true"
               />
               <!-- eslint-disable vue/no-v-html -- highlightHtml escapes its input, so the marked-up output is safe -->
-              <span class="shrink-0 font-medium" v-html="highlightHtml(view.title, query)" />
+              <span
+                class="max-w-[70%] shrink-0 truncate font-medium"
+                v-html="highlightHtml(view.title, query)"
+              />
               <span
                 class="min-w-0 flex-1 truncate text-xs text-muted-foreground"
                 v-html="highlightHtml(view.description, query)"

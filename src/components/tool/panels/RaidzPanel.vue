@@ -1382,7 +1382,7 @@ onMounted(() => {
               </dt>
               <dd class="ml-auto shrink-0 font-mono text-xs tabular-nums">
                 {{ formatBytes(arc.bytes) }}
-                <span class="text-muted-foreground">{{ slicePercent(arc.bytes) }}</span>
+                <span class="text-muted-foreground">{{ slicePercent(arc.percent) }}</span>
               </dd>
             </div>
           </dl>

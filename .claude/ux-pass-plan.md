@@ -320,7 +320,21 @@ real components:
       Done: categories.ts + /category pages + registry guard (built 201
       pages incl 24 category pages + OG + sitemap)
 - [ ] Wave 1: Max said lgtm
-- [ ] Wave 2: shell UX deployed + QA'd
-- [ ] Wave 3: overhauls + facelifts deployed + QA'd
-- [ ] Wave 4: new tools deployed + QA'd
+- [x] Wave 2+3 PUSHED together as 264401e (380 files): all shell UX, all
+      overhauls, 5 of 6 facelift panels (WireGaugePanel relaunched on Sonnet
+      after the 5h-cap kill), US English sweep done + check-spelling wired
+      into npm run lint (repo clean; keys/aliases restored with markers:
+      chart-maker doughnut allowlist, kilometre/metre input synonyms in
+      distance-bearing + photography, search.test literals). 8357 tests,
+      typecheck 0, build 201 pages. CI watch running.
+      NOTE the 5h usage cap killed 7 agents mid-flight ~17:00; all their
+      panels were complete on disk; examples validated repo-wide (70/70).
+      Max asked for REDUCED parallelism + lower-tier agents from now on
+      (max 2-3 concurrent, Sonnet-first, Opus only for tricky panels).
+- [ ] Wave 2+3 QA on live site (incl font-subsetter WOFF2 recheck, category
+      pages, palette, sidebar resize, RAIDZ sim, resistor picker)
+- [ ] Wave 4: new tools (chemistry x5, wikidata x4, scanner, handwriting pad,
+      PDF sign, upscaler, gpx basemap) built + deployed + QA'd. CI needs the
+      prepare scripts before typecheck once tools import _generated (see
+      Wave 4 build notes).
 - [ ] Memory + final report

@@ -158,6 +158,7 @@ const panels: Record<string, Component> = {
     () => import("./panels/SunriseSunsetPanel.vue"),
   ),
   "photography-calculator": defineAsyncComponent(() => import("./panels/PhotographyPanel.vue")),
+  "wire-gauge-calculator": defineAsyncComponent(() => import("./panels/WireGaugePanel.vue")),
   "coordinate-converter": defineAsyncComponent(
     () => import("./panels/CoordinateConverterPanel.vue"),
   ),

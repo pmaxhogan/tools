@@ -29,7 +29,11 @@ self.onmessage = function (event) {
     .then(function () {
       var result = self.Module[codec](bytes);
       if (result === false) throw new Error("The WOFF2 " + codec + " call failed");
-      var out = result instanceof Uint8Array ? result : new Uint8Array(result);
+      // The emscripten call returns a view over the wasm heap, whose
+      // ArrayBuffer is not detachable; copy into a fresh buffer so the
+      // transfer back to the page succeeds.
+      var view = result instanceof Uint8Array ? result : new Uint8Array(result);
+      var out = view.slice();
       self.postMessage({ id: id, ok: true, bytes: out }, [out.buffer]);
     })
     .catch(function (error) {
