@@ -519,7 +519,7 @@ describe("errors and edges", () => {
 });
 
 describe("run()", () => {
-  it("falls back to a librarian and returns labelled rows", () => {
+  it("falls back to a librarian and returns labeled rows", () => {
     const out = run("", {});
     expect(out["Villager"]).toContain("Librarian");
     expect(Object.keys(out).length).toBeGreaterThan(3);

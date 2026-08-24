@@ -25,6 +25,7 @@ export const meta: ToolMeta = {
     "reveal password field",
     "designmode editable page",
     "list page links",
+    "bookmarklet maker",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -34,6 +35,8 @@ export const meta: ToolMeta = {
       id: "mode",
       label: "Mode",
       default: "encode",
+      // Full sentence labels: keep the dropdown rather than a row of buttons.
+      ui: "select",
       options: [
         {
           value: "encode",

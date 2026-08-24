@@ -26,6 +26,10 @@ export const meta: ToolMeta = {
     "check json against spec",
     "json schema linter",
     "schema error path",
+    "ajv validator online",
+    "json schema tester",
+    "validate json schema online",
+    "schema validation errors",
   ],
   input: "application/json",
   output: "application/json",
@@ -51,6 +55,28 @@ export const meta: ToolMeta = {
       id: "shortCircuit",
       label: "Stop at first error",
       default: false,
+    },
+  ],
+  examples: [
+    {
+      label: "Order with two errors",
+      input: `{
+  "schema": {
+    "type": "object",
+    "required": ["customerName", "email", "total"],
+    "properties": {
+      "customerName": { "type": "string" },
+      "email": { "type": "string", "pattern": "^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$" },
+      "total": { "type": "number", "minimum": 0 }
+    }
+  },
+  "data": {
+    "customerName": "Dana Whitfield",
+    "email": "dana.whitfield",
+    "total": -5
+  }
+}`,
+      opts: { draft: "2020-12" },
     },
   ],
   http: { method: "POST", contentType: "application/json" },

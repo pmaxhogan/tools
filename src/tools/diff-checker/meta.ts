@@ -28,6 +28,9 @@ export const meta: ToolMeta = {
     "string diff",
     "compare json objects",
     "compare yaml files",
+    "diff tool",
+    "compare text",
+    "compare files",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -72,6 +75,30 @@ export const meta: ToolMeta = {
       default: 3,
       min: 0,
       max: 10,
+    },
+  ],
+  examples: [
+    {
+      label: "Config file diff",
+      input: `server_name api.example.com;
+listen 443 ssl;
+ssl_certificate /etc/ssl/certs/api.crt;
+worker_processes 4;
+keepalive_timeout 65;
+=====
+server_name api.example.com;
+listen 443 ssl;
+ssl_certificate /etc/ssl/certs/api-2024.crt;
+worker_processes 8;
+keepalive_timeout 65;
+gzip on;`,
+    },
+    {
+      label: "JSON semantic diff",
+      input: `{"user":{"name":"Maria Alvarez","role":"editor","active":true},"lastLogin":"2024-01-10"}
+=====
+{"user":{"name":"Maria Alvarez","role":"admin","active":true},"lastLogin":"2024-03-02"}`,
+      opts: { mode: "json" },
     },
   ],
   http: { method: "POST", contentType: "text/plain" },

@@ -61,9 +61,9 @@ describe("the float sine table", () => {
   });
 
   it("quantizes: the table is not just Math.sin", () => {
-    // 65536 entries over a full turn, so neighbouring fractional pitches can
+    // 65536 entries over a full turn, so neighboring fractional pitches can
     // land on the same entry. If this ever became exact, the reimplementation
-    // would have silently stopped modelling Mth#sin.
+    // would have silently stopped modeling Mth#sin.
     const sample = mthSin(0.1234567);
     expect(sample).not.toBe(Math.sin(0.1234567));
   });
@@ -125,7 +125,7 @@ describe("stepGlide", () => {
     expect(after.y).toBeGreaterThan(0);
   });
 
-  it("honours Slow Falling gravity", () => {
+  it("honors Slow Falling gravity", () => {
     const normal = stepGlide({ x: 0, y: 0, z: 0 }, { pitchDeg: 0, gravity: DEFAULT_GRAVITY });
     const slow = stepGlide({ x: 0, y: 0, z: 0 }, { pitchDeg: 0, gravity: SLOW_FALLING_GRAVITY });
     expect(slow.y).toBeGreaterThan(normal.y);
@@ -424,7 +424,7 @@ describe("flight profiles", () => {
    * The panel's initial state, kept in step with the refs in
    * MinecraftElytraPanel.vue. The picker rendered an empty box on a clean
    * load because nothing mapped this setup to a preset, so these tests pin
-   * that the default state always resolves to a real, labelled option.
+   * that the default state always resolves to a real, labeled option.
    */
   const PANEL_DEFAULT: FlightSetup = {
     pitchDeg: 0,
@@ -460,7 +460,7 @@ describe("flight profiles", () => {
   it("round-trips: applying a profile matches that profile", () => {
     for (const profile of flightProfiles()) {
       expect(setupMatchesProfile(profile, profile)).toBe(true);
-      // and the id a fresh match returns is labelled, even when an earlier
+      // and the id a fresh match returns is labeled, even when an earlier
       // profile in the list shares the same parameters
       expect(flightProfileLabel(matchFlightProfile(profile)).length).toBeGreaterThan(0);
     }

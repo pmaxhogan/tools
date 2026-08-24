@@ -28,6 +28,8 @@ export const meta: ToolMeta = {
     "world magnetic model",
     "destination from bearing and distance",
     "geodesic distance",
+    "gps distance",
+    "haversine",
   ],
   input: "text/plain",
   output: "application/json",
@@ -40,7 +42,7 @@ export const meta: ToolMeta = {
       options: [
         {
           value: "km",
-          label: "Kilometres",
+          label: "Kilometers",
           synonyms: ["km", "kilometers", "kilometres", "metric"],
         },
         {
@@ -53,7 +55,7 @@ export const meta: ToolMeta = {
           label: "Nautical miles",
           synonyms: ["nmi", "nm", "marine", "aviation", "sailing", "knots"],
         },
-        { value: "m", label: "Metres", synonyms: ["m", "meters", "metres", "survey"] },
+        { value: "m", label: "Meters", synonyms: ["m", "meters", "metres", "survey"] },
       ],
     },
     {
@@ -63,15 +65,26 @@ export const meta: ToolMeta = {
       default: true,
     },
   ],
+  examples: [
+    {
+      label: "New York to London",
+      input: `40.7128, -74.0060
+51.5074, -0.1278`,
+    },
+    {
+      label: "Destination from bearing",
+      input: "from 40.7128,-74.0060 bearing 45 distance 100km",
+    },
+  ],
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: "Works out the distance and bearing between coordinates two ways at once: the haversine great circle on a sphere of mean radius 6371.0088 km, and Vincenty's geodesic on the WGS84 ellipsoid, with the difference between them spelled out. It also gives the initial and final true bearings, the midpoint, and the magnetic declination at each end from the World Magnetic Model 2025, so you get the magnetic bearing you would actually steer. Give three or more points and it becomes a route with per leg distances, bearings and a total. Give a line like from 40.7,-74 bearing 45 distance 100km and it solves the other direction, telling you where you end up.",
-    how: "Paste one coordinate per line, or separate them with semicolons. Decimal degrees, degrees and decimal minutes, and full degrees minutes seconds all work, with or without N, S, E and W letters. Add a line like on 2026-08-19 to price the declination for a specific date instead of today, and pick kilometres, miles, nautical miles or metres from the unit menu. Every row has its own copy button and the URL updates as you type, so you can share the exact result.",
+    how: "Paste one coordinate per line, or separate them with semicolons. Decimal degrees, degrees and decimal minutes, and full degrees minutes seconds all work, with or without N, S, E and W letters. Add a line like on 2026-08-19 to price the declination for a specific date instead of today, and pick kilometers, miles, nautical miles or meters from the unit menu. Every row has its own copy button and the URL updates as you type, so you can share the exact result.",
     why: "Most distance calculators give you one number on a sphere and stop there, and the ones that add magnetic declination usually ask you to hit a government API for it. This page runs the full World Magnetic Model in your browser, validated against the official NOAA test value table, alongside a real Vincenty solution rather than a spherical approximation. There are no ads, no sign up, no daily limits, and your files and inputs never leave your device.",
     faq: [
       {
         q: "Why are the sphere and ellipsoid distances different?",
-        a: "The haversine formula treats the earth as a perfect sphere, which is simple and fast but off by up to about 0.3 percent because the earth is flatter at the poles. Vincenty's inverse formula solves the same problem on the WGS84 ellipsoid, the shape GPS actually uses, and is accurate to under a millimetre. For New York to London the sphere gives 5570.2 km and the ellipsoid gives 5585.2 km, a 15 km gap. Use the ellipsoid figure for anything that matters and the sphere figure when you just want a quick sense of scale.",
+        a: "The haversine formula treats the earth as a perfect sphere, which is simple and fast but off by up to about 0.3 percent because the earth is flatter at the poles. Vincenty's inverse formula solves the same problem on the WGS84 ellipsoid, the shape GPS actually uses, and is accurate to under a millimeter. For New York to London the sphere gives 5570.2 km and the ellipsoid gives 5585.2 km, a 15 km gap. Use the ellipsoid figure for anything that matters and the sphere figure when you just want a quick sense of scale.",
       },
       {
         q: "What is magnetic declination and which model is used here?",
@@ -79,7 +92,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "How accurate are these numbers?",
-        a: "The Vincenty distances match Karney's GeographicLib to well under a millimetre for ordinary point pairs, and the test suite checks that. Vincenty does not converge for nearly antipodal points, which is a known limit of the algorithm, and in that case the sphere value is shown with a clear note instead of a wrong number. The magnetic model is checked against every row of the official NOAA WMM2025 test value table and agrees to better than 0.005 degrees. The model itself has a stated accuracy of about 1 degree of declination at sea level for most of the globe, and much worse near the magnetic poles where declination changes fast.",
+        a: "The Vincenty distances match Karney's GeographicLib to well under a millimeter for ordinary point pairs, and the test suite checks that. Vincenty does not converge for nearly antipodal points, which is a known limit of the algorithm, and in that case the sphere value is shown with a clear note instead of a wrong number. The magnetic model is checked against every row of the official NOAA WMM2025 test value table and agrees to better than 0.005 degrees. The model itself has a stated accuracy of about 1 degree of declination at sea level for most of the globe, and much worse near the magnetic poles where declination changes fast.",
       },
     ],
   },

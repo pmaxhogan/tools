@@ -26,6 +26,8 @@ export const meta: ToolMeta = {
     "remove cookies from har",
     "inspect network capture",
     "devtools network export",
+    "network request viewer",
+    "api call inspector",
   ],
   input: "application/json",
   output: "text/plain",

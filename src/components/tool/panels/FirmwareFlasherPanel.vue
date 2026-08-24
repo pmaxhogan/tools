@@ -18,6 +18,8 @@ import {
   type FlashRegion,
 } from "@/tools/firmware-flasher/index";
 import { useStickToBottom } from "@/lib/stick-to-bottom";
+import type { KeyValueRow } from "@/lib/key-value";
+import KeyValueGrid from "../KeyValueGrid.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -204,6 +206,19 @@ const chipName = ref("");
 const chipKey = ref<ChipKey | null>(null);
 const chipMac = ref("");
 const chipFeatures = ref("");
+
+/**
+ * What the confirm dialog says about the board it is about to write to. The
+ * feature list only exists for chips whose bootloader reports one, so the row
+ * is dropped rather than shown empty.
+ */
+const chipRows = computed<KeyValueRow[]>(() => {
+  const rows: KeyValueRow[] = [
+    { key: "Chip", value: chipKey.value ? CHIP_LABELS[chipKey.value] : chipName.value },
+  ];
+  if (chipFeatures.value) rows.push({ key: "Features", value: chipFeatures.value });
+  return rows;
+});
 
 const errorTitle = ref<string | null>(null);
 const errorDetail = ref<string | null>(null);
@@ -750,18 +765,7 @@ onUnmounted(() => {
             from booting.
           </p>
 
-          <dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-            <dt class="text-muted-foreground">Chip</dt>
-            <dd class="font-mono">
-              {{ chipKey ? CHIP_LABELS[chipKey] : chipName }}
-            </dd>
-            <template v-if="chipFeatures">
-              <dt class="text-muted-foreground">Features</dt>
-              <dd class="font-mono text-xs">
-                {{ chipFeatures }}
-              </dd>
-            </template>
-          </dl>
+          <KeyValueGrid :rows="chipRows" :columns="2" surface="card" :copy="false" class="mt-3" />
 
           <div class="mt-3 flex flex-col gap-1.5">
             <p class="text-xs font-medium uppercase tracking-[0.04em] text-muted-foreground">

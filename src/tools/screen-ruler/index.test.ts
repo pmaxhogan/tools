@@ -62,7 +62,7 @@ describe("unitsToPx", () => {
 });
 
 describe("calibrate", () => {
-  it("computes pixels per millimetre from a known length", () => {
+  it("computes pixels per millimeter from a known length", () => {
     expect(calibrate(85.6, 200)).toBeCloseTo(2.336448598, 6);
   });
 
@@ -155,12 +155,12 @@ describe("describeDisplay", () => {
 });
 
 describe("rgbaToHex", () => {
-  it("formats opaque colours as 6 digit hex", () => {
+  it("formats opaque colors as 6 digit hex", () => {
     expect(rgbaToHex(255, 0, 0)).toBe("#ff0000");
     expect(rgbaToHex(0, 255, 0)).toBe("#00ff00");
   });
 
-  it("appends an alpha byte for translucent colours", () => {
+  it("appends an alpha byte for translucent colors", () => {
     expect(rgbaToHex(0, 0, 0, 0.5)).toBe("#00000080");
   });
 
@@ -178,11 +178,11 @@ describe("contrastRatio", () => {
     expect(contrastRatio("#ffffff", "#000000")).toBeCloseTo(21, 4);
   });
 
-  it("reports 1:1 for identical colours", () => {
+  it("reports 1:1 for identical colors", () => {
     expect(contrastRatio("#336699", "#336699")).toBeCloseTo(1, 4);
   });
 
-  it("throws a ToolError for an invalid hex colour", () => {
+  it("throws a ToolError for an invalid hex color", () => {
     expect(() => contrastRatio("not-a-color", "#fff")).toThrowError(ToolError);
   });
 });
@@ -193,7 +193,7 @@ describe("nearestCssColorName", () => {
     expect(nearestCssColorName("#0000ff")).toBe("blue");
   });
 
-  it("finds the closest name for an off-shade colour", () => {
+  it("finds the closest name for an off-shade color", () => {
     expect(nearestCssColorName("#fefefe")).toBe("white");
   });
 });

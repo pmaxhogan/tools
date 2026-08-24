@@ -119,6 +119,8 @@ export const meta: ToolMeta = {
       id: "output",
       label: "Where results go",
       default: "subfolder",
+      // Full sentence labels: keep the dropdown rather than a row of buttons.
+      ui: "select",
       options: [
         {
           value: "subfolder",

@@ -63,6 +63,8 @@ export const meta: ToolMeta = {
     "punycode encode decode",
     "xn-- prefix",
     "internationalized domain name",
+    "url encode",
+    "url decode",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -284,6 +286,18 @@ export const meta: ToolMeta = {
           synonyms: ["decode", "decoding", "from escaped"],
         },
       ],
+    },
+  ],
+  examples: [
+    {
+      label: "JSON escape text",
+      input: `Say "hello" to the team.
+Meeting starts at 3pm.`,
+    },
+    {
+      label: "URL decode a query",
+      input: "hello%20world%21%20price%3D%2429.99",
+      opts: { format: "url", direction: "unescape" },
     },
   ],
   http: { method: "POST", contentType: "text/plain" },

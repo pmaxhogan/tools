@@ -340,7 +340,7 @@ describe("executeWriteOps", () => {
   it("refuses to overwrite even when the plan did not know the target existed", async () => {
     const dir = makeDir("photos", { "a.txt": "source", "b.txt": "keep me" });
     // No scan, so planWrites cannot see the collision: the executor is the
-    // second line of defence and has to catch it on its own.
+    // second line of defense and has to catch it on its own.
     const plan = planWrites([{ op: "rename", from: "a.txt", to: "b.txt" }], { now: NOW });
     expect(plan.conflicts).toEqual([]);
 

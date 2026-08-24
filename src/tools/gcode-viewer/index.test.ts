@@ -269,7 +269,7 @@ describe("renderLayerSvg", () => {
     expect(svg).toContain("stroke-dasharray");
   });
 
-  it("splits the strokes by feed rate when colouring by speed", () => {
+  it("splits the strokes by feed rate when coloring by speed", () => {
     const model = parseGcode(SAMPLE);
     const svg = renderLayerSvg(model, 1, { showTravel: false, colorBy: "speed" });
     expect(svg.match(/<path/g)).toHaveLength(2);
@@ -303,7 +303,7 @@ describe("helpers", () => {
 });
 
 describe("summarize", () => {
-  it("produces the labelled rows", () => {
+  it("produces the labeled rows", () => {
     const rows = summarize(parseGcode(SAMPLE));
     expect(Object.keys(rows)).toEqual([
       "Slicer",
@@ -371,7 +371,7 @@ describe("run", () => {
     expect(codeOf(() => run(new Uint8Array(100 * 1024 * 1024 + 1), OPTS))).toBe("too-large");
   });
 
-  it("throws bad-option on an unknown colouring or layer number", () => {
+  it("throws bad-option on an unknown coloring or layer number", () => {
     expect(codeOf(() => run(SAMPLE, { ...OPTS, colorBy: "rainbow" }))).toBe("bad-option");
     expect(codeOf(() => run(SAMPLE, { ...OPTS, layer: -1 }))).toBe("bad-option");
     expect(codeOf(() => run(SAMPLE, { ...OPTS, layer: 1.5 }))).toBe("bad-option");

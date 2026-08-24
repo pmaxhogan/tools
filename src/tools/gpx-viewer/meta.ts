@@ -26,6 +26,9 @@ export const meta: ToolMeta = {
     "gpx statistics",
     "route distance calculator",
     "elevation gain calculator",
+    "map route viewer",
+    "hiking track viewer",
+    "running route viewer",
   ],
   input: "File",
   output: "application/json",
@@ -75,7 +78,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "How is elevation gain calculated?",
-        a: "Gain and loss use a hysteresis filter rather than adding up every reading. A climb or descent only counts once the elevation differs from the last accepted reading by the smoothing threshold, 3 metres by default, and then the whole difference is booked. That keeps barometric and GPS noise from turning a flat ride into hundreds of metres of fake climbing. Set the smoothing option to 0 to see the raw sum, or raise it for a very noisy recording.",
+        a: "Gain and loss use a hysteresis filter rather than adding up every reading. A climb or descent only counts once the elevation differs from the last accepted reading by the smoothing threshold, 3 meters by default, and then the whole difference is booked. That keeps barometric and GPS noise from turning a flat ride into hundreds of meters of fake climbing. Set the smoothing option to 0 to see the raw sum, or raise it for a very noisy recording.",
       },
       {
         q: "Can it convert GPX to GeoJSON?",

@@ -45,6 +45,8 @@ import { readFragment, writeFragment } from "@/lib/fragment";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Segmented } from "@/components/ui/segmented";
+import type { SegmentedOption } from "@/components/ui/segmented";
 import OutputView from "../OutputView.vue";
 
 defineProps<{ meta: ToolMeta }>();
@@ -57,6 +59,13 @@ const MODES: { id: Mode; label: string }[] = [
   { id: "range", label: "Maximum range" },
   { id: "drop", label: "Drop over distance" },
   { id: "pearl", label: "Ender pearl landing" },
+];
+
+const MODE_OPTIONS: SegmentedOption[] = MODES.map((m) => ({ value: m.id, label: m.label }));
+
+const MEDIUM_OPTIONS: SegmentedOption[] = [
+  { value: "air", label: "Air" },
+  { value: "water", label: "Water" },
 ];
 
 /* ---------------------------------------------------------------- */
@@ -339,9 +348,7 @@ const calc = computed<Calc>(() => {
       // Stop each plotted arc just past the target so the chart scales to the
       // shot the reader asked about, not to a 400 tick free fall.
       const plotTo = distance.value * 1.1;
-      const curves: Curve[] = [
-        toCurve(shootAt(low.pitch, false, plotTo), "primary", "Flat shot"),
-      ];
+      const curves: Curve[] = [toCurve(shootAt(low.pitch, false, plotTo), "primary", "Flat shot")];
       if (solutions.high) {
         curves.push(
           toCurve(shootAt(solutions.high.pitch, false, plotTo), "secondary", "Lobbed shot"),
@@ -408,7 +415,7 @@ const calc = computed<Calc>(() => {
             {
               label: `After ${r.overTicks} ticks`,
               value: `${round(r.maxRange)}`,
-              sub: "blocks travelled",
+              sub: "blocks traveled",
             },
             { label: "Launch speed", value: `${round(speed.value, 3)}`, sub: "blocks per tick" },
             {
@@ -486,7 +493,13 @@ const calc = computed<Calc>(() => {
       drawTicks.value,
       medium.value,
     );
-    const curves: Curve[] = [toCurve(shootAt(0, false, DROP_DISTANCES[DROP_DISTANCES.length - 1]), "primary", "Level shot")];
+    const curves: Curve[] = [
+      toCurve(
+        shootAt(0, false, DROP_DISTANCES[DROP_DISTANCES.length - 1]),
+        "primary",
+        "Level shot",
+      ),
+    ];
     const detail: Record<string, string> = {
       "Launch speed": `${round(speed.value, 4)} blocks per tick`,
     };
@@ -628,17 +641,17 @@ watch(
 /** Every fragment value is untrusted: validate, clamp, and gate all of it. */
 onMounted(() => {
   const { opts } = readFragment() as { opts: Partial<Record<string, string>> };
-  const pick = <T extends string>(value: string | undefined, allowed: readonly T[]): T | undefined =>
-    allowed.includes(value as T) ? (value as T) : undefined;
+  const pick = <T extends string>(
+    value: string | undefined,
+    allowed: readonly T[],
+  ): T | undefined => (allowed.includes(value as T) ? (value as T) : undefined);
 
   version.value = pick(opts.v, VERSIONS) ?? "1.21.11";
   mode.value = pick(opts.mode, ["aim", "range", "drop", "pearl"] as const) ?? "aim";
   const p = PROJECTILES.find((x) => x.id === opts.p);
   if (p) projectile.value = p.id;
   const allowed = PROJECTILE_BY_ID[projectile.value].launchers;
-  launcher.value = allowed.includes(opts.l as LaunchModeId)
-    ? (opts.l as LaunchModeId)
-    : allowed[0];
+  launcher.value = allowed.includes(opts.l as LaunchModeId) ? (opts.l as LaunchModeId) : allowed[0];
   medium.value = pick(opts.med, ["air", "water"] as const) ?? "air";
   drawTicks.value = clampInt(opts.dt, 0, 60, BOW_FULL_DRAW_TICKS);
   distance.value = clampNum(opts.d, 0.5, 500, 30);
@@ -680,21 +693,12 @@ const enchantNotes = computed(() =>
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
           >Mode</span
         >
-        <div class="flex flex-wrap gap-2" role="group" aria-label="Calculator mode">
-          <button
-            v-for="m in MODES"
-            :key="m.id"
-            type="button"
-            class="rounded-[10px] border px-3 py-1.5 text-sm transition-colors"
-            :class="
-              mode === m.id ? 'border-ring bg-accent font-semibold' : 'bg-secondary hover:bg-accent'
-            "
-            :aria-pressed="mode === m.id"
-            @click="mode = m.id"
-          >
-            {{ m.label }}
-          </button>
-        </div>
+        <Segmented
+          :model-value="mode"
+          :options="MODE_OPTIONS"
+          label="Calculator mode"
+          @update:model-value="(v: string) => (mode = v as Mode)"
+        />
       </div>
       <div class="flex flex-wrap gap-3">
         <div class="flex w-40 flex-col gap-1.5">
@@ -708,23 +712,13 @@ const enchantNotes = computed(() =>
         </div>
         <div class="flex flex-col gap-1.5">
           <span class="text-xs text-muted-foreground">Medium</span>
-          <div class="flex gap-1.5" role="group" aria-label="Medium">
-            <button
-              v-for="k in (['air', 'water'] as const)"
-              :key="k"
-              type="button"
-              class="rounded-[8px] border px-2.5 py-1.5 text-xs capitalize transition-colors"
-              :class="
-                medium === k
-                  ? 'border-ring bg-accent font-semibold'
-                  : 'bg-secondary hover:bg-accent'
-              "
-              :aria-pressed="medium === k"
-              @click="medium = k"
-            >
-              {{ k }}
-            </button>
-          </div>
+          <Segmented
+            :model-value="medium"
+            :options="MEDIUM_OPTIONS"
+            label="Medium"
+            size="sm"
+            @update:model-value="(v: string) => (medium = v === 'water' ? 'water' : 'air')"
+          />
         </div>
       </div>
     </div>
@@ -777,7 +771,8 @@ const enchantNotes = computed(() =>
 
         <div class="rounded-[10px] bg-secondary p-2.5 shadow-[var(--sh-inset)]">
           <p class="font-mono text-xs tabular-nums">
-            {{ round(speed, 4) }} blocks per tick at launch, {{ launcherLabel(projectile, launcher) }}
+            {{ round(speed, 4) }} blocks per tick at launch,
+            {{ launcherLabel(projectile, launcher) }}
           </p>
           <p class="mt-1 text-xs text-muted-foreground">{{ def.note }}</p>
         </div>
@@ -865,10 +860,10 @@ const enchantNotes = computed(() =>
             </div>
           </div>
           <p class="text-xs text-muted-foreground">
-            Distance is measured flat along the ground and height is measured from the launch
-            point, which sits {{ DEFAULT_LAUNCH_HEIGHT }} blocks above your feet. The solver runs a
-            full simulation at every candidate angle rather than using the vacuum formula, so drag
-            is included.
+            Distance is measured flat along the ground and height is measured from the launch point,
+            which sits {{ DEFAULT_LAUNCH_HEIGHT }} blocks above your feet. The solver runs a full
+            simulation at every candidate angle rather than using the vacuum formula, so drag is
+            included.
           </p>
         </template>
 
@@ -895,10 +890,10 @@ const enchantNotes = computed(() =>
 
         <template v-else-if="mode === 'range'">
           <p class="text-xs text-muted-foreground">
-            The maximum range search simulates every launch angle from level to 80 degrees and
-            keeps the one that lands furthest, then refines it in hundredths of a degree. The shot
-            starts {{ DEFAULT_LAUNCH_HEIGHT }} blocks above your feet and lands on flat ground at
-            your own level.
+            The maximum range search simulates every launch angle from level to 80 degrees and keeps
+            the one that lands furthest, then refines it in hundredths of a degree. The shot starts
+            {{ DEFAULT_LAUNCH_HEIGHT }} blocks above your feet and lands on flat ground at your own
+            level.
           </p>
         </template>
 
@@ -911,7 +906,10 @@ const enchantNotes = computed(() =>
         </template>
 
         <!-- stat tiles -->
-        <div v-if="!calc.error" class="mt-auto grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
+        <div
+          v-if="!calc.error"
+          class="mt-auto grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2"
+        >
           <div
             v-for="t in calc.tiles"
             :key="t.label"
@@ -1046,8 +1044,8 @@ const enchantNotes = computed(() =>
         </svg>
       </div>
       <p class="text-xs text-muted-foreground">
-        One dot per sampled game tick, so the spacing shows how fast the projectile is still
-        moving. The dashed line is your feet; the dotted line is the height the shot leaves at.
+        One dot per sampled game tick, so the spacing shows how fast the projectile is still moving.
+        The dashed line is your feet; the dotted line is the height the shot leaves at.
         <span v-if="calc.curves.length > 1">
           The dashed curve is the {{ calc.curves[1].label.toLowerCase() }}.
         </span>
@@ -1068,8 +1066,8 @@ const enchantNotes = computed(() =>
         of the impact tick.
       </span>
       <span v-else-if="info.floatGravity">
-        On {{ info.label }}, gravity is a Java float, so a falling projectile loses 0.05000000074505806
-        per tick rather than exactly 0.05.
+        On {{ info.label }}, gravity is a Java float, so a falling projectile loses
+        0.05000000074505806 per tick rather than exactly 0.05.
       </span>
       <span v-else>
         On {{ info.label }}, gravity is a true double and every projectile still moves before it

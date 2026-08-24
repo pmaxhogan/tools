@@ -775,7 +775,7 @@ describe("run", () => {
     expect(out["Report layout"]).toContain("Input report, no report ID, 3 bytes (24 bits)");
   });
 
-  it("honours the view and showBytes options", () => {
+  it("honors the view and showBytes options", () => {
     const dump = Array.from(GAMEPAD, (b) => b.toString(16).padStart(2, "0")).join(" ");
     const treeOnly = run(dump, { view: "tree", showBytes: false });
     expect(Object.keys(treeOnly)).toEqual(["Summary", "Descriptor tree"]);

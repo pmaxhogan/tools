@@ -24,6 +24,8 @@ export const meta: ToolMeta = {
     "states() function tester",
     "namespace jinja test",
     "homeassistant yaml template",
+    "jinja2 online tester",
+    "ansible jinja test",
   ],
   input: "text/plain",
   output: "text/plain",

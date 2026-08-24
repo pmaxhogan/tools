@@ -35,7 +35,7 @@ describe("calc", () => {
     expect(run("sin(90 deg)", {}).Result).toBe("1");
   });
 
-  it("honours the significant digits option", () => {
+  it("honors the significant digits option", () => {
     expect(run("1/3", { precision: 3 }).Result).toBe("0.333");
     expect(run("1/3", { precision: 8 }).Result).toBe("0.33333333");
   });

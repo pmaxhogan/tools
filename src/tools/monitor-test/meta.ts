@@ -33,6 +33,13 @@ export const meta: ToolMeta = {
     "panel inversion test",
     "ufo test",
     "blur busters",
+    "dead pixel checker online",
+    "monitor uniformity test",
+    "new monitor test",
+    "screen burn in test",
+    "refresh rate test",
+    "tv test patterns",
+    "curved monitor test",
   ],
   input: "text/plain",
   output: "application/json",
@@ -78,7 +85,12 @@ export const meta: ToolMeta = {
             {
               value: "color-cycle",
               label: "Color cycle (dead and stuck pixel scan)",
-              synonyms: ["dead pixel test", "stuck pixel test", "color flash test", "pixel checker"],
+              synonyms: [
+                "dead pixel test",
+                "stuck pixel test",
+                "color flash test",
+                "pixel checker",
+              ],
             },
             {
               value: "gray-0",

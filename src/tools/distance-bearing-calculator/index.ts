@@ -19,7 +19,7 @@ import {
 /** IUGG mean earth radius, the sphere the haversine numbers are quoted on. */
 export const SPHERE_RADIUS_KM = 6371.0088;
 
-/** WGS84 ellipsoid, in metres. */
+/** WGS84 ellipsoid, in meters. */
 const WGS84_A = 6378137.0;
 const WGS84_F = 1 / 298.257223563;
 const WGS84_B = WGS84_A * (1 - WGS84_F);
@@ -45,7 +45,7 @@ interface UnitDef {
   id: UnitId;
   /** Suffix printed after a value. */
   label: string;
-  /** How many of this unit make up one kilometre. */
+  /** How many of this unit make up one kilometer. */
   perKm: number;
 }
 
@@ -61,8 +61,8 @@ const UNIT_SYNONYMS: Record<string, UnitId> = {
   kms: "km",
   kilometer: "km",
   kilometers: "km",
-  kilometre: "km",
-  kilometres: "km",
+  kilometre: "km", // spelling: allow (accepted input synonym)
+  kilometres: "km", // spelling: allow (accepted input synonym)
   mi: "mi",
   mile: "mi",
   miles: "mi",
@@ -78,8 +78,8 @@ const UNIT_SYNONYMS: Record<string, UnitId> = {
   m: "m",
   meter: "m",
   meters: "m",
-  metre: "m",
-  metres: "m",
+  metre: "m", // spelling: allow (accepted input synonym)
+  metres: "m", // spelling: allow (accepted input synonym)
 };
 
 /** Resolve a unit name or abbreviation, or null when it is not a unit. */
@@ -292,7 +292,7 @@ export function parsePoint(text: string): LatLon {
  * Spherical geometry
  * ------------------------------------------------------------------ */
 
-/** Great circle distance in kilometres on a sphere of mean earth radius. */
+/** Great circle distance in kilometers on a sphere of mean earth radius. */
 export function haversineKm(a: LatLon, b: LatLon): number {
   const dLat = toRad(b.lat - a.lat);
   const dLon = toRad(b.lon - a.lon);
@@ -332,7 +332,7 @@ export function midpoint(a: LatLon, b: LatLon): LatLon {
   return { lat: toDeg(lat), lon: wrapLon(toDeg(lon)) };
 }
 
-/** Destination reached by travelling a great circle distance on a bearing. */
+/** Destination reached by traveling a great circle distance on a bearing. */
 export function sphereDestination(start: LatLon, bearingDeg: number, distanceKm: number): LatLon {
   const delta = distanceKm / SPHERE_RADIUS_KM;
   const theta = toRad(bearingDeg);
@@ -378,7 +378,7 @@ export function compassPoint(bearing: number): string {
  * ------------------------------------------------------------------ */
 
 export interface VincentyInverse {
-  /** Distance in kilometres. */
+  /** Distance in kilometers. */
   distanceKm: number;
   /** Initial bearing in degrees, or null for coincident points. */
   initialBearing: number | null;
@@ -663,7 +663,7 @@ function harmonicSum(
 /**
  * Evaluate the World Magnetic Model at a geodetic position and date.
  *
- * `altKm` is height above the WGS84 ellipsoid in kilometres and
+ * `altKm` is height above the WGS84 ellipsoid in kilometers and
  * `decimalYear` is a fractional year such as 2026.5. The declination is
  * positive east of true north, which is the sign convention charts use.
  */
@@ -683,7 +683,7 @@ export function magneticDeclination(
   const sinPhi = Math.sin(phi);
   const cosPhi = Math.cos(phi);
 
-  // Geodetic to geocentric, in kilometres.
+  // Geodetic to geocentric, in kilometers.
   const aKm = WGS84_A / 1000;
   const e2 = WGS84_F * (2 - WGS84_F);
   const rc = aKm / Math.sqrt(1 - e2 * sinPhi * sinPhi);
@@ -1031,7 +1031,7 @@ export function run(input: string, opts: DistanceBearingOpts = {}): DistanceBear
 
     out["Start"] = formatPoint(d.start);
     out["Bearing (true)"] = formatBearing(d.bearing);
-    out["Distance travelled"] = formatDistance(d.distanceKm, unit);
+    out["Distance traveled"] = formatDistance(d.distanceKm, unit);
     if (written.id !== unit.id) {
       out["Distance as written"] = formatDistance(d.distanceKm, written);
     }

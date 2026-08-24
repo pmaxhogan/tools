@@ -137,7 +137,7 @@ export function applyMatte(
 }
 
 /**
- * Nearest neighbour rescale of a matte, using centre sampling so the result
+ * Nearest neighbor rescale of a matte, using center sampling so the result
  * stays aligned with the image rather than drifting half a pixel.
  *
  * The panel usually rescales the matte through a canvas, which interpolates

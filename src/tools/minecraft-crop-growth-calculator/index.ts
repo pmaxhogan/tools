@@ -86,7 +86,7 @@ function plantFor(id: string, version: string): PlantInfo {
 
 /** How much same-plant crowding the growth speed check sees. */
 export type Crowding =
-  /** No neighbouring plant of the same kind, orthogonally or diagonally. */
+  /** No neighboring plant of the same kind, orthogonally or diagonally. */
   | "none"
   /** Same plant on one horizontal axis only, with the diagonals clear. */
   | "row"
@@ -133,7 +133,7 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
       neighbourHydrated: true,
       crowding: "row",
     },
-    note: "Every block is still farmland and still hydrated, but the plant only has neighbours on one axis, so the crowding halving never applies.",
+    note: "Every block is still farmland and still hydrated, but the plant only has neighbors on one axis, so the crowding halving never applies.",
   },
   {
     id: "full",
@@ -203,16 +203,16 @@ export const LAYOUT_PRESET_BY_ID: Map<string, LayoutPreset> = new Map(
 
 /**
  * CropBlock#getGrowthSpeed, reimplemented over a described layout instead of a
- * real world. Neighbouring blocks that are not farmland simply add nothing.
+ * real world. Neighboring blocks that are not farmland simply add nothing.
  */
 export function growthSpeed(layout: FarmLayout, version: string): number {
   const c = constants(version);
-  const neighbours = Math.min(8, Math.max(0, Math.floor(layout.neighbourFarmland)));
+  const neighbors = Math.min(8, Math.max(0, Math.floor(layout.neighbourFarmland)));
   const centerWeight = layout.centerHydrated ? c.speedMoistFarmland : c.speedFarmland;
   const neighbourWeight = layout.neighbourHydrated ? c.speedMoistFarmland : c.speedFarmland;
   let speed = f32(c.speedBase + centerWeight);
   const per = f32(neighbourWeight / c.speedNeighbourDivisor);
-  for (let i = 0; i < neighbours; i++) speed = f32(speed + per);
+  for (let i = 0; i < neighbors; i++) speed = f32(speed + per);
   if (layout.crowding === "grid" || layout.crowding === "diagonal") {
     speed = f32(speed / c.speedCrowdDivisor);
   }

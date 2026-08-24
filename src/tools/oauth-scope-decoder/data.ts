@@ -620,7 +620,7 @@ export const SCOPES: readonly ScopeEntry[] = [
     label: "Read audit logs",
     plainEnglish: "Read the domain wide audit log of who did what and when.",
     risk: "high",
-    riskWhy: "Audit logs describe the behaviour of every person in the domain.",
+    riskWhy: "Audit logs describe the behavior of every person in the domain.",
   },
   {
     pattern: `${G}admin.reports.usage.readonly`,
@@ -1965,7 +1965,7 @@ export const SCOPES: readonly ScopeEntry[] = [
     label: "Manage orders",
     plainEnglish: "Create, change and cancel orders in the store.",
     risk: "high",
-    riskWhy: "Order changes affect fulfilment and money.",
+    riskWhy: "Order changes affect fulfillment and money.",
   },
   {
     pattern: "read_all_orders",
@@ -2178,7 +2178,7 @@ export const SCOPES: readonly ScopeEntry[] = [
     label: "Manage your meetings",
     plainEnglish: "Create, change and delete your Zoom meetings.",
     risk: "moderate",
-    riskWhy: "Meetings can be created or cancelled in your name.",
+    riskWhy: "Meetings can be created or canceled in your name.",
   },
   {
     pattern: "meeting:read:admin",

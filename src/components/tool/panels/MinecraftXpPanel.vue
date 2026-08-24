@@ -42,6 +42,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Segmented } from "@/components/ui/segmented";
+import type { SegmentedOption } from "@/components/ui/segmented";
 import OutputView from "../OutputView.vue";
 
 defineProps<{ meta: ToolMeta }>();
@@ -164,8 +166,7 @@ const presetSpec = computed<SelectOptionSpec>(() => ({
   options: [
     { value: "", label: "Custom weights", synonyms: ["manual", "none"] },
     ...MIXTURE_PRESETS.filter(
-      (p) =>
-        p.kind === sourceKind.value && presetWeights(p, version.value) !== null,
+      (p) => p.kind === sourceKind.value && presetWeights(p, version.value) !== null,
     ).map((p) => ({
       value: p.id,
       label: p.approximate ? `${p.label} (approximate)` : p.label,
@@ -301,9 +302,7 @@ const plannerRows = computed(() =>
 /* mixture selection + weights                                       */
 /* ---------------------------------------------------------------- */
 
-const selectableSources = computed(() =>
-  XP_SOURCES.filter((s) => s.kind === sourceKind.value),
-);
+const selectableSources = computed(() => XP_SOURCES.filter((s) => s.kind === sourceKind.value));
 
 const selectedEntries = computed<MixtureEntry[]>(() =>
   Object.entries(selection.value).map(([sourceId, weight]) => ({ sourceId, weight })),
@@ -383,6 +382,18 @@ const mixtureRows = computed<Record<string, string>>(() => {
 const familyDef = computed(() => TOOL_FAMILY_BY_ID.get(family.value));
 const materialDef = computed(() => MATERIAL_BY_ID.get(material.value));
 
+/**
+ * Mobs or blocks. With Mending on, the chosen tool family decides which of the
+ * two can act, so the other segment is disabled rather than hidden.
+ */
+const sourceKindOptions = computed<SegmentedOption[]>(() =>
+  (["mob", "block"] as const).map((k) => ({
+    value: k,
+    label: k === "mob" ? "Mobs" : "Blocks",
+    disabled: mendingOn.value && familyDef.value?.acts !== k,
+  })),
+);
+
 function onFamilyChange(id: string) {
   family.value = id;
   const def = TOOL_FAMILY_BY_ID.get(id);
@@ -461,7 +472,8 @@ const sustainRows = computed<Record<string, string>>(() => {
   rows["Worst case"] = r.worstSelfSustaining
     ? `self-sustaining even in the worst case (${r.worstSource.label} only, minimum XP, Unbreaking never procs)`
     : `${fmt(r.worstActions ?? 0)} ${noun} (${r.worstSource.label} only, minimum XP, Unbreaking never procs)`;
-  rows["Expected wear per action"] = `${r.avgLossPerAction.toLocaleString("en-US", { maximumFractionDigits: 3 })} durability lost, ${r.avgRepairPerAction.toLocaleString("en-US", { maximumFractionDigits: 2 })} repaired`;
+  rows["Expected wear per action"] =
+    `${r.avgLossPerAction.toLocaleString("en-US", { maximumFractionDigits: 3 })} durability lost, ${r.avgRepairPerAction.toLocaleString("en-US", { maximumFractionDigits: 2 })} repaired`;
   return rows;
 });
 
@@ -710,22 +722,13 @@ onMounted(() => {
           XP sources
         </span>
         <div class="flex items-center gap-2">
-          <div class="flex gap-2" role="group" aria-label="Source category">
-            <button
-              v-for="k in ['mob', 'block'] as const"
-              :key="k"
-              type="button"
-              class="rounded-[8px] border px-2.5 py-1 text-xs transition-colors"
-              :class="
-                sourceKind === k ? 'border-ring bg-accent font-semibold' : 'bg-secondary hover:bg-accent'
-              "
-              :aria-pressed="sourceKind === k"
-              :disabled="mendingOn && familyDef?.acts !== k"
-              @click="setKind(k)"
-            >
-              {{ k === "mob" ? "Mobs" : "Blocks" }}
-            </button>
-          </div>
+          <Segmented
+            :model-value="sourceKind"
+            :options="sourceKindOptions"
+            label="Source category"
+            size="sm"
+            @update:model-value="(v: string) => setKind(v as 'mob' | 'block')"
+          />
           <div class="w-56">
             <SearchableSelect
               id="mcxp-preset"
@@ -791,14 +794,20 @@ onMounted(() => {
           {{ activePreset.provenance }}
         </p>
         <p v-else class="text-xs text-muted-foreground">
-          Weights are relative shares of your actions, normalized automatically. New selections
-          join at weight 1 (an equal split).
+          Weights are relative shares of your actions, normalized automatically. New selections join
+          at weight 1 (an equal split).
         </p>
       </div>
 
-      <div v-if="mixturePlan.error" class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm" role="alert">
+      <div
+        v-if="mixturePlan.error"
+        class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
+        role="alert"
+      >
         <p class="font-medium">{{ mixturePlan.error.message }}</p>
-        <p v-if="mixturePlan.error.fix" class="text-muted-foreground">{{ mixturePlan.error.fix }}</p>
+        <p v-if="mixturePlan.error.fix" class="text-muted-foreground">
+          {{ mixturePlan.error.fix }}
+        </p>
       </div>
       <div v-else-if="mixturePlan.plan" aria-live="polite">
         <OutputView :output="mixtureRows" />
@@ -812,7 +821,10 @@ onMounted(() => {
     <!-- mending sustainability -->
     <div class="flex flex-col gap-3 rounded-[14px] border p-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <Label for="mcxp-mend" class="cursor-pointer text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+        <Label
+          for="mcxp-mend"
+          class="cursor-pointer text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+        >
           Source tool has Mending
         </Label>
         <Switch
@@ -883,7 +895,9 @@ onMounted(() => {
                 id="mcxp-de"
                 :spec="damageEnchantSpec"
                 :model-value="damageEnchant"
-                @update:model-value="(v: string) => (damageEnchant = v as 'none' | 'sharpness' | 'smite' | 'bane')"
+                @update:model-value="
+                  (v: string) => (damageEnchant = v as 'none' | 'sharpness' | 'smite' | 'bane')
+                "
               />
             </div>
             <div v-if="damageEnchant !== 'none'" class="flex min-w-0 flex-col gap-1.5">
@@ -932,17 +946,21 @@ onMounted(() => {
 
         <p v-if="family === 'pickaxe'" class="text-xs text-muted-foreground">
           Fortune is not shown because it never changes ore XP in any verified version: the drop
-          paths (OreBlock, DropExperienceBlock, tryDropExperience) only check Silk Touch. Silk
-          Touch drops zero XP, so a silk-touched pickaxe cannot sustain itself off ore.
+          paths (OreBlock, DropExperienceBlock, tryDropExperience) only check Silk Touch. Silk Touch
+          drops zero XP, so a silk-touched pickaxe cannot sustain itself off ore.
         </p>
         <p v-if="familyDef?.acts === 'mob'" class="text-xs text-muted-foreground">
           Smite only helps against undead mobs and Bane of Arthropods only against arthropods;
           against everything else the bonus is zero. Fire Aspect burn depends on how long the mob
-          lives, so it is modeled as a flat amount of free damage per kill that you can adjust.
-          Hit counts ignore mob armor and natural regeneration.
+          lives, so it is modeled as a flat amount of free damage per kill that you can adjust. Hit
+          counts ignore mob armor and natural regeneration.
         </p>
 
-        <div v-if="sustain.error" class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm" role="alert">
+        <div
+          v-if="sustain.error"
+          class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
+          role="alert"
+        >
           <p class="font-medium">{{ sustain.error.message }}</p>
           <p v-if="sustain.error.fix" class="text-muted-foreground">{{ sustain.error.fix }}</p>
         </div>
@@ -988,8 +1006,8 @@ onMounted(() => {
       </div>
       <p class="text-xs text-muted-foreground">
         Averages use each source's expected XP; guaranteed counts assume minimum rolls. Mob
-        equipment adds 1 to 3 bonus XP per equipped item and Looting never changes XP, so real
-        farm rates only beat these numbers.
+        equipment adds 1 to 3 bonus XP per equipped item and Looting never changes XP, so real farm
+        rates only beat these numbers.
       </p>
     </div>
 

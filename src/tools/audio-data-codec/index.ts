@@ -1148,7 +1148,7 @@ export function decodeFsk(
   }
 
   // Group the matching positions into runs and take the middle of each: the
-  // true alignment sits at the centre of the stretch of positions that match.
+  // true alignment sits at the center of the stretch of positions that match.
   const candidates: { start: number; score: number }[] = [];
   let runStart = -1;
   let runScore = 0;
@@ -1408,7 +1408,7 @@ export function run(input: string, opts: AudioDataCodecOpts): AudioDataCodecResu
     Tones: `${FSK_DEFAULT_F0} Hz for a 0 bit, ${FSK_DEFAULT_F1} Hz for a 1 bit, phase continuous`,
     Checksum: `CRC-16/CCITT-FALSE 0x${frame.crc.toString(16).toUpperCase().padStart(4, "0")}`,
     Audio:
-      "Press send in the panel to play this through the speaker, and open the same page on the other device to listen. Works best in a quiet room within a few metres.",
+      "Press send in the panel to play this through the speaker, and open the same page on the other device to listen. Works best in a quiet room within a few meters.",
   };
 }
 

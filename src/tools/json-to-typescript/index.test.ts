@@ -115,7 +115,7 @@ describe("json-to-typescript", () => {
     expect(kotlin).toContain("import kotlinx.serialization.json.JsonElement");
   });
 
-  it("honours rootName and de-duplicates colliding type names", () => {
+  it("honors rootName and de-duplicates colliding type names", () => {
     const json = JSON.stringify({ user: { id: 1 }, users: [{ id: 2 }] });
     const out = run(json, { target: "typescript", rootName: "ApiResponse" });
     expect(out).toContain("export interface ApiResponse {");

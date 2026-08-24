@@ -32,6 +32,7 @@ export const meta: ToolMeta = {
   ],
   input: "text/plain",
   output: "application/json",
+  examples: [{ label: "Acronym heavy identifier", input: "parseHTMLDocumentFromXMLString" }],
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: 'Converts text into every common naming case at once: camelCase, PascalCase, snake_case, SCREAMING_SNAKE_CASE, kebab-case, Title Case, Sentence case, lowercase, UPPERCASE, and a URL-safe slug. It tokenizes robustly, splitting on spaces, underscores, hyphens, and camelCase boundaries, including acronym runs like "parseHTMLDocument" or "XMLHttpRequest", so mixed-format input still converts cleanly.',

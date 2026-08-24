@@ -48,6 +48,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Segmented } from "@/components/ui/segmented";
+import type { SegmentedOption } from "@/components/ui/segmented";
 import OutputView from "../OutputView.vue";
 
 const props = defineProps<{ meta: ToolMeta }>();
@@ -282,7 +284,8 @@ const absorptionSpec: SelectOptionSpec = {
   options: ABSORPTION_SOURCES.map((a) => ({
     value: a.id,
     label: a.label,
-    synonyms: a.id === "egapple" ? ["notch apple", "god apple"] : a.id === "gapple" ? ["gapple"] : [],
+    synonyms:
+      a.id === "egapple" ? ["notch apple", "god apple"] : a.id === "gapple" ? ["gapple"] : [],
   })),
 };
 
@@ -468,6 +471,16 @@ const modes = computed<{ id: Mode; label: string }[]>(() => [
   ...(versionInfo.value.mace ? [{ id: "mace" as Mode, label: "Mace smash" }] : []),
 ]);
 
+/** Mob or player, on either side of the fight. */
+const SIDE_KIND_OPTIONS: SegmentedOption[] = [
+  { value: "mob", label: "Mob" },
+  { value: "player", label: "Player" },
+];
+
+function toSideKind(v: string): SideKind {
+  return v === "player" ? "player" : "mob";
+}
+
 function onVersionChange(v: string) {
   if ((VERSIONS as readonly string[]).includes(v)) version.value = v as VersionId;
   enforceVersionGates();
@@ -547,8 +560,10 @@ watch(
 /** Every fragment value is untrusted; validate, clamp, and gate it all. */
 onMounted(() => {
   const { opts } = readFragment() as { opts: Partial<Record<string, string>> };
-  const pick = <T extends string>(value: string | undefined, allowed: readonly T[]): T | undefined =>
-    allowed.includes(value as T) ? (value as T) : undefined;
+  const pick = <T extends string>(
+    value: string | undefined,
+    allowed: readonly T[],
+  ): T | undefined => (allowed.includes(value as T) ? (value as T) : undefined);
 
   version.value = pick(opts.v, VERSIONS) ?? "1.21.11";
   mode.value = pick(opts.mode, ["attack", "fall", "mace"] as const) ?? "attack";
@@ -558,8 +573,7 @@ onMounted(() => {
   if (opts.am && MOBS.some((m) => m.id === opts.am)) attackerMob.value = opts.am;
   if (opts.dm && MOBS.some((m) => m.id === opts.dm)) defenderMob.value = opts.dm;
   if (opts.w && WEAPON_PRESETS.some((w) => w.id === opts.w)) weapon.value = opts.w;
-  weaponEnchant.value =
-    pick(opts.we, ["none", "sharpness", "smite", "bane"] as const) ?? "none";
+  weaponEnchant.value = pick(opts.we, ["none", "sharpness", "smite", "bane"] as const) ?? "none";
   weaponEnchantLevel.value = clampInt(opts.wel, 0, 5, 0);
   strength.value = clampInt(opts.str, 0, 2, 0);
   weakness.value = clampInt(opts.weak, 0, 1, 0);
@@ -579,10 +593,12 @@ onMounted(() => {
     });
   }
   featherFalling.value = clampInt(opts.ff, 0, 4, 0);
-  resistanceSource.value =
-    RESISTANCE_SOURCES.some((r) => r.id === opts.res) ? (opts.res as string) : "none";
-  absorptionSource.value =
-    ABSORPTION_SOURCES.some((a) => a.id === opts.abs) ? (opts.abs as string) : "none";
+  resistanceSource.value = RESISTANCE_SOURCES.some((r) => r.id === opts.res)
+    ? (opts.res as string)
+    : "none";
+  absorptionSource.value = ABSORPTION_SOURCES.some((a) => a.id === opts.abs)
+    ? (opts.abs as string)
+    : "none";
   fallHeight.value = Math.min(Math.max(Number(opts.fh) || 23.5, 0), 10000);
   slowFalling.value = opts.sf === "true";
   maceFall.value = Math.min(Math.max(Number(opts.mf) || 5, 0), 10000);
@@ -607,21 +623,12 @@ watch(weapon, enforceEnchantGates);
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
           >Mode</span
         >
-        <div class="flex flex-wrap gap-2" role="group" aria-label="Calculator mode">
-          <button
-            v-for="m in modes"
-            :key="m.id"
-            type="button"
-            class="rounded-[10px] border px-3 py-1.5 text-sm transition-colors"
-            :class="
-              mode === m.id ? 'border-ring bg-accent font-semibold' : 'bg-secondary hover:bg-accent'
-            "
-            :aria-pressed="mode === m.id"
-            @click="mode = m.id"
-          >
-            {{ m.label }}
-          </button>
-        </div>
+        <Segmented
+          :model-value="mode"
+          :options="modes.map((m) => ({ value: m.id, label: m.label }))"
+          label="Calculator mode"
+          @update:model-value="(v: string) => (mode = v as Mode)"
+        />
       </div>
       <div class="flex flex-wrap gap-3">
         <div class="flex w-40 flex-col gap-1.5">
@@ -649,31 +656,19 @@ watch(weapon, enforceEnchantGates);
     <!-- the matchup -->
     <div class="grid grid-cols-1 items-stretch gap-3 lg:grid-cols-[1fr_auto_1fr]">
       <!-- attacker -->
-      <section
-        class="flex flex-col gap-3 rounded-[14px] border p-4"
-        aria-label="Attacker"
-      >
+      <section class="flex flex-col gap-3 rounded-[14px] border p-4" aria-label="Attacker">
         <div class="flex items-center justify-between gap-2">
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             {{ mode === "fall" ? "The fall" : mode === "mace" ? "Mace smash" : "Attacker" }}
           </span>
-          <div v-if="mode === 'attack'" class="flex gap-1.5" role="group" aria-label="Attacker type">
-            <button
-              v-for="k in ['mob', 'player'] as const"
-              :key="k"
-              type="button"
-              class="rounded-[8px] border px-2.5 py-1 text-xs capitalize transition-colors"
-              :class="
-                attackerKind === k
-                  ? 'border-ring bg-accent font-semibold'
-                  : 'bg-secondary hover:bg-accent'
-              "
-              :aria-pressed="attackerKind === k"
-              @click="attackerKind = k"
-            >
-              {{ k }}
-            </button>
-          </div>
+          <Segmented
+            v-if="mode === 'attack'"
+            :model-value="attackerKind"
+            :options="SIDE_KIND_OPTIONS"
+            label="Attacker type"
+            size="sm"
+            @update:model-value="(v: string) => (attackerKind = toSideKind(v))"
+          />
         </div>
 
         <!-- fall parameters -->
@@ -714,9 +709,7 @@ watch(weapon, enforceEnchantGates);
         <template v-else-if="mode === 'mace'">
           <div class="grid grid-cols-2 gap-3">
             <div class="flex flex-col gap-1.5">
-              <Label for="mc-macefall" class="text-xs text-muted-foreground"
-                >Fall distance</Label
-              >
+              <Label for="mc-macefall" class="text-xs text-muted-foreground">Fall distance</Label>
               <Input
                 id="mc-macefall"
                 type="number"
@@ -752,9 +745,7 @@ watch(weapon, enforceEnchantGates);
               />
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label for="mc-mace-ench" class="text-xs text-muted-foreground"
-                >Smite or Bane</Label
-              >
+              <Label for="mc-mace-ench" class="text-xs text-muted-foreground">Smite or Bane</Label>
               <div class="flex gap-2">
                 <SearchableSelect
                   id="mc-mace-ench"
@@ -851,10 +842,7 @@ watch(weapon, enforceEnchantGates);
               />
             </div>
           </div>
-          <p
-            v-if="currentWeapon.family === 'bow'"
-            class="text-xs text-muted-foreground"
-          >
+          <p v-if="currentWeapon.family === 'bow'" class="text-xs text-muted-foreground">
             Bows cannot hold Sharpness, Smite, or Bane, and arrow crits are random, so the crit
             toggle is off for the bow.
           </p>
@@ -924,23 +912,13 @@ watch(weapon, enforceEnchantGates);
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
             >Defender</span
           >
-          <div class="flex gap-1.5" role="group" aria-label="Defender type">
-            <button
-              v-for="k in ['mob', 'player'] as const"
-              :key="k"
-              type="button"
-              class="rounded-[8px] border px-2.5 py-1 text-xs capitalize transition-colors"
-              :class="
-                defenderKind === k
-                  ? 'border-ring bg-accent font-semibold'
-                  : 'bg-secondary hover:bg-accent'
-              "
-              :aria-pressed="defenderKind === k"
-              @click="defenderKind = k"
-            >
-              {{ k }}
-            </button>
-          </div>
+          <Segmented
+            :model-value="defenderKind"
+            :options="SIDE_KIND_OPTIONS"
+            label="Defender type"
+            size="sm"
+            @update:model-value="(v: string) => (defenderKind = toSideKind(v))"
+          />
         </div>
 
         <template v-if="defenderKind === 'mob'">
@@ -1107,9 +1085,8 @@ watch(weapon, enforceEnchantGates);
     </div>
 
     <p class="text-xs text-muted-foreground">
-      Armor, Protection, and Resistance math is measured against real dedicated servers per
-      version; mob stats and effect semantics are derived from decompiled or unobfuscated game
-      code.
+      Armor, Protection, and Resistance math is measured against real dedicated servers per version;
+      mob stats and effect semantics are derived from decompiled or unobfuscated game code.
       <span>Not an official Minecraft product.</span>
       <span>Not approved by or associated with Mojang or Microsoft.</span>
     </p>

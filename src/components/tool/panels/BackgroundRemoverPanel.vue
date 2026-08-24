@@ -442,7 +442,7 @@ function clampMatte(matte: Float32Array): Float32Array {
 /**
  * Scales the predicted matte back up to the size of the photo. A canvas gives
  * a smoothly interpolated edge, so that is the preferred path; the pure
- * nearest neighbour helper in the logic layer is the fallback when a browser
+ * nearest neighbor helper in the logic layer is the fallback when a browser
  * will not hand over a second 2D context.
  */
 function upscaleMatte(
@@ -465,15 +465,15 @@ function upscaleMatte(
   if (!srcCtx || !dstCtx) return clampMatte(fallback(matte, fromW, fromH, toW, toH));
 
   const clamped = clampMatte(matte);
-  const grey = srcCtx.createImageData(fromW, fromH);
+  const gray = srcCtx.createImageData(fromW, fromH);
   for (let i = 0; i < fromW * fromH; i += 1) {
     const v = Math.round((clamped[i] ?? 0) * 255);
-    grey.data[i * 4] = v;
-    grey.data[i * 4 + 1] = v;
-    grey.data[i * 4 + 2] = v;
-    grey.data[i * 4 + 3] = 255;
+    gray.data[i * 4] = v;
+    gray.data[i * 4 + 1] = v;
+    gray.data[i * 4 + 2] = v;
+    gray.data[i * 4 + 3] = 255;
   }
-  srcCtx.putImageData(grey, 0, 0);
+  srcCtx.putImageData(gray, 0, 0);
 
   dstCtx.imageSmoothingEnabled = true;
   dstCtx.imageSmoothingQuality = "high";
@@ -526,7 +526,7 @@ async function removeBackground() {
     if (!matte || matte.length !== pixels) {
       throw new ToolError(
         "unexpected-output",
-        "The matting model returned a result this tool does not recognise.",
+        "The matting model returned a result this tool does not recognize.",
         "Reload the page so the model is read again from the browser cache.",
       );
     }

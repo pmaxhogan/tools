@@ -26,6 +26,8 @@ export const meta: ToolMeta = {
     "mssim",
     "before and after image",
     "anti aliasing diff",
+    "diff two images",
+    "compare screenshots",
   ],
   input: "image/*",
   output: "application/json",

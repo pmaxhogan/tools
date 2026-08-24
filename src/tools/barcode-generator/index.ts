@@ -6,7 +6,7 @@ import { ToolError, type ToolLogic } from "../types";
  * a scanner failure, so nothing here is derived from a library at runtime.
  *
  * Every encoder builds a full bit string first (1 = bar module, 0 = space
- * module) and then run length encodes it. That way two adjacent same colour
+ * module) and then run length encodes it. That way two adjacent same color
  * elements can never be emitted as two runs by accident.
  */
 
@@ -218,7 +218,7 @@ function chooseAB(text: string, from: number): Code128Set {
 /**
  * Turn text into the full Code 128 symbol value list: start character, data,
  * check character, stop character. The code set selection follows the standard
- * optimisation: start in C when the data opens with four or more digits (or is
+ * optimization: start in C when the data opens with four or more digits (or is
  * an even run of digits end to end), otherwise A when a control character
  * precedes any lowercase letter, otherwise B; then switch into C for any run
  * of four or more digits and back out again when the digits run out.
@@ -395,7 +395,7 @@ function requireDigits(value: string, symbology: string): string {
 }
 
 /**
- * Normalise a fixed length numeric code: accept the body without its check
+ * Normalize a fixed length numeric code: accept the body without its check
  * digit and compute one, or accept the full code and validate the check digit
  * that is already there.
  */
@@ -1062,7 +1062,7 @@ function rect(x: number, y: number, w: number, h: number, fill: string): string 
 }
 
 export interface RenderBarcodeOptions {
-  /** Width of one module. Pixels in single mode, millimetres on a sheet. */
+  /** Width of one module. Pixels in single mode, millimeters on a sheet. */
   moduleWidth?: number;
   /** Bar height, in the same unit as `moduleWidth`. */
   height?: number;
@@ -1177,7 +1177,7 @@ export function renderBarcodeSvg(enc: EncodedBarcode, options: RenderBarcodeOpti
 /* Sheet layouts                                                              */
 /* -------------------------------------------------------------------------- */
 
-/** One label sheet. Every measurement is millimetres. */
+/** One label sheet. Every measurement is millimeters. */
 export interface SheetSpec {
   id: string;
   label: string;
@@ -1260,7 +1260,7 @@ export interface SheetCell {
   height: number;
 }
 
-/** Every label position on a sheet, in reading order, in millimetres. */
+/** Every label position on a sheet, in reading order, in millimeters. */
 export function sheetCells(spec: SheetSpec): SheetCell[] {
   const cells: SheetCell[] = [];
   for (let row = 0; row < spec.rows; row++) {
@@ -1289,12 +1289,12 @@ export interface RenderSheetOptions {
 
 /** Largest module width on a sheet, so a short code does not stretch absurdly. */
 const SHEET_MAX_MODULE_MM = 0.6;
-/** Tallest bars on a sheet, in millimetres. */
+/** Tallest bars on a sheet, in millimeters. */
 const SHEET_MAX_BAR_MM = 25;
 
 /**
  * Lay a list of encoded barcodes out on a label sheet as one page sized SVG.
- * The document is measured in millimetres so it prints at true size.
+ * The document is measured in millimeters so it prints at true size.
  */
 export function renderSheetSvg(
   list: EncodedBarcode[],

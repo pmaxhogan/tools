@@ -77,7 +77,7 @@ export const COMPONENTS: ComponentTiming[] = [
     group: "Signal",
     delayTicks: 0,
     kind: "instant",
-    note: "Dust carries a signal with no delay at all. Strength starts at 15 and drops by 1 for every dust block travelled, so a line reaches 15 blocks and then dies.",
+    note: "Dust carries a signal with no delay at all. Strength starts at 15 and drops by 1 for every dust block traveled, so a line reaches 15 blocks and then dies.",
     source: "RedStoneWireBlock calculateTargetStrength (1.16.5 to 1.21.1), DefaultRedstoneWireEvaluator calculateTargetStrength and RedstoneWireEvaluator getIncomingWireSignal (1.21.11, 26.2)",
     synonyms: ["dust", "wire", "signal decay", "15 blocks", "power level"],
   },
@@ -88,7 +88,7 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 0,
     kind: "instant",
     note: "A lever switches on the same tick it is flipped and stays until flipped back. It is the only input with no timer of its own.",
-    source: "LeverBlock useWithoutItem and neighbour updates, no scheduleTick call in any version",
+    source: "LeverBlock useWithoutItem and neighbor updates, no scheduleTick call in any version",
     synonyms: ["switch", "toggle", "manual input"],
   },
   {
@@ -666,7 +666,7 @@ export interface VersionChange {
 
 /**
  * Every place the six verified trees disagree about timing. Renames and file
- * moves are excluded; only behaviour that a builder would feel is listed.
+ * moves are excluded; only behavior that a builder would feel is listed.
  */
 export const VERSION_CHANGES: VersionChange[] = [
   {
@@ -684,7 +684,7 @@ export const VERSION_CHANGES: VersionChange[] = [
   {
     version: "1.20.6",
     summary:
-      "The sculk sensor is retimed to 30 active ticks with a 10 tick cooldown, so 1.18 era sensor circuits change behaviour. The calibrated sculk sensor arrives at 10 active ticks. The crafter arrives with a 4 tick delay and the copper bulb arrives with none at all. The hopper minecart loses its pull cooldown and jumps from 5 items a second to 20.",
+      "The sculk sensor is retimed to 30 active ticks with a 10 tick cooldown, so 1.18 era sensor circuits change behavior. The calibrated sculk sensor arrives at 10 active ticks. The crafter arrives with a 4 tick delay and the copper bulb arrives with none at all. The hopper minecart loses its pull cooldown and jumps from 5 items a second to 20.",
     source: "SculkSensorBlock ACTIVE_TICKS 30 and COOLDOWN_TICKS 10, CalibratedSculkSensorBlock getActiveTicks 10, CrafterBlock CRAFTING_TICK_DELAY 4, CopperBulbBlock, MinecartHopper tick in mc-pipeline/work/1.20.6/src",
   },
   {

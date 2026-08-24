@@ -201,7 +201,7 @@ export function lookup(scope: string): ScopeEntry | null {
 }
 
 /**
- * A light, honest read of an unknown scope name. Every result is labelled as a
+ * A light, honest read of an unknown scope name. Every result is labeled as a
  * guess in the output; the point is to say what the words usually mean, not to
  * pretend the catalog covers it.
  */

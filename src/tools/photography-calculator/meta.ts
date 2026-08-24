@@ -27,6 +27,9 @@ export const meta: ToolMeta = {
     "equivalent exposure",
     "aps-c crop factor",
     "bulb mode exposure time",
+    "portrait lens depth of field",
+    "camera settings calculator",
+    "focal length calculator",
   ],
   input: "text/plain",
   output: "application/json",
@@ -122,10 +125,17 @@ export const meta: ToolMeta = {
       ],
     },
   ],
+  examples: [
+    {
+      label: "Portrait depth of field",
+      input: "85mm f/1.4 4m",
+      opts: { mode: "dof", sensor: "full-frame" },
+    },
+  ],
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: "Five photography calculators behind one text box: depth of field with near and far limits, hyperfocal distance with a table across the common apertures, exposure value with a set of equivalent aperture and shutter pairs, ND filter exposure times with a table of the usual filters, and field of view with crop factor and 35mm equivalent focal length. Every calculation uses the real sensor dimensions and circle of confusion for the format you pick, from 1 inch compacts up to 44 by 33 mm medium format, or a custom sensor you define yourself. Distances come back in whichever unit system you typed, and depth of field past the hyperfocal distance is reported honestly as infinity.",
-    how: "Choose a calculation and a sensor, then type the numbers the way you would say them out loud: \"50mm f/2.8 3m\" for depth of field, \"f/16 1/125 ISO100\" for exposure, \"1/125 ND1000\" for a long exposure, or \"24mm\" for field of view. Key=value tokens work too when you want to be explicit, such as focal=85 aperture=1.4 distance=2.5m, and you can override the circle of confusion with coc=0.015 or describe an unusual sensor with sensorWidth, sensorHeight, and coc. Feet and inches are recognized, so \"50mm f/2.8 10ft\" answers in feet. In exposure mode you can supply ev= and leave out the aperture, shutter, or ISO, and the missing one is solved for you.",
+    how: 'Choose a calculation and a sensor, then type the numbers the way you would say them out loud: "50mm f/2.8 3m" for depth of field, "f/16 1/125 ISO100" for exposure, "1/125 ND1000" for a long exposure, or "24mm" for field of view. Key=value tokens work too when you want to be explicit, such as focal=85 aperture=1.4 distance=2.5m, and you can override the circle of confusion with coc=0.015 or describe an unusual sensor with sensorWidth, sensorHeight, and coc. Feet and inches are recognized, so "50mm f/2.8 10ft" answers in feet. In exposure mode you can supply ev= and leave out the aperture, shutter, or ISO, and the missing one is solved for you.',
     why: "The popular depth of field sites wrap three or four numbers in banner ads, cookie walls, and a newsletter modal, and most of them only do one calculation, so planning a shot means opening four tabs. This does all five, accepts the shorthand you already use instead of six dropdowns, shows the formula it applied so you can check the work, and runs entirely in the page: your files and inputs never leave your device. There is no sign in, no request limit, and the same URL works as a JSON endpoint when you want to script it.",
     faq: [
       {
@@ -134,7 +144,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "Why does my ND1000 give 8 seconds here when a 10 stop filter should give 8.2?",
-        a: "ND1000 is marketed as a round number but a true 10 stop filter blocks a factor of 1024, so the two answers differ by about 3%. This calculator uses the factor printed on the filter, which is what the label promises. Real filters also drift by a third of a stop or more and dense filters shift colour, so treat any long exposure as a starting point and bracket around it.",
+        a: "ND1000 is marketed as a round number but a true 10 stop filter blocks a factor of 1024, so the two answers differ by about 3%. This calculator uses the factor printed on the filter, which is what the label promises. Real filters also drift by a third of a stop or more and dense filters shift color, so treat any long exposure as a starting point and bracket around it.",
       },
       {
         q: "How is the 35mm equivalent focal length calculated?",

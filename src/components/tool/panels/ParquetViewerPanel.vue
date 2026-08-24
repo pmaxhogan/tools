@@ -4,9 +4,13 @@ import { ChevronLeft, ChevronRight, Download, Sigma, X } from "lucide-vue-next";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";
+import type { KeyValueRow } from "@/lib/key-value";
+import KeyValueGrid from "../KeyValueGrid.vue";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Segmented } from "@/components/ui/segmented";
+import type { SegmentedOption } from "@/components/ui/segmented";
 
 /**
  * Bespoke panel for the Parquet viewer. The generic ToolShell renders a
@@ -39,6 +43,11 @@ const MAX_ROWS = 100000;
 /** Characters kept per cell in the grid. Copying still yields the full value. */
 const CELL_CAP = 300;
 const PAGE_SIZES = [50, 100, 500];
+/** Segmented values are strings, so the page sizes round-trip through String(). */
+const PAGE_SIZE_OPTIONS: SegmentedOption[] = PAGE_SIZES.map((n) => ({
+  value: String(n),
+  label: String(n),
+}));
 
 let logicPromise: Promise<ParquetLogic> | null = null;
 function loadLogic(): Promise<ParquetLogic> {
@@ -80,6 +89,23 @@ let copyTimer: ReturnType<typeof setTimeout> | undefined;
 
 /** Guards against an older, smaller read landing after a newer one. */
 let readSeq = 0;
+
+/**
+ * The two footnote facts about the file itself. `createdBy` is a writer version
+ * string that regularly runs past a hundred characters, so KeyValueGrid gives it
+ * the full row while the codec list keeps its column.
+ */
+const metadataRows = computed<KeyValueRow[]>(() => {
+  const meta = info.value?.metadata;
+  if (!meta) return [];
+  return [
+    {
+      key: "Compression codecs",
+      value: meta.codecs.length > 0 ? meta.codecs.join(", ") : "none recorded",
+    },
+    { key: "Created by", value: meta.createdBy ?? "not recorded in this file" },
+  ];
+});
 
 /* ---------------------------------------------------------------- */
 /* helpers                                                           */
@@ -464,22 +490,7 @@ function exportCsv() {
           </div>
         </div>
 
-        <dl class="grid gap-2 text-xs sm:grid-cols-2">
-          <div class="flex gap-2">
-            <dt class="shrink-0 text-muted-foreground">Compression codecs</dt>
-            <dd class="min-w-0 font-mono break-words">
-              {{
-                info.metadata.codecs.length > 0 ? info.metadata.codecs.join(", ") : "none recorded"
-              }}
-            </dd>
-          </div>
-          <div class="flex gap-2">
-            <dt class="shrink-0 text-muted-foreground">Created by</dt>
-            <dd class="min-w-0 font-mono break-words">
-              {{ info.metadata.createdBy ?? "not recorded in this file" }}
-            </dd>
-          </div>
-        </dl>
+        <KeyValueGrid :rows="metadataRows" :columns="2" surface="card" :copy="false" dense />
       </div>
 
       <!-- Schema -->
@@ -582,19 +593,15 @@ function exportCsv() {
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-          <div class="flex items-center gap-1 rounded-[10px] bg-secondary p-1">
-            <span class="px-1 text-xs text-muted-foreground">Rows per page</span>
-            <button
-              v-for="size in PAGE_SIZES"
-              :key="`size-${size}`"
-              type="button"
-              class="rounded-[8px] px-2 py-1 text-xs tabular-nums outline-none hover:bg-card focus-visible:ring-3 focus-visible:ring-ring/50"
-              :class="pageSize === size ? 'bg-card shadow-[var(--sh-sm)] font-medium' : ''"
-              :aria-pressed="pageSize === size"
-              @click="setPageSize(size)"
-            >
-              {{ size }}
-            </button>
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs text-muted-foreground">Rows per page</span>
+            <Segmented
+              :model-value="String(pageSize)"
+              :options="PAGE_SIZE_OPTIONS"
+              label="Rows per page"
+              size="sm"
+              @update:model-value="(v: string) => setPageSize(Number(v))"
+            />
           </div>
 
           <Button variant="outline" size="sm" :disabled="loadedCount === 0" @click="exportCsv">

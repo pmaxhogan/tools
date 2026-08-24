@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   icon: "Binary",
   matrixSlug: "base-convert",
   name: "Base Converter",
-  description: "Binary, octal, decimal and hex with a bitwise visualiser.",
+  description: "Binary, octal, decimal and hex with a bitwise visualizer.",
   category: "Text",
   keywords: [
     "base converter",
@@ -51,6 +51,10 @@ export const meta: ToolMeta = {
         { value: "36", label: "Base 36", synonyms: ["alphanumeric base", "radix 36"] },
       ],
     },
+  ],
+  examples: [
+    { label: "Decimal to hex", input: "3735928559" },
+    { label: "128 bit max value", input: "340282366920938463463374607431768211455" },
   ],
   http: { method: "GET", contentType: "application/json" },
   copy: {

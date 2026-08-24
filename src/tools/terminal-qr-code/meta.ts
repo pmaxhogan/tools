@@ -22,6 +22,9 @@ export const meta: ToolMeta = {
     "qrencode -t utf8",
     "share a link from the terminal",
     "wifi qr code cli",
+    "unicode block qr code",
+    "curl qr code generator",
+    "qr code no image",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -40,6 +43,13 @@ export const meta: ToolMeta = {
     },
     { kind: "boolean", id: "invert", label: "Invert (dark background)", default: false },
     { kind: "number", id: "margin", label: "Quiet zone", default: 1, min: 0, max: 4 },
+  ],
+  examples: [
+    {
+      label: "Share a link",
+      input: "https://tools.maxhogan.dev",
+      opts: { ecc: "M", invert: "false", margin: "1" },
+    },
   ],
   http: { method: "GET", contentType: "text/plain" },
   copy: {

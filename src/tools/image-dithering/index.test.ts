@@ -19,7 +19,7 @@ import {
  * fixtures
  * ------------------------------------------------------------------ */
 
-/** A solid grey image, fully opaque. */
+/** A solid gray image, fully opaque. */
 function flat(width: number, height: number, value: number): Uint8ClampedArray {
   const out = new Uint8ClampedArray(width * height * 4);
   for (let i = 0; i < width * height; i += 1) {
@@ -31,7 +31,7 @@ function flat(width: number, height: number, value: number): Uint8ClampedArray {
   return out;
 }
 
-/** A grey ramp running left to right and top to bottom, 0 to 255. */
+/** A gray ramp running left to right and top to bottom, 0 to 255. */
 function gradient(width: number, height: number): Uint8ClampedArray {
   const out = new Uint8ClampedArray(width * height * 4);
   const last = width * height - 1;
@@ -45,7 +45,7 @@ function gradient(width: number, height: number): Uint8ClampedArray {
   return out;
 }
 
-/** Mean of the red channel, which equals mean brightness on a grey image. */
+/** Mean of the red channel, which equals mean brightness on a gray image. */
 function meanRed(buf: Uint8ClampedArray): number {
   let sum = 0;
   for (let p = 0; p < buf.length; p += 4) sum += buf[p]!;
@@ -224,7 +224,7 @@ describe("ordered dithering", () => {
     expect(ranks).toEqual([0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]);
   });
 
-  it("turns flat 50 percent grey into an exact checkerboard with Bayer 4x4", () => {
+  it("turns flat 50 percent gray into an exact checkerboard with Bayer 4x4", () => {
     // sRGB 128 is 0.50196. The threshold offset is (rank + 0.5) / 16 - 0.5, so a
     // pixel goes white exactly when its Bayer rank is 8 or more, and in the 4x4
     // matrix that is precisely the squares where x + y is odd.
@@ -365,7 +365,7 @@ describe("resampling", () => {
     expect(Array.from(out)).toEqual([50, 50, 50, 255, 222, 222, 222, 255]);
   });
 
-  it("picks whole pixels with nearest neighbour, in both directions", () => {
+  it("picks whole pixels with nearest neighbor, in both directions", () => {
     const src = new Uint8ClampedArray([
       10, 10, 10, 255, 250, 250, 250, 255, 40, 40, 40, 255, 90, 90, 90, 255,
     ]);

@@ -24,6 +24,8 @@ export const meta: ToolMeta = {
     "power budget calculator",
     "milliamp hour calculator",
     "standby time calculator",
+    "esp32 battery life",
+    "power consumption calculator",
   ],
   input: "none",
   output: "application/json",

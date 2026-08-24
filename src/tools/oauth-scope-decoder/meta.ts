@@ -29,6 +29,9 @@ export const meta: ToolMeta = {
     "zoom oauth scopes",
     "salesforce oauth scopes",
     "spotify oauth scopes",
+    "what does this app want access to",
+    "oauth permission checker",
+    "github oauth app permissions",
   ],
   input: "text/plain",
   output: "application/json",
@@ -52,6 +55,14 @@ export const meta: ToolMeta = {
       ],
     },
     { kind: "boolean", id: "hideLow", label: "Hide low risk scopes", default: false },
+  ],
+  examples: [
+    {
+      label: "Google consent scopes",
+      input:
+        "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar.events openid email profile",
+      opts: { sort: "risk", hideLow: "false" },
+    },
   ],
   http: { method: "GET", contentType: "application/json" },
   copy: {

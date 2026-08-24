@@ -516,11 +516,11 @@ export interface FrameFields {
 }
 
 export interface ParsedFrame extends FrameFields {
-  /** CRC32 of `data` as it travelled, already verified by the parser. */
+  /** CRC32 of `data` as it traveled, already verified by the parser. */
   crc: number;
 }
 
-/** Serialise one frame to its wire bytes. */
+/** Serialize one frame to its wire bytes. */
 export function buildFrameBytes(fields: FrameFields): Uint8Array {
   const nameBytes = fields.fileName ? encoder.encode(fields.fileName) : null;
   if (nameBytes && nameBytes.length > MAX_NAME_BYTES)
@@ -551,7 +551,7 @@ export function buildFrameBytes(fields: FrameFields): Uint8Array {
   return out;
 }
 
-/** Serialise one frame to the base64url text a QR code carries. */
+/** Serialize one frame to the base64url text a QR code carries. */
 export function encodeFrame(fields: FrameFields): string {
   return toBase64Url(buildFrameBytes(fields));
 }
@@ -1262,7 +1262,7 @@ export interface QrTransferOpts {
 }
 
 /**
- * The generic shell renders a labelled record. The real surface is the custom
+ * The generic shell renders a labeled record. The real surface is the custom
  * panel: a sender that animates the frames on a canvas and a receiver that
  * reads them back through the camera.
  */

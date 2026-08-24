@@ -233,7 +233,7 @@ const NO_CANVAS = {
 
 /**
  * A procedural sample: a gradient sky, a glow, a shaded sphere, a ridge of flat
- * shapes, and a stepped grey ramp. Gradients are what make one algorithm look
+ * shapes, and a stepped gray ramp. Gradients are what make one algorithm look
  * different from another, and the flat shapes and the ramp make banding and
  * palette clipping obvious. Drawn from arithmetic, so nothing is fetched.
  */

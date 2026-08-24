@@ -29,6 +29,8 @@ export const meta: ToolMeta = {
     "jpg to webp",
     "check image size in pixels",
     "gps data in photo",
+    "batch image editor",
+    "image metadata viewer",
   ],
   input: "image/*",
   output: "application/json",

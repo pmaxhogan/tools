@@ -180,7 +180,7 @@ export interface LaunchMode {
   power: number;
   /**
    * Degrees added to the pitch for the y component only, before the direction
-   * is normalised (Projectile.shootFromRotation angle argument). Potions and
+   * is normalized (Projectile.shootFromRotation angle argument). Potions and
    * experience bottles pass -20, which lobs them upward.
    */
   pitchOffset: number;

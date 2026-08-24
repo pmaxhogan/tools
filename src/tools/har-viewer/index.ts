@@ -285,7 +285,7 @@ export function statusClass(status: number): string {
   return "other";
 }
 
-/** Strips parameters and normalises a MIME type down to its bucket name. */
+/** Strips parameters and normalizes a MIME type down to its bucket name. */
 export function mimeBucket(mimeType: string): string {
   const base = mimeType.split(";")[0]?.trim().toLowerCase() ?? "";
   if (!base) return "unknown";

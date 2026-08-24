@@ -111,7 +111,7 @@ describe("signaling parser", () => {
     expect(() => parsePeerSignal('{"type":"ice","candidate":"str"}')).toThrowError(/candidate/);
   });
 
-  it("recognises relay messages and falls back to the peer parser", () => {
+  it("recognizes relay messages and falls back to the peer parser", () => {
     expect(parseSignal('{"type":"joined","role":"host","peerPresent":false}')).toEqual({
       type: "joined",
       role: "host",
@@ -296,7 +296,7 @@ describe("run", () => {
     expect(run(undefined, { seed: "pinned" })).toEqual(out);
   });
 
-  it("normalises a typed code or pasted link", () => {
+  it("normalizes a typed code or pasted link", () => {
     expect(run("abc def")["Join link"]).toBe("/p2p-file-transfer#room=ABCDEF");
     expect(run("https://tools.maxhogan.dev/p2p-file-transfer#room=ABCDEF")["Room code"]).toBe(
       "ABC DEF",

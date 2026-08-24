@@ -32,6 +32,7 @@ export const meta: ToolMeta = {
     "frequency domain chart",
     "pitch visualizer",
     "decibel chart",
+    "spectrogram maker",
   ],
   input: "audio/*",
   output: "application/json",

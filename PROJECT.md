@@ -84,7 +84,7 @@ stop and raise it rather than working around it.
 | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Domain    | `tools.maxhogan.dev`, its own Cloudflare Pages project                                                                                                                                         |
 | License   | MIT                                                                                                                                                                                            |
-| Audience  | Public, SEO-optimised                                                                                                                                                                          |
+| Audience  | Public, SEO-optimized                                                                                                                                                                          |
 | Analytics | Cookieless. Use zone-level HTTP analytics (no client JS) or proxy the beacon through our own domain — never load `static.cloudflareinsights.com` directly, per rule 8                          |
 | Framework | **Deferred.** Must prerender per route, support per-page metadata, keep the shell tiny, and use partial hydration so 168 tools don't compile into one bundle. Astro or SvelteKit both qualify. |
 
@@ -133,7 +133,7 @@ The model is nested groups (see `SelectOptionSpec` in `src/tools/types.ts`):
 - Each selectable value is `{ value, label, synonyms }`. **Synonyms are required** (typed
   optional only during the migration): they are hidden search aliases the filter matches on
   besides the visible label.
-- Options may be organised into recursively nestable `groups`, each `{ label, synonyms,
+- Options may be organized into recursively nestable `groups`, each `{ label, synonyms,
 options?, groups? }`. Search matches category labels and synonyms too, and matching a
   category surfaces its options. Group any select large enough to benefit.
 - The search field appears automatically once the flat leaf-option count (via

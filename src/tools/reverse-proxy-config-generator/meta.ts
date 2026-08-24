@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "proxy-config",
   icon: "Server",
   name: "Reverse Proxy Config Generator",
-  description: "Generate nginx and Caddy reverse proxy configs with TLS, websockets, and security headers.",
+  description:
+    "Generate nginx and Caddy reverse proxy configs with TLS, websockets, and security headers.",
   category: "Homelab",
   keywords: [
     "nginx reverse proxy config generator",
@@ -26,6 +27,10 @@ export const meta: ToolMeta = {
   ],
   input: "text/plain",
   output: "text/plain",
+  inputOptional: {
+    label: "Quick entry",
+    hint: 'Optional. Type one line like "app.example.com -> http://127.0.0.1:3000" to set the domain and the upstream together, overriding those two options above. Every other option still applies.',
+  },
   http: { method: "GET", contentType: "text/plain" },
   options: [
     {
@@ -97,7 +102,7 @@ export const meta: ToolMeta = {
     faq: [
       {
         q: "Why does nginx need the Upgrade header for websockets?",
-        a: "nginx proxies HTTP/1.1 connections by default without forwarding the Connection and Upgrade headers, so a websocket handshake fails silently behind a plain proxy_pass. Setting proxy_http_version 1.1 plus proxy_set_header Upgrade $http_upgrade and Connection \"upgrade\" tells nginx to pass the handshake through instead of terminating it as a normal HTTP request.",
+        a: 'nginx proxies HTTP/1.1 connections by default without forwarding the Connection and Upgrade headers, so a websocket handshake fails silently behind a plain proxy_pass. Setting proxy_http_version 1.1 plus proxy_set_header Upgrade $http_upgrade and Connection "upgrade" tells nginx to pass the handshake through instead of terminating it as a normal HTTP request.',
       },
       {
         q: "Where do the TLS certificates come from?",

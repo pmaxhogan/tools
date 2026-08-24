@@ -24,6 +24,8 @@ export const meta: ToolMeta = {
     "sha256 file compare",
     "file hash duplicate check",
     "clean up folder duplicates",
+    "file deduplication tool",
+    "duplicate file remover",
   ],
   input: "none",
   output: "application/json",

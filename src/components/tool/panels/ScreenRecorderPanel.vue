@@ -238,7 +238,7 @@ async function startRecording() {
     stage.value = "idle";
     error.value = {
       message: "The browser shared no video track.",
-      fix: "Start again and pick a screen, window, or tab rather than cancelling the picker.",
+      fix: "Start again and pick a screen, window, or tab rather than canceling the picker.",
     };
     return;
   }

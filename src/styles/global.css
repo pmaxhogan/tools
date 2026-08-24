@@ -75,6 +75,13 @@
   /* Native UI (scrollbars, form controls, spellcheck) follows the theme. */
   color-scheme: light;
   --radius: 0.625rem;
+  /* Sidebar column width at xl and up, and the range its drag handle allows.
+     The default here is the shipped width; a stored preference overrides it
+     before paint by setting --sidebar-w on <html> (BaseLayout applyHtmlState).
+     The numbers match src/lib/sidebar-width.ts. */
+  --sidebar-w: 17rem;
+  --sidebar-w-min: 14rem;
+  --sidebar-w-max: 28rem;
   --background: #f6f4f1;
   --foreground: #1b1917;
   --card: #ffffff;

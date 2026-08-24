@@ -267,7 +267,7 @@ describe("json-format", () => {
     expect(apply("json-format", '{"a":1,"b":[2]}')).toBe('{\n  "a": 1,\n  "b": [\n    2\n  ]\n}\n');
   });
 
-  it("honours a custom indent", () => {
+  it("honors a custom indent", () => {
     expect(apply("json-format", '{"a":1}', { jsonIndent: 4 })).toBe('{\n    "a": 1\n}\n');
   });
 
@@ -486,7 +486,7 @@ describe("planBatch", () => {
     ]);
   });
 
-  it("honours a custom suffix marker", () => {
+  it("honors a custom suffix marker", () => {
     const plan = planBatch(scanOf(["a.txt"]), {
       operation: "case",
       output: "suffix",

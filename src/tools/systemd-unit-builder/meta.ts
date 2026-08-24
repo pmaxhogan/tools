@@ -30,6 +30,10 @@ export const meta: ToolMeta = {
   ],
   input: "text/plain",
   output: "text/plain",
+  inputOptional: {
+    label: "Quick entry",
+    hint: 'Optional. Paste a command line like "/usr/bin/node /srv/app/server.js" and it becomes ExecStart, but only while the ExecStart option above is empty. A filled ExecStart field always wins.',
+  },
   http: { method: "GET", contentType: "text/plain" },
   options: [
     { kind: "text", id: "description", label: "Description", default: "My service" },

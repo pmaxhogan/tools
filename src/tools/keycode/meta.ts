@@ -24,6 +24,8 @@ export const meta: ToolMeta = {
     "event.key reference",
     "modifier key checker",
     "shortcut combo tester",
+    "which key was pressed",
+    "js keyboard event inspector",
   ],
   input: "application/json",
   output: "application/json",

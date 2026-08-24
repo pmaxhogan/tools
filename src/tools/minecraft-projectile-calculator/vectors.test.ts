@@ -127,7 +127,7 @@ function listVectorFiles(): { version: VersionId; file: VectorFile }[] {
  * Through 1.20.6 the acceleration is a stored Power vector, which a plain
  * /summon leaves at zero, so the entity coasts on drag alone. From 1.21.1 it is
  * the acceleration_power field, which defaults to 0.1 and is applied along the
- * normalised motion, so a summoned fireball speeds up exactly like a ghast's.
+ * normalized motion, so a summoned fireball speeds up exactly like a ghast's.
  */
 function summonedAcceleration(fields: Record<string, unknown>): number | undefined {
   const explicit = fields.acceleration_power;
@@ -158,7 +158,7 @@ describe("measured golden vectors", () => {
       for (const c of file.sourceConstants ?? []) {
         const projectile = TYPE_TO_PROJECTILE[c.type];
         if (!projectile) {
-          it.skip(`${c.type}: not modelled by this tool`, () => {});
+          it.skip(`${c.type}: not modeled by this tool`, () => {});
           continue;
         }
         it(`${c.type} constants match the source the pipeline read`, () => {
@@ -207,7 +207,7 @@ describe("measured golden vectors", () => {
       for (const c of file.cases ?? []) {
         const projectile = TYPE_TO_PROJECTILE[c.type];
         if (!projectile) {
-          it.skip(`${c.type} ${c.launch}: not modelled by this tool`, () => {});
+          it.skip(`${c.type} ${c.launch}: not modeled by this tool`, () => {});
           continue;
         }
 

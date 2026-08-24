@@ -727,7 +727,7 @@ onUnmounted(() => {
           Captures are drawn at the video's own pixel size, so nothing is scaled down. A burst
           pauses playback, seeks to each planned time in turn, and captures there. Browsers seek to
           the nearest decodable frame, so a capture can land a few milliseconds either side of the
-          time you asked for. Each thumbnail below is labelled with the position the video actually
+          time you asked for. Each thumbnail below is labeled with the position the video actually
           reported.
         </p>
       </div>

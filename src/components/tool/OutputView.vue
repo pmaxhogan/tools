@@ -1,32 +1,26 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import CopyButton from "./CopyButton.vue";
+import KeyValueGrid from "./KeyValueGrid.vue";
+import { recordToRows, rowsToText } from "@/lib/key-value";
 
 /**
  * Renders tool output. Supports:
  *  - string: single mono block with one copy button
- *  - Record<string, string>: labeled rows, each with its own copy button
+ *  - Record<string, string>: a responsive labeled grid, each row with its own
+ *    copy button, sitting under one copy everything button
+ *
+ * The record branch used to be a single tall stack, which wasted most of a wide
+ * screen on tools that report a dozen short facts. KeyValueGrid owns that
+ * layout now, including the rule for when a value is too long to share a row.
  */
 const props = defineProps<{ output: string | Record<string, string> }>();
 
 const isRecord = computed(() => typeof props.output !== "string");
-const entries = computed(() =>
-  typeof props.output === "string" ? [] : Object.entries(props.output),
-);
+const rows = computed(() => (typeof props.output === "string" ? [] : recordToRows(props.output)));
 const all = computed(() =>
-  typeof props.output === "string"
-    ? props.output
-    : entries.value.map(([k, v]) => `${k}: ${v}`).join("\n"),
+  typeof props.output === "string" ? props.output : rowsToText(rows.value),
 );
-
-/**
- * Every value wraps so none of them is unreadable, which leaves short ones
- * looking exactly as compact as before. Long or multi-line values also get a
- * height cap and scroll in place, and their copy button pins to the top.
- */
-function isLong(value: string): boolean {
-  return value.length > 120 || value.includes("\n");
-}
 </script>
 
 <template>
@@ -38,27 +32,7 @@ function isLong(value: string): boolean {
       <CopyButton :text="all" label="Copy" />
     </div>
 
-    <div v-if="isRecord" class="divide-y divide-border/60">
-      <div
-        v-for="[k, v] in entries"
-        :key="k"
-        class="flex justify-between gap-3 px-3 py-2"
-        :class="isLong(v) ? 'items-start' : 'items-center'"
-      >
-        <div class="min-w-0">
-          <div class="text-xs text-muted-foreground">
-            {{ k }}
-          </div>
-          <div
-            class="font-mono text-sm break-words whitespace-pre-wrap"
-            :class="isLong(v) ? 'max-h-40 overflow-y-auto' : undefined"
-          >
-            {{ v }}
-          </div>
-        </div>
-        <CopyButton :text="v" />
-      </div>
-    </div>
+    <KeyValueGrid v-if="isRecord" :rows="rows" />
 
     <pre
       v-else

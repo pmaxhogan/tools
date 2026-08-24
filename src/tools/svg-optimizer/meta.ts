@@ -29,6 +29,9 @@ export const meta: ToolMeta = {
     "strip inkscape metadata",
     "illustrator svg cleanup",
     "svg path optimizer",
+    "svgomg online",
+    "figma svg export cleanup",
+    "svg comment remover",
   ],
   input: "image/svg+xml",
   output: "application/json",
@@ -55,6 +58,20 @@ export const meta: ToolMeta = {
     },
     { kind: "boolean", id: "pretty", label: "Pretty print output", default: false },
     { kind: "boolean", id: "removeIds", label: "Remove unused ids", default: false },
+  ],
+  examples: [
+    {
+      label: "Inkscape star icon",
+      input:
+        '<?xml version="1.0" encoding="UTF-8"?>\n<!-- Created with Inkscape (http://www.inkscape.org/) -->\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="64" height="64" viewBox="0 0 64 64" version="1.1" id="svg1" inkscape:version="1.1.2">\n  <defs id="defs1" />\n  <path inkscape:connector-curvature="0" id="path1" d="M 32.000004,4.0000041 39.021925,25.75621 61.87593,25.755847 43.42631,38.98779 50.445167,60.744831 32.000004,47.51103 13.554841,60.744831 20.573738,38.98779 2.1241175,25.755847 24.978083,25.75621 Z" style="fill:#ffcc00;stroke:#000000;stroke-width:1" />\n</svg>\n',
+      opts: {
+        multipass: "true",
+        precision: "3",
+        keepViewBox: "true",
+        pretty: "false",
+        removeIds: "false",
+      },
+    },
   ],
   copy: {
     what: "Runs the real SVGO optimizer engine on your SVG, right in your browser, and shows byte level before and after stats. Comments, editor metadata (Inkscape and Illustrator cruft), and redundant precision get stripped, paths get merged and shortened, and the result is a smaller file that still renders identically. Toggle multipass, decimal precision, viewBox handling, pretty printing, and id cleanup to match your needs.",

@@ -25,9 +25,22 @@ export const meta: ToolMeta = {
     "elapsed time sum",
     "work hours calculator",
     "timesheet calculator",
+    "billable hours calculator",
   ],
   input: "text/plain",
   output: "application/json",
+  examples: [
+    {
+      label: "Mixed expression",
+      input: "1:30:00 + 45min - 20s",
+    },
+    {
+      label: "Sum a time list",
+      input: `1h
+30m
+15s`,
+    },
+  ],
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: "Adds and subtracts clock times and durations in a single expression. Mix hh:mm:ss clock times, unit shorthand like 90m, 1.5h, or 2h 30m, and plain numbers (read as minutes), joined with + and -, or paste one duration per line to sum them all. Returns the total as hh:mm:ss, a humanized 'X days Y hours Z minutes' string, and totals in seconds, minutes, and hours.",

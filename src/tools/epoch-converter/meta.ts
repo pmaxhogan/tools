@@ -17,6 +17,8 @@ export const meta: ToolMeta = {
     "convert timestamp to human readable",
     "iso 8601 converter",
     "unix epoch calculator",
+    "utc converter",
+    "epoch time",
   ],
   input: "text/plain",
   output: "application/json",
@@ -98,6 +100,17 @@ export const meta: ToolMeta = {
           ],
         },
       ],
+    },
+  ],
+  examples: [
+    {
+      label: "Unix timestamp",
+      input: "1754521200",
+    },
+    {
+      label: "ISO date in Chicago",
+      input: "2026-12-25T09:00:00Z",
+      opts: { tz: "America/Chicago" },
     },
   ],
   http: { method: "GET", contentType: "application/json" },

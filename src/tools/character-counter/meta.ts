@@ -28,6 +28,8 @@ export const meta: ToolMeta = {
     "unicode grapheme counter",
     "string length checker",
     "paragraph counter",
+    "line counter",
+    "text statistics",
   ],
   input: "text/plain",
   output: "application/json",
@@ -49,6 +51,14 @@ export const meta: ToolMeta = {
           synonyms: ["gpt-3.5", "gpt-4", "chatgpt", "older tokenizer"],
         },
       ],
+    },
+  ],
+  examples: [
+    {
+      label: "Paragraph with emoji",
+      input:
+        "Please review the attached invoice before Friday's call. The whole team, including the new hires, will be on the line: 👨‍👩‍👧‍👦",
+      opts: { encoding: "o200k_base" },
     },
   ],
   copy: {

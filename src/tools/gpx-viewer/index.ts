@@ -22,7 +22,7 @@ import { ToolError, type ToolLogic } from "../types";
 export interface TrackPoint {
   lat: number;
   lon: number;
-  /** Metres above sea level, when the file carried one. */
+  /** Meters above sea level, when the file carried one. */
   ele?: number;
   /** Epoch milliseconds. Kept as a number so exports round trip exactly. */
   time?: number;
@@ -80,14 +80,14 @@ export interface TrackStats {
 
 export interface StatsOptions {
   /**
-   * Elevation hysteresis in metres. A climb or descent only counts once the
+   * Elevation hysteresis in meters. A climb or descent only counts once the
    * reading differs from the last accepted reading by at least this much,
    * which stops GPS noise from inflating the totals. Default 3.
    */
   smoothing?: number;
   /**
-   * Minimum horizontal run in metres before a grade sample is taken. Without
-   * it, two points a metre apart turn half a metre of noise into a 50 percent
+   * Minimum horizontal run in meters before a grade sample is taken. Without
+   * it, two points a meter apart turn half a meter of noise into a 50 percent
    * grade. Default 10.
    */
   minGradeRun?: number;
@@ -104,9 +104,9 @@ export interface GpxViewerOpts {
 
 /** Refuse anything past this, before decoding, so a huge drop fails fast. */
 const MAX_BYTES = 50 * 1024 * 1024;
-/** IUGG mean Earth radius in metres. */
+/** IUGG mean Earth radius in meters. */
 const EARTH_RADIUS_M = 6371008.8;
-/** Metres per degree of latitude, the constant the equirectangular scale uses. */
+/** Meters per degree of latitude, the constant the equirectangular scale uses. */
 const METERS_PER_DEGREE = 111320;
 const METERS_PER_MILE = 1609.344;
 const METERS_PER_FOOT = 0.3048;
@@ -706,7 +706,7 @@ function toRadians(degrees: number): number {
   return (degrees * Math.PI) / 180;
 }
 
-/** Great circle distance in metres between two coordinates. */
+/** Great circle distance in meters between two coordinates. */
 export function haversineMeters(
   a: { lat: number; lon: number },
   b: { lat: number; lon: number },
@@ -722,7 +722,7 @@ export function haversineMeters(
 }
 
 /**
- * Distance from the first point to each point, in metres. The jump between two
+ * Distance from the first point to each point, in meters. The jump between two
  * segments adds nothing: a paused recording should not bill the user for the
  * straight line across the gap.
  */
@@ -760,9 +760,9 @@ function boundsOf(coords: { lat: number; lon: number }[]): BoundingBox | undefin
  *
  * Elevation gain and loss use a last-accepted hysteresis: a change only counts
  * once the reading differs from the last accepted reading by `smoothing`
- * metres (3 by default), at which point the whole difference is booked and the
- * accepted reading moves. Grade samples need `minGradeRun` metres of
- * horizontal travel so a metre of GPS jitter cannot report a cliff. Both
+ * meters (3 by default), at which point the whole difference is booked and the
+ * accepted reading moves. Grade samples need `minGradeRun` meters of
+ * horizontal travel so a meter of GPS jitter cannot report a cliff. Both
  * counters restart at a segment boundary, as does distance.
  */
 export function trackStats(track: Track, options: StatsOptions = {}): TrackStats {
@@ -1263,7 +1263,7 @@ export function renderTrackSvg(track: Track, options: RenderOptions = {}): strin
 }
 
 /**
- * Elevation against distance as a filled area, with the min and max labelled.
+ * Elevation against distance as a filled area, with the min and max labeled.
  * Deterministic for a given track and options.
  */
 export function renderElevationSvg(track: Track, options: RenderOptions = {}): string {

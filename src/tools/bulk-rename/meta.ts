@@ -26,6 +26,7 @@ export const meta: ToolMeta = {
     "clean up filenames",
     "strip accents from filenames",
     "multi file rename",
+    "rename multiple files",
   ],
   input: "none",
   output: "application/json",

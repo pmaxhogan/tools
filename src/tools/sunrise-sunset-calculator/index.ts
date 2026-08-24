@@ -25,17 +25,17 @@ const MS_PER_MINUTE = 60_000;
 /** Julian day number of the unix epoch (1970-01-01T00:00:00Z). */
 const UNIX_EPOCH_JD = 2440587.5;
 
-/** Zenith angle of the sun's centre at sunrise and sunset (NOAA). */
+/** Zenith angle of the sun's center at sunrise and sunset (NOAA). */
 export const ZENITH_SUNRISE = 90.833;
-/** Civil twilight: the sun's centre 6 degrees below the horizon. */
+/** Civil twilight: the sun's center 6 degrees below the horizon. */
 export const ZENITH_CIVIL = 96;
 /** Nautical twilight: 12 degrees below the horizon. */
 export const ZENITH_NAUTICAL = 102;
 /** Astronomical twilight: 18 degrees below the horizon. */
 export const ZENITH_ASTRONOMICAL = 108;
-/** Golden hour boundary: the sun's centre 6 degrees above the horizon. */
+/** Golden hour boundary: the sun's center 6 degrees above the horizon. */
 export const ZENITH_GOLDEN = 84;
-/** Blue hour inner boundary: the sun's centre 4 degrees below the horizon. */
+/** Blue hour inner boundary: the sun's center 4 degrees below the horizon. */
 export const ZENITH_BLUE = 94;
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -96,7 +96,7 @@ export function eccentricityEarthOrbit(t: number): number {
   return 0.016708634 - t * (0.000042037 + 0.0000001267 * t);
 }
 
-/** Sun's equation of centre, degrees. */
+/** Sun's equation of center, degrees. */
 export function sunEqOfCenter(t: number): number {
   const m = geomMeanAnomalySun(t) * RAD;
   return (
@@ -342,7 +342,7 @@ function solarNoonUTCMinutes(jd0: number, lonDeg: number): number {
 
 /**
  * Minutes past 00:00 UTC of a rise or set event at one zenith. The value can
- * fall outside [0, 1440) when the event belongs to the neighbouring UTC day,
+ * fall outside [0, 1440) when the event belongs to the neighboring UTC day,
  * which is correct: the caller turns it back into an instant.
  */
 function eventUTCMinutes(

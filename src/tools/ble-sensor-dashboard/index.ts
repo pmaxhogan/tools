@@ -192,8 +192,8 @@ function parseCo2(view: DataView): ParsedCharacteristic {
 
 /**
  * PM1, PM2.5 and PM10 all share the SFLOAT layout. The GATT supplement names
- * the unit as kilograms per cubic metre, but every real sensor and the numbers
- * people expect to see are micrograms per cubic metre, so the reading is
+ * the unit as kilograms per cubic meter, but every real sensor and the numbers
+ * people expect to see are micrograms per cubic meter, so the reading is
  * labeled that way and the SFLOAT decode itself is unit agnostic.
  */
 function makePmParser(label: string): GattParser {

@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   icon: "Scissors",
   matrixSlug: "audio-trim",
   name: "Audio Trimmer",
-  description: "Cut, fade and loudness-normalise audio in your browser.",
+  description: "Cut, fade and loudness-normalize audio in your browser.",
   category: "Media",
   keywords: [
     "audio trimmer",
@@ -27,6 +27,7 @@ export const meta: ToolMeta = {
     "lufs normalizer",
     "loudness meter",
     "audio slicer",
+    "audio normalization",
   ],
   input: "audio/*",
   output: "application/json",

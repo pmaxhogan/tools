@@ -416,7 +416,7 @@ function resync(doc: SubtitleDoc, opts: SubtitleOpts): SubtitleDoc {
   return { ...doc, blocks: doc.blocks.map((b) => ({ ...b })), cues };
 }
 
-/** Fold a cue down to two lines by repeatedly merging the shortest neighbours. */
+/** Fold a cue down to two lines by repeatedly merging the shortest neighbors. */
 function collapseLines(lines: string[]): string[] {
   const out = [...lines];
   while (out.length > 2) {

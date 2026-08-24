@@ -53,6 +53,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Segmented } from "@/components/ui/segmented";
 import OutputView from "../OutputView.vue";
 
 defineProps<{ meta: ToolMeta }>();
@@ -542,11 +543,12 @@ onMounted(() => {
             @update:model-value="onVersionChange"
           />
         </div>
-        <div class="flex w-40 flex-col gap-1.5">
+        <div class="flex min-w-0 flex-col gap-1.5">
           <Label for="mch-difficulty" class="text-xs text-muted-foreground">Difficulty</Label>
-          <SearchableSelect
+          <Segmented
             id="mch-difficulty"
-            :spec="difficultySpec"
+            :options="difficultySpec.options ?? []"
+            label="Difficulty"
             :model-value="difficulty"
             @update:model-value="(v: string) => (difficulty = v as DifficultyId)"
           />

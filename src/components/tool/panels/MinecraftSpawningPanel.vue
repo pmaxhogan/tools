@@ -31,6 +31,8 @@ import {
 } from "@/tools/minecraft-mob-spawning-calculator/index";
 import { BIOMES, type SpawnDimension } from "@/tools/minecraft-mob-spawning-calculator/biomes";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import type { KeyValueRow } from "@/lib/key-value";
+import KeyValueGrid from "../KeyValueGrid.vue";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -322,6 +324,20 @@ function round(n: number): string {
   if (n >= 1) return n.toFixed(1);
   return n.toFixed(2);
 }
+
+/** The six terms the farm rate is built from, spelled out under the estimate. */
+const farmTermRows = computed<KeyValueRow[]>(() => {
+  const t = farm.value?.terms;
+  if (!t) return [];
+  return [
+    { key: "Chunk ticks per second", value: String(t.chunkTicksPerSecond) },
+    { key: "Random y values", value: String(t.columnHeight) },
+    { key: "Spaces per chunk", value: round(t.spawnSpacesPerChunk) },
+    { key: "Chance of a hit", value: pct(t.hitChance) },
+    { key: "Mobs per hit", value: round(t.mobsPerHit) },
+    { key: "Light passes", value: pct(t.lightChance) },
+  ];
+});
 
 function clampInt(value: unknown, min: number, max: number, fallback: number): number {
   const n = Math.round(Number(value));
@@ -875,34 +891,7 @@ const TABS: Array<{ id: Tab; label: string }> = [
 
             <div class="flex flex-col gap-2 rounded-[14px] border p-4">
               <h3 class="text-sm font-medium">Where the estimate comes from</h3>
-              <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-3">
-                <div class="flex justify-between gap-2">
-                  <dt class="text-muted-foreground">Chunk ticks per second</dt>
-                  <dd class="font-mono tabular-nums">{{ farm.terms.chunkTicksPerSecond }}</dd>
-                </div>
-                <div class="flex justify-between gap-2">
-                  <dt class="text-muted-foreground">Random y values</dt>
-                  <dd class="font-mono tabular-nums">{{ farm.terms.columnHeight }}</dd>
-                </div>
-                <div class="flex justify-between gap-2">
-                  <dt class="text-muted-foreground">Spaces per chunk</dt>
-                  <dd class="font-mono tabular-nums">
-                    {{ round(farm.terms.spawnSpacesPerChunk) }}
-                  </dd>
-                </div>
-                <div class="flex justify-between gap-2">
-                  <dt class="text-muted-foreground">Chance of a hit</dt>
-                  <dd class="font-mono tabular-nums">{{ pct(farm.terms.hitChance) }}</dd>
-                </div>
-                <div class="flex justify-between gap-2">
-                  <dt class="text-muted-foreground">Mobs per hit</dt>
-                  <dd class="font-mono tabular-nums">{{ round(farm.terms.mobsPerHit) }}</dd>
-                </div>
-                <div class="flex justify-between gap-2">
-                  <dt class="text-muted-foreground">Light passes</dt>
-                  <dd class="font-mono tabular-nums">{{ pct(farm.terms.lightChance) }}</dd>
-                </div>
-              </dl>
+              <KeyValueGrid :rows="farmTermRows" :columns="3" surface="card" :copy="false" dense />
               <ul class="flex flex-col gap-1 text-xs text-muted-foreground">
                 <li v-for="note in farm.notes" :key="note">{{ note }}</li>
               </ul>

@@ -14,3 +14,6 @@ public/tesseract/
 # by mc-pipeline/*.mjs. Generated, huge, and diffed as data rather than read.
 mc-pipeline/extracted/
 mc-pipeline/vectors/
+src/tools/_generated/
+public/data/
+public/wawoff2/

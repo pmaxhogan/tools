@@ -340,13 +340,13 @@ describe("key naming, Camelot, and Open Key", () => {
     expect(scaleNotes("A", "minor")).toEqual(["A", "B", "C", "D", "E", "F", "G"]);
   });
 
-  it("lists the three neighbours on the wheel", () => {
+  it("lists the three neighbors on the wheel", () => {
     expect(camelotNeighbours("8A")).toEqual(["7A", "9A", "8B"]);
     expect(camelotNeighbours("1B")).toEqual(["12B", "2B", "1A"]);
     expect(() => camelotNeighbours("nope")).toThrow(/not a Camelot code/);
   });
 
-  it("normalises key spellings", () => {
+  it("normalizes key spellings", () => {
     expect(formatKey("c#", "minor")).toBe("C# minor");
     expect(formatKey("Db", "minor")).toBe("C# minor");
     expect(formatKey(1, "major")).toBe("Db major");
@@ -440,7 +440,7 @@ describe("run", () => {
     expect(out["Energy boost"]).toContain("B minor (10A, 3m)");
   });
 
-  it("honours the notation option", () => {
+  it("honors the notation option", () => {
     const camelot = run("A minor", { notation: "camelot" });
     expect(camelot["Camelot"]).toBe("8A");
     expect(camelot["Open Key"]).toBeUndefined();

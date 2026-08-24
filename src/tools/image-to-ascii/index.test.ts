@@ -27,7 +27,7 @@ function flat(width: number, height: number, r: number, g = r, b = r): Uint8Clam
   return out;
 }
 
-/** A grey ramp running left to right, constant top to bottom, 0 to 255. */
+/** A gray ramp running left to right, constant top to bottom, 0 to 255. */
 function hGradient(width: number, height: number): Uint8ClampedArray {
   const out = new Uint8ClampedArray(width * height * 4);
   for (let y = 0; y < height; y += 1) {
@@ -319,7 +319,7 @@ describe("toBraille", () => {
     expect(high.replace(/\n/g, "")[0]!.codePointAt(0)).toBe(0x28ff); // 150 <= 200, dot
   });
 
-  it("changes the output when dithering is turned on for a mid grey image", () => {
+  it("changes the output when dithering is turned on for a mid gray image", () => {
     const src = flat(32, 32, 140);
     const plain = toBraille(src, 32, 32, { columns: 32, threshold: 128 });
     const dithered = toBraille(src, 32, 32, { columns: 32, threshold: 128, dither: true });

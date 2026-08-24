@@ -116,6 +116,19 @@ export const meta: ToolMeta = {
       ],
     },
   ],
+  examples: [
+    {
+      label: "Minified invoice JSON",
+      input:
+        '{"invoice":"INV-2024-0417","customer":{"name":"Riverbend Coffee Roasters","email":"accounts@riverbendroasters.example"},"items":[{"sku":"GRN-ETH-5K","qty":4,"unitPrice":91.5}],"total":1246.23,"paid":false}',
+      opts: { mode: "format", indent: "2" },
+    },
+    {
+      label: "Base64 to decode",
+      input: "SGVsbG8gZnJvbSB0aGUgY2xpcGJvYXJkLg==",
+      opts: { mode: "base64-decode" },
+    },
+  ],
   http: { method: "POST", contentType: "text/plain" },
   copy: {
     what: "One box for the four things you do to a payload all day: pretty-print or minify JSON, check whether a document is valid and exactly where it breaks, and decode base64, URL-escapes or a JWT. JSON errors report the character position, line and column plus the surrounding text, so you find the stray comma instead of hunting for it. The JWT mode splits the token into header, payload and signature, pretty-prints both JSON parts, reports the algorithm, and turns the exp, iat and nbf claims into readable ISO timestamps. Base64 is unicode-safe in both directions, so emoji and non-Latin scripts round-trip intact.",

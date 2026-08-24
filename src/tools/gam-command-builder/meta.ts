@@ -28,6 +28,12 @@ export const meta: ToolMeta = {
     "admin console cli alternative",
     "gam command generator",
     "google admin sdk cli",
+    "gam bulk operations",
+    "workspace admin scripting",
+    "gam wiki alternative",
+    "gam delete user command",
+    "it admin automation",
+    "google directory api cli",
   ],
   input: "text/plain",
   output: "application/json",
@@ -102,6 +108,10 @@ export const meta: ToolMeta = {
       default: false,
     },
   ],
+  examples: [
+    { label: "Suspend a user", input: "suspend a user", opts: { category: "all" } },
+    { label: "Offboard a leaver", input: "offboard a leaver", opts: { category: "all" } },
+  ],
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: "Describe a Google Workspace admin task in plain English and this returns the GAM command that does it, with every angle bracket placeholder explained and a filled in example you can adapt. The catalog is hand written against the GAM7 wiki and the BNF grammar GAM ships beside its binary, and it covers users, groups, org units, licenses, Drive and shared drives, Gmail, Calendar, reports and device management. Each recipe carries the gotchas that bite in practice, such as Git Bash rewriting a leading slash org unit path into a Windows directory, print filelist quietly adding an owner clause to your query so it returns nothing and exits happy, max_to_trash defaulting to one rather than unlimited, and Gmail deletions staying a dry run until you append doit. Commands that change or remove data are flagged, and the handful of recipes that only one fork accepts say so.",
@@ -114,7 +124,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "GAM7 or GAMADV-XTD3, which syntax do I get?",
-        a: "GAM7, and for almost every command that is the same answer either way. GAMADV-XTD3 was not a rival fork that drifted apart, it is the lineage GAM7 continues: its own README says it has been replaced by GAM7, and its last release was 7.05.08 in March 2025. So GAM7 is mostly a superset, and only a handful of recipes here are genuinely fork specific, each labelled and explained. The real syntax mismatch people hit is legacy GAM 4, 5 and 6, the older gam.py lineage, which is a different thing again. Run gam version before you trust any example you found online.",
+        a: "GAM7, and for almost every command that is the same answer either way. GAMADV-XTD3 was not a rival fork that drifted apart, it is the lineage GAM7 continues: its own README says it has been replaced by GAM7, and its last release was 7.05.08 in March 2025. So GAM7 is mostly a superset, and only a handful of recipes here are genuinely fork specific, each labeled and explained. The real syntax mismatch people hit is legacy GAM 4, 5 and 6, the older gam.py lineage, which is a different thing again. Run gam version before you trust any example you found online.",
       },
       {
         q: "Is what I type here uploaded anywhere?",

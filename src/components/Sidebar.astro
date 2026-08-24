@@ -1,6 +1,7 @@
 ---
 import { tools } from "@/tools/registry";
 import SidebarNav from "@/components/SidebarNav.vue";
+import { SIDEBAR_WIDTH_DEFAULT, SIDEBAR_WIDTH_MAX, SIDEBAR_WIDTH_MIN } from "@/lib/sidebar-width";
 
 /**
  * Sitewide tool navigation: every tool grouped by category, with live search.
@@ -11,6 +12,16 @@ import SidebarNav from "@/components/SidebarNav.vue";
  * The searchable list itself is a Vue island (SidebarNav) so it can filter,
  * arrow-navigate, and track the active route. It is `transition:persist`ed so
  * its open/closed drawer context and in-progress search survive navigations.
+ *
+ * The aside itself is NOT persisted: it is rebuilt on every view-transition
+ * swap, and the island saves and restores its scrollTop around the swap.
+ *
+ * `#sidebar-resize` is the width drag handle, at xl and up only. It is a
+ * sibling of the aside and `position: fixed`, so it never takes flow space and
+ * is never clipped by the aside's own scrolling. Its markup is server rendered
+ * so the edge exists before hydration; the pointer, keyboard and persistence
+ * logic lives in SidebarNav.vue, which survives view transitions and can import
+ * the tested helpers in src/lib/sidebar-width.ts.
  */
 
 const path = Astro.url.pathname;
@@ -30,7 +41,10 @@ const navTools = tools.map((t) => ({
 <div id="sidebar-scrim" class="sidebar-scrim" aria-hidden="true"></div>
 
 <aside id="site-sidebar" class="site-sidebar border-r bg-card" aria-label="All tools" tabindex="-1">
-  <div class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-card px-4 py-3">
+  <div
+    id="sidebar-header"
+    class="sidebar-header sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-card px-4"
+  >
     <h2 class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
       All tools
     </h2>
@@ -56,10 +70,38 @@ const navTools = tools.map((t) => ({
   <SidebarNav client:load transition:persist="sidebar" tools={navTools} currentSlug={currentSlug} />
 </aside>
 
+<div
+  id="sidebar-resize"
+  class="sidebar-resize"
+  role="separator"
+  tabindex="0"
+  aria-orientation="vertical"
+  aria-label="Resize the tool list"
+  aria-controls="site-sidebar"
+  aria-valuemin={SIDEBAR_WIDTH_MIN}
+  aria-valuemax={SIDEBAR_WIDTH_MAX}
+  aria-valuenow={SIDEBAR_WIDTH_DEFAULT}
+>
+</div>
+
 <style>
   .site-sidebar {
+    /* The header and the island's search box both stick to the top of this
+       scroll box. Pinning the header height here lets the search dock sit
+       exactly under it, and lets the island measure how much of the scroll
+       viewport is covered when it reveals the active tool. */
+    --sidebar-header-h: 3.375rem;
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  .sidebar-header {
+    height: var(--sidebar-header-h);
+  }
+
+  /* Resize handle: hidden except at xl and up, where the sidebar is a column. */
+  .sidebar-resize {
+    display: none;
   }
 
   /* Below xl: off-canvas drawer. Kept in the DOM (fixed, so it never takes
@@ -109,12 +151,23 @@ const navTools = tools.map((t) => ({
 
   /* xl and up: a real column that pushes the page, sticky and self-scrolling. */
   @media (min-width: 1280px) {
+    /* One resolved width for the column and for where the handle sits, so a
+       stored value outside the range can never let the two disagree. */
+    .site-sidebar,
+    .sidebar-resize {
+      --sidebar-w-applied: clamp(
+        var(--sidebar-w-min, 14rem),
+        var(--sidebar-w, 17rem),
+        var(--sidebar-w-max, 28rem)
+      );
+    }
+
     .site-sidebar {
       position: sticky;
       top: 0;
       align-self: flex-start;
       flex: none;
-      width: 17rem;
+      width: var(--sidebar-w-applied);
       height: 100dvh;
     }
 
@@ -124,6 +177,56 @@ const navTools = tools.map((t) => ({
 
     .sidebar-scrim {
       display: none;
+    }
+
+    /* A 6px grab edge straddling the sidebar's right border, with the pill
+       only showing on hover, on keyboard focus, and while dragging. */
+    .sidebar-resize {
+      display: block;
+      position: fixed;
+      inset-block: 0;
+      left: var(--sidebar-w-applied);
+      z-index: 45;
+      width: 6px;
+      margin-left: -3px;
+      cursor: col-resize;
+      touch-action: none;
+    }
+
+    :global(html.sb-closed) .sidebar-resize {
+      display: none;
+    }
+
+    .sidebar-resize::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 3px;
+      height: 2.5rem;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      background: var(--brand-hairline);
+      opacity: 0;
+      transition:
+        opacity 120ms ease-out,
+        background-color 120ms ease-out;
+    }
+
+    .sidebar-resize:hover::before,
+    .sidebar-resize:focus-visible::before {
+      opacity: 1;
+    }
+
+    :global(html.sb-resizing) .sidebar-resize::before {
+      opacity: 1;
+      background: var(--primary);
+    }
+
+    /* Nothing animates while the pointer is driving the width. */
+    :global(html.sb-resizing) .site-sidebar,
+    :global(html.sb-resizing) .sidebar-resize::before {
+      transition: none;
     }
   }
 </style>

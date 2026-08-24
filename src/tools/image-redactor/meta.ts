@@ -29,6 +29,8 @@ export const meta: ToolMeta = {
     "tap to redact",
     "auto redact text",
     "click to censor",
+    "pixelate image",
+    "hide text in screenshot",
   ],
   input: "image/*",
   output: "application/json",

@@ -137,7 +137,7 @@ const CASE_LAYOUTS: Record<string, FarmLayout> = {
     crowding: "row",
   },
   // Solid field interior: all nine blocks are farmland and the crop has
-  // neighbours on both axes, so the speed is halved.
+  // neighbors on both axes, so the speed is halved.
   "field-hydrated": {
     centerHydrated: true,
     neighbourFarmland: 8,

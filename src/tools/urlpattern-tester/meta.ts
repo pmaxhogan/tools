@@ -22,6 +22,9 @@ export const meta: ToolMeta = {
     "wildcard url match",
     "service worker route test",
     "router debug",
+    "express route pattern test",
+    "path-to-regexp tester",
+    "named group url match",
   ],
   icon: "Route",
   input: "text/plain",
@@ -40,6 +43,13 @@ export const meta: ToolMeta = {
       label: "Base URL (optional)",
       default: "",
       placeholder: "https://example.com",
+    },
+  ],
+  examples: [
+    {
+      label: "Product route match",
+      input: "https://shop.example.com/products/electronics/42",
+      opts: { pattern: "/products/:category/:id", baseURL: "https://shop.example.com" },
     },
   ],
   copy: {

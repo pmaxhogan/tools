@@ -28,6 +28,8 @@ export const meta: ToolMeta = {
     "transcript maker",
     "voice recognition",
     "caption generator",
+    "meeting transcription",
+    "audio to text converter",
   ],
   input: "audio/*",
   output: "text/plain",

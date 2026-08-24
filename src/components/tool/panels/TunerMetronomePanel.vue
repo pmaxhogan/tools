@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 /**
@@ -41,7 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
  * Two deliberate choices worth knowing about:
  *
  * - Pitch detection runs on a 40 ms timer, not on every animation frame. The
- *   NSDF is O(window * window / 2), so analysing 60 times a second would burn
+ *   NSDF is O(window * window / 2), so analyzing 60 times a second would burn
  *   a core for a needle that cannot move that fast anyway. Silence is cheap:
  *   detectPitch bails on its own RMS check before the expensive loop.
  * - The metronome never fires a click from a timer. A 25 ms interval books the
@@ -70,7 +71,7 @@ const HOLD_SIZE = 5;
 const MAX_MISSES = 3;
 /** Clarity a reading needs before it counts. A little looser than the default. */
 const CLARITY_THRESHOLD = 0.78;
-/** Widest cents offset the needle track shows, either side of centre. */
+/** Widest cents offset the needle track shows, either side of center. */
 const CENTS_RANGE = 50;
 /** The needle track's gridlines, in cents. */
 const CENTS_TICKS = [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50];
@@ -507,6 +508,8 @@ const metroError = ref<PanelError | null>(null);
 const bpmText = ref("120");
 const timeSignatureId = ref(TIME_FALLBACK.default);
 const subdivisionText = ref("1");
+/** When true, only beat 1 is treated as an accent, regardless of time signature. */
+const accentFirstOnly = ref(false);
 const volume = ref(50);
 const currentBeat = ref(0);
 const tapCount = ref(0);
@@ -560,6 +563,7 @@ const msPerBeat = computed(() => Math.round((60000 / bpm.value) * 10) / 10);
 const beats = computed(() => Array.from({ length: signature.value.beatsPerBar }, (_, i) => i + 1));
 
 function isAccentBeat(beat: number): boolean {
+  if (accentFirstOnly.value) return beat === 1;
   return signature.value.accentBeats.includes(beat);
 }
 
@@ -1163,6 +1167,14 @@ onUnmounted(() => {
                 @update:model-value="(v: string) => (subdivisionText = v)"
               />
             </div>
+            <div class="flex flex-col gap-1.5">
+              <Label for="tm-accent-first" class="cursor-pointer text-xs text-muted-foreground">
+                Accent first beat only
+              </Label>
+              <div class="flex h-9 items-center">
+                <Switch id="tm-accent-first" v-model="accentFirstOnly" />
+              </div>
+            </div>
             <div class="flex min-w-44 flex-1 flex-col gap-1.5">
               <span class="text-xs text-muted-foreground tabular-nums">Volume: {{ volume }}%</span>
               <Slider
@@ -1248,7 +1260,7 @@ onUnmounted(() => {
     </Tabs>
 
     <p class="text-xs text-muted-foreground">
-      The microphone opens only when you press Start tuner, the audio is analysed in this tab, and
+      The microphone opens only when you press Start tuner, the audio is analyzed in this tab, and
       nothing is recorded or uploaded: your files and inputs never leave your device. The metronome
       keeps running while you tune, so stop it if the clicks reach the microphone.
     </p>

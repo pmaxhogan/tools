@@ -1,0 +1,134 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SiteHeader from "@/components/SiteHeader.astro";
+import HomeGrid from "@/components/HomeGrid.vue";
+import { iconFor } from "@/lib/tool-icons";
+import { CATEGORIES, type ToolCategory } from "@/tools/categories";
+import { tools } from "@/tools/registry";
+import type { LucideIcon } from "lucide-vue-next";
+
+export function getStaticPaths() {
+  return CATEGORIES.map((category) => ({ params: { slug: category.slug }, props: { category } }));
+}
+
+interface Props {
+  category: ToolCategory;
+}
+
+const { category } = Astro.props;
+
+const gridTools = tools
+  .filter((t) => t.category === category.label)
+  .map((t) => ({
+    slug: t.slug,
+    name: t.name,
+    description: t.description,
+    category: t.category,
+    keywords: t.keywords,
+    searchTerms: t.searchTerms,
+    icon: t.icon,
+  }));
+
+const path = `/category/${category.slug}`;
+
+// Server-rendered to static SVG, same cast and reason as ToolPage.astro: every
+// value iconFor can return is a lucide FunctionalComponent, but its declared
+// type is the broad Vue Component union that Astro's JSX check rejects.
+const Icon = iconFor(category.icon) as LucideIcon;
+const related = CATEGORIES.filter((c) => c.slug !== category.slug).map((c) => ({
+  ...c,
+  Icon: iconFor(c.icon) as LucideIcon,
+}));
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: `${category.label} tools`,
+  description: category.description,
+  url: new URL(path, Astro.site).href,
+  isPartOf: { "@type": "WebSite", name: "tools.maxhogan.dev", url: new URL("/", Astro.site).href },
+  mainEntity: {
+    "@type": "ItemList",
+    numberOfItems: gridTools.length,
+    itemListElement: gridTools.map((t, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: new URL(`/${t.slug}`, Astro.site).href,
+      name: t.name,
+    })),
+  },
+};
+---
+
+<BaseLayout
+  title={`${category.label} tools`}
+  description={category.description}
+  path={path}
+  jsonLd={jsonLd}
+  ogImage={`/og/category/${category.slug}.png`}
+>
+  <SiteHeader />
+  <div class="border-b border-[color:var(--brand-hairline)] bg-[image:var(--brand-band)]">
+    <div class="mx-auto max-w-[1140px] px-4 pt-7 pb-8">
+      <nav
+        aria-label="Breadcrumb"
+        class="text-[11px] font-semibold tracking-[0.12em] text-primary uppercase"
+      >
+        <a href="/" class="text-primary/80 hover:text-primary">Tools</a>
+        <span aria-hidden="true"> / </span>
+        <span class="inline-flex items-center gap-1.5 align-middle">
+          <Icon class="size-3.5" stroke-width={2} aria-hidden="true" />
+          {category.label}
+        </span>
+      </nav>
+      <div class="mt-2 flex items-center gap-3">
+        <span
+          class="grid size-11 shrink-0 place-items-center rounded-[12px] bg-[color:var(--accent-soft)] text-[color:var(--primary)]"
+          aria-hidden="true"
+        >
+          <Icon class="size-6" stroke-width={2} />
+        </span>
+        <h1 class="text-3xl font-semibold tracking-tight">{category.label}</h1>
+      </div>
+      <p class="mt-2 max-w-[68ch] text-muted-foreground">{category.description}</p>
+    </div>
+  </div>
+  <main class="mx-auto max-w-[1140px] px-4 pt-8 pb-10">
+    <HomeGrid client:load tools={gridTools} category={category.label} />
+
+    <section class="mt-16 border-t pt-6">
+      <h2 class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+        Related categories
+      </h2>
+      <ul class="mt-3 flex flex-wrap gap-2">
+        {
+          related.map(({ slug, label, Icon: ChipIcon }) => (
+            <li>
+              <a
+                href={`/category/${slug}`}
+                class="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm shadow-[var(--sh-sm)] transition-colors hover:border-[color:var(--primary)] hover:text-primary"
+              >
+                <ChipIcon
+                  class="size-4 text-muted-foreground"
+                  stroke-width={2}
+                  aria-hidden="true"
+                />
+                {label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <footer class="mt-16 rounded-[18px] border bg-card p-6 text-center shadow-[var(--sh-sm)]">
+      <p class="text-sm text-muted-foreground">
+        No ads, no accounts, no limits. Your files and inputs never leave your device.{" "}
+        <a
+          href="https://github.com/pmaxhogan/tools"
+          class="text-primary underline-offset-2 hover:underline">MIT licensed</a
+        >.
+      </p>
+    </footer>
+  </main>
+</BaseLayout>

@@ -24,6 +24,8 @@ export const meta: ToolMeta = {
     "dmarc gz reader",
     "domain spoofing report",
     "email authentication report",
+    "spf dkim dmarc",
+    "dmarc analyzer",
   ],
   input: "File",
   output: "text/plain",

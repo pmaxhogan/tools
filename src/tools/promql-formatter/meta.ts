@@ -25,6 +25,9 @@ export const meta: ToolMeta = {
     "rate vs irate",
     "unwrap logql",
     "prometheus alert rule formatter",
+    "grafana explore query formatter",
+    "promql syntax checker",
+    "loki logql pipeline formatter",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -57,6 +60,8 @@ export const meta: ToolMeta = {
       id: "mode",
       label: "Output",
       default: "format",
+      // Full sentence labels: keep the dropdown rather than a row of buttons.
+      ui: "select",
       options: [
         {
           value: "format",
@@ -74,6 +79,13 @@ export const meta: ToolMeta = {
           synonyms: ["both", "everything", "all"],
         },
       ],
+    },
+  ],
+  examples: [
+    {
+      label: "5xx rate by job",
+      input: 'sum(rate(http_requests_total{job="api",status=~"5.."}[5m])) by (job, status)',
+      opts: { lang: "auto", mode: "both" },
     },
   ],
   http: { method: "POST", contentType: "text/plain" },

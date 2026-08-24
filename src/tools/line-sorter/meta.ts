@@ -26,6 +26,9 @@ export const meta: ToolMeta = {
     "sort by length",
     "de-duplicate list",
     "shuffle a list online",
+    "sort words alphabetically",
+    "remove duplicate lines online",
+    "randomize order",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -82,6 +85,18 @@ export const meta: ToolMeta = {
       label: "Shuffle seed (optional)",
       default: "",
       placeholder: "Leave blank for random",
+    },
+  ],
+  examples: [
+    {
+      label: "Sort hostnames",
+      input: "web-03.prod\napi-01.prod\ndb-02.prod\ncache-01.prod\napi-02.prod",
+      opts: { operation: "sort-az" },
+    },
+    {
+      label: "Dedupe a list",
+      input: "banana\nApple\ncherry\napple\nBanana\ndate",
+      opts: { operation: "dedupe", caseInsensitive: "true" },
     },
   ],
   http: { method: "POST", contentType: "text/plain" },

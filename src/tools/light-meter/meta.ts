@@ -4,7 +4,7 @@ export const meta: ToolMeta = {
   slug: "light-meter",
   matrixSlug: "light-meter",
   name: "Light Meter",
-  description: "Camera-based lux and colour temperature estimates.",
+  description: "Camera-based lux and color temperature estimates.",
   category: "Mobile",
   icon: "Sun",
   keywords: [
@@ -55,8 +55,8 @@ export const meta: ToolMeta = {
     },
   ],
   copy: {
-    what: "Turns your camera into a rough light meter. It reads the average brightness and colour of the live preview and estimates illuminance in lux (or footcandles) along with a correlated colour temperature in Kelvin. When your browser exposes the camera's exposure time, ISO, and aperture it uses the same incident-light formula a handheld meter uses; otherwise it falls back to a brightness-only estimate you can calibrate against a known light source.",
-    how: "Press Start above to turn on your camera and point it at the light you want to measure. The lux reading, its confidence, and the estimated colour temperature update live from a smoothed average of recent frames. If the reading looks off, adjust the Calibration option while pointed at a light source of known brightness until it matches.",
+    what: "Turns your camera into a rough light meter. It reads the average brightness and color of the live preview and estimates illuminance in lux (or footcandles) along with a correlated color temperature in Kelvin. When your browser exposes the camera's exposure time, ISO, and aperture it uses the same incident-light formula a handheld meter uses; otherwise it falls back to a brightness-only estimate you can calibrate against a known light source.",
+    how: "Press Start above to turn on your camera and point it at the light you want to measure. The lux reading, its confidence, and the estimated color temperature update live from a smoothed average of recent frames. If the reading looks off, adjust the Calibration option while pointed at a light source of known brightness until it matches.",
     why: "Dedicated lux meter apps are usually locked behind an app store install, an account, or ads, and most never explain how the number was actually computed. This page runs the same computation in the open, entirely in your browser: the camera stream is analyzed on this page and discarded, nothing is recorded or uploaded, and the exact formula is shown in the results.",
     faq: [
       {
@@ -65,7 +65,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "Why does the reading change when I move the camera or my hand?",
-        a: "Your camera runs auto exposure and auto white balance continuously, so pointing it at a brighter area, a shadow, or a strongly coloured surface changes what the sensor reports even if the room light has not changed. Hold the camera steady on the surface you actually want to measure, give it a second to settle, and read the smoothed value rather than any single instantaneous spike.",
+        a: "Your camera runs auto exposure and auto white balance continuously, so pointing it at a brighter area, a shadow, or a strongly colored surface changes what the sensor reports even if the room light has not changed. Hold the camera steady on the surface you actually want to measure, give it a second to settle, and read the smoothed value rather than any single instantaneous spike.",
       },
       {
         q: "Is my camera video uploaded anywhere?",

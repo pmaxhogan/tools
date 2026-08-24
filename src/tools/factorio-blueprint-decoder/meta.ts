@@ -27,6 +27,7 @@ export const meta: ToolMeta = {
     "factorio save editor",
     "production line planner",
     "factorio calculator",
+    "factorio blueprint tool",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -77,6 +78,13 @@ export const meta: ToolMeta = {
       default: false,
     },
     { kind: "boolean", id: "stripTiles", label: "Strip: remove the tile layer", default: false },
+  ],
+  examples: [
+    {
+      label: "Furnace and belt blueprint",
+      input:
+        "0eJyNz8FqwzAQBNBfCXNWIFLdxtG1f9AeQyhyug0CeSWkdRpj9O8lCS2F1uDjzOHtzoQuDJSyZ4Gd4IV62F+dQnAdBVg8x5Qor157CuL5tHqJn1A4Uy4+MqxpdbPdmW3btk87bRT8MXKB3U8o/sQuXHkZE8Heryiw66+pSGRafwyZ3ZFQFTy/0wVW14MCsXjxdIduYXzjoe8ow+oZQiHF4uX21oQL7EZhhN3Uqv4YZqlh5o2HpUYzbzQ/hmTHJcUs646CzI3R/yGPixH9jRxq/QLfOav4",
+    },
   ],
   http: { method: "POST", contentType: "text/plain" },
   copy: {

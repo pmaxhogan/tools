@@ -26,6 +26,8 @@ export const meta: ToolMeta = {
     "azerty qwertz analysis",
     "typing effort score",
     "which keyboard layout is best for me",
+    "keyboard heatmap generator",
+    "typing heatmap",
   ],
   input: "text/plain",
   output: "application/json",

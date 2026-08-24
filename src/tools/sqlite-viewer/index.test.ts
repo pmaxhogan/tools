@@ -272,7 +272,7 @@ describe("formatCell, scalar and toCsv", () => {
 });
 
 describe("describeHeader", () => {
-  it("recognises a real SQLite file", () => {
+  it("recognizes a real SQLite file", () => {
     const bytes = new TextEncoder().encode("SQLite format 3\0rest of the file");
     expect(describeHeader(bytes)).toEqual({
       looksLikeSqlite: true,

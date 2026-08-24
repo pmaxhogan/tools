@@ -19,7 +19,7 @@ export const RUN_COUNT = 10;
 
 /**
  * cronstrue throws a bare string ('Error: minutes part must be >= 0 and <= 59');
- * croner throws a real Error. Normalise both and drop the redundant prefix so the
+ * croner throws a real Error. Normalize both and drop the redundant prefix so the
  * underlying parse reason can be embedded in a ToolError message.
  */
 function reason(err: unknown): string {

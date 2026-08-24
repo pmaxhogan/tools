@@ -277,7 +277,7 @@ describe("canonicalToken", () => {
  * ------------------------------------------------------------------ */
 
 describe("displayKeycode", () => {
-  it("normalises plain keycodes", () => {
+  it("normalizes plain keycodes", () => {
     expect(displayKeycode("KC_A")).toBe("A");
     expect(displayKeycode("KC_F7")).toBe("F7");
     expect(displayKeycode("KC_LSFT")).toBe("LShift");
@@ -288,7 +288,7 @@ describe("displayKeycode", () => {
     expect(displayKeycode("KC_NO")).toBe("none");
   });
 
-  it("normalises layer taps and mod taps", () => {
+  it("normalizes layer taps and mod taps", () => {
     expect(displayKeycode("LT(1,KC_SPC)")).toBe("LT L1 / Space");
     expect(displayKeycode("LT(1, KC_SPC)", ["BASE", "SYM"])).toBe("LT SYM / Space");
     expect(displayKeycode("MT(MOD_LSFT, KC_ESC)")).toBe("Shift-tap / Esc");

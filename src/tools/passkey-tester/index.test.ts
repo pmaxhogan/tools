@@ -5,7 +5,7 @@ import { run, type PasskeyTesterResult } from "./index";
 /**
  * cbor-x defaults to its own extensions (tag 259 for Maps, tag 64 for typed
  * arrays). WebAuthn payloads are plain canonical CBOR, so the fixtures use an
- * encoder with those extensions switched off. useTag259ForMaps is honoured at
+ * encoder with those extensions switched off. useTag259ForMaps is honored at
  * runtime but missing from the shipped Options type, hence the cast.
  */
 const encoderOptions = {

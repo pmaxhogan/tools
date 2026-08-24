@@ -130,7 +130,7 @@ describe("diffPixels", () => {
       found: true,
     });
 
-    // The corner only image A has is red in the mask, the shared centre is not.
+    // The corner only image A has is red in the mask, the shared center is not.
     expect(pixelAt(result.mask, 40, 5, 5)).toEqual([255, 0, 0, 255]);
     expect(pixelAt(result.mask, 40, 19, 19)).toEqual([255, 0, 0, 255]);
     expect(pixelAt(result.mask, 40, 12, 12)[0]).toBe(pixelAt(result.mask, 40, 12, 12)[1]);
@@ -184,7 +184,7 @@ describe("diffPixels", () => {
     });
   });
 
-  it("honours the alpha option when fading the unchanged background", () => {
+  it("honors the alpha option when fading the unchanged background", () => {
     const a = solid(4, 4, 0, 0, 0);
     const b = solid(4, 4, 0, 0, 0);
     expect(pixelAt(diffPixels(a, b, 4, 4, { alpha: 0 }).mask, 4, 0, 0)).toEqual([
@@ -412,7 +412,7 @@ describe("run", () => {
     expect(rows["SSIM windows"]).toContain("Rec.601 luma");
   });
 
-  it("accepts the payload as bytes and honours the view option", () => {
+  it("accepts the payload as bytes and honors the view option", () => {
     const bytes = new TextEncoder().encode(both);
     expect(run(bytes, { view: "diff" }).MSSIM).toBeUndefined();
     expect(run(bytes, { view: "ssim" })["Different pixels"]).toBeUndefined();

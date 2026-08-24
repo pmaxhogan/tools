@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "ohms-law",
   icon: "CircuitBoard",
   name: "Ohm's Law & LED Calculator",
-  description: "Solve voltage, current, resistance, and power, plus LED resistor and voltage divider math.",
+  description:
+    "Solve voltage, current, resistance, and power, plus LED resistor and voltage divider math.",
   category: "Hardware",
   keywords: [
     "ohms law calculator",
@@ -23,6 +24,10 @@ export const meta: ToolMeta = {
     "series led resistor",
     "voltage divider resistor",
     "power dissipation calculator",
+    "voltage calculator",
+    "current calculator",
+    "resistance calculator",
+    "watts volts amps ohms",
   ],
   input: "text/plain",
   output: "application/json",
@@ -51,10 +56,17 @@ export const meta: ToolMeta = {
       ],
     },
   ],
+  examples: [
+    {
+      label: "Voltage and current",
+      input: "R=100 P=4",
+      opts: { mode: "ohms-law" },
+    },
+  ],
   http: { method: "GET", contentType: "application/json" },
   copy: {
-    what: "Solves Ohm's law and power for voltage, current, resistance, and power given any two of them, sizes a current limiting resistor for one or more series LEDs against the E12 and E24 standard series, and solves voltage divider networks in either direction. Input is plain text like \"12V 100mA\" or \"vin=12 vf=2.1 if=20mA\", not a form.",
-    how: "Pick a calculation mode, then type values as key=value pairs or number-plus-unit tokens separated by spaces or commas, such as \"R=4.7k P=2W\" or \"vin=9 vout=3 r2=1k\". The result shows every derived value in clean engineering notation along with the formula used and, for LEDs and dividers, the nearest standard resistor values.",
+    what: 'Solves Ohm\'s law and power for voltage, current, resistance, and power given any two of them, sizes a current limiting resistor for one or more series LEDs against the E12 and E24 standard series, and solves voltage divider networks in either direction. Input is plain text like "12V 100mA" or "vin=12 vf=2.1 if=20mA", not a form.',
+    how: 'Pick a calculation mode, then type values as key=value pairs or number-plus-unit tokens separated by spaces or commas, such as "R=4.7k P=2W" or "vin=9 vout=3 r2=1k". The result shows every derived value in clean engineering notation along with the formula used and, for LEDs and dividers, the nearest standard resistor values.',
     why: "Most online Ohm's law calculators handle only one mode, force you into separate input boxes per variable, and round LED resistor suggestions to arbitrary values instead of real E12 or E24 parts. This one takes free-form text, covers all three common calculations in one place, and your inputs never leave your device.",
     faq: [
       {

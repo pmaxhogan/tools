@@ -96,7 +96,7 @@ export const FORMATS: Record<TargetId, FormatSpec> = {
     label: "GIF",
     ext: "gif",
     kind: "video",
-    codecs: "GIF with a generated colour palette",
+    codecs: "GIF with a generated color palette",
     note: "Builds a palette from the clip in the same pass. Keep it short: GIF stores whole frames, so a few seconds is already megabytes.",
     qualityApplies: true,
   },

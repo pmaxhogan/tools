@@ -23,6 +23,8 @@ export const meta: ToolMeta = {
     "ttl check",
     "mx record lookup",
     "txt record lookup",
+    "whatsmydns alternative",
+    "global dns propagation checker",
   ],
   input: "text/plain",
   output: "application/json",

@@ -26,9 +26,19 @@ export const meta: ToolMeta = {
     "url structure analyzer",
     "phishing url detector",
     "decode url parameters",
+    "url breakdown tool",
+    "what does this link do",
+    "utm parameter reader",
   ],
   input: "text/plain",
   output: "application/json",
+  examples: [
+    {
+      label: "Ecommerce search URL",
+      input:
+        "https://shop.example.com/products/search?q=running+shoes&size=10&size=11&ref=newsletter#reviews",
+    },
+  ],
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: 'Breaks a URL down into scheme, host, port, path, each query parameter, and fragment, decoding percent-encoding and "+" spaces along the way. Repeated query keys are each shown on their own row, and a fully decoded form of the whole URL is included at the end.',

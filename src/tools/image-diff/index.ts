@@ -281,8 +281,8 @@ function hasManySiblings(
 
 /**
  * The intensity slope detector: a pixel is probably anti-aliasing when it has
- * both a darker and a brighter neighbour, no more than two identical
- * neighbours, and the extreme neighbour is a flat run of color in both images.
+ * both a darker and a brighter neighbor, no more than two identical
+ * neighbors, and the extreme neighbor is a flat run of color in both images.
  */
 function antialiased(
   img: Uint8ClampedArray,
@@ -497,7 +497,7 @@ function toLuma(rgba: Uint8ClampedArray, total: number): Float64Array {
  * - Grayscale is Rec.601 luma, `0.299 R + 0.587 G + 0.114 B`. Alpha is ignored,
  *   because the panel always hands over images composited onto a background.
  * - Windows are square, 8 by 8 by default, and slide with a stride of 4, so
- *   neighbouring windows overlap by half. Overlap is what keeps a single
+ *   neighboring windows overlap by half. Overlap is what keeps a single
  *   changed block from being averaged away by the windows around it.
  * - Weighting inside a window is a box, not a gaussian. A box is what makes the
  *   per window values easy to reason about and to hand check in a test, at the

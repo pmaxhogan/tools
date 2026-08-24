@@ -4013,7 +4013,7 @@ export const words: string[] = [
   "mournful",
   "mouse",
   "mousiness",
-  "moustache",
+  "mustache",
   "mousy",
   "mouth",
   "movable",

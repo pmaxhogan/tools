@@ -309,26 +309,26 @@ function iconLabel(icon: unknown): string | null {
 interface WireTally {
   wires: number;
   endpoints: number;
-  neighbours: number;
+  neighbors: number;
 }
 
 function tallyWires(bp: Obj, entities: Obj[]): WireTally {
-  const tally: WireTally = { wires: asArray(bp["wires"]).length, endpoints: 0, neighbours: 0 };
+  const tally: WireTally = { wires: asArray(bp["wires"]).length, endpoints: 0, neighbors: 0 };
   for (const entity of entities) {
     const connections = asObject(entity["connections"]);
     if (connections) {
       for (const side of Object.values(connections)) {
         const sideObj = asObject(side);
         if (!sideObj) continue;
-        for (const colour of Object.values(sideObj)) tally.endpoints += asArray(colour).length;
+        for (const color of Object.values(sideObj)) tally.endpoints += asArray(color).length;
       }
     }
-    tally.neighbours += asArray(entity["neighbours"]).length;
+    tally.neighbors += asArray(entity["neighbors"]).length;
   }
   return tally;
 }
 
-const ENVIRONMENT_EXACT = new Set(["fish", "dead-grey-trunk", "crash-site-spaceship"]);
+const ENVIRONMENT_EXACT = new Set(["fish", "dead-gray-trunk", "crash-site-spaceship"]);
 
 /** Trees, rocks and the other decoratives Factorio copies into a blueprint. */
 export function isEnvironmentEntity(name: string): boolean {
@@ -443,7 +443,7 @@ function describeBlueprint(bp: Obj, pad: string, lines: string[]): void {
     wireParts.push(
       `${plural(wires.endpoints, "circuit connection endpoint")} in the 1.x style, where each wire is listed on both of the entities it joins`,
     );
-  if (wires.neighbours) wireParts.push(`${plural(wires.neighbours, "power pole neighbour")}`);
+  if (wires.neighbors) wireParts.push(`${plural(wires.neighbors, "power pole neighbor")}`);
   lines.push(
     `${pad}Wires and circuit connections: ${wireParts.length ? wireParts.join("; ") : "none"}`,
   );

@@ -31,6 +31,8 @@ export const meta: ToolMeta = {
     "pixel density",
     "screen details",
     "multi monitor",
+    "device pixel ratio",
+    "screen test",
   ],
   input: "application/json",
   output: "application/json",

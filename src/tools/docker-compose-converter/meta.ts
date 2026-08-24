@@ -25,6 +25,7 @@ export const meta: ToolMeta = {
     "docker-compose.yml generator",
     "convert compose to cli",
     "docker run command builder",
+    "docker compose to cli command",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -64,11 +65,29 @@ export const meta: ToolMeta = {
       ],
     },
   ],
+  examples: [
+    {
+      label: "docker run to compose",
+      input:
+        "docker run -d --name webapp -p 8080:80 -v appdata:/var/lib/app -e TZ=America/Chicago --restart unless-stopped nginx:alpine",
+    },
+    {
+      label: "Compose to docker run",
+      input: `services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
+    restart: always`,
+    },
+  ],
   http: { method: "POST", contentType: "text/plain" },
   copy: {
     what: "Translates a docker run command into a docker compose service definition, and a compose file back into one docker run command per service. It understands the flags people actually use: published ports with ranges and udp, named volumes and bind mounts, --mount syntax, environment variables and env files, networks, restart policies, healthcheck flags, capabilities, devices, ulimits, sysctls, logging options, memory and cpu limits, and GPU reservations. Several docker run commands chained with && become several services in one file, and anything it cannot express is listed in a not translated comment block instead of being silently dropped.",
     how: "Paste a docker run command (or a podman run command) and the converter emits a complete modern compose file, with named volumes hoisted into a top-level volumes section. Paste a compose file instead and it emits one readable multi-line docker run command per service. Direction is detected automatically, and you can force it with the Direction dropdown if your input is unusual.",
-    why: "The popular composerize and decomposerize sites each handle one direction, drop flags they do not recognise without telling you, and wrap the tool in ads. This one does both directions, always shows you what it could not translate, and runs entirely in your browser: your files and inputs never leave your device.",
+    why: "The popular composerize and decomposerize sites each handle one direction, drop flags they do not recognize without telling you, and wrap the tool in ads. This one does both directions, always shows you what it could not translate, and runs entirely in your browser: your files and inputs never leave your device.",
     faq: [
       {
         q: "Does it check that the resulting container actually works?",

@@ -10,10 +10,10 @@ describe("color-blindness-simulator", () => {
     expect(toHex(simulateRgb([255, 0, 0], "protanopia"))).toBe("#6d5f00");
 
     const out = run("#FF0000", { kind: "protanopia", contrast: false });
-    expect(out["Colour 1 (#ff0000)"]).toBe("#ff0000 -> #6d5f00");
+    expect(out["Color 1 (#ff0000)"]).toBe("#ff0000 -> #6d5f00");
   });
 
-  it("leaves a mid grey unchanged under every deficiency", () => {
+  it("leaves a mid gray unchanged under every deficiency", () => {
     for (const kind of CVD_KINDS) {
       const [r, g, b] = simulateRgb([128, 128, 128], kind);
       expect(Math.abs(r - g)).toBeLessThanOrEqual(1);
@@ -22,7 +22,7 @@ describe("color-blindness-simulator", () => {
     }
   });
 
-  it("maps red to the Rec. 709 luminance grey under achromatopsia", () => {
+  it("maps red to the Rec. 709 luminance gray under achromatopsia", () => {
     // Rec. 709 luminance of linear red is 0.2126; encoded to sRGB that is 127.
     const encode = (v: number) => Math.round((1.055 * Math.pow(v, 1 / 2.4) - 0.055) * 255);
     const expected = encode(0.2126);
@@ -44,21 +44,21 @@ describe("color-blindness-simulator", () => {
     expect(parseColor("rgba(29 78 216 / 0.5)")).toEqual([29, 78, 216]);
   });
 
-  it("emits one row per colour listing every deficiency for kind=all", () => {
+  it("emits one row per color listing every deficiency for kind=all", () => {
     const out = run("#ff0000\n#00ff00", ALL);
-    const row = out["Colour 1 (#ff0000)"];
+    const row = out["Color 1 (#ff0000)"];
     const parts = row.split(" | ");
     expect(parts).toHaveLength(CVD_KINDS.length);
     expect(parts[0]).toBe("protanopia #6d5f00");
     expect(parts[parts.length - 1]).toBe("achromatopsia #7f7f7f");
     for (const part of parts) expect(part).toMatch(/^[a-z]+ #[0-9a-f]{6}$/);
-    expect(out["Summary"]).toMatch(/2 colours simulated as all seven deficiencies/);
+    expect(out["Summary"]).toMatch(/2 colors simulated as all seven deficiencies/);
   });
 
-  it("splits colours on newlines, commas and spaces", () => {
+  it("splits colors on newlines, commas and spaces", () => {
     const out = run("#f00, #0f0 #00f", { kind: "deuteranopia", contrast: false });
-    expect(Object.keys(out)).toContain("Colour 3 (#0000ff)");
-    expect(out["Colour 3 (#0000ff)"]).toBe("#0000ff -> #003dfb");
+    expect(Object.keys(out)).toContain("Color 3 (#0000ff)");
+    expect(out["Color 3 (#0000ff)"]).toBe("#0000ff -> #003dfb");
   });
 
   it("flags an adjacent pair that collapses under a deficiency", () => {
@@ -82,9 +82,9 @@ describe("color-blindness-simulator", () => {
     expect(Object.keys(out).filter((k) => k.startsWith("Pair "))).toHaveLength(0);
   });
 
-  it("explains that pair contrast needs two colours", () => {
+  it("explains that pair contrast needs two colors", () => {
     const out = run("#ff0000", ALL);
-    expect(out["Contrast check"]).toBe("Add a second colour to compare adjacent pairs.");
+    expect(out["Contrast check"]).toBe("Add a second color to compare adjacent pairs.");
   });
 
   it("throws empty-input for blank input", () => {
@@ -93,7 +93,7 @@ describe("color-blindness-simulator", () => {
       run("", ALL);
     } catch (e) {
       expect((e as ToolError).code).toBe("empty-input");
-      expect((e as ToolError).fix).toMatch(/one colour per line/);
+      expect((e as ToolError).fix).toMatch(/one color per line/);
     }
   });
 

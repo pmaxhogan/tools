@@ -1,31 +1,52 @@
 import { formatBytes } from "../../lib/format";
 import { ToolError, type ToolLogic } from "../types";
+import { formatMttdl, formatProbability, mttdl, type PoolReliability } from "./reliability";
+import {
+  isDraid,
+  poolCapacity,
+  toleratedFailures,
+  ZFS_OVERHEAD_RATIO,
+  type PoolSpec,
+  type VdevLevel,
+  type VdevSpec,
+} from "./sim";
 
 export interface RaidzOpts {
   disks: number;
   diskSizeUnit: string; // 'TB' | 'GB' | 'TiB' | 'GiB'
   diskSize: number;
-  level: string; // 'raidz1' | 'raidz2' | 'raidz3' | 'mirror' | 'stripe'
+  level: string; // raidz1-3, draid1-3, mirror, stripe
   vdevs: number;
   zfsOverhead: boolean;
+  /** Headroom held back after the ZFS derate, as a percent. Default 0. */
+  osReservePercent?: number;
+  /**
+   * Spare drives. On a dRAID level these are the distributed spares inside each
+   * vdev, because that is where dRAID keeps spare space. On every other level
+   * they are pool-wide hot spare drives sitting idle in the chassis. Default 0.
+   */
+  hotSpares?: number;
+  /** Per drive MTBF in hours. Default 1200000. Ignored when afrPercent is above 0. */
+  mtbfHours?: number;
+  /** Per drive annualized failure rate, as a percent. Default 0, meaning use the MTBF. */
+  afrPercent?: number;
+  /** Hours to rebuild one drive, excluding the human replacement delay. Default 24. */
+  resilverHours?: number;
   [key: string]: unknown;
 }
 
 export type RaidzResult = Record<string, string>;
 
-/** Approximate ZFS slop-space and metadata reservation derate. Not exact:
- * real usable space also depends on ashift, recordsize, and RAIDZ padding. */
-const ZFS_OVERHEAD_RATIO = 0.976;
-
-type Level = "raidz1" | "raidz2" | "raidz3" | "mirror" | "stripe";
-
-const MIN_DISKS: Record<Level, number> = {
-  raidz1: 2,
-  raidz2: 3,
-  raidz3: 4,
-  mirror: 2,
-  stripe: 1,
-};
+/**
+ * Read a numeric option that may arrive as a string from the query API or as
+ * undefined from an older caller. Anything unparseable falls back rather than
+ * throwing, so the v1 option set still runs unchanged.
+ */
+function num(value: unknown, fallback: number): number {
+  if (value === undefined || value === null || value === "") return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
 
 /** Decimal (10^n) or binary (2^n) bytes-per-unit, matched to how drive vendors
  * (decimal TB/GB) vs operating systems (binary TiB/GiB) label capacity. This
@@ -37,17 +58,20 @@ const UNIT_BYTES: Record<string, number> = {
   GiB: 2 ** 30,
 };
 
-function normalizeLevel(raw: string): Level {
+function normalizeLevel(raw: string): VdevLevel {
   const s = (raw || "").trim().toLowerCase();
   if (s === "raidz1" || s === "z1" || s === "raid-z1" || s === "raid5") return "raidz1";
   if (s === "raidz2" || s === "z2" || s === "raid-z2" || s === "raid6") return "raidz2";
   if (s === "raidz3" || s === "z3" || s === "raid-z3") return "raidz3";
   if (s === "mirror" || s === "raid1" || s === "raid10") return "mirror";
   if (s === "stripe" || s === "raid0") return "stripe";
+  if (s === "draid1" || s === "draid-1" || s === "draid") return "draid1";
+  if (s === "draid2" || s === "draid-2") return "draid2";
+  if (s === "draid3" || s === "draid-3") return "draid3";
   throw new ToolError(
     "bad-level",
     `Unknown RAIDZ level "${raw}".`,
-    "Use raidz1, raidz2, raidz3, mirror, or stripe.",
+    "Use raidz1, raidz2, raidz3, draid1, draid2, draid3, mirror, or stripe.",
   );
 }
 
@@ -110,45 +134,43 @@ export function run(input: string, opts: RaidzOpts): RaidzResult {
   const level = normalizeLevel(levelRaw);
   const unit = normalizeUnit(diskSizeUnit);
   disks = Math.floor(disks);
-
-  const minDisks = MIN_DISKS[level];
-  if (disks < minDisks)
-    throw new ToolError(
-      "too-few-disks",
-      `${level} needs at least ${minDisks} disk${minDisks === 1 ? "" : "s"} per vdev.`,
-      level === "mirror" || level === "stripe"
-        ? "Add more disks to this vdev."
-        : "Add disks or choose a lower RAIDZ level.",
-    );
+  const vdevCount = Math.floor(vdevs);
 
   const diskBytes = diskSize * UNIT_BYTES[unit]!;
-  const rawPerVdev = disks * diskBytes;
+  const spares = Math.max(0, Math.floor(num(opts.hotSpares, 0)));
+  const draid = isDraid(level);
 
-  let parity: number;
-  let usablePerVdev: number;
-  if (level === "mirror") {
-    parity = disks - 1;
-    usablePerVdev = diskBytes;
-  } else if (level === "stripe") {
-    parity = 0;
-    usablePerVdev = rawPerVdev;
-  } else {
-    parity = { raidz1: 1, raidz2: 2, raidz3: 3 }[level]!;
-    usablePerVdev = (disks - parity) * diskBytes;
-  }
+  const vdev: VdevSpec = { level, disks, diskBytes, spares: draid ? spares : 0 };
+  const spec: PoolSpec = {
+    vdevs: Array.from({ length: vdevCount }, () => ({ ...vdev })),
+    hotSpares: draid ? 0 : spares,
+  };
 
-  const poolRaw = rawPerVdev * vdevs;
-  let poolUsable = usablePerVdev * vdevs;
-  if (opts.zfsOverhead) poolUsable *= ZFS_OVERHEAD_RATIO;
+  const osReservePercent = num(opts.osReservePercent, 0);
+  const capacity = poolCapacity(spec, {
+    zfsOverhead: Boolean(opts.zfsOverhead),
+    osReservePercent,
+  });
 
-  const overheadBytes = poolRaw - poolUsable;
-  const efficiencyPct = poolRaw > 0 ? (poolUsable / poolRaw) * 100 : 0;
-  const overheadPct = poolRaw > 0 ? (overheadBytes / poolRaw) * 100 : 0;
+  // "Usable capacity" stays the post-ZFS figure it has always been, and the OS
+  // reserve gets its own row, so a reserve of 0 leaves every v1 number intact.
+  const usableBeforeReserve = capacity.usableBytes + capacity.osReserveBytes;
+  const pct = (bytes: number) =>
+    capacity.rawBytes > 0 ? ((bytes / capacity.rawBytes) * 100).toFixed(1) : "0.0";
+  const size = (bytes: number) => `${formatBytes(bytes)} (${decimalTB(bytes)})`;
 
+  const tolerated = toleratedFailures(vdev);
   const toleranceLabel =
     level === "stripe"
       ? "0 disks per vdev (no redundancy)"
-      : `${parity} disk${parity === 1 ? "" : "s"} per vdev`;
+      : `${tolerated} disk${tolerated === 1 ? "" : "s"} per vdev`;
+
+  const afrPercent = num(opts.afrPercent, 0);
+  const mtbfHours = num(opts.mtbfHours, 1_200_000);
+  const resilverHours = num(opts.resilverHours, 24);
+  let reliability: PoolReliability | null = null;
+  if ((afrPercent > 0 || mtbfHours > 0) && resilverHours > 0)
+    reliability = mttdl(spec, { mtbfHours, afrPercent, resilverHours });
 
   const notes: string[] = [
     "This is an estimate: real usable space also depends on ashift, recordsize, and RAIDZ padding, which are not modeled here and vary by pool.",
@@ -157,18 +179,50 @@ export function run(input: string, opts: RaidzOpts): RaidzResult {
     notes.push(
       `Usable capacity above is derated by about ${(100 - ZFS_OVERHEAD_RATIO * 100).toFixed(1)}% to approximate ZFS slop space and metadata reservation.`,
     );
+  if (osReservePercent > 0)
+    notes.push(
+      `A further ${osReservePercent}% is held back as OS and filesystem reserve, shown as its own row.`,
+    );
   if (level === "stripe")
     notes.push("Stripe (RAID 0) has no redundancy: any single disk failure loses the entire vdev.");
+  if (spares > 0)
+    notes.push(
+      draid
+        ? `${spares} distributed spare${spares === 1 ? "" : "s"} per vdev reserve capacity inside the vdev and let a rebuild start immediately, but they do not raise the number of drives a vdev can lose.`
+        : `${spares} hot spare${spares === 1 ? " drive removes" : " drives remove"} the wait for a human to swap a disk, but a hot spare never raises the number of drives a vdev can lose.`,
+    );
+  notes.push(
+    "Unrecoverable read errors (UREs) are ignored: only whole drive failures count, so a long resilver on large drives carries more real risk than these numbers show.",
+  );
+  if (reliability)
+    notes.push(
+      "MTTDL treats drive failures as independent and at a constant rate, so correlated failures from one bad batch or one hot shelf are not modeled.",
+    );
 
-  return {
-    Layout: `${vdevs}x (${disks}-disk ${level})`,
-    "Raw capacity": `${formatBytes(poolRaw)} (${decimalTB(poolRaw)})`,
-    "Usable capacity": `${formatBytes(poolUsable)} (${decimalTB(poolUsable)})`,
-    "Parity overhead": `${formatBytes(overheadBytes)} (${decimalTB(overheadBytes)}), ${overheadPct.toFixed(1)}%`,
-    "Storage efficiency": `${efficiencyPct.toFixed(1)}%`,
-    "Fault tolerance": toleranceLabel,
-    Notes: notes.join(" "),
+  const layout = draid && spares > 0 ? `${level} with ${spares} distributed spare` : level;
+  const out: RaidzResult = {
+    Layout: `${vdevCount}x (${disks}-disk ${layout}${draid && spares > 1 ? "s" : ""})`,
+    "Raw capacity": size(capacity.rawBytes),
+    "Usable capacity": size(usableBeforeReserve),
   };
+  if (capacity.osReserveBytes > 0)
+    out["Usable after OS reserve"] =
+      `${size(capacity.usableBytes)}, ${osReservePercent}% held back`;
+  out["Parity overhead"] = `${size(capacity.parityBytes)}, ${pct(capacity.parityBytes)}%`;
+  if (capacity.zfsOverheadBytes > 0)
+    out["ZFS overhead"] = `${size(capacity.zfsOverheadBytes)}, ${pct(capacity.zfsOverheadBytes)}%`;
+  if (capacity.spareBytes > 0)
+    out["Spare capacity"] =
+      `${size(capacity.spareBytes)}, ${pct(capacity.spareBytes)}% (${spares} ${draid ? "distributed spare" : "hot spare"}${spares === 1 ? "" : "s"}${draid ? " per vdev" : ""})`;
+  out["Storage efficiency"] = `${(capacity.efficiency * 100).toFixed(1)}%`;
+  out["Fault tolerance"] = toleranceLabel;
+  if (reliability) {
+    out["MTTDL (pool)"] =
+      `${formatMttdl(reliability.mttdlHours)} (drive MTBF ${Math.round(reliability.mtbfHours).toLocaleString("en-US")} h, ${reliability.afrPercent.toFixed(2)}% AFR, ${resilverHours} h resilver)`;
+    out["Annual data loss risk"] = formatProbability(reliability.annualDataLossProbability);
+  }
+  out["Notes"] = notes.join(" ");
+  return out;
 }
 
 export default { run } satisfies ToolLogic<string, RaidzResult, RaidzOpts>;

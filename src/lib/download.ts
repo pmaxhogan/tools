@@ -20,7 +20,7 @@ export function downloadUrl(url: string, filename: string): void {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
-  // Firefox only honours a click on a link that is in the document.
+  // Firefox only honors a click on a link that is in the document.
   document.body.appendChild(a);
   a.click();
   a.remove();

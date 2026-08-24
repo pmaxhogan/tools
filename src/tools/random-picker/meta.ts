@@ -30,6 +30,9 @@ export const meta: ToolMeta = {
     "randomizer",
     "pick a winner",
     "random draw",
+    "dice notation calculator",
+    "attack roll calculator",
+    "random number picker",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -39,6 +42,8 @@ export const meta: ToolMeta = {
       id: "mode",
       label: "Mode",
       default: "dice",
+      // Full sentence labels: keep the dropdown rather than a row of buttons.
+      ui: "select",
       options: [
         {
           value: "dice",
@@ -76,6 +81,13 @@ export const meta: ToolMeta = {
       label: "Seed (optional, for repeatable results)",
       default: "",
       placeholder: "leave empty for true randomness",
+    },
+  ],
+  examples: [
+    {
+      label: "Attack roll",
+      input: "1d20+5",
+      opts: { mode: "dice", count: "1", seed: "" },
     },
   ],
   copy: {

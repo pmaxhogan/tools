@@ -71,7 +71,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "Is my audio file uploaded anywhere?",
-        a: "No. The browser decodes the file with its own audio decoder, the FFT and the autocorrelation run on the samples in this tab, and the result is drawn in the page. Your files and inputs never leave your device, there is no upload step, and nothing about the track is stored or logged. The page works offline once it has loaded, which is the simplest way to check the claim for yourself: turn off the network and analyse a file anyway.",
+        a: "No. The browser decodes the file with its own audio decoder, the FFT and the autocorrelation run on the samples in this tab, and the result is drawn in the page. Your files and inputs never leave your device, there is no upload step, and nothing about the track is stored or logged. The page works offline once it has loaded, which is the simplest way to check the claim for yourself: turn off the network and analyze a file anyway.",
       },
     ],
   },

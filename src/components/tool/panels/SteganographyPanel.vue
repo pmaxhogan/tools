@@ -51,7 +51,7 @@ import OutputView from "../OutputView.vue";
  * 2. **Transparency is detected at load,** not from the `hasTransparency` field
  *    of an embed result, because the warning and the flatten button have to be
  *    offered before anything is hidden. Canvas premultiplies alpha, so the
- *    colour under a partly transparent pixel can be rewritten on the round trip
+ *    color under a partly transparent pixel can be rewritten on the round trip
  *    and take the hidden bits with it. Flattening onto white first is the fix.
  * 3. **No URL fragment state.** The message is the secret, and the carrier
  *    cannot go in a URL at all, so there is nothing here worth sharing and a
@@ -132,7 +132,7 @@ const vizSpec: SelectOptionSpec = {
   options: [
     {
       value: "parity",
-      label: "All colours combined",
+      label: "All colors combined",
       synonyms: ["parity", "xor", "rgb", "any channel", "combined"],
     },
     { value: "r", label: "Red", synonyms: ["red channel", "r"] },
@@ -185,7 +185,7 @@ function nextFrame(): Promise<void> {
 /**
  * Decodes a file to something a canvas can draw.
  *
- * `createImageBitmap` is tried first with colour management turned off, because
+ * `createImageBitmap` is tried first with color management turned off, because
  * a browser that converts an ICC tagged PNG into the display profile rewrites
  * pixel values, and rewritten pixels are erased pixels for this tool. Older
  * browsers fall back to an `<img>` element.
@@ -438,7 +438,7 @@ function onPayloadPick(e: Event) {
 /**
  * Composites the carrier onto white and drops the alpha.
  *
- * Canvas stores partly transparent pixels premultiplied, so the colour it hands
+ * Canvas stores partly transparent pixels premultiplied, so the color it hands
  * back under them is already approximate and can shift again on the way out.
  * Flattening first makes every pixel fully opaque, which makes the round trip
  * exact and the hidden bits survivable.
@@ -709,7 +709,7 @@ onUnmounted(() => {
           </span>
           <p class="text-sm text-muted-foreground">
             Some pixels in this image are not fully opaque. Canvas stores those premultiplied, which
-            can rewrite the colour underneath them and erase the hidden bits on the way back out.
+            can rewrite the color underneath them and erase the hidden bits on the way back out.
             Flatten the image first, or expect the reveal step to come up empty.
           </p>
           <div>
@@ -831,7 +831,7 @@ onUnmounted(() => {
           <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
           <p class="text-muted-foreground">
             Writing into the alpha channel leaves pixels that are not fully opaque. Canvas stores
-            those premultiplied, so the colours underneath can shift by one step when the PNG is
+            those premultiplied, so the colors underneath can shift by one step when the PNG is
             written and take the hidden bits with them. Red, green, and blue is the reliable choice
             unless you have checked that the extra capacity survives.
           </p>

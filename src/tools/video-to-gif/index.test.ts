@@ -224,7 +224,7 @@ describe("run", () => {
     expect(run("", {})["ffmpeg command"]).toContain('"[0:v] fps=12');
   });
 
-  it("honours option values and reports the trim window and frame count", () => {
+  it("honors option values and reports the trim window and frame count", () => {
     const out = run("", {
       start: "0:02",
       end: "0:12",

@@ -5,7 +5,7 @@ import { nextTick, ref, watch, type Ref, type WatchSource } from "vue";
  *
  * Every live surface on this site that streams rows (the MIDI monitor, the
  * serial terminal, the HID report log, the flasher log, the ffmpeg log tails)
- * wants the same behaviour, and every one of them used to reimplement it or
+ * wants the same behavior, and every one of them used to reimplement it or
  * skip it: keep the newest line in view while the reader is at the bottom, and
  * stop fighting them the moment they scroll up to read back.
  *

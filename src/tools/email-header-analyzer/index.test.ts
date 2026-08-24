@@ -172,7 +172,7 @@ describe("email-header-analyzer hop waterfall", () => {
     // so there is no originating host to put in a hop 0 row.
     expect(rows).toHaveLength(5);
     expect(rows[0]).toContain("mail.origin.example");
-    // The first receiving relay is never labelled as the origin itself: the
+    // The first receiving relay is never labeled as the origin itself: the
     // delay column carries a dash, not the old "origin" marker.
     expect(rows[0]).toMatch(/\s-$/);
     expect(rows[0]).not.toMatch(/origin$/);
@@ -282,7 +282,7 @@ describe("email-header-analyzer hop waterfall", () => {
   });
 });
 
-describe("email-header-analyzer parsing behaviour", () => {
+describe("email-header-analyzer parsing behavior", () => {
   it("ignores everything after the first blank line of a .eml", () => {
     const out = go(EML);
     expect(out).not.toContain("evil.example");

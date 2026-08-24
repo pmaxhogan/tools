@@ -31,6 +31,12 @@ export const meta: ToolMeta = {
     "sms qr code",
     "custom qr code generator",
     "qr code no watermark",
+    "qr code with logo image",
+    "free qr code generator",
+    "qr code for menu",
+    "qr code with center logo",
+    "event qr code generator",
+    "svg qr code download",
   ],
   input: "text/plain",
   output: "image/svg+xml",
@@ -143,8 +149,8 @@ export const meta: ToolMeta = {
     { kind: "number", id: "margin", label: "Quiet zone (modules)", default: 4, min: 0, max: 20 },
   ],
   copy: {
-    what: "Turns any of nine content types into a QR code rendered as clean, infinitely scalable SVG or a high resolution PNG. The payload builders handle the formats phones actually recognise: URLs, Wi-Fi join codes, vCard 4.0 contacts, mailto messages with a subject and body, SMS drafts, dialable numbers, map pins, and calendar events written as a standard VEVENT. You can drop a logo into the middle of the code, set the foreground and background colours, and tune error correction and the quiet zone.",
-    how: "Pick a content type, then fill in its fields: the code redraws as you type. Add a logo if you want one and the tool switches to the highest error correction level automatically so the covered modules still recover. Adjust the size slider (15% to 25% of the code) and the colours, watch the scannability line for warnings, then copy the SVG or download SVG or PNG.",
+    what: "Turns any of nine content types into a QR code rendered as clean, infinitely scalable SVG or a high resolution PNG. The payload builders handle the formats phones actually recognize: URLs, Wi-Fi join codes, vCard 4.0 contacts, mailto messages with a subject and body, SMS drafts, dialable numbers, map pins, and calendar events written as a standard VEVENT. You can drop a logo into the middle of the code, set the foreground and background colors, and tune error correction and the quiet zone.",
+    how: "Pick a content type, then fill in its fields: the code redraws as you type. Add a logo if you want one and the tool switches to the highest error correction level automatically so the covered modules still recover. Adjust the size slider (15% to 25% of the code) and the colors, watch the scannability line for warnings, then copy the SVG or download SVG or PNG.",
     why: "Most QR generators route your data through their servers, then hold the code hostage: dynamic redirects that expire, tracking on every scan, watermarks, a signup wall before you can download a vector file, and a paid tier just to add a logo. This one encodes entirely in your browser, so your files and inputs never leave your device, and the code is static: it will still work in ten years with nobody in the middle.",
     faq: [
       {

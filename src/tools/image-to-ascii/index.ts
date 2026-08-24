@@ -48,7 +48,7 @@ import { ToolError, type ToolLogic } from "../types";
  * matter against a light background turns into visible dots, like a pen and
  * ink line drawing. `dither: true` runs Floyd Steinberg error diffusion over
  * the full dot resolution grayscale grid before thresholding, which spreads
- * quantization error into neighbouring dots and reproduces soft gradients
+ * quantization error into neighboring dots and reproduces soft gradients
  * far better than a hard cutoff.
  *
  * ## Alpha
@@ -185,7 +185,7 @@ export function luma(r: number, g: number, b: number): number {
  * Area averaged (box filter) resampling. Every destination pixel is the mean
  * of the source rectangle it covers, weighted by how much of each source
  * pixel falls inside it. This is what gives a shrunk image clean, unbiased
- * cells instead of the aliasing a nearest neighbour pick would leave behind.
+ * cells instead of the aliasing a nearest neighbor pick would leave behind.
  */
 export function resizeBox(
   rgba: Uint8ClampedArray,
@@ -488,7 +488,7 @@ const DOT_BITS: readonly (readonly [number, number])[] = [
  * Renders an RGBA buffer as Unicode braille dot art (U+2800 to U+28FF). Each
  * character packs a 2 wide by 4 tall block of dots, so this carries roughly
  * 8x the detail of `toAscii` for the same number of terminal columns. See
- * the module docs for the threshold and dither behaviour.
+ * the module docs for the threshold and dither behavior.
  */
 export function toBraille(
   rgba: Uint8ClampedArray,

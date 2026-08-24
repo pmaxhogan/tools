@@ -22,7 +22,7 @@ import { ToolError, type ToolLogic } from "../types";
  *      wastes the most space, and it is the layout people expect when every
  *      sprite is a similar height.
  *
- *    Input order is normalised before packing so the same input always gives
+ *    Input order is normalized before packing so the same input always gives
  *    the same atlas: sprites sort by their longest side descending, then by id.
  *    The shelf packer sorts by placed height descending instead, because next
  *    fit decreasing height is defined by that order.
@@ -84,7 +84,7 @@ export interface PackOpts {
   maxWidth?: number;
   /** Hard ceiling on atlas height in pixels. Default 2048. */
   maxHeight?: number;
-  /** Gap kept between neighbouring sprites in pixels. Default 2. */
+  /** Gap kept between neighboring sprites in pixels. Default 2. */
   padding?: number;
   /** Round the finished atlas up to power of two sides. Default false. */
   powerOfTwo?: boolean;
@@ -609,7 +609,7 @@ function growDim(n: number, max: number, powerOfTwo: boolean): number {
  * search happened to try.
  *
  * `padding` is reserved on the right and the bottom of every sprite, so the gap
- * between any two neighbours is at least `padding` pixels while the outer edge
+ * between any two neighbors is at least `padding` pixels while the outer edge
  * of the atlas stays flush.
  */
 export function packRects(items: PackItem[], opts: PackOpts = {}): PackResult {
@@ -754,7 +754,7 @@ function assertBuffer(rgba: ArrayLike<number>, w: number, h: number, what: strin
  * trimmed frame back in its original position.
  *
  * Trimming and padding solve different problems and are usually used together.
- * Padding keeps a gap so that bilinear filtering cannot sample a neighbouring
+ * Padding keeps a gap so that bilinear filtering cannot sample a neighboring
  * sprite. `extrudeEdges` goes one step further and bleeds the sprite's own
  * border pixels into that gap, which is what removes the last hairline seam on
  * a scaled or rotated quad. Trim removes empty space, and then padding and

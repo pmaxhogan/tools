@@ -47,7 +47,7 @@ import { ToolError, type ToolLogic } from "../types";
  * Semi transparent pixels are composited onto white in the working space before
  * quantization, and every output pixel is fully opaque. Dithering to a fixed
  * palette has no way to express partial coverage, so guessing a background once
- * and saying so beats writing alpha nobody can honour.
+ * and saying so beats writing alpha nobody can honor.
  */
 
 /* ------------------------------------------------------------------ *
@@ -419,7 +419,7 @@ export interface ThresholdMap {
 /**
  * The recursive Bayer construction: M1 = [[0]] and
  * M2n = [[4M, 4M+2], [4M+3, 4M+1]]. Values are normalized to
- * `(rank + 0.5) / size^2` so the map is centred on 0.5.
+ * `(rank + 0.5) / size^2` so the map is centered on 0.5.
  */
 export function bayerMatrix(size: number): ThresholdMap {
   let m: number[][] = [[0]];
@@ -524,7 +524,7 @@ function buildBlueNoise(): ThresholdMap {
     stamp(index, -1);
   };
 
-  /** Position of the one with the most neighbours: the tightest cluster. */
+  /** Position of the one with the most neighbors: the tightest cluster. */
   const tightestCluster = (): number => {
     let best = -1;
     let bestValue = -Infinity;
@@ -537,7 +537,7 @@ function buildBlueNoise(): ThresholdMap {
     return best;
   };
 
-  /** Position of the zero with the fewest neighbours: the largest void. */
+  /** Position of the zero with the fewest neighbors: the largest void. */
   const largestVoid = (): number => {
     let best = -1;
     let bestValue = Infinity;
@@ -697,13 +697,13 @@ function assertBuffer(rgba: Uint8ClampedArray, width: number, height: number): v
 }
 
 /**
- * The typical spacing between neighbouring palette colors, used as the
+ * The typical spacing between neighboring palette colors, used as the
  * amplitude of the ordered and random threshold offsets.
  *
  * It is the mean distance from each palette color to its nearest other palette
  * color, divided by the square root of 3 to turn a three channel Euclidean
- * distance back into a per channel step. For an evenly spaced grey ramp this is
- * exact: 1 for black and white, 1/3 for four greys, 1/15 for sixteen. For a
+ * distance back into a per channel step. For an evenly spaced gray ramp this is
+ * exact: 1 for black and white, 1/3 for four grays, 1/15 for sixteen. For a
  * color palette it is a heuristic that keeps the noise large enough to break
  * up banding and small enough not to wash the image out.
  */
@@ -901,7 +901,7 @@ function assertResize(newW: number, newH: number): void {
 }
 
 /**
- * Nearest neighbour resampling. This is what you want when scaling pixel art
+ * Nearest neighbor resampling. This is what you want when scaling pixel art
  * back up, because it keeps every hard edge exactly where the dither put it.
  */
 export function resizeNearest(
@@ -934,7 +934,7 @@ export function resizeNearest(
  * the source rectangle it covers, weighted by how much of each source pixel
  * falls inside it. Downscaling with a box filter before dithering is what gives
  * clean chunky pixel art: dithering first and shrinking afterwards averages the
- * dither pattern itself back into grey mush.
+ * dither pattern itself back into gray mush.
  */
 export function resizeBox(
   rgba: Uint8ClampedArray,

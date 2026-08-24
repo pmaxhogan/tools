@@ -28,6 +28,9 @@ export const meta: ToolMeta = {
     "subtitle offset adjuster",
     "webvtt editor",
     "caption resync",
+    "srt to vtt online",
+    "subtitle drift fix",
+    "caption timing editor",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -109,6 +112,14 @@ export const meta: ToolMeta = {
       step: 50,
     },
   ],
+  examples: [
+    {
+      label: "SRT to WebVTT",
+      input:
+        "1\n00:00:01,000 --> 00:00:04,200\nWelcome back to the show.\n\n2\n00:00:04,500 --> 00:00:07,800\nToday we are talking about home labs.\n\n3\n00:00:08,100 --> 00:00:11,000\nLet's get started.\n",
+      opts: { operation: "convert", format: "vtt" },
+    },
+  ],
   http: { method: "POST", contentType: "text/plain" },
   copy: {
     what: "Reads SRT and WebVTT subtitles, works out which format you pasted, and writes back either one. It can also move every cue by a fixed offset, resync a whole file from two anchor points, and clean up messy captions by renumbering, stripping stray markup, folding overlong cues down to two lines, trimming overlaps and enforcing a minimum cue length. WebVTT comments, styling blocks, cue identifiers and cue settings survive a WebVTT to WebVTT pass; speaker voice spans become plain speaker prefixes when you convert to SRT, and italic and bold markup carries across intact.",
@@ -117,7 +128,7 @@ export const meta: ToolMeta = {
     faq: [
       {
         q: "How do I fix subtitles that drift further out of sync as the film goes on?",
-        a: "Use the resync operation. Note the correct time for the very first line of dialogue and the correct time for the very last one, enter both, and every cue in between is scaled to match. Growing drift means the subtitles were timed against a different framerate, so no constant shift can ever fix it, but a two point linear resync can.",
+        a: "Use the resync operation. Note the correct time for the very first spoken line and the correct time for the very last one, enter both, and every cue in between is scaled to match. Growing drift means the subtitles were timed against a different framerate, so no constant shift can ever fix it, but a two point linear resync can.",
       },
       {
         q: "What is the difference between SRT and VTT?",

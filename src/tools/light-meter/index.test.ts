@@ -117,7 +117,7 @@ describe("estimateCct", () => {
     expect(result.note.length).toBeGreaterThan(0);
   });
 
-  it("reads a red-heavy colour as warm, in the incandescent region", () => {
+  it("reads a red-heavy color as warm, in the incandescent region", () => {
     const result = estimateCct({ r: 1, g: 0.4, b: 0.1 });
     expect(result.cct).toBeGreaterThan(2000);
     expect(result.cct).toBeLessThan(3200);
@@ -193,9 +193,9 @@ describe("run", () => {
     expect(result["Illuminance estimate"]).toContain("measured from exposure settings");
     expect(result["Camera exposure settings used"]).toContain("f/2");
     expect(result["Camera exposure settings used"]).toContain("ISO 100");
-    expect(result["Colour temperature estimate"]).toContain("K");
-    expect(result["Colour temperature estimate"]).toContain("overcast");
-    expect(result["Colour temperature note"]).toBeDefined();
+    expect(result["Color temperature estimate"]).toContain("K");
+    expect(result["Color temperature estimate"]).toContain("overcast");
+    expect(result["Color temperature note"]).toBeDefined();
     expect(result["EV100"]).toBeDefined();
     expect(result["Light level"]).toBeDefined();
   });
@@ -207,13 +207,13 @@ describe("run", () => {
     expect(result["Camera exposure settings used"]).toContain("Not exposed by this browser");
   });
 
-  it("marks colour temperature unavailable when the report has no colour channels", () => {
+  it("marks color temperature unavailable when the report has no color channels", () => {
     const report = JSON.stringify({ meanLuma: 0.2 });
     const result = run(report, {});
-    expect(result["Colour temperature estimate"]).toBe(
-      "Not available: the frame report did not include colour channel data.",
+    expect(result["Color temperature estimate"]).toBe(
+      "Not available: the frame report did not include color channel data.",
     );
-    expect(result["Colour temperature note"]).toBeUndefined();
+    expect(result["Color temperature note"]).toBeUndefined();
   });
 
   it("converts to footcandles when requested", () => {

@@ -452,7 +452,7 @@ async function deleteChosen(slot: FsSlot) {
 
   error.value = null;
   const result = await slot.applyWrites(ops);
-  // null is a cancelled confirmation, which needs no message of its own.
+  // null is a canceled confirmation, which needs no message of its own.
   if (!result) return;
 
   let bytes = 0;

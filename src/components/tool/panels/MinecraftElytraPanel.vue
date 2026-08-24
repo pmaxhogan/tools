@@ -82,7 +82,7 @@ const mending = ref(false);
 const stars = ref(1);
 const slowFalling = ref(false);
 /**
- * The preset the user last picked explicitly. It is honoured only while the
+ * The preset the user last picked explicitly. It is honored only while the
  * setup still matches it, so it can never disagree with the controls; the
  * displayed selection is always `activeProfile` below, which falls back to a
  * match against the live setup and then to "Custom". That is what keeps the

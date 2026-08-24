@@ -25,6 +25,9 @@ export const meta: ToolMeta = {
     "iso week number",
     "day of year calculator",
     "leap year check",
+    "does this time exist",
+    "utc offset calculator",
+    "instant vs zoneddatetime",
   ],
   input: "text/plain",
   output: "application/json",
@@ -151,6 +154,13 @@ export const meta: ToolMeta = {
       label: "Add duration (ISO 8601, e.g. P1M2DT3H)",
       default: "",
       placeholder: "P1D",
+    },
+  ],
+  examples: [
+    {
+      label: "Spring-forward gap",
+      input: "2026-03-08T02:30",
+      opts: { timeZone: "America/New_York", add: "" },
     },
   ],
   copy: {

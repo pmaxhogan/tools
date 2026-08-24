@@ -27,6 +27,8 @@ export const meta: ToolMeta = {
     "tasmota flasher",
     "chip identify",
     "flash microcontroller browser",
+    "esp32 flash download tool",
+    "web based firmware flasher",
   ],
   input: "none",
   output: "application/json",

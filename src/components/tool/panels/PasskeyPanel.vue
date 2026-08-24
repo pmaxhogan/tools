@@ -168,7 +168,7 @@ function describe(err: unknown, phase: "create" | "get"): PanelError {
   }
   if (name === "AbortError") {
     return {
-      message: "The ceremony was cancelled",
+      message: "The ceremony was canceled",
       fix: "Press the button again to start a new one.",
     };
   }

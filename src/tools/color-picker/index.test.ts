@@ -30,8 +30,8 @@ const PALETTE = { mode: "palette", paletteKind: "all" };
 const RED: [number, number, number] = [1, 0, 0];
 const WHITE: [number, number, number] = [1, 1, 1];
 
-describe("color-picker named colours", () => {
-  it("carries all 148 CSS named colours", () => {
+describe("color-picker named colors", () => {
+  it("carries all 148 CSS named colors", () => {
     expect(Object.keys(NAMED_COLORS)).toHaveLength(148);
   });
 
@@ -49,7 +49,7 @@ describe("color-picker named colours", () => {
     expect(NAMED_COLORS.darkslategrey).toBe(NAMED_COLORS.darkslategray);
   });
 
-  it("parses a colour name and reports the format", () => {
+  it("parses a color name and reports the format", () => {
     const c = parseColor("rebeccapurple");
     expect(formatHex(c)).toBe("#663399");
     expect(c.format).toBe("named");
@@ -111,7 +111,7 @@ describe("color-picker conversions", () => {
     expect(formatOklch({ r: 0.5, g: 0.5, b: 0.5, a: 1 })).toContain("none");
   });
 
-  it("round trips every accepted syntax back to the same colour", () => {
+  it("round trips every accepted syntax back to the same color", () => {
     const forms = [
       "#663399",
       "#639",
@@ -156,7 +156,7 @@ describe("color-picker conversions", () => {
     expect(parseColor("#ff000080").a).toBeCloseTo(0.502, 3);
     expect(parseColor("#f008").a).toBeCloseTo(0.533, 3);
     expect(parseColor("hsl(0 100% 50% / 0.25)").a).toBe(0.25);
-    // Opaque colours never grow an alpha pair on the hex.
+    // Opaque colors never grow an alpha pair on the hex.
     expect(formatHex(parseColor("#ff0000"))).toBe("#ff0000");
   });
 
@@ -169,7 +169,7 @@ describe("color-picker conversions", () => {
     expect(formatHex(parseColor("oklch(1 none none)"))).toBe("#ffffff");
   });
 
-  it("collapses hwb to grey once whiteness and blackness fill the colour", () => {
+  it("collapses hwb to grey once whiteness and blackness fill the color", () => {
     expect(hwbToSrgb([0, 60, 60])).toEqual([0.5, 0.5, 0.5]);
     expect(formatHex(parseColor("hwb(210 60% 60%)"))).toBe("#808080");
     expect(formatHex(parseColor("hwb(210 100% 0%)"))).toBe("#ffffff");
@@ -205,7 +205,7 @@ describe("color-picker gamut mapping", () => {
     expect(out.OKLCH).toBe("oklch(0.9 0.1816 150)");
   });
 
-  it("leaves an in gamut colour untouched and reports it as such", () => {
+  it("leaves an in gamut color untouched and reports it as such", () => {
     const mapped = gamutMapOklch(0.628, 0.2, 29.23);
     expect(mapped.clipped).toBe(false);
     expect(mapped.chroma).toBe(0.2);
@@ -252,7 +252,7 @@ describe("color-picker contrast", () => {
     });
   });
 
-  it("checks a single colour against white and black", () => {
+  it("checks a single color against white and black", () => {
     const out = run("#777777", CONTRAST);
     expect(out["On white (#ffffff)"]).toContain("4.48:1");
     expect(out["On black (#000000)"]).toContain("4.69:1");
@@ -260,7 +260,7 @@ describe("color-picker contrast", () => {
     expect(out.Foreground).toBeUndefined();
   });
 
-  it("splits two colours without tripping over commas inside rgb()", () => {
+  it("splits two colors without tripping over commas inside rgb()", () => {
     expect(splitOperands("rgb(255, 0, 0), white")).toEqual(["rgb(255, 0, 0)", "white"]);
     expect(splitOperands("#fff on #000")).toEqual(["#fff", "#000"]);
     const out = run("rgb(255, 0, 0), white", CONTRAST);

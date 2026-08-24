@@ -30,6 +30,8 @@ export const meta: ToolMeta = {
     "lorem ipsum generator",
     "database seeding",
     "synthetic data",
+    "mockaroo alternative",
+    "json seed data",
   ],
   input: "none",
   output: "text/plain",

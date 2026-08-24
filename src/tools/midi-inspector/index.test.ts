@@ -180,7 +180,7 @@ describe("midi-inspector events", () => {
     });
   });
 
-  it("normalises a running-status note-on velocity 0 to note-off at the two-byte delta", () => {
+  it("normalizes a running-status note-on velocity 0 to note-off at the two-byte delta", () => {
     const off = notes.events[2]!;
     expect(off).toMatchObject({ kind: "noteOff", note: 60, velocity: 0, tick: 296 });
   });
@@ -245,7 +245,7 @@ describe("midi-inspector decodeLiveMessage", () => {
       controller: 7,
       value: 100,
     });
-    // Centre pitch bend is 0x2000 -> value 0.
+    // Center pitch bend is 0x2000 -> value 0.
     expect(decodeLiveMessage(Uint8Array.from([0xe0, 0x00, 0x40]))).toEqual({
       kind: "pitchBend",
       channel: 0,
@@ -356,7 +356,7 @@ describe("control meters", () => {
     expect(controlMeterFor(cc(0, 37, 100))?.detail).toBe("");
   });
 
-  it("centres pitch bend and scales each half to its own end", () => {
+  it("centers pitch bend and scales each half to its own end", () => {
     const rest = controlMeterFor(decodeLiveMessage(Uint8Array.from([0xe0, 0x00, 0x40])));
     expect(rest?.value).toBe(0);
     expect(rest?.level).toBeCloseTo(0.5, 10);
@@ -371,7 +371,7 @@ describe("control meters", () => {
     expect(up?.level).toBeCloseTo(1, 10);
   });
 
-  it("meters both flavours of aftertouch", () => {
+  it("meters both flavors of aftertouch", () => {
     const poly = controlMeterFor(decodeLiveMessage(Uint8Array.from([0xa0, 60, 64])));
     expect(poly).toMatchObject({ id: "pat:0:60", kind: "polyAftertouch", label: "C4", value: 64 });
 

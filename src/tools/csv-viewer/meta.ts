@@ -63,6 +63,21 @@ export const meta: ToolMeta = {
     },
     { kind: "number", id: "limit", label: "Row limit", default: 100, min: 1, max: 1000 },
   ],
+  examples: [
+    {
+      label: "Wholesale orders",
+      input: `order_id,date,customer,region,product,quantity,unit_price,status
+1001,2024-03-04,Riverbend Roasters,Southeast,Ethiopia Guji,4,91.50,shipped
+1002,2024-03-05,Nine Mile Coffee,Northeast,Colombia Huila,6,78.25,shipped
+1003,2024-03-07,Harborlight Cafe,Northeast,Kenya Nyeri,2,104.00,pending
+1004,2024-03-11,Sunset Provisions,West,Brazil Cerrado,12,61.75,shipped
+1005,2024-03-12,Riverbend Roasters,Southeast,Kraft bags 12 oz,2,64.00,shipped
+1006,2024-03-15,Cedar Street Bakery,Midwest,Guatemala Antigua,3,86.40,canceled
+1007,2024-03-18,Nine Mile Coffee,Northeast,Ethiopia Guji,5,91.50,pending
+1008,2024-03-21,Trailhead Outfitters,West,Sumatra Mandheling,8,72.10,shipped`,
+      opts: { header: "true", view: "table", limit: "100" },
+    },
+  ],
   http: { method: "POST", contentType: "text/plain" },
   copy: {
     what: "Opens CSV and TSV data in the browser and lays it out as an aligned table you can actually read. The delimiter is detected automatically, so comma, tab, semicolon and pipe files all work without a setup step. Sort by any column, filter the rows with a single condition, and switch to column statistics, a JSON array, or clean comma-delimited CSV.",

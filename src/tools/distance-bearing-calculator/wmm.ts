@@ -11,7 +11,7 @@
  * The model is valid from 2025.0 to 2030.0. Values are in nanotesla,
  * and the dot arrays are the secular variation in nanotesla per year.
  *
- * This is a data file, not logic: it holds no behaviour of its own.
+ * This is a data file, not logic: it holds no behavior of its own.
  */
 
 /** Model name as it appears in the official coefficient file. */
@@ -24,7 +24,7 @@ export const WMM_VALID_FROM = 2025;
 export const WMM_VALID_TO = 2030;
 /** Maximum spherical harmonic degree and order. */
 export const WMM_MAX_DEGREE = 12;
-/** Geomagnetic reference radius in kilometres (not the mean earth radius). */
+/** Geomagnetic reference radius in kilometers (not the mean earth radius). */
 export const WMM_REFERENCE_RADIUS_KM = 6371.2;
 
 /** Main field g coefficients, indexed [n][m], nanotesla. */

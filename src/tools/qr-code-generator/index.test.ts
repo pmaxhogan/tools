@@ -38,7 +38,7 @@ describe("qr-code-generator: rendering", () => {
     expect(svg).toContain("</svg>");
   });
 
-  it("honours error correction and margin options", async () => {
+  it("honors error correction and margin options", async () => {
     const low = await run("hello world", { ...OPTS, ecc: "L" });
     const high = await run("hello world", { ...OPTS, ecc: "H" });
     expect(low).not.toBe(high);
@@ -47,7 +47,7 @@ describe("qr-code-generator: rendering", () => {
     expect(tight).toMatch(/viewBox="0 0 21 21"/);
   });
 
-  it("renders the requested colours", async () => {
+  it("renders the requested colors", async () => {
     const svg = await run("hello", { ...OPTS, color: "#112233", background: "#ffeedd" });
     expect(svg).toContain('fill="#ffeedd"');
     expect(svg).toContain('stroke="#112233"');
@@ -64,9 +64,9 @@ describe("qr-code-generator: rendering", () => {
     await expect(run("hi", { ...OPTS, margin: 99 })).rejects.toThrowError(ToolError);
   });
 
-  it("rejects a colour that is not hex", async () => {
+  it("rejects a color that is not hex", async () => {
     await expect(run("hi", { ...OPTS, color: "rebeccapurple" })).rejects.toThrowError(
-      /is not a hex colour/,
+      /is not a hex color/,
     );
   });
 
@@ -354,12 +354,12 @@ describe("qr-code-generator: line folding", () => {
   });
 });
 
-describe("qr-code-generator: colours and scannability", () => {
+describe("qr-code-generator: colors and scannability", () => {
   it("parses short and long hex forms", () => {
     expect(normaliseColor("#fff", "#000000")).toBe("#ffffff");
     expect(normaliseColor("#1D1B18", "#000000")).toBe("#1d1b18");
     expect(normaliseColor("", "#123456")).toBe("#123456");
-    expect(() => normaliseColor("blue", "#000000")).toThrowError(/not a hex colour/);
+    expect(() => normaliseColor("blue", "#000000")).toThrowError(/not a hex color/);
   });
 
   it("computes WCAG luminance and contrast", () => {
@@ -386,11 +386,11 @@ describe("qr-code-generator: colours and scannability", () => {
 });
 
 describe("qr-code-generator: logo embedding", () => {
-  it("centres a padded rounded plate and the image inside the viewBox", () => {
+  it("centers a padded rounded plate and the image inside the viewBox", () => {
     const svg =
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M0 0"/></svg>';
     const out = embedLogoInSvg(svg, { dataUrl: LOGO, size: 0.2, pad: 0.08 });
-    // Logo 20 wide, plate 20 * 1.16 = 23.2 wide, both centred in 100.
+    // Logo 20 wide, plate 20 * 1.16 = 23.2 wide, both centered in 100.
     expect(out).toContain('<rect x="38.4" y="38.4" width="23.2" height="23.2" rx="3.48"');
     expect(out).toContain('fill="#ffffff"');
     expect(out).toContain('<image x="40" y="40" width="20" height="20"');
@@ -399,7 +399,7 @@ describe("qr-code-generator: logo embedding", () => {
     expect(out.indexOf("<rect")).toBeLessThan(out.indexOf("<image"));
   });
 
-  it("paints the plate in the background colour", () => {
+  it("paints the plate in the background color", () => {
     const svg = '<svg viewBox="0 0 40 40"></svg>';
     expect(embedLogoInSvg(svg, { dataUrl: LOGO, background: "#ffeedd" })).toContain(
       'fill="#ffeedd"',

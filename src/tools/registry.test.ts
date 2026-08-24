@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { CATEGORIES } from "./categories";
 import { loaders, tools } from "./registry";
 
 /**
@@ -153,5 +154,43 @@ describe("icons", () => {
     expect(icons.size).toBeGreaterThan(0);
     const unknown = tools.filter((t) => t.icon && !icons.has(t.icon));
     expect(unknown.map((t) => `${t.slug} -> ${t.icon}`)).toEqual([]);
+  });
+});
+
+/**
+ * `ToolMeta.category` is a free string, so nothing but this guard relates it to
+ * the canonical list in categories.ts. A typo there is invisible: the tool just
+ * grows its own one-off section on the homepage and never appears under the
+ * category it belongs to, and its category page link 404s.
+ *
+ * The slug collision check matters because tool pages live at `/<slug>` and
+ * category pages at `/category/<slug>`. They do not collide as URLs today, but
+ * the two namespaces are written by hand from the same vocabulary, and a shared
+ * name makes every link, breadcrumb and search result ambiguous to read.
+ */
+describe("categories", () => {
+  const labels = new Set(CATEGORIES.map((c) => c.label));
+
+  it("declares a known category on every tool", () => {
+    const unknown = tools.filter((t) => !labels.has(t.category));
+    expect(unknown.map((t) => `${t.slug} -> ${t.category}`)).toEqual([]);
+  });
+
+  it("never reuses a tool slug as a category slug", () => {
+    const clashing = CATEGORIES.filter((c) => slugs.has(c.slug));
+    expect(clashing.map((c) => c.slug)).toEqual([]);
+  });
+
+  it("gives every category a unique, kebab-case slug", () => {
+    const seen = CATEGORIES.map((c) => c.slug);
+    expect(new Set(seen).size).toBe(seen.length);
+    expect(seen.filter((slug) => !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))).toEqual([]);
+  });
+
+  it("keeps em and en dashes out of the category copy", () => {
+    // Escapes, not literals: the copy rule bans these characters from prose, so
+    // the guard should not be the one file that smuggles them back in.
+    const offenders = CATEGORIES.filter((c) => /[\u2013\u2014]/.test(c.description));
+    expect(offenders.map((c) => c.slug)).toEqual([]);
   });
 });

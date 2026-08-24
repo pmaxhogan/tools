@@ -108,7 +108,7 @@ export const meta: ToolMeta = {
     faq: [
       {
         q: "How far does sending data over the speaker actually work?",
-        a: "Across a desk or a quiet room, a few metres at most, and only at low speeds. The default of 100 baud is slow on purpose: every bit gets a full 10 milliseconds, which is a dozen or more whole cycles of tone, and that is what lets the receiver still tell the two tones apart after room echo, laptop speaker roll off and a phone microphone have all had a turn. Raise the baud rate and the useful distance shrinks quickly. It will not survive a noisy cafe, a wall, or a phone in your pocket, so treat it as a neat way to move a short string between two devices in front of you rather than a replacement for a network.",
+        a: "Across a desk or a quiet room, a few meters at most, and only at low speeds. The default of 100 baud is slow on purpose: every bit gets a full 10 milliseconds, which is a dozen or more whole cycles of tone, and that is what lets the receiver still tell the two tones apart after room echo, laptop speaker roll off and a phone microphone have all had a turn. Raise the baud rate and the useful distance shrinks quickly. It will not survive a noisy cafe, a wall, or a phone in your pocket, so treat it as a neat way to move a short string between two devices in front of you rather than a replacement for a network.",
       },
       {
         q: "Is Morse timing standard, or does everyone do it differently?",

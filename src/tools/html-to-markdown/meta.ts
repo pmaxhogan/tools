@@ -26,6 +26,10 @@ export const meta: ToolMeta = {
     "strip word formatting",
     "notion to markdown",
     "convert to gfm",
+    "convert to md",
+    "html2markdown",
+    "paste from word to markdown",
+    "confluence to markdown",
   ],
   input: "text/html",
   output: "text/plain",
@@ -43,6 +47,21 @@ export const meta: ToolMeta = {
     },
     { kind: "boolean", id: "keepLinks", label: "Keep links", default: true },
     { kind: "boolean", id: "keepImages", label: "Keep images", default: true },
+  ],
+  examples: [
+    {
+      label: "Roadmap snippet",
+      input: `<h2>Q3 Roadmap</h2>
+<p>Key items for the <strong>Northwind</strong> team this quarter:</p>
+<ul>
+<li>Ship the <a href="https://example.com/billing">billing dashboard</a></li>
+<li>Migrate staging to the new cluster</li>
+</ul>
+<table>
+<tr><th>Owner</th><th>Due</th></tr>
+<tr><td>Dana</td><td>Sep 12</td></tr>
+</table>`,
+    },
   ],
   copy: {
     what: "Converts HTML and rich text from Google Docs, Word, Outlook, or any web page into clean Markdown. Headings, lists, blockquotes, code blocks, links, and images all come across, and tables, strikethrough, and task lists convert to GitHub Flavored Markdown. Before the conversion runs, a cleanup pass removes the junk those editors leave behind: the Google Docs wrapper tag, Word conditional comments and o:p tags, mso styles, class and id attributes, and runs of non-breaking spaces used as layout.",

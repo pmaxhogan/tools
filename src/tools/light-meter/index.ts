@@ -5,7 +5,7 @@ import { ToolError, type ToolLogic } from "../types";
  * (~5 Hz), converts them to linear light with sRGBToLinear/linearLuma below,
  * smooths the readings with rollingAverage, and serializes the result into a
  * JSON report: { meanLuma, r, g, b, exposureTimeSec?, iso?, fNumber? }. This
- * file turns that report into a lux and colour temperature estimate. No DOM,
+ * file turns that report into a lux and color temperature estimate. No DOM,
  * no getUserMedia, no canvas access live here.
  *
  * Nothing here is a calibrated light meter. A phone or webcam sensor has no
@@ -20,7 +20,7 @@ import { ToolError, type ToolLogic } from "../types";
  */
 
 // ---------------------------------------------------------------------------
-// Colour math helpers (also used directly by the panel on raw canvas pixels)
+// Color math helpers (also used directly by the panel on raw canvas pixels)
 // ---------------------------------------------------------------------------
 
 /** Converts one sRGB gamma-encoded channel (0..1) to linear light. */
@@ -190,7 +190,7 @@ export function describeLux(lux: number): string {
 }
 
 // ---------------------------------------------------------------------------
-// Colour temperature estimate
+// Color temperature estimate
 // ---------------------------------------------------------------------------
 
 export interface CctInput {
@@ -201,14 +201,14 @@ export interface CctInput {
 }
 
 export interface CctEstimate {
-  /** Correlated colour temperature in Kelvin, clamped to 1000..25000. */
+  /** Correlated color temperature in Kelvin, clamped to 1000..25000. */
   cct: number;
   label: string;
   note: string;
 }
 
 const WB_CAVEAT =
-  "Auto white balance actively corrects colour casts before this estimate ever sees the frame, so this reflects what the camera decided the light looks like, not necessarily the true colour temperature, unless white balance is locked.";
+  "Auto white balance actively corrects color casts before this estimate ever sees the frame, so this reflects what the camera decided the light looks like, not necessarily the true color temperature, unless white balance is locked.";
 
 interface CctReference {
   k: number;
@@ -225,7 +225,7 @@ const CCT_REFERENCES: CctReference[] = [
   { k: 7500, label: "shade" },
 ];
 
-/** Nearest reference label, compared in mireds (1e6/K) since colour perception is roughly linear there. */
+/** Nearest reference label, compared in mireds (1e6/K) since color perception is roughly linear there. */
 function nearestCctLabel(k: number): string {
   const mired = 1e6 / k;
   let best: CctReference = CCT_REFERENCES[0] as CctReference;
@@ -241,7 +241,7 @@ function nearestCctLabel(k: number): string {
 }
 
 /**
- * Estimates correlated colour temperature from the frame's mean linear sRGB
+ * Estimates correlated color temperature from the frame's mean linear sRGB
  * via McCamy's approximation: convert to CIE XYZ (D65 sRGB primaries), then
  * to xy chromaticity, then n = (x - 0.3320) / (0.1858 - y) and
  * CCT = 449n^3 + 3525n^2 + 6823.3n + 5520.33, clamped to 1000..25000 K.
@@ -260,7 +260,7 @@ export function estimateCct(input: CctInput): CctEstimate {
     return {
       cct: 6500,
       label: "overcast",
-      note: `No colour signal in the frame, so this defaults to an overcast daylight estimate. ${WB_CAVEAT}`,
+      note: `No color signal in the frame, so this defaults to an overcast daylight estimate. ${WB_CAVEAT}`,
     };
   }
 
@@ -288,7 +288,7 @@ export interface LightMeterOpts {
 export type LightMeterResult = Record<string, string>;
 
 const EMPTY_STATUS =
-  "Point the camera at a light source and press Start above to read a live lux and colour temperature estimate. Frames are analyzed on this page and discarded: nothing is recorded or uploaded.";
+  "Point the camera at a light source and press Start above to read a live lux and color temperature estimate. Frames are analyzed on this page and discarded: nothing is recorded or uploaded.";
 
 interface Report {
   meanLuma: number;
@@ -419,11 +419,11 @@ export function run(input: string, opts: LightMeterOpts = {}): LightMeterResult 
 
   if (report.r !== undefined && report.g !== undefined && report.b !== undefined) {
     const cct = estimateCct({ r: report.r, g: report.g, b: report.b });
-    out["Colour temperature estimate"] = `${Math.round(cct.cct)} K (${cct.label})`;
-    out["Colour temperature note"] = cct.note;
+    out["Color temperature estimate"] = `${Math.round(cct.cct)} K (${cct.label})`;
+    out["Color temperature note"] = cct.note;
   } else {
-    out["Colour temperature estimate"] =
-      "Not available: the frame report did not include colour channel data.";
+    out["Color temperature estimate"] =
+      "Not available: the frame report did not include color channel data.";
   }
 
   const hasExposureData =

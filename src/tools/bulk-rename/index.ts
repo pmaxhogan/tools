@@ -16,7 +16,7 @@ import type { FsFileEntry, FsScan, WriteOp } from "@/lib/fs-access";
  * Nothing here reads or writes a file. Every decision it makes is reproducible
  * from the scan object alone, which is what makes the whole tool testable.
  *
- * Two behaviours are worth knowing before reading the code:
+ * Two behaviors are worth knowing before reading the code:
  *
  *   1. Order matters. `planWrites` in the FS layer replays a batch against the
  *      set of paths the scan saw, and a rename never overwrites, so shifting a

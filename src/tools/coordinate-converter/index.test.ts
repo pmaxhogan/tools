@@ -96,11 +96,11 @@ describe("coordinate-converter parsing", () => {
   });
 
   it("reads MGRS at several precisions and records the cell size", () => {
-    const metre = parseCoordinate("18TWL8395907350");
-    expect(metre.format).toBe("MGRS");
-    expect(metre.precisionMeters).toBe(1);
-    expect(metre.lat).toBeCloseTo(40.7128, 4);
-    expect(metre.lon).toBeCloseTo(-74.006, 4);
+    const meter = parseCoordinate("18TWL8395907350");
+    expect(meter.format).toBe("MGRS");
+    expect(meter.precisionMeters).toBe(1);
+    expect(meter.lat).toBeCloseTo(40.7128, 4);
+    expect(meter.lon).toBeCloseTo(-74.006, 4);
 
     expect(parseCoordinate("18TWL83950735").precisionMeters).toBe(10);
     expect(parseCoordinate("18T WL 839 073").precisionMeters).toBe(100);
@@ -174,7 +174,7 @@ describe("coordinate-converter UTM and MGRS", () => {
     expect(utmZone(78, 5)).toBe(31);
   });
 
-  it("round trips UTM to well under a centimetre", () => {
+  it("round trips UTM to well under a centimeter", () => {
     const points = [
       { lat: 40.7128, lon: -74.006 },
       { lat: -33.8688, lon: 151.2093 },
@@ -231,7 +231,7 @@ describe("coordinate-converter Plus Codes", () => {
     expect(toPlusCode(47.0000625, 8.0000625, 10)).toBe("8FVC2222+22");
   });
 
-  it("decodes to the centre of the code area", () => {
+  it("decodes to the center of the code area", () => {
     const a = fromPlusCode("8FVC2222+22");
     expect(a.lat).toBeCloseTo(47.0000625, 9);
     expect(a.lon).toBeCloseTo(8.0000625, 9);
@@ -328,7 +328,7 @@ describe("coordinate-converter distance and bearing", () => {
 });
 
 describe("coordinate-converter options", () => {
-  it("honours the decimals option", () => {
+  it("honors the decimals option", () => {
     const out = run("40.7128, -74.0060", { decimals: 2 });
     expect(out["Decimal degrees"]).toBe("40.71, -74.01");
     expect(out["geo URI"]).toBe("geo:40.71,-74.01");
@@ -340,7 +340,7 @@ describe("coordinate-converter options", () => {
     );
   });
 
-  it("honours the MGRS precision option", () => {
+  it("honors the MGRS precision option", () => {
     const out = run("40.7128, -74.0060", { mgrsPrecision: "1000" });
     expect(out["MGRS"]).toBe("18TWL8307");
   });

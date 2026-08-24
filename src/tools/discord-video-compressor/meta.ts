@@ -27,6 +27,8 @@ export const meta: ToolMeta = {
     "compress mp4 online",
     "video compressor no upload",
     "reduce mp4 size",
+    "handbrake alternative",
+    "discord video upload limit",
   ],
   input: "video/*",
   output: "application/json",
@@ -78,7 +80,7 @@ export const meta: ToolMeta = {
   ],
   copy: {
     what: "Works out the exact video bitrate that fits a clip under a size cap, then runs a two pass H.264 encode in your browser to hit it. It reads the length of the video, holds back a margin for container overhead, pays for an AAC audio track at 96, 64, or 48 kbps depending on how tight the budget is, and hands the rest to the picture. The presets cover the common Discord caps, and a custom field takes any size up to 2000 MB for other upload limits. When a cap genuinely cannot hold the clip, it says so with the numbers instead of producing something unwatchable.",
-    how: "Drop a video in and the tool reads its length, then shows the plan before anything is encoded: target size, video and audio bitrate, and the estimated result. Pick a cap, optionally cap the height or the frame rate to buy more bits per pixel, then press Compress. Pass one analyses the clip and pass two encodes it, and the finished file is checked against the cap and reported as either the headroom it left or an honest overshoot. Very large sources are limited by how much memory the browser tab can hold, so an hour of 4K may not load even when the math says it would fit.",
+    how: "Drop a video in and the tool reads its length, then shows the plan before anything is encoded: target size, video and audio bitrate, and the estimated result. Pick a cap, optionally cap the height or the frame rate to buy more bits per pixel, then press Compress. Pass one analyzes the clip and pass two encodes it, and the finished file is checked against the cap and reported as either the headroom it left or an honest overshoot. Very large sources are limited by how much memory the browser tab can hold, so an hour of 4K may not load even when the math says it would fit.",
     why: "The popular discord-size sites upload your video to their servers, re-encode it with one fixed setting, and hand back whatever comes out, which is why the result is often far under the cap and softer than it needed to be. This one computes the bitrate for your exact clip length and cap, shows you the plan before it runs, and does the encode with ffmpeg inside this tab: your files and inputs never leave your device. No queue, no watermark, no account.",
     faq: [
       {

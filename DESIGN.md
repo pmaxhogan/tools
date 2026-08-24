@@ -145,11 +145,18 @@ Implementation: `.dark` class on `<html>`, set before paint in BaseLayout.
 - Empty, error, and loading states are designed, never blank: errors show the
   message plus the fix hint; empty inputs show a helpful placeholder.
 - Keyboard hints render as `<kbd>` chips (8px radius, `--secondary` fill).
-- Dropdowns (every `kind: "select"` and every bespoke `<Select>`) render through
-  the shared `searchable-select` component. The trigger matches the Select look;
+- Single-choice options with 2 to 4 short choices render as the shared
+  `segmented` control (radiogroup of buttons, brand gradient on the active
+  segment, arrow-key roving focus); the generic panel promotes small selects
+  automatically and a spec can force either look with `ui: "segmented"` or
+  `ui: "select"`. Larger or grouped dropdowns (and every bespoke `<Select>`)
+  render through the shared `searchable-select` component. The trigger matches the Select look;
   the panel is a `--popover` surface with a violet active row (`--accent-soft`).
   Once a select has more than 6 leaf options the panel grows a search field at
   the top that filters on option labels and their synonyms, plus category labels
   and their synonyms. Options can be grouped into nested, indented categories.
   The search field, synonyms, and grouping are copy that must obey the copy
   rules below: no em or en dashes in any label or synonym.
+- All user-facing prose is US English (color, gray, meter, analyze); British
+  spellings live only in hidden search synonyms. `npm run lint` runs
+  scripts/check-spelling.mjs to enforce this.

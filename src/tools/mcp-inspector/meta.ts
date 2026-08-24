@@ -26,6 +26,15 @@ export const meta: ToolMeta = {
     "sse json-rpc parser",
     "anthropic mcp",
     "mcp schema viewer",
+    "claude mcp server test",
+    "mcp inspector alternative",
+    "test mcp tool calls",
+    "mcp playground",
+    "mcp session id header",
+    "mcp handshake tester",
+    "mcp server debugger online",
+    "tools/list json viewer",
+    "streamable http mcp test",
   ],
   input: "text/plain",
   output: "application/json",
@@ -37,6 +46,8 @@ export const meta: ToolMeta = {
       id: "mode",
       label: "Mode",
       default: "parse",
+      // Full sentence labels: keep the dropdown rather than a row of buttons.
+      ui: "select",
       options: [
         {
           value: "parse",

@@ -28,6 +28,8 @@ export const meta: ToolMeta = {
     "crontab syntax checker",
     "systemd timer",
     "node-cron syntax",
+    "cron job scheduler",
+    "kubernetes cronjob",
   ],
   input: "text/plain",
   output: "application/json",
@@ -40,6 +42,14 @@ export const meta: ToolMeta = {
       placeholder: "UTC, America/Chicago, Europe/Berlin…",
     },
     { kind: "boolean", id: "seconds", label: "Expression includes seconds", default: false },
+  ],
+  examples: [
+    { label: "Weekday business hours", input: "*/15 9-17 * * 1-5" },
+    {
+      label: "With a seconds field",
+      input: "0 */15 9-17 * * 1-5",
+      opts: { seconds: "true" },
+    },
   ],
   http: { method: "GET", contentType: "application/json" },
   copy: {

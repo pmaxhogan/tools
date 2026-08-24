@@ -24,6 +24,8 @@ export const meta: ToolMeta = {
     "ip to hostname",
     "in-addr.arpa",
     "ip6.arpa",
+    "spf record lookup",
+    "dmarc record lookup",
   ],
   input: "text/plain",
   output: "application/json",

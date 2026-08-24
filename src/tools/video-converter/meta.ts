@@ -28,6 +28,13 @@ export const meta: ToolMeta = {
     "transcode video browser",
     "handbrake alternative online",
     "video codec converter",
+    "mkv to mp4",
+    "wav to mp3",
+    "convert avi to mp4",
+    "remove audio from video",
+    "video to audio extractor",
+    "browser video transcoder",
+    "convert video without upload",
   ],
   input: "video/*",
   output: "application/json",
@@ -102,6 +109,8 @@ export const meta: ToolMeta = {
       id: "quality",
       label: "Quality",
       default: "balanced",
+      // Full sentence labels: keep the dropdown rather than a row of buttons.
+      ui: "select",
       options: [
         {
           value: "high",

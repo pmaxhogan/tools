@@ -1,0 +1,13 @@
+order_id,date,customer,region,product,quantity,unit_price,status
+1001,2024-03-04,Riverbend Roasters,Southeast,Ethiopia Guji,4,91.50,shipped
+1002,2024-03-05,Nine Mile Coffee,Northeast,Colombia Huila,6,78.25,shipped
+1003,2024-03-07,Harborlight Cafe,Northeast,Kenya Nyeri,2,104.00,pending
+1004,2024-03-11,Sunset Provisions,West,Brazil Cerrado,12,61.75,shipped
+1005,2024-03-12,Riverbend Roasters,Southeast,Kraft bags 12 oz,2,64.00,shipped
+1006,2024-03-15,Cedar Street Bakery,Midwest,Guatemala Antigua,3,86.40,cancelled
+1007,2024-03-18,Nine Mile Coffee,Northeast,Ethiopia Guji,5,91.50,pending
+1008,2024-03-21,Trailhead Outfitters,West,Sumatra Mandheling,8,72.10,shipped
+1009,2024-03-22,Harborlight Cafe,Northeast,Cupping session,1,150.00,shipped
+1010,2024-03-26,Cedar Street Bakery,Midwest,Colombia Huila,7,78.25,shipped
+1011,2024-03-28,Sunset Provisions,West,Kenya Nyeri,4,104.00,pending
+1012,2024-03-30,Trailhead Outfitters,West,Brazil Cerrado,10,61.75,shipped

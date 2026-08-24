@@ -632,7 +632,7 @@ function describeMemories(memories: WasmMemory[]): string {
   return rows.join("; ");
 }
 
-function summarise(items: string[], count: number): string {
+function summarize(items: string[], count: number): string {
   if (count === 0) return "none";
   const shown = items.slice(0, SAMPLE_CAP);
   const suffix = count > shown.length ? ", ..." : "";
@@ -664,8 +664,8 @@ function summaryView(mod: WasmModule): Record<string, string> {
     Size: formatByteCount(mod.size),
     Sections: sectionList(mod),
     Types: String(mod.typeCount),
-    Imports: summarise(mod.imports.map(importLabel), mod.imports.length),
-    Exports: summarise(mod.exports.map(exportLabel), mod.exports.length),
+    Imports: summarize(mod.imports.map(importLabel), mod.imports.length),
+    Exports: summarize(mod.exports.map(exportLabel), mod.exports.length),
     Functions: String(mod.functionCount),
     Tables: String(mod.tableCount),
     Memory: describeMemories(mod.memories),

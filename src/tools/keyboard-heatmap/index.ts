@@ -314,10 +314,10 @@ export function compareLayouts(
   layoutIds: string[] = LAYOUT_IDS,
 ): Record<string, ComparisonRow> {
   const ids = layoutIds.length === 0 ? LAYOUT_IDS : layoutIds;
-  const analyses = ids.map((id) => analyzeText(text, id, { topKeys: 1 }));
+  const analyzes = ids.map((id) => analyzeText(text, id, { topKeys: 1 }));
 
   const seen = new Set<string>();
-  const ranked = analyses
+  const ranked = analyzes
     .filter((analysis) => {
       if (seen.has(analysis.layoutId)) return false;
       seen.add(analysis.layoutId);
@@ -353,7 +353,7 @@ const KEY_SIZE = 46;
 const PAD = 14;
 const LEGEND_HEIGHT = 52;
 
-/** Outline colour per finger, so the eight finger zones read at a glance. */
+/** Outline color per finger, so the eight finger zones read at a glance. */
 const FINGER_COLORS = [
   "#b45309",
   "#a16207",
@@ -368,7 +368,7 @@ const FINGER_COLORS = [
 /**
  * Fill for a key whose share of the busiest key is `t`, from 0 to 1. One hue
  * throughout, light for cold and saturated for hot, so the ramp reads the same
- * way for every kind of colour vision.
+ * way for every kind of color vision.
  */
 export function heatFill(t: number): string {
   const clamped = Math.min(1, Math.max(0, t));
@@ -456,7 +456,7 @@ export function renderHeatmapSvg(layoutId: string, hitCounts: Record<string, num
 
   const legendY = PAD + boardHeight + 22;
   parts.push(
-    `<text x="${PAD}" y="${legendY}" font-size="12" fill="#64748b">Outline colour marks the finger zone. Darker fill means the key was pressed more often.</text>`,
+    `<text x="${PAD}" y="${legendY}" font-size="12" fill="#64748b">Outline color marks the finger zone. Darker fill means the key was pressed more often.</text>`,
   );
   FINGER_CODES.forEach((code, finger) => {
     const x = PAD + finger * 84;

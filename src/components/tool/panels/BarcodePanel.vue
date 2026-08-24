@@ -408,7 +408,7 @@ function printOutput() {
 <style>
 /*
  * Print isolation: only the generated barcode or sheet should reach paper, at
- * its own authored size (millimetres for a label sheet, pixels for a single
+ * its own authored size (millimeters for a label sheet, pixels for a single
  * symbol), never scaled to fit the on-screen preview box. Scoped styles
  * cannot reach outside this component (header, sidebar, footer), so this
  * block is intentionally global but only ever loads on the barcode generator
@@ -419,10 +419,10 @@ function printOutput() {
 }
 
 @media print {
-  /* Anchors the sheet SVG's millimetre coordinates to the physical page
+  /* Anchors the sheet SVG's millimeter coordinates to the physical page
      corner. Without this, the browser's default page margin (commonly
      around 10mm) shifts every label off its die-cut position, which defeats
-     the point of a sheet measured in real millimetres. */
+     the point of a sheet measured in real millimeters. */
   @page {
     margin: 0;
   }

@@ -121,7 +121,7 @@ const hannCache = new Map<number, Float32Array>();
  *
  * Both endpoints are exactly zero and the center is exactly one, which is
  * what tapers the frame edges and keeps a steady tone from smearing across
- * neighbouring bins. The result is cached and shared, so treat it as read
+ * neighboring bins. The result is cached and shared, so treat it as read
  * only: multiply it into a separate frame buffer rather than in place.
  */
 export function hannWindow(n: number): Float32Array {
@@ -844,7 +844,7 @@ export function freqToLabel(hz: number): string {
  * happens when the browser refused to decode at the file's own rate and
  * resampled, and then both numbers matter because the frequency axis follows
  * the decoded one. Or the header could not be read at all, in which case the
- * only honest thing to print is what the decoder produced, labelled as such
+ * only honest thing to print is what the decoder produced, labeled as such
  * rather than passed off as a fact about the file.
  */
 export function describeSampleRate(sourceRate: number | null, decodedRate: number): string {

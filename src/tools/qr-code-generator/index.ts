@@ -11,9 +11,9 @@ export interface QrOpts {
   ecc: string;
   /** Quiet-zone width in modules. */
   margin: number;
-  /** Dark module colour as #rgb or #rrggbb. Defaults to black. */
+  /** Dark module color as #rgb or #rrggbb. Defaults to black. */
   color?: string;
-  /** Light module colour as #rgb or #rrggbb. Defaults to white. */
+  /** Light module color as #rgb or #rrggbb. Defaults to white. */
   background?: string;
   /** Optional rendered width in pixels, written to the SVG width/height. */
   width?: number;
@@ -316,7 +316,7 @@ export function buildGeo(fields: GeoFields): string {
 }
 
 /**
- * Normalise an instant to the iCalendar UTC basic format (20260806T233000Z).
+ * Normalize an instant to the iCalendar UTC basic format (20260806T233000Z).
  * Accepts a Date, an already basic value, an ISO string carrying an offset,
  * or a bare "YYYY-MM-DDTHH:MM" which is read as UTC so the output never
  * depends on the machine's timezone.
@@ -493,7 +493,7 @@ export function buildWifiPayload(input: string): string {
 
 /**
  * Build a vCard from lines. The first four keep the order this tool has always
- * used (name, phone, email, organisation) so old shared links still decode the
+ * used (name, phone, email, organization) so old shared links still decode the
  * same way; the newer fields are appended after them.
  */
 export function buildVcardPayload(input: string): string {
@@ -503,7 +503,7 @@ export function buildVcardPayload(input: string): string {
     throw new ToolError(
       "missing-name",
       "The first line must be the contact name.",
-      "Lines are: name, phone, email, organisation, title, website, address, note.",
+      "Lines are: name, phone, email, organization, title, website, address, note.",
     );
   return buildVcard({ name, phone, email, org, title, url, address, note: rest(all, 7) });
 }
@@ -575,7 +575,7 @@ export function buildPayload(input: string, preset: string): string {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Colour helpers                                                             */
+/* Color helpers                                                             */
 /* -------------------------------------------------------------------------- */
 
 /** Parse #rgb or #rrggbb into 0-255 channels. Returns null when unparseable. */
@@ -598,7 +598,7 @@ export function parseHexColor(value: string): { r: number; g: number; b: number 
   return null;
 }
 
-/** Normalise a colour to #rrggbb, throwing a typed error on garbage. */
+/** Normalize a color to #rrggbb, throwing a typed error on garbage. */
 export function normaliseColor(value: string | undefined, fallback: string): string {
   const raw = (value ?? "").trim();
   if (!raw) return fallback;
@@ -606,14 +606,14 @@ export function normaliseColor(value: string | undefined, fallback: string): str
   if (!rgb)
     throw new ToolError(
       "bad-color",
-      `"${raw}" is not a hex colour.`,
+      `"${raw}" is not a hex color.`,
       "Use a value like #1d1b18 or #fff.",
     );
   const hex = (n: number) => n.toString(16).padStart(2, "0");
   return `#${hex(rgb.r)}${hex(rgb.g)}${hex(rgb.b)}`;
 }
 
-/** WCAG relative luminance. Returns 0 for an unparseable colour. */
+/** WCAG relative luminance. Returns 0 for an unparseable color. */
 export function relativeLuminance(color: string): number {
   const rgb = parseHexColor(color);
   if (!rgb) return 0;
@@ -624,7 +624,7 @@ export function relativeLuminance(color: string): number {
   return 0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b);
 }
 
-/** WCAG contrast ratio between two colours: 1 (identical) to 21 (black on white). */
+/** WCAG contrast ratio between two colors: 1 (identical) to 21 (black on white). */
 export function contrastRatio(a: string, b: string): number {
   const la = relativeLuminance(a);
   const lb = relativeLuminance(b);
@@ -652,7 +652,7 @@ export interface LogoEmbedOptions {
   size?: number;
   /** Pad around the logo, as a fraction of the logo size. Defaults to 0.08. */
   pad?: number;
-  /** Pad fill colour. Defaults to white. */
+  /** Pad fill color. Defaults to white. */
   background?: string;
 }
 
@@ -670,7 +670,7 @@ function escapeAttr(value: string): string {
 
 /**
  * Place a logo in the middle of a rendered QR SVG: a rounded pad in the
- * background colour, then the image on top. Error correction level H recovers
+ * background color, then the image on top. Error correction level H recovers
  * roughly 30% of the modules, which is what makes the covered area safe.
  */
 export function embedLogoInSvg(svg: string, options: LogoEmbedOptions): string {
@@ -739,7 +739,7 @@ export function scannabilityWarnings(input: ScannabilityInput): string[] {
   const ratio = contrastRatio(input.color ?? "#000000", input.background ?? "#ffffff");
   if (ratio < CONTRAST_MIN)
     out.push(
-      `Contrast between the two colours is low (${ratio.toFixed(1)} to 1). Darken the foreground or lighten the background.`,
+      `Contrast between the two colors is low (${ratio.toFixed(1)} to 1). Darken the foreground or lighten the background.`,
     );
   return out;
 }

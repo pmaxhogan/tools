@@ -23,11 +23,11 @@ export interface QrOpts {
   [key: string]: unknown;
 }
 
-/** The recognised payload shapes. Anything unmatched falls back to 'text'. */
+/** The recognized payload shapes. Anything unmatched falls back to 'text'. */
 export type QrKind =
   "url" | "wifi" | "geo" | "email" | "phone" | "sms" | "vcard" | "event" | "text";
 
-/** One labelled row of a structured interpretation. */
+/** One labeled row of a structured interpretation. */
 export interface DecodedField {
   label: string;
   value: string;
@@ -36,7 +36,7 @@ export interface DecodedField {
 export interface DecodeResult {
   /** The exact text encoded in the code, untouched. */
   text: string;
-  /** Which payload shape was recognised. */
+  /** Which payload shape was recognized. */
   kind: QrKind;
   /** Human label for the shape, e.g. "Web link". No trailing punctuation. */
   label: string;
@@ -210,7 +210,7 @@ function splitProperty(line: string): { name: string; value: string } {
   return { name, value: line.slice(colon + 1) };
 }
 
-/** Parse a vCard contact card into name, contact details and organisation. */
+/** Parse a vCard contact card into name, contact details and organization. */
 function interpretVcard(text: string): DecodeResult {
   const props = new Map<string, string>();
   for (const line of unfold(text)) {
@@ -298,7 +298,7 @@ function interpretEvent(text: string): DecodeResult {
 
 /**
  * Classify a decoded string and, where the shape is understood, break it into
- * labelled fields. Pure and side-effect free, so the panel and the tests can
+ * labeled fields. Pure and side-effect free, so the panel and the tests can
  * call it directly with any string.
  */
 export function interpret(text: string): DecodeResult {
@@ -371,7 +371,7 @@ export function decodeQr(image: ImageInput, opts?: Partial<QrOpts>): DecodeResul
 
 /**
  * The generic tool contract. Custom panels call `decodeQr` directly for the
- * rich typed result; `run` flattens it to a labelled record so anything that
+ * rich typed result; `run` flattens it to a labeled record so anything that
  * touches the logic generically still gets readable output.
  */
 export function run(input: ImageInput, opts: QrOpts): Record<string, string> {

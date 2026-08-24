@@ -31,6 +31,7 @@ export const meta: ToolMeta = {
     "barcode label sheet",
     "check digit calculator",
     "barcode no watermark",
+    "gs1 barcode",
   ],
   input: "text/plain",
   output: "image/svg+xml",
@@ -114,6 +115,8 @@ export const meta: ToolMeta = {
       id: "sheet",
       label: "Layout",
       default: "single",
+      // Full sentence labels: keep the dropdown rather than a row of buttons.
+      ui: "select",
       options: [
         {
           value: "single",
@@ -165,9 +168,9 @@ export const meta: ToolMeta = {
     },
   ],
   copy: {
-    what: "Encodes a value as a real linear barcode and hands you the SVG. Eight symbologies are built in: Code 128 with automatic A, B and C code set switching, EAN-13, EAN-8, UPC-A and UPC-E with the correct parity and guard bars, Code 39 with an optional modulo 43 check character, ITF-14 with bearer bars, and Codabar. Check digits are calculated for you, or validated when you paste a full number, and the pattern tables come straight from the published symbology specifications. Pick a label sheet and the same values are laid out on a page sized SVG in real millimetres, ready to print.",
+    what: "Encodes a value as a real linear barcode and hands you the SVG. Eight symbologies are built in: Code 128 with automatic A, B and C code set switching, EAN-13, EAN-8, UPC-A and UPC-E with the correct parity and guard bars, Code 39 with an optional modulo 43 check character, ITF-14 with bearer bars, and Codabar. Check digits are calculated for you, or validated when you paste a full number, and the pattern tables come straight from the published symbology specifications. Pick a label sheet and the same values are laid out on a page sized SVG in real millimeters, ready to print.",
     how: "Choose a symbology, type or paste the value, and the barcode redraws as you go. Enter 12 digits for an EAN-13 or 11 for a UPC-A and the check digit is appended, or paste the full number and it is checked instead. For a label run, pick a sheet layout, put one value per line, set how many copies of each you want, then print the page or download the SVG or PNG. Module width, bar height, quiet zone and the human readable text underneath are all adjustable.",
-    why: "Most barcode sites cap you at a handful of codes a day, watermark the output, hide SVG behind a signup, or upload your product numbers to their servers to render a PNG. This one encodes in your browser, so your files and inputs never leave your device, and there is no limit, no watermark and no account. You get vector output that stays sharp at any print size, honest check digit handling instead of a silently wrong number, and label sheets measured in millimetres so what comes out of the printer is actually to scale.",
+    why: "Most barcode sites cap you at a handful of codes a day, watermark the output, hide SVG behind a signup, or upload your product numbers to their servers to render a PNG. This one encodes in your browser, so your files and inputs never leave your device, and there is no limit, no watermark and no account. You get vector output that stays sharp at any print size, honest check digit handling instead of a silently wrong number, and label sheets measured in millimeters so what comes out of the printer is actually to scale.",
     faq: [
       {
         q: "Which barcode type do I need for a product I want to sell in shops?",
@@ -175,11 +178,11 @@ export const meta: ToolMeta = {
       },
       {
         q: "Will a real scanner read what this produces?",
-        a: "Yes, if you print it big enough. The bar patterns and check digits follow the published specifications, so the data is right; what usually fails is scale. Keep the narrow module at 0.33 mm or wider for retail EAN and UPC, keep the quiet zone clear on both sides (the tool enforces the minimum for you), print black on white rather than colour on colour, and never stretch the image non uniformly. Print one and scan it with a phone before you order a thousand.",
+        a: "Yes, if you print it big enough. The bar patterns and check digits follow the published specifications, so the data is right; what usually fails is scale. Keep the narrow module at 0.33 mm or wider for retail EAN and UPC, keep the quiet zone clear on both sides (the tool enforces the minimum for you), print black on white rather than color on color, and never stretch the image non uniformly. Print one and scan it with a phone before you order a thousand.",
       },
       {
         q: "How do the label sheets work, and will they line up in my printer?",
-        a: "Pick Avery 5160, A4 3 x 8 or A4 2 x 7, put one value on each line, and set the copies number if you want the same value repeated. The page comes out as an SVG sized in millimetres with the label grid at the manufacturer's measurements, so printing at 100% scale (not fit to page) puts each barcode in the middle of its label. If you ask for more barcodes than the sheet holds, the tool tells you exactly how many fit instead of quietly dropping the rest.",
+        a: "Pick Avery 5160, A4 3 x 8 or A4 2 x 7, put one value on each line, and set the copies number if you want the same value repeated. The page comes out as an SVG sized in millimeters with the label grid at the manufacturer's measurements, so printing at 100% scale (not fit to page) puts each barcode in the middle of its label. If you ask for more barcodes than the sheet holds, the tool tells you exactly how many fit instead of quietly dropping the rest.",
       },
     ],
   },

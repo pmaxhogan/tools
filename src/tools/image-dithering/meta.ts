@@ -42,6 +42,8 @@ export const meta: ToolMeta = {
     "posterize",
     "pixel art converter",
     "black and white converter",
+    "floyd steinberg",
+    "atkinson dither",
   ],
   input: "image/*",
   output: "application/json",

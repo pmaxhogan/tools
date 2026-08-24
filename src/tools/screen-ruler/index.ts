@@ -11,9 +11,9 @@ import { ToolError, type ToolLogic } from "../types";
  * ruler bookmarklet instead.
  *
  * `run()` accepts the JSON snapshot the panel builds from the overlay, or a
- * plain text pair of points for quick manual use. The colour helpers
+ * plain text pair of points for quick manual use. The color helpers
  * (rgbaToHex, contrastRatio, nearestCssColorName) exist for the panel's
- * canvas-sampling colour picker and are not part of run()'s own input shape.
+ * canvas-sampling color picker and are not part of run()'s own input shape.
  */
 
 /* -------------------------------------------------------------------- types */
@@ -38,7 +38,7 @@ export interface PxToUnitsOpts {
   dpr?: number;
   /** CSS pixels per inch. The CSS spec fixes this at 96 for the reference pixel. */
   cssPpi?: number;
-  /** Pixels per millimetre from calibrate(). When set, this replaces cssPpi for real-world units. */
+  /** Pixels per millimeter from calibrate(). When set, this replaces cssPpi for real-world units. */
   calibrationPxPerMm?: number;
 }
 
@@ -88,8 +88,8 @@ const MAX_DPR = 4;
 
 const UNIT_SYNONYMS: Record<LengthUnit, string[]> = {
   px: ["px", "pixel", "pixels", "screen pixel", "screen pixels"],
-  mm: ["mm", "millimeter", "millimeters", "millimetre", "millimetres"],
-  cm: ["cm", "centimeter", "centimeters", "centimetre", "centimetres"],
+  mm: ["mm", "millimeter", "millimeters", "millimeter", "millimeters"],
+  cm: ["cm", "centimeter", "centimeters", "centimeter", "centimeters"],
   in: ["in", "inch", "inches"],
 };
 
@@ -226,7 +226,7 @@ export function aspectRatio(width: number, height: number): string {
 }
 
 /**
- * Derives pixels-per-millimetre from a known real-world length (in mm) held
+ * Derives pixels-per-millimeter from a known real-world length (in mm) held
  * up to the screen and the pixel distance measured across it. A standard
  * credit card is 85.60 mm wide, a common calibration reference.
  */
@@ -280,8 +280,8 @@ export function describeDisplay(display: DisplayInput): Record<string, string> {
 function badHex(hex: string): ToolError {
   return new ToolError(
     "bad-option",
-    `"${hex}" is not a valid hex colour.`,
-    "Use a 3 or 6 digit hex colour, such as #fff or #38bdf8.",
+    `"${hex}" is not a valid hex color.`,
+    "Use a 3 or 6 digit hex color, such as #fff or #38bdf8.",
   );
 }
 
@@ -302,7 +302,7 @@ function hexToRgb(hex: string): Rgb {
   };
 }
 
-/** Converts 0..255 RGB channels plus an optional 0..1 alpha to a lowercase hex colour. */
+/** Converts 0..255 RGB channels plus an optional 0..1 alpha to a lowercase hex color. */
 export function rgbaToHex(r: number, g: number, b: number, a = 1): string {
   const clampByte = (v: number): number => Math.max(0, Math.min(255, Math.round(v)));
   const hex2 = (v: number): string => clampByte(v).toString(16).padStart(2, "0");
@@ -324,14 +324,14 @@ function relativeLuminance(rgb: Rgb): number {
   );
 }
 
-/** WCAG 2.x contrast ratio between two hex colours, from 1:1 to 21:1. Argument order does not matter. */
+/** WCAG 2.x contrast ratio between two hex colors, from 1:1 to 21:1. Argument order does not matter. */
 export function contrastRatio(hexA: string, hexB: string): number {
   const la = relativeLuminance(hexToRgb(hexA));
   const lb = relativeLuminance(hexToRgb(hexB));
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
-/** The 16 basic CSS/HTML named colours, enough for a quick eyedropper label. */
+/** The 16 basic CSS/HTML named colors, enough for a quick eyedropper label. */
 const BASIC_NAMED_COLORS: Record<string, string> = {
   black: "#000000",
   white: "#ffffff",
@@ -352,7 +352,7 @@ const BASIC_NAMED_COLORS: Record<string, string> = {
   orange: "#ffa500",
 };
 
-/** Nearest of the 16 basic CSS colour names to a hex colour, by plain RGB distance. */
+/** Nearest of the 16 basic CSS color names to a hex color, by plain RGB distance. */
 export function nearestCssColorName(hex: string): string {
   const target = hexToRgb(hex);
   let best = "black";

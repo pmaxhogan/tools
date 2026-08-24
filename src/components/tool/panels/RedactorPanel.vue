@@ -518,7 +518,7 @@ function onPointerUp(e: PointerEvent) {
   redraw();
 }
 
-/** A cancelled pointer must never resolve into a tap or a stray region. */
+/** A canceled pointer must never resolve into a tap or a stray region. */
 function onPointerCancel(e: PointerEvent) {
   const el = canvas.value;
   if (el && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);

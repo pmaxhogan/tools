@@ -2,7 +2,7 @@ import { ToolError, type ToolLogic } from "../types";
 
 /* -------------------------------------------------------------------- types */
 
-/** The colour syntax a value was written in. */
+/** The color syntax a value was written in. */
 export type ColorFormat =
   "hex" | "rgb" | "hsl" | "hwb" | "oklch" | "oklab" | "lab" | "lch" | "named";
 
@@ -14,10 +14,10 @@ export interface Rgba {
   a: number;
 }
 
-/** A parsed colour: normalised sRGB, the syntax it came from, gamut notes. */
+/** A parsed color: normalized sRGB, the syntax it came from, gamut notes. */
 export interface ParsedColor extends Rgba {
   format: ColorFormat;
-  /** True when the written colour sat outside sRGB and had to be mapped in. */
+  /** True when the written color sat outside sRGB and had to be mapped in. */
   clipped: boolean;
   /** OKLCH chroma the input asked for. Present only when `clipped`. */
   requestedChroma?: number;
@@ -25,13 +25,13 @@ export interface ParsedColor extends Rgba {
   mappedChroma?: number;
 }
 
-/** A three component colour vector. Its meaning depends on the space. */
+/** A three component color vector. Its meaning depends on the space. */
 export type Vec3 = [number, number, number];
 
-/* ------------------------------------------------------------ named colours */
+/* ------------------------------------------------------------ named colors */
 
 /**
- * The 148 CSS Color 4 named colours: the 147 CSS 2.1 and SVG keywords plus
+ * The 148 CSS Color 4 named colors: the 147 CSS 2.1 and SVG keywords plus
  * rebeccapurple. `transparent` and `currentColor` are separate keywords and
  * are deliberately not in this table.
  */
@@ -260,7 +260,7 @@ export function linearToOklab(lin: Vec3): Vec3 {
   return mul3(LMS_TO_OKLAB, [Math.cbrt(lms[0]), Math.cbrt(lms[1]), Math.cbrt(lms[2])]);
 }
 
-/** OKLab to linear sRGB. Lands outside 0..1 when the colour is out of gamut. */
+/** OKLab to linear sRGB. Lands outside 0..1 when the color is out of gamut. */
 export function oklabToLinear(lab: Vec3): Vec3 {
   const lms = mul3(OKLAB_TO_LMS, lab);
   return mul3(LMS_TO_LIN_RGB, [lms[0] ** 3, lms[1] ** 3, lms[2] ** 3]);
@@ -433,16 +433,16 @@ export function hwbToSrgb(hwb: Vec3): Vec3 {
 
 /* ------------------------------------------------------------ gamut mapping */
 
-/** Slack allowed on a channel before a colour counts as outside sRGB. */
+/** Slack allowed on a channel before a color counts as outside sRGB. */
 export const GAMUT_EPSILON = 1e-5;
 
-/** The outcome of fitting an OKLCH colour into sRGB. */
+/** The outcome of fitting an OKLCH color into sRGB. */
 export interface GamutResult {
   /** Gamma encoded sRGB, clamped to 0..1. */
   rgb: Vec3;
   /** The chroma actually used. Equals the requested chroma when nothing moved. */
   chroma: number;
-  /** True when the requested colour did not fit inside sRGB. */
+  /** True when the requested color did not fit inside sRGB. */
   clipped: boolean;
 }
 
@@ -458,10 +458,10 @@ function inGamut(lin: Vec3): boolean {
 }
 
 /**
- * Fit an OKLCH colour into sRGB by reducing chroma, holding lightness and hue.
+ * Fit an OKLCH color into sRGB by reducing chroma, holding lightness and hue.
  * A binary search finds the largest chroma that still fits, to a tolerance of
  * 1e-6. Lightness outside 0..1 cannot be fixed by chroma alone, so the final
- * channels are always clamped as well and `clipped` reports that the colour
+ * channels are always clamped as well and `clipped` reports that the color
  * you asked for was not reachable.
  */
 export function gamutMapOklch(l: number, c: number, h: number): GamutResult {
@@ -484,15 +484,15 @@ export function gamutMapOklch(l: number, c: number, h: number): GamutResult {
 function badColor(token: string): ToolError {
   return new ToolError(
     "bad-color",
-    `Could not read "${token}" as a colour.`,
-    "Accepted syntaxes: #rgb, #rgba, #rrggbb, #rrggbbaa, rgb(255 0 0 / 50%), rgba(255, 0, 0, 0.5), hsl(270 50% 40%), hwb(270 20% 30%), lab(54 81 70), lch(54 107 41), oklab(0.63 0.22 0.13), oklch(0.63 0.26 29), or a CSS colour name such as rebeccapurple.",
+    `Could not read "${token}" as a color.`,
+    "Accepted syntaxes: #rgb, #rgba, #rrggbb, #rrggbbaa, rgb(255 0 0 / 50%), rgba(255, 0, 0, 0.5), hsl(270 50% 40%), hwb(270 20% 30%), lab(54 81 70), lch(54 107 41), oklab(0.63 0.22 0.13), oklch(0.63 0.26 29), or a CSS color name such as rebeccapurple.",
   );
 }
 
 function emptyInput(): ToolError {
   return new ToolError(
     "empty-input",
-    "Enter a colour to work with.",
+    "Enter a color to work with.",
     "Try #663399, rgb(102 51 153), hsl(270 50% 40%), oklch(0.44 0.16 303), or rebeccapurple.",
   );
 }
@@ -554,7 +554,7 @@ interface FuncArgs {
   alpha: string | null;
 }
 
-/** Split a colour function body into components plus an optional alpha. */
+/** Split a color function body into components plus an optional alpha. */
 function splitFuncArgs(body: string): FuncArgs {
   const slash = body.indexOf("/");
   let head = body;
@@ -632,12 +632,12 @@ function fromLabD50(lab: Vec3, alpha: number, format: ColorFormat): ParsedColor 
 }
 
 /**
- * Parse any CSS colour into normalised sRGB plus the syntax it was written in.
+ * Parse any CSS color into normalized sRGB plus the syntax it was written in.
  *
  * Accepts hex in 3, 4, 6 and 8 digits (with or without the leading hash), the
  * legacy comma forms of rgb()/rgba()/hsl()/hsla(), the modern space separated
  * forms with an optional `/ alpha`, hwb(), lab(), lch(), oklab(), oklch(), the
- * `none` keyword for any component, and all 148 CSS colour names. Colours
+ * `none` keyword for any component, and all 148 CSS color names. Colors
  * outside sRGB are gamut mapped by chroma reduction in OKLCH, and the result
  * reports that on `clipped`.
  */
@@ -733,7 +733,7 @@ export function num(v: number, dp: number): string {
   return s === "-0" ? "0" : s;
 }
 
-/** Below this OKLCH chroma a colour is treated as achromatic and its hue as `none`. */
+/** Below this OKLCH chroma a color is treated as achromatic and its hue as `none`. */
 const ACHROMATIC_OKLCH = 1e-4;
 /** The same idea on the CIE chroma scale, which runs roughly 0..150. */
 const ACHROMATIC_LCH = 0.01;
@@ -746,7 +746,7 @@ function rgbVec(c: Rgba): Vec3 {
   return [c.r, c.g, c.b];
 }
 
-/** Lowercase #rrggbb, extended to #rrggbbaa only when the colour is translucent. */
+/** Lowercase #rrggbb, extended to #rrggbbaa only when the color is translucent. */
 export function formatHex(c: Rgba): string {
   const hex = (v: number): string =>
     Math.round(clamp(v, 0, 1) * 255)
@@ -773,7 +773,7 @@ export function formatHwb(c: Rgba): string {
   return `hwb(${num(h, 2)} ${num(w, 2)}% ${num(bl, 2)}%${alphaSuffix(c.a)})`;
 }
 
-/** `oklch()`. An achromatic colour gets the CSS `none` hue rather than a made up angle. */
+/** `oklch()`. An achromatic color gets the CSS `none` hue rather than a made up angle. */
 export function formatOklch(c: Rgba): string {
   const [l, ch, h] = srgbToOklch(rgbVec(c));
   const hue = ch < ACHROMATIC_OKLCH ? "none" : num(h, 2);
@@ -792,7 +792,7 @@ export function formatLab(c: Rgba): string {
   return `lab(${num(l, 2)} ${num(a, 2)} ${num(b, 2)}${alphaSuffix(c.a)})`;
 }
 
-/** CIE `lch()` under D50. An achromatic colour gets the CSS `none` hue. */
+/** CIE `lch()` under D50. An achromatic color gets the CSS `none` hue. */
 export function formatLch(c: Rgba): string {
   const [l, ch, h] = srgbToLchD50(rgbVec(c));
   const hue = ch < ACHROMATIC_LCH ? "none" : num(h, 2);
@@ -819,7 +819,7 @@ function namedEntries(): NamedEntry[] {
   return namedCache;
 }
 
-/** The nearest CSS colour name and its distance. */
+/** The nearest CSS color name and its distance. */
 export interface NearestNamed {
   name: string;
   hex: string;
@@ -828,7 +828,7 @@ export interface NearestNamed {
 }
 
 /**
- * Find the closest CSS colour name. The metric is plain Euclidean distance in
+ * Find the closest CSS color name. The metric is plain Euclidean distance in
  * OKLab scaled by 100, which tracks perceived difference better than an RGB
  * distance and needs no reference illuminant of its own.
  */
@@ -934,9 +934,9 @@ function swatch(label: string, l: number, c: number, h: number): Swatch {
 }
 
 /**
- * Build a palette from a base colour expressed in OKLCH.
+ * Build a palette from a base color expressed in OKLCH.
  *
- * Every hue rotation happens in OKLCH, so the rotated colours keep the base
+ * Every hue rotation happens in OKLCH, so the rotated colors keep the base
  * lightness instead of drifting the way an HSL rotation does. Tints, shades
  * and the numbered scale move OKLCH lightness only, and each result is gamut
  * mapped back into sRGB.
@@ -989,7 +989,7 @@ export function buildPalette(base: Vec3, kind: string): Swatch[] {
 /* -------------------------------------------------------------- input split */
 
 /**
- * Split an input into colour operands on top level commas, newlines,
+ * Split an input into color operands on top level commas, newlines,
  * semicolons and the word "on", leaving anything inside parentheses alone so
  * "rgb(255, 0, 0) on white" survives.
  */
@@ -1069,7 +1069,7 @@ function convertReport(color: ParsedColor, token: string): ColorPickerResult {
     "Lab (D50)": formatLab(color),
     "LCH (D50)": formatLch(color),
     Alpha: color.a < 1 ? `${num(color.a, 3)} (${num(color.a * 100, 1)}% opaque)` : "1 (opaque)",
-    "Nearest CSS colour": `${near.name} ${near.hex} | deltaE ${num(near.deltaE, 2)} (OKLab distance x100)`,
+    "Nearest CSS color": `${near.name} ${near.hex} | deltaE ${num(near.deltaE, 2)} (OKLab distance x100)`,
     "Relative luminance": num(relativeLuminance(rgb), 4),
     "Contrast on white": `${ratioText(onWhite)} | ${verdictLine(onWhite)}`,
     "Contrast on black": `${ratioText(onBlack)} | ${verdictLine(onBlack)}`,
@@ -1083,8 +1083,8 @@ function contrastReport(operands: string[]): ColorPickerResult {
   if (colors.length >= 2 && colors[1] === "") {
     throw new ToolError(
       "second-color-required",
-      `No second colour after "${colors[0]}".`,
-      'Write "#777777 on #ffffff" or "#777777, #ffffff" to compare two colours, or give one colour to check it against white and black.',
+      `No second color after "${colors[0]}".`,
+      'Write "#777777 on #ffffff" or "#777777, #ffffff" to compare two colors, or give one color to check it against white and black.',
     );
   }
 
@@ -1096,7 +1096,7 @@ function contrastReport(operands: string[]): ColorPickerResult {
     const onBlack = contrastRatio(firstRgb, BLACK);
     const better = onWhite >= onBlack ? "white" : "black";
     const out: ColorPickerResult = {
-      Colour: `${formatHex(first)} (read as ${first.format})`,
+      Color: `${formatHex(first)} (read as ${first.format})`,
       "On white (#ffffff)": `${ratioText(onWhite)} | ${verdictLine(onWhite)}`,
       "On black (#000000)": `${ratioText(onBlack)} | ${verdictLine(onBlack)}`,
       "Better background": `${better} at ${ratioText(Math.max(onWhite, onBlack))}`,
@@ -1130,7 +1130,7 @@ function contrastReport(operands: string[]): ColorPickerResult {
 }
 
 function alphaContrastNote(detail: string): string {
-  return `Alpha ${detail} ignored. WCAG 2 contrast is defined for opaque colours, so composite the colour over its real backdrop first.`;
+  return `Alpha ${detail} ignored. WCAG 2 contrast is defined for opaque colors, so composite the color over its real backdrop first.`;
 }
 
 function paletteReport(color: ParsedColor, kind: string): ColorPickerResult {
@@ -1156,10 +1156,10 @@ function paletteReport(color: ParsedColor, kind: string): ColorPickerResult {
 }
 
 /**
- * Convert, contrast check or build palettes from a CSS colour.
+ * Convert, contrast check or build palettes from a CSS color.
  *
- * Convert mode reports the colour in every syntax plus its nearest CSS name
- * and its contrast against white and black. Contrast mode takes one colour, or
+ * Convert mode reports the color in every syntax plus its nearest CSS name
+ * and its contrast against white and black. Contrast mode takes one color, or
  * two written as "a on b" or "a, b". Palette mode derives hue rotations and
  * lightness ramps in OKLCH.
  */

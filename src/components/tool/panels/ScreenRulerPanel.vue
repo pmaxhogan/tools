@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Segmented } from "@/components/ui/segmented";
+import type { SegmentedOption } from "@/components/ui/segmented";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   angle,
@@ -48,7 +50,7 @@ import CopyButton from "../CopyButton.vue";
  *
  * Nothing here touches the network: your files and inputs never leave your
  * device. The EyeDropper button is the one control that can sample a pixel
- * from outside this tab, and even then the colour it returns stays here.
+ * from outside this tab, and even then the color it returns stays here.
  */
 defineProps<{ meta: ToolMeta }>();
 
@@ -58,6 +60,10 @@ defineProps<{ meta: ToolMeta }>();
 
 type PanelTab = "overlay" | "screenshot" | "calibrate";
 type Shape = "line" | "rect";
+const SHAPE_OPTIONS: SegmentedOption[] = [
+  { value: "line", label: "Line" },
+  { value: "rect", label: "Rectangle" },
+];
 /** Which coordinate space a measurement was taken in. */
 type Space = "viewport" | "image";
 
@@ -75,7 +81,7 @@ const shape = ref<Shape>("line");
 
 /** Live device pixel ratio, re-read per pointer event so browser zoom stays right. */
 const dpr = ref(1);
-/** Pixels per millimetre from the calibration tab, or null when uncalibrated. */
+/** Pixels per millimeter from the calibration tab, or null when uncalibrated. */
 const pxPerMm = ref<number | null>(null);
 
 const measurements = ref<Measurement[]>([]);
@@ -367,6 +373,10 @@ const imgWidth = ref(0);
 const imgHeight = ref(0);
 const zoom = ref<"fit" | "50" | "100" | "200" | "400">("fit");
 const imageMode = ref<"measure" | "pick">("measure");
+const IMAGE_MODE_OPTIONS: SegmentedOption[] = [
+  { value: "measure", label: "Measure" },
+  { value: "pick", label: "Pick color" },
+];
 
 /** Kept out of the reactive graph: a large pixel buffer must not be proxied. */
 const pixels = shallowRef<ImageData | null>(null);
@@ -398,7 +408,7 @@ const imageDragReadout = computed<Row[] | null>(() => {
 /**
  * Decodes into an offscreen canvas, never the visible one: the visible canvas
  * only exists once an image has loaded, so it is not there for the first drop.
- * The pixels are kept so the colour picker can sample without reading back
+ * The pixels are kept so the color picker can sample without reading back
  * from a canvas on every click.
  */
 function decode(file: File): Promise<void> {
@@ -567,7 +577,7 @@ function onImageCancel(e: PointerEvent) {
 }
 
 /* ------------------------------------------------------------------ *
- * colour sampling
+ * color sampling
  * ------------------------------------------------------------------ */
 
 interface Sample {
@@ -603,7 +613,7 @@ interface WindowWithEyeDropper extends Window {
 
 /**
  * `hex` is what the user sees, carrying an alpha pair when the pixel is not
- * opaque. `opaque` is the same colour without alpha, the only form the
+ * opaque. `opaque` is the same color without alpha, the only form the
  * contrast and naming helpers accept. Both come from rgbaToHex, so the panel
  * never assembles a hex string of its own.
  */
@@ -655,10 +665,10 @@ async function openEyeDropper() {
     const result = await new ctor().open();
     const hex = result.sRGBHex.trim().toLowerCase();
     if (!/^#[0-9a-f]{6}$/.test(hex)) {
-      eyeDropperError.value = "The browser returned a colour this tool could not read.";
+      eyeDropperError.value = "The browser returned a color this tool could not read.";
       return;
     }
-    // The EyeDropper API always returns an opaque colour, so both forms match.
+    // The EyeDropper API always returns an opaque color, so both forms match.
     sample.value = buildSample(hex, hex, null, "screen", null);
   } catch {
     // Closing the eyedropper without picking rejects. That is not an error.
@@ -704,7 +714,7 @@ const previewDpi = computed(() => {
   return value === null ? null : Math.round(value * 25.4);
 });
 
-/** A one centimetre tick spacing under the current preview, for the bar ruler. */
+/** A one centimeter tick spacing under the current preview, for the bar ruler. */
 const previewCmPx = computed(() => {
   const value = barPreview.value;
   if (value === null) return null;
@@ -886,34 +896,12 @@ onUnmounted(() => {
 
       <div class="flex flex-col gap-1.5">
         <span class="text-xs text-muted-foreground">Tool</span>
-        <div class="inline-flex rounded-[10px] bg-secondary p-0.5 shadow-[var(--sh-inset)]">
-          <button
-            type="button"
-            class="rounded-[8px] px-3 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            :class="
-              shape === 'line'
-                ? 'bg-card text-foreground shadow-[var(--sh-sm)]'
-                : 'text-muted-foreground'
-            "
-            :aria-pressed="shape === 'line'"
-            @click="shape = 'line'"
-          >
-            Line
-          </button>
-          <button
-            type="button"
-            class="rounded-[8px] px-3 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            :class="
-              shape === 'rect'
-                ? 'bg-card text-foreground shadow-[var(--sh-sm)]'
-                : 'text-muted-foreground'
-            "
-            :aria-pressed="shape === 'rect'"
-            @click="shape = 'rect'"
-          >
-            Rectangle
-          </button>
-        </div>
+        <Segmented
+          :model-value="shape"
+          :options="SHAPE_OPTIONS"
+          label="Tool"
+          @update:model-value="(v: string) => (shape = v as Shape)"
+        />
       </div>
 
       <p class="min-w-[16rem] flex-1 text-xs text-muted-foreground">
@@ -1068,7 +1056,7 @@ onUnmounted(() => {
 
           <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
             Drop a screenshot here, paste one with Ctrl or Cmd and V, or open a file. Measurements
-            and colours are read in image pixels. Everything runs in this tab: your files and inputs
+            and colors are read in image pixels. Everything runs in this tab: your files and inputs
             never leave your device.
           </p>
         </div>
@@ -1103,36 +1091,18 @@ onUnmounted(() => {
 
             <div class="flex flex-col gap-1.5">
               <span class="text-xs text-muted-foreground">Click does</span>
-              <div class="inline-flex rounded-[10px] bg-secondary p-0.5 shadow-[var(--sh-inset)]">
-                <button
-                  type="button"
-                  class="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  :class="
-                    imageMode === 'measure'
-                      ? 'bg-card text-foreground shadow-[var(--sh-sm)]'
-                      : 'text-muted-foreground'
-                  "
-                  :aria-pressed="imageMode === 'measure'"
-                  @click="imageMode = 'measure'"
-                >
-                  <Ruler class="size-3.5" aria-hidden="true" />
-                  Measure
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  :class="
-                    imageMode === 'pick'
-                      ? 'bg-card text-foreground shadow-[var(--sh-sm)]'
-                      : 'text-muted-foreground'
-                  "
-                  :aria-pressed="imageMode === 'pick'"
-                  @click="imageMode = 'pick'"
-                >
-                  <Pipette class="size-3.5" aria-hidden="true" />
-                  Pick colour
-                </button>
-              </div>
+              <Segmented
+                :model-value="imageMode"
+                :options="IMAGE_MODE_OPTIONS"
+                label="Click does"
+                @update:model-value="(v: string) => (imageMode = v === 'pick' ? 'pick' : 'measure')"
+              >
+                <template #default="{ option }">
+                  <Ruler v-if="option.value === 'measure'" class="size-3.5" aria-hidden="true" />
+                  <Pipette v-else class="size-3.5" aria-hidden="true" />
+                  {{ option.label }}
+                </template>
+              </Segmented>
             </div>
           </div>
 
@@ -1147,7 +1117,7 @@ onUnmounted(() => {
                 :style="canvasStyle"
                 :aria-label="
                   imageMode === 'pick'
-                    ? 'Screenshot. Click a pixel to read its colour.'
+                    ? 'Screenshot. Click a pixel to read its color.'
                     : 'Screenshot. Drag between two points to measure.'
                 "
                 @pointerdown="onImageDown"
@@ -1233,11 +1203,11 @@ onUnmounted(() => {
           </p>
         </template>
 
-        <!-- colour picker -->
+        <!-- color picker -->
         <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-              Colour picker
+              Color picker
             </span>
             <Button v-if="eyeDropperSupported" variant="outline" size="sm" @click="openEyeDropper">
               <Pipette class="size-3.5" aria-hidden="true" />
@@ -1247,14 +1217,14 @@ onUnmounted(() => {
 
           <p class="max-w-[68ch] text-xs text-muted-foreground">
             <template v-if="eyeDropperSupported">
-              Switch the click mode to Pick colour and click a pixel in the screenshot, or use
+              Switch the click mode to Pick color and click a pixel in the screenshot, or use
               EyeDropper. EyeDropper is the one control here that can reach past this tab: the
-              browser takes over the pointer and hands back a single colour from anywhere on your
-              screen. The colour still stays on this device.
+              browser takes over the pointer and hands back a single color from anywhere on your
+              screen. The color still stays on this device.
             </template>
             <template v-else>
-              Switch the click mode to Pick colour and click a pixel in the screenshot. This browser
-              has no EyeDropper API, which is the only way a page can sample a colour from outside
+              Switch the click mode to Pick color and click a pixel in the screenshot. This browser
+              has no EyeDropper API, which is the only way a page can sample a color from outside
               its own tab, so screen wide sampling is unavailable here. Chromium browsers such as
               Chrome and Edge support it.
             </template>
@@ -1276,7 +1246,7 @@ onUnmounted(() => {
                 <CopyButton :text="sample.hex" />
               </div>
               <span class="text-muted-foreground">
-                Nearest named colour: {{ sample.name }}
+                Nearest named color: {{ sample.name }}
                 <template v-if="sample.rgb"> · {{ sample.rgb }}</template>
                 <template v-if="sample.point">
                   · sampled at {{ sample.point.x }}, {{ sample.point.y }} in the image

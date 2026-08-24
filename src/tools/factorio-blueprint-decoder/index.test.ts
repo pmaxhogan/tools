@@ -106,7 +106,7 @@ describe("factorio-blueprint-decoder: format handling", () => {
 });
 
 describe("factorio-blueprint-decoder: inspect", () => {
-  it("summarises a blueprint with counts, icons, tiles and a footprint", async () => {
+  it("summarizes a blueprint with counts, icons, tiles and a footprint", async () => {
     const out = await run(encodeFixture(SIMPLE_BLUEPRINT), {});
     expect(out).toContain("Blueprint: Red Belt Lane");
     expect(out).toContain("Game version: 1.1.110.0");
@@ -396,21 +396,21 @@ describe("factorio-blueprint-decoder: errors", () => {
 });
 
 describe("factorio-blueprint-decoder: helpers", () => {
-  it("recognises environment entities without eating real machines", () => {
+  it("recognizes environment entities without eating real machines", () => {
     for (const name of [
       "tree-01",
       "dead-dry-hairy-tree",
       "rock-huge",
       "sand-rock-big",
       "fish",
-      "dead-grey-trunk",
+      "dead-gray-trunk",
     ])
       expect(isEnvironmentEntity(name)).toBe(true);
     for (const name of ["transport-belt", "assembling-machine-3", "rocket-silo", "stone-furnace"])
       expect(isEnvironmentEntity(name)).toBe(false);
   });
 
-  it("normalises both item request shapes to name and count", () => {
+  it("normalizes both item request shapes to name and count", () => {
     expect(itemRequestCounts({ "speed-module-3": 2 })).toEqual({ "speed-module-3": 2 });
     expect(
       itemRequestCounts([

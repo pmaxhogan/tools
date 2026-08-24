@@ -24,9 +24,13 @@ export const meta: ToolMeta = {
     "discord relative time tag",
     "discord epoch tag",
     "discord bot timestamp",
+    "discord message timestamp",
+    "discord snowflake",
+    "discord time converter",
   ],
   input: "text/plain",
   output: "application/json",
+  examples: [{ label: "Upcoming event date", input: "2026-12-25T18:00:00Z" }],
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: 'Generates Discord\'s <t:UNIX:style> timestamp tags from a date or unix timestamp. Paste a time and get all seven display styles at once: short/long time, short/long date, short/long date-time, and relative ("in 2 hours"), each rendered in whatever timezone the reader viewing the message is in.',

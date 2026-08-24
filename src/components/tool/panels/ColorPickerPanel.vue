@@ -24,10 +24,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CopyButton from "../CopyButton.vue";
 
 /**
- * Bespoke panel for the Colour Suite.
+ * Bespoke panel for the Color Suite.
  *
- * Three things the generic shell cannot do live here: a native colour picker
- * wired two ways to a text field that takes any CSS colour, a live contrast
+ * Three things the generic shell cannot do live here: a native color picker
+ * wired two ways to a text field that takes any CSS color, a live contrast
  * preview that renders real text in the pair being checked, and palettes drawn
  * as swatch strips instead of a list of hex strings.
  *
@@ -86,7 +86,7 @@ function rgbOf(color: ParsedColor): Vec3 {
   return [color.r, color.g, color.b];
 }
 
-/** The opaque `#rrggbb` a native colour input can hold. */
+/** The opaque `#rrggbb` a native color input can hold. */
 function opaqueHex(color: ParsedColor): string {
   return formatHex({ ...color, a: 1 });
 }
@@ -123,7 +123,7 @@ function scheduleApply() {
   debounceTimer = setTimeout(applyInputs, DEBOUNCE_MS);
 }
 
-/** A native colour input is already a valid hex and fires continuously while
+/** A native color input is already a valid hex and fires continuously while
  * it is dragged, so it skips the debounce and lands straight away. */
 function applyNow() {
   clearTimeout(debounceTimer);
@@ -137,7 +137,7 @@ watch([mode, paletteKind], syncFragment);
  * picker tab
  * ------------------------------------------------------------------ */
 
-/** The rows of the convert report that state the colour in another syntax.
+/** The rows of the convert report that state the color in another syntax.
  * Everything else in the report is context, and goes under Details. */
 const FORMAT_KEYS = new Set([
   "Hex",
@@ -148,7 +148,7 @@ const FORMAT_KEYS = new Set([
   "OKLab",
   "Lab (D50)",
   "LCH (D50)",
-  "Nearest CSS colour",
+  "Nearest CSS color",
 ]);
 
 interface ConvertState {
@@ -177,12 +177,12 @@ const convert = computed<ConvertState>(() => {
       parsed: null,
       formats: [],
       details: [],
-      error: toPanelError(err, "That colour could not be read."),
+      error: toPanelError(err, "That color could not be read."),
     };
   }
 });
 
-/** What the native colour input shows. It only accepts opaque `#rrggbb`. */
+/** What the native color input shows. It only accepts opaque `#rrggbb`. */
 const pickerHex = computed(() =>
   convert.value.parsed ? opaqueHex(convert.value.parsed) : "#000000",
 );
@@ -259,7 +259,7 @@ const contrast = computed<ContrastState>(() => {
   } catch (err) {
     return {
       ...EMPTY_CONTRAST,
-      error: toPanelError(err, "Those colours could not be compared."),
+      error: toPanelError(err, "Those colors could not be compared."),
     };
   }
 });
@@ -494,14 +494,14 @@ onUnmounted(() => {
           </div>
 
           <div class="flex flex-col gap-1.5">
-            <Label for="cp-color-text" class="text-xs text-muted-foreground">Colour</Label>
+            <Label for="cp-color-text" class="text-xs text-muted-foreground">Color</Label>
             <div
               class="flex h-12 items-center gap-2 rounded-[10px] border border-input bg-transparent px-2 focus-within:ring-3 focus-within:ring-ring/50"
             >
               <input
                 id="cp-color-swatch"
                 type="color"
-                aria-label="Pick a colour"
+                aria-label="Pick a color"
                 class="size-9 shrink-0 cursor-pointer rounded-[8px] border-0 bg-transparent p-0 outline-none"
                 :value="pickerHex"
                 @input="onPickerSwatch(($event.target as HTMLInputElement).value)"
@@ -519,8 +519,8 @@ onUnmounted(() => {
               />
             </div>
             <p class="text-xs text-muted-foreground">
-              Drag the swatch or type any CSS colour: hex, rgb(), hsl(), hwb(), lab(), lch(),
-              oklab(), oklch(), or a colour name such as rebeccapurple.
+              Drag the swatch or type any CSS color: hex, rgb(), hsl(), hwb(), lab(), lch(),
+              oklab(), oklch(), or a color name such as rebeccapurple.
             </p>
           </div>
         </div>
@@ -586,7 +586,7 @@ onUnmounted(() => {
         </div>
 
         <p v-if="!convert.parsed && !convert.error" class="text-xs text-muted-foreground">
-          Pick a colour above to see it in every syntax, with its nearest CSS colour name and its
+          Pick a color above to see it in every syntax, with its nearest CSS color name and its
           contrast against white and black.
         </p>
       </TabsContent>
@@ -602,7 +602,7 @@ onUnmounted(() => {
               <input
                 id="cp-fg-swatch"
                 type="color"
-                aria-label="Pick a foreground colour"
+                aria-label="Pick a foreground color"
                 class="size-7 shrink-0 cursor-pointer rounded-[6px] border-0 bg-transparent p-0 outline-none"
                 :value="foregroundHex"
                 @input="onForegroundSwatch(($event.target as HTMLInputElement).value)"
@@ -629,7 +629,7 @@ onUnmounted(() => {
               <input
                 id="cp-bg-swatch"
                 type="color"
-                aria-label="Pick a background colour"
+                aria-label="Pick a background color"
                 class="size-7 shrink-0 cursor-pointer rounded-[6px] border-0 bg-transparent p-0 outline-none"
                 :value="backgroundHex"
                 @input="onBackgroundSwatch(($event.target as HTMLInputElement).value)"
@@ -721,7 +721,7 @@ onUnmounted(() => {
         </template>
 
         <p v-else-if="!contrast.error" class="text-xs text-muted-foreground">
-          Give a foreground and a background colour to see the ratio and the AA and AAA verdicts for
+          Give a foreground and a background color to see the ratio and the AA and AAA verdicts for
           normal and large text.
         </p>
       </TabsContent>
@@ -730,14 +730,14 @@ onUnmounted(() => {
       <TabsContent value="palette" class="flex flex-col gap-4 pt-4">
         <div class="grid gap-3 sm:grid-cols-2">
           <div class="flex flex-col gap-1.5">
-            <Label for="cp-base-text" class="text-xs text-muted-foreground">Base colour</Label>
+            <Label for="cp-base-text" class="text-xs text-muted-foreground">Base color</Label>
             <div
               class="flex h-10 items-center gap-2 rounded-[10px] border border-input bg-transparent px-2 focus-within:ring-3 focus-within:ring-ring/50"
             >
               <input
                 id="cp-base-swatch"
                 type="color"
-                aria-label="Pick a base colour"
+                aria-label="Pick a base color"
                 class="size-7 shrink-0 cursor-pointer rounded-[6px] border-0 bg-transparent p-0 outline-none"
                 :value="pickerHex"
                 @input="onPickerSwatch(($event.target as HTMLInputElement).value)"
@@ -798,7 +798,7 @@ onUnmounted(() => {
                 <button
                   type="button"
                   class="group flex w-[5.5rem] flex-col gap-1 text-left"
-                  :aria-label="`Copy the base colour ${palette.baseHex}`"
+                  :aria-label="`Copy the base color ${palette.baseHex}`"
                   @click="copySwatch('base', palette.baseHex)"
                 >
                   <span
@@ -857,7 +857,7 @@ onUnmounted(() => {
         </template>
 
         <p v-else-if="!palette.error" class="text-xs text-muted-foreground">
-          Pick a base colour to build hue rotations and lightness ramps in OKLCH, each swatch ready
+          Pick a base color to build hue rotations and lightness ramps in OKLCH, each swatch ready
           to copy as a hex or as a set of CSS variables.
         </p>
       </TabsContent>

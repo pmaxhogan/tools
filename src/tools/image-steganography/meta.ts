@@ -27,6 +27,8 @@ export const meta: ToolMeta = {
     "bit plane viewer",
     "steghide alternative",
     "decode hidden image data",
+    "png steganography",
+    "invisible watermark",
   ],
   input: "image/*",
   output: "application/json",

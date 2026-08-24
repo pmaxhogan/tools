@@ -5,7 +5,7 @@ import { ToolError, type ToolLogic } from "../types";
  *
  * This is deliberately NOT a full grammar. It is a resilient tokenizer, a loose
  * recursive descent parser, and a pretty printer. Anything the parser cannot
- * make sense of falls back to a token level whitespace normalisation pass, so a
+ * make sense of falls back to a token level whitespace normalization pass, so a
  * plausible but odd query is never rejected and never crashes. Both the printer
  * and the fallback are idempotent: format(format(q)) === format(q).
  */
@@ -196,7 +196,7 @@ function checkBalance(toks: Tok[]): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Whitespace normalisation (matchers, pipeline stage bodies, fallback) */
+/* Whitespace normalization (matchers, pipeline stage bodies, fallback) */
 /* ------------------------------------------------------------------ */
 
 /** Operators that bind with no surrounding space, matcher style. */

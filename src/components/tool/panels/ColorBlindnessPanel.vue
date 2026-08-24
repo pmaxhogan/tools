@@ -22,19 +22,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OutputView from "../OutputView.vue";
 
 /**
- * Bespoke panel for the Colour Blindness Simulator.
+ * Bespoke panel for the Color Blindness Simulator.
  *
  * Two things the generic shell cannot do live here. The palette tab renders
  * real swatches beside the text report, and the image tab runs the same
  * simulation over every pixel of a picture on a canvas. Both defer to the pure
- * layer in `src/tools/color-blindness-simulator/` for the colour science
+ * layer in `src/tools/color-blindness-simulator/` for the color science
  * (PROJECT.md rule 27): `run` produces the report, `parseColor` reads a token,
  * `simulateRgb` transforms a swatch, `toHex` formats one.
  *
  * The pixel loop is the one exception, and only for speed: a full picture is
  * millions of `simulateRgb` calls, so it inlines the same matrix multiply using
  * MATRICES plus a 256 entry decode table. It is the same arithmetic in the same
- * order, checked to be byte identical across a sample of the colour cube.
+ * order, checked to be byte identical across a sample of the color cube.
  *
  * Nothing here touches the network. The picture is read with an object URL and
  * drawn on a local canvas, so your files and inputs never leave your device.
@@ -140,7 +140,7 @@ const paletteResult = shallowRef<ColorBlindnessResult | null>(null);
 const paletteError = ref<{ message: string; fix?: string } | null>(null);
 
 interface SwatchRow {
-  /** The colour exactly as the logic layer read it. */
+  /** The color exactly as the logic layer read it. */
   hex: string;
   sims: { kind: CvdKind; hex: string }[];
 }
@@ -486,7 +486,7 @@ onUnmounted(() => {
       <!-- palette -->
       <TabsContent value="palette" class="flex flex-col gap-4 pt-4">
         <div class="flex flex-col gap-1.5">
-          <Label for="cb-palette-input" class="text-xs text-muted-foreground">Colours</Label>
+          <Label for="cb-palette-input" class="text-xs text-muted-foreground">Colors</Label>
           <Textarea
             id="cb-palette-input"
             v-model="paletteText"
@@ -497,7 +497,7 @@ onUnmounted(() => {
             :aria-invalid="paletteError ? 'true' : undefined"
           />
           <p class="text-xs text-muted-foreground">
-            One colour per line, or separated by commas. Short hex, long hex, bare hex, and rgb()
+            One color per line, or separated by commas. Short hex, long hex, bare hex, and rgb()
             all parse.
           </p>
         </div>
@@ -565,8 +565,8 @@ onUnmounted(() => {
         <OutputView v-if="paletteResult" :output="paletteResult" />
 
         <p v-else-if="!paletteError" class="text-xs text-muted-foreground">
-          Paste a palette above to see every colour simulated, with the WCAG contrast and CIE76
-          deltaE of each neighbouring pair.
+          Paste a palette above to see every color simulated, with the WCAG contrast and CIE76
+          deltaE of each neighboring pair.
         </p>
       </TabsContent>
 

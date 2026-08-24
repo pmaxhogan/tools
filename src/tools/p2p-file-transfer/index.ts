@@ -501,7 +501,7 @@ export interface DropOptions {
 
 /**
  * The paste surface: given nothing, mints a room; given a code or a join
- * link, normalises it and shows the link the other device should open. The
+ * link, normalizes it and shows the link the other device should open. The
  * live panel does the actual moving of files.
  */
 export function run(input: string | undefined, opts: DropOptions = {}): Record<string, string> {

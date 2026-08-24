@@ -67,7 +67,7 @@ describe("sunrise-sunset-calculator: NOAA equations", () => {
   it("gives an equinox day just over twelve hours long", () => {
     // Refraction and the sun's own width push the equinox past 12h: the
     // 90.833 degree zenith means the disc is already visible before the
-    // geometric centre reaches the horizon.
+    // geometric center reaches the horizon.
     const newYork = sunTimes(utcDay(2026, 3, 20), NY.lat, NY.lon);
     expect(newYork.dayLengthMinutes).toBeGreaterThan(720);
     expect(newYork.dayLengthMinutes).toBeLessThan(735);

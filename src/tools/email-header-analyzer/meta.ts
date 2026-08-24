@@ -24,6 +24,8 @@ export const meta: ToolMeta = {
     "email routing analyzer",
     "mail server hop viewer",
     "email latency waterfall",
+    "email headers",
+    "received headers",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -61,6 +63,29 @@ export const meta: ToolMeta = {
           synonyms: ["received headers", "delivery path", "routing", "waterfall"],
         },
       ],
+    },
+  ],
+  examples: [
+    {
+      label: "Sample header block",
+      input: `Received: from mx.dest.example (mx.dest.example [203.0.113.44])
+  by mbox.dest.example (Postfix) with ESMTPS id 5E5E5E
+  for <bob@example.net>; Tue, 5 Aug 2025 12:01:06 +0000
+Received: from mail.origin.example (mail.origin.example [198.51.100.9])
+  by mx.dest.example (Postfix) with ESMTPS id 2B2B2B; Tue, 5 Aug 2025 12:00:02 +0000
+Authentication-Results: mx.dest.example;
+  spf=pass smtp.mailfrom=lists.example.org;
+  dkim=pass header.d=example.com header.s=selector1;
+  dmarc=pass header.from=example.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com;
+  s=selector1; h=from:to:subject:date; bh=abc123=; b=sig1data
+Return-Path: <bounces+42@lists.example.org>
+From: Alice Example <alice@example.com>
+To: Bob <bob@example.net>
+Reply-To: support@reply.example.net
+Subject: Your July invoice
+Date: Tue, 5 Aug 2025 12:00:00 +0000
+Message-ID: <abc123@example.com>`,
     },
   ],
   http: { method: "POST", contentType: "text/plain" },

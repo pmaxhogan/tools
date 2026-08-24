@@ -27,6 +27,9 @@ export const meta: ToolMeta = {
     "twitter id decoder",
     "x post id timestamp",
     "instagram id timestamp",
+    "when was this discord account created",
+    "discord id creation date",
+    "snowflake id to timestamp",
   ],
   input: "text/plain",
   output: "application/json",
@@ -53,6 +56,13 @@ export const meta: ToolMeta = {
           synonyms: ["ig", "instagram id"],
         },
       ],
+    },
+  ],
+  examples: [
+    {
+      label: "Discord message ID",
+      input: "175928847299117063",
+      opts: { platform: "discord" },
     },
   ],
   http: { method: "GET", contentType: "application/json" },

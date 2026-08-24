@@ -241,7 +241,7 @@ const TEXT_META_LABELS: Record<number, string> = {
 /**
  * Decode one channel voice message from its status byte and up to two data
  * bytes. A note-on with velocity 0 is the running-status idiom for a note-off,
- * so it is normalised to `noteOff` here, once, for the parser, the event list
+ * so it is normalized to `noteOff` here, once, for the parser, the event list
  * and the live synth alike. Returns null for a status byte that is not a
  * channel message (system messages are handled elsewhere).
  */
@@ -375,7 +375,7 @@ export interface ControlMeter {
   max: number;
   /** Where the value sits in its range, 0 at the minimum and 1 at the maximum. */
   level: number;
-  /** Where the bar grows from: 0.5 for pitch bend, which is centred at rest. */
+  /** Where the bar grows from: 0.5 for pitch bend, which is centered at rest. */
   origin: number;
   /** How many messages this control has sent since the log was last cleared. */
   count: number;
@@ -452,13 +452,13 @@ export function controlMeterFor(message: LiveMessage, middleC = 4): ControlMeter
         channel: message.channel + 1,
         number: -1,
         label: "Pitch bend",
-        detail: "Centred at rest",
+        detail: "Centered at rest",
         value: message.value,
         min: -8192,
         max: 8191,
         // The wheel rests at 0 in the middle of a range that is one step wider
         // below than above, so the two halves are scaled separately. Without
-        // that, a wheel at rest would read a hair off centre.
+        // that, a wheel at rest would read a hair off center.
         level: message.value < 0 ? 0.5 + message.value / 16384 : 0.5 + message.value / 16382,
         origin: 0.5,
         count: 1,

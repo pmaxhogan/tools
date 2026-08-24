@@ -369,7 +369,7 @@ describe("blitInto", () => {
     ).not.toThrow();
   });
 
-  it("rejects an atlas, a sprite, or a position it cannot honour", () => {
+  it("rejects an atlas, a sprite, or a position it cannot honor", () => {
     expect(codeOf(() => blitInto(new Uint8ClampedArray(10), 4, sprite(), 2, 3, 0, 0))).toBe(
       "size-mismatch",
     );
@@ -475,7 +475,7 @@ describe("exporters", () => {
     expect(css.match(/^\.sprite \{/gm) ?? []).toHaveLength(1);
   });
 
-  it("strips file extensions and honours a custom class prefix", () => {
+  it("strips file extensions and honors a custom class prefix", () => {
     const small = packRects([{ id: "Hero Idle.png", w: 8, h: 8 }], { padding: 0 });
     const css = toCss(small, { classPrefix: "icon" });
     expect(css).toContain(".icon-hero-idle {");
@@ -578,7 +578,7 @@ describe("run", () => {
     expect(Object.keys(parsed.frames).sort()).toEqual(["boss", "coin", "hero"]);
   });
 
-  it("packs a JSON items payload and honours every option", () => {
+  it("packs a JSON items payload and honors every option", () => {
     const payload = JSON.stringify({
       items: [
         { id: "a", w: 40, h: 40 },

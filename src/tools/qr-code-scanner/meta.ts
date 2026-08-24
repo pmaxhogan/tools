@@ -25,6 +25,11 @@ export const meta: ToolMeta = {
     "qr code reader from photo",
     "webcam qr scanner",
     "upload qr code",
+    "qr code decoder online",
+    "read qr code from screenshot",
+    "camera qr code scanner",
+    "torch flashlight qr scan",
+    "wifi qr code login",
   ],
   input: "image/*",
   output: "text/plain",
@@ -55,8 +60,8 @@ export const meta: ToolMeta = {
     },
   ],
   copy: {
-    what: "Reads a QR code and shows you what is inside it. Point your camera at a code for a live scan, or upload, drag, or paste an image of one, and the decoder runs entirely in your browser. When the payload is a known shape it is broken into labelled fields you can read at a glance: web links, Wi-Fi logins with the network name and password, contact cards, calendar events, map pins, email drafts, phone numbers, and text messages. Links are shown but never opened for you, so you always see where a code points before you decide to follow it.",
-    how: "Choose the camera or upload an image. For a live scan, press start, allow camera access, and hold the code flat and steady inside the frame; on phones with a supported rear camera you can switch on the torch for a dark room. To read a saved code, drop an image onto the page, pick a file, or paste a screenshot with Ctrl+V. The decoded content appears the moment a code is recognised, with a copy button and, for links, a safe clickable version that opens only on your click.",
+    what: "Reads a QR code and shows you what is inside it. Point your camera at a code for a live scan, or upload, drag, or paste an image of one, and the decoder runs entirely in your browser. When the payload is a known shape it is broken into labeled fields you can read at a glance: web links, Wi-Fi logins with the network name and password, contact cards, calendar events, map pins, email drafts, phone numbers, and text messages. Links are shown but never opened for you, so you always see where a code points before you decide to follow it.",
+    how: "Choose the camera or upload an image. For a live scan, press start, allow camera access, and hold the code flat and steady inside the frame; on phones with a supported rear camera you can switch on the torch for a dark room. To read a saved code, drop an image onto the page, pick a file, or paste a screenshot with Ctrl+V. The decoded content appears the moment a code is recognized, with a copy button and, for links, a safe clickable version that opens only on your click.",
     why: "Most online QR readers upload the photo you scanned to their servers, wrap the result in ads, and quietly log every code you decode, which matters when that code is your home Wi-Fi password or a private contact card. This one decodes on your device, so your files and inputs never leave your device, and it never follows a link on your behalf. There is no app to install, no account, and no watermark on what you scanned.",
     faq: [
       {

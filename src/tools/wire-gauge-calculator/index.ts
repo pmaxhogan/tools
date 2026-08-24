@@ -342,7 +342,7 @@ interface Fields {
 function normalizeMaterial(v: string, tokenForError: string): "copper" | "aluminum" {
   const s = v.toLowerCase();
   if (s === "copper" || s === "cu") return "copper";
-  if (s === "aluminum" || s === "aluminium" || s === "al") return "aluminum";
+  if (s === "aluminum" || s === "aluminum" || s === "al") return "aluminum";
   throw new ToolError("bad-token", `Unrecognized material "${tokenForError}".`, "Use copper or aluminum.");
 }
 
@@ -355,7 +355,7 @@ function normalizePhase(v: string, tokenForError: string): "dc" | "ac1" | "ac3" 
 }
 
 function parseLengthValue(v: string, tokenForError: string): number {
-  const m = v.match(/^([+-]?\d*\.?\d+)\s*(m|meter|meters|metre|metres|ft|feet|foot)?$/i);
+  const m = v.match(/^([+-]?\d*\.?\d+)\s*(m|meter|meters|meter|meters|ft|feet|foot)?$/i);
   if (!m || m[1] === "") {
     throw new ToolError("bad-token", `Could not parse length "${tokenForError}".`, "Use a number with m or ft, like 30m or 100ft.");
   }
@@ -449,7 +449,7 @@ function parseWireTokens(raw: string): Fields {
     }
 
     const lower = token.toLowerCase();
-    if (lower === "copper" || lower === "cu" || lower === "aluminum" || lower === "aluminium" || lower === "al") {
+    if (lower === "copper" || lower === "cu" || lower === "aluminum" || lower === "aluminum" || lower === "al") {
       fields.material = normalizeMaterial(lower, token);
       continue;
     }
@@ -472,7 +472,7 @@ function parseWireTokens(raw: string): Fields {
       fields.voltage = Number(mV[1]);
       continue;
     }
-    const mM = token.match(/^([+-]?\d*\.?\d+)(m|meter|meters|metre|metres)$/i);
+    const mM = token.match(/^([+-]?\d*\.?\d+)(m|meter|meters|meter|meters)$/i);
     if (mM) {
       fields.lengthM = Number(mM[1]);
       continue;

@@ -140,7 +140,7 @@ export function launchSpeed(
   return mode.power;
 }
 
-/** Degrees added to the pitch for the y component only, before normalising. */
+/** Degrees added to the pitch for the y component only, before normalizing. */
 export function launchPitchOffset(projectile: ProjectileId, launcher: LaunchModeId): number {
   const def = PROJECTILE_BY_ID[projectile];
   return def.pitchOffsetByLauncher?.[launcher] ?? LAUNCH_MODES[launcher].pitchOffset;
@@ -149,7 +149,7 @@ export function launchPitchOffset(projectile: ProjectileId, launcher: LaunchMode
 /**
  * Projectile.shootFromRotation followed by Projectile.getMovementToShoot with
  * the inaccuracy term at its mean of zero: build the aim vector in floats,
- * normalise it in doubles, then scale by the launch speed.
+ * normalize it in doubles, then scale by the launch speed.
  *
  * `pitch` is the game's xRot, so negative is upward.
  */
@@ -1142,7 +1142,7 @@ export function run(_input: string, opts: ProjectileCalcOpts = {}): ProjectileCa
   return out;
 }
 
-/** Human label for how a projectile got launched, honouring per type overrides. */
+/** Human label for how a projectile got launched, honoring per type overrides. */
 export function launcherLabel(projectile: ProjectileId, launcher: LaunchModeId): string {
   const def = PROJECTILE_BY_ID[projectile];
   return (def.launcherLabels?.[launcher] ?? LAUNCH_MODES[launcher].label).toLowerCase();

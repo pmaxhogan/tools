@@ -24,6 +24,8 @@ export const meta: ToolMeta = {
     "browser fingerprint headers",
     "what is my ip header",
     "sec-fetch headers explained",
+    "my request headers",
+    "check http headers online",
   ],
   input: "text/plain",
   output: "application/json",
@@ -56,9 +58,9 @@ export const meta: ToolMeta = {
   privacyNote:
     "Your headers are shown to you by this site's own worker and are not stored or logged by its code.",
   copy: {
-    what: 'Shows the HTTP request headers a browser is sending, with a labeled explanation for each one: User-Agent, Accept-Language, the Sec-CH-UA client hints, the Sec-Fetch-* metadata headers, caching and proxy headers, and more. Works on your own live headers, fetched with one click from this site\'s own API, or on any header text or JSON object you paste in, including a captured curl -v transcript. A raw values view and a ready-to-run curl command are also available.',
+    what: "Shows the HTTP request headers a browser is sending, with a labeled explanation for each one: User-Agent, Accept-Language, the Sec-CH-UA client hints, the Sec-Fetch-* metadata headers, caching and proxy headers, and more. Works on your own live headers, fetched with one click from this site's own API, or on any header text or JSON object you paste in, including a captured curl -v transcript. A raw values view and a ready-to-run curl command are also available.",
     how: 'Click "Show my headers" to fetch and analyze exactly what your browser just sent to this site, or paste header lines or a JSON object of headers into the input yourself. Switch the view between an explained breakdown, raw values only, or a curl command that reproduces the same request. The Cookie and Authorization values are always redacted to a length in the explained and curl views.',
-    why: "Most \"what headers am I sending\" pages just read navigator.userAgent from JavaScript, which is not what a server actually receives once client hints, Fetch Metadata, and any proxy in front of it add or strip headers along the way. This tool reads the request headers this site's own worker actually received, explains what each one reveals and how identifying it is, and never stores or logs them.",
+    why: 'Most "what headers am I sending" pages just read navigator.userAgent from JavaScript, which is not what a server actually receives once client hints, Fetch Metadata, and any proxy in front of it add or strip headers along the way. This tool reads the request headers this site\'s own worker actually received, explains what each one reveals and how identifying it is, and never stores or logs them.',
     faq: [
       {
         q: "Why doesn't this match navigator.userAgent?",

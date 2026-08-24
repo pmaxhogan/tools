@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   icon: "Clapperboard",
   matrixSlug: "video-to-gif",
   name: "Video to GIF",
-  description: "Trim a clip and export an optimised GIF with palette control, all in your browser.",
+  description: "Trim a clip and export an optimized GIF with palette control, all in your browser.",
   category: "Media",
   keywords: [
     "video to gif",
@@ -28,6 +28,13 @@ export const meta: ToolMeta = {
     "looping gif creator",
     "meme gif maker",
     "clip to gif converter",
+    "webm to gif",
+    "mov to gif",
+    "reduce gif file size",
+    "screen recording to gif",
+    "smooth gif from video",
+    "high quality animated gif maker",
+    "trim clip to gif",
   ],
   input: "video/*",
   output: "application/json",
@@ -59,6 +66,8 @@ export const meta: ToolMeta = {
       id: "dither",
       label: "Dithering",
       default: "sierra2_4a",
+      // Full sentence labels: keep the dropdown rather than a row of buttons.
+      ui: "select",
       options: [
         {
           value: "sierra2_4a",

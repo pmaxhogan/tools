@@ -2,6 +2,7 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import SiteHeader from "@/components/SiteHeader.astro";
 import { iconFor } from "@/lib/tool-icons";
+import { categoryByLabel, categoryPath } from "@/tools/categories";
 import type { ToolMeta } from "@/tools/types";
 import type { LucideIcon } from "lucide-vue-next";
 
@@ -16,6 +17,12 @@ const title = `${meta.name}: free, private, in your browser`;
 // return (the curated map plus the Wrench fallback) is actually a lucide
 // FunctionalComponent, which is what Astro's JSX check needs to accept it.
 const Icon = iconFor(meta.icon) as LucideIcon;
+
+// The breadcrumb category links to its page. registry.test guarantees the label
+// resolves, but an unregistered one still has to render, so the link is
+// conditional rather than pointing at a bare /category/.
+const category = categoryByLabel(meta.category);
+const CategoryIcon = category ? (iconFor(category.icon) as LucideIcon) : null;
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -57,7 +64,19 @@ const jsonLd = {
       >
         <a href="/" class="text-primary/80 hover:text-primary">Tools</a>
         <span aria-hidden="true"> / </span>
-        <span>{meta.category}</span>
+        {
+          category && CategoryIcon ? (
+            <a
+              href={categoryPath(category)}
+              class="inline-flex items-center gap-1.5 align-middle text-primary/80 hover:text-primary"
+            >
+              <CategoryIcon class="size-3.5" stroke-width={2} aria-hidden="true" />
+              {meta.category}
+            </a>
+          ) : (
+            <span>{meta.category}</span>
+          )
+        }
       </nav>
       <div class="mt-2 flex items-center gap-3">
         <span

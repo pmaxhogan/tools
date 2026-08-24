@@ -26,6 +26,10 @@ export const meta: ToolMeta = {
     "config format converter",
     "serialization format converter",
     "structured data converter",
+    "yml to json",
+    "json to yml",
+    "toml to json",
+    "csv to json",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -89,6 +93,25 @@ export const meta: ToolMeta = {
       id: "csvHeader",
       label: "First CSV row is a header",
       default: true,
+    },
+  ],
+  examples: [
+    {
+      label: "CSV to JSON",
+      input: `id,name,department,salary,active
+1,Grace Hopper,Engineering,98000,true
+2,Ada Lovelace,Research,105000,true
+3,Alan Turing,Engineering,102500,false`,
+    },
+    {
+      label: "YAML to TOML",
+      input: `service: api-gateway
+port: 8080
+replicas: 3
+env:
+  region: us-east-1
+  debug: false`,
+      opts: { to: "toml" },
     },
   ],
   http: { method: "POST", contentType: "text/plain" },

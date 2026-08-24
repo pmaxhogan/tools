@@ -29,6 +29,8 @@ export const meta: ToolMeta = {
     "decode binary payload",
     "hex to json",
     "wire format inspector",
+    "protobuf to json",
+    "decode base64 protobuf",
   ],
   input: "File",
   output: "application/json",

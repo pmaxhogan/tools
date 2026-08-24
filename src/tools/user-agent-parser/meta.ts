@@ -26,9 +26,19 @@ export const meta: ToolMeta = {
     "os detection from ua",
     "identify browser from header",
     "server log user agent lookup",
+    "safari version detector",
+    "chrome version from ua",
+    "mobile vs desktop user agent",
   ],
   input: "text/plain",
   output: "application/json",
+  examples: [
+    {
+      label: "Safari on macOS",
+      input:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15",
+    },
+  ],
   http: { method: "POST", contentType: "application/json" },
   copy: {
     what: 'Decodes a raw User-Agent string into its parts: browser name and version, rendering engine, operating system, device vendor/model/type, CPU architecture when present, and whether the string belongs to a known bot or crawler. Handles desktop, mobile, and bot UAs, including unrecognized ones (returned as "Unknown" rather than an error).',

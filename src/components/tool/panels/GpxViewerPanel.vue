@@ -429,7 +429,7 @@ const trackPoints2d = computed<{ x: number; y: number }[]>(() => {
 /* pan and zoom                                                      */
 /* ---------------------------------------------------------------- */
 
-/** Keep the window inside the picture: the centre can never leave the middle. */
+/** Keep the window inside the picture: the center can never leave the middle. */
 function clampCenter(value: number, level: number): number {
   const half = 0.5 / level;
   return Math.min(Math.max(value, half), 1 - half);

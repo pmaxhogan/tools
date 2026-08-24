@@ -10,7 +10,7 @@ import { ToolError, type ToolLogic } from "../types";
  *
  * Pitch detection uses the McLeod Pitch Method (MPM), described in "A Smarter
  * Way to Find Pitch" by Philip McLeod and Geoff Wyvill. MPM builds the
- * Normalised Square Difference Function (NSDF)
+ * Normalized Square Difference Function (NSDF)
  *
  *     n(tau) = 2 * sum(x[j] * x[j + tau]) / sum(x[j]^2 + x[j + tau]^2)
  *
@@ -71,7 +71,7 @@ const SILENT: PitchResult = { frequency: null, clarity: 0 };
  * a note locks in.
  *
  * Cost is O(samples * maxLag), so a 2048 sample window is a good balance for a
- * live meter. Analysing every animation frame is wasteful; 20 to 30 times a
+ * live meter. Analyzing every animation frame is wasteful; 20 to 30 times a
  * second is plenty for a needle.
  */
 export function detectPitch(
@@ -156,7 +156,7 @@ export function detectPitch(
     }
   }
 
-  // Parabolic interpolation through the peak and its two neighbours turns the
+  // Parabolic interpolation through the peak and its two neighbors turns the
   // integer lag into a fractional one, which is where most of the accuracy
   // comes from: a whole sample of error at 440 Hz is already about 4 Hz.
   let lag = chosen;
@@ -852,7 +852,7 @@ function describeFrequency(
   }
   out["Time signature"] = `${signature.label}, ${signature.beatsPerBar} beats per bar`;
   out["Live tuning"] =
-    "Open the panel and click Start listening to tune from your microphone. The audio is analysed on your device and never leaves your browser.";
+    "Open the panel and click Start listening to tune from your microphone. The audio is analyzed on your device and never leaves your browser.";
   return out;
 }
 

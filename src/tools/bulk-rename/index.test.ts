@@ -233,7 +233,7 @@ describe("planRenames: template", () => {
     ]);
   });
 
-  it("honours the sequence start and padding width", () => {
+  it("honors the sequence start and padding width", () => {
     const result = plan(scanOf([file("a.txt"), file("b.txt")]), {
       mode: "template",
       template: "{n}-{name}",

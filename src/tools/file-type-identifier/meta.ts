@@ -30,6 +30,7 @@ export const meta: ToolMeta = {
   ],
   input: "File",
   output: "application/json",
+  examples: [{ label: "Sample PNG image", file: "sample.png" }],
   copy: {
     what: "Reads the first bytes of a file (or pasted text) and works out what it actually is, regardless of its extension or a missing one. It recognizes magic bytes for hundreds of binary formats, including zip-based formats like DOCX, XLSX, and EPUB, and falls back to text analysis for JSON, XML, HTML, SVG, CSV, Markdown, YAML, and more when no binary signature matches.",
     how: "Drop a file onto the input, use the file picker, or paste text directly. The result shows the detected type, its MIME type, the typical extension, and the raw first bytes as hex, plus encoding and line-ending details when the content is text.",

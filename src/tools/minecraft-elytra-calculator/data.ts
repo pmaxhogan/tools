@@ -176,7 +176,7 @@ export const SLOW_FALLING_GRAVITY = 0.01;
 export const DRAG_HORIZONTAL = 0.99;
 export const DRAG_VERTICAL = 0.98;
 
-/** Fraction of gravity cancelled by lift at cos(pitch)^2 == 1. */
+/** Fraction of gravity canceled by lift at cos(pitch)^2 == 1. */
 export const LIFT_FACTOR = 0.75;
 
 /** Fraction of downward speed converted into forward speed each tick. */

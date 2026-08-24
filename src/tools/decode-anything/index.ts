@@ -106,7 +106,7 @@ function printableRatio(s: string): number {
   return total === 0 ? 0 : ok / total;
 }
 
-/** Bytes that read as text a person would recognise, or null. */
+/** Bytes that read as text a person would recognize, or null. */
 function asReadableText(bytes: Uint8Array): string | null {
   if (bytes.length < 3) return null;
   const s = utf8(bytes);

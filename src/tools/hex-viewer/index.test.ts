@@ -110,7 +110,7 @@ describe("hex-viewer: hexDump", () => {
     expect(hexDump(SAMPLE)).toBe(expected);
   });
 
-  it("honours uppercase, bytesPerRow, and a starting offset", () => {
+  it("honors uppercase, bytesPerRow, and a starting offset", () => {
     expect(hexDump(SAMPLE, { bytesPerRow: 8, uppercase: true, offset: 16 })).toBe(
       `00000010  72 21 0A 00${" ".repeat(14)}|r!..|`,
     );
@@ -517,7 +517,7 @@ describe("hex-viewer: run", () => {
     expect(output).toContain("UTF-16LE runs of 4 characters or more: 0");
   });
 
-  it("summarises the file", () => {
+  it("summarizes the file", () => {
     const rows = run(PNG, { view: "info" }) as Record<string, string>;
     expect(rows.Size).toBe("45 bytes");
     expect(rows.Input).toBe("raw bytes");

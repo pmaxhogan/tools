@@ -23,6 +23,9 @@ export const meta: ToolMeta = {
     "speculation rules validator",
     "prerender json builder",
     "href_matches",
+    "prefetch on hover",
+    "instant page navigation",
+    "speculationrules json",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -68,6 +71,8 @@ export const meta: ToolMeta = {
       id: "eagerness",
       label: "Eagerness (generate mode)",
       default: "moderate",
+      // Full sentence labels: keep the dropdown rather than a row of buttons.
+      ui: "select",
       options: [
         {
           value: "conservative",
@@ -102,6 +107,19 @@ export const meta: ToolMeta = {
       id: "scriptTag",
       label: 'Wrap output in <script type="speculationrules">',
       default: true,
+    },
+  ],
+  examples: [
+    {
+      label: "Prefetch blog posts",
+      input: "/blog/*\nnot /blog/drafts/*",
+      opts: {
+        mode: "generate",
+        action: "prefetch",
+        eagerness: "moderate",
+        documentRules: "true",
+        scriptTag: "true",
+      },
     },
   ],
   copy: {

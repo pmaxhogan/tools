@@ -26,6 +26,7 @@ export const meta: ToolMeta = {
     "pwa icon generator",
     "logo to favicon",
     "generate favicon sizes",
+    "realfavicongenerator alternative",
   ],
   input: "image/*",
   output: "application/json",

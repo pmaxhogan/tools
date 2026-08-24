@@ -285,7 +285,7 @@ describe("gpx-viewer stats", () => {
     expect(stats.movingSeconds).toBe(60);
   });
 
-  it("keeps a metre of jitter from reporting a cliff", () => {
+  it("keeps a meter of jitter from reporting a cliff", () => {
     const src = `<gpx version="1.1"><trk><trkseg>
       <trkpt lat="47.60620" lon="-122.3321"><ele>10</ele></trkpt>
       <trkpt lat="47.60620500" lon="-122.3321"><ele>14</ele></trkpt>
@@ -477,7 +477,7 @@ describe("gpx-viewer run", () => {
     expect(out["Elevation SVG"]).toContain('class="elevation-line"');
   });
 
-  it("honours the smoothing option", () => {
+  it("honors the smoothing option", () => {
     expect(run(GPX_FIXTURE, { smoothing: 0 })["Elevation gain"]).toBe("16 m");
     expect(run(GPX_FIXTURE, { smoothing: 3 })["Elevation gain"]).toBe("15 m");
   });

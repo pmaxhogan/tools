@@ -7,6 +7,8 @@ import { decodeQr, type DecodeResult } from "@/tools/qr-code-scanner/index";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Segmented } from "@/components/ui/segmented";
+import type { SegmentedOption } from "@/components/ui/segmented";
 import CopyButton from "../CopyButton.vue";
 
 /**
@@ -25,6 +27,10 @@ defineProps<{ meta: ToolMeta }>();
 
 type Mode = "camera" | "upload";
 const mode = ref<Mode>("camera");
+const MODE_OPTIONS: SegmentedOption[] = [
+  { value: "camera", label: "Camera" },
+  { value: "upload", label: "Upload image" },
+];
 /** Subset of QrOpts['inversion'] the UI offers; 'invertFirst' has no control here. */
 type Inversion = "attemptBoth" | "dontInvert" | "onlyInvert";
 const inversionStill = ref<Inversion>("attemptBoth");
@@ -317,30 +323,13 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Mode toggle -->
-    <div
-      class="flex w-fit gap-1 rounded-[10px] bg-secondary p-1 shadow-[var(--sh-inset)]"
-      role="tablist"
-      aria-label="Scan source"
-    >
-      <Button
-        role="tab"
-        :aria-selected="mode === 'camera'"
-        :variant="mode === 'camera' ? 'default' : 'ghost'"
-        size="sm"
-        @click="setMode('camera')"
-      >
-        Camera
-      </Button>
-      <Button
-        role="tab"
-        :aria-selected="mode === 'upload'"
-        :variant="mode === 'upload' ? 'default' : 'ghost'"
-        size="sm"
-        @click="setMode('upload')"
-      >
-        Upload image
-      </Button>
-    </div>
+    <Segmented
+      :model-value="mode"
+      :options="MODE_OPTIONS"
+      label="Scan source"
+      class="w-fit"
+      @update:model-value="(v: string) => setMode(v as Mode)"
+    />
 
     <!-- Errors -->
     <div

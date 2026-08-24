@@ -134,8 +134,8 @@ describe("resizeMatteNearest", () => {
     ]);
   });
 
-  it("samples pixel centres when downscaling", () => {
-    // 4 by 4 counting up from 0. Centre sampling picks columns and rows 1 and 3.
+  it("samples pixel centers when downscaling", () => {
+    // 4 by 4 counting up from 0. Center sampling picks columns and rows 1 and 3.
     const matte = new Float32Array(16);
     for (let i = 0; i < 16; i += 1) matte[i] = i;
     expect(Array.from(resizeMatteNearest(matte, 4, 4, 2, 2))).toEqual([5, 7, 13, 15]);

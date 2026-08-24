@@ -27,6 +27,10 @@ export const meta: ToolMeta = {
     "json to model class",
     "transform.tools alternative",
     "infer types from json",
+    "json to dto",
+    "generate typescript types from json",
+    "json to zod",
+    "api response types generator",
   ],
   input: "application/json",
   output: "text/plain",
@@ -62,6 +66,18 @@ export const meta: ToolMeta = {
       id: "optionalNulls",
       label: "Nulls make a property optional",
       default: true,
+    },
+  ],
+  examples: [
+    {
+      label: "Orders with optional field",
+      input: `{
+  "orders": [
+    { "id": "ORD-1001", "customer": "Dana Whitfield", "total": 128.5, "shipped": true },
+    { "id": "ORD-1002", "customer": "Miguel Torres", "total": 64.0 }
+  ]
+}`,
+      opts: { target: "typescript", rootName: "Root" },
     },
   ],
   http: { method: "POST", contentType: "application/json" },

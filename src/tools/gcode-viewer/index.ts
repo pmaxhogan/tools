@@ -491,7 +491,7 @@ export function parseGcode(text: string, options: ParseGcodeOptions = {}): Gcode
   const header = scanHeader(rawLines, lineCount);
   const layerDetection: LayerDetection = header.hasMarkers ? "marker" : "z-change";
 
-  // Machine state, all in millimetres and mm per minute.
+  // Machine state, all in millimeters and mm per minute.
   let x = 0;
   let y = 0;
   let z = 0;
@@ -659,7 +659,7 @@ export function parseGcode(text: string, options: ParseGcodeOptions = {}): Gcode
       const dy = ty - y;
       const d = Math.sqrt(dx * dx + dy * dy);
       if (d < 1e-9) {
-        // A radius arc back to the same point has no defined centre.
+        // A radius arc back to the same point has no defined center.
         commitExtruder(params.E, eDelta);
         moveTo(tx, ty, tz, eDelta);
         return;
@@ -672,7 +672,7 @@ export function parseGcode(text: string, options: ParseGcodeOptions = {}): Gcode
       cx = x + 0.5 * (dx - dy * h);
       cy = y + 0.5 * (dy + dx * h);
     } else {
-      // No centre and no radius: the only honest reading is a straight line.
+      // No center and no radius: the only honest reading is a straight line.
       commitExtruder(params.E, eDelta);
       moveTo(tx, ty, tz, eDelta);
       return;
@@ -1003,7 +1003,7 @@ function speedBucket(feed: number, minFeed: number, maxFeed: number): number {
 
 /**
  * A top down SVG of one layer. Extrusion is drawn as solid strokes, travel as
- * faint dashes, and "speed" colouring ramps each stroke by its feed rate.
+ * faint dashes, and "speed" coloring ramps each stroke by its feed rate.
  * Deterministic: the same model and options always produce identical markup.
  */
 export function renderLayerSvg(
@@ -1117,7 +1117,7 @@ function describeFan(fan: GcodeFan): string {
   return `${fan.maxPercent}% at the fastest`;
 }
 
-/** The labelled rows the generic panel renders. */
+/** The labeled rows the generic panel renders. */
 export function summarize(model: GcodeModel): Record<string, string> {
   const b = model.bounds;
   const grams = filamentWeight(model.totalFilamentMm);
@@ -1163,7 +1163,7 @@ function readColorBy(value: unknown): ColorBy {
   if (value === "type" || value === "speed") return value;
   throw new ToolError(
     "bad-option",
-    `"${String(value)}" is not a colouring mode.`,
+    `"${String(value)}" is not a coloring mode.`,
     'Use "type" to paint every extrusion alike, or "speed" to ramp by feed rate.',
   );
 }

@@ -20,7 +20,7 @@ describe("json-formatter: format", () => {
     expect(run(UGLY, opts("format"))).toBe('{\n  "b": 1,\n  "a": [\n    1,\n    2,\n    3\n  ]\n}');
   });
 
-  it("honours the 4-space and tab indents", () => {
+  it("honors the 4-space and tab indents", () => {
     expect(run('{"a":1}', opts("format", "4"))).toBe('{\n    "a": 1\n}');
     expect(run('{"a":1}', opts("format", "tab"))).toBe('{\n\t"a": 1\n}');
   });

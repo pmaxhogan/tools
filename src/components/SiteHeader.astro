@@ -58,7 +58,49 @@
         <span class="truncate"><span class="text-primary">tools</span>.maxhogan.dev</span>
       </a>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex min-w-0 items-center gap-2">
+      <button
+        type="button"
+        data-palette-open="true"
+        aria-label="Search tools"
+        aria-keyshortcuts="Control+K"
+        class="hidden w-44 items-center gap-2 rounded-lg border bg-secondary py-1.5 pr-1.5 pl-2.5 text-sm text-muted-foreground transition-colors duration-[120ms] hover:border-ring/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:flex lg:w-56"
+      >
+        <svg
+          aria-hidden="true"
+          class="size-4 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.5-3.5"></path>
+        </svg>
+        <span class="truncate">Search tools</span>
+        <kbd class="ml-auto shrink-0">Ctrl K</kbd>
+      </button>
+      <button
+        type="button"
+        data-palette-open="true"
+        aria-label="Search tools"
+        aria-keyshortcuts="Control+K"
+        class="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:hidden"
+      >
+        <svg
+          aria-hidden="true"
+          class="size-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.5-3.5"></path>
+        </svg>
+      </button>
       <button
         id="theme-toggle"
         type="button"
@@ -106,10 +148,18 @@
 
 <script is:inline>
   // Delegated on document (which persists across ClientRouter swaps) so the
-  // toggle keeps working after client-side navigation replaces the button.
+  // buttons keep working after client-side navigation replaces them. One
+  // listener for both, bound exactly once because the router dedupes this
+  // inline script.
   document.addEventListener("click", (e) => {
-    if (!(e.target instanceof Element) || !e.target.closest("#theme-toggle")) return;
-    const dark = document.documentElement.classList.toggle("dark");
-    localStorage.setItem("theme", dark ? "dark" : "light");
+    if (!(e.target instanceof Element)) return;
+    if (e.target.closest("#theme-toggle")) {
+      const dark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", dark ? "dark" : "light");
+    } else if (e.target.closest("[data-palette-open]")) {
+      // The palette is a Vue island, so the header reaches it through an event
+      // on document rather than through a shared module instance.
+      document.dispatchEvent(new CustomEvent("tools:open-palette"));
+    }
   });
 </script>

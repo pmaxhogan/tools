@@ -42,7 +42,7 @@ export const MIN_SPAWN_DISTANCE = 24;
 /**
  * DistanceManager's naturalSpawnChunkCounter is a
  * FixedPlayerDistanceChunkTracker(8), and ChunkTracker propagates over all
- * eight neighbours, so one player charges a 17 by 17 square of chunks.
+ * eight neighbors, so one player charges a 17 by 17 square of chunks.
  */
 export const SPAWN_CHUNK_RADIUS = 8;
 
@@ -51,7 +51,7 @@ export const MOB_CAP_DIVISOR = 289;
 
 /**
  * ChunkMap#playerIsCloseEnoughForSpawning: a chunk only runs the spawn loop
- * when a player is within 128 blocks of its centre. The comparison is
+ * when a player is within 128 blocks of its center. The comparison is
  * horizontal only, so height above or below the player does not count.
  */
 export const SPAWNING_CHUNK_PLAYER_RADIUS = 128;
@@ -688,8 +688,8 @@ export interface MobCapResult {
 }
 
 /**
- * Count chunks whose centre is within 128 blocks of a player standing at the
- * centre of their own chunk, limited to a Chebyshev radius. This is exactly
+ * Count chunks whose center is within 128 blocks of a player standing at the
+ * center of their own chunk, limited to a Chebyshev radius. This is exactly
  * ChunkMap#playerIsCloseEnoughForSpawning combined with the spawn candidate
  * set, evaluated for the common case.
  */

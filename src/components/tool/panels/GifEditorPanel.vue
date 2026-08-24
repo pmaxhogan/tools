@@ -296,7 +296,7 @@ function onFiles() {
           </div>
         </div>
 
-        <!-- Optimise -->
+        <!-- Optimize -->
         <div v-else-if="operation === 'optimize'" class="flex flex-wrap items-end gap-3">
           <div class="flex w-32 flex-col gap-1.5">
             <Label for="gif-fps" class="text-xs text-muted-foreground">Frames per second</Label>

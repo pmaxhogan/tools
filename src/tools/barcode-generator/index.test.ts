@@ -625,7 +625,7 @@ describe("sheet layouts", () => {
     expect(sheetCells(getSheet("a4-2x7")!)).toHaveLength(14);
   });
 
-  it("renders a page sized SVG measured in millimetres", () => {
+  it("renders a page sized SVG measured in millimeters", () => {
     const spec = getSheet("avery-5160")!;
     const list = Array.from({ length: 3 }, () => encode("ABC-1", "code128"));
     const svg = renderSheetSvg(list, spec);

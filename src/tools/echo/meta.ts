@@ -7,7 +7,13 @@ export const meta: ToolMeta = {
   name: "Echo Endpoint",
   description: "A curl-able endpoint that reflects your request, headers, and IP back at you.",
   category: "Platform",
-  keywords: ["echo endpoint", "httpbin alternative", "request inspector", "what is my ip", "webhook tester"],
+  keywords: [
+    "echo endpoint",
+    "httpbin alternative",
+    "request inspector",
+    "what is my ip",
+    "webhook tester",
+  ],
   searchTerms: [
     "httpbin",
     "requestbin",
@@ -18,6 +24,8 @@ export const meta: ToolMeta = {
     "reflect request",
     "test post request",
     "my ip address curl",
+    "request bin",
+    "curl echo endpoint",
   ],
   input: "application/json",
   output: "application/json",

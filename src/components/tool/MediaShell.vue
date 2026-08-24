@@ -145,7 +145,7 @@ const inputEl = ref<HTMLInputElement>();
 const dragging = ref(false);
 
 const running = ref(false);
-const cancelling = ref(false);
+const canceling = ref(false);
 const ratio = ref<number | null>(null);
 const timeMs = ref<number | null>(null);
 const logLines = ref<string[]>([]);
@@ -195,7 +195,7 @@ const canRun = computed(
     supported.value &&
     picked.value.length > 0 &&
     !running.value &&
-    !cancelling.value &&
+    !canceling.value &&
     !props.runDisabled,
 );
 
@@ -384,7 +384,7 @@ async function run() {
   }
 
   running.value = true;
-  cancelling.value = false;
+  canceling.value = false;
   error.value = null;
   ratio.value = null;
   timeMs.value = null;
@@ -429,7 +429,7 @@ async function run() {
     }));
     emit("complete", produced);
   } catch (e) {
-    if (cancelling.value) {
+    if (canceling.value) {
       error.value = null;
     } else {
       engineState.value = isEngineReady() ? "ready" : "idle";
@@ -450,11 +450,11 @@ async function run() {
  */
 async function cancel() {
   if (!running.value) return;
-  cancelling.value = true;
+  canceling.value = true;
   terminateEngine();
   engineState.value = "idle";
   await loadEngine();
-  cancelling.value = false;
+  canceling.value = false;
 }
 
 function download(out: OutputFile) {
@@ -621,8 +621,8 @@ onUnmounted(() => {
         <Button :disabled="!canRun" @click="run">
           {{ running ? "Working…" : runLabel }}
         </Button>
-        <Button v-if="running" variant="outline" :disabled="cancelling" @click="cancel">
-          {{ cancelling ? "Stopping…" : "Cancel" }}
+        <Button v-if="running" variant="outline" :disabled="canceling" @click="cancel">
+          {{ canceling ? "Stopping…" : "Cancel" }}
         </Button>
         <span
           v-if="running && (ratio !== null || timeMs !== null)"

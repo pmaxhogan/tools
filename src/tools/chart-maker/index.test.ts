@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { formatNumber, niceTicks, parseChartData, renderChart, run } from "./index";
+import {
+  formatNumber,
+  niceTicks,
+  parseChartData,
+  renderChart,
+  renderPie,
+  resolveOpts,
+  run,
+  slicePath,
+} from "./index";
 import { ToolError } from "../types";
 
 const CSV = ["Month,Revenue,Cost,Profit", "Jan,120,80,40", "Feb,150,90,60", "Mar,90,70,20"].join(
@@ -124,7 +133,7 @@ describe("chart-maker rendering", () => {
     expect(fills.every((tag) => tag.includes('fill="currentColor"'))).toBe(true);
   });
 
-  it("honours the width, height, legend and gridline options", () => {
+  it("honors the width, height, legend and gridline options", () => {
     const svg = renderChart(parseChartData(CSV), {
       ...DEFAULTS,
       width: 1200,
@@ -139,12 +148,12 @@ describe("chart-maker rendering", () => {
 
   it("adds a label per value when asked", () => {
     const plain = renderChart(parseChartData("Month,Rev\nJan,120\nFeb,150"), DEFAULTS);
-    const labelled = renderChart(parseChartData("Month,Rev\nJan,120\nFeb,150"), {
+    const labeled = renderChart(parseChartData("Month,Rev\nJan,120\nFeb,150"), {
       ...DEFAULTS,
       valueLabels: true,
     });
     expect(plain).not.toContain(">120<");
-    expect(labelled).toContain(">120<");
+    expect(labeled).toContain(">120<");
   });
 
   it("draws a line as a path and breaks it at gaps", () => {
@@ -389,5 +398,40 @@ describe("chart-maker errors", () => {
       expect((err as ToolError).code).toBe("bad-option");
       expect((err as ToolError).fix).toContain("warm");
     }
+  });
+});
+
+describe("chart-maker pie internals reused by other tools", () => {
+  const DATA = {
+    title: "Pool capacity",
+    labels: ["Usable", "Parity", "Spare"],
+    series: [{ name: "Bytes", values: [16, 8, 4] }],
+  };
+
+  it("exports slicePath, resolveOpts and renderPie so another tool can draw the same pie", () => {
+    const o = resolveOpts({ type: "pie", width: 420, height: 320, legend: true });
+    const svg = renderPie(DATA, DATA.series, o);
+    expect(svg).toContain("<svg");
+    expect(svg.match(/<path /g)).toHaveLength(3);
+    expect(svg).toContain('data-label="Usable"');
+    expect(svg).toContain('data-label="Parity"');
+    expect(svg).toContain('data-label="Spare"');
+    expect(svg).toContain("data-chart-ink");
+  });
+
+  it("draws a wedge for a pie and a ring segment for a donut", () => {
+    const wedge = slicePath(100, 100, 80, 0, 0, Math.PI / 2);
+    const ring = slicePath(100, 100, 80, 40, 0, Math.PI / 2);
+    expect(wedge.startsWith("M100,100")).toBe(true);
+    expect(wedge).toContain("A80,80");
+    expect(ring.startsWith("M180,100")).toBe(true);
+    expect(ring).toContain("A40,40");
+  });
+
+  it("matches what renderChart produces for the same pie", () => {
+    const o = resolveOpts({ type: "pie", width: 420, height: 320 });
+    expect(renderPie(DATA, DATA.series, o)).toBe(
+      renderChart(DATA, { type: "pie", width: 420, height: 320 }),
+    );
   });
 });

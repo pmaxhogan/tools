@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseShorthand, run, type RaidzOpts } from "./index";
+import { ToolError } from "../types";
 
 const base: RaidzOpts = {
   disks: 6,
@@ -100,5 +101,149 @@ describe("raidz-calculator", () => {
     const two = run("", { ...base, vdevs: 2 });
     const parseTB = (s: string) => Number(s.match(/\(([\d.]+) TB\)/)![1]);
     expect(parseTB(two["Usable capacity"]!)).toBeCloseTo(parseTB(one["Usable capacity"]!) * 2, 5);
+  });
+});
+
+const parseTB = (s: string) => Number(s.match(/\(([\d.]+) TB\)/)![1]);
+
+describe("raidz-calculator v2 rows", () => {
+  it("shows the ZFS overhead as its own row once the toggle is on", () => {
+    const off = run("", base);
+    const on = run("", { ...base, zfsOverhead: true });
+    expect(off["ZFS overhead"]).toBeUndefined();
+    expect(parseTB(on["ZFS overhead"]!)).toBeCloseTo(16 * 0.024, 1);
+    expect(on["ZFS overhead"]).toContain("1.6%");
+  });
+
+  it("keeps the parity row as parity alone rather than every derate combined", () => {
+    const on = run("", { ...base, zfsOverhead: true });
+    expect(parseTB(on["Parity overhead"]!)).toBeCloseTo(8, 6);
+    expect(on["Parity overhead"]).toContain("33.3%");
+  });
+
+  it("adds a usable-after-OS-reserve row only when a reserve is asked for", () => {
+    expect(run("", base)["Usable after OS reserve"]).toBeUndefined();
+    const out = run("", { ...base, osReservePercent: 10 });
+    expect(parseTB(out["Usable capacity"]!)).toBeCloseTo(16, 6);
+    expect(parseTB(out["Usable after OS reserve"]!)).toBeCloseTo(14.4, 6);
+    expect(out["Usable after OS reserve"]).toContain("10% held back");
+    expect(out["Notes"]).toMatch(/OS and filesystem reserve/);
+  });
+
+  it("counts hot spares in raw capacity, in a spare row, and in efficiency", () => {
+    const out = run("", { ...base, hotSpares: 2 });
+    expect(parseTB(out["Raw capacity"]!)).toBeCloseTo(32, 6);
+    expect(parseTB(out["Spare capacity"]!)).toBeCloseTo(8, 6);
+    expect(out["Spare capacity"]).toContain("2 hot spares");
+    expect(out["Storage efficiency"]).toBe("50.0%");
+    expect(out["Fault tolerance"]).toBe("2 disks per vdev");
+    expect(out["Notes"]).toMatch(/never raises the number of drives a vdev can lose/);
+  });
+
+  it("makes every capacity slice add up to the raw capacity", () => {
+    const out = run("", {
+      ...base,
+      level: "draid2",
+      disks: 11,
+      hotSpares: 1,
+      zfsOverhead: true,
+      osReservePercent: 5,
+    });
+    // "Usable capacity" is the post-ZFS figure, so the OS reserve is the gap
+    // between it and the after-reserve row. Those five slices are the pie.
+    const usable = parseTB(out["Usable after OS reserve"]!);
+    const osReserve = parseTB(out["Usable capacity"]!) - usable;
+    const slices =
+      usable +
+      osReserve +
+      parseTB(out["Parity overhead"]!) +
+      parseTB(out["ZFS overhead"]!) +
+      parseTB(out["Spare capacity"]!);
+    expect(osReserve).toBeGreaterThan(0);
+    expect(slices).toBeCloseTo(parseTB(out["Raw capacity"]!), 1);
+    expect(parseTB(out["Raw capacity"]!)).toBeCloseTo(44, 6);
+  });
+
+  it("reads spares as dRAID distributed spares and excludes them from usable space", () => {
+    const out = run("", { ...base, level: "draid2", disks: 11, hotSpares: 1 });
+    expect(out["Layout"]).toBe("1x (11-disk draid2 with 1 distributed spare)");
+    expect(parseTB(out["Usable capacity"]!)).toBeCloseTo(32, 6);
+    expect(parseTB(out["Spare capacity"]!)).toBeCloseTo(4, 6);
+    expect(parseTB(out["Raw capacity"]!)).toBeCloseTo(44, 6);
+    expect(out["Fault tolerance"]).toBe("2 disks per vdev");
+    expect(out["Notes"]).toMatch(/distributed spare/);
+  });
+
+  it("rejects a dRAID vdev too narrow once its spares are counted", () => {
+    expect(() => run("", { ...base, level: "draid2", disks: 4, hotSpares: 2 })).toThrowError(
+      /draid2 needs at least 5 disks/,
+    );
+  });
+
+  it("names dRAID in the unknown-level fix text", () => {
+    try {
+      run("", { ...base, level: "raidz9" });
+      throw new Error("should have thrown");
+    } catch (err) {
+      expect((err as ToolError).code).toBe("bad-level");
+      expect((err as ToolError).fix).toContain("draid1");
+    }
+  });
+
+  it("reports MTTDL and annual data loss risk from the default reliability inputs", () => {
+    const out = run("", base);
+    expect(out["MTTDL (pool)"]).toMatch(/years/);
+    expect(out["MTTDL (pool)"]).toContain("24 h resilver");
+    expect(out["MTTDL (pool)"]).toContain("1,200,000 h");
+    expect(out["Annual data loss risk"]).toMatch(/%$/);
+  });
+
+  it("makes a wider stripe far riskier than a raidz2 of the same width", () => {
+    const stripe = run("", { ...base, level: "stripe" });
+    const raidz2 = run("", base);
+    const risk = (s: string) => Number(s.replace("%", ""));
+    expect(risk(stripe["Annual data loss risk"]!)).toBeGreaterThan(
+      risk(raidz2["Annual data loss risk"]!),
+    );
+  });
+
+  it("prefers an AFR over the MTBF and shows the drive figures it used", () => {
+    const out = run("", { ...base, afrPercent: 2 });
+    expect(out["MTTDL (pool)"]).toContain("2.00% AFR");
+    expect(out["MTTDL (pool)"]).not.toContain("1,200,000 h");
+  });
+
+  it("improves the reliability numbers when a hot spare removes the wait for a human", () => {
+    const bare = run("", base);
+    const spared = run("", { ...base, hotSpares: 1 });
+    const risk = (s: string) => Number(s.replace("%", ""));
+    expect(risk(spared["Annual data loss risk"]!)).toBeLessThan(
+      risk(bare["Annual data loss risk"]!),
+    );
+    expect(bare["MTTDL (pool)"]).toContain("million years");
+    expect(spared["MTTDL (pool)"]).toContain("billion years");
+  });
+
+  it("drops the reliability rows when the resilver time is zero", () => {
+    const out = run("", { ...base, resilverHours: 0 });
+    expect(out["MTTDL (pool)"]).toBeUndefined();
+    expect(out["Annual data loss risk"]).toBeUndefined();
+    expect(out["Notes"]).toMatch(/UREs/);
+  });
+
+  it("always says unrecoverable read errors are ignored", () => {
+    expect(run("", base)["Notes"]).toMatch(/Unrecoverable read errors \(UREs\) are ignored/);
+  });
+
+  it("still accepts option values that arrive as strings from the query API", () => {
+    const out = run("", {
+      ...base,
+      hotSpares: "2" as unknown as number,
+      osReservePercent: "10" as unknown as number,
+      resilverHours: "48" as unknown as number,
+    });
+    expect(parseTB(out["Spare capacity"]!)).toBeCloseTo(8, 6);
+    expect(out["Usable after OS reserve"]).toContain("10% held back");
+    expect(out["MTTDL (pool)"]).toContain("48 h resilver");
   });
 });

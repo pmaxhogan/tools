@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   matrixSlug: "sql-format",
   name: "SQL Formatter",
   description:
-    "Prettify and normalise SQL across dialects with configurable keyword case and indentation.",
+    "Prettify and normalize SQL across dialects with configurable keyword case and indentation.",
   category: "Data",
   keywords: [
     "sql formatter",
@@ -29,6 +29,9 @@ export const meta: ToolMeta = {
     "oracle sql formatter",
     "mariadb sql formatter",
     "sql formatting rules",
+    "format sql query",
+    "sql indenter",
+    "tsql formatter",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -150,9 +153,17 @@ export const meta: ToolMeta = {
       max: 5,
     },
   ],
+  examples: [
+    {
+      label: "Join with a filter",
+      input:
+        "select o.id, c.name, o.total from orders o join customers c on o.customer_id = c.id where o.status = 'shipped' and o.total > 100 order by o.total desc;",
+      opts: { dialect: "sql", keywordCase: "upper", tabWidth: "2", linesBetweenQueries: "1" },
+    },
+  ],
   http: { method: "POST", contentType: "text/plain" },
   copy: {
-    what: "Formats and normalises SQL for nine dialects, including Standard SQL, PostgreSQL, MySQL, SQLite, SQL Server, BigQuery, Snowflake, MariaDB, and Oracle PL/SQL. Reindents clauses, breaks long statements onto readable lines, and lets you set keyword case and indent width. Handles multiple semicolon-separated statements in one paste.",
+    what: "Formats and normalizes SQL for nine dialects, including Standard SQL, PostgreSQL, MySQL, SQLite, SQL Server, BigQuery, Snowflake, MariaDB, and Oracle PL/SQL. Reindents clauses, breaks long statements onto readable lines, and lets you set keyword case and indent width. Handles multiple semicolon-separated statements in one paste.",
     how: "Paste a query or a batch of statements into the input, pick the dialect that matches your database, and adjust keyword case, indent width, or spacing between queries. The formatted SQL appears instantly with a copy button, and the URL updates so you can share exactly what you see.",
     why: "Most online SQL formatters cap how much you can paste, run ads next to the output, or push a signup wall after a few uses, and all of them send your query to a server first. This one runs the formatter locally in your browser: your files and inputs never leave your device, there is no length cap, and no ads.",
     faq: [

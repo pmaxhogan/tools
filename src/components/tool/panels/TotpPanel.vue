@@ -5,6 +5,7 @@ import { run } from "@/tools/totp-generator/index";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import CopyButton from "../CopyButton.vue";
+import KeyValueGrid from "../KeyValueGrid.vue";
 import OptionControl from "../OptionControl.vue";
 
 /**
@@ -260,11 +261,6 @@ const metaRows = computed(() => {
     </div>
 
     <!-- metadata -->
-    <dl v-if="metaRows.length" class="flex flex-wrap gap-x-6 gap-y-2">
-      <div v-for="row in metaRows" :key="row.key" class="flex min-w-0 flex-col gap-0.5">
-        <dt class="text-xs text-muted-foreground">{{ row.key }}</dt>
-        <dd class="font-mono text-sm break-words">{{ row.value }}</dd>
-      </div>
-    </dl>
+    <KeyValueGrid :rows="metaRows" surface="card" :copy="false" />
   </div>
 </template>

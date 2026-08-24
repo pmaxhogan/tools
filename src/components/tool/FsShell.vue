@@ -319,7 +319,7 @@ function acceptWrites() {
 
 /**
  * The path a tool should use: confirm, execute, rescan. Returns null when the
- * visitor cancelled or when something stopped the batch before it started.
+ * visitor canceled or when something stopped the batch before it started.
  */
 async function applyWrites(
   ops: WriteOp[],

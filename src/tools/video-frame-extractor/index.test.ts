@@ -92,7 +92,7 @@ describe("frameName", () => {
     expect(frameName("clip.webm", 3723.004)).toBe("clip-01h02m03s004.png");
   });
 
-  it("adds a zero padded burst index and honours the extension", () => {
+  it("adds a zero padded burst index and honors the extension", () => {
     expect(frameName("clip.mov", 1, 1)).toBe("clip-00m01s000-01.png");
     expect(frameName("clip.mov", 1, 12, "jpg")).toBe("clip-00m01s000-12.jpg");
     expect(frameName("clip.mov", 1, undefined, ".WebP")).toBe("clip-00m01s000.webp");

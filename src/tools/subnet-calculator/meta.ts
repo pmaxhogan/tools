@@ -24,6 +24,9 @@ export const meta: ToolMeta = {
     "how many hosts in a subnet",
     "ip range to cidr",
     "rfc 1918 checker",
+    "ip address range calculator",
+    "usable hosts calculator",
+    "cidr notation calculator",
   ],
   input: "text/plain",
   output: "application/json",
@@ -35,6 +38,13 @@ export const meta: ToolMeta = {
       default: 0,
       min: 0,
       max: 64,
+    },
+  ],
+  examples: [
+    {
+      label: "Office /22 block",
+      input: "10.20.4.0/22",
+      opts: { split: "0" },
     },
   ],
   http: { method: "GET", contentType: "application/json" },

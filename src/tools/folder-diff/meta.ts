@@ -25,6 +25,8 @@ export const meta: ToolMeta = {
     "folder comparison tool",
     "diff folders no upload",
     "compare files by hash",
+    "robocopy alternative",
+    "rsync dry run",
   ],
   input: "none",
   output: "application/json",

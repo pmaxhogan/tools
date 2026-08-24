@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "rollover",
   icon: "KeyboardMusic",
   name: "Key Rollover Tester",
-  description: "Check N-key rollover and ghosting visually by holding down keys and watching a live diagram.",
+  description:
+    "Check N-key rollover and ghosting visually by holding down keys and watching a live diagram.",
   category: "Testers",
   keywords: [
     "key rollover test",
@@ -22,6 +23,8 @@ export const meta: ToolMeta = {
     "gaming keyboard test",
     "simultaneous keypress test",
     "keyboard matrix test",
+    "nkro test",
+    "6kro test",
   ],
   input: "application/json",
   output: "application/json",

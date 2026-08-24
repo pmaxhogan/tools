@@ -11,7 +11,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "test": "vitest run",
-    "lint": "eslint .",
+    "lint": "eslint . && node scripts/check-spelling.mjs",
     "format": "prettier -w .",
     "typecheck": "astro check && vue-tsc --noEmit"
   },

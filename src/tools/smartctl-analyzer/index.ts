@@ -462,7 +462,7 @@ function nvmeFindings(report: SmartReport): Finding[] {
       line: `Critical Warning: ${report.nvme.critical_warning}. ${
         bits.length
           ? bits.map((b) => `${b.label}. ${b.meaning}`).join(" ")
-          : "The controller set a bit this decoder does not recognise, which still means it believes something is wrong."
+          : "The controller set a bit this decoder does not recognize, which still means it believes something is wrong."
       }`,
     });
   }

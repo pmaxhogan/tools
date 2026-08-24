@@ -20,7 +20,7 @@ export type TimezonePlannerResult = Record<string, string>;
 interface Zone {
   /** Dedupe key: the IANA name, or "fixed:<minutes>" for a raw offset. */
   key: string;
-  /** How the place is labelled in the output. */
+  /** How the place is labeled in the output. */
   label: string;
   iana?: string;
   /** Minutes east of UTC, for raw offset inputs only. */

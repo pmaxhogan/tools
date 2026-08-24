@@ -71,7 +71,7 @@ describe("wasm-inspector", () => {
     // id 10 (code), body size 5, count 1, body bytes that include 0xfd and 0x12.
     // Those bytes collide with ordinary LEB immediates, so a byte scan would
     // wrongly report SIMD and tail calls. Definitive-only detection reports
-    // neither, and nothing is ever labelled "heuristic".
+    // neither, and nothing is ever labeled "heuristic".
     const out = run(mod([0x0a, 0x05, 0x01, 0x02, 0xfd, 0x0c, 0x12]), OPTS);
     expect(out["Features detected"]).not.toContain("heuristic");
     expect(out["Features detected"]).not.toContain("SIMD");

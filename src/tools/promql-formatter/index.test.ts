@@ -182,7 +182,7 @@ describe("promql-formatter: language detection", () => {
     expect(rows(`up{job=~"api|web"}`)["Language"]).toBe("PromQL (detected)");
   });
 
-  it("honours an explicit language, including synonyms", () => {
+  it("honors an explicit language, including synonyms", () => {
     expect(rows(`up{job="api"}`, "loki")["Language"]).toBe("LogQL");
     // Forced to PromQL, != is a comparison rather than a line filter.
     expect(fmt(`{app="x"}!="timeout"`, "prometheus")).toBe(`{app="x"} != "timeout"`);

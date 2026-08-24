@@ -27,7 +27,7 @@ describe("formatBytes", () => {
     expect(formatBytes(5 * 1024 * 1024, { maxUnit: "KB" })).toBe("5120 KB");
   });
 
-  it("honours a wider precision on both sides of 10", () => {
+  it("honors a wider precision on both sides of 10", () => {
     expect(formatBytes(1234, { precision: 2 })).toBe("1.21 KB");
     expect(formatBytes(20 * 1024, { largePrecision: 1 })).toBe("20.0 KB");
   });

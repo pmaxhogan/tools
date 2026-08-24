@@ -202,10 +202,10 @@ export interface OnsetEnvelopeOptions {
    * Width in frames of the Gaussian that broadens each onset peak. Default 1.5.
    *
    * Broadening matters more than it looks: a beat period is almost never a
-   * whole number of frames, so the onsets land on alternating neighbouring
+   * whole number of frames, so the onsets land on alternating neighboring
    * frames. A peak one frame wide would make the autocorrelation choose one of
    * those whole numbers; a peak a few frames wide merges them into a single
-   * smooth bump whose centre is the real period.
+   * smooth bump whose center is the real period.
    */
   smoothing?: number;
 }
@@ -410,7 +410,7 @@ function tempoPreference(bpm: number): number {
  * lag, using a normalized correlation so a long lag is not punished for having
  * fewer overlapping frames. Every local maximum inside the tempo range becomes
  * a candidate, refined to a fractional lag by fitting a parabola through the
- * peak and its two neighbours. Each candidate is scored by its own correlation
+ * peak and its two neighbors. Each candidate is scored by its own correlation
  * plus a smaller share of the correlation at twice and three times its period,
  * since a real beat period repeats at its multiples, and the whole score is
  * weighted by the preference for tempos near 120 bpm.
@@ -449,7 +449,7 @@ export function detectBpm(
     throw new ToolError(
       "audio-too-short",
       `Measuring a tempo down to ${minBpm} bpm needs about ${needed} seconds of audio, but only ${round(samples.length / sampleRate, 2)} seconds were given.`,
-      "Analyse a longer stretch of the track, or raise the minimum tempo.",
+      "Analyze a longer stretch of the track, or raise the minimum tempo.",
     );
   }
 
@@ -502,7 +502,7 @@ export function detectBpm(
     if (!(here >= before && here >= after)) continue;
     if (here <= 0) continue;
 
-    // Fit a parabola through the peak and its neighbours. With the middle point
+    // Fit a parabola through the peak and its neighbors. With the middle point
     // the largest of the three the vertex always lands within half a frame.
     let refined = lag;
     if (Number.isFinite(before) && Number.isFinite(after)) {
@@ -665,7 +665,7 @@ export interface ChromagramOptions {
  * Each frame is windowed and transformed, then every bin between C2 and C7 is
  * placed on a log frequency axis where one step is one semitone. A bin lands in
  * the pitch class it is nearest to, weighted by a raised cosine over how far it
- * sits from that semitone centre, so a bin exactly on the note counts fully and
+ * sits from that semitone center, so a bin exactly on the note counts fully and
  * a bin halfway between two notes counts for neither. Each frame is length
  * normalized before it is added in, so a loud chorus does not outvote a quiet
  * verse, and frames below the silence floor are skipped entirely.
@@ -754,7 +754,7 @@ export function chromagram(
     throw new ToolError(
       "silent-audio",
       "The audio is silent, so there is no pitch content to read a key from.",
-      "Analyse a section of the track that actually plays, or check that the file decoded correctly.",
+      "Analyze a section of the track that actually plays, or check that the file decoded correctly.",
     );
   }
 
@@ -982,7 +982,7 @@ export function parseKey(text: string): KeyName {
   if (!match) {
     throw new ToolError(
       "bad-key",
-      `"${raw}" is not a key this tool recognises.`,
+      `"${raw}" is not a key this tool recognizes.`,
       'Type a key such as "A minor" or "F# major", or a Camelot code such as 8A.',
     );
   }
@@ -1111,7 +1111,7 @@ export function detectKey(chroma: Samples): KeyResult {
     throw new ToolError(
       "flat-chroma",
       "Every pitch class is equally strong, so no key stands out.",
-      "This usually means the audio was silence or noise. Analyse a section with music in it.",
+      "This usually means the audio was silence or noise. Analyze a section with music in it.",
     );
   }
 
@@ -1256,12 +1256,12 @@ function panelRows(notation: Notation): BpmKeyResult {
     "Type a tempo":
       "Enter a number such as 128 to see its tempo marking, its beat and bar lengths, and its half time and double time partners.",
     "Type a key":
-      "Enter a key such as A minor, or a code such as 8A, to see its wheel position, relative key, and mixing neighbours.",
+      "Enter a key such as A minor, or a code such as 8A, to see its wheel position, relative key, and mixing neighbors.",
   };
   if (notation !== "open-key") rows["Camelot"] = "C major is 8B and A minor is 8A.";
   if (notation !== "camelot") rows["Open Key"] = "C major is 1d and A minor is 1m.";
   rows["Privacy"] =
-    "The file is decoded and analysed in this tab. Your files and inputs never leave your device.";
+    "The file is decoded and analyzed in this tab. Your files and inputs never leave your device.";
   return rows;
 }
 
@@ -1314,7 +1314,7 @@ function keyRows(name: KeyName, notation: Notation): BpmKeyResult {
   const openKey = openKeyFor(name.tonic, name.mode);
   const relative = relativeKey(name.tonic, name.mode);
   const parallel = parallelKey(name.tonic, name.mode);
-  const neighbours = camelotNeighbours(camelot);
+  const neighbors = camelotNeighbours(camelot);
 
   const rows: BpmKeyResult = { Key: name.key };
   if (notation !== "open-key") rows["Camelot"] = camelot;
@@ -1322,7 +1322,7 @@ function keyRows(name: KeyName, notation: Notation): BpmKeyResult {
   rows["Relative key"] = describeKeyRef(relative, notation);
   rows["Parallel key"] = describeKeyRef(parallel, notation);
   rows["Scale notes"] = scaleNotes(name.tonic, name.mode).join(" ");
-  rows["Mixes with"] = neighbours
+  rows["Mixes with"] = neighbors
     .map((code) => describeKeyRef(CODE_TO_KEY.get(code.toLowerCase())!, notation))
     .join(", ");
 
@@ -1356,7 +1356,7 @@ function droppedFileRows(byteLength: number, notation: Notation): BpmKeyResult {
   if (notation !== "camelot")
     rows["Open Key"] = "Reported in Open Key notation, where C major is 1d.";
   rows["Privacy"] =
-    "The file is decoded and analysed in this tab. Your files and inputs never leave your device.";
+    "The file is decoded and analyzed in this tab. Your files and inputs never leave your device.";
   return rows;
 }
 

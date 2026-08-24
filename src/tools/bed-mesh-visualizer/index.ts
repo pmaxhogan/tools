@@ -38,9 +38,9 @@ export interface Mesh {
 
 /** Least squares plane in normalized mesh coordinates: z = a*u + b*v + c. */
 export interface PlaneFit {
-  /** Millimetres of rise across the whole X span. */
+  /** Millimeters of rise across the whole X span. */
   a: number;
-  /** Millimetres of rise across the whole Y span. */
+  /** Millimeters of rise across the whole Y span. */
   b: number;
   /** Height of the fitted plane at the front left corner. */
   c: number;
@@ -77,9 +77,9 @@ export interface MeshStats {
   /** Bilinear sample at the middle of the mesh, so even grids need no case. */
   center: number;
   plane: PlaneFit;
-  /** Millimetres of tilt across the full X span. */
+  /** Millimeters of tilt across the full X span. */
   tiltX: number;
-  /** Millimetres of tilt across the full Y span. */
+  /** Millimeters of tilt across the full Y span. */
   tiltY: number;
   residualMin: number;
   residualMax: number;
@@ -98,7 +98,7 @@ export interface MeshStats {
 export interface BedMeshOpts {
   /** Add the rendered SVG rows to the output. Default false. */
   svg?: boolean;
-  /** Where the neutral colour sits: "zero" (default) or "mean". */
+  /** Where the neutral color sits: "zero" (default) or "mean". */
   centerOn?: string;
   /** Height exaggeration for the isometric render, 1 to 50. Default 10. */
   zScale?: number;
@@ -478,7 +478,7 @@ export function interpolateMesh(mesh: Mesh, factor: number): Mesh {
  *
  * On a complete rectangular grid the u and v cross covariance is exactly zero,
  * so the two slopes decouple and no matrix solve is needed. `a` and `b` come
- * out directly as millimetres of rise across the whole X and Y spans.
+ * out directly as millimeters of rise across the whole X and Y spans.
  */
 export function fitPlane(mesh: Mesh): PlaneFit {
   const { xCount, yCount, rows } = mesh;
@@ -682,7 +682,7 @@ export type PaletteCenter = "zero" | "mean";
 export interface HeatmapOptions {
   width?: number;
   height?: number;
-  /** Where the neutral colour of the ramp sits. Default "zero". */
+  /** Where the neutral color of the ramp sits. Default "zero". */
   palette?: PaletteCenter;
 }
 
@@ -691,7 +691,7 @@ export interface IsometricOptions {
   height?: number;
   /** Height exaggeration, 1 to 50. Default 10. */
   zScale?: number;
-  /** Where the neutral colour of the ramp sits. Default "zero". */
+  /** Where the neutral color of the ramp sits. Default "zero". */
   palette?: PaletteCenter;
 }
 
@@ -716,7 +716,7 @@ export function divergingColor(t: number): string {
 interface Ramp {
   center: number;
   spread: number;
-  /** Maps a height to -1..1 for the colour ramp. */
+  /** Maps a height to -1..1 for the color ramp. */
   t(z: number): number;
 }
 
@@ -740,7 +740,7 @@ function svgOpen(width: number, height: number, title: string): string {
 }
 
 /**
- * Flat grid of cells coloured by height. Deterministic: same mesh and options
+ * Flat grid of cells colored by height. Deterministic: same mesh and options
  * always produce byte-identical markup.
  */
 export function renderHeatmapSvg(mesh: Mesh, options: HeatmapOptions = {}): string {

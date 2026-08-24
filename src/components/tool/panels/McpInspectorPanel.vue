@@ -23,6 +23,8 @@ import type {
   JsonRpcRequest,
 } from "@/tools/mcp-inspector/index";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import { recordToRows, type KeyValueRow } from "@/lib/key-value";
+import KeyValueGrid from "../KeyValueGrid.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -657,6 +659,17 @@ const busy = computed(() => connecting.value || calling.value || pinging.value);
 
 const sessionLabel = computed(() => (sessionId.value ? sessionId.value : "none issued"));
 
+/**
+ * What the handshake told us, plus the session id. The id is tracked separately
+ * from the initialize summary because it arrives as a response header rather
+ * than in the body, so it is appended here instead of in the logic layer.
+ */
+const serverGridRows = computed<KeyValueRow[]>(() =>
+  serverRows.value
+    ? [...recordToRows(serverRows.value), { key: "Session id", value: sessionLabel.value }]
+    : [],
+);
+
 /** Direct mode can only read the session header when the server exposes it. */
 const sessionHeaderHidden = computed(
   () => connected.value && mode.value === "direct" && !sessionId.value,
@@ -766,20 +779,7 @@ onMounted(() => {
     <!-- server info -->
     <section v-if="serverRows" class="flex flex-col gap-2">
       <h3 class="text-[17px] font-semibold">Server</h3>
-      <dl class="flex flex-col gap-2 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
-        <div v-for="(value, key) in serverRows" :key="key" class="flex flex-col gap-0.5">
-          <dt class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            {{ key }}
-          </dt>
-          <dd class="font-mono text-sm break-words whitespace-pre-wrap">{{ value }}</dd>
-        </div>
-        <div class="flex flex-col gap-0.5">
-          <dt class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            Session id
-          </dt>
-          <dd class="font-mono text-sm break-all">{{ sessionLabel }}</dd>
-        </div>
-      </dl>
+      <KeyValueGrid :rows="serverGridRows" class="shadow-[var(--sh-inset)]" />
       <p v-if="sessionHeaderHidden" class="text-xs text-muted-foreground">
         No Mcp-Session-Id header was readable. A server that issues one must also list it in
         Access-Control-Expose-Headers, otherwise the browser hides it and later requests may be
@@ -924,16 +924,7 @@ onMounted(() => {
                 <TriangleAlert class="size-3.5" aria-hidden="true" />
                 The tool reported an error result.
               </span>
-              <dl class="flex flex-col gap-2">
-                <div v-for="(value, key) in callRows" :key="key" class="flex flex-col gap-0.5">
-                  <dt
-                    class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
-                  >
-                    {{ key }}
-                  </dt>
-                  <dd class="font-mono text-xs break-words whitespace-pre-wrap">{{ value }}</dd>
-                </div>
-              </dl>
+              <KeyValueGrid :record="callRows" :columns="2" dense />
             </div>
           </form>
         </li>

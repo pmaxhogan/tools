@@ -26,6 +26,8 @@ export const meta: ToolMeta = {
     "usage page lookup",
     "hid report descriptor viewer",
     "hid bytes decoder",
+    "hid device inspector",
+    "controller hid debug",
   ],
   input: "none",
   output: "application/json",

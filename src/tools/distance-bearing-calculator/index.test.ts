@@ -109,7 +109,7 @@ describe("distance-bearing-calculator: destination mode", () => {
 
   it("accepts a distance written in another unit", () => {
     const out = run("from 0,0 bearing 90 distance 54nmi", { units: "km", now: NOW });
-    expect(num(out["Distance travelled"])).toBeCloseTo(100.008, 2);
+    expect(num(out["Distance traveled"])).toBeCloseTo(100.008, 2);
     expect(out["Distance as written"]).toContain("nmi");
   });
 });
@@ -138,7 +138,7 @@ describe("distance-bearing-calculator: routes", () => {
   });
 
   it("resolves unit synonyms", () => {
-    expect(resolveUnit("kilometres")).toBe("km");
+    expect(resolveUnit("kilometers")).toBe("km");
     expect(resolveUnit("Nautical Miles")).toBe("nmi");
     expect(resolveUnit("furlongs")).toBe(null);
   });

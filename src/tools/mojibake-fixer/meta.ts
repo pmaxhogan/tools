@@ -27,6 +27,9 @@ export const meta: ToolMeta = {
     "encoding mismatch fix",
     "repair unicode text",
     "question marks instead of characters",
+    "gibberish characters fix",
+    "black diamond question mark",
+    "replacement character fix",
   ],
   input: "text/plain",
   output: "application/json",
@@ -63,6 +66,13 @@ export const meta: ToolMeta = {
           synonyms: ["iso-8859-1", "iso 8859-1", "double encoded"],
         },
       ],
+    },
+  ],
+  examples: [
+    {
+      label: "Garbled café review",
+      input: "The cafÃ©â€™s seasonal blend didnâ€™t sell as well as the espresso this quarter.",
+      opts: { chain: "auto" },
     },
   ],
   http: { method: "GET", contentType: "application/json" },

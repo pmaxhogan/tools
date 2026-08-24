@@ -18,7 +18,7 @@ describe("html-to-markdown", () => {
     expect(md.endsWith("\n\n")).toBe(false);
   });
 
-  it("honours the bullet marker option", () => {
+  it("honors the bullet marker option", () => {
     const md = run("<ul><li>one</li></ul>", { bullet: "*" });
     expect(md).toMatch(/^\*\s+one/m);
   });

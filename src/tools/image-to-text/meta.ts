@@ -25,6 +25,8 @@ export const meta: ToolMeta = {
     "receipt scanner text",
     "copy text from image",
     "tesseract wasm",
+    "image to text converter",
+    "picture to text",
   ],
   input: "image/*",
   output: "text/plain",

@@ -355,7 +355,7 @@ function onDragEnd(): void {
   }
 }
 
-/** A cancelled or interrupted drag must not leave a stale highlight behind. */
+/** A canceled or interrupted drag must not leave a stale highlight behind. */
 function cancelDrag(): void {
   dragFrom.value = null;
   dragTo.value = null;

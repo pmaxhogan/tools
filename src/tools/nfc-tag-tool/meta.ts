@@ -28,11 +28,19 @@ export const meta: ToolMeta = {
     "ntag216",
     "mifare ultralight",
     "make nfc tag read only",
+    "web nfc api demo",
+    "nfc chip programmer",
+    "ndef message builder",
+    "nfc sticker",
+    "topaz 512",
+    "nfc tag decoder",
+    "tagwriter alternative",
   ],
   input: "text/plain",
   output: "application/json",
   requires: ["nfc"],
-  privacyNote: "Tag contents are read and written by your phone directly; nothing is sent to this site.",
+  privacyNote:
+    "Tag contents are read and written by your phone directly; nothing is sent to this site.",
   options: [
     {
       kind: "select",
@@ -45,7 +53,11 @@ export const meta: ToolMeta = {
           synonyms: ["basic", "note"],
           options: [
             { value: "text", label: "Text", synonyms: ["plain text", "note", "message"] },
-            { value: "empty", label: "Empty (lock or erase)", synonyms: ["blank", "erase", "clear"] },
+            {
+              value: "empty",
+              label: "Empty (lock or erase)",
+              synonyms: ["blank", "erase", "clear"],
+            },
           ],
         },
         {

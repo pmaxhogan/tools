@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Coffee cup">
+  <title>Coffee cup</title>
+  <defs>
+    <linearGradient id="steam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9b8cff" stop-opacity="0" />
+      <stop offset="1" stop-color="#9b8cff" stop-opacity="0.9" />
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#steam)" stroke-width="3" stroke-linecap="round">
+    <path d="M24 6c0 4 4 4 4 8s-4 4-4 8" />
+    <path d="M36 4c0 4 4 4 4 8s-4 4-4 8" />
+  </g>
+  <path
+    d="M10 30h34v12a12 12 0 0 1-12 12H22a12 12 0 0 1-12-12V30z"
+    fill="#3f2a1d"
+    stroke="#1c120b"
+    stroke-width="2"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M44 33h5a7 7 0 0 1 0 14h-5"
+    fill="none"
+    stroke="#1c120b"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+  <rect x="8" y="56" width="40" height="4" rx="2" fill="#1c120b" />
+</svg>

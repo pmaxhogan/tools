@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "anchor",
   icon: "Anchor",
   name: "CSS Anchor Positioning Builder",
-  description: "Build CSS anchor-positioned tooltips, menus, and popovers with flip fallbacks and a plain-CSS fallback.",
+  description:
+    "Build CSS anchor-positioned tooltips, menus, and popovers with flip fallbacks and a plain-CSS fallback.",
   category: "Dev",
   keywords: [
     "css anchor positioning",
@@ -27,6 +28,7 @@ export const meta: ToolMeta = {
     "floating ui alternative css",
     "popovertarget",
     "flip-block flip-inline",
+    "css tooltip generator",
   ],
   input: "text/plain",
   output: "text/plain",

@@ -45,6 +45,31 @@ export function shouldShowSearch(spec: SelectOptionSpec): boolean {
   return flattenSelectOptions(spec).length > SEARCH_THRESHOLD;
 }
 
+/**
+ * The largest leaf-option count that still reads well as a row of buttons.
+ * Above this the generic panel falls back to the searchable dropdown.
+ */
+export const SEGMENTED_MAX = 4;
+
+/**
+ * Whether the generic panel should render this select as a segmented button
+ * group instead of the searchable dropdown.
+ *
+ * The default rule: a short, flat list of two to four options is a segmented
+ * control, because every choice stays visible and reachable in one click.
+ * Anything grouped is a dropdown, since a segmented row cannot show category
+ * headers. A meta overrides either way with `ui`: "select" forces the dropdown
+ * on a small list whose labels are full sentences, and "segmented" forces
+ * buttons on a longer list that still reads well as a row.
+ */
+export function shouldRenderSegmented(spec: SelectOptionSpec): boolean {
+  if (spec.ui === "segmented") return true;
+  if (spec.ui === "select") return false;
+  if (spec.groups?.length) return false;
+  const count = flattenSelectOptions(spec).length;
+  return count >= 2 && count <= SEGMENTED_MAX;
+}
+
 /** Split a raw query into lowercased, non-empty tokens (whitespace separated). */
 function tokenize(query: string): string[] {
   return query

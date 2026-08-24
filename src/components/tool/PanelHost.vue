@@ -147,6 +147,20 @@ const panels: Record<string, Component> = {
   "webcam-mic-test": defineAsyncComponent(() => import("./panels/WebcamMicPanel.vue")),
   "webrtc-tester": defineAsyncComponent(() => import("./panels/WebrtcTesterPanel.vue")),
   "wireguard-config-generator": defineAsyncComponent(() => import("./panels/WireguardPanel.vue")),
+  "raidz-calculator": defineAsyncComponent(() => import("./panels/RaidzPanel.vue")),
+  "resistor-color-code-calculator": defineAsyncComponent(
+    () => import("./panels/ResistorPanel.vue"),
+  ),
+  "distance-bearing-calculator": defineAsyncComponent(
+    () => import("./panels/DistanceBearingPanel.vue"),
+  ),
+  "sunrise-sunset-calculator": defineAsyncComponent(
+    () => import("./panels/SunriseSunsetPanel.vue"),
+  ),
+  "photography-calculator": defineAsyncComponent(() => import("./panels/PhotographyPanel.vue")),
+  "coordinate-converter": defineAsyncComponent(
+    () => import("./panels/CoordinateConverterPanel.vue"),
+  ),
 };
 
 const props = defineProps<{ meta: ToolMeta }>();

@@ -556,7 +556,7 @@ function resetResult() {
 }
 
 async function readFile(file: File) {
-  // A run cannot be cancelled, so swapping the file underneath one would leave
+  // A run cannot be canceled, so swapping the file underneath one would leave
   // the old recording's transcript sitting under the new file's name.
   if (running.value) return;
   resetResult();

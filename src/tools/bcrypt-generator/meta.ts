@@ -135,7 +135,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "Is my password sent anywhere?",
-        a: "No. The hashing runs in WebAssembly inside your browser tab, so your inputs never leave your device, and the page keeps working offline after the first load. This is also the one tool here with no curl endpoint on purpose, because a hosted hashing endpoint would mean real passwords travelling over the network.",
+        a: "No. The hashing runs in WebAssembly inside your browser tab, so your inputs never leave your device, and the page keeps working offline after the first load. This is also the one tool here with no curl endpoint on purpose, because a hosted hashing endpoint would mean real passwords traveling over the network.",
       },
     ],
   },

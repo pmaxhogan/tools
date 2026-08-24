@@ -86,6 +86,14 @@ export interface SelectOptionSpec {
   options?: SelectOption[];
   /** Hierarchical category groups, recursively nestable. */
   groups?: SelectGroup[];
+  /**
+   * Rendering override. The generic panel renders a select with 4 or fewer
+   * leaf options as a segmented button group and anything larger as the
+   * searchable dropdown; set "select" to force the dropdown on a small list
+   * (long labels, a placeholder-like default) or "segmented" to force buttons
+   * on a larger one that still reads well as a row.
+   */
+  ui?: "segmented" | "select";
 }
 
 /** Schema-driven options — the generic tool panel renders these controls. */
@@ -118,6 +126,23 @@ export interface FaqEntry {
 }
 
 /**
+ * A worked example the generic panel can load so a first visit shows the tool
+ * doing something. Text tools pre-fill `input` (flagged with a dismissable
+ * "Example input" chip) when the URL fragment is empty; file tools show a
+ * "Try a sample" button that fetches `file` from /samples/. `opts` presets
+ * options alongside. An example never overrides a shared link's fragment.
+ */
+export interface ToolExample {
+  label: string;
+  /** Text to place in the main input (text/JSON/CSV/HTML tools). */
+  input?: string;
+  /** Path under public/samples/ for File, image, audio and video tools. */
+  file?: string;
+  /** Option values to apply with the example (stringified like the fragment). */
+  opts?: Record<string, string>;
+}
+
+/**
  * Static, cheap metadata for a tool. Lives in `src/tools/<slug>/meta.ts` and
  * is imported eagerly by the registry (homepage grid, palette, sitemap, SEO).
  * Must stay tiny: no logic imports, no heavy strings beyond page copy.
@@ -134,7 +159,7 @@ export interface ToolMeta {
   keywords: string[];
   /**
    * Hidden synonyms and aliases for in-app search only. Never rendered and not
-   * part of SEO; exists so a search for "regex", "colour", "gif to mp4", etc.
+   * part of SEO; exists so a search for "regex", "color", "gif to mp4", etc.
    * finds the right tool even when those words are not in the name or copy.
    */
   searchTerms?: string[];
@@ -147,6 +172,19 @@ export interface ToolMeta {
   input: TypeSpec;
   output: TypeSpec;
   options?: OptionSpec[];
+  /**
+   * Worked examples for the generic panel (see ToolExample). The first one is
+   * the default. Omit on tools whose input is "none" or that have no sensible
+   * sample.
+   */
+  examples?: ToolExample[];
+  /**
+   * The main input is a secondary shorthand (a one-line "6x4TB raidz2", a
+   * pasted slicer summary) and the options alone are a complete UI. The
+   * generic panel collapses the input box under a "Quick entry" toggle with
+   * `label` on the toggle and `hint` explaining what the box accepts.
+   */
+  inputOptional?: { label: string; hint: string };
   /** Exposed as a stateless curl endpoint. Cheap, pure runs only. */
   http?: { method: "GET" | "POST"; contentType: string };
   /** Gates the UI with an honest message instead of breaking (rule 15). */

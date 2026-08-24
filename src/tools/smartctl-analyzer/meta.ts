@@ -28,6 +28,9 @@ export const meta: ToolMeta = {
     "power on hours",
     "nvme smart log",
     "crystaldiskinfo alternative",
+    "smart status pass fail",
+    "backblaze drive stats",
+    "hard drive about to fail",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -49,6 +52,14 @@ export const meta: ToolMeta = {
           synonyms: ["all attributes", "detailed", "raw attributes"],
         },
       ],
+    },
+  ],
+  examples: [
+    {
+      label: "Aging drive, watch verdict",
+      input:
+        "smartctl 7.3 2022-02-28 r5338 [x86_64-linux-6.1.0-18-amd64] (local build)\n\n=== START OF INFORMATION SECTION ===\nModel Family:     Seagate BarraCuda 3.5\nDevice Model:     ST2000DM008-2FR102\nSerial Number:    ZFL3Q9XK\nUser Capacity:    2,000,398,934,016 bytes [2.00 TB]\nRotation Rate:    7200 rpm\nSMART support is: Enabled\n\n=== START OF READ SMART DATA SECTION ===\nSMART overall-health self-assessment test result: PASSED\n\nID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE\n  5 Reallocated_Sector_Ct   0x0033   097   097   010    Pre-fail  Always       -       24\n  9 Power_On_Hours          0x0032   074   074   000    Old_age   Always       -       23980\n196 Reallocated_Event_Count 0x0032   097   097   000    Old_age   Always       -       9\n197 Current_Pending_Sector  0x0032   100   100   000    Old_age   Offline      -       0\n198 Offline_Uncorrectable   0x0030   100   253   000    Old_age   Offline      -       0\n199 UDMA_CRC_Error_Count    0x0032   200   200   000    Old_age   Always       -       0\n\nSMART Error Log Version: 1\nNo Errors Logged\n",
+      opts: { detail: "verdict" },
     },
   ],
   http: { method: "POST", contentType: "text/plain" },

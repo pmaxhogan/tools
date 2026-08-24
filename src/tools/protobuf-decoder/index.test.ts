@@ -292,7 +292,7 @@ describe("protobuf-decoder: JSON rendering", () => {
     expect(renderJson(loop)).toBe('{\n  "name": "loop",\n  "self": "[circular reference]"\n}');
   });
 
-  it("renders an unknown CBOR tag as a labelled object", () => {
+  it("renders an unknown CBOR tag as a labeled object", () => {
     // Tag 888 wrapping the array [1, 2].
     const rows = run(Uint8Array.from([0xd9, 0x03, 0x78, 0x82, 0x01, 0x02]), { format: "cbor" });
     expect(decodedOf(rows)).toEqual({ $tag: 888, value: [1, 2] });

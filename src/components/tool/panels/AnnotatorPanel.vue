@@ -3,6 +3,8 @@ import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } fr
 import { Copy, Download, Redo2, Trash2, Undo2, X } from "lucide-vue-next";
 import type { ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
+import { Segmented } from "@/components/ui/segmented";
+import type { SegmentedOption } from "@/components/ui/segmented";
 import { Slider } from "@/components/ui/slider";
 import {
   ANNOTATION_KINDS,
@@ -58,6 +60,19 @@ const HISTORY_CAP = 50;
 /** Image pixels a drag must cover before it counts as a shape and not a stray click. */
 const MIN_DRAG = 3;
 const STROKE_WIDTHS = [2, 4, 6] as const;
+/** Segmented values are strings, so the widths round-trip through String(). */
+const STROKE_WIDTH_OPTIONS: SegmentedOption[] = STROKE_WIDTHS.map((w) => ({
+  value: String(w),
+  label: `${w} px`,
+}));
+const BLUR_STYLE_OPTIONS: SegmentedOption[] = [
+  { value: "blur", label: "Blur" },
+  { value: "pixelate", label: "Pixelate" },
+];
+const FORMAT_OPTIONS: SegmentedOption[] = [
+  { value: "png", label: "PNG" },
+  { value: "jpeg", label: "JPEG" },
+];
 const JPEG_QUALITY = 0.92;
 
 const TOOL_CHOICES: ToolChoice[] = ["select", ...ANNOTATION_KINDS];
@@ -126,6 +141,11 @@ const strokeWidth = ref<number>(4);
 const fontSize = ref<number>(DEFAULT_FONT_SIZE);
 
 const blurStyle = ref<"blur" | "pixelate">("blur");
+
+function setStrokeWidth(value: string) {
+  const found = STROKE_WIDTHS.find((w) => String(w) === value);
+  if (found !== undefined) strokeWidth.value = found;
+}
 const blurRadius = ref(10);
 const pixelBlock = ref(12);
 const format = ref<"png" | "jpeg">("png");
@@ -991,19 +1011,15 @@ onUnmounted(() => {
             />
           </div>
 
-          <div class="flex items-center gap-2" role="group" aria-label="Stroke width">
+          <div class="flex items-center gap-2">
             <span class="text-xs text-muted-foreground">Stroke</span>
-            <Button
-              v-for="width in STROKE_WIDTHS"
-              :key="width"
-              type="button"
+            <Segmented
+              :model-value="String(strokeWidth)"
+              :options="STROKE_WIDTH_OPTIONS"
+              label="Stroke width"
               size="sm"
-              :variant="strokeWidth === width ? 'default' : 'outline'"
-              :aria-pressed="strokeWidth === width"
-              @click="strokeWidth = width"
-            >
-              {{ width }} px
-            </Button>
+              @update:model-value="setStrokeWidth"
+            />
           </div>
 
           <div class="flex min-w-48 flex-1 flex-col gap-1.5">
@@ -1108,26 +1124,17 @@ onUnmounted(() => {
           Blur regions
         </span>
         <div class="flex flex-wrap items-center gap-4">
-          <div class="flex items-center gap-2" role="group" aria-label="Blur style">
+          <div class="flex items-center gap-2">
             <span class="text-xs text-muted-foreground">Style</span>
-            <Button
-              type="button"
+            <Segmented
+              :model-value="blurStyle"
+              :options="BLUR_STYLE_OPTIONS"
+              label="Blur style"
               size="sm"
-              :variant="blurStyle === 'blur' ? 'default' : 'outline'"
-              :aria-pressed="blurStyle === 'blur'"
-              @click="blurStyle = 'blur'"
-            >
-              Blur
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              :variant="blurStyle === 'pixelate' ? 'default' : 'outline'"
-              :aria-pressed="blurStyle === 'pixelate'"
-              @click="blurStyle = 'pixelate'"
-            >
-              Pixelate
-            </Button>
+              @update:model-value="
+                (v: string) => (blurStyle = v === 'pixelate' ? 'pixelate' : 'blur')
+              "
+            />
           </div>
 
           <div v-if="blurStyle === 'blur'" class="flex min-w-48 flex-1 flex-col gap-1.5">
@@ -1173,26 +1180,13 @@ onUnmounted(() => {
           Export
         </span>
         <div class="flex flex-wrap items-center gap-2">
-          <div class="flex items-center gap-2" role="group" aria-label="Export format">
-            <Button
-              type="button"
-              size="sm"
-              :variant="format === 'png' ? 'default' : 'outline'"
-              :aria-pressed="format === 'png'"
-              @click="format = 'png'"
-            >
-              PNG
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              :variant="format === 'jpeg' ? 'default' : 'outline'"
-              :aria-pressed="format === 'jpeg'"
-              @click="format = 'jpeg'"
-            >
-              JPEG
-            </Button>
-          </div>
+          <Segmented
+            :model-value="format"
+            :options="FORMAT_OPTIONS"
+            label="Export format"
+            size="sm"
+            @update:model-value="(v: string) => (format = v === 'jpeg' ? 'jpeg' : 'png')"
+          />
           <Button size="sm" :disabled="busy" @click="downloadExport">
             <Download class="size-3.5" />
             Download {{ format === "jpeg" ? "JPEG" : "PNG" }}

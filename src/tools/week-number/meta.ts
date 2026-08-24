@@ -27,9 +27,18 @@ export const meta: ToolMeta = {
     "work week number",
     "current week number",
     "week year calculator",
+    "cweek calculator",
+    "iso week 53",
+    "day of week from date",
   ],
   input: "text/plain",
   output: "application/json",
+  examples: [
+    {
+      label: "Year boundary edge case",
+      input: "2027-01-01",
+    },
+  ],
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: "Looks up the ISO 8601 week number, day-of-year, quarter, and weekday for any date. Handles the tricky year-boundary cases correctly: a date near Jan 1 or Dec 31 can belong to a week number from the adjacent calendar year, and this tool gets that right instead of just counting weeks from Jan 1.",

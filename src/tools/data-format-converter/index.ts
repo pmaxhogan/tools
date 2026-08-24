@@ -226,7 +226,7 @@ export function detectFormat(text: string, csvHeader = true): DataFormat {
 }
 
 /* ------------------------------------------------------------------ *
- * Value normalisation
+ * Value normalization
  * ------------------------------------------------------------------ */
 
 /**
@@ -302,7 +302,7 @@ function toCell(value: unknown): string | number | boolean {
 /**
  * Flatten one level of nesting into dotted keys: { a: { b: 1 } } becomes
  * the column "a.b". Anything deeper than that (or an array value) is
- * serialised into the cell as inline JSON rather than exploding into an
+ * serialized into the cell as inline JSON rather than exploding into an
  * unbounded number of columns.
  */
 function flattenRow(row: Record<string, unknown>): Record<string, string | number | boolean> {
@@ -390,7 +390,7 @@ function toToml(value: unknown): string {
 }
 
 /**
- * Normalise then write. Both halves sit inside one try, because a pathological
+ * Normalize then write. Both halves sit inside one try, because a pathological
  * input (a YAML anchor that points at its own parent, say) blows up during the
  * walk rather than during the write.
  */
@@ -439,9 +439,9 @@ export function run(input: string, opts: ConvertOpts): string {
   const indent = clampIndent(opts?.indent ?? 2);
   const fromOpt = opts?.from ?? "auto";
 
-  // from === to still runs a full parse and re-serialise, which is what
+  // from === to still runs a full parse and re-serialize, which is what
   // reformats the document: json to json applies the indent, csv to csv
-  // normalises quoting and line endings.
+  // normalizes quoting and line endings.
   const parsed =
     fromOpt === "auto"
       ? detect(text, csvHeader).value

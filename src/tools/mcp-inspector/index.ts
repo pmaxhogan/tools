@@ -395,7 +395,7 @@ export function detectResultKind(
   return "unknown";
 }
 
-/** Summarize one JSON-RPC message, whichever direction it travelled. */
+/** Summarize one JSON-RPC message, whichever direction it traveled. */
 export function summarizeMessage(message: JsonRpcMessage): InspectorResult {
   if (message.error) {
     const rows: InspectorResult = {

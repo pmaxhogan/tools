@@ -24,6 +24,9 @@ export const meta: ToolMeta = {
     "circular mils calculator",
     "wire diameter chart",
     "voltage drop over distance",
+    "wire ampacity table",
+    "awg wire size chart",
+    "romex wire gauge",
   ],
   input: "text/plain",
   output: "application/json",
@@ -37,7 +40,13 @@ export const meta: ToolMeta = {
         {
           value: "lookup",
           label: "Wire size lookup",
-          synonyms: ["awg chart", "wire size chart", "gauge lookup", "mm2 lookup", "wire properties"],
+          synonyms: [
+            "awg chart",
+            "wire size chart",
+            "gauge lookup",
+            "mm2 lookup",
+            "wire properties",
+          ],
         },
         {
           value: "voltage-drop",
@@ -52,10 +61,17 @@ export const meta: ToolMeta = {
       ],
     },
   ],
+  examples: [
+    {
+      label: "Lookup 10 AWG",
+      input: "10 awg",
+      opts: { mode: "lookup" },
+    },
+  ],
   http: { method: "GET", contentType: "application/json" },
   copy: {
-    what: "Looks up AWG and metric wire sizes (diameter, area, resistance, and NEC 310.16-style ampacity), calculates voltage drop over a run for DC, single-phase, or three-phase circuits, and finds the smallest gauge that satisfies both ampacity and a voltage drop target. Input is plain text like \"12 awg\", \"20A 30m 12awg 120V\", or \"20A 30m 120V\", not a form.",
-    how: "Pick a mode, then type the wire size or circuit values as space or comma separated tokens, either bare with units (\"20A 30m 12awg 120V copper dc\") or as key=value pairs (\"current=20 length=30m gauge=12awg voltage=120\"). Lookup mode accepts an AWG gauge (\"12 awg\", \"4/0\", \"0000\") or a metric size (\"2.5 mm2\"); voltage-drop and size-for accept current, one-way length in meters or feet, voltage, and optional material and phase.",
+    what: 'Looks up AWG and metric wire sizes (diameter, area, resistance, and NEC 310.16-style ampacity), calculates voltage drop over a run for DC, single-phase, or three-phase circuits, and finds the smallest gauge that satisfies both ampacity and a voltage drop target. Input is plain text like "12 awg", "20A 30m 12awg 120V", or "20A 30m 120V", not a form.',
+    how: 'Pick a mode, then type the wire size or circuit values as space or comma separated tokens, either bare with units ("20A 30m 12awg 120V copper dc") or as key=value pairs ("current=20 length=30m gauge=12awg voltage=120"). Lookup mode accepts an AWG gauge ("12 awg", "4/0", "0000") or a metric size ("2.5 mm2"); voltage-drop and size-for accept current, one-way length in meters or feet, voltage, and optional material and phase.',
     why: "Most wire gauge calculators online cover either the AWG chart or voltage drop, not both, and rarely show the NEC ampacity columns and hobbyist chassis-wiring figures side by side with an honest source note. This one covers lookup, voltage drop, and reverse sizing in one place, computed directly from the AWG formula rather than a static rounded table, and your inputs never leave your device.",
     faq: [
       {

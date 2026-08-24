@@ -12,6 +12,7 @@ const paletteTools = tools.map((t) => ({
   category: t.category,
   keywords: t.keywords,
   searchTerms: t.searchTerms,
+  icon: t.icon,
 }));
 
 export interface Props {
@@ -90,6 +91,18 @@ const og = ogImage ? new URL(ogImage, site).href : undefined;
         const sidebarPref = localStorage.getItem("sidebar");
         html.classList.toggle("sb-closed", sidebarPref === "closed");
         html.classList.toggle("sb-open", sidebarPref === "open");
+
+        // Sidebar width at xl and up, a rem number the resize handle stores.
+        // The key, range and default are duplicated from src/lib/sidebar-width.ts
+        // because this script has to run before paint and so cannot import a
+        // module; src/lib/sidebar-width.test.ts guards the copy against drift.
+        const storedWidth = Number(
+          String(localStorage.getItem("sidebar-width") || "")
+            .trim()
+            .replace(/rem$/i, ""),
+        );
+        const width = storedWidth > 0 ? Math.min(28, Math.max(14, storedWidth)) : 17;
+        html.style.setProperty("--sidebar-w", width + "rem");
       }
       applyHtmlState();
       // document persists across swaps and this inline script is deduped by the

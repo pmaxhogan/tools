@@ -25,6 +25,8 @@ export const meta: ToolMeta = {
     "shift photo times by an hour",
     "daylight saving photo dates",
     "merge photos from two cameras",
+    "jpeg date fix",
+    "photo metadata editor",
   ],
   input: "File",
   output: "application/json",

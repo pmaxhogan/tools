@@ -1,13 +1,28 @@
 <script setup lang="ts">
 import type { OptionSpec } from "@/tools/types";
+import { computed } from "vue";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Segmented } from "@/components/ui/segmented";
+import { flattenSelectOptions, shouldRenderSegmented } from "@/lib/select-options";
 
-defineProps<{ spec: OptionSpec; modelValue: unknown }>();
+const props = defineProps<{ spec: OptionSpec; modelValue: unknown }>();
 const emit = defineEmits<{ "update:modelValue": [value: unknown] }>();
+
+/**
+ * A short, flat select becomes a segmented button group; everything else stays
+ * the searchable dropdown. `shouldRenderSegmented` owns the rule so the worker
+ * and the tests can ask the same question.
+ */
+const segmented = computed(() => props.spec.kind === "select" && shouldRenderSegmented(props.spec));
+
+/** The flat leaf options a segmented group renders. Empty for other kinds. */
+const segmentedOptions = computed(() =>
+  props.spec.kind === "select" ? flattenSelectOptions(props.spec) : [],
+);
 
 function set(v: unknown) {
   emit("update:modelValue", v);
@@ -16,15 +31,26 @@ function set(v: unknown) {
 
 <template>
   <div class="flex min-w-0 flex-col gap-1.5">
+    <!-- A segmented group is a div, which `for` cannot target, so that branch
+         drops the attribute and names the group with aria-label instead. -->
     <Label
-      :for="spec.id"
+      :for="segmented ? undefined : spec.id"
       class="text-xs text-muted-foreground"
       :class="spec.kind === 'boolean' ? 'w-fit cursor-pointer' : undefined"
       >{{ spec.label }}</Label
     >
 
+    <Segmented
+      v-if="spec.kind === 'select' && segmented"
+      :id="spec.id"
+      :options="segmentedOptions"
+      :label="spec.label"
+      :model-value="String(modelValue)"
+      @update:model-value="set($event)"
+    />
+
     <SearchableSelect
-      v-if="spec.kind === 'select'"
+      v-else-if="spec.kind === 'select'"
       :id="spec.id"
       :spec="spec"
       :model-value="String(modelValue)"

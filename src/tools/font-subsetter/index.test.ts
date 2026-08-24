@@ -36,7 +36,7 @@ function boxGlyph(name: string, unicode: number, width: number, height: number) 
 
 /**
  * A four glyph font: .notdef plus A, B, C at U+0041 to U+0043. opentype.js
- * writes CFF outlines, so this comes out as an OTTO flavoured sfnt.
+ * writes CFF outlines, so this comes out as an OTTO flavored sfnt.
  */
 function buildTestFont(): Uint8Array {
   const notdef = new opentype.Glyph({
@@ -415,7 +415,7 @@ describe("run", () => {
     expect(out["Data URL"].startsWith("data:font/woff2;base64,")).toBe(true);
   });
 
-  it("honours the text option and the none preset", async () => {
+  it("honors the text option and the none preset", async () => {
     const out = await run(
       FONT,
       defaultOpts({ preset: "none", includeDigitsPunct: false, text: "AC" }),

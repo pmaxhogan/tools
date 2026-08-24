@@ -1041,7 +1041,7 @@ function flac(rate: number, blockType = 0, channels = 2, bps = 16): Uint8Array {
   info[10] = (rate >> 12) & 0xff;
   info[11] = (rate >> 4) & 0xff;
   // The low nibble of the rate shares this byte with the channel count and the
-  // bit depth, so the neighbours are filled in to prove the field really is
+  // bit depth, so the neighbors are filled in to prove the field really is
   // read as 20 bits rather than as two and a half bytes.
   info[12] = ((rate & 0x0f) << 4) | (((channels - 1) & 0x07) << 1) | (((bps - 1) >> 4) & 1);
   return join(ascii("fLaC"), [blockType & 0x7f, 0x00, 0x00, 0x22], info);
@@ -1196,7 +1196,7 @@ describe("audio-spectrogram: sniffSampleRate, Ogg", () => {
     expect(sniffSampleRate(oggPage(vorbisIdent(8000, 1)))).toBe(8000);
   });
 
-  it("honours the segment table length instead of a fixed payload offset", () => {
+  it("honors the segment table length instead of a fixed payload offset", () => {
     expect(sniffSampleRate(oggPage(vorbisIdent(32000), 4))).toBe(32000);
     expect(sniffSampleRate(oggPage(vorbisIdent(32000), 17))).toBe(32000);
   });

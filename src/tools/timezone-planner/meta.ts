@@ -24,6 +24,9 @@ export const meta: ToolMeta = {
     "time zone difference between cities",
     "utc offset for a date",
     "daylight saving meeting planner",
+    "world clock for meetings",
+    "remote team meeting time",
+    "find a meeting time across timezones",
   ],
   input: "text/plain",
   output: "application/json",
@@ -45,6 +48,13 @@ export const meta: ToolMeta = {
       min: 1,
       max: 24,
       step: 1,
+    },
+  ],
+  examples: [
+    {
+      label: "Transatlantic standup time",
+      input: "Europe/Berlin, New York",
+      opts: { dayStart: "9", dayEnd: "17" },
     },
   ],
   copy: {

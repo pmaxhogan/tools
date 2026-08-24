@@ -4,6 +4,8 @@ import type { ToolMeta } from "@/tools/types";
 import { run } from "@/tools/gpu-inspector/index";
 import type { GpuSnapshot } from "@/tools/gpu-inspector/index";
 import { Button } from "@/components/ui/button";
+import { Segmented } from "@/components/ui/segmented";
+import type { SegmentedOption } from "@/components/ui/segmented";
 import { RefreshCw } from "lucide-vue-next";
 import OutputView from "../OutputView.vue";
 
@@ -185,6 +187,11 @@ const output = computed<Record<string, string> | null>(() => {
   }
 });
 
+const DETAIL_OPTIONS: SegmentedOption[] = [
+  { value: "key", label: "Key limits" },
+  { value: "all", label: "All limits" },
+];
+
 function setDetail(value: "key" | "all") {
   detail.value = value;
 }
@@ -231,26 +238,12 @@ function setDetail(value: "key" | "all") {
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
           >Limits shown</span
         >
-        <div class="inline-flex gap-1 rounded-[10px] bg-secondary p-1 shadow-[var(--sh-inset)]">
-          <Button
-            variant="ghost"
-            size="sm"
-            :aria-pressed="detail === 'key'"
-            :class="detail === 'key' ? 'bg-card shadow-[var(--sh-sm)]' : ''"
-            @click="setDetail('key')"
-          >
-            Key limits
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            :aria-pressed="detail === 'all'"
-            :class="detail === 'all' ? 'bg-card shadow-[var(--sh-sm)]' : ''"
-            @click="setDetail('all')"
-          >
-            All limits
-          </Button>
-        </div>
+        <Segmented
+          :model-value="detail"
+          :options="DETAIL_OPTIONS"
+          label="Limits shown"
+          @update:model-value="(v: string) => setDetail(v as 'key' | 'all')"
+        />
       </div>
 
       <OutputView v-if="output" :output="output" />

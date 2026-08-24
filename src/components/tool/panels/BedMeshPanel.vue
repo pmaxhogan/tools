@@ -16,6 +16,8 @@ import bedMesh, {
 import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Segmented } from "@/components/ui/segmented";
+import type { SegmentedOption } from "@/components/ui/segmented";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import OutputView from "../OutputView.vue";
@@ -31,7 +33,7 @@ import CopyButton from "../CopyButton.vue";
  * Advice rows out of that record to headline them above the rest. Everything
  * about parsing and analysis stays in src/tools/bed-mesh-visualizer (rule 27);
  * this file owns the textarea, the sample and drop handling, the render
- * controls (colour centre, smoothing, height exaggeration), the two inline
+ * controls (color center, smoothing, height exaggeration), the two inline
  * SVG previews, a heat map hover readout computed from pointer position, and
  * the SVG and PNG exports.
  *
@@ -115,6 +117,16 @@ const centerOn = ref<PaletteCenter>("zero");
 
 const INTERPOLATION_OPTIONS = [1, 2, 4] as const;
 const interpolation = ref<(typeof INTERPOLATION_OPTIONS)[number]>(1);
+/** Segmented values are strings, so the factors round-trip through String(). */
+const INTERPOLATION_SEGMENTS: SegmentedOption[] = INTERPOLATION_OPTIONS.map((n) => ({
+  value: String(n),
+  label: `${n}x`,
+}));
+
+function setInterpolation(value: string) {
+  const found = INTERPOLATION_OPTIONS.find((n) => String(n) === value);
+  if (found !== undefined) interpolation.value = found;
+}
 
 /* -------------------------------------------------------------------------- */
 /* Run                                                                        */
@@ -442,43 +454,25 @@ async function downloadIsoPng(): Promise<void> {
       <!-- Render controls -->
       <div class="flex flex-wrap items-end gap-4">
         <div class="flex flex-col gap-1.5">
-          <span class="text-xs text-muted-foreground">Colour centre</span>
-          <div
-            role="group"
-            aria-label="Colour centre"
-            class="inline-flex gap-0.5 rounded-[10px] bg-secondary p-0.5 shadow-[var(--sh-inset)]"
-          >
-            <Button
-              v-for="opt in CENTER_OPTIONS"
-              :key="opt.value"
-              size="sm"
-              :variant="centerOn === opt.value ? 'default' : 'ghost'"
-              :aria-pressed="centerOn === opt.value"
-              @click="centerOn = opt.value"
-            >
-              {{ opt.label }}
-            </Button>
-          </div>
+          <span class="text-xs text-muted-foreground">Color center</span>
+          <Segmented
+            :model-value="centerOn"
+            :options="CENTER_OPTIONS"
+            label="Color center"
+            size="sm"
+            @update:model-value="(v: string) => (centerOn = v as PaletteCenter)"
+          />
         </div>
 
         <div class="flex flex-col gap-1.5">
           <span class="text-xs text-muted-foreground">Smoothing</span>
-          <div
-            role="group"
-            aria-label="Interpolation"
-            class="inline-flex gap-0.5 rounded-[10px] bg-secondary p-0.5 shadow-[var(--sh-inset)]"
-          >
-            <Button
-              v-for="opt in INTERPOLATION_OPTIONS"
-              :key="opt"
-              size="sm"
-              :variant="interpolation === opt ? 'default' : 'ghost'"
-              :aria-pressed="interpolation === opt"
-              @click="interpolation = opt"
-            >
-              {{ opt }}x
-            </Button>
-          </div>
+          <Segmented
+            :model-value="String(interpolation)"
+            :options="INTERPOLATION_SEGMENTS"
+            label="Interpolation"
+            size="sm"
+            @update:model-value="setInterpolation"
+          />
         </div>
 
         <div class="flex min-w-48 flex-1 flex-col gap-1.5">
@@ -553,8 +547,8 @@ async function downloadIsoPng(): Promise<void> {
           </div>
 
           <p class="text-xs text-muted-foreground">
-            This is a fixed isometric angle. The renderer takes a height exaggeration and a colour
-            centre, but no rotation, so there is no rotate control here.
+            This is a fixed isometric angle. The renderer takes a height exaggeration and a color
+            center, but no rotation, so there is no rotate control here.
           </p>
         </div>
       </div>

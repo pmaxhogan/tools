@@ -28,6 +28,8 @@ export const meta: ToolMeta = {
     "frequency to wavelength",
     "ev to nm",
     "color to wavelength",
+    "wavelength calculator",
+    "electromagnetic spectrum chart",
   ],
   icon: "Rainbow",
   input: "none",

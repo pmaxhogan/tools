@@ -77,7 +77,7 @@ const BETA = [
   (20648693 / 638668800) * NN6,
 ];
 
-/** Forward transverse Mercator: degrees to metres relative to the central meridian. */
+/** Forward transverse Mercator: degrees to meters relative to the central meridian. */
 function tmForward(lat: number, lon: number, lon0: number): { x: number; y: number } {
   const phi = toRad(lat);
   const lam = toRad(wrapLon(lon - lon0));
@@ -101,7 +101,7 @@ function tmForward(lat: number, lon: number, lon0: number): { x: number; y: numb
   return { x: K0 * RECT_RADIUS * eta, y: K0 * RECT_RADIUS * xi };
 }
 
-/** Inverse transverse Mercator: metres relative to the central meridian back to degrees. */
+/** Inverse transverse Mercator: meters relative to the central meridian back to degrees. */
 function tmInverse(x: number, y: number, lon0: number): { lat: number; lon: number } {
   const eta = x / (K0 * RECT_RADIUS);
   const xi = y / (K0 * RECT_RADIUS);
@@ -175,7 +175,7 @@ export function utmZone(lat: number, lon: number): number {
   if (zone < 1) zone = 1;
   // Southwest Norway: zone 32 is widened west at the expense of zone 31.
   if (lat >= 56 && lat < 64 && l >= 3 && l < 12) zone = 32;
-  // Svalbard: zones 32, 34 and 36 are absorbed by their neighbours.
+  // Svalbard: zones 32, 34 and 36 are absorbed by their neighbors.
   if (lat >= 72 && lat < 84) {
     if (l >= 0 && l < 9) zone = 31;
     else if (l >= 9 && l < 21) zone = 33;
@@ -239,13 +239,13 @@ export function fromUtm(
 
 const MGRS_DIGITS: Record<number, number> = { 1: 5, 10: 4, 100: 3, 1000: 2, 10000: 1 };
 
-/** Convert degrees to an MGRS reference at the given cell size in metres. */
+/** Convert degrees to an MGRS reference at the given cell size in meters. */
 export function toMgrs(lat: number, lon: number, precision = 1): string {
   const digits = MGRS_DIGITS[precision];
   if (!digits) {
     throw new ToolError(
       "unparseable",
-      `MGRS precision ${precision} is not one of 1, 10, 100, 1000 or 10000 metres.`,
+      `MGRS precision ${precision} is not one of 1, 10, 100, 1000 or 10000 meters.`,
       "Pick one of the offered grid sizes.",
     );
   }
@@ -274,11 +274,11 @@ function bandBottomNorthing(bandIndex: number): number {
 export interface MgrsPoint {
   lat: number;
   lon: number;
-  /** Side of the named cell in metres. */
+  /** Side of the named cell in meters. */
   precisionMeters: number;
 }
 
-/** Decode an MGRS reference to the centre of the cell it names. */
+/** Decode an MGRS reference to the center of the cell it names. */
 export function fromMgrs(text: string): MgrsPoint {
   const label = String(text).trim();
   const s = label.replace(/\s+/g, "").toUpperCase();
@@ -416,7 +416,7 @@ export interface PlusCodeArea {
   digits: number;
 }
 
-/** Decode a full Plus Code to the centre of the area it names. */
+/** Decode a full Plus Code to the center of the area it names. */
 export function fromPlusCode(code: string): PlusCodeArea {
   const label = String(code).trim();
   const upper = label.toUpperCase();
@@ -542,7 +542,7 @@ export interface GeohashArea {
   lonWidth: number;
 }
 
-/** Decode a geohash to the centre of the cell it names. */
+/** Decode a geohash to the center of the cell it names. */
 export function fromGeohash(hash: string): GeohashArea {
   const s = String(hash).trim().toLowerCase();
   if (!s) throw new ToolError("empty-input", "Enter a geohash to decode.");
@@ -663,7 +663,7 @@ export interface LatLon {
   lon: number;
 }
 
-/** Great circle distance in kilometres (haversine on a spherical earth). */
+/** Great circle distance in kilometers (haversine on a spherical earth). */
 export function haversineKm(a: LatLon, b: LatLon): number {
   const dLat = toRad(b.lat - a.lat);
   const dLon = toRad(b.lon - a.lon);
@@ -714,7 +714,7 @@ export function compassPoint(bearing: number): string {
 export interface ParsedPoint {
   lat: number;
   lon: number;
-  /** Human name of the format the text was recognised as. */
+  /** Human name of the format the text was recognized as. */
   format: string;
   /** Side of the cell the input names, when the format implies one. */
   precisionMeters?: number;
@@ -1032,7 +1032,7 @@ function tryGeohash(raw: string): ParsedPoint | null {
  * Read one coordinate written in any supported format.
  *
  * Decimal degrees, DMS, DDM, UTM, MGRS, Plus Codes, geohashes, geo URIs and
- * map links are all recognised from the text alone.
+ * map links are all recognized from the text alone.
  */
 export function parseCoordinate(text: string): ParsedPoint {
   const raw = String(text ?? "").trim();
@@ -1061,7 +1061,7 @@ export function parseCoordinate(text: string): ParsedPoint {
 export interface CoordinateOpts {
   /** Decimal places on the decimal degrees output, 2 to 8. */
   decimals?: number;
-  /** MGRS cell size in metres, as a string from the select. */
+  /** MGRS cell size in meters, as a string from the select. */
   mgrsPrecision?: string | number;
   /** Include OpenStreetMap, Google Maps and Apple Maps URLs. */
   links?: boolean;
@@ -1140,7 +1140,7 @@ function blockFor(
 
   if (p.precisionMeters && p.precisionMeters > 0) {
     out[key("Precision")] =
-      `About ${fmtMetres(p.precisionMeters)} across. The position shown is the centre of that cell.`;
+      `About ${fmtMetres(p.precisionMeters)} across. The position shown is the center of that cell.`;
   }
   if (p.note) out[key("Note")] = p.note;
   return out;

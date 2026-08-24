@@ -125,7 +125,7 @@ const SPEED_OPTIONS: { value: SpeedKey; label: string; rate: number }[] = [
 const FALLBACK_COLOR_BY: SelectOptionSpec = {
   kind: "select",
   id: "colorBy",
-  label: "Colour the strokes by",
+  label: "Color the strokes by",
   default: "type",
   options: [
     { value: "type", label: "Move type", synonyms: ["extrusion", "travel", "flat"] },
@@ -818,7 +818,7 @@ function baseName(): string {
   return stem === "" ? "gcode" : stem;
 }
 
-/** The pane colour behind the canvas, so a PNG is not saved on transparency. */
+/** The pane color behind the canvas, so a PNG is not saved on transparency. */
 function backdropColor(el: HTMLElement): string {
   const color = window.getComputedStyle(el).backgroundColor;
   if (color === "" || color === "transparent" || color.startsWith("rgba(0, 0, 0, 0")) {

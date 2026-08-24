@@ -37,11 +37,11 @@ describe("growth speed", () => {
     expect(growthSpeed(layout(), LATEST)).toBe(5);
   });
 
-  it("does not halve a plant with neighbours on one axis only", () => {
+  it("does not halve a plant with neighbors on one axis only", () => {
     expect(growthSpeed(layout({ crowding: "row" }), LATEST)).toBe(10);
   });
 
-  it("halves for a diagonal-only neighbour, matching the else branch", () => {
+  it("halves for a diagonal-only neighbor, matching the else branch", () => {
     expect(growthSpeed(layout({ crowding: "diagonal" }), LATEST)).toBe(5);
   });
 
@@ -57,7 +57,7 @@ describe("growth speed", () => {
     expect(speed).toBe(5.5);
   });
 
-  it("clamps a nonsense neighbour count into the real 0 to 8 range", () => {
+  it("clamps a nonsense neighbor count into the real 0 to 8 range", () => {
     expect(growthSpeed(layout({ neighbourFarmland: 40 }), LATEST)).toBe(5);
     expect(growthSpeed(layout({ neighbourFarmland: -3, crowding: "none" }), LATEST)).toBe(4);
   });
@@ -349,7 +349,7 @@ describe("breeding", () => {
 });
 
 describe("run", () => {
-  it("defaults to wheat and returns labelled rows", () => {
+  it("defaults to wheat and returns labeled rows", () => {
     const out = run("", {});
     expect(out.Plant).toContain("Wheat");
     expect(out["Average time"]).toContain("in game days");

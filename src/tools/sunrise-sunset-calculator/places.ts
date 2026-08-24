@@ -110,7 +110,7 @@ const RAW: readonly (readonly [string, number, number, string, ...string[]])[] =
 
 /** A resolved city: where it is and which time zone it keeps. */
 export interface PlaceEntry {
-  /** How the place is labelled in the output. */
+  /** How the place is labeled in the output. */
   name: string;
   /** Degrees north of the equator. */
   lat: number;

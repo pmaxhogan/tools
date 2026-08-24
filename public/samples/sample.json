@@ -1,0 +1,32 @@
+{
+  "invoice": "INV-2024-0417",
+  "issued": "2024-04-17T09:32:00Z",
+  "due": "2024-05-17",
+  "currency": "USD",
+  "status": "unpaid",
+  "customer": {
+    "id": "cus_8213",
+    "name": "Riverbend Coffee Roasters",
+    "email": "accounts@riverbendroasters.example",
+    "address": {
+      "line1": "418 Mill Street",
+      "city": "Asheville",
+      "region": "NC",
+      "postalCode": "28801",
+      "country": "US"
+    }
+  },
+  "items": [
+    { "sku": "GRN-ETH-5K", "name": "Ethiopia Guji, green", "qty": 4, "unitPrice": 91.5 },
+    { "sku": "GRN-COL-5K", "name": "Colombia Huila, green", "qty": 6, "unitPrice": 78.25 },
+    { "sku": "BAG-KRAFT-12", "name": "Kraft bags, 12 oz, 500 ct", "qty": 2, "unitPrice": 64 },
+    { "sku": "SRV-CUPPING", "name": "Cupping session", "qty": 1, "unitPrice": 150 }
+  ],
+  "subtotal": 1246.5,
+  "discount": { "code": "SPRING10", "amount": 124.65 },
+  "shipping": 42,
+  "tax": { "rate": 0.0725, "amount": 82.38 },
+  "total": 1246.23,
+  "notes": "Split shipment: green coffee ships Thursday, packaging follows Monday.",
+  "tags": ["wholesale", "net30", "repeat"]
+}

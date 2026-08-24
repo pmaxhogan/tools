@@ -191,7 +191,7 @@ describe("data-format-converter", () => {
   });
 
   it("reformats in place when from and to match", () => {
-    // Redundant quoting and CRLF line endings are normalised away.
+    // Redundant quoting and CRLF line endings are normalized away.
     const csv = run('"a","b"\r\n1,2\r\n', opts({ from: "csv", to: "csv" }));
     expect(csv).toBe("a,b\n1,2");
   });

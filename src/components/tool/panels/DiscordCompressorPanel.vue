@@ -31,7 +31,9 @@ import {
 } from "@/lib/ffmpeg";
 import { formatBytes } from "@/lib/format";
 import { downloadUrl } from "@/lib/download";
+import type { KeyValueRow } from "@/lib/key-value";
 import { useStickToBottom } from "@/lib/stick-to-bottom";
+import KeyValueGrid from "../KeyValueGrid.vue";
 import {
   MAX_CAP_MB,
   OVERHEAD_FLOOR_BYTES,
@@ -115,7 +117,7 @@ const downloadedBytes = ref(0);
 const downloadTotal = ref(0);
 
 const running = ref(false);
-const cancelling = ref(false);
+const canceling = ref(false);
 /** 0 when idle, otherwise which of the two passes is on screen. */
 const activePass = ref<0 | 1 | 2>(0);
 const jobRatio = ref<number | null>(null);
@@ -202,6 +204,18 @@ const plan = computed<CompressionPlan | null>(() => {
   });
 });
 
+/** The plan card: what the two passes are aiming for, before they run. */
+const planRows = computed<KeyValueRow[]>(() => {
+  const p = plan.value;
+  if (!p) return [];
+  return [
+    { key: "Size cap", value: formatMegabytes(targetBytes.value) },
+    { key: "Video bitrate", value: `${p.videoKbps} kbps` },
+    { key: "Audio bitrate", value: p.audioKbps > 0 ? `${p.audioKbps} kbps` : "silent" },
+    { key: "Estimated result", value: formatMegabytes(p.estimatedBytes) },
+  ];
+});
+
 /**
  * The same usable budget `planCompression` divides between the streams: the
  * cap minus the container overhead it has to reserve. A source already at or
@@ -237,7 +251,7 @@ const canRun = computed(
     plan.value !== null &&
     plan.value.feasible &&
     !running.value &&
-    !cancelling.value,
+    !canceling.value,
 );
 
 /** Pass 1 is the cheaper half, so it takes the smaller share of the bar. */
@@ -452,7 +466,7 @@ async function compress() {
   if (!canRun.value || !source || !current) return;
 
   running.value = true;
-  cancelling.value = false;
+  canceling.value = false;
   error.value = null;
   jobRatio.value = null;
   jobTimeMs.value = null;
@@ -485,7 +499,7 @@ async function compress() {
       onProgress,
     });
 
-    if (cancelling.value) return;
+    if (canceling.value) return;
 
     activePass.value = 2;
     jobRatio.value = null;
@@ -511,7 +525,7 @@ async function compress() {
     };
     await clearPassLog();
   } catch (e) {
-    if (cancelling.value) {
+    if (canceling.value) {
       error.value = null;
     } else {
       engineState.value = isEngineReady() ? "ready" : "idle";
@@ -532,11 +546,11 @@ async function compress() {
  */
 async function cancel() {
   if (!running.value) return;
-  cancelling.value = true;
+  canceling.value = true;
   terminateEngine();
   engineState.value = "idle";
   await loadEngine();
-  cancelling.value = false;
+  canceling.value = false;
 }
 
 function download() {
@@ -758,30 +772,7 @@ onUnmounted(clearResult);
             Plan
           </span>
         </div>
-        <dl class="grid grid-cols-2 gap-x-4 gap-y-3 px-3 pt-2 pb-3 sm:grid-cols-4">
-          <div>
-            <dt class="text-xs text-muted-foreground">Size cap</dt>
-            <dd class="font-mono text-sm tabular-nums">
-              {{ formatMegabytes(targetBytes) }}
-            </dd>
-          </div>
-          <div>
-            <dt class="text-xs text-muted-foreground">Video bitrate</dt>
-            <dd class="font-mono text-sm tabular-nums">{{ plan.videoKbps }} kbps</dd>
-          </div>
-          <div>
-            <dt class="text-xs text-muted-foreground">Audio bitrate</dt>
-            <dd class="font-mono text-sm tabular-nums">
-              {{ plan.audioKbps > 0 ? `${plan.audioKbps} kbps` : "silent" }}
-            </dd>
-          </div>
-          <div>
-            <dt class="text-xs text-muted-foreground">Estimated result</dt>
-            <dd class="font-mono text-sm tabular-nums">
-              {{ formatMegabytes(plan.estimatedBytes) }}
-            </dd>
-          </div>
-        </dl>
+        <KeyValueGrid :rows="planRows" :columns="2" :copy="false" class="mt-2" />
         <p
           v-if="alreadyUnderCap"
           class="flex items-center gap-1.5 border-t border-border/60 px-3 py-2 text-sm text-muted-foreground"
@@ -808,8 +799,8 @@ onUnmounted(clearResult);
         <Button :disabled="!canRun" @click="compress">
           {{ running ? `Pass ${activePass} of 2…` : compressButtonLabel }}
         </Button>
-        <Button v-if="running" variant="outline" :disabled="cancelling" @click="cancel">
-          {{ cancelling ? "Stopping…" : "Cancel" }}
+        <Button v-if="running" variant="outline" :disabled="canceling" @click="cancel">
+          {{ canceling ? "Stopping…" : "Cancel" }}
         </Button>
         <span
           v-if="running && (overallPercent !== null || jobTimeMs !== null)"

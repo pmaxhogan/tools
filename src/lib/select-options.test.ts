@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { SelectOptionSpec } from "../tools/types";
 import {
   SEARCH_THRESHOLD,
+  SEGMENTED_MAX,
   filterSelectTree,
   flattenSelectOptions,
+  shouldRenderSegmented,
   shouldShowSearch,
 } from "./select-options";
 
@@ -147,5 +149,61 @@ describe("filterSelectTree", () => {
   it("filters a flat options list by label and synonym", () => {
     expect(filterSelectTree(flat, "decode").options.map((o) => o.value)).toEqual(["unescape"]);
     expect(filterSelectTree(flat, "Unescape").options.map((o) => o.value)).toEqual(["unescape"]);
+  });
+});
+
+describe("shouldRenderSegmented", () => {
+  /** A flat select with `n` short options and no `ui` override. */
+  function withOptions(n: number, ui?: SelectOptionSpec["ui"]): SelectOptionSpec {
+    return {
+      kind: "select",
+      id: "s",
+      label: "S",
+      default: "0",
+      options: Array.from({ length: n }, (_, i) => ({
+        value: String(i),
+        label: `Opt ${i}`,
+        synonyms: [],
+      })),
+      ui,
+    };
+  }
+
+  it("promotes a flat list of two to four options", () => {
+    expect(SEGMENTED_MAX).toBe(4);
+    expect(shouldRenderSegmented(withOptions(2))).toBe(true);
+    expect(shouldRenderSegmented(withOptions(3))).toBe(true);
+    expect(shouldRenderSegmented(withOptions(4))).toBe(true);
+  });
+
+  it("leaves anything longer than the maximum as a dropdown", () => {
+    expect(shouldRenderSegmented(withOptions(5))).toBe(false);
+    expect(shouldRenderSegmented(withOptions(20))).toBe(false);
+  });
+
+  it("never promotes a select with nothing to choose between", () => {
+    expect(shouldRenderSegmented(withOptions(0))).toBe(false);
+    expect(shouldRenderSegmented(withOptions(1))).toBe(false);
+    const bare: SelectOptionSpec = { kind: "select", id: "e", label: "E", default: "" };
+    expect(shouldRenderSegmented(bare)).toBe(false);
+  });
+
+  it("never promotes a grouped select, however few leaves it has", () => {
+    expect(flattenSelectOptions(grouped)).toHaveLength(4);
+    expect(shouldRenderSegmented(grouped)).toBe(false);
+  });
+
+  it('honors ui: "select" on a short list', () => {
+    expect(shouldRenderSegmented(withOptions(2, "select"))).toBe(false);
+    expect(shouldRenderSegmented(withOptions(4, "select"))).toBe(false);
+  });
+
+  it('honors ui: "segmented" on a long list and on a grouped one', () => {
+    expect(shouldRenderSegmented(withOptions(5, "segmented"))).toBe(true);
+    expect(shouldRenderSegmented({ ...grouped, ui: "segmented" })).toBe(true);
+  });
+
+  it("promotes the shared two-option fixture", () => {
+    expect(shouldRenderSegmented(flat)).toBe(true);
   });
 });

@@ -41,7 +41,7 @@ function filterOf(result: GifPlanResult): string {
 }
 
 /**
- * Builds a minimal but structurally real GIF89a: a global colour table, one
+ * Builds a minimal but structurally real GIF89a: a global color table, one
  * graphic control extension plus one image descriptor per frame, and a
  * trailer. The pixel data is a stub, which is fine because the reader steps
  * over compressed data rather than decoding it.
@@ -51,7 +51,7 @@ function makeGif(options: { width: number; height: number; delaysCs: number[] })
   for (const code of "GIF89a") bytes.push(code.charCodeAt(0));
   bytes.push(options.width & 0xff, options.width >> 8);
   bytes.push(options.height & 0xff, options.height >> 8);
-  bytes.push(0x80, 0x00, 0x00); // global colour table of 2 entries
+  bytes.push(0x80, 0x00, 0x00); // global color table of 2 entries
   bytes.push(0x00, 0x00, 0x00, 0xff, 0xff, 0xff);
 
   for (const delay of options.delaysCs) {
@@ -61,7 +61,7 @@ function makeGif(options: { width: number; height: number; delaysCs: number[] })
     bytes.push(0x2c, 0x00, 0x00, 0x00, 0x00);
     bytes.push(options.width & 0xff, options.width >> 8);
     bytes.push(options.height & 0xff, options.height >> 8);
-    bytes.push(0x00); // no local colour table
+    bytes.push(0x00); // no local color table
     bytes.push(0x02); // LZW minimum code size
     bytes.push(0x02, 0x4c, 0x01, 0x00); // one data sub-block, then terminator
   }
@@ -308,7 +308,7 @@ describe("buildCaption", () => {
     ).toContain("font file name");
   });
 
-  it("plans a centred bottom caption once a font is available", () => {
+  it("plans a centered bottom caption once a font is available", () => {
     const filter = filterOf(
       buildCaption({
         inputName: "a.gif",

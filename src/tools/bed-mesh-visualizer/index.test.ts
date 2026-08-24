@@ -287,7 +287,7 @@ describe("renderers", () => {
     expect(renderIsometricSvg(mesh, { zScale: 40 })).not.toBe(svg);
   });
 
-  it("moves the neutral colour when centred on the mesh average", () => {
+  it("moves the neutral color when centered on the mesh average", () => {
     const mesh = parseMesh(KLIPPER_CONSOLE);
     expect(renderHeatmapSvg(mesh, { palette: "mean" })).not.toBe(
       renderHeatmapSvg(mesh, { palette: "zero" }),

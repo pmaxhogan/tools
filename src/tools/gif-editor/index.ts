@@ -11,7 +11,7 @@
  * Two things drive most of the design here:
  *
  *  - **Every gif to gif operation re-palettizes.** A GIF carries at most 256
- *    colours in its own table. Re-encoding one without building a new palette
+ *    colors in its own table. Re-encoding one without building a new palette
  *    makes ffmpeg fall back to a generic 8 bit palette, and the result bands
  *    and dithers badly. So every gif output goes through the standard
  *    split / palettegen / paletteuse graph, built by `paletteWrap`.
@@ -240,7 +240,7 @@ export const MAX_FPS = 50;
 
 /**
  * Makes a GIF smaller the two ways ffmpeg actually can: fewer frames per
- * second, and a smaller colour table.
+ * second, and a smaller color table.
  *
  * ffmpeg has no equivalent of gifsicle's lossy mode, which perturbs pixel
  * values so the LZW stream compresses better. Asking for it here is refused

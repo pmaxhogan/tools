@@ -43,6 +43,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Segmented } from "@/components/ui/segmented";
+import type { SegmentedOption } from "@/components/ui/segmented";
 import OutputView from "../OutputView.vue";
 
 defineProps<{ meta: ToolMeta }>();
@@ -65,6 +67,11 @@ const clockKind = ref<ClockKind>("repeater-loop");
 const clockTarget = ref(40);
 /** False builds a delay line, true builds a clock. Same pane either way. */
 const clockShown = ref(false);
+
+const BUILDER_OPTIONS: SegmentedOption[] = [
+  { value: "delay", label: "Delay line" },
+  { value: "clock", label: "Clock" },
+];
 
 // throughput tab
 const transport = ref("hopper");
@@ -123,13 +130,11 @@ const versionSpec: SelectOptionSpec = {
   id: "version",
   label: "Game version",
   default: "1.21.11",
-  options: [...REDSTONE_VERSIONS]
-    .reverse()
-    .map((v) => ({
-      value: v,
-      label: v === REDSTONE_VERSIONS[REDSTONE_VERSIONS.length - 1] ? `${v} (latest)` : v,
-      synonyms: [v.replace(/\./g, " ")],
-    })),
+  options: [...REDSTONE_VERSIONS].reverse().map((v) => ({
+    value: v,
+    label: v === REDSTONE_VERSIONS[REDSTONE_VERSIONS.length - 1] ? `${v} (latest)` : v,
+    synonyms: [v.replace(/\./g, " ")],
+  })),
 };
 
 const unitSpec: SelectOptionSpec = {
@@ -201,7 +206,11 @@ const stackSizeSpec: SelectOptionSpec = {
   label: "Item stack size",
   default: "64",
   options: [
-    { value: "64", label: "Stacks to 64 (most items)", synonyms: ["64", "normal", "blocks", "ore"] },
+    {
+      value: "64",
+      label: "Stacks to 64 (most items)",
+      synonyms: ["64", "normal", "blocks", "ore"],
+    },
     {
       value: "16",
       label: "Stacks to 16 (eggs, snowballs, signs)",
@@ -522,11 +531,13 @@ const selectedComponent = computed(
 
 watch(version, (v) => {
   if (!transportsForVersion(v).some((t) => t.id === transport.value)) transport.value = "hopper";
-  if (!containersForVersion(v).some((c) => c.id === container.value)) container.value = "double_chest";
+  if (!containersForVersion(v).some((c) => c.id === container.value))
+    container.value = "double_chest";
   if (!containersForVersion(v).some((c) => c.id === signalContainer.value)) {
     signalContainer.value = "double_chest";
   }
-  if (!componentsForVersion(v).some((c) => c.id === componentId.value)) componentId.value = "repeater";
+  if (!componentsForVersion(v).some((c) => c.id === componentId.value))
+    componentId.value = "repeater";
 });
 
 /* ---------------------------------------------------------------- */
@@ -634,8 +645,8 @@ onMounted(() => {
           Redstone workbench
         </span>
         <p class="max-w-[64ch] text-xs text-muted-foreground">
-          Tick counts never change with server load. The tick rate below only changes how long
-          those ticks take in real time.
+          Tick counts never change with server load. The tick rate below only changes how long those
+          ticks take in real time.
         </p>
       </div>
       <div class="flex flex-wrap items-end gap-3">
@@ -709,30 +720,13 @@ onMounted(() => {
                 <p class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
                   Build a
                 </p>
-                <div class="flex gap-2" role="group" aria-label="Builder mode">
-                  <button
-                    type="button"
-                    class="rounded-[8px] border px-2.5 py-1 text-xs transition-colors"
-                    :class="
-                      !clockShown ? 'border-ring bg-accent font-semibold' : 'bg-card hover:bg-accent'
-                    "
-                    :aria-pressed="!clockShown"
-                    @click="clockShown = false"
-                  >
-                    Delay line
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-[8px] border px-2.5 py-1 text-xs transition-colors"
-                    :class="
-                      clockShown ? 'border-ring bg-accent font-semibold' : 'bg-card hover:bg-accent'
-                    "
-                    :aria-pressed="clockShown"
-                    @click="clockShown = true"
-                  >
-                    Clock
-                  </button>
-                </div>
+                <Segmented
+                  :model-value="clockShown ? 'clock' : 'delay'"
+                  :options="BUILDER_OPTIONS"
+                  label="Builder mode"
+                  size="sm"
+                  @update:model-value="(v: string) => (clockShown = v === 'clock')"
+                />
               </div>
 
               <template v-if="!clockShown">
@@ -800,7 +794,10 @@ onMounted(() => {
             </div>
 
             <!-- stat tiles -->
-            <div v-if="!clockShown && delaySolution.value" class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div
+              v-if="!clockShown && delaySolution.value"
+              class="grid grid-cols-2 gap-3 sm:grid-cols-4"
+            >
               <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
                 <div class="text-xs text-muted-foreground">Achievable delay</div>
                 <div
@@ -830,7 +827,10 @@ onMounted(() => {
               </div>
             </div>
 
-            <div v-if="clockShown && clockSolution.value" class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div
+              v-if="clockShown && clockSolution.value"
+              class="grid grid-cols-2 gap-3 sm:grid-cols-4"
+            >
               <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
                 <div class="text-xs text-muted-foreground">Period</div>
                 <div
@@ -941,23 +941,19 @@ onMounted(() => {
             >
               <p class="text-sm">{{ delaySolution.value.note }}</p>
               <ul v-if="shownDelay && shownDelay.parts.length" class="flex flex-col gap-1 text-sm">
-                <li
-                  v-for="p in shownDelay.parts"
-                  :key="p.setting"
-                  class="font-mono tabular-nums"
-                >
+                <li v-for="p in shownDelay.parts" :key="p.setting" class="font-mono tabular-nums">
                   {{ p.count }} repeater{{ p.count === 1 ? "" : "s" }} on setting
                   {{ p.setting }} ({{ p.delayTicks }} game ticks each)
                 </li>
               </ul>
-              <p v-if="shownDelay && shownDelay.componentCount > 0" class="text-xs text-muted-foreground">
+              <p
+                v-if="shownDelay && shownDelay.componentCount > 0"
+                class="text-xs text-muted-foreground"
+              >
                 The same delay in comparators alone would take {{ shownDelay.comparatorOnlyCount }}
                 of them, since a comparator is fixed at 1 redstone tick.
               </p>
-              <p
-                v-if="delaySolution.value.exact === null"
-                class="text-xs text-muted-foreground"
-              >
+              <p v-if="delaySolution.value.exact === null" class="text-xs text-muted-foreground">
                 Closest achievable delays: {{ delaySolution.value.below?.gameTicks ?? "none" }} and
                 {{ delaySolution.value.above?.gameTicks ?? "none" }} game ticks.
               </p>
@@ -1167,7 +1163,9 @@ onMounted(() => {
               />
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label for="rs-sig-stack" class="text-xs text-muted-foreground">Item stack size</Label>
+              <Label for="rs-sig-stack" class="text-xs text-muted-foreground"
+                >Item stack size</Label
+              >
               <SearchableSelect
                 id="rs-sig-stack"
                 :spec="stackSizeSpec"
@@ -1237,11 +1235,15 @@ onMounted(() => {
             <template v-else-if="signalTable.value">
               <div class="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-live="polite">
                 <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
-                  <div class="text-xs text-muted-foreground">Signal for {{ fmt(itemCount) }} items</div>
+                  <div class="text-xs text-muted-foreground">
+                    Signal for {{ fmt(itemCount) }} items
+                  </div>
                   <div class="font-mono text-lg tabular-nums">{{ currentSignal ?? "n/a" }}</div>
                 </div>
                 <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
-                  <div class="text-xs text-muted-foreground">Fewest for signal {{ targetSignal }}</div>
+                  <div class="text-xs text-muted-foreground">
+                    Fewest for signal {{ targetSignal }}
+                  </div>
                   <div class="font-mono text-lg tabular-nums">
                     {{
                       targetBand && targetBand.minItems !== null
@@ -1262,7 +1264,9 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div class="max-h-[26rem] overflow-auto rounded-[10px] bg-secondary p-1 shadow-[var(--sh-inset)]">
+              <div
+                class="max-h-[26rem] overflow-auto rounded-[10px] bg-secondary p-1 shadow-[var(--sh-inset)]"
+              >
                 <table class="w-full min-w-[480px] text-sm">
                   <caption class="sr-only">
                     Comparator signal strength for every item count in this container
@@ -1335,9 +1339,7 @@ onMounted(() => {
                 </div>
               </div>
               <p class="text-sm">{{ selectedComponent.note }}</p>
-              <p class="text-xs text-muted-foreground">
-                Read from {{ selectedComponent.source }}.
-              </p>
+              <p class="text-xs text-muted-foreground">Read from {{ selectedComponent.source }}.</p>
             </div>
           </div>
 
@@ -1355,7 +1357,10 @@ onMounted(() => {
             >
               <table class="w-full min-w-[560px] text-sm">
                 <caption class="sr-only">
-                  Every timed redstone component in {{ version }}, sorted by timing
+                  Every timed redstone component in
+                  {{
+                    version
+                  }}, sorted by timing
                 </caption>
                 <thead>
                   <tr class="text-left text-xs font-semibold text-muted-foreground">
@@ -1380,7 +1385,9 @@ onMounted(() => {
               </table>
             </div>
 
-            <div class="flex flex-col gap-2 rounded-[14px] bg-secondary p-3 shadow-[var(--sh-inset)]">
+            <div
+              class="flex flex-col gap-2 rounded-[14px] bg-secondary p-3 shadow-[var(--sh-inset)]"
+            >
               <p class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
                 Version boundaries
               </p>
@@ -1402,8 +1409,8 @@ onMounted(() => {
     <p class="text-xs text-muted-foreground">
       Every constant here was read from the decompiled or unobfuscated server source of 1.16.5,
       1.18.2, 1.20.6, 1.21.1, 1.21.11 and 26.2, and the hopper cadence was checked against a live
-      dedicated server. Not an official Minecraft product. Not approved by or associated with
-      Mojang or Microsoft.
+      dedicated server. Not an official Minecraft product. Not approved by or associated with Mojang
+      or Microsoft.
     </p>
   </div>
 </template>

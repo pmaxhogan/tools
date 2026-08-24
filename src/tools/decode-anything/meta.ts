@@ -29,6 +29,8 @@ export const meta: ToolMeta = {
     "multi layer decoder",
     "auto detect encoding",
     "universal decoder",
+    "cyberchef alternative",
+    "what does this decode to",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -49,15 +51,27 @@ export const meta: ToolMeta = {
       default: true,
     },
   ],
+  examples: [
+    {
+      label: "Decode a JWT",
+      input:
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NjExNjg2MDE4NDI3Mzg3OTA0IiwibmFtZSI6IlByaXlhIENoYW5kcmFuIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDM2MDB9.QSj9mK3vLxTn7ZpW2hRcYbEoFdA1uG5s",
+    },
+    {
+      label: "Base64 gzip JSON",
+      input:
+        "H4sIAAAAAAAACqtWKi1OLVKyUsrKyE9PzFPSUSrKz0lVslJKTcksyS9S0lHKyU/PzHPOL80rUbIyMdJRykksLvEBiSlZGZobQEEtAECbBH5IAAAA",
+    },
+  ],
   http: { method: "POST", contentType: "text/plain" },
   copy: {
-    what: "Paste any opaque string and this works out what it is, decodes it, and then tries again on whatever comes out. It recognises JWTs, JSON, base64 and base64url, hex dumps, URL encoding, quoted-printable, data URLs, gzip and zlib streams, unix timestamps, snowflake IDs, UUIDs, MAC addresses, and IPv4 addresses stored as integers. A base64 blob holding a gzipped JSON document unwraps all three layers in one pass, and the result is printed as an indented tree with the decode chain summarised on the first line.",
+    what: "Paste any opaque string and this works out what it is, decodes it, and then tries again on whatever comes out. It recognizes JWTs, JSON, base64 and base64url, hex dumps, URL encoding, quoted-printable, data URLs, gzip and zlib streams, unix timestamps, snowflake IDs, UUIDs, MAC addresses, and IPv4 addresses stored as integers. A base64 blob holding a gzipped JSON document unwraps all three layers in one pass, and the result is printed as an indented tree with the decode chain summarized on the first line.",
     how: 'Paste or drop the mystery string into the input. The chain line at the top tells you what it turned out to be, for example "base64 -> gzip -> JSON", and each indented block below shows the value at that step. Use the depth option if a deeply nested payload stops early, and turn off the intermediate values when you only care about the final answer.',
     why: "Single purpose decoder sites make you guess the encoding before you can even paste, and the ones that handle tokens ask you to hand over a JWT that may still be live. This one tries every detector locally, shows its reasoning including the interpretations it rejected, and your files and inputs never leave your device.",
     faq: [
       {
         q: "How does it decide what something is?",
-        a: 'Detectors run in priority order from most structured to least: JWT and data URLs first, then JSON, URL encoding, UUIDs and MAC addresses, numeric IDs and timestamps, quoted-printable, hex, and finally base64. A detector only fires when its output is genuinely more meaningful than the input, which means valid UTF-8 text with a high printable ratio, parseable JSON, or a recognised file signature such as gzip or PNG. When two readings are plausible you get the stronger one plus an "also possible" line, and text that only decodes to noise is left alone with the closing line "Nothing more to decode."',
+        a: 'Detectors run in priority order from most structured to least: JWT and data URLs first, then JSON, URL encoding, UUIDs and MAC addresses, numeric IDs and timestamps, quoted-printable, hex, and finally base64. A detector only fires when its output is genuinely more meaningful than the input, which means valid UTF-8 text with a high printable ratio, parseable JSON, or a recognized file signature such as gzip or PNG. When two readings are plausible you get the stronger one plus an "also possible" line, and text that only decodes to noise is left alone with the closing line "Nothing more to decode."',
       },
       {
         q: "Are JWT signatures checked?",

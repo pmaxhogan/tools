@@ -42,7 +42,7 @@ export const AUDIO_TIERS = [96, 64, 48] as const;
 
 /**
  * Below this, H.264 stops resolving anything a viewer would call detail, so
- * reporting an honest refusal beats producing a grey smear that fits.
+ * reporting an honest refusal beats producing a gray smear that fits.
  */
 export const MIN_VIDEO_KBPS = 100;
 
@@ -237,7 +237,7 @@ function scaleFilter(maxHeight: number): string {
 /**
  * Builds one pass of the two pass encode.
  *
- * Pass 1 analyses the clip and writes ffmpeg2pass-0.log; it decodes no audio
+ * Pass 1 analyzes the clip and writes ffmpeg2pass-0.log; it decodes no audio
  * and muxes nothing, which is what `-an -f null -` says. Pass 2 reads that log
  * and spends its bit budget where pass 1 found the motion.
  *

@@ -27,6 +27,13 @@ export const meta: ToolMeta = {
     "bpm counter",
     "click track",
     "a440 reference",
+    "mandolin tuner",
+    "cello tuner",
+    "hertz to note converter",
+    "practice metronome",
+    "chromatic tuner microphone",
+    "orchestra tuning reference",
+    "time signature metronome",
   ],
   input: "text/plain",
   output: "application/json",
@@ -170,7 +177,7 @@ export const meta: ToolMeta = {
   copy: {
     what: "A chromatic instrument tuner and a metronome in one page. The tuner listens through your microphone, finds the fundamental pitch with the McLeod Pitch Method, and shows the nearest note, how many cents sharp or flat you are, and which open string you are closest to in the tuning you picked. The metronome schedules every click against the audio clock, so the beat holds steady instead of drifting the way a plain timer does. Presets cover guitar, drop D, seven string, bass, ukulele, violin, cello, mandolin, and open G banjo, and the A4 reference moves from 415 Hz to 466 Hz for baroque pitch or an orchestra that tunes sharp.",
     how: "For tuning, pick your instrument, click Start listening, allow microphone access, then play one string at a time and watch the needle settle. Green in the middle means within five cents; the readout tells you which way to turn the peg. For the metronome, set a tempo or tap it in, choose a time signature and a subdivision, then press Start. You can also type a frequency like 440.5 or a tempo like 120 bpm into the box to get the note, the cents offset, the Italian marking, and the millisecond timings without touching the microphone.",
-    why: "Most tuner and metronome sites wrap a small amount of audio code in ads, an account wall, or a push to install an app, and several upload nothing useful while asking for the microphone anyway. This one asks for the microphone only when you press the button, analyses the audio in your browser, and never records or uploads it. There is no account, no tempo limit, no ad interrupting the click, and the page works offline after the first load.",
+    why: "Most tuner and metronome sites wrap a small amount of audio code in ads, an account wall, or a push to install an app, and several upload nothing useful while asking for the microphone anyway. This one asks for the microphone only when you press the button, analyzes the audio in your browser, and never records or uploads it. There is no account, no tempo limit, no ad interrupting the click, and the page works offline after the first load.",
     faq: [
       {
         q: "Is my microphone audio uploaded anywhere?",

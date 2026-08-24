@@ -27,6 +27,8 @@ export const meta: ToolMeta = {
     "motd generator",
     "block letters text",
     "text art maker",
+    "figlet generator",
+    "figlet online",
   ],
   input: "text/plain",
   output: "text/plain",
@@ -118,6 +120,8 @@ export const meta: ToolMeta = {
       id: "layout",
       label: "Letter spacing",
       default: "default",
+      // Full sentence labels: keep the dropdown rather than a row of buttons.
+      ui: "select",
       options: [
         {
           value: "default",
@@ -144,6 +148,17 @@ export const meta: ToolMeta = {
       min: 0,
       max: 300,
       step: 10,
+    },
+  ],
+  examples: [
+    {
+      label: "Standard font",
+      input: "hello",
+    },
+    {
+      label: "Slant font banner",
+      input: "README",
+      opts: { font: "Slant" },
     },
   ],
   http: { method: "GET", contentType: "text/plain" },

@@ -65,7 +65,7 @@ interface OutgoingBatch {
   id: string;
   files: File[];
   entries: FileEntry[];
-  status: "offered" | "sending" | "done" | "declined" | "cancelled" | "failed";
+  status: "offered" | "sending" | "done" | "declined" | "canceled" | "failed";
   bytesDone: number;
   total: number;
   startedAt: number;
@@ -83,7 +83,7 @@ interface ReceivedFile {
 interface IncomingBatch {
   id: string;
   entries: FileEntry[];
-  status: "offered" | "receiving" | "done" | "declined" | "cancelled" | "failed";
+  status: "offered" | "receiving" | "done" | "declined" | "canceled" | "failed";
   bytesDone: number;
   total: number;
   startedAt: number;
@@ -615,7 +615,7 @@ async function runSend(batch: OutgoingBatch) {
       dc.send(encodeControl({ type: "file-start", batch: batch.id, id: entry.id }));
       let offset = 0;
       while (offset < file.size) {
-        if (cancelOutgoing || dc.readyState !== "open") throw new Error("cancelled");
+        if (cancelOutgoing || dc.readyState !== "open") throw new Error("canceled");
         const slice = file.slice(offset, offset + size);
         const buf = await slice.arrayBuffer();
         dc.send(buf);
@@ -632,9 +632,9 @@ async function runSend(batch: OutgoingBatch) {
     dc.send(encodeControl({ type: "batch-done", batch: batch.id }));
     batch.status = "done";
   } catch {
-    if (batch.status === "sending") batch.status = cancelOutgoing ? "cancelled" : "failed";
-    if (dc.readyState === "open" && batch.status === "cancelled") {
-      dc.send(encodeControl({ type: "cancel", batch: batch.id, reason: "sender cancelled" }));
+    if (batch.status === "sending") batch.status = cancelOutgoing ? "canceled" : "failed";
+    if (dc.readyState === "open" && batch.status === "canceled") {
+      dc.send(encodeControl({ type: "cancel", batch: batch.id, reason: "sender canceled" }));
     }
   } finally {
     if (!busyReceiving.value) stopTicker();
@@ -645,8 +645,8 @@ function cancelSend() {
   const b = outgoing.value;
   if (!b) return;
   if (b.status === "offered") {
-    b.status = "cancelled";
-    channel?.send(encodeControl({ type: "cancel", batch: b.id, reason: "sender cancelled" }));
+    b.status = "canceled";
+    channel?.send(encodeControl({ type: "cancel", batch: b.id, reason: "sender canceled" }));
     return;
   }
   cancelOutgoing = true;
@@ -740,13 +740,13 @@ function handleControl(msg: ControlMessage) {
     }
     case "cancel": {
       if (incoming.value?.id === msg.batch && busyReceiving.value) {
-        incoming.value.status = "cancelled";
+        incoming.value.status = "canceled";
         incoming.value.chunks = [];
         if (!busySending.value) stopTicker();
       }
       if (outgoing.value?.id === msg.batch && busySending.value) {
         cancelOutgoing = true;
-        if (outgoing.value.status === "offered") outgoing.value.status = "cancelled";
+        if (outgoing.value.status === "offered") outgoing.value.status = "canceled";
       }
       break;
     }
@@ -772,9 +772,9 @@ function declineIncoming() {
 function cancelReceive() {
   const b = incoming.value;
   if (!b || b.status !== "receiving") return;
-  b.status = "cancelled";
+  b.status = "canceled";
   b.chunks = [];
-  channel?.send(encodeControl({ type: "cancel", batch: b.id, reason: "receiver cancelled" }));
+  channel?.send(encodeControl({ type: "cancel", batch: b.id, reason: "receiver canceled" }));
   if (!busySending.value) stopTicker();
 }
 
@@ -1021,7 +1021,7 @@ onUnmounted(() => {
             <template v-else-if="outgoing.status === 'declined'">
               The other device declined the files.
             </template>
-            <template v-else-if="outgoing.status === 'cancelled'">Transfer cancelled.</template>
+            <template v-else-if="outgoing.status === 'canceled'">Transfer canceled.</template>
             <template v-else>Transfer failed before it finished.</template>
           </span>
           <span class="grow" />
@@ -1079,7 +1079,7 @@ onUnmounted(() => {
               ({{ formatBytes(incoming.total) }})
             </template>
             <template v-else-if="incoming.status === 'declined'">Declined.</template>
-            <template v-else-if="incoming.status === 'cancelled'">Transfer cancelled.</template>
+            <template v-else-if="incoming.status === 'canceled'">Transfer canceled.</template>
             <template v-else>Transfer failed before it finished.</template>
           </span>
           <span class="grow" />

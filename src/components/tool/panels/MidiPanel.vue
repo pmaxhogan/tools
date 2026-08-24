@@ -6,6 +6,8 @@ import { ToolError } from "@/tools/types";
 import { formatBytes } from "@/lib/format";
 import { useStickToBottom } from "@/lib/stick-to-bottom";
 import { Button } from "@/components/ui/button";
+import { Segmented } from "@/components/ui/segmented";
+import type { SegmentedOption } from "@/components/ui/segmented";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import CopyButton from "@/components/tool/CopyButton.vue";
@@ -79,6 +81,11 @@ onMounted(() => {
 /* ---------------------------------------------------------------- */
 
 const mode = ref<"file" | "live">("file");
+
+const MODE_OPTIONS: SegmentedOption[] = [
+  { value: "file", label: "MIDI file" },
+  { value: "live", label: "Live monitor" },
+];
 
 /* ================================================================ */
 /* FILE mode                                                        */
@@ -550,32 +557,19 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4">
     <!-- mode toggle -->
-    <div
-      class="inline-flex w-fit gap-1 rounded-[10px] bg-secondary p-1 shadow-[var(--sh-inset)]"
-      role="tablist"
-      aria-label="MIDI inspector mode"
+    <Segmented
+      :model-value="mode"
+      :options="MODE_OPTIONS"
+      label="MIDI inspector mode"
+      class="w-fit"
+      @update:model-value="(v: string) => (mode = v as 'file' | 'live')"
     >
-      <Button
-        role="tab"
-        :aria-selected="mode === 'file'"
-        size="sm"
-        :variant="mode === 'file' ? 'default' : 'ghost'"
-        @click="mode = 'file'"
-      >
-        <FileMusic class="size-4" aria-hidden="true" />
-        MIDI file
-      </Button>
-      <Button
-        role="tab"
-        :aria-selected="mode === 'live'"
-        size="sm"
-        :variant="mode === 'live' ? 'default' : 'ghost'"
-        @click="mode = 'live'"
-      >
-        <Radio class="size-4" aria-hidden="true" />
-        Live monitor
-      </Button>
-    </div>
+      <template #default="{ option }">
+        <FileMusic v-if="option.value === 'file'" class="size-4" aria-hidden="true" />
+        <Radio v-else class="size-4" aria-hidden="true" />
+        {{ option.label }}
+      </template>
+    </Segmented>
 
     <!-- ============================================================ -->
     <!-- FILE mode                                                    -->

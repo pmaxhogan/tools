@@ -24,6 +24,7 @@ export const meta: ToolMeta = {
     "dimensional analysis",
     "frink alternative",
     "wolfram alpha alternative",
+    "unit converter online",
   ],
   input: "text/plain",
   output: "application/json",

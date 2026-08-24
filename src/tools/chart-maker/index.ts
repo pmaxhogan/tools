@@ -352,7 +352,7 @@ export function parseChartData(text: string): ChartData {
     );
   }
 
-  // A single column is read as a bare list of numbers, labelled 1, 2, 3.
+  // A single column is read as a bare list of numbers, labeled 1, 2, 3.
   const valueStart = width === 1 ? 0 : 1;
   const cells = body.length * (width - valueStart);
   if (cells > MAX_CELLS) {
@@ -398,7 +398,7 @@ function niceNum(range: number, round: boolean): number {
 function roundTo(value: number, decimals: number): number {
   const factor = Math.pow(10, decimals);
   const rounded = Math.round(value * factor) / factor;
-  // Normalise -0, which would otherwise print as "-0" on an axis.
+  // Normalize -0, which would otherwise print as "-0" on an axis.
   return rounded === 0 ? 0 : rounded;
 }
 
@@ -438,7 +438,12 @@ export function niceTicks(min: number, max: number, count = 5): number[] {
 
 /* --------------------------------------------------------- option intake -- */
 
-interface Resolved {
+/**
+ * Options after defaults and aliases are applied. Exported alongside
+ * `resolveOpts`, `slicePath` and `renderPie` so another tool can borrow the pie
+ * renderer: without the resolved shape those functions are uncallable.
+ */
+export interface Resolved {
   type: string;
   width: number;
   height: number;
@@ -494,8 +499,15 @@ function resolveChoice(
   return hit;
 }
 
-function resolveOpts(opts: Partial<ChartOpts>): Resolved {
-  const type = resolveChoice(opts.type, TYPE_ALIASES, "chart type", Object.keys(TYPE_LABELS), "bar");
+/** Apply defaults and aliases to a partial option bag. */
+export function resolveOpts(opts: Partial<ChartOpts>): Resolved {
+  const type = resolveChoice(
+    opts.type,
+    TYPE_ALIASES,
+    "chart type",
+    Object.keys(TYPE_LABELS),
+    "bar",
+  );
   const palette = resolveChoice(
     opts.palette,
     PALETTE_ALIASES,
@@ -1036,7 +1048,8 @@ function renderHorizontalBar(data: ChartData, series: ChartSeries[], o: Resolved
 
 /* --------------------------------------------------------- pie and donut -- */
 
-function slicePath(
+/** SVG path for one pie or donut slice, sweeping clockwise from a0 to a1. */
+export function slicePath(
   cx: number,
   cy: number,
   outer: number,
@@ -1053,7 +1066,8 @@ function slicePath(
   return `M${point(outer, a0)} A${n(outer)},${n(outer)} 0 ${large} 1 ${point(outer, a1)} L${point(inner, a1)} A${n(inner)},${n(inner)} 0 ${large} 0 ${point(inner, a0)} Z`;
 }
 
-function renderPie(data: ChartData, series: ChartSeries[], o: Resolved): string {
+/** Draw a pie or donut chart as a standalone SVG document. */
+export function renderPie(data: ChartData, series: ChartSeries[], o: Resolved): string {
   const first = series[0];
   const entries: { label: string; value: number }[] = [];
   data.labels.forEach((label, i) => {

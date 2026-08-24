@@ -30,7 +30,13 @@ interface SensorSpec {
 const SENSORS: SensorSpec[] = [
   { id: "full-frame", label: "Full frame 35mm (36 x 24 mm)", width: 36, height: 24, coc: 0.03 },
   { id: "aps-c", label: "APS-C (23.6 x 15.6 mm)", width: 23.6, height: 15.6, coc: 0.02 },
-  { id: "aps-c-canon", label: "Canon APS-C (22.3 x 14.9 mm)", width: 22.3, height: 14.9, coc: 0.019 },
+  {
+    id: "aps-c-canon",
+    label: "Canon APS-C (22.3 x 14.9 mm)",
+    width: 22.3,
+    height: 14.9,
+    coc: 0.019,
+  },
   {
     id: "micro-four-thirds",
     label: "Micro Four Thirds (17.3 x 13 mm)",
@@ -358,7 +364,7 @@ function normalizeInput(raw: string): string {
     .replace(/÷/g, "/")
     .replace(/\biso\s+(\d)/gi, "iso$1")
     .replace(
-      /(\d)\s+(stops?|mm|cm|km|meters?|metres?|m|feet|foot|ft|inches|inch|in|seconds?|secs?|sec|s|x)\b/gi,
+      /(\d)\s+(stops?|mm|cm|km|meters?|meters?|m|feet|foot|ft|inches|inch|in|seconds?|secs?|sec|s|x)\b/gi,
       "$1$2",
     );
 }
@@ -370,7 +376,7 @@ function parseFocal(value: string, token: string): number {
     throw badToken(
       token,
       `Could not read "${value}" as a focal length`,
-      'Write a focal length in millimetres, like "50mm" or "focal=24".',
+      'Write a focal length in millimeters, like "50mm" or "focal=24".',
     );
   }
   return Number(m[1]);
@@ -395,8 +401,8 @@ const DISTANCE_UNITS: Record<string, { mm: number; imperial: boolean }> = {
   m: { mm: 1000, imperial: false },
   meter: { mm: 1000, imperial: false },
   meters: { mm: 1000, imperial: false },
-  metre: { mm: 1000, imperial: false },
-  metres: { mm: 1000, imperial: false },
+  metre: { mm: 1000, imperial: false }, // spelling: allow (accepted input synonym)
+  metres: { mm: 1000, imperial: false }, // spelling: allow (accepted input synonym)
   km: { mm: 1e6, imperial: false },
   ft: { mm: 304.8, imperial: true },
   foot: { mm: 304.8, imperial: true },
@@ -418,7 +424,7 @@ function parseDistance(value: string, token: string): { mm: number; imperial: bo
     throw badToken(
       token,
       `Could not read "${value}" as a distance`,
-      'Write a distance with a unit, like "3m", "300cm", or "10ft". Metres are assumed when no unit is given.',
+      'Write a distance with a unit, like "3m", "300cm", or "10ft". Meters are assumed when no unit is given.',
     );
   }
   const num = Number(m[1]);
@@ -426,11 +432,7 @@ function parseDistance(value: string, token: string): { mm: number; imperial: bo
   if (unit === "") return { mm: num * 1000, imperial: false };
   const spec = DISTANCE_UNITS[unit];
   if (!spec) {
-    throw badToken(
-      token,
-      `Unknown distance unit "${m[2]}"`,
-      "Use mm, cm, m, km, in, ft, or yd.",
-    );
+    throw badToken(token, `Unknown distance unit "${m[2]}"`, "Use mm, cm, m, km, in, ft, or yd.");
   }
   return { mm: num * spec.mm, imperial: spec.imperial };
 }
@@ -536,7 +538,11 @@ function parseNd(value: string, token: string): { stops: number; label: string }
 function parsePlainNumber(value: string, token: string, what: string): number {
   const m = value.match(/^([+-]?\d*\.?\d+)$/);
   if (!m) {
-    throw badToken(token, `Could not read "${value}" as ${what}`, `Write ${what} as a plain number.`);
+    throw badToken(
+      token,
+      `Could not read "${value}" as ${what}`,
+      `Write ${what} as a plain number.`,
+    );
   }
   return Number(m[1]);
 }
@@ -582,7 +588,9 @@ function parseInput(input: string, fallbackMode: Mode): Parsed {
     );
   }
 
-  const tokens = normalizeInput(raw).split(/[\s,;]+/).filter(Boolean);
+  const tokens = normalizeInput(raw)
+    .split(/[\s,;]+/)
+    .filter(Boolean);
   const { mode, consumed } = detectMode(tokens, fallbackMode);
   const out: Parsed = { mode, imperial: false };
 
@@ -792,12 +800,11 @@ function requirePositive(name: string, value: number): void {
 
 function requireFields(mode: Mode, missing: string[], example: string): void {
   if (missing.length === 0) return;
-  const list = missing.length === 1 ? missing[0] : `${missing.slice(0, -1).join(", ")} and ${missing[missing.length - 1]}`;
-  throw new ToolError(
-    "missing-values",
-    `${MODE_LABEL[mode]} needs ${list}.`,
-    `Try "${example}".`,
-  );
+  const list =
+    missing.length === 1
+      ? missing[0]
+      : `${missing.slice(0, -1).join(", ")} and ${missing[missing.length - 1]}`;
+  throw new ToolError("missing-values", `${MODE_LABEL[mode]} needs ${list}.`, `Try "${example}".`);
 }
 
 interface ResolvedSensor {
@@ -808,7 +815,8 @@ interface ResolvedSensor {
 }
 
 function resolveSensor(parsed: Parsed, optSensor: string | undefined): ResolvedSensor {
-  const requested = parsed.sensorId ?? (optSensor ? SENSOR_ALIASES[normalizeKey(optSensor)] : undefined);
+  const requested =
+    parsed.sensorId ?? (optSensor ? SENSOR_ALIASES[normalizeKey(optSensor)] : undefined);
   if (optSensor && !parsed.sensorId && !requested) {
     throw badToken(
       optSensor,
@@ -825,7 +833,7 @@ function resolveSensor(parsed: Parsed, optSensor: string | undefined): ResolvedS
     if (missing.length > 0) {
       throw new ToolError(
         "missing-values",
-        `A custom sensor needs ${missing.join(" and ")} in millimetres.`,
+        `A custom sensor needs ${missing.join(" and ")} in millimeters.`,
         'Try "sensor=custom sensorWidth=36 sensorHeight=24 coc=0.03".',
       );
     }
@@ -906,8 +914,10 @@ function runDof(parsed: Parsed, sensor: ResolvedSensor): PhotographyCalculatorRe
   };
 
   if (Number.isFinite(total)) {
-    out["In front of subject"] = `${formatDistance(front, parsed.imperial)} (${((front / total) * 100).toFixed(1)}%)`;
-    out["Behind subject"] = `${formatDistance(behind, parsed.imperial)} (${((behind / total) * 100).toFixed(1)}%)`;
+    out["In front of subject"] =
+      `${formatDistance(front, parsed.imperial)} (${((front / total) * 100).toFixed(1)}%)`;
+    out["Behind subject"] =
+      `${formatDistance(behind, parsed.imperial)} (${((behind / total) * 100).toFixed(1)}%)`;
   } else {
     out["In front of subject"] = formatDistance(front, parsed.imperial);
     out["Behind subject"] = "infinity";
@@ -960,8 +970,7 @@ function runHyperfocal(parsed: Parsed, sensor: ResolvedSensor): PhotographyCalcu
   }
 
   out.Formula = "H = f^2 / (N x c) + f; focusing at H puts H/2 to infinity in focus";
-  out.Note =
-    `Focus at ${formatDistance(H, parsed.imperial)} and everything from ${formatDistance(H / 2, parsed.imperial)} to the horizon falls inside the depth of field. Focusing past that point buys nothing at the far end and gives up near sharpness.`;
+  out.Note = `Focus at ${formatDistance(H, parsed.imperial)} and everything from ${formatDistance(H / 2, parsed.imperial)} to the horizon falls inside the depth of field. Focusing past that point buys nothing at the far end and gives up near sharpness.`;
   return out;
 }
 
@@ -1032,8 +1041,7 @@ function runExposure(parsed: Parsed): PhotographyCalculatorResult {
       iso = (100 * ((aperture * aperture) / shutter)) / 2 ** ev100;
       notes.push("ISO solved from the exposure value.");
     } else {
-      const measured =
-        Math.log2((aperture * aperture) / shutter) - Math.log2(iso / 100);
+      const measured = Math.log2((aperture * aperture) / shutter) - Math.log2(iso / 100);
       notes.push(
         `Aperture, shutter, and ISO were all given: they measure EV ${measured.toFixed(2)}, which is ${formatStopsDelta(measured - ev100)} the EV ${ev100} you asked for.`,
       );
@@ -1120,7 +1128,8 @@ function runNd(parsed: Parsed): PhotographyCalculatorResult {
   };
 
   if (newTime > 30) {
-    out["Bulb mode"] = `${formatShutter(newTime)} is longer than the 30 s most cameras offer, so use bulb with a remote or an intervalometer.`;
+    out["Bulb mode"] =
+      `${formatShutter(newTime)} is longer than the 30 s most cameras offer, so use bulb with a remote or an intervalometer.`;
   }
 
   for (const f of COMMON_NDS) {
@@ -1129,7 +1138,7 @@ function runNd(parsed: Parsed): PhotographyCalculatorResult {
 
   out.Formula = "new time = base time x filter factor; stops = log2(factor); density = stops x 0.3";
   out.Note =
-    "Times over one second are rounded to the nearest half second, which is finer than any shutter dial. Very dense filters also shift colour and can add a few percent of extra exposure, so bracket long exposures.";
+    "Times over one second are rounded to the nearest half second, which is finer than any shutter dial. Very dense filters also shift color and can add a few percent of extra exposure, so bracket long exposures.";
   return out;
 }
 
@@ -1182,7 +1191,8 @@ function runFov(parsed: Parsed, sensor: ResolvedSensor): PhotographyCalculatorRe
     out[`Frame diagonal at ${label}`] = formatDistance(Math.hypot(width, height), parsed.imperial);
   }
 
-  out.Formula = "angle = 2 x atan(sensor dimension / (2 x focal length)); crop = 43.27 mm / sensor diagonal";
+  out.Formula =
+    "angle = 2 x atan(sensor dimension / (2 x focal length)); crop = 43.27 mm / sensor diagonal";
   out.Note =
     "Angles are the geometric field of a rectilinear lens focused at infinity. Real lenses breathe a little at close focus, and fisheye projections do not follow this formula at all.";
   return out;

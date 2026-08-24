@@ -217,7 +217,7 @@ describe("outputNameFor", () => {
 });
 
 describe("looksLikeAudio", () => {
-  it("recognises audio extensions and nothing else", () => {
+  it("recognizes audio extensions and nothing else", () => {
     expect(looksLikeAudio("song.mp3")).toBe(true);
     expect(looksLikeAudio("SONG.FLAC")).toBe(true);
     expect(looksLikeAudio("clip.mp4")).toBe(false);
@@ -310,7 +310,7 @@ describe("run", () => {
     expect(run("clip.mov", { target: "flac" })["Audio"]).toContain("only the audio");
   });
 
-  it("throws for an option value it cannot honour", () => {
+  it("throws for an option value it cannot honor", () => {
     expect(() => run("clip.mov", { target: "avi" })).toThrow(ToolError);
   });
 });

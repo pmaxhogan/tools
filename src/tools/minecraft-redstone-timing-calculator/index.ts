@@ -186,7 +186,7 @@ export function convertTime(value: number, unit: TimeUnit, tps = TICKS_PER_SECON
       );
   }
   // Everything the game schedules is a whole tick, so the canonical answer is
-  // rounded. Sub-tick input is a request the game cannot honour.
+  // rounded. Sub-tick input is a request the game cannot honor.
   gameTicks = Math.round(gameTicks * 1e6) / 1e6;
   const wholeTicks = Math.round(gameTicks);
   const nominalSeconds = gameTicks / TICKS_PER_SECOND;
@@ -888,7 +888,7 @@ export function componentReference(version: string): ComponentRow[] {
     .sort((a, b) => a.delayTicks - b.delayTicks || a.label.localeCompare(b.label));
 }
 
-/** The delay one component has in one version, honouring per-version overrides. */
+/** The delay one component has in one version, honoring per-version overrides. */
 export function delayForVersion(component: ComponentTiming, version: VersionId): number {
   return component.perVersion?.[version] ?? component.delayTicks;
 }

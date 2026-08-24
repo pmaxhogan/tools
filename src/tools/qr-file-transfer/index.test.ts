@@ -529,7 +529,7 @@ describe("qr-file-transfer: estimating", () => {
 /* -------------------------------------------------------------------------- */
 
 describe("qr-file-transfer: run", () => {
-  it("returns the labelled rows the shell renders", () => {
+  it("returns the labeled rows the shell renders", () => {
     const out = run(makePayload(5000, 2), OPTS);
     expect(Object.keys(out)).toEqual([
       "Payload size",

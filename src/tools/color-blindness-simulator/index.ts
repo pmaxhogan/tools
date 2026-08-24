@@ -1,6 +1,6 @@
 import { ToolError, type ToolLogic } from "../types";
 
-/** A colour vision deficiency the simulator can model. */
+/** A color vision deficiency the simulator can model. */
 export type CvdKind =
   | "protanopia"
   | "protanomaly"
@@ -29,7 +29,7 @@ export type Matrix3 = readonly [
 ];
 
 /**
- * Machado, Oliveira and Fernandes (2009) colour vision deficiency matrices,
+ * Machado, Oliveira and Fernandes (2009) color vision deficiency matrices,
  * plus a Rec. 709 luminance matrix for achromatopsia.
  *
  * The dichromacy entries (protanopia, deuteranopia, tritanopia) are the
@@ -102,12 +102,12 @@ function clamp(n: number, lo: number, hi: number): number {
 function badColor(token: string): ToolError {
   return new ToolError(
     "bad-color",
-    `Could not read "${token}" as a colour.`,
-    "Use #rgb, #rrggbb, a bare 6 digit hex like ff8800, or rgb(255, 136, 0). Put one colour per line or separate them with commas.",
+    `Could not read "${token}" as a color.`,
+    "Use #rgb, #rrggbb, a bare 6 digit hex like ff8800, or rgb(255, 136, 0). Put one color per line or separate them with commas.",
   );
 }
 
-/** Parse one colour token into a 0..255 RGB triple. Accepts #rgb, #rrggbb, bare hex, rgb(). */
+/** Parse one color token into a 0..255 RGB triple. Accepts #rgb, #rrggbb, bare hex, rgb(). */
 export function parseColor(s: string): Rgb {
   const token = (s ?? "").trim();
   if (!token) throw badColor(s ?? "");
@@ -147,7 +147,7 @@ export function parseColor(s: string): Rgb {
   ];
 }
 
-/** Split a palette blob into colour tokens, keeping rgb(...) groups intact. */
+/** Split a palette blob into color tokens, keeping rgb(...) groups intact. */
 function tokenize(input: string): string[] {
   const out: string[] = [];
   const re = /rgba?\([^)]*\)?|[^\s,;]+/gi;
@@ -159,7 +159,7 @@ function tokenize(input: string): string[] {
   return out;
 }
 
-/* ------------------------------------------------------------ colour science */
+/* ------------------------------------------------------------ color science */
 
 /** sRGB transfer function: gamma encoded 0..1 to linear 0..1. */
 function srgbToLinear(c: number): number {
@@ -180,7 +180,7 @@ function toLinear(rgb: Rgb): [number, number, number] {
 }
 
 /**
- * Simulate one colour under a deficiency. Input and output are 0..255 sRGB
+ * Simulate one color under a deficiency. Input and output are 0..255 sRGB
  * triples: decode to linear, apply the 3x3 matrix, clamp, re-encode.
  */
 export function simulateRgb(rgb: Rgb, kind: CvdKind): Rgb {
@@ -232,7 +232,7 @@ function toLab(rgb: Rgb): [number, number, number] {
   return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
 }
 
-/** CIE76 colour difference between two 0..255 sRGB triples. */
+/** CIE76 color difference between two 0..255 sRGB triples. */
 function deltaE76(a: Rgb, b: Rgb): number {
   const la = toLab(a);
   const lb = toLab(b);
@@ -268,8 +268,8 @@ export function run(input: string, opts: ColorBlindnessOpts): ColorBlindnessResu
   if (tokens.length === 0) {
     throw new ToolError(
       "empty-input",
-      "Enter at least one colour to simulate.",
-      "Paste a palette with one colour per line, such as #1d4ed8 or rgb(29, 78, 216).",
+      "Enter at least one color to simulate.",
+      "Paste a palette with one color per line, such as #1d4ed8 or rgb(29, 78, 216).",
     );
   }
 
@@ -287,7 +287,7 @@ export function run(input: string, opts: ColorBlindnessOpts): ColorBlindnessResu
   const out: ColorBlindnessResult = {};
 
   colors.forEach((_, i) => {
-    const key = `Colour ${i + 1} (${hexes[i]})`;
+    const key = `Color ${i + 1} (${hexes[i]})`;
     out[key] = wantAll
       ? kinds.map((k) => `${k} ${toHex(simulated[k][i])}`).join(" | ")
       : `${hexes[i]} -> ${toHex(simulated[kinds[0]][i])}`;
@@ -318,7 +318,7 @@ export function run(input: string, opts: ColorBlindnessOpts): ColorBlindnessResu
       out[label] = [before, ...parts].join(" | ");
     }
   } else if (showContrast) {
-    out["Contrast check"] = "Add a second colour to compare adjacent pairs.";
+    out["Contrast check"] = "Add a second color to compare adjacent pairs.";
   }
 
   if (showContrast) {
@@ -334,7 +334,7 @@ export function run(input: string, opts: ColorBlindnessOpts): ColorBlindnessResu
           )}.`;
   }
 
-  out["Summary"] = `${colors.length} ${plural(colors.length, "colour", "colours")} simulated as ${
+  out["Summary"] = `${colors.length} ${plural(colors.length, "color", "colors")} simulated as ${
     wantAll ? "all seven deficiencies" : kinds[0]
   }, using the Machado 2009 matrices in linear RGB.`;
 

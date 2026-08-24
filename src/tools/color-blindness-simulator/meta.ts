@@ -4,8 +4,8 @@ export const meta: ToolMeta = {
   slug: "color-blindness-simulator",
   matrixSlug: "colorblind",
   icon: "Eye",
-  name: "Colour Blindness Simulator",
-  description: "Preview palettes and images under colour vision deficiencies.",
+  name: "Color Blindness Simulator",
+  description: "Preview palettes and images under color vision deficiencies.",
   category: "Dev",
   keywords: [
     "color blindness simulator",
@@ -25,6 +25,7 @@ export const meta: ToolMeta = {
     "achromatopsia grayscale",
     "wcag contrast palette",
     "is my palette colorblind safe",
+    "color blind test",
   ],
   input: "text/plain",
   output: "application/json",
@@ -89,7 +90,7 @@ export const meta: ToolMeta = {
           ],
         },
         {
-          label: "No colour vision",
+          label: "No color vision",
           synonyms: ["monochrome", "grayscale vision", "total colour blindness"],
           options: [
             {
@@ -115,9 +116,9 @@ export const meta: ToolMeta = {
     },
   ],
   copy: {
-    what: "Runs a palette through seven colour vision deficiencies and gives you the simulated hex for each one: protanopia, protanomaly, deuteranopia, deuteranomaly, tritanopia, tritanomaly, and achromatopsia. Every colour is decoded from sRGB to linear light, transformed by the published Machado, Oliveira and Fernandes (2009) matrix for that deficiency, then re-encoded, so the output is a real simulation rather than a hue rotation. With the pair check on it also reports the WCAG contrast ratio of each neighbouring pair before and after simulation, plus a CIE76 deltaE, and flags any pair that collapses into near identical colours.",
-    how: "Paste your palette with one colour per line, or separated by commas or spaces. Hex short form (#f00), hex long form (#1d4ed8), bare six digit hex, and rgb(29, 78, 216) all parse. Leave the deficiency on All seven for a full comparison, or pick a single one to get a compact original to simulated row per colour. Every row has its own copy button, so you can paste the simulated palette straight into a design file or a ticket.",
-    why: "The well known simulators either want an upload, cap you at a few images a day, or wrap the answer in ads. This one is a plain text box: your inputs never leave your device, there is no sign in, and there is no limit on how many palettes you check. It also does the part most simulators skip, which is telling you which specific pair of your colours stops being distinguishable and by how much.",
+    what: "Runs a palette through seven color vision deficiencies and gives you the simulated hex for each one: protanopia, protanomaly, deuteranopia, deuteranomaly, tritanopia, tritanomaly, and achromatopsia. Every color is decoded from sRGB to linear light, transformed by the published Machado, Oliveira and Fernandes (2009) matrix for that deficiency, then re-encoded, so the output is a real simulation rather than a hue rotation. With the pair check on it also reports the WCAG contrast ratio of each neighboring pair before and after simulation, plus a CIE76 deltaE, and flags any pair that collapses into near identical colors.",
+    how: "Paste your palette with one color per line, or separated by commas or spaces. Hex short form (#f00), hex long form (#1d4ed8), bare six digit hex, and rgb(29, 78, 216) all parse. Leave the deficiency on All seven for a full comparison, or pick a single one to get a compact original to simulated row per color. Every row has its own copy button, so you can paste the simulated palette straight into a design file or a ticket.",
+    why: "The well known simulators either want an upload, cap you at a few images a day, or wrap the answer in ads. This one is a plain text box: your inputs never leave your device, there is no sign in, and there is no limit on how many palettes you check. It also does the part most simulators skip, which is telling you which specific pair of your colors stops being distinguishable and by how much.",
     faq: [
       {
         q: "Which simulation matrices does this use, and why do results differ from other tools?",
@@ -129,7 +130,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "What does the hard to tell apart flag actually mean?",
-        a: "For each neighbouring pair it computes a CIE76 deltaE in Lab space between the two simulated colours. A deltaE under 12 means the pair reads as roughly the same colour to someone with that deficiency, so the flag is a prompt to change one of them or add a non colour cue such as a shape, label, or line style.",
+        a: "For each neighboring pair it computes a CIE76 deltaE in Lab space between the two simulated colors. A deltaE under 12 means the pair reads as roughly the same color to someone with that deficiency, so the flag is a prompt to change one of them or add a non color cue such as a shape, label, or line style.",
       },
     ],
   },

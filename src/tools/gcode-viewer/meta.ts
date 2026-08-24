@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: "Layers",
   name: "G-code Viewer",
   description:
-    "Visualise a G-code toolpath layer by layer, with filament, time and temperature stats.",
+    "Visualize a G-code toolpath layer by layer, with filament, time and temperature stats.",
   category: "Hardware",
   keywords: [
     "gcode viewer online",
@@ -57,7 +57,7 @@ export const meta: ToolMeta = {
     {
       kind: "select",
       id: "colorBy",
-      label: "Colour the strokes by",
+      label: "Color the strokes by",
       default: "type",
       options: [
         {
@@ -74,8 +74,8 @@ export const meta: ToolMeta = {
     },
   ],
   copy: {
-    what: "Drop a .gcode file and see what it actually does. This page walks the program the way firmware would, following G0 and G1 moves, G2 and G3 arcs, absolute and relative positioning, M82 and M83 extrusion modes, G92 resets and G28 homing, then splits the result into layers using the slicer markers when they are there and Z changes when they are not. You get the layer count and layer height, the printed bounding box, filament in millimetres and grams, extruding and travel distance, a rough time estimate, hotend and bed temperatures, fan speed and tool changes. It also reads the header comments, so it can tell you which slicer wrote the file and what that slicer estimated for time and filament.",
-    how: "Drop the file, or paste the text of a short program. Turn on the toolpath drawing to get a top down SVG: leave the layer at 0 for the whole stack with the lower layers faded, or set a layer number to draw just that one. Turn on travel moves to see where the head jumps between islands, and switch the colouring to speed when you want to spot where the slicer slowed down. Every number is recomputed from the moves themselves, so it also works on hand written and post processed files.",
+    what: "Drop a .gcode file and see what it actually does. This page walks the program the way firmware would, following G0 and G1 moves, G2 and G3 arcs, absolute and relative positioning, M82 and M83 extrusion modes, G92 resets and G28 homing, then splits the result into layers using the slicer markers when they are there and Z changes when they are not. You get the layer count and layer height, the printed bounding box, filament in millimeters and grams, extruding and travel distance, a rough time estimate, hotend and bed temperatures, fan speed and tool changes. It also reads the header comments, so it can tell you which slicer wrote the file and what that slicer estimated for time and filament.",
+    how: "Drop the file, or paste the text of a short program. Turn on the toolpath drawing to get a top down SVG: leave the layer at 0 for the whole stack with the lower layers faded, or set a layer number to draw just that one. Turn on travel moves to see where the head jumps between islands, and switch the coloring to speed when you want to spot where the slicer slowed down. Every number is recomputed from the moves themselves, so it also works on hand written and post processed files.",
     why: "Most G-code previewers either want an upload to somebody else's server or want you to install a desktop slicer just to open one file. This one parses the program in the page, so your files and inputs never leave your device, there is no size gate at a few megabytes, and it keeps working offline after the first load. It also does not just trust the slicer header: the filament, distance and bounds come from the moves, so a post processing script that broke your file shows up here as numbers that no longer match the comments.",
     faq: [
       {
@@ -88,7 +88,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "Does it handle arcs and CNC files?",
-        a: "Yes. G2 and G3 arcs are flattened into short line segments in the XY plane, from either the I and J centre offsets or the R radius form, with the commanded endpoint kept exact so the path never drifts. Inch mode from G20 is converted to millimetres. Files with no extrusion at all, which is most CNC work, still get bounds, distance, a rough time and the toolpath drawing; the filament and temperature rows just say they were not set in the file, because nothing in the program sets them.",
+        a: "Yes. G2 and G3 arcs are flattened into short line segments in the XY plane, from either the I and J center offsets or the R radius form, with the commanded endpoint kept exact so the path never drifts. Inch mode from G20 is converted to millimeters. Files with no extrusion at all, which is most CNC work, still get bounds, distance, a rough time and the toolpath drawing; the filament and temperature rows just say they were not set in the file, because nothing in the program sets them.",
       },
     ],
   },

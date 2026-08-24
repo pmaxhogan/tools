@@ -325,7 +325,7 @@ describe("the mob cap", () => {
     expect(afkGeometry(LATEST, "water_ambient").instantDespawn).toBe(64);
   });
 
-  it("counts only the chunks whose centre is inside the 128 block circle", () => {
+  it("counts only the chunks whose center is inside the 128 block circle", () => {
     expect(countAttemptChunks(8)).toBe(countAttemptChunks(32));
     expect(countAttemptChunks(8)).toBeLessThan(289);
     expect(countAttemptChunks(1)).toBe(9);

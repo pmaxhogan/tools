@@ -1000,7 +1000,7 @@ function ascii(text: string): number[] {
  * A small magic number table. Deliberately its own copy rather than a shared
  * import: the file type identifier tool answers "what is this file", which
  * wants breadth, while this one only needs the handful of formats that have a
- * built in template plus the few neighbours a user would otherwise think were
+ * built in template plus the few neighbors a user would otherwise think were
  * missing. Ordered most specific first, so the two byte signatures at the end
  * never shadow a longer match.
  */

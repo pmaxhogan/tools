@@ -29,6 +29,7 @@ export const meta: ToolMeta = {
     "openssl x509 text online",
     "crt viewer",
     "der certificate parser",
+    "certificate expiration",
   ],
   input: "text/plain",
   output: "application/json",
@@ -58,6 +59,26 @@ export const meta: ToolMeta = {
           ],
         },
       ],
+    },
+  ],
+  examples: [
+    {
+      label: "Sample TLS leaf certificate",
+      input: `-----BEGIN CERTIFICATE-----
+MIICbDCCAhKgAwIBAgIEC63A3jAKBggqhkjOPQQDAjBPMQswCQYDVQQGEwJVUzEZ
+MBcGA1UECgwQRXhhbXBsZSBUZXN0IE9yZzElMCMGA1UEAwwcRXhhbXBsZSBUZXN0
+IEludGVybWVkaWF0ZSBDQTAeFw0yNjA4MTkwNDEwNDVaFw0yNjExMjcwNDEwNDVa
+MEMxCzAJBgNVBAYTAlVTMRkwFwYDVQQKDBBFeGFtcGxlIFRlc3QgT3JnMRkwFwYD
+VQQDDBB0ZXN0LmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
+nClJt9B8HNJ8gLJgkpjfmhevsKJoPrnJg8G7QPi4nFj9Nwy+0u/TGQOXV1AmTkNk
+vZ6ujvtnaq4m6U3FgmdTxaOB5zCB5DAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQE
+AwIFoDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0OBBYEFLvV
+I+DseIIbbldXjhzecxS2fbmAMB8GA1UdIwQYMBaAFEZ0N4oLX+68GL8y7nl4MkBN
+1+yZMGUGA1UdEQReMFyCEHRlc3QuZXhhbXBsZS5jb22CFHd3dy50ZXN0LmV4YW1w
+bGUuY29thwTAAAIKgRFhZG1pbkBleGFtcGxlLmNvbYYZaHR0cHM6Ly90ZXN0LmV4
+YW1wbGUuY29tLzAKBggqhkjOPQQDAgNIADBFAiEA1IS8SCkbHgL/B7Ks4tobFgZP
+wYfcJi7hfy+xqmbUmI4CIDNfnD1eCoZ5o2HoKAEXSFUas0jyYqRCg+GqczMKxrTf
+-----END CERTIFICATE-----`,
     },
   ],
   http: { method: "POST", contentType: "text/plain" },

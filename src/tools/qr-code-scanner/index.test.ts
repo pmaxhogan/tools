@@ -83,7 +83,7 @@ describe("qr-code-scanner: decoding", () => {
     );
   });
 
-  it("flattens the decoded result to a labelled record via run", () => {
+  it("flattens the decoded result to a labeled record via run", () => {
     const record = run(renderToImage("https://example.com"), { inversion: "attemptBoth" });
     expect(record.Type).toBe("Web link");
     expect(record.Text).toBe("https://example.com");
