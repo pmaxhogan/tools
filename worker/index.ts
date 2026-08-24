@@ -141,6 +141,24 @@ import { meta as markdownTableEditorMeta } from "../src/tools/markdown-table-edi
 import { run as markdownTableEditorRun } from "../src/tools/markdown-table-editor/index";
 import { meta as printCostCalculatorMeta } from "../src/tools/print-cost-calculator/meta";
 import { run as printCostCalculatorRun } from "../src/tools/print-cost-calculator/index";
+import { meta as chemicalLookupMeta } from "../src/tools/chemical-lookup/meta";
+import { run as chemicalLookupRun } from "../src/tools/chemical-lookup/index";
+import { meta as ghsPictogramLookupMeta } from "../src/tools/ghs-pictogram-lookup/meta";
+import { run as ghsPictogramLookupRun } from "../src/tools/ghs-pictogram-lookup/index";
+import { meta as molarMassCalculatorMeta } from "../src/tools/molar-mass-calculator/meta";
+import { run as molarMassCalculatorRun } from "../src/tools/molar-mass-calculator/index";
+import { meta as nfpa704FireDiamondMeta } from "../src/tools/nfpa-704-fire-diamond/meta";
+import { run as nfpa704FireDiamondRun } from "../src/tools/nfpa-704-fire-diamond/index";
+import { meta as periodicTableMeta } from "../src/tools/periodic-table/meta";
+import { run as periodicTableRun } from "../src/tools/periodic-table/index";
+import { meta as airportCodeLookupMeta } from "../src/tools/airport-code-lookup/meta";
+import { run as airportCodeLookupRun } from "../src/tools/airport-code-lookup/index";
+import { meta as countryCodeLookupMeta } from "../src/tools/country-code-lookup/meta";
+import { run as countryCodeLookupRun } from "../src/tools/country-code-lookup/index";
+import { meta as languageCodeLookupMeta } from "../src/tools/language-code-lookup/meta";
+import { run as languageCodeLookupRun } from "../src/tools/language-code-lookup/index";
+import { meta as wikidataCitiesDatabaseMeta } from "../src/tools/wikidata-cities-database/meta";
+import { run as wikidataCitiesDatabaseRun } from "../src/tools/wikidata-cities-database/index";
 
 export interface Env {
   /** Static assets from the Astro build. */
@@ -374,6 +392,19 @@ const ALL: Endpoint[] = [
   expose(printCostCalculatorMeta, printCostCalculatorRun, {
     sampleQuery: "grams=25&material=pla&hours=3",
   }),
+  expose(chemicalLookupMeta, chemicalLookupRun, { sample: "acetone" }),
+  expose(ghsPictogramLookupMeta, ghsPictogramLookupRun, {
+    sampleQuery: "pictograms=GHS02,GHS07&mode=all",
+  }),
+  expose(molarMassCalculatorMeta, molarMassCalculatorRun, { sample: "CuSO4.5H2O" }),
+  expose(nfpa704FireDiamondMeta, nfpa704FireDiamondRun, {
+    sampleQuery: "health=3&fire=0&instability=2",
+  }),
+  expose(periodicTableMeta, periodicTableRun, { sampleQuery: "symbol=Fe" }),
+  expose(airportCodeLookupMeta, airportCodeLookupRun, { sample: "ORD to LHR" }),
+  expose(countryCodeLookupMeta, countryCodeLookupRun, { sample: "DE" }),
+  expose(languageCodeLookupMeta, languageCodeLookupRun, { sample: "ja" }),
+  expose(wikidataCitiesDatabaseMeta, wikidataCitiesDatabaseRun, {}),
 ];
 
 const ENDPOINTS: Endpoint[] = ALL.filter((e) => e.meta.http);

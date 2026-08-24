@@ -179,3 +179,12 @@ Minecraft Elytra Calculator,minecraft-elytra,Flight speed and rockets per distan
 Minecraft Growth Timers,minecraft-growth,Crop and animal growth odds from random tick constants,Minecraft,Yes,B,B,A-,B,3.0
 Minecraft Redstone Timing,minecraft-redstone-timing,Tick conversions and hopper throughput and comparator delays,Minecraft,Yes,B+,B,B+,B,2.9
 Minecraft Fall Damage,minecraft-fall,Merged into the damage calculator; kept for search coverage,Minecraft,Yes,A-,B,B+,B+,3.0
+NFPA 704 Fire Diamond,nfpa-704-fire-diamond,Pick ratings and see matching chemicals with a downloadable diamond,Chemistry,Yes,A-,B+,A-,B,3.1
+Chemical Lookup,chemical-lookup,Name or CAS or formula to properties and hazard data,Chemistry,Yes,B+,B+,B+,B,3.0
+GHS Pictogram Lookup,ghs-pictogram-lookup,Pick pictograms or H codes and see which chemicals carry them,Chemistry,Yes,B+,B,B+,B-,2.8
+Molar Mass Calculator,molar-mass-calculator,Formula parser with molar mass and percent composition,Chemistry,Yes,B,A-,C,B+,3.2
+Periodic Table,periodic-table,Interactive table with trend color maps and element cards,Chemistry,Yes,B+,B+,C,B+,3.0
+Country Code Lookup,country-code-lookup,ISO 3166 codes with calling codes and currencies and plugs,Geo,Yes,B,B+,B,B,3.0
+Airport Code Lookup,airport-code-lookup,IATA and ICAO codes with distance between two airports,Geo,Yes,B,B+,B,B,3.0
+Language Code Lookup,language-code-lookup,ISO 639 and ISO 15924 codes with scripts and directions,Text,Yes,B,B,B,B-,2.8
+Wikidata Cities Database,wikidata-cities-database,Query a baked SQLite of world cities in the browser,Data,Yes,B+,B,A-,B-,2.8

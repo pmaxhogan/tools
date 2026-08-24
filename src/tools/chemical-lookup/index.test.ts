@@ -8,6 +8,7 @@ import {
   lookup,
   pubchemUrl,
   run,
+  suggestions,
   wikipediaUrl,
 } from "./index";
 
@@ -70,6 +71,26 @@ describe("lookup", () => {
     expect(lookup("chloride", 20).map((h) => h.chemical.id)).toEqual(
       lookup("chloride", 20).map((h) => h.chemical.id),
     );
+  });
+});
+
+describe("suggestions", () => {
+  it("shortens a misspelled word until something matches", () => {
+    expect(suggestions("acetonezz").map((c) => c.name)).toContain("Acetone");
+    expect(suggestions("ethanolll").length).toBeGreaterThan(0);
+  });
+
+  it("gives up on a word with no recognizable stem", () => {
+    expect(suggestions("zzzzzzznotathing")).toEqual([]);
+    expect(suggestions("ab")).toEqual([]);
+    expect(suggestions("")).toEqual([]);
+  });
+
+  it("honors the limit and returns names in order", () => {
+    const three = suggestions("chloride", 3);
+    expect(three.length).toBeLessThanOrEqual(3);
+    const names = three.map((c) => c.name.toLowerCase());
+    expect(names).toEqual([...names].sort());
   });
 });
 

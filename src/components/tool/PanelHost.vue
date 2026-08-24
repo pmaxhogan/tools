@@ -159,6 +159,10 @@ const panels: Record<string, Component> = {
   ),
   "photography-calculator": defineAsyncComponent(() => import("./panels/PhotographyPanel.vue")),
   "wire-gauge-calculator": defineAsyncComponent(() => import("./panels/WireGaugePanel.vue")),
+  "nfpa-704-fire-diamond": defineAsyncComponent(() => import("./panels/NfpaDiamondPanel.vue")),
+  "chemical-lookup": defineAsyncComponent(() => import("./panels/ChemicalLookupPanel.vue")),
+  "ghs-pictogram-lookup": defineAsyncComponent(() => import("./panels/GhsLookupPanel.vue")),
+  "periodic-table": defineAsyncComponent(() => import("./panels/PeriodicTablePanel.vue")),
   "coordinate-converter": defineAsyncComponent(
     () => import("./panels/CoordinateConverterPanel.vue"),
   ),

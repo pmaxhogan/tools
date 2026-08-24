@@ -176,8 +176,7 @@ export function describeChemical(c: Chemical): Record<string, string> {
     if (c.ghs.p.length) {
       const shown = c.ghs.p.slice(0, P_CODE_CAP).join(", ");
       const extra = c.ghs.p.length - Math.min(P_CODE_CAP, c.ghs.p.length);
-      out["GHS precautionary statements"] =
-        extra > 0 ? `${shown}, and ${extra} more` : shown;
+      out["GHS precautionary statements"] = extra > 0 ? `${shown}, and ${extra} more` : shown;
     }
   }
 
