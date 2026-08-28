@@ -55,3 +55,8 @@ dist-worker-check/
 # source. Local-only by license posture; never committed or redistributed.
 mc-pipeline/work/
 training/qr-detector/eval-js/node_modules/
+
+# Derived debug imagery: BoofCV failure crops and private-photo diagnostics.
+# Private inputs must never enter this public repo.
+training/qr-detector/eval-js/failures/
+training/qr-detector/eval-js/diag*/
