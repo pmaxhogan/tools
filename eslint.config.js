@@ -11,6 +11,13 @@ export default tseslint.config(
   ...astro.configs.recommended,
   ...vue.configs["flat/recommended"],
   {
+    // Agent worktrees under .claude/ carry their own tsconfig, which would
+    // otherwise make typescript-eslint see two candidate project roots.
+    languageOptions: {
+      parserOptions: { tsconfigRootDir: import.meta.dirname },
+    },
+  },
+  {
     files: ["**/*.vue", "src/lib/**", "src/components/**"],
     languageOptions: {
       globals: globals.browser,
@@ -93,6 +100,8 @@ export default tseslint.config(
       ".astro/",
       ".wrangler/",
       "node_modules/",
+      // Agent worktrees: sibling checkouts, linted in their own sessions.
+      ".claude/worktrees/",
       // Python training pipeline: its venv vendors JS (torch model_dump).
       "training/",
       "src/components/ui/",
