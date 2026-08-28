@@ -7,7 +7,8 @@
     "public/ffmpeg",
     "public/models",
     "public/pyodide",
-    "public/tesseract"
+    "public/tesseract",
+    "training"
   ],
   "compilerOptions": {
     "jsx": "preserve",

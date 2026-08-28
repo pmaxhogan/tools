@@ -93,6 +93,8 @@ export default tseslint.config(
       ".astro/",
       ".wrangler/",
       "node_modules/",
+      // Python training pipeline: its venv vendors JS (torch model_dump).
+      "training/",
       "src/components/ui/",
       "public/ffmpeg/",
       "public/models/",

@@ -1,0 +1,172 @@
+[
+  {
+    "category": "blurred",
+    "images": 45,
+    "codes": 65,
+    "jsqr": 12,
+    "zxing": 38,
+    "deep": 38,
+    "detRecall": 64,
+    "falsePositives": 2
+  },
+  {
+    "category": "bright_spots",
+    "images": 32,
+    "codes": 97,
+    "jsqr": 5,
+    "zxing": 31,
+    "deep": 40,
+    "detRecall": 81,
+    "falsePositives": 0
+  },
+  {
+    "category": "brightness",
+    "images": 28,
+    "codes": 85,
+    "jsqr": 1,
+    "zxing": 69,
+    "deep": 70,
+    "detRecall": 58,
+    "falsePositives": 1
+  },
+  {
+    "category": "close",
+    "images": 40,
+    "codes": 40,
+    "jsqr": 3,
+    "zxing": 40,
+    "deep": 40,
+    "detRecall": 40,
+    "falsePositives": 0
+  },
+  {
+    "category": "curved",
+    "images": 50,
+    "codes": 60,
+    "jsqr": 16,
+    "zxing": 34,
+    "deep": 35,
+    "detRecall": 58,
+    "falsePositives": 3
+  },
+  {
+    "category": "damaged",
+    "images": 37,
+    "codes": 43,
+    "jsqr": 1,
+    "zxing": 12,
+    "deep": 16,
+    "detRecall": 43,
+    "falsePositives": 2
+  },
+  {
+    "category": "glare",
+    "images": 50,
+    "codes": 53,
+    "jsqr": 7,
+    "zxing": 21,
+    "deep": 24,
+    "detRecall": 53,
+    "falsePositives": 0
+  },
+  {
+    "category": "high_version",
+    "images": 33,
+    "codes": 37,
+    "jsqr": 2,
+    "zxing": 33,
+    "deep": 33,
+    "detRecall": 37,
+    "falsePositives": 0
+  },
+  {
+    "category": "lots",
+    "images": 7,
+    "codes": 420,
+    "jsqr": 0,
+    "zxing": 112,
+    "deep": 112,
+    "detRecall": 12,
+    "falsePositives": 0
+  },
+  {
+    "category": "monitor",
+    "images": 17,
+    "codes": 17,
+    "jsqr": 0,
+    "zxing": 17,
+    "deep": 17,
+    "detRecall": 17,
+    "falsePositives": 0
+  },
+  {
+    "category": "nominal",
+    "images": 65,
+    "codes": 78,
+    "jsqr": 37,
+    "zxing": 74,
+    "deep": 74,
+    "detRecall": 78,
+    "falsePositives": 8
+  },
+  {
+    "category": "noncompliant",
+    "images": 16,
+    "codes": 26,
+    "jsqr": 2,
+    "zxing": 21,
+    "deep": 24,
+    "detRecall": 26,
+    "falsePositives": 0
+  },
+  {
+    "category": "pathological",
+    "images": 23,
+    "codes": 23,
+    "jsqr": 11,
+    "zxing": 12,
+    "deep": 12,
+    "detRecall": 21,
+    "falsePositives": 0
+  },
+  {
+    "category": "perspective",
+    "images": 35,
+    "codes": 35,
+    "jsqr": 22,
+    "zxing": 24,
+    "deep": 25,
+    "detRecall": 31,
+    "falsePositives": 0
+  },
+  {
+    "category": "rotations",
+    "images": 44,
+    "codes": 133,
+    "jsqr": 1,
+    "zxing": 132,
+    "deep": 132,
+    "detRecall": 133,
+    "falsePositives": 1
+  },
+  {
+    "category": "shadows",
+    "images": 14,
+    "codes": 20,
+    "jsqr": 6,
+    "zxing": 19,
+    "deep": 19,
+    "detRecall": 20,
+    "falsePositives": 4
+  },
+  {
+    "category": "TOTAL",
+    "images": 536,
+    "codes": 1232,
+    "jsqr": 126,
+    "zxing": 689,
+    "deep": 711,
+    "detRecall": 772,
+    "falsePositives": 21
+  }
+]

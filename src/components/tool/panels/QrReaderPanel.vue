@@ -1,9 +1,23 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, shallowRef } from "vue";
-import { Check, X } from "lucide-vue-next";
+import jsQR from "jsqr";
+import { Check, ScanSearch, X } from "lucide-vue-next";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
-import { ToolError } from "@/tools/types";
-import { decodeQr, type DecodeResult } from "@/tools/qr-code-scanner/index";
+import { interpret, type DecodeResult } from "@/tools/qr-code-scanner/index";
+import type { RawImage } from "@/tools/qr-code-scanner/detector";
+import {
+  type DeepEngine,
+  type DownloadProgress,
+  type Inversion,
+  type ScanHit,
+  type ScanMethod,
+  deepModelCached,
+  deepScan,
+  ensureDeepEngine,
+  scanStandard,
+} from "@/lib/qr-scan";
+import { shouldAutoDownload } from "@/lib/connection";
+import { formatBytes } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -13,15 +27,16 @@ import CopyButton from "../CopyButton.vue";
 
 /**
  * Bespoke panel for the QR scanner. The generic ToolShell reads one textarea;
- * this tool needs a live camera feed, a throttled decode loop over canvas
- * frames, and an image upload path, all of which live here. The pure layer in
- * `src/tools/qr-code-scanner/` owns every payload interpretation and the
- * jsQR call; this file only moves pixels into it and paints the result.
+ * this tool needs a live camera feed, a decode loop over canvas frames, an
+ * image upload path, and the staged engine cascade in src/lib/qr-scan.ts:
+ * jsQR, then zxing-wasm, then the ML deep scan (detector + bow-corrected
+ * rectification). The pure layer in src/tools/qr-code-scanner/ owns payload
+ * interpretation and all geometry; this file moves pixels and paints results.
  *
- * Nothing here is ever written to the URL fragment or localStorage. A scanned
- * code can hold a plaintext Wi-Fi password or a private contact, so the decoded
- * content is deliberately kept out of any persistent, shareable, or logged
- * surface (mirroring the Wi-Fi exclusion in the QR generator panel).
+ * Nothing here is ever written to the URL fragment or localStorage except the
+ * deep-scan preference flag. A scanned code can hold a plaintext Wi-Fi
+ * password or a private contact, so decoded content is deliberately kept out
+ * of any persistent, shareable, or logged surface.
  */
 defineProps<{ meta: ToolMeta }>();
 
@@ -31,8 +46,6 @@ const MODE_OPTIONS: SegmentedOption[] = [
   { value: "camera", label: "Camera" },
   { value: "upload", label: "Upload image" },
 ];
-/** Subset of QrOpts['inversion'] the UI offers; 'invertFirst' has no control here. */
-type Inversion = "attemptBoth" | "dontInvert" | "onlyInvert";
 const inversionStill = ref<Inversion>("attemptBoth");
 
 const inversionSpec: SelectOptionSpec = {
@@ -59,157 +72,162 @@ const inversionSpec: SelectOptionSpec = {
   ],
 };
 
-const result = shallowRef<DecodeResult | null>(null);
+/** One decoded code, interpreted for display. */
+interface ResultItem {
+  result: DecodeResult;
+  method: ScanMethod;
+}
+
+const results = shallowRef<ResultItem[]>([]);
+const unreadCount = ref(0);
 const error = ref<{ message: string; fix?: string } | null>(null);
+const busyMessage = ref("");
+
+const METHOD_LABELS: Record<ScanMethod, string> = {
+  jsqr: "quick scan",
+  zxing: "standard scan",
+  deep: "deep scan",
+};
+
+function publishHits(hits: ScanHit[]) {
+  const seen = new Set(results.value.map((r) => r.result.text));
+  const next = [...results.value];
+  for (const hit of hits) {
+    if (seen.has(hit.text)) continue;
+    seen.add(hit.text);
+    next.push({ result: interpret(hit.text), method: hit.method });
+  }
+  results.value = next;
+}
 
 /* ---------------------------------------------------------------- */
-/* camera                                                           */
+/* deep scan engine state                                            */
 /* ---------------------------------------------------------------- */
 
-const videoEl = ref<HTMLVideoElement>();
-const scanning = ref(false);
-const torchOn = ref(false);
-const torchSupported = ref(false);
+/**
+ * The one-time engine download is about 40 MB (the ONNX runtime plus the
+ * trained detector), kept in the browser cache afterwards. It starts on its
+ * own where the connection is not metered; on metered connections it waits
+ * for a tap, matching every other engine download on this site.
+ */
+const DEEP_DOWNLOAD_BYTES = 40 * 1024 * 1024;
+/** localStorage key for "the visitor turned deep scan on" (a preference). */
+const DEEP_PREF_KEY = "qr-scanner-deep";
 
-/** The MediaStream is not reactive: Vue must never proxy a live track. */
-let stream: MediaStream | null = null;
-let videoTrack: MediaStreamTrack | null = null;
-let scanTimer: ReturnType<typeof setInterval> | undefined;
-/** A reused offscreen canvas so we are not allocating one per frame. */
-let scanCanvas: HTMLCanvasElement | null = null;
+type DeepState = "idle" | "offered" | "downloading" | "ready" | "failed";
+const deepState = ref<DeepState>("idle");
+const deepProgress = ref<DownloadProgress>({ received: 0, total: 0 });
+let engine: DeepEngine | null = null;
 
-/** Longest edge we downscale a camera frame to before decoding, for speed. */
-const SCAN_MAX_EDGE = 720;
-/** Decode a handful of times a second rather than on every animation frame. */
-const SCAN_INTERVAL_MS = 150;
-
-function describeCameraError(e: unknown): { message: string; fix?: string } {
-  const name = e instanceof Error ? e.name : "";
-  if (name === "NotAllowedError" || name === "SecurityError")
-    return {
-      message: "Camera access was blocked, so the live scanner cannot start.",
-      fix: "Allow the camera for this page in your browser, or switch to Upload image and scan a photo of the code instead.",
-    };
-  if (
-    name === "NotFoundError" ||
-    name === "OverconstrainedError" ||
-    name === "DevicesNotFoundError"
-  )
-    return {
-      message: "No camera was found on this device.",
-      fix: "Switch to Upload image and scan a photo or screenshot of the code instead.",
-    };
-  return {
-    message: `The camera could not be started: ${e instanceof Error ? e.message : String(e)}`,
-    fix: "Switch to Upload image and scan a photo of the code instead.",
-  };
-}
-
-async function startCamera() {
-  error.value = null;
-  result.value = null;
-  if (!navigator.mediaDevices?.getUserMedia) {
-    error.value = describeCameraError(new DOMException("", "NotFoundError"));
-    return;
-  }
+function deepPreferred(): boolean {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } },
-      audio: false,
-    });
-    videoTrack = stream.getVideoTracks()[0] ?? null;
-
-    // Torch is a Chromium-on-mobile extension and is not in the DOM types, and
-    // MediaTrackCapabilities itself has no runtime global (unlike
-    // MediaStreamTrack), so referencing it by name trips eslint's no-undef.
-    // Assert only the one field this panel reads instead.
-    const caps = videoTrack?.getCapabilities?.() as { torch?: boolean } | undefined;
-    torchSupported.value = Boolean(caps?.torch);
-    torchOn.value = false;
-
-    const video = videoEl.value;
-    if (!video) return;
-    video.srcObject = stream;
-    await new Promise<void>((resolve) => {
-      if (video.readyState >= 1) return resolve();
-      video.addEventListener("loadedmetadata", () => resolve(), { once: true });
-    });
-    await video.play();
-
-    scanning.value = true;
-    scanTimer = setInterval(scanFrame, SCAN_INTERVAL_MS);
-  } catch (e) {
-    error.value = describeCameraError(e);
-    stopCamera();
-  }
-}
-
-function stopCamera() {
-  clearInterval(scanTimer);
-  scanTimer = undefined;
-  scanning.value = false;
-  torchOn.value = false;
-  torchSupported.value = false;
-  if (videoEl.value) videoEl.value.srcObject = null;
-  stream?.getTracks().forEach((t) => t.stop());
-  stream = null;
-  videoTrack = null;
-}
-
-async function toggleTorch() {
-  if (!videoTrack) return;
-  const next = !torchOn.value;
-  try {
-    await (
-      videoTrack as MediaStreamTrack & {
-        applyConstraints(c: { advanced: { torch: boolean }[] }): Promise<void>;
-      }
-    ).applyConstraints({ advanced: [{ torch: next }] });
-    torchOn.value = next;
+    return localStorage.getItem(DEEP_PREF_KEY) === "1";
   } catch {
-    // Some devices report the capability but reject the constraint; hide it.
-    torchSupported.value = false;
+    return false;
   }
 }
 
-function scanFrame() {
-  const video = videoEl.value;
-  if (!video || video.readyState < 2) return;
-  const vw = video.videoWidth;
-  const vh = video.videoHeight;
-  if (!vw || !vh) return;
-
-  const scale = Math.min(1, SCAN_MAX_EDGE / Math.max(vw, vh));
-  const w = Math.round(vw * scale);
-  const h = Math.round(vh * scale);
-
-  scanCanvas ??= document.createElement("canvas");
-  scanCanvas.width = w;
-  scanCanvas.height = h;
-  const ctx = scanCanvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return;
-  ctx.drawImage(video, 0, 0, w, h);
-  const image = ctx.getImageData(0, 0, w, h);
-
+function rememberDeepPreference() {
   try {
-    // Live frames are always dark-on-light off a screen or print, so we skip the
-    // second inverted pass here to keep the loop cheap.
-    const decoded = decodeQr(image, { inversion: "dontInvert" });
-    // Freeze on a hit: stop the camera, show the result, offer "Scan again".
-    result.value = decoded;
-    error.value = null;
-    stopCamera();
+    localStorage.setItem(DEEP_PREF_KEY, "1");
   } catch {
-    // No code in this frame. Keep scanning silently.
+    // Preferences only; losing this costs one extra tap next visit.
   }
+}
+
+async function loadDeepEngine(): Promise<DeepEngine | null> {
+  if (engine) return engine;
+  deepState.value = "downloading";
+  try {
+    engine = await ensureDeepEngine((p) => (deepProgress.value = p));
+    deepState.value = "ready";
+    rememberDeepPreference();
+    return engine;
+  } catch {
+    deepState.value = "failed";
+    return null;
+  }
+}
+
+/** Whether the deep engine may start loading without a tap right now. */
+async function deepMayAutoload(): Promise<boolean> {
+  if (engine) return true;
+  if (deepPreferred() || (await deepModelCached())) return true;
+  return shouldAutoDownload();
 }
 
 /* ---------------------------------------------------------------- */
-/* upload                                                           */
+/* upload                                                            */
 /* ---------------------------------------------------------------- */
 
 const fileInput = ref<HTMLInputElement>();
 const dragging = ref(false);
+/** The last uploaded image, kept so a deep scan tap can rerun it. */
+let lastUpload: RawImage | null = null;
+let lastUploadHits: ScanHit[] = [];
+
+async function runDeepOn(image: RawImage, known: ScanHit[]) {
+  const eng = await loadDeepEngine();
+  if (!eng) return;
+  const hadResults = results.value.length > 0;
+  busyMessage.value = hadResults
+    ? "Deep scan is checking for more codes…"
+    : "Deep scan is looking for codes…";
+  try {
+    const deep = await deepScan(eng, image, known);
+    publishHits(deep.hits);
+    unreadCount.value = deep.unread.length;
+    if (!results.value.length && !deep.unread.length) {
+      error.value = {
+        message: "No QR code was found, even with the deep scan.",
+        fix: "Try a shot where the code is larger, sharper, or better lit.",
+      };
+    }
+  } finally {
+    busyMessage.value = "";
+  }
+}
+
+async function processUpload(image: RawImage) {
+  results.value = [];
+  unreadCount.value = 0;
+  error.value = null;
+  busyMessage.value = "Scanning…";
+  lastUpload = image;
+  try {
+    const hits = await scanStandard(image, inversionStill.value);
+    lastUploadHits = hits;
+    publishHits(hits);
+  } finally {
+    busyMessage.value = "";
+  }
+
+  if (!results.value.length) {
+    // Nothing found: the deep pass runs on its own, downloading the engine
+    // if the connection allows, otherwise waiting for one tap.
+    if (await deepMayAutoload()) {
+      await runDeepOn(image, lastUploadHits);
+    } else {
+      deepState.value = "offered";
+      error.value = {
+        message: "No QR code was found by the standard scan.",
+        fix: "The deep scan can find small, warped, or damaged codes.",
+      };
+    }
+  } else if (engine || (await deepModelCached())) {
+    // Something found and the engine is already on hand: sweep for further
+    // codes the classical pass missed. No download is started just for this.
+    await runDeepOn(image, lastUploadHits);
+  } else {
+    deepState.value = "offered";
+  }
+}
+
+async function startOfferedDeep() {
+  if (!lastUpload) return;
+  error.value = null;
+  await runDeepOn(lastUpload, lastUploadHits);
+}
 
 function decodeImageElement(img: HTMLImageElement) {
   const w = img.naturalWidth;
@@ -218,23 +236,17 @@ function decodeImageElement(img: HTMLImageElement) {
     error.value = { message: "That image has no pixels to read.", fix: "Try a different file." };
     return;
   }
+  // Very large photos are decoded at up to ~12 MP; enough detail for the
+  // decoders while keeping the pixel buffers manageable.
+  const scale = Math.min(1, 3500 / Math.max(w, h));
   const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = Math.round(w * scale);
+  canvas.height = Math.round(h * scale);
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return;
-  ctx.drawImage(img, 0, 0);
-  const image = ctx.getImageData(0, 0, w, h);
-  try {
-    result.value = decodeQr(image, { inversion: inversionStill.value });
-    error.value = null;
-  } catch (e) {
-    result.value = null;
-    error.value =
-      e instanceof ToolError
-        ? { message: e.message, fix: e.fix }
-        : { message: e instanceof Error ? e.message : String(e) };
-  }
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  void processUpload({ data: image.data, width: image.width, height: image.height });
 }
 
 function acceptFile(file: File | null | undefined) {
@@ -291,26 +303,257 @@ function onPaste(e: ClipboardEvent) {
 }
 
 /* ---------------------------------------------------------------- */
-/* mode + lifecycle                                                 */
+/* camera                                                            */
+/* ---------------------------------------------------------------- */
+
+const videoEl = ref<HTMLVideoElement>();
+const scanning = ref(false);
+const torchOn = ref(false);
+const torchSupported = ref(false);
+const deepAssist = ref(false);
+
+/** The MediaStream is not reactive: Vue must never proxy a live track. */
+let stream: MediaStream | null = null;
+let videoTrack: MediaStreamTrack | null = null;
+let scanTimer: ReturnType<typeof setInterval> | undefined;
+/** Reused offscreen canvases so we are not allocating per frame. */
+let fastCanvas: HTMLCanvasElement | null = null;
+let fullCanvas: HTMLCanvasElement | null = null;
+
+/** Longest edge for the cheap per-tick jsQR pass. */
+const SCAN_MAX_EDGE = 720;
+const SCAN_INTERVAL_MS = 150;
+/** The zxing pass reads the full frame, a few times a second at most. */
+const ZXING_INTERVAL_MS = 600;
+/** Deep assist cadence adapts to measured inference time. */
+const DEEP_MIN_INTERVAL_MS = 1200;
+
+let zxingBusy = false;
+let lastZxingAt = 0;
+let deepBusy = false;
+let lastDeepAt = 0;
+let lastDeepCostMs = 0;
+
+function describeCameraError(e: unknown): { message: string; fix?: string } {
+  const name = e instanceof Error ? e.name : "";
+  if (name === "NotAllowedError" || name === "SecurityError")
+    return {
+      message: "Camera access was blocked, so the live scanner cannot start.",
+      fix: "Allow the camera for this page in your browser, or switch to Upload image and scan a photo of the code instead.",
+    };
+  if (
+    name === "NotFoundError" ||
+    name === "OverconstrainedError" ||
+    name === "DevicesNotFoundError"
+  )
+    return {
+      message: "No camera was found on this device.",
+      fix: "Switch to Upload image and scan a photo or screenshot of the code instead.",
+    };
+  return {
+    message: `The camera could not be started: ${e instanceof Error ? e.message : String(e)}`,
+    fix: "Switch to Upload image and scan a photo of the code instead.",
+  };
+}
+
+async function startCamera() {
+  error.value = null;
+  results.value = [];
+  unreadCount.value = 0;
+  if (!navigator.mediaDevices?.getUserMedia) {
+    error.value = describeCameraError(new DOMException("", "NotFoundError"));
+    return;
+  }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+      },
+      audio: false,
+    });
+    videoTrack = stream.getVideoTracks()[0] ?? null;
+
+    // Torch is a Chromium-on-mobile extension and is not in the DOM types.
+    const caps = videoTrack?.getCapabilities?.() as { torch?: boolean } | undefined;
+    torchSupported.value = Boolean(caps?.torch);
+    torchOn.value = false;
+
+    const video = videoEl.value;
+    if (!video) return;
+    video.srcObject = stream;
+    await new Promise<void>((resolve) => {
+      if (video.readyState >= 1) return resolve();
+      video.addEventListener("loadedmetadata", () => resolve(), { once: true });
+    });
+    await video.play();
+
+    scanning.value = true;
+    lastZxingAt = 0;
+    lastDeepAt = 0;
+    scanTimer = setInterval(scanTick, SCAN_INTERVAL_MS);
+    if (deepAssist.value) void loadDeepEngine();
+  } catch (e) {
+    error.value = describeCameraError(e);
+    stopCamera();
+  }
+}
+
+function stopCamera() {
+  clearInterval(scanTimer);
+  scanTimer = undefined;
+  scanning.value = false;
+  torchOn.value = false;
+  torchSupported.value = false;
+  if (videoEl.value) videoEl.value.srcObject = null;
+  stream?.getTracks().forEach((t) => t.stop());
+  stream = null;
+  videoTrack = null;
+}
+
+async function toggleTorch() {
+  if (!videoTrack) return;
+  const next = !torchOn.value;
+  try {
+    await (
+      videoTrack as MediaStreamTrack & {
+        applyConstraints(c: { advanced: { torch: boolean }[] }): Promise<void>;
+      }
+    ).applyConstraints({ advanced: [{ torch: next }] });
+    torchOn.value = next;
+  } catch {
+    torchSupported.value = false;
+  }
+}
+
+function grabFrame(maxEdge: number, reuse: "fast" | "full"): RawImage | null {
+  const video = videoEl.value;
+  if (!video || video.readyState < 2) return null;
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  if (!vw || !vh) return null;
+  const scale = Math.min(1, maxEdge / Math.max(vw, vh));
+  const w = Math.round(vw * scale);
+  const h = Math.round(vh * scale);
+  let canvas = reuse === "fast" ? fastCanvas : fullCanvas;
+  canvas ??= document.createElement("canvas");
+  if (reuse === "fast") fastCanvas = canvas;
+  else fullCanvas = canvas;
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return null;
+  ctx.drawImage(video, 0, 0, w, h);
+  const image = ctx.getImageData(0, 0, w, h);
+  return { data: image.data, width: w, height: h };
+}
+
+function cameraHit(hits: ScanHit[]) {
+  if (!hits.length || !scanning.value) return;
+  publishHits(hits);
+  error.value = null;
+  stopCamera();
+}
+
+function scanTick() {
+  if (!scanning.value) return;
+
+  // Cheap pass: jsQR on a downscaled frame, every tick. Live frames are
+  // usually dark on light, so the inverted second pass is skipped here.
+  const fast = grabFrame(SCAN_MAX_EDGE, "fast");
+  if (fast) {
+    const found = fastDecode(fast);
+    if (found.length) return cameraHit(found);
+  }
+
+  const now = Date.now();
+
+  // Robust pass: zxing on the full frame, throttled, never overlapping.
+  if (!zxingBusy && now - lastZxingAt >= ZXING_INTERVAL_MS) {
+    const full = grabFrame(1920, "full");
+    if (full) {
+      zxingBusy = true;
+      lastZxingAt = now;
+      void scanStandard(full, "dontInvert")
+        .then((hits) => cameraHit(hits))
+        .finally(() => (zxingBusy = false));
+    }
+  }
+
+  // Deep assist: the detector every couple of seconds, cadence scaled to how
+  // long inference actually takes so a slow device is not starved.
+  const deepInterval = Math.max(DEEP_MIN_INTERVAL_MS, lastDeepCostMs * 2.5);
+  if (deepAssist.value && engine && !deepBusy && now - lastDeepAt >= deepInterval) {
+    const full = grabFrame(1920, "full");
+    if (full) {
+      deepBusy = true;
+      lastDeepAt = now;
+      const t0 = performance.now();
+      void deepScan(engine, full)
+        .then((deep) => {
+          lastDeepCostMs = performance.now() - t0;
+          cameraHit(deep.hits);
+        })
+        .finally(() => (deepBusy = false));
+    }
+  }
+}
+
+/** The synchronous per-tick pass, kept out of the async engine cascade. */
+function fastDecode(image: RawImage): ScanHit[] {
+  const found = jsQR(image.data, image.width, image.height, {
+    inversionAttempts: "dontInvert",
+  });
+  return found && found.data ? [{ text: found.data, method: "jsqr" }] : [];
+}
+
+async function toggleDeepAssist() {
+  if (deepAssist.value) {
+    deepAssist.value = false;
+    return;
+  }
+  deepAssist.value = true;
+  if (!engine) {
+    if (await deepMayAutoload()) void loadDeepEngine();
+    else deepState.value = "offered";
+  }
+}
+
+async function confirmDeepDownload() {
+  await loadDeepEngine();
+}
+
+/* ---------------------------------------------------------------- */
+/* mode + lifecycle                                                  */
 /* ---------------------------------------------------------------- */
 
 function setMode(next: Mode) {
   if (next === mode.value) return;
   stopCamera();
   mode.value = next;
-  result.value = null;
+  results.value = [];
+  unreadCount.value = 0;
   error.value = null;
+  busyMessage.value = "";
 }
 
 function scanAgain() {
-  result.value = null;
+  results.value = [];
+  unreadCount.value = 0;
   error.value = null;
-  if (mode.value === "camera") startCamera();
+  if (mode.value === "camera") void startCamera();
 }
 
-const linkResult = computed(() =>
-  result.value?.url && result.value.kind === "url" ? result.value.url : null,
-);
+function linkFor(item: ResultItem): string | null {
+  return item.result.url && item.result.kind === "url" ? item.result.url : null;
+}
+
+const deepDownloadPercent = computed(() => {
+  const { received, total } = deepProgress.value;
+  if (!total) return null;
+  return Math.min(100, Math.round((received / total) * 100));
+});
 
 if (typeof window !== "undefined") window.addEventListener("paste", onPaste);
 
@@ -345,6 +588,53 @@ onUnmounted(() => {
       </p>
     </div>
 
+    <!-- Deep scan download states -->
+    <div
+      v-if="deepState === 'offered'"
+      class="flex flex-wrap items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm shadow-[var(--sh-inset)]"
+    >
+      <ScanSearch class="size-4 shrink-0 text-muted-foreground" />
+      <span class="text-muted-foreground">
+        Deep scan finds small, warped, and damaged codes. It is a one time download of about
+        {{ formatBytes(DEEP_DOWNLOAD_BYTES) }} that is saved for next time, and it runs entirely
+        on your device.
+      </span>
+      <Button size="sm" @click="mode === 'upload' ? startOfferedDeep() : confirmDeepDownload()">
+        Download and scan
+      </Button>
+    </div>
+    <div
+      v-else-if="deepState === 'downloading'"
+      class="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm text-muted-foreground shadow-[var(--sh-inset)]"
+    >
+      <span
+        class="size-3.5 shrink-0 animate-spin rounded-full border-2 border-muted-foreground/40 border-t-transparent"
+        aria-hidden="true"
+      />
+      <span>
+        Preparing the deep scanner{{
+          deepDownloadPercent === null ? "…" : `: ${deepDownloadPercent}% downloaded`
+        }}
+      </span>
+    </div>
+    <div v-else-if="deepState === 'failed'" class="text-sm text-muted-foreground">
+      The deep scanner could not be loaded. The standard scan still works; check your connection
+      and try again.
+    </div>
+
+    <!-- Busy -->
+    <div
+      v-if="busyMessage"
+      class="flex items-center gap-2 text-sm text-muted-foreground"
+      role="status"
+    >
+      <span
+        class="size-3.5 shrink-0 animate-spin rounded-full border-2 border-muted-foreground/40 border-t-transparent"
+        aria-hidden="true"
+      />
+      {{ busyMessage }}
+    </div>
+
     <!-- Camera -->
     <div v-if="mode === 'camera'" class="flex flex-col gap-3">
       <div class="relative overflow-hidden rounded-[10px] bg-black shadow-[var(--sh-inset)]">
@@ -362,7 +652,7 @@ onUnmounted(() => {
           aria-hidden="true"
         />
         <div
-          v-if="!scanning && !result"
+          v-if="!scanning && !results.length"
           class="flex min-h-56 flex-col items-center justify-center gap-3 px-4 py-8 text-center"
         >
           <p class="max-w-sm text-sm text-white/80">
@@ -378,6 +668,14 @@ onUnmounted(() => {
           >Scanning… hold the code steady in the frame.</span
         >
         <span class="grow" />
+        <Button
+          variant="outline"
+          size="sm"
+          :aria-pressed="deepAssist"
+          @click="toggleDeepAssist"
+        >
+          {{ deepAssist ? "Deep scan on" : "Deep scan" }}
+        </Button>
         <Button
           v-if="torchSupported"
           variant="outline"
@@ -428,9 +726,10 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Result -->
+    <!-- Results -->
     <div
-      v-if="result"
+      v-for="(item, index) in results"
+      :key="item.result.text"
       class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
     >
       <div class="flex flex-wrap items-center justify-between gap-2">
@@ -438,20 +737,26 @@ onUnmounted(() => {
           class="flex items-center gap-1.5 text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
         >
           <Check class="size-3.5 text-[var(--positive)]" />
-          {{ result.label }}
+          {{ item.result.label }}
+          <span v-if="results.length > 1" class="font-normal normal-case">
+            ({{ index + 1 }} of {{ results.length }})
+          </span>
         </span>
         <div class="flex items-center gap-1">
-          <CopyButton :text="result.text" label="Copy" />
-          <Button variant="ghost" size="sm" @click="scanAgain"> Scan again </Button>
+          <span class="text-[11px] text-muted-foreground">found by {{ METHOD_LABELS[item.method] }}</span>
+          <CopyButton :text="item.result.text" label="Copy" />
+          <Button v-if="index === 0" variant="ghost" size="sm" @click="scanAgain">
+            Scan again
+          </Button>
         </div>
       </div>
 
       <!-- Structured fields, when the payload shape is understood -->
       <dl
-        v-if="result.fields?.length"
+        v-if="item.result.fields?.length"
         class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[max-content_1fr]"
       >
-        <template v-for="field in result.fields" :key="field.label">
+        <template v-for="field in item.result.fields" :key="field.label">
           <dt class="text-xs text-muted-foreground sm:pt-0.5">
             {{ field.label }}
           </dt>
@@ -463,13 +768,13 @@ onUnmounted(() => {
 
       <!-- Safe link: shown, never auto-opened, and only for http(s) -->
       <a
-        v-if="linkResult"
-        :href="linkResult"
+        v-if="linkFor(item)"
+        :href="linkFor(item)!"
         target="_blank"
         rel="noopener noreferrer"
         class="text-sm font-medium break-all text-primary underline underline-offset-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        {{ linkResult }}
+        {{ linkFor(item) }}
       </a>
 
       <!-- Raw decoded text -->
@@ -477,13 +782,26 @@ onUnmounted(() => {
         <span class="text-xs text-muted-foreground">Decoded text</span>
         <pre
           class="max-h-56 overflow-auto rounded-[6px] bg-card p-2 font-mono text-xs break-all whitespace-pre-wrap shadow-[var(--sh-inset)]"
-          >{{ result.text }}</pre>
+          >{{ item.result.text }}</pre>
       </div>
+    </div>
+
+    <!-- Detected but unreadable codes -->
+    <div
+      v-if="unreadCount > 0"
+      class="flex items-center gap-2 text-xs text-muted-foreground"
+    >
+      <ScanSearch class="size-3.5 shrink-0" />
+      <span>
+        The deep scan saw {{ unreadCount === 1 ? "a code shape" : `${unreadCount} code shapes` }} it
+        could not read. Too much of the pattern is missing or blurred; a closer, sharper shot may
+        decode.
+      </span>
     </div>
 
     <!-- Empty result affordance for a stopped camera -->
     <div
-      v-else-if="mode === 'camera' && !scanning"
+      v-else-if="mode === 'camera' && !scanning && !results.length"
       class="flex items-center gap-2 text-xs text-muted-foreground"
     >
       <X class="size-3.5" />

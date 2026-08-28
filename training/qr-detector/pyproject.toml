@@ -1,0 +1,30 @@
+[project]
+name = "qr-detector-training"
+version = "0.1.0"
+description = "Synthetic-data training pipeline for the tools.maxhogan.dev QR corner detector"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "torch>=2.7",
+    "torchvision>=0.22",
+    "numpy>=2.0",
+    "pillow>=10.0",
+    "opencv-python-headless>=4.10",
+    "segno>=1.6",
+    "onnx>=1.16",
+    "onnxruntime>=1.19",
+    "requests>=2.32",
+    "tqdm>=4.66",
+]
+
+[tool.uv]
+# torch/torchvision come from the CUDA 12.8 index; everything else from PyPI.
+index-strategy = "unsafe-best-match"
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }

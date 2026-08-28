@@ -1,0 +1,162 @@
+[
+  {
+    "name": "hard",
+    "images": 800,
+    "codes": 989,
+    "falsePositives": 345,
+    "table": [
+      {
+        "bucket": "all",
+        "n": 989,
+        "jsqr": 1.9,
+        "zxing": 5.4,
+        "deep": 6.1,
+        "detRecall": 69.7
+      },
+      {
+        "bucket": "small (side < 48px)",
+        "n": 301,
+        "jsqr": 0,
+        "zxing": 0.3,
+        "deep": 0.3,
+        "detRecall": 34.2
+      },
+      {
+        "bucket": "medium (48 to 96px)",
+        "n": 243,
+        "jsqr": 1.2,
+        "zxing": 3.3,
+        "deep": 3.7,
+        "detRecall": 72
+      },
+      {
+        "bucket": "large (>= 96px)",
+        "n": 445,
+        "jsqr": 3.6,
+        "zxing": 9.9,
+        "deep": 11.2,
+        "detRecall": 92.4
+      },
+      {
+        "bucket": "cylinder wrapped",
+        "n": 338,
+        "jsqr": 0,
+        "zxing": 0,
+        "deep": 0,
+        "detRecall": 64.8
+      },
+      {
+        "bucket": "center logo",
+        "n": 258,
+        "jsqr": 0.4,
+        "zxing": 1.9,
+        "deep": 2.3,
+        "detRecall": 69.4
+      },
+      {
+        "bucket": "logo > ECC limit /2",
+        "n": 145,
+        "jsqr": 0.7,
+        "zxing": 0.7,
+        "deep": 0.7,
+        "detRecall": 64.1
+      },
+      {
+        "bucket": "occluded patch",
+        "n": 161,
+        "jsqr": 0.6,
+        "zxing": 1.2,
+        "deep": 1.9,
+        "detRecall": 66.5
+      },
+      {
+        "bucket": "heavy blur (sigma > 1.6)",
+        "n": 404,
+        "jsqr": 1.5,
+        "zxing": 2.7,
+        "deep": 3,
+        "detRecall": 60.9
+      }
+    ]
+  },
+  {
+    "name": "liketrain",
+    "images": 400,
+    "codes": 504,
+    "falsePositives": 75,
+    "table": [
+      {
+        "bucket": "all",
+        "n": 504,
+        "jsqr": 6.3,
+        "zxing": 15.9,
+        "deep": 17.3,
+        "detRecall": 89.3
+      },
+      {
+        "bucket": "small (side < 48px)",
+        "n": 99,
+        "jsqr": 0,
+        "zxing": 2,
+        "deep": 2,
+        "detRecall": 70.7
+      },
+      {
+        "bucket": "medium (48 to 96px)",
+        "n": 142,
+        "jsqr": 3.5,
+        "zxing": 12.7,
+        "deep": 12.7,
+        "detRecall": 86.6
+      },
+      {
+        "bucket": "large (>= 96px)",
+        "n": 263,
+        "jsqr": 10.3,
+        "zxing": 22.8,
+        "deep": 25.5,
+        "detRecall": 97.7
+      },
+      {
+        "bucket": "cylinder wrapped",
+        "n": 100,
+        "jsqr": 1,
+        "zxing": 1,
+        "deep": 1,
+        "detRecall": 86
+      },
+      {
+        "bucket": "center logo",
+        "n": 87,
+        "jsqr": 4.6,
+        "zxing": 9.2,
+        "deep": 9.2,
+        "detRecall": 89.7
+      },
+      {
+        "bucket": "logo > ECC limit /2",
+        "n": 40,
+        "jsqr": 2.5,
+        "zxing": 2.5,
+        "deep": 2.5,
+        "detRecall": 90
+      },
+      {
+        "bucket": "occluded patch",
+        "n": 74,
+        "jsqr": 0,
+        "zxing": 4.1,
+        "deep": 5.4,
+        "detRecall": 85.1
+      },
+      {
+        "bucket": "heavy blur (sigma > 1.6)",
+        "n": 131,
+        "jsqr": 8.4,
+        "zxing": 14.5,
+        "deep": 14.5,
+        "detRecall": 81.7
+      }
+    ]
+  }
+]

@@ -36,11 +36,20 @@ the plan for all 168 tools.
   over 2 MB.
 - URL slugs are keyword-shaped for SEO (`qr-code-generator`); `matrixSlug`
   maps back to `tool-matrix.csv` when they differ.
+- `training/qr-detector/` — the PyTorch pipeline (synthetic data, training,
+  ONNX export, eval harness) behind the QR scanner's deep scan. Python via uv,
+  not part of the site build; only its README, sources, and the committed
+  `export/qr-detector.onnx` ship in git. `prepare-models.mjs` stages that ONNX
+  to `/models/qr-detector/` (a `source: "file"` entry), zxing-wasm's reader
+  wasm to `/models/zxing/`, and the scan cascade lives in `src/lib/qr-scan.ts`
+  over the pure geometry in `src/tools/qr-code-scanner/detector.ts`.
 
 ## Commands
 
 - `npm test` / `npx vitest run src/tools/<slug>` — logic tests
-- `npm run build` — astro build + `scripts/generate-sw.mjs` (service worker)
+- `npm run build` — runs `scripts/build.mjs`: every `prepare-*.mjs` stager in
+  parallel (disjoint public/ subtrees), then astro build, then
+  `scripts/generate-sw.mjs` (service worker)
 - `npm run lint` — includes purity rules for `src/tools`
 - `npm run typecheck` — `astro check` then `vue-tsc`. Both are needed: astro
   check covers `.astro` and `.ts` and silently skips `.vue`, which is most of

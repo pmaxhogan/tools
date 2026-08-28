@@ -39,9 +39,19 @@ public/pyodide/
 # raw downloads that back the staging step, so rebuilds refetch nothing
 .model-cache/
 
+# QR detector training: env, datasets, checkpoints, and runs stay local.
+# Only the training source and the exported ONNX (training/qr-detector/export/)
+# are committed.
+training/qr-detector/.venv/
+training/qr-detector/data/
+training/qr-detector/runs/
+training/qr-detector/__pycache__/
+training/qr-detector/**/__pycache__/
+
 # wrangler dry-run output
 dist-worker-check/
 
 # minecraft pipeline artifacts: jars, JDKs, servers, mappings, decompiled
 # source. Local-only by license posture; never committed or redistributed.
 mc-pipeline/work/
+training/qr-detector/eval-js/node_modules/

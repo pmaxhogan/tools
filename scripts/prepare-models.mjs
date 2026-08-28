@@ -225,6 +225,23 @@ const ENTRIES = [
     to: "models/ort/ort-wasm-simd-threaded.asyncify.mjs",
   },
 
+  // zxing-cpp compiled to WebAssembly, the robust QR decoder behind the
+  // scanner's standard pass. Served from this origin like every other engine.
+  {
+    source: "node_modules",
+    from: "zxing-wasm/dist/reader/zxing_reader.wasm",
+    to: "models/zxing/zxing_reader.wasm",
+  },
+
+  // The QR corner detector trained in training/qr-detector/ (see its README).
+  // A repo file, not a download: the ONNX export is committed so the deploy
+  // build cannot drift from the training run that produced it.
+  {
+    source: "file",
+    from: "training/qr-detector/export/qr-detector.onnx",
+    to: "models/qr-detector/qr-detector.onnx",
+  },
+
   // Tesseract OCR. See the corePath note in the header comment.
   {
     source: "node_modules",
@@ -292,6 +309,14 @@ async function resolveSource(entry) {
     const path = join(root, "node_modules", entry.from);
     if (!existsSync(path)) {
       fail(`missing ${path}. Run npm install so every model package is present.`);
+    }
+    return { path, bytes: statSync(path).size };
+  }
+
+  if (entry.source === "file") {
+    const path = join(root, entry.from);
+    if (!existsSync(path)) {
+      fail(`missing ${path}. This repo file is expected to be committed.`);
     }
     return { path, bytes: statSync(path).size };
   }
@@ -412,6 +437,12 @@ function packageVersion(from) {
 // manifest, so the idempotence check would call the tree current and skip them.
 for (const entry of ENTRIES) {
   if (entry.source === "node_modules") entry.pkgVersion = packageVersion(entry.from);
+  // Repo files carry their content hash so retraining the detector (same path,
+  // new bytes) changes the entries fingerprint and forces a restage.
+  if (entry.source === "file") {
+    const path = join(root, entry.from);
+    entry.fileSha = existsSync(path) ? sha256(readFileSync(path)) : "missing";
+  }
 }
 
 /**

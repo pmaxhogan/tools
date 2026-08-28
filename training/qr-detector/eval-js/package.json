@@ -1,0 +1,11 @@
+{
+  "name": "qr-detector-eval-js",
+  "private": true,
+  "description": "Node harness scoring the actual JS scan pipeline (jsQR, zxing-wasm, deep scan) against the held-out synthetic eval sets. Not part of the site build; run with: npx tsx run.ts",
+  "type": "module",
+  "dependencies": {
+    "jpeg-js": "^0.4.4",
+    "onnxruntime-node": "^1.20.0",
+    "pngjs": "^7.0.0"
+  }
+}
