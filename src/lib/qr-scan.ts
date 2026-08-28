@@ -528,7 +528,10 @@ export async function deepScan(
         knownTexts.add(hit.text);
         hits.push({ text: hit.text, method: "deep", corners: det.corners });
       }
-    } else if (!cropHits.length) {
+    } else if (!cropHits.length && det.score >= 0.5) {
+      // Only confidently detected shapes earn the "could not read" hint;
+      // marginal detections from the tiled pass stay silent rather than
+      // teasing codes that may not exist.
       unread.push(det.corners);
     }
   }

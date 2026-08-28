@@ -5,8 +5,8 @@
     "codes": 65,
     "jsqr": 12,
     "zxing": 38,
-    "deep": 38,
-    "detRecall": 64,
+    "deep": 43,
+    "detRecall": 65,
     "falsePositives": 2
   },
   {
@@ -15,9 +15,9 @@
     "codes": 97,
     "jsqr": 5,
     "zxing": 31,
-    "deep": 40,
-    "detRecall": 81,
-    "falsePositives": 0
+    "deep": 71,
+    "detRecall": 97,
+    "falsePositives": 1
   },
   {
     "category": "brightness",
@@ -25,8 +25,8 @@
     "codes": 85,
     "jsqr": 1,
     "zxing": 69,
-    "deep": 70,
-    "detRecall": 58,
+    "deep": 79,
+    "detRecall": 85,
     "falsePositives": 1
   },
   {
@@ -37,7 +37,7 @@
     "zxing": 40,
     "deep": 40,
     "detRecall": 40,
-    "falsePositives": 0
+    "falsePositives": 5
   },
   {
     "category": "curved",
@@ -45,9 +45,9 @@
     "codes": 60,
     "jsqr": 16,
     "zxing": 34,
-    "deep": 35,
-    "detRecall": 58,
-    "falsePositives": 3
+    "deep": 40,
+    "detRecall": 60,
+    "falsePositives": 7
   },
   {
     "category": "damaged",
@@ -55,7 +55,7 @@
     "codes": 43,
     "jsqr": 1,
     "zxing": 12,
-    "deep": 16,
+    "deep": 20,
     "detRecall": 43,
     "falsePositives": 2
   },
@@ -65,9 +65,9 @@
     "codes": 53,
     "jsqr": 7,
     "zxing": 21,
-    "deep": 24,
+    "deep": 29,
     "detRecall": 53,
-    "falsePositives": 0
+    "falsePositives": 6
   },
   {
     "category": "high_version",
@@ -75,7 +75,7 @@
     "codes": 37,
     "jsqr": 2,
     "zxing": 33,
-    "deep": 33,
+    "deep": 34,
     "detRecall": 37,
     "falsePositives": 0
   },
@@ -85,9 +85,9 @@
     "codes": 420,
     "jsqr": 0,
     "zxing": 112,
-    "deep": 112,
-    "detRecall": 12,
-    "falsePositives": 0
+    "deep": 406,
+    "detRecall": 407,
+    "falsePositives": 1
   },
   {
     "category": "monitor",
@@ -105,9 +105,9 @@
     "codes": 78,
     "jsqr": 37,
     "zxing": 74,
-    "deep": 74,
+    "deep": 76,
     "detRecall": 78,
-    "falsePositives": 8
+    "falsePositives": 10
   },
   {
     "category": "noncompliant",
@@ -115,7 +115,7 @@
     "codes": 26,
     "jsqr": 2,
     "zxing": 21,
-    "deep": 24,
+    "deep": 25,
     "detRecall": 26,
     "falsePositives": 0
   },
@@ -125,7 +125,7 @@
     "codes": 23,
     "jsqr": 11,
     "zxing": 12,
-    "deep": 12,
+    "deep": 13,
     "detRecall": 21,
     "falsePositives": 0
   },
@@ -135,7 +135,7 @@
     "codes": 35,
     "jsqr": 22,
     "zxing": 24,
-    "deep": 25,
+    "deep": 30,
     "detRecall": 31,
     "falsePositives": 0
   },
@@ -155,9 +155,9 @@
     "codes": 20,
     "jsqr": 6,
     "zxing": 19,
-    "deep": 19,
+    "deep": 20,
     "detRecall": 20,
-    "falsePositives": 4
+    "falsePositives": 6
   },
   {
     "category": "TOTAL",
@@ -165,8 +165,8 @@
     "codes": 1232,
     "jsqr": 126,
     "zxing": 689,
-    "deep": 711,
-    "detRecall": 772,
-    "falsePositives": 21
+    "deep": 1075,
+    "detRecall": 1213,
+    "falsePositives": 42
   }
 ]
