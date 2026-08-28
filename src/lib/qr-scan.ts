@@ -28,6 +28,7 @@ import {
   contrastStretch,
   cropTile,
   decodeDetections,
+  gridResample,
   makeBumpSurface,
   packLetterboxed,
   planTiles,
@@ -354,7 +355,16 @@ async function decodeCrop(crop: RawImage): Promise<ScanHit[]> {
   // responds to aggressive unsharp masking where the mild pass does not.
   hits = await zxingDecode(sharpen(crop, 1.6));
   if (hits.length) return hits;
-  return decodeBinarized(crop);
+  hits = await decodeBinarized(crop);
+  if (hits.length) return hits;
+  // Grid resample: rebuild a perfect synthetic code from the finder grid,
+  // absorbing shear, aspect drift, and smooth bends the surface models left
+  // behind.
+  const rebuilt = gridResample(crop);
+  if (!rebuilt) return [];
+  hits = jsqrDecode(rebuilt, "dontInvert");
+  if (hits.length) return hits;
+  return zxingDecode(rebuilt, { tryInvert: false, tryDownscale: false });
 }
 
 /**

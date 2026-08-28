@@ -633,6 +633,301 @@ export function sharpen(image: RawImage, amount = 0.8): RawImage {
 }
 
 /* ------------------------------------------------------------------ */
+/* grid resampling: synthesize a clean code from a near-frontal crop   */
+/* ------------------------------------------------------------------ */
+
+interface FinderHit {
+  x: number;
+  y: number;
+  /** Module size measured horizontally and vertically: they differ when the
+   * crop carries residual anamorphic stretch, and mixing them corrupts the
+   * version estimate. */
+  mx: number;
+  my: number;
+  module: number;
+}
+
+/** Does a 5-run window match the 1:1:3:1:1 finder signature? */
+function finderRatioOk(runs: number[]): boolean {
+  const total = runs.reduce((a, b) => a + b, 0);
+  const m = total / 7;
+  if (m < 1.5) return false;
+  const expected = [1, 1, 3, 1, 1];
+  for (let i = 0; i < 5; i++) {
+    if (Math.abs(runs[i]! - expected[i]! * m) > Math.max(1.6, m * 0.55)) return false;
+  }
+  return true;
+}
+
+/** Scan one line (row or column) of a binary image for finder signatures. */
+function scanLine(
+  dark: Uint8Array,
+  width: number,
+  fixed: number,
+  horizontal: boolean,
+  length: number,
+  emit: (center: number, module: number) => void,
+): void {
+  const at = (i: number) => (horizontal ? dark[fixed * width + i]! : dark[i * width + fixed]!);
+  const runs: number[] = [];
+  const ends: number[] = [];
+  let current = at(0);
+  let count = 1;
+  for (let i = 1; i < length; i++) {
+    const v = at(i);
+    if (v === current) {
+      count++;
+      continue;
+    }
+    runs.push(count);
+    ends.push(i);
+    current = v;
+    count = 1;
+  }
+  runs.push(count);
+  ends.push(length);
+  // A finder is dark-light-dark-light-dark, so windows starting on dark runs.
+  const firstDark = at(0) === 1 ? 0 : 1;
+  for (let w = firstDark; w + 5 <= runs.length; w += 2) {
+    const window = runs.slice(w, w + 5);
+    if (finderRatioOk(window)) {
+      const start = ends[w]! - runs[w]!;
+      const total = window.reduce((a, b) => a + b, 0);
+      emit(start + total / 2, total / 7);
+    }
+  }
+}
+
+/** Locate finder-pattern centers in a binarized crop. */
+export function findFinderPatterns(image: RawImage): FinderHit[] {
+  const bin = adaptiveBinarize(image);
+  const { width, height } = bin;
+  const dark = new Uint8Array(width * height);
+  for (let i = 0; i < width * height; i++) dark[i] = bin.data[i * 4]! < 128 ? 1 : 0;
+
+  const raw: FinderHit[] = [];
+  for (let y = 0; y < height; y += 2) {
+    scanLine(dark, width, y, true, width, (cx, module) => {
+      // Verify the vertical signature through the candidate center.
+      scanLine(dark, width, Math.round(cx), false, height, (cy, vModule) => {
+        if (Math.abs(cy - y) < module * 2 && vModule > module * 0.4 && vModule < module * 2.5) {
+          raw.push({ x: cx, y: cy, mx: module, my: vModule, module: (module + vModule) / 2 });
+        }
+      });
+    });
+  }
+
+  // Cluster hits within a module radius; a real finder collects many rows.
+  const clusters: (FinderHit & { hits: number })[] = [];
+  for (const hit of raw) {
+    const near = clusters.find(
+      (c) => Math.hypot(c.x - hit.x, c.y - hit.y) < Math.max(4, c.module * 2),
+    );
+    if (near) {
+      const n = near.hits;
+      near.x = (near.x * n + hit.x) / (n + 1);
+      near.y = (near.y * n + hit.y) / (n + 1);
+      near.mx = (near.mx * n + hit.mx) / (n + 1);
+      near.my = (near.my * n + hit.my) / (n + 1);
+      near.module = (near.mx + near.my) / 2;
+      near.hits = n + 1;
+    } else {
+      clusters.push({ ...hit, hits: 1 });
+    }
+  }
+  return clusters
+    .filter((c) => c.hits >= 2)
+    .sort((a, b) => b.hits - a.hits)
+    .slice(0, 8);
+}
+
+/**
+ * Rebuild a clean, perfectly square QR bitmap from a near-frontal crop.
+ *
+ * The three finder patterns give an exact affine module grid (absorbing
+ * rotation, shear, and aspect drift the projective rectification left
+ * behind); walking the timing patterns then measures the smooth residual
+ * bend (a bottle shoulder, a wavy poster) as separable drift curves. Every
+ * module is sampled at its corrected center from a locally binarized image
+ * and re-emitted as crisp square modules with a full quiet zone. Returns
+ * null when the finder geometry cannot be established; the caller just moves
+ * on to the next variant.
+ */
+export function gridResample(image: RawImage, useTiming = true): RawImage | null {
+  const finders = findFinderPatterns(image);
+  if (finders.length < 3) return null;
+
+  // Choose TL, TR, BL: the pair with the longest span is TR-BL (the
+  // diagonal); the remaining finder of the best right-angle triple is TL.
+  let best: { tl: FinderHit; tr: FinderHit; bl: FinderHit; err: number } | null = null;
+  for (let a = 0; a < finders.length; a++) {
+    for (let b = 0; b < finders.length; b++) {
+      for (let c = 0; c < finders.length; c++) {
+        if (a === b || a === c || b === c) continue;
+        const tl = finders[a]!;
+        const tr = finders[b]!;
+        const bl = finders[c]!;
+        const vx = [tr.x - tl.x, tr.y - tl.y];
+        const vy = [bl.x - tl.x, bl.y - tl.y];
+        const lx = Math.hypot(vx[0]!, vx[1]!);
+        const ly = Math.hypot(vy[0]!, vy[1]!);
+        if (lx < tl.module * 8 || ly < tl.module * 8) continue;
+        // Right-handed, roughly perpendicular, roughly equal legs.
+        const cross = vx[0]! * vy[1]! - vx[1]! * vy[0]!;
+        if (cross <= 0) continue;
+        const dot = Math.abs(vx[0]! * vy[0]! + vx[1]! * vy[1]!) / (lx * ly);
+        const aspect = Math.abs(Math.log(lx / ly));
+        const err = dot + aspect;
+        if (dot < 0.25 && aspect < 0.35 && (!best || err < best.err)) {
+          best = { tl, tr, bl, err };
+        }
+      }
+    }
+  }
+  if (!best) return null;
+  const { tl, tr, bl } = best;
+
+  // Version from the finder spacing, measured per axis so anamorphic stretch
+  // cannot corrupt it: the horizontal leg is counted in horizontal modules
+  // and the vertical leg in vertical modules.
+  const moduleSize = (tl.module + tr.module + bl.module) / 3;
+  const spanX = Math.hypot(tr.x - tl.x, tr.y - tl.y) / ((tl.mx + tr.mx) / 2) + 7;
+  const spanY = Math.hypot(bl.x - tl.x, bl.y - tl.y) / ((tl.my + bl.my) / 2) + 7;
+  const spanModules = (spanX + spanY) / 2;
+  const version = Math.max(1, Math.min(40, Math.round((spanModules - 17) / 4)));
+  const n = 17 + 4 * version;
+
+  // Affine module-grid map from the three finder centers (at 3.5 modules in).
+  // [x, y] = O + i * U + j * V with i, j in module units.
+  const span = n - 7;
+  const U = [(tr.x - tl.x) / span, (tr.y - tl.y) / span];
+  const V = [(bl.x - tl.x) / span, (bl.y - tl.y) / span];
+  const O = [tl.x - 3.5 * (U[0]! + V[0]!), tl.y - 3.5 * (U[1]! + V[1]!)];
+  const gridAt = (i: number, j: number): Point => [
+    O[0]! + i * U[0]! + j * V[0]!,
+    O[1]! + i * U[1]! + j * V[1]!,
+  ];
+
+  const bin = adaptiveBinarize(image);
+  const darkAt = (x: number, y: number): number => {
+    const xi = Math.min(bin.width - 1, Math.max(0, Math.round(x)));
+    const yi = Math.min(bin.height - 1, Math.max(0, Math.round(y)));
+    return bin.data[(yi * bin.width + xi) * 4]! < 128 ? 1 : 0;
+  };
+  // Majority vote over a 3x3 stencil inside the module: a single noisy pixel
+  // must not flip a module the way point sampling would let it.
+  const step = Math.max(1, moduleSize / 5);
+  const moduleDark = (x: number, y: number): number => {
+    let votes = 0;
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        votes += darkAt(x + dx * step, y + dy * step);
+      }
+    }
+    return votes >= 5 ? 1 : 0;
+  };
+
+  // Grayscale bilinear sampler for subpixel drift scoring.
+  const grayAt = (x: number, y: number): number => {
+    const cx = Math.min(image.width - 1, Math.max(0, x));
+    const cy = Math.min(image.height - 1, Math.max(0, y));
+    const x0 = Math.floor(cx);
+    const y0 = Math.floor(cy);
+    const x1 = Math.min(image.width - 1, x0 + 1);
+    const y1 = Math.min(image.height - 1, y0 + 1);
+    const fx = cx - x0;
+    const fy = cy - y0;
+    const g = (xx: number, yy: number) => {
+      const o = (yy * image.width + xx) * 4;
+      return image.data[o]! * 0.299 + image.data[o + 1]! * 0.587 + image.data[o + 2]! * 0.114;
+    };
+    const top = g(x0, y0) + (g(x1, y0) - g(x0, y0)) * fx;
+    const bot = g(x0, y1) + (g(x1, y1) - g(x0, y1)) * fx;
+    return top + (bot - top) * fy;
+  };
+
+  // Timing walk: measure smooth drift along the timing row (drift of y as a
+  // function of column) and the timing column (drift of x as a function of
+  // row), in segments, and interpolate between segment centers. Scored by
+  // gray correlation against the alternating pattern; a segment that does
+  // not clearly look like a timing pattern contributes no correction.
+  const measureDrift = (alongRow: boolean): ((t: number) => number) => {
+    const coords: number[] = [];
+    const values: number[] = [];
+    const segment = 5;
+    const offsets: number[] = [0];
+    for (let o = 0.1; o <= 1.0001; o += 0.1) offsets.push(o, -o);
+    for (let start = 8; start + segment <= n - 8; start += segment) {
+      let bestOffset = 0;
+      let bestScore = -Infinity;
+      let zeroScore = 0;
+      for (const o of offsets) {
+        let score = 0;
+        for (let k = start; k < start + segment; k++) {
+          const expectDark = k % 2 === 0;
+          const [x, y] = alongRow ? gridAt(k + 0.5, 6.5) : gridAt(6.5, k + 0.5);
+          const px = alongRow ? x : x + o * moduleSize;
+          const py = alongRow ? y + o * moduleSize : y;
+          const v = grayAt(px, py) / 255;
+          score += expectDark ? 1 - v : v;
+        }
+        if (o === 0) zeroScore = score;
+        // Strictly greater plus small-offset-first ordering: ties keep the
+        // smallest correction instead of drifting to the search boundary.
+        if (score > bestScore + 1e-6) {
+          bestScore = score;
+          bestOffset = o;
+        }
+      }
+      coords.push(start + segment / 2);
+      // A correction is applied only when it clearly looks like a timing
+      // pattern AND clearly beats applying no correction at all: noise must
+      // never nudge an already-aligned grid.
+      const accept = bestScore >= segment * 0.8 && bestScore > zeroScore + segment * 0.12;
+      values.push(accept ? bestOffset : 0);
+    }
+    if (!coords.length) return () => 0;
+    return (t: number) => {
+      if (t <= coords[0]!) return values[0]!;
+      if (t >= coords[coords.length - 1]!) return values[values.length - 1]!;
+      let k = 0;
+      while (k < coords.length - 1 && coords[k + 1]! < t) k++;
+      const f = (t - coords[k]!) / (coords[k + 1]! - coords[k]!);
+      return values[k]! + (values[k + 1]! - values[k]!) * f;
+    };
+  };
+  const zero = () => 0;
+  const dyOfColumn = useTiming ? measureDrift(true) : zero;
+  const dxOfRow = useTiming ? measureDrift(false) : zero;
+
+  // Sample every module and re-emit a clean code.
+  const OUT_MODULE = 8;
+  const QUIET = 4;
+  const outN = n + 2 * QUIET;
+  const outSize = outN * OUT_MODULE;
+  const out = new Uint8ClampedArray(outSize * outSize * 4);
+  out.fill(255);
+  for (let i = 3; i < out.length; i += 4) out[i] = 255;
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const [gx, gy] = gridAt(i + 0.5, j + 0.5);
+      const px = gx + dxOfRow(j) * moduleSize;
+      const py = gy + dyOfColumn(i) * moduleSize;
+      if (moduleDark(px, py) !== 1) continue;
+      const x0 = (i + QUIET) * OUT_MODULE;
+      const y0 = (j + QUIET) * OUT_MODULE;
+      for (let y = y0; y < y0 + OUT_MODULE; y++) {
+        for (let x = x0; x < x0 + OUT_MODULE; x++) {
+          const o = (y * outSize + x) * 4;
+          out[o] = out[o + 1] = out[o + 2] = 0;
+        }
+      }
+    }
+  }
+  return { data: out, width: outSize, height: outSize };
+}
+
+/* ------------------------------------------------------------------ */
 /* multi-code bookkeeping                                              */
 /* ------------------------------------------------------------------ */
 

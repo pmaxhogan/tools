@@ -470,6 +470,56 @@ describe("rectifyCylinder with phase", () => {
   });
 });
 
+describe("gridResample", () => {
+  it("rebuilds a decodable code from a crop with a smooth S-bend and shear", async () => {
+    const { gridResample } = await import("./detector");
+    const payload = "https://example.com/grid-resample";
+    const code = renderQr(payload, 8, 4);
+    const size = code.width;
+    // A residual warp the projective and cylinder models cannot express:
+    // anamorphic stretch, shear, a sine bend, and sensor noise together,
+    // like a bottle label after imperfect rectification. The rebuild must
+    // stay faithful through all of it (its value over the raw decoders is
+    // measured on the real-photo benchmark, not asserted here; jsQR happens
+    // to be strong on noiseless synthetic warps).
+    const W = Math.round(size * 1.35);
+    const bent: RawImage = solidImage(W, size, 255);
+    const amp = 8;
+    let seed = 12345;
+    const rand = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    };
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < W; x++) {
+        const sx = (x / W) * size + (y - size / 2) * 0.05;
+        const sy = y + amp * Math.sin((x / W) * Math.PI * 2);
+        const xi = Math.round(sx);
+        const yi = Math.round(sy);
+        if (xi < 0 || yi < 0 || xi >= size || yi >= size) continue;
+        const so = (yi * size + xi) * 4;
+        const doff = (y * W + x) * 4;
+        const noise = (rand() - 0.5) * 90;
+        for (let c = 0; c < 3; c++) {
+          bent.data[doff + c] = Math.max(0, Math.min(255, code.data[so + c]! + noise));
+        }
+      }
+    }
+
+    const rebuilt = gridResample(bent);
+    expect(rebuilt).not.toBeNull();
+    const decoded = jsQR(rebuilt!.data, rebuilt!.width, rebuilt!.height, {
+      inversionAttempts: "dontInvert",
+    });
+    expect(decoded?.data).toBe(payload);
+  });
+
+  it("returns null on a crop with no finder patterns", async () => {
+    const { gridResample } = await import("./detector");
+    expect(gridResample(solidImage(300, 300, 200))).toBeNull();
+  });
+});
+
 describe("adaptiveBinarize", () => {
   it("recovers a code under a strong illumination ramp that defeats a global stretch", async () => {
     const { adaptiveBinarize } = await import("./detector");

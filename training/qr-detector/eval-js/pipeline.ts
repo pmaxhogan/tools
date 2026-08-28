@@ -15,6 +15,7 @@ import {
   contrastStretch,
   cropTile,
   decodeDetections,
+  gridResample,
   makeBumpSurface,
   packLetterboxed,
   planTiles,
@@ -188,6 +189,19 @@ export async function decodeDetection(
     // responds to aggressive unsharp masking where the mild pass does not.
     if (!texts.length) texts = await zxingPng(encodePng(sharpen(crop, 1.6)));
     if (!texts.length) texts = await decodeBinarized(zxingPng, crop);
+    // Grid resample: rebuild a perfect synthetic code from the finder grid,
+    // absorbing shear, aspect drift, and smooth bends the surface models
+    // left behind.
+    if (!texts.length) {
+      const rebuilt = gridResample(crop);
+      if (rebuilt) {
+        const j = jsQR(rebuilt.data, rebuilt.width, rebuilt.height, {
+          inversionAttempts: "dontInvert",
+        });
+        if (j?.data) texts = [j.data];
+        if (!texts.length) texts = await zxingPng(encodePng(rebuilt));
+      }
+    }
     if (texts.length) return texts;
 
     // Margin sweep: with corners slightly off, a tighter or looser quiet
