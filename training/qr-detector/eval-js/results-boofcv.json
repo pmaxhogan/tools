@@ -5,9 +5,9 @@
     "codes": 65,
     "jsqr": 12,
     "zxing": 38,
-    "deep": 46,
+    "deep": 45,
     "detRecall": 65,
-    "falsePositives": 3
+    "falsePositives": 10
   },
   {
     "category": "bright_spots",
@@ -15,9 +15,9 @@
     "codes": 97,
     "jsqr": 5,
     "zxing": 31,
-    "deep": 81,
+    "deep": 83,
     "detRecall": 97,
-    "falsePositives": 2
+    "falsePositives": 0
   },
   {
     "category": "brightness",
@@ -27,7 +27,7 @@
     "zxing": 69,
     "deep": 81,
     "detRecall": 85,
-    "falsePositives": 0
+    "falsePositives": 2
   },
   {
     "category": "close",
@@ -37,7 +37,7 @@
     "zxing": 40,
     "deep": 40,
     "detRecall": 40,
-    "falsePositives": 4
+    "falsePositives": 10
   },
   {
     "category": "curved",
@@ -45,9 +45,9 @@
     "codes": 60,
     "jsqr": 16,
     "zxing": 34,
-    "deep": 40,
+    "deep": 42,
     "detRecall": 60,
-    "falsePositives": 7
+    "falsePositives": 6
   },
   {
     "category": "damaged",
@@ -55,9 +55,9 @@
     "codes": 43,
     "jsqr": 1,
     "zxing": 12,
-    "deep": 20,
+    "deep": 19,
     "detRecall": 43,
-    "falsePositives": 2
+    "falsePositives": 3
   },
   {
     "category": "glare",
@@ -67,7 +67,7 @@
     "zxing": 21,
     "deep": 33,
     "detRecall": 53,
-    "falsePositives": 16
+    "falsePositives": 20
   },
   {
     "category": "high_version",
@@ -75,7 +75,7 @@
     "codes": 37,
     "jsqr": 2,
     "zxing": 33,
-    "deep": 35,
+    "deep": 34,
     "detRecall": 37,
     "falsePositives": 0
   },
@@ -85,9 +85,9 @@
     "codes": 420,
     "jsqr": 0,
     "zxing": 112,
-    "deep": 400,
-    "detRecall": 402,
-    "falsePositives": 0
+    "deep": 397,
+    "detRecall": 407,
+    "falsePositives": 6
   },
   {
     "category": "monitor",
@@ -107,7 +107,7 @@
     "zxing": 74,
     "deep": 76,
     "detRecall": 78,
-    "falsePositives": 7
+    "falsePositives": 5
   },
   {
     "category": "noncompliant",
@@ -115,9 +115,9 @@
     "codes": 26,
     "jsqr": 2,
     "zxing": 21,
-    "deep": 23,
+    "deep": 26,
     "detRecall": 26,
-    "falsePositives": 0
+    "falsePositives": 1
   },
   {
     "category": "pathological",
@@ -125,7 +125,7 @@
     "codes": 23,
     "jsqr": 11,
     "zxing": 12,
-    "deep": 13,
+    "deep": 22,
     "detRecall": 22,
     "falsePositives": 0
   },
@@ -135,7 +135,7 @@
     "codes": 35,
     "jsqr": 22,
     "zxing": 24,
-    "deep": 30,
+    "deep": 29,
     "detRecall": 30,
     "falsePositives": 0
   },
@@ -145,9 +145,9 @@
     "codes": 133,
     "jsqr": 1,
     "zxing": 132,
-    "deep": 133,
+    "deep": 132,
     "detRecall": 133,
-    "falsePositives": 1
+    "falsePositives": 5
   },
   {
     "category": "shadows",
@@ -157,7 +157,7 @@
     "zxing": 19,
     "deep": 20,
     "detRecall": 20,
-    "falsePositives": 3
+    "falsePositives": 8
   },
   {
     "category": "TOTAL",
@@ -165,8 +165,8 @@
     "codes": 1232,
     "jsqr": 126,
     "zxing": 689,
-    "deep": 1088,
-    "detRecall": 1208,
-    "falsePositives": 45
+    "deep": 1096,
+    "detRecall": 1213,
+    "falsePositives": 76
   }
 ]

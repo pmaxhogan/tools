@@ -227,7 +227,7 @@ const session = existsSync(MODEL) ? await ort.InferenceSession.create(MODEL) : n
 if (!session) console.log("NOTE: export/qr-detector.onnx missing, deep stage skipped");
 const zxing = await loadZxing();
 const results = [];
-for (const set of ["hard", "liketrain"]) {
+for (const set of ["hard", "liketrain", "lookalike"]) {
   results.push(await evalSet(set, session, zxing));
 }
 writeFileSync(join(import.meta.dirname, "results.json"), JSON.stringify(results, null, 2));

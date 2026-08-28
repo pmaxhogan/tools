@@ -167,7 +167,7 @@ const MODEL_URL = "/models/qr-detector/qr-detector.onnx";
 /** Bumped whenever the trained model changes: the URL stays the same, so the
  * cache name is what forces returning visitors onto the new weights. */
 const CACHE_PREFIX = "tools-qr-deep-";
-const CACHE_NAME = `${CACHE_PREFIX}v2`;
+const CACHE_NAME = `${CACHE_PREFIX}v3`;
 export const DETECTOR_THRESHOLD = 0.3;
 
 /** The narrow slice of onnxruntime-web this module touches. */
