@@ -170,16 +170,20 @@ def main() -> None:
             running = {"hm": 0.0, "off": 0.0, "n": 0}
             t0 = time.time()
 
-        if not args.smoke and (step % 4000 == 0 or step == args.steps):
+        if not args.smoke and (step % 1000 == 0 or step == args.steps):
+            # Checkpoint every 1000 steps: this machine reboots nightly, so a
+            # killed run must lose minutes, not hours. Resume with
+            # --resume runs/<name>/last.pt. Validation stays on a 4000 cadence.
             torch.save(
                 {"model": model.state_dict(), "opt": opt.state_dict(), "sched": sched.state_dict(), "step": step},
                 out_dir / "last.pt",
             )
-            val = quick_val(model, device)
-            msg = {"step": step, "val": val}
-            print(json.dumps(msg), flush=True)
-            with log_path.open("a") as f:
-                f.write(json.dumps(msg) + "\n")
+            if step % 4000 == 0 or step == args.steps:
+                val = quick_val(model, device)
+                msg = {"step": step, "val": val}
+                print(json.dumps(msg), flush=True)
+                with log_path.open("a") as f:
+                    f.write(json.dumps(msg) + "\n")
 
     torch.save(
         {"model": model.state_dict(), "opt": opt.state_dict(), "sched": sched.state_dict(), "step": step},
