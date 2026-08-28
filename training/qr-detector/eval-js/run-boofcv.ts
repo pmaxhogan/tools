@@ -154,7 +154,15 @@ async function deepHits(
   dets: Det[],
 ): Promise<Located[]> {
   const hits: Located[] = [];
-  const zxingPng = async (png: Uint8Array) => (await zxingHits(zxing, png)).map((h) => h.text);
+  const zxingPng = async (png: Uint8Array, binarizer?: string) =>
+    (
+      await zxing.readBarcodes(png, {
+        ...ZXING_OPTIONS,
+        ...(binarizer ? { binarizer: binarizer as "FixedThreshold" } : {}),
+      })
+    )
+      .filter((r) => r.isValid && r.text.length > 0)
+      .map((r) => r.text);
   const refine = (img: RawImage, det: Det) => refineDetection(session, makeTensor, img, det);
   for (const det of dets) {
     for (const text of await decodeDetection(zxingPng, image, det, refine)) {

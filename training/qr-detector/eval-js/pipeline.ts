@@ -9,6 +9,7 @@ import {
   type EdgeMids,
   type Quad,
   type RawImage,
+  adaptiveBinarize,
   bowMagnitudes,
   chooseRectifySize,
   contrastStretch,
@@ -23,6 +24,7 @@ import {
   rgbaToTensor,
   sameCode,
   sharpen,
+  unitMidShift,
   unletterboxPoints,
 } from "../../../src/tools/qr-code-scanner/detector";
 
@@ -88,7 +90,7 @@ export async function detectAll(
   return found.sort((a, b) => b.score - a.score);
 }
 
-const ARC_SWEEP = [0.9, 1.4, 1.9, 2.4];
+const ARC_SWEEP = [0.9, 1.6, 2.3];
 const ARC_BOW_MIN = 0.012;
 /** Margin used when a crop is cut for the second-pass refinement. */
 const REFINE_MARGIN = 0.16;
@@ -133,7 +135,7 @@ export async function refineDetection(
 }
 
 async function decodeOneCrop(
-  zxingPng: (png: Uint8Array) => Promise<string[]>,
+  zxingPng: (png: Uint8Array, binarizer?: string) => Promise<string[]>,
   crop: RawImage,
   stretch: boolean,
 ): Promise<string[]> {
@@ -147,12 +149,30 @@ async function decodeOneCrop(
 }
 
 /**
+ * Local-threshold rescue: binarize adaptively, then hand the clean binary
+ * image to both decoders. Recovers ramps, shadow edges, and partial glare
+ * that no global operation can fix.
+ */
+async function decodeBinarized(
+  zxingPng: (png: Uint8Array, binarizer?: string) => Promise<string[]>,
+  crop: RawImage,
+): Promise<string[]> {
+  const bin = adaptiveBinarize(crop);
+  // The image is already two-level; re-binarizing with a local average would
+  // only reintroduce artifacts at block boundaries.
+  const texts = await zxingPng(encodePng(bin), "FixedThreshold");
+  if (texts.length) return texts;
+  const j = jsQR(bin.data, bin.width, bin.height, { inversionAttempts: "attemptBoth" });
+  return j?.data ? [j.data] : [];
+}
+
+/**
  * Decode one detection: bow-corrected crop with enhancement fallbacks, then
  * the cylinder sweep, then (when a refiner is available) the same again with
  * second-pass refined points.
  */
 export async function decodeDetection(
-  zxingPng: (png: Uint8Array) => Promise<string[]>,
+  zxingPng: (png: Uint8Array, binarizer?: string) => Promise<string[]>,
   image: RawImage,
   det: Det,
   refine?: (image: RawImage, det: Det) => Promise<Det>,
@@ -164,18 +184,46 @@ export async function decodeDetection(
     const crop = rectifyQuad(image, d.corners, size, 0.1, d.mids);
     let texts = await decodeOneCrop(zxingPng, crop, true);
     if (!texts.length) texts = await zxingPng(encodePng(sharpen(contrastStretch(crop))));
+    // Strong sharpen on the plain crop: soft focus over an upscaled crop
+    // responds to aggressive unsharp masking where the mild pass does not.
+    if (!texts.length) texts = await zxingPng(encodePng(sharpen(crop, 1.6)));
+    if (!texts.length) texts = await decodeBinarized(zxingPng, crop);
     if (texts.length) return texts;
 
+    // Margin sweep: with corners slightly off, a tighter or looser quiet
+    // zone assumption realigns the module grid enough to decode.
+    for (const margin of [0.04, 0.22]) {
+      const m = rectifyQuad(image, d.corners, size, margin, d.mids);
+      texts = await decodeOneCrop(zxingPng, m, false);
+      if (texts.length) return texts;
+    }
+
+    // Scale bump: small codes suffer module aliasing at the default size.
+    if (size < 460) {
+      const big = rectifyQuad(image, d.corners, Math.round(size * 1.8), 0.1, d.mids);
+      texts = await decodeOneCrop(zxingPng, big, false);
+      if (!texts.length) texts = await decodeBinarized(zxingPng, big);
+      if (texts.length) return texts;
+    }
+
     const [bowU, bowV] = bowMagnitudes(d.corners, d.mids);
-    if (Math.max(bowU, bowV) < ARC_BOW_MIN) return [];
     const axis = bowU >= bowV ? ("u" as const) : ("v" as const);
+    const shift = unitMidShift(d.corners, d.mids, axis === "v");
+    if (Math.max(bowU, bowV) < ARC_BOW_MIN && Math.abs(shift) < 0.02) return [];
+    // Off-center wraps (a label read from the side) need a phase term; the
+    // measured midpoint shift orders the sweep so the likely side goes first.
+    const phaseOrder = shift >= 0 ? [0, 0.35, -0.35, 0.65, -0.65] : [0, -0.35, 0.35, -0.65, 0.65];
     for (const theta of ARC_SWEEP) {
       // The detector under-reports bow on strong wraps, so the measured
       // sagitta is also swept upward.
-      for (const scale of [1, 1.6, 2.2]) {
-        const unrolled = rectifyCylinder(image, d.corners, d.mids, size, 0.1, theta, axis, scale);
-        const arcTexts = await decodeOneCrop(zxingPng, unrolled, scale === 1);
-        if (arcTexts.length) return arcTexts;
+      for (const scale of [1, 1.9]) {
+        for (const phaseFrac of phaseOrder) {
+          const unrolled = rectifyCylinder(
+            image, d.corners, d.mids, size, 0.1, theta, axis, scale, (phaseFrac * theta) / 2,
+          );
+          const arcTexts = await decodeOneCrop(zxingPng, unrolled, scale === 1 && phaseFrac === 0);
+          if (arcTexts.length) return arcTexts;
+        }
       }
     }
     return [];

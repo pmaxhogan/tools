@@ -395,6 +395,106 @@ describe("rectifyQuad with edge midpoints", () => {
   });
 });
 
+describe("rectifyCylinder with phase", () => {
+  it("unwraps an off-center cylinder wrap that the centered model cannot", async () => {
+    const { rectifyCylinder } = await import("./detector");
+    const payload = "https://example.com/off-center-wrap";
+    const code = renderQr(payload);
+    const scene = solidImage(700, 700, 228);
+
+    // Paint the code through an off-center perspective-cylinder projection:
+    // arc theta around a cylinder at k radii, code center at phase phi0.
+    const theta = 1.2;
+    const k = 2.5;
+    const phi0 = 0.3;
+    const xOf = (p: number) => Math.sin(p) / (k - Math.cos(p));
+    const x0 = xOf(phi0 - theta / 2);
+    const x1 = xOf(phi0 + theta / 2);
+    const left = 120;
+    const right = 580;
+    const top = 150;
+    const bottom = 550;
+    const surface = (u: number, v: number): [number, number] => {
+      const p = (u - 0.5) * theta + phi0;
+      const un = (xOf(p) - x0) / (x1 - x0);
+      const depth = k - Math.cos(p);
+      const vScale = (k - Math.cos(theta / 2)) / depth;
+      return [left + un * (right - left), top + (0.5 + (v - 0.5) * vScale) * (bottom - top)];
+    };
+    // Dense forward paint.
+    const steps = code.width * 4;
+    for (let j = 0; j <= steps; j++) {
+      for (let i = 0; i <= steps; i++) {
+        const u = i / steps;
+        const v = j / steps;
+        const [x, y] = surface(u, v);
+        const xi = Math.round(x);
+        const yi = Math.round(y);
+        if (xi < 0 || yi < 0 || xi >= 700 || yi >= 700) continue;
+        const sx = Math.min(code.width - 1, Math.floor(u * code.width));
+        const sy = Math.min(code.height - 1, Math.floor(v * code.height));
+        const so = (sy * code.width + sx) * 4;
+        const doff = (yi * 700 + xi) * 4;
+        scene.data[doff] = code.data[so]!;
+        scene.data[doff + 1] = code.data[so + 1]!;
+        scene.data[doff + 2] = code.data[so + 2]!;
+      }
+    }
+    const quad: Quad = [surface(0, 0), surface(1, 0), surface(1, 1), surface(0, 1)];
+    const mids: EdgeMids = [surface(0.5, 0), surface(1, 0.5), surface(0.5, 1), surface(0, 0.5)];
+
+    // The production sweep: theta and sagitta-scale candidates, phases
+    // ordered center-out. The off-center wrap must decode only once a
+    // nonzero phase enters the sweep.
+    const size = 500;
+    const decodeAt = (thetaC: number, scale: number, phase: number) => {
+      const crop = rectifyCylinder(scene, quad, mids, size, 0.04, thetaC, "u", scale, phase);
+      return jsQR(crop.data, size, size, { inversionAttempts: "dontInvert" })?.data;
+    };
+
+    let centeredWins = 0;
+    let phasedWins = 0;
+    for (const thetaC of [0.9, 1.6, 2.3]) {
+      for (const scale of [1, 1.9]) {
+        for (const phaseFrac of [0, 0.35, -0.35, 0.65, -0.65]) {
+          const text = decodeAt(thetaC, scale, (phaseFrac * thetaC) / 2);
+          if (text === payload) {
+            if (phaseFrac === 0) centeredWins++;
+            else phasedWins++;
+          }
+        }
+      }
+    }
+    expect(phasedWins).toBeGreaterThan(0);
+    expect(centeredWins).toBe(0);
+  });
+});
+
+describe("adaptiveBinarize", () => {
+  it("recovers a code under a strong illumination ramp that defeats a global stretch", async () => {
+    const { adaptiveBinarize } = await import("./detector");
+    const payload = "ramp-check";
+    const code = renderQr(payload);
+    // A left-to-right brightness ramp: dark modules on the bright side end up
+    // lighter than light modules on the dim side, so no global threshold works.
+    const ramped = new Uint8ClampedArray(code.data.length);
+    for (let y = 0; y < code.height; y++) {
+      for (let x = 0; x < code.width; x++) {
+        const i = (y * code.width + x) * 4;
+        const gain = 0.25 + 0.75 * (x / code.width);
+        const lift = 90 * (x / code.width);
+        const v = code.data[i]! * gain + lift;
+        ramped[i] = ramped[i + 1] = ramped[i + 2] = v;
+        ramped[i + 3] = 255;
+      }
+    }
+    const rampedImage: RawImage = { data: ramped, width: code.width, height: code.height };
+    const bin = adaptiveBinarize(rampedImage);
+    const decoded = jsQR(bin.data, bin.width, bin.height, { inversionAttempts: "dontInvert" });
+    expect(decoded?.data).toBe(payload);
+  });
+});
+
 describe("enhancement variants", () => {
   it("contrastStretch rescues a low-contrast code for jsQR", () => {
     const payload = "low-contrast-check";

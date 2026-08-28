@@ -348,6 +348,25 @@ export function unitSagitta(quad: Quad, mids: EdgeMids, swapped: boolean): numbe
 }
 
 /**
+ * How far the bowed edge midpoints sit off the quad's centerline, in unit
+ * coordinates, along the arc axis. Zero for a flat or center-on wrap; grows
+ * when the code wraps a cylinder off to one side (the label read at an
+ * angle), which the symmetric bump correction cannot fit. The sign says
+ * which side compresses.
+ */
+export function unitMidShift(quad: Quad, mids: EdgeMids, swapped: boolean): number {
+  const H = squareToQuad(quad);
+  if (!swapped) {
+    const top = applyInverseHomography(H, mids[0]![0], mids[0]![1]);
+    const bottom = applyInverseHomography(H, mids[2]![0], mids[2]![1]);
+    return (top[0] - 0.5 + (bottom[0] - 0.5)) / 2;
+  }
+  const right = applyInverseHomography(H, mids[1]![0], mids[1]![1]);
+  const left = applyInverseHomography(H, mids[3]![0], mids[3]![1]);
+  return (right[1] - 0.5 + (left[1] - 0.5)) / 2;
+}
+
+/**
  * Rectify a cylinder-wrapped code with the true perspective-cylinder surface.
  *
  * Model: the code subtends arc theta on a cylinder viewed by a camera at
@@ -369,6 +388,7 @@ export function rectifyCylinder(
   theta: number,
   axis: "u" | "v",
   sagittaScale = 1,
+  phase = 0,
 ): RawImage {
   const H = squareToQuad(quad);
   // The detector under-predicts bow on strong cylinders (regression to the
@@ -376,7 +396,12 @@ export function rectifyCylinder(
   const sagitta = Math.max(0.002, unitSagitta(quad, mids, axis === "v") * sagittaScale);
   const t2 = theta / 2;
   const k = 1 + (1 - Math.cos(t2)) / (2 * sagitta);
-  const chordNorm = (2 * Math.sin(t2)) / (k - Math.cos(t2));
+  // Phase shifts the code center away from the cylinder's nearest line (a
+  // label read from off to the side). The projection is renormalized so the
+  // detected corners stay pinned to u = 0 and 1 whatever the phase.
+  const xOf = (p: number) => Math.sin(p) / (k - Math.cos(p));
+  const x0n = xOf(phase - t2);
+  const x1n = xOf(phase + t2);
 
   const out = new Uint8ClampedArray(outSize * outSize * 4);
   const span = 1 + 2 * margin;
@@ -388,9 +413,9 @@ export function rectifyCylinder(
       const t = ((i + 0.5) / outSize) * span - margin;
       const arcT = axis === "u" ? t : s;
       const flatS = axis === "u" ? s : t;
-      const p = (arcT - 0.5) * theta;
+      const p = (arcT - 0.5) * theta + phase;
       const depth = k - Math.cos(p);
-      const un = 0.5 + Math.sin(p) / depth / chordNorm;
+      const un = (xOf(p) - x0n) / (x1n - x0n);
       const vn = 0.5 + (flatS - 0.5) * ((k - Math.cos(t2)) / depth);
       const [sx, sy] =
         axis === "u" ? applyHomography(H, un, vn) : applyHomography(H, vn, un);
@@ -538,6 +563,52 @@ export function contrastStretch(image: RawImage, lowPct = 0.02, highPct = 0.98):
     out[i * 4 + 3] = 255;
   }
   return { data: out, width: image.width, height: image.height };
+}
+
+/**
+ * Local adaptive binarization via an integral-image mean threshold. Each
+ * pixel is compared against the mean of its neighborhood, so a code under an
+ * illumination ramp, a shadow edge, or partial glare binarizes cleanly where
+ * any global threshold smears one side to solid black or white.
+ */
+export function adaptiveBinarize(image: RawImage, windowFrac = 0.125, bias = 0.06): RawImage {
+  const { width, height, data } = image;
+  const n = width * height;
+  const gray = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    gray[i] = data[i * 4]! * 0.299 + data[i * 4 + 1]! * 0.587 + data[i * 4 + 2]! * 0.114;
+  }
+  // Summed-area table with a zero row/column at the top/left.
+  const sat = new Float64Array((width + 1) * (height + 1));
+  for (let y = 0; y < height; y++) {
+    let rowSum = 0;
+    for (let x = 0; x < width; x++) {
+      rowSum += gray[y * width + x]!;
+      sat[(y + 1) * (width + 1) + (x + 1)] = sat[y * (width + 1) + (x + 1)]! + rowSum;
+    }
+  }
+  const half = Math.max(4, Math.round((Math.min(width, height) * windowFrac) / 2));
+  const out = new Uint8ClampedArray(n * 4);
+  for (let y = 0; y < height; y++) {
+    const y0 = Math.max(0, y - half);
+    const y1 = Math.min(height - 1, y + half);
+    for (let x = 0; x < width; x++) {
+      const x0 = Math.max(0, x - half);
+      const x1 = Math.min(width - 1, x + half);
+      const area = (x1 - x0 + 1) * (y1 - y0 + 1);
+      const sum =
+        sat[(y1 + 1) * (width + 1) + (x1 + 1)]! -
+        sat[y0 * (width + 1) + (x1 + 1)]! -
+        sat[(y1 + 1) * (width + 1) + x0]! +
+        sat[y0 * (width + 1) + x0]!;
+      const mean = sum / area;
+      const v = gray[y * width + x]! < mean * (1 - bias) ? 0 : 255;
+      const o = (y * width + x) * 4;
+      out[o] = out[o + 1] = out[o + 2] = v;
+      out[o + 3] = 255;
+    }
+  }
+  return { data: out, width, height };
 }
 
 /** Unsharp-mask style 3x3 sharpen, for softly blurred crops. */
