@@ -5,9 +5,9 @@
     "codes": 65,
     "jsqr": 12,
     "zxing": 38,
-    "deep": 43,
+    "deep": 46,
     "detRecall": 65,
-    "falsePositives": 2
+    "falsePositives": 3
   },
   {
     "category": "bright_spots",
@@ -15,9 +15,9 @@
     "codes": 97,
     "jsqr": 5,
     "zxing": 31,
-    "deep": 71,
+    "deep": 81,
     "detRecall": 97,
-    "falsePositives": 1
+    "falsePositives": 2
   },
   {
     "category": "brightness",
@@ -25,9 +25,9 @@
     "codes": 85,
     "jsqr": 1,
     "zxing": 69,
-    "deep": 79,
+    "deep": 81,
     "detRecall": 85,
-    "falsePositives": 1
+    "falsePositives": 0
   },
   {
     "category": "close",
@@ -37,7 +37,7 @@
     "zxing": 40,
     "deep": 40,
     "detRecall": 40,
-    "falsePositives": 5
+    "falsePositives": 4
   },
   {
     "category": "curved",
@@ -65,9 +65,9 @@
     "codes": 53,
     "jsqr": 7,
     "zxing": 21,
-    "deep": 29,
+    "deep": 33,
     "detRecall": 53,
-    "falsePositives": 6
+    "falsePositives": 16
   },
   {
     "category": "high_version",
@@ -75,7 +75,7 @@
     "codes": 37,
     "jsqr": 2,
     "zxing": 33,
-    "deep": 34,
+    "deep": 35,
     "detRecall": 37,
     "falsePositives": 0
   },
@@ -85,9 +85,9 @@
     "codes": 420,
     "jsqr": 0,
     "zxing": 112,
-    "deep": 406,
-    "detRecall": 407,
-    "falsePositives": 1
+    "deep": 400,
+    "detRecall": 402,
+    "falsePositives": 0
   },
   {
     "category": "monitor",
@@ -107,7 +107,7 @@
     "zxing": 74,
     "deep": 76,
     "detRecall": 78,
-    "falsePositives": 10
+    "falsePositives": 7
   },
   {
     "category": "noncompliant",
@@ -115,7 +115,7 @@
     "codes": 26,
     "jsqr": 2,
     "zxing": 21,
-    "deep": 25,
+    "deep": 23,
     "detRecall": 26,
     "falsePositives": 0
   },
@@ -126,7 +126,7 @@
     "jsqr": 11,
     "zxing": 12,
     "deep": 13,
-    "detRecall": 21,
+    "detRecall": 22,
     "falsePositives": 0
   },
   {
@@ -136,7 +136,7 @@
     "jsqr": 22,
     "zxing": 24,
     "deep": 30,
-    "detRecall": 31,
+    "detRecall": 30,
     "falsePositives": 0
   },
   {
@@ -145,7 +145,7 @@
     "codes": 133,
     "jsqr": 1,
     "zxing": 132,
-    "deep": 132,
+    "deep": 133,
     "detRecall": 133,
     "falsePositives": 1
   },
@@ -157,7 +157,7 @@
     "zxing": 19,
     "deep": 20,
     "detRecall": 20,
-    "falsePositives": 6
+    "falsePositives": 3
   },
   {
     "category": "TOTAL",
@@ -165,8 +165,8 @@
     "codes": 1232,
     "jsqr": 126,
     "zxing": 689,
-    "deep": 1075,
-    "detRecall": 1213,
-    "falsePositives": 42
+    "deep": 1088,
+    "detRecall": 1208,
+    "falsePositives": 45
   }
 ]

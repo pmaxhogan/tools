@@ -162,7 +162,10 @@ export async function scanStandard(image: RawImage, inversion: Inversion): Promi
 /* ------------------------------------------------------------------ */
 
 const MODEL_URL = "/models/qr-detector/qr-detector.onnx";
-const CACHE_NAME = "tools-qr-deep-v1";
+/** Bumped whenever the trained model changes: the URL stays the same, so the
+ * cache name is what forces returning visitors onto the new weights. */
+const CACHE_PREFIX = "tools-qr-deep-";
+const CACHE_NAME = `${CACHE_PREFIX}v2`;
 export const DETECTOR_THRESHOLD = 0.3;
 
 /** The narrow slice of onnxruntime-web this module touches. */
@@ -207,6 +210,12 @@ export async function deepModelCached(): Promise<boolean> {
 
 async function openModelCache(): Promise<Cache | null> {
   try {
+    // Drop buckets from older model versions so a stale 15 MB detector never
+    // lingers next to the current one.
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME).map((k) => caches.delete(k)),
+    );
     return await caches.open(CACHE_NAME);
   } catch {
     return null;
