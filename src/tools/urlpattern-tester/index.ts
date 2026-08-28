@@ -64,19 +64,65 @@ function describePattern(pattern: URLPattern): string {
   return parts.map(([name, value]) => `${name}=${value}`).join(", ");
 }
 
+/**
+ * A stand-in base for the probe below. Nothing ever fetches it, and RFC 2606
+ * reserves .invalid so it can never resolve to a real host.
+ */
+const PROBE_BASE = "https://example.invalid/";
+
+/** Would this pattern construct if it had a base URL to resolve against? */
+function resolvesWithBase(source: string): boolean {
+  try {
+    new URLPattern(source, PROBE_BASE);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Is this a base the URLPattern constructor can resolve against? */
+function isAbsoluteURL(value: string): boolean {
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Build the pattern, turning a construction TypeError into an actionable ToolError. */
 function createPattern(source: string, baseURL: string): URLPattern {
   try {
     return baseURL ? new URLPattern(source, baseURL) : new URLPattern(source);
   } catch (err) {
+    /**
+     * The cause is established by retrying rather than by reading the error
+     * text, because neither implementation's message can be trusted. Node's
+     * native URLPattern reports every construction failure as the same opaque
+     * "Failed to construct URLPattern" with no cause, and the polyfill rejects
+     * a relative source before it ever parses the pattern, so it blames a
+     * missing base even for genuinely broken syntax. Probing keeps the hint
+     * identical on both.
+     */
+    if (!baseURL && resolvesWithBase(source)) {
+      throw new ToolError(
+        "bad-pattern",
+        "This pattern is relative, so it needs a base URL to resolve against.",
+        "A relative pattern needs a base, so fill in the Base URL option, for example https://example.com.",
+      );
+    }
+    if (baseURL && !isAbsoluteURL(baseURL)) {
+      throw new ToolError(
+        "bad-base-url",
+        `The Base URL "${baseURL}" is not a valid URL.`,
+        "Give the Base URL option a full absolute URL, for example https://example.com.",
+      );
+    }
     const message = err instanceof Error ? err.message : String(err);
-    const needsBase = /base url/i.test(message);
     throw new ToolError(
       "bad-pattern",
       message,
-      needsBase
-        ? "A relative pattern needs a base, so fill in the Base URL option, for example https://example.com."
-        : "Check the URLPattern syntax. Named groups are :name, wildcards are *.",
+      "Check the URLPattern syntax. Named groups are :name, wildcards are *.",
     );
   }
 }

@@ -119,12 +119,37 @@ describe("urlpattern-tester", () => {
     }
   });
 
+  /**
+   * Broken syntax is a syntax problem whether or not a base URL is filled in.
+   * Only the pattern is asserted on, never the thrown message: implementations
+   * word these differently, and the native one says nothing useful at all.
+   */
+  it("throws bad-pattern with the syntax hint for broken syntax and no base", () => {
+    try {
+      run("https://example.com/x", { pattern: "((" });
+      expect.unreachable();
+    } catch (err) {
+      expect((err as ToolError).code).toBe("bad-pattern");
+      expect((err as ToolError).fix).toContain("URLPattern syntax");
+    }
+  });
+
   it("throws bad-pattern with a base URL hint for a relative pattern and no base", () => {
     try {
       run("https://example.com/users/42", { pattern: "/users/:id" });
       expect.unreachable();
     } catch (err) {
       expect((err as ToolError).code).toBe("bad-pattern");
+      expect((err as ToolError).fix).toContain("Base URL");
+    }
+  });
+
+  it("blames the base URL, not the pattern, when the base is not a URL", () => {
+    try {
+      run("https://example.com/users/42", { pattern: "/users/:id", baseURL: "not a url" });
+      expect.unreachable();
+    } catch (err) {
+      expect((err as ToolError).code).toBe("bad-base-url");
       expect((err as ToolError).fix).toContain("Base URL");
     }
   });
