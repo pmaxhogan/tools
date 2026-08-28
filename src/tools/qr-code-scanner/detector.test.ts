@@ -520,6 +520,43 @@ describe("gridResample", () => {
   });
 });
 
+describe("quadGridResample", () => {
+  it("rescues a code whose bottom-left finder is erased by glare", async () => {
+    const { QUAD_GRID_VERSIONS, quadGridResample } = await import("./detector");
+    const payload = "https://example.com/glare-corner";
+    // Rectified-crop geometry: the code fills the frame minus a 0.1 margin,
+    // exactly what rectifyQuad(margin 0.1) produces.
+    const code = renderQr(payload, 8, 0);
+    const margin = 0.1;
+    const size = Math.round((code.width * (1 + 2 * margin)) / 1);
+    const m0 = Math.round((size * margin) / (1 + 2 * margin));
+    const crop = solidImage(size, size, 235);
+    for (let y = 0; y < code.height; y++) {
+      for (let x = 0; x < code.width; x++) {
+        const so = (y * code.width + x) * 4;
+        const doff = ((y + m0) * size + (x + m0)) * 4;
+        crop.data[doff] = code.data[so]!;
+        crop.data[doff + 1] = code.data[so + 1]!;
+        crop.data[doff + 2] = code.data[so + 2]!;
+      }
+    }
+    // Glare: wash the bottom-left finder region to near-white.
+    const wash = Math.round(size * 0.28);
+    for (let y = size - wash; y < size; y++) {
+      for (let x = 0; x < wash; x++) {
+        const o = (y * size + x) * 4;
+        crop.data[o] = crop.data[o + 1] = crop.data[o + 2] = 246;
+      }
+    }
+
+    const decoded = QUAD_GRID_VERSIONS.map((v) => {
+      const q = quadGridResample(crop, margin, v);
+      return jsQR(q.data, q.width, q.height, { inversionAttempts: "dontInvert" })?.data;
+    }).find(Boolean);
+    expect(decoded).toBe(payload);
+  });
+});
+
 describe("adaptiveBinarize", () => {
   it("recovers a code under a strong illumination ramp that defeats a global stretch", async () => {
     const { adaptiveBinarize } = await import("./detector");

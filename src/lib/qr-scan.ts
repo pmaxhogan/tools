@@ -28,7 +28,9 @@ import {
   contrastStretch,
   cropTile,
   decodeDetections,
-  gridResample,
+  gridResampleCandidates,
+  quadGridResample,
+  QUAD_GRID_VERSIONS,
   makeBumpSurface,
   packLetterboxed,
   planTiles,
@@ -368,12 +370,22 @@ async function decodeCrop(crop: RawImage): Promise<ScanHit[]> {
   if (hits.length) return hits;
   // Grid resample: rebuild a perfect synthetic code from the finder grid,
   // absorbing shear, aspect drift, and smooth bends the surface models left
-  // behind.
-  const rebuilt = gridResample(crop);
-  if (!rebuilt) return [];
-  hits = jsqrDecode(rebuilt, "dontInvert");
-  if (hits.length) return hits;
-  return zxingDecode(rebuilt, { tryInvert: false, tryDownscale: false });
+  // behind. Neighbor-version candidates cover a misjudged module count.
+  for (const rebuilt of gridResampleCandidates(crop)) {
+    hits = jsqrDecode(rebuilt, "dontInvert");
+    if (hits.length) return hits;
+    hits = await zxingDecode(rebuilt, { tryInvert: false, tryDownscale: false });
+    if (hits.length) return hits;
+  }
+  // Quad-grid sweep: when finders cannot anchor a grid (a glare-eaten
+  // corner), the detection quad frames the modules directly; only the
+  // version is unknown, and Reed-Solomon rejects every wrong guess.
+  for (const version of QUAD_GRID_VERSIONS) {
+    const q = quadGridResample(crop, 0.1, version);
+    hits = jsqrDecode(q, "dontInvert");
+    if (hits.length) return hits;
+  }
+  return [];
 }
 
 /**

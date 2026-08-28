@@ -87,6 +87,14 @@ class Difficulty:
     # occlusion. Sized up to and slightly past each ECC level's theoretical
     # recovery limit (L 7%, M 15%, Q 25%, H 30% of area).
     center_logo_p: float = 0.18
+    # Real-failure lookalikes, modeled on field photos that defeated the
+    # deployed scanner: an etched tone-on-tone metal plate, a hard specular
+    # band washing modules to white, caption text hugging the code, and the
+    # blown-up screenshot of a tiny code.
+    metal_p: float = 0.08
+    glare_band_p: float = 0.08
+    caption_p: float = 0.18
+    zoom_p: float = 0.06
     # PNG-8/GIF-style palette banding, optionally with ordered dithering.
     posterize_p: float = 0.15
 
@@ -118,6 +126,44 @@ EVAL_HARD = Difficulty(
     cylinder_p=0.3,
     posterize_p=0.2,
     center_logo_p=0.25,
+    metal_p=0.12,
+    glare_band_p=0.14,
+    caption_p=0.22,
+    zoom_p=0.1,
+)
+
+# The field-failure stress set: every knob that mirrors the real photos the
+# deployed scanner missed, cranked. Off-center tilted cylinder wraps, etched
+# tone-on-tone plates under glare bands, captions against the code, and
+# blown-up screenshots of tiny codes.
+LOOKALIKE = Difficulty(
+    size_min=60.0,
+    size_max=380.0,
+    persp_jitter=0.16,
+    invert_p=0.05,
+    low_contrast_p=0.3,
+    styled_module_p=0.1,
+    occlusion_p=0.05,
+    glare_p=0.25,
+    shadow_p=0.25,
+    blur_sigma_max=2.8,
+    motion_blur_p=0.2,
+    noise_std_max=0.1,
+    jpeg_p=0.7,
+    jpeg_q_min=24,
+    lowres_p=0.35,
+    lowres_min=0.3,
+    moire_p=0.1,
+    n_codes_p=(0.0, 0.9, 0.1, 0.0),
+    letterbox_p=0.25,
+    n_negatives_p=(0.7, 0.25, 0.05),
+    cylinder_p=0.55,
+    posterize_p=0.1,
+    center_logo_p=0.25,
+    metal_p=0.4,
+    glare_band_p=0.45,
+    caption_p=0.55,
+    zoom_p=0.3,
 )
 
 # Held-out set drawn from the training distribution (but disjoint seeds), to
@@ -285,6 +331,17 @@ def _apply_code_lighting(tile: np.ndarray, rng: np.random.Generator, d: Difficul
         soft = rng.uniform(2, 30)
         mask = 1.0 / (1.0 + np.exp(-(dist - edge) / soft))
         out = out * (1.0 - mask[..., None] * rng.uniform(0.2, 0.55))
+    if rng.random() < d.glare_band_p:
+        # A broad specular band that washes modules nearly to white, the way
+        # brushed metal or glossy lamination catches a light source.
+        ang = rng.uniform(0, 2 * np.pi)
+        c, s = np.cos(ang), np.sin(ang)
+        dist = (xx - w / 2) * c + (yy - h / 2) * s
+        center = rng.uniform(-0.35, 0.35) * max(h, w)
+        width = rng.uniform(0.18, 0.5) * max(h, w)
+        band = np.exp(-(((dist - center) / width) ** 2)) * rng.uniform(0.72, 0.97)
+        wash = rng.uniform(0.88, 0.98)
+        out = out + (wash - out) * band[..., None]
     return np.clip(out, 0, 1)
 
 
@@ -372,6 +429,53 @@ def _draw_center_logo(tile: np.ndarray, corners: np.ndarray, rng: np.random.Gene
             lineType=cv2.LINE_AA,
         )
     return f * f
+
+
+def _draw_caption(rendered, rng: np.random.Generator) -> None:
+    """Caption clutter hugging the code: squiggly script text, straight text
+    bars, and small icons drawn onto an extension of the tile below (and
+    sometimes above) the quiet zone, the way stickers and signs caption their
+    codes. The corner ground truth is unchanged; the tile just grows.
+    """
+    tile = rendered.image
+    h, w = tile.shape[:2]
+    pad = int(np.clip(h * rng.uniform(0.1, 0.28), 6, 200))
+    above = rng.random() < 0.25
+    bg = tile[0, 0].copy()
+    strip = np.empty((pad, w, 3), dtype=np.float32)
+    strip[:] = bg
+    color = rng.uniform(0.0, 0.55, 3).astype(np.float32).tolist()
+    kind = rng.choice(["script", "bars", "icon"])
+    if kind == "script":
+        # Connected squiggle, like handwriting-styled captions.
+        n_pts = 40
+        xs = np.linspace(w * 0.1, w * 0.9, n_pts)
+        ys = pad / 2 + np.sin(np.linspace(0, rng.uniform(6, 14), n_pts)) * pad * 0.28
+        ys += rng.normal(0, pad * 0.05, n_pts)
+        pts = np.stack([xs, ys], axis=1).astype(np.int32)
+        cv2.polylines(strip, [pts.reshape(-1, 1, 2)], False, color, max(1, int(pad * 0.12)), cv2.LINE_AA)
+    elif kind == "bars":
+        # Blocky text: short bars with gaps, like printed serial numbers.
+        x = int(w * rng.uniform(0.08, 0.25))
+        bh = max(2, int(pad * rng.uniform(0.3, 0.55)))
+        y = (pad - bh) // 2
+        while x < w * 0.9:
+            bw = int(rng.integers(max(2, pad // 4), max(3, pad)))
+            cv2.rectangle(strip, (x, y), (min(x + bw, w - 1), y + bh), color, -1)
+            x += bw + int(rng.integers(2, max(3, pad // 2)))
+    else:
+        # A small icon: rounded box with dots, like a calendar glyph.
+        cx = int(w * rng.uniform(0.15, 0.85))
+        r = int(pad * 0.42)
+        cv2.rectangle(strip, (cx - r, pad // 2 - r), (cx + r, pad // 2 + r), color, max(1, r // 4))
+        for gy in (-r // 3, r // 3):
+            for gx in (-r // 2, 0, r // 2):
+                cv2.circle(strip, (cx + gx, pad // 2 + gy), max(1, r // 6), color, -1)
+    if above:
+        rendered.image = np.vstack([strip, tile])
+        rendered.corners[:, 1] += pad
+    else:
+        rendered.image = np.vstack([tile, strip])
 
 
 def _occlude(img: np.ndarray, quad: np.ndarray, rng: np.random.Generator) -> None:
@@ -503,10 +607,21 @@ def _cylinder_warp(
         if points is not None:
             points = points[:, ::-1].copy()
 
+    # Tilted wrap axis: a sticker applied crooked on the pole bends along a
+    # diagonal. Rotate into the axis frame, wrap, rotate back at the end.
+    tilt = float(rng.uniform(-0.28, 0.28)) if rng.random() < 0.5 else 0.0
+    pre_alpha = None
+    if tilt != 0.0:
+        tile, pre_alpha, points = _rotate_tile(tile, None, points, tilt)
+
     h, w = tile.shape[:2]
     k = float(rng.uniform(1.15, 4.0))  # camera distance in cylinder radii
     # The surface is visible only while it faces the camera: |phi| < acos(1/k).
-    theta = float(rng.uniform(0.5, 0.92)) * 2.0 * float(np.arccos(1.0 / k))
+    vis = float(np.arccos(1.0 / k))
+    theta = float(rng.uniform(0.5, 0.92)) * 2.0 * vis
+    # Off-center wrap: the code sits away from the cylinder's nearest line (a
+    # label read from off to the side), the dominant real-photo case.
+    phase = float(rng.uniform(-0.7, 0.7)) * (vis - theta / 2)
     radius = w / theta  # arc length is preserved
     d = k * radius
     f = d - radius  # focal length making the center column scale exactly 1
@@ -515,7 +630,7 @@ def _cylinder_warp(
         return f * radius * np.sin(phi) / (d - radius * np.cos(phi))
 
     # Dense forward table, numerically inverted per output column.
-    phi_dense = np.linspace(-theta / 2, theta / 2, 2048, dtype=np.float64)
+    phi_dense = np.linspace(phase - theta / 2, phase + theta / 2, 2048, dtype=np.float64)
     xp_dense = xproj(phi_dense)
     xp_min, xp_max = float(xp_dense[0]), float(xp_dense[-1])
     out_w = max(8, int(np.ceil(xp_max - xp_min)))
@@ -523,17 +638,18 @@ def _cylinder_warp(
 
     xs = xp_min + np.arange(out_w, dtype=np.float64) + 0.5
     phi_col = np.interp(xs, xp_dense, phi_dense)
-    src_x = ((phi_col / theta + 0.5) * w).astype(np.float32)
+    src_x = (((phi_col - phase) / theta + 0.5) * w).astype(np.float32)
     depth_col = (d - radius * np.cos(phi_col)).astype(np.float32)
-    yscale_col = f / depth_col  # 1 at the center, < 1 at the limbs
+    yscale_col = f / depth_col  # 1 where the surface is nearest the camera
 
     rows = np.arange(out_h, dtype=np.float32)[:, None] + 0.5 - out_h / 2
     map_y = (rows / yscale_col[None, :] + h / 2 - 0.5).astype(np.float32)
     map_x = np.broadcast_to(src_x[None, :], (out_h, out_w)).astype(np.float32).copy()
 
     warped = cv2.remap(tile, map_x, map_y, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    src_alpha = pre_alpha if pre_alpha is not None else np.ones((h, w), dtype=np.float32)
     alpha = cv2.remap(
-        np.ones((h, w), dtype=np.float32),
+        src_alpha,
         map_x,
         map_y,
         cv2.INTER_LINEAR,
@@ -546,11 +662,14 @@ def _cylinder_warp(
 
     mapped = None
     if points is not None:
-        phi_p = (points[:, 0] / w - 0.5) * theta
+        phi_p = (points[:, 0] / w - 0.5) * theta + phase
         depth_p = d - radius * np.cos(phi_p)
         px = f * radius * np.sin(phi_p) / depth_p - xp_min
         py = (points[:, 1] - h / 2) * (f / depth_p) + out_h / 2
         mapped = np.stack([px, py], axis=1).astype(np.float32)
+
+    if tilt != 0.0:
+        warped, alpha, mapped = _rotate_tile(warped, alpha, mapped, -tilt)
 
     if not vertical:
         warped = np.transpose(warped, (1, 0, 2))
@@ -558,6 +677,31 @@ def _cylinder_warp(
         if mapped is not None:
             mapped = mapped[:, ::-1].copy()
     return warped, alpha, mapped
+
+
+def _rotate_tile(
+    tile: np.ndarray, alpha: np.ndarray | None, points: np.ndarray | None, angle: float
+) -> tuple[np.ndarray, np.ndarray, np.ndarray | None]:
+    """Rotate a tile (and its alpha and points) by `angle` radians about its
+    center, expanding the canvas so nothing clips."""
+    h, w = tile.shape[:2]
+    deg = float(np.degrees(angle))
+    c, s = abs(np.cos(angle)), abs(np.sin(angle))
+    nw = int(np.ceil(w * c + h * s))
+    nh = int(np.ceil(w * s + h * c))
+    M = cv2.getRotationMatrix2D((w / 2, h / 2), deg, 1.0)
+    M[0, 2] += (nw - w) / 2
+    M[1, 2] += (nh - h) / 2
+    rot = cv2.warpAffine(tile, M, (nw, nh), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    a = alpha if alpha is not None else np.ones((h, w), dtype=np.float32)
+    rot_a = cv2.warpAffine(
+        a, M, (nw, nh), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0.0
+    )
+    mapped = None
+    if points is not None:
+        ones = np.ones((points.shape[0], 1), dtype=np.float64)
+        mapped = (np.hstack([points.astype(np.float64), ones]) @ M.T).astype(np.float32)
+    return rot, rot_a, mapped
 
 
 def _composite_tile(
@@ -667,7 +811,16 @@ def generate_scene(index: int, seed_base: int, d: Difficulty, pool: BackgroundPo
             style = "square"
             if rng.random() < d.styled_module_p:
                 style = str(rng.choice(["rounded", "dots"]))
-            dark, light = sample_colors(rng, d.invert_p, d.low_contrast_p)
+            if rng.random() < d.metal_p:
+                # Etched tone-on-tone plate: both module colors sit close
+                # together on a metallic gray, with a slight warm cast.
+                base = float(rng.uniform(0.6, 0.85))
+                delta = float(rng.uniform(0.08, 0.22))
+                warm = np.array([1.03, 1.0, 0.95], dtype=np.float32)
+                light = np.clip(base * warm, 0, 1).astype(np.float32)
+                dark = np.clip((base - delta) * warm, 0, 1).astype(np.float32)
+            else:
+                dark, light = sample_colors(rng, d.invert_p, d.low_contrast_p)
             rendered = render_qr(
                 matrix,
                 payload,
@@ -681,6 +834,8 @@ def generate_scene(index: int, seed_base: int, d: Difficulty, pool: BackgroundPo
             logo_frac = 0.0
             if wants_logo:
                 logo_frac = _draw_center_logo(rendered.image, rendered.corners, rng, ecc)
+            if rng.random() < d.caption_p:
+                _draw_caption(rendered, rng)
 
             c = rendered.corners
             mids = np.array(
@@ -734,8 +889,38 @@ def generate_scene(index: int, seed_base: int, d: Difficulty, pool: BackgroundPo
                 placed_quads.append(placed[1])
                 break
 
+    # Blown-up screenshot of a tiny code: crop tight around one code and
+    # upscale to full frame BEFORE capture degradation, so blur and JPEG land
+    # on the upscaled pixels exactly like a zoomed screenshot.
+    if scene.codes and rng.random() < d.zoom_p:
+        img = _zoom_blowup(img, scene, rng)
+
     img = _global_degrade(img.astype(np.float32), rng, d, scene)
     if rng.random() < d.letterbox_p:
         img = _letterbox(img, scene, rng)
     scene.image = (np.clip(img, 0, 1) * 255).astype(np.uint8)
     return scene
+
+
+def _zoom_blowup(img: np.ndarray, scene: Scene, rng: np.random.Generator) -> np.ndarray:
+    """Crop a window around one code and upscale it to the full frame."""
+    code = scene.codes[int(rng.integers(0, len(scene.codes)))]
+    pts = code.corners
+    cx, cy = pts.mean(axis=0)
+    side = float(np.linalg.norm(pts[0] - pts[2]) / np.sqrt(2))
+    win = int(np.clip(side * rng.uniform(1.35, 2.4), 32, IMG_SIZE))
+    x0 = int(np.clip(cx - win / 2, 0, IMG_SIZE - win))
+    y0 = int(np.clip(cy - win / 2, 0, IMG_SIZE - win))
+    crop = img[y0 : y0 + win, x0 : x0 + win]
+    out = cv2.resize(crop, (IMG_SIZE, IMG_SIZE), interpolation=cv2.INTER_LINEAR)
+    s = IMG_SIZE / win
+    kept = []
+    for c in scene.codes:
+        p = (c.points - np.array([x0, y0], dtype=np.float32)) * s
+        center = p[:4].mean(axis=0)
+        if 0 <= center[0] < IMG_SIZE and 0 <= center[1] < IMG_SIZE:
+            c.points = p.astype(np.float32)
+            c.side_px *= s
+            kept.append(c)
+    scene.codes = kept
+    return out

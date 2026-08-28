@@ -17,7 +17,7 @@ from pathlib import Path
 import cv2
 from tqdm import tqdm
 
-from synth import EVAL_HARD, EVAL_LIKE_TRAIN, BackgroundPool, generate_scene
+from synth import EVAL_HARD, EVAL_LIKE_TRAIN, LOOKALIKE, BackgroundPool, generate_scene
 
 ROOT = Path(__file__).parent
 BACKGROUNDS = ROOT / "data" / "backgrounds" / "val2017"
@@ -25,6 +25,9 @@ BACKGROUNDS = ROOT / "data" / "backgrounds" / "val2017"
 SETS = [
     ("hard", 2_000_000_000, EVAL_HARD, 800),
     ("liketrain", 4_000_000_000, EVAL_LIKE_TRAIN, 400),
+    # Field-failure lookalikes: metal plates, glare bands, off-center tilted
+    # wraps, zoomed screenshots, captions against the code.
+    ("lookalike", 5_000_000_000, LOOKALIKE, 400),
 ]
 
 

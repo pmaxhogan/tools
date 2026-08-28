@@ -15,7 +15,9 @@ import {
   contrastStretch,
   cropTile,
   decodeDetections,
-  gridResample,
+  gridResampleCandidates,
+  quadGridResample,
+  QUAD_GRID_VERSIONS,
   makeBumpSurface,
   packLetterboxed,
   planTiles,
@@ -193,13 +195,26 @@ export async function decodeDetection(
     // absorbing shear, aspect drift, and smooth bends the surface models
     // left behind.
     if (!texts.length) {
-      const rebuilt = gridResample(crop);
-      if (rebuilt) {
+      for (const rebuilt of gridResampleCandidates(crop)) {
         const j = jsQR(rebuilt.data, rebuilt.width, rebuilt.height, {
           inversionAttempts: "dontInvert",
         });
         if (j?.data) texts = [j.data];
         if (!texts.length) texts = await zxingPng(encodePng(rebuilt));
+        if (texts.length) break;
+      }
+    }
+    // Quad-grid sweep: when finders cannot anchor a grid (a glare-eaten
+    // corner), the detection quad frames the modules directly; only the
+    // version is unknown, and Reed-Solomon rejects every wrong guess.
+    if (!texts.length) {
+      for (const version of QUAD_GRID_VERSIONS) {
+        const q = quadGridResample(crop, 0.1, version);
+        const j = jsQR(q.data, q.width, q.height, { inversionAttempts: "dontInvert" });
+        if (j?.data) {
+          texts = [j.data];
+          break;
+        }
       }
     }
     if (texts.length) return texts;

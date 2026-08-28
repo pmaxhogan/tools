@@ -698,23 +698,30 @@ function scanLine(
   }
 }
 
-/** Locate finder-pattern centers in a binarized crop. */
-export function findFinderPatterns(image: RawImage): FinderHit[] {
-  const bin = adaptiveBinarize(image);
-  const { width, height } = bin;
-  const dark = new Uint8Array(width * height);
-  for (let i = 0; i < width * height; i++) dark[i] = bin.data[i * 4]! < 128 ? 1 : 0;
+/** Locate finder-pattern centers in a binarized crop.
 
+ * The scan runs at two binarization window scales: the fine window resolves
+ * small finders, while a finder whose 3-module core is WIDER than the fine
+ * window gets hollowed out by local thresholding and only survives the
+ * coarse pass. */
+export function findFinderPatterns(image: RawImage): FinderHit[] {
   const raw: FinderHit[] = [];
-  for (let y = 0; y < height; y += 2) {
-    scanLine(dark, width, y, true, width, (cx, module) => {
-      // Verify the vertical signature through the candidate center.
-      scanLine(dark, width, Math.round(cx), false, height, (cy, vModule) => {
-        if (Math.abs(cy - y) < module * 2 && vModule > module * 0.4 && vModule < module * 2.5) {
-          raw.push({ x: cx, y: cy, mx: module, my: vModule, module: (module + vModule) / 2 });
-        }
+  const { width, height } = image;
+  for (const windowFrac of [0.125, 0.45]) {
+    const bin = adaptiveBinarize(image, windowFrac);
+    const dark = new Uint8Array(width * height);
+    for (let i = 0; i < width * height; i++) dark[i] = bin.data[i * 4]! < 128 ? 1 : 0;
+
+    for (let y = 0; y < height; y += 2) {
+      scanLine(dark, width, y, true, width, (cx, module) => {
+        // Verify the vertical signature through the candidate center.
+        scanLine(dark, width, Math.round(cx), false, height, (cy, vModule) => {
+          if (Math.abs(cy - y) < module * 2 && vModule > module * 0.4 && vModule < module * 2.5) {
+            raw.push({ x: cx, y: cy, mx: module, my: vModule, module: (module + vModule) / 2 });
+          }
+        });
       });
-    });
+    }
   }
 
   // Cluster hits within a module radius; a real finder collects many rows.
@@ -753,13 +760,13 @@ export function findFinderPatterns(image: RawImage): FinderHit[] {
  * null when the finder geometry cannot be established; the caller just moves
  * on to the next variant.
  */
-export function gridResample(image: RawImage, useTiming = true): RawImage | null {
+export function gridResampleCandidates(image: RawImage, useTiming = true): RawImage[] {
   const finders = findFinderPatterns(image);
-  if (finders.length < 3) return null;
+  if (finders.length < 2) return [];
 
   // Choose TL, TR, BL: the pair with the longest span is TR-BL (the
   // diagonal); the remaining finder of the best right-angle triple is TL.
-  let best: { tl: FinderHit; tr: FinderHit; bl: FinderHit; err: number } | null = null;
+  let best: { tl: FinderHit; tr: FinderHit; bl: FinderHit; err: number; synthetic?: "bl" | "tr" } | null = null;
   for (let a = 0; a < finders.length; a++) {
     for (let b = 0; b < finders.length; b++) {
       for (let c = 0; c < finders.length; c++) {
@@ -784,30 +791,142 @@ export function gridResample(image: RawImage, useTiming = true): RawImage | null
       }
     }
   }
-  if (!best) return null;
-  const { tl, tr, bl } = best;
+  // Two-finder fallback: glare or damage often erases exactly one finder.
+  // A crisp pair still fixes the grid completely on a near-frontal crop: the
+  // missing corner is a right-angle construction, and the timing walk cleans
+  // up the residual. Only used when no full triple qualifies.
+  if (!best && finders.length >= 2) {
+    for (let a = 0; a < finders.length && !best; a++) {
+      for (let b = 0; b < finders.length && !best; b++) {
+        if (a === b) continue;
+        const p = finders[a]!;
+        const q = finders[b]!;
+        const dx = q.x - p.x;
+        const dy = q.y - p.y;
+        const len = Math.hypot(dx, dy);
+        if (len < p.module * 8) continue;
+        const horizontal = Math.abs(dx) > Math.abs(dy) * 2;
+        const verticalPair = Math.abs(dy) > Math.abs(dx) * 2;
+        if (horizontal && dx > 0) {
+          // p = TL, q = TR; BL sits at TL rotated 90 degrees down.
+          best = { tl: p, tr: q, bl: { ...p, x: p.x - dy, y: p.y + dx }, err: 1, synthetic: "bl" };
+        } else if (verticalPair && dy > 0) {
+          // p = TL, q = BL; TR sits at TL rotated 90 degrees right.
+          best = { tl: p, tr: { ...p, x: p.x + dy, y: p.y - dx }, bl: q, err: 1, synthetic: "tr" };
+        }
+      }
+    }
+  }
+  if (!best) return [];
+  const { tl, tr, bl, synthetic } = best;
 
   // Version from the finder spacing, measured per axis so anamorphic stretch
   // cannot corrupt it: the horizontal leg is counted in horizontal modules
-  // and the vertical leg in vertical modules.
+  // and the vertical leg in vertical modules. The estimate can land one
+  // version off when modules bleed (etched or blurred prints), so the
+  // neighbors are emitted as candidates too; Reed-Solomon rejects wrong ones.
   const moduleSize = (tl.module + tr.module + bl.module) / 3;
   const spanX = Math.hypot(tr.x - tl.x, tr.y - tl.y) / ((tl.mx + tr.mx) / 2) + 7;
   const spanY = Math.hypot(bl.x - tl.x, bl.y - tl.y) / ((tl.my + bl.my) / 2) + 7;
   const spanModules = (spanX + spanY) / 2;
   const version = Math.max(1, Math.min(40, Math.round((spanModules - 17) / 4)));
-  const n = 17 + 4 * version;
 
-  // Affine module-grid map from the three finder centers (at 3.5 modules in).
-  // [x, y] = O + i * U + j * V with i, j in module units.
-  const span = n - 7;
-  const U = [(tr.x - tl.x) / span, (tr.y - tl.y) / span];
-  const V = [(bl.x - tl.x) / span, (bl.y - tl.y) / span];
-  const O = [tl.x - 3.5 * (U[0]! + V[0]!), tl.y - 3.5 * (U[1]! + V[1]!)];
-  const gridAt = (i: number, j: number): Point => [
-    O[0]! + i * U[0]! + j * V[0]!,
-    O[1]! + i * U[1]! + j * V[1]!,
-  ];
+  const out: RawImage[] = [];
+  for (const v of [version, version - 1, version + 1]) {
+    if (v < 1 || v > 40) continue;
+    const n = 17 + 4 * v;
+    // Affine module-grid map from the three finder centers (3.5 modules in).
+    // [x, y] = O + i * U + j * V with i, j in module units.
+    const span = n - 7;
+    const makeGrid = (scale: number) => {
+      const trS =
+        synthetic === "tr"
+          ? { x: tl.x + (tr.x - tl.x) * scale, y: tl.y + (tr.y - tl.y) * scale }
+          : tr;
+      const blS =
+        synthetic === "bl"
+          ? { x: tl.x + (bl.x - tl.x) * scale, y: tl.y + (bl.y - tl.y) * scale }
+          : bl;
+      const U = [(trS.x - tl.x) / span, (trS.y - tl.y) / span];
+      const V = [(blS.x - tl.x) / span, (blS.y - tl.y) / span];
+      const O = [tl.x - 3.5 * (U[0]! + V[0]!), tl.y - 3.5 * (U[1]! + V[1]!)];
+      return (i: number, j: number): Point => [
+        O[0]! + i * U[0]! + j * V[0]!,
+        O[1]! + i * U[1]! + j * V[1]!,
+      ];
+    };
+    let gridAt = makeGrid(1);
+    if (synthetic) {
+      // A synthesized leg knows its direction but not its length (the crop
+      // may be stretched along it). Recover the length from the timing
+      // pattern: the scale that makes its alternation ring true is the one
+      // whose rows actually land on module centers.
+      let bestScale = 1;
+      let bestScore = -Infinity;
+      for (let scale = 0.78; scale <= 1.27; scale += 0.02) {
+        const g = makeGrid(scale);
+        const score = timingAlternationScore(image, g, n, synthetic === "tr");
+        if (score > bestScore) {
+          bestScore = score;
+          bestScale = scale;
+        }
+      }
+      gridAt = makeGrid(bestScale);
+    }
+    out.push(sampleGridToBitmap(image, gridAt, moduleSize, n, useTiming));
+  }
+  return out;
+}
 
+/**
+ * How strongly the timing pattern alternates under a candidate grid, scored
+ * on bilinear gray. alongRow scores the horizontal timing line (used when
+ * the horizontal leg was synthesized); otherwise the vertical one.
+ */
+function timingAlternationScore(
+  image: RawImage,
+  gridAt: (i: number, j: number) => Point,
+  n: number,
+  alongRow: boolean,
+): number {
+  const gray = (x: number, y: number): number => {
+    const cx = Math.min(image.width - 1, Math.max(0, x));
+    const cy = Math.min(image.height - 1, Math.max(0, y));
+    const x0 = Math.floor(cx);
+    const y0 = Math.floor(cy);
+    const x1 = Math.min(image.width - 1, x0 + 1);
+    const y1 = Math.min(image.height - 1, y0 + 1);
+    const fx = cx - x0;
+    const fy = cy - y0;
+    const g = (xx: number, yy: number) => {
+      const o = (yy * image.width + xx) * 4;
+      return image.data[o]! * 0.299 + image.data[o + 1]! * 0.587 + image.data[o + 2]! * 0.114;
+    };
+    const top = g(x0, y0) + (g(x1, y0) - g(x0, y0)) * fx;
+    const bot = g(x0, y1) + (g(x1, y1) - g(x0, y1)) * fx;
+    return top + (bot - top) * fy;
+  };
+  let score = 0;
+  for (let k = 8; k <= n - 9; k++) {
+    const [x, y] = alongRow ? gridAt(k + 0.5, 6.5) : gridAt(6.5, k + 0.5);
+    const v = gray(x, y) / 255;
+    score += k % 2 === 0 ? 1 - v : v;
+  }
+  return score;
+}
+
+/**
+ * Sample an n x n module grid through `gridAt` (module coords to source px)
+ * and re-emit a clean synthetic code. Shared by the finder-based grid and the
+ * detection-quad fallback grid.
+ */
+function sampleGridToBitmap(
+  image: RawImage,
+  gridAt: (i: number, j: number) => Point,
+  moduleSize: number,
+  n: number,
+  useTiming: boolean,
+): RawImage {
   const bin = adaptiveBinarize(image);
   const darkAt = (x: number, y: number): number => {
     const xi = Math.min(bin.width - 1, Math.max(0, Math.round(x)));
@@ -900,7 +1019,24 @@ export function gridResample(image: RawImage, useTiming = true): RawImage | null
   const dyOfColumn = useTiming ? measureDrift(true) : zero;
   const dxOfRow = useTiming ? measureDrift(false) : zero;
 
-  // Sample every module and re-emit a clean code.
+  // Sample every module into a bit grid.
+  const bits = new Uint8Array(n * n);
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const [gx, gy] = gridAt(i + 0.5, j + 0.5);
+      const px = gx + dxOfRow(j) * moduleSize;
+      const py = gy + dyOfColumn(i) * moduleSize;
+      bits[j * n + i] = moduleDark(px, py);
+    }
+  }
+
+  // Restore every deterministic structure. Finders, separators, timing, the
+  // dark module, and alignment patterns carry no data, so damage to them
+  // (a glare-blown corner) must never be allowed to survive into the
+  // rebuild: the decoders re-locate from scratch and need them intact.
+  stampFixedStructure(bits, n);
+
+  // Re-emit as crisp square modules with a full quiet zone.
   const OUT_MODULE = 8;
   const QUIET = 4;
   const outN = n + 2 * QUIET;
@@ -910,10 +1046,7 @@ export function gridResample(image: RawImage, useTiming = true): RawImage | null
   for (let i = 3; i < out.length; i += 4) out[i] = 255;
   for (let j = 0; j < n; j++) {
     for (let i = 0; i < n; i++) {
-      const [gx, gy] = gridAt(i + 0.5, j + 0.5);
-      const px = gx + dxOfRow(j) * moduleSize;
-      const py = gy + dyOfColumn(i) * moduleSize;
-      if (moduleDark(px, py) !== 1) continue;
+      if (bits[j * n + i] !== 1) continue;
       const x0 = (i + QUIET) * OUT_MODULE;
       const y0 = (j + QUIET) * OUT_MODULE;
       for (let y = y0; y < y0 + OUT_MODULE; y++) {
@@ -926,6 +1059,96 @@ export function gridResample(image: RawImage, useTiming = true): RawImage | null
   }
   return { data: out, width: outSize, height: outSize };
 }
+
+/** The single best grid rebuild, kept for callers that want one image. */
+export function gridResample(image: RawImage, useTiming = true): RawImage | null {
+  return gridResampleCandidates(image, useTiming)[0] ?? null;
+}
+
+/** Alignment pattern center coordinates per version, 1 through 10. */
+const ALIGNMENT_CENTERS: Record<number, number[]> = {
+  1: [],
+  2: [6, 18],
+  3: [6, 22],
+  4: [6, 26],
+  5: [6, 30],
+  6: [6, 34],
+  7: [6, 22, 38],
+  8: [6, 24, 42],
+  9: [6, 26, 46],
+  10: [6, 28, 50],
+};
+
+/** Overwrite the spec-fixed modules of an n x n bit grid in place. */
+function stampFixedStructure(bits: Uint8Array, n: number): void {
+  const set = (i: number, j: number, v: number) => {
+    if (i >= 0 && j >= 0 && i < n && j < n) bits[j * n + i] = v;
+  };
+  const stampFinder = (fi: number, fj: number) => {
+    // 7x7 finder plus its one-module white separator ring.
+    for (let j = -1; j <= 7; j++) {
+      for (let i = -1; i <= 7; i++) {
+        const inRing =
+          i >= 0 && j >= 0 && i <= 6 && j <= 6 && (i === 0 || j === 0 || i === 6 || j === 6);
+        const inCore = i >= 2 && j >= 2 && i <= 4 && j <= 4;
+        set(fi + i, fj + j, inRing || inCore ? 1 : 0);
+      }
+    }
+  };
+  stampFinder(0, 0);
+  stampFinder(n - 7, 0);
+  stampFinder(0, n - 7);
+  // Timing patterns: alternating, dark on even indices.
+  for (let k = 8; k <= n - 9; k++) {
+    set(k, 6, k % 2 === 0 ? 1 : 0);
+    set(6, k, k % 2 === 0 ? 1 : 0);
+  }
+  const version = (n - 17) / 4;
+  // The always-dark module.
+  set(8, n - 8, 1);
+  // Alignment patterns: 5x5, skipping any that would overlap a finder.
+  const centers = ALIGNMENT_CENTERS[version] ?? [];
+  for (const cy of centers) {
+    for (const cx of centers) {
+      const nearFinder =
+        (cx <= 8 && cy <= 8) || (cx >= n - 9 && cy <= 8) || (cx <= 8 && cy >= n - 9);
+      if (nearFinder) continue;
+      for (let j = -2; j <= 2; j++) {
+        for (let i = -2; i <= 2; i++) {
+          const ring = Math.max(Math.abs(i), Math.abs(j));
+          set(cx + i, cy + j, ring === 2 || ring === 0 ? 1 : 0);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Fallback grid for crops where finder patterns cannot be established (a
+ * glare-eaten corner, finders hollowed by damage): the detection quad itself
+ * already frames the module grid inside a rectified crop, so only the module
+ * count is unknown. Callers sweep candidate versions and let Reed-Solomon
+ * judge; a wrong version can never produce a false payload.
+ *
+ * `margin` must be the margin fraction the crop was rectified with, so the
+ * code region can be located inside it.
+ */
+export function quadGridResample(
+  crop: RawImage,
+  margin: number,
+  version: number,
+  useTiming = true,
+): RawImage {
+  const n = 17 + 4 * version;
+  const size = Math.min(crop.width, crop.height);
+  const m0 = (size * margin) / (1 + 2 * margin);
+  const cell = (size - 2 * m0) / n;
+  const gridAt = (i: number, j: number): Point => [m0 + i * cell, m0 + j * cell];
+  return sampleGridToBitmap(crop, gridAt, cell, n, useTiming);
+}
+
+/** Version candidates for the quad-grid sweep, most common sizes first. */
+export const QUAD_GRID_VERSIONS = [2, 3, 4, 1, 5, 6, 7, 8, 9, 10];
 
 /* ------------------------------------------------------------------ */
 /* multi-code bookkeeping                                              */
