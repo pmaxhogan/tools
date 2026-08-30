@@ -184,3 +184,5 @@ Wave 3 live QA (headless /browse): 28 of 30 new tools clean; chem search, FileDr
 - (by design) keycode pad captures Tab only while focused; Escape releases
 - (data, follow-up) plain "Aspirin" (CID 2244) is absent from the broad chem index while 7 aspirin combinations are present; check the merge/dedupe step in prepare-chem-data.mjs
 Final report artifact (native comments): https://claude.ai/code/artifact/98bfd84b-a441-4782-9be3-f45252dea2c1
+
+Categories reworked after the run (e2ee7d3): CSS, Color, Games, Electronics, 3D Printing added; Crypto -> Security; Science/Physics/Mobile/Generators retired with redirects.
