@@ -159,6 +159,20 @@ import { meta as languageCodeLookupMeta } from "../src/tools/language-code-looku
 import { run as languageCodeLookupRun } from "../src/tools/language-code-lookup/index";
 import { meta as wikidataCitiesDatabaseMeta } from "../src/tools/wikidata-cities-database/meta";
 import { run as wikidataCitiesDatabaseRun } from "../src/tools/wikidata-cities-database/index";
+import { meta as cipherToolMeta } from "../src/tools/cipher-tool/meta";
+import { run as cipherToolRun } from "../src/tools/cipher-tool/index";
+import { meta as fancyTextGeneratorMeta } from "../src/tools/fancy-text-generator/meta";
+import { run as fancyTextGeneratorRun } from "../src/tools/fancy-text-generator/index";
+import { meta as loremIpsumGeneratorMeta } from "../src/tools/lorem-ipsum-generator/meta";
+import { run as loremIpsumGeneratorRun } from "../src/tools/lorem-ipsum-generator/index";
+import { meta as morseCodeTranslatorMeta } from "../src/tools/morse-code-translator/meta";
+import { run as morseCodeTranslatorRun } from "../src/tools/morse-code-translator/index";
+import { meta as natoPhoneticAlphabetMeta } from "../src/tools/nato-phonetic-alphabet/meta";
+import { run as natoPhoneticAlphabetRun } from "../src/tools/nato-phonetic-alphabet/index";
+import { meta as numberToWordsMeta } from "../src/tools/number-to-words/meta";
+import { run as numberToWordsRun } from "../src/tools/number-to-words/index";
+import { meta as romanNumeralConverterMeta } from "../src/tools/roman-numeral-converter/meta";
+import { run as romanNumeralConverterRun } from "../src/tools/roman-numeral-converter/index";
 
 export interface Env {
   /** Static assets from the Astro build. */
@@ -405,6 +419,18 @@ const ALL: Endpoint[] = [
   expose(countryCodeLookupMeta, countryCodeLookupRun, { sample: "DE" }),
   expose(languageCodeLookupMeta, languageCodeLookupRun, { sample: "ja" }),
   expose(wikidataCitiesDatabaseMeta, wikidataCitiesDatabaseRun, {}),
+  expose(cipherToolMeta, cipherToolRun, {
+    sample: "HELLO WORLD",
+    sampleQuery: "cipher=caesar&shift=3",
+  }),
+  expose(fancyTextGeneratorMeta, fancyTextGeneratorRun, { sample: "Hello world" }),
+  expose(loremIpsumGeneratorMeta, loremIpsumGeneratorRun, {
+    sampleQuery: "units=paragraphs&count=2",
+  }),
+  expose(morseCodeTranslatorMeta, morseCodeTranslatorRun, { sample: "SOS" }),
+  expose(natoPhoneticAlphabetMeta, natoPhoneticAlphabetRun, { sample: "Hello" }),
+  expose(numberToWordsMeta, numberToWordsRun, { sample: "1234.56" }),
+  expose(romanNumeralConverterMeta, romanNumeralConverterRun, { sample: "2026" }),
 ];
 
 const ENDPOINTS: Endpoint[] = ALL.filter((e) => e.meta.http);
