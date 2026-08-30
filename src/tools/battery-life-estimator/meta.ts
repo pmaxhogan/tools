@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "Battery Life Estimator",
   description:
     "Model runtime from battery capacity, sleep draw, and active draw, in whatever units your datasheet uses.",
-  category: "Hardware",
+  category: "Electronics",
   keywords: [
     "battery life calculator",
     "runtime estimator",

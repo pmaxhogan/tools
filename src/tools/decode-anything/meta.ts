@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "Decode Anything",
   description:
     "Recursively unwrap base64, hex, URL encoding, gzip, JSON, JWTs, timestamps and IDs until plain meaning falls out.",
-  category: "Dev",
+  category: "Data",
   keywords: [
     "decode base64 online",
     "jwt decoder",

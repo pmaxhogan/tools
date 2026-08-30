@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Image Color Palette Extractor",
   description:
     "Pull the dominant colors out of an image as hex, rgb, hsl and oklch swatches with ready made CSS.",
-  category: "Images",
+  category: "Color",
   keywords: [
     "image color palette extractor",
     "get colors from image",

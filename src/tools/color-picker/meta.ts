@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "Color Suite",
   description:
     "Convert any CSS color between hex, rgb, hsl, hwb, oklch, oklab, lab and lch, check WCAG contrast, and build palettes in OKLCH.",
-  category: "Dev",
+  category: "Color",
   keywords: [
     "color picker",
     "hex to rgb",

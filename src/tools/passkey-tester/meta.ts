@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "Passkey Tester",
   description:
     "Register and authenticate passkeys, then decode the attestation object, flags, and public key.",
-  category: "Crypto",
+  category: "Security",
   keywords: [
     "passkey tester",
     "webauthn debugger",

@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   icon: "Fingerprint",
   name: "HMAC Generator",
   description: "Compute and verify HMAC digests for a message and a secret key, in your browser.",
-  category: "Crypto",
+  category: "Security",
   // The key goes in the Key option below, which is flagged sensitive: the panel
   // masks it and the shell never writes it to the URL fragment. sensitiveInput
   // stays on because the message box still accepts the older "--- then the key"

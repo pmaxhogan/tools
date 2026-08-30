@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Cubic Bezier Easing Editor",
   description:
     "Drag the control points of a CSS easing curve, watch it animate, and copy the cubic-bezier or linear() value.",
-  category: "Dev",
+  category: "CSS",
   keywords: [
     "cubic bezier editor",
     "css easing curve generator",

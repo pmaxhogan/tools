@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Capacitor Code Decoder",
   description:
     "Decode 3-digit and letter capacitor codes into capacitance, tolerance, voltage rating, and reactance, or generate a code from a target value.",
-  category: "Hardware",
+  category: "Electronics",
   keywords: [
     "capacitor code decoder",
     "104 capacitor value",

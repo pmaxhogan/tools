@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   matrixSlug: "factorio",
   name: "Blueprint Surgeon",
   description: "Decode, inspect, repair and re-encode Factorio blueprint strings.",
-  category: "Dev",
+  category: "Games",
   keywords: [
     "factorio blueprint decoder",
     "factorio blueprint string to json",

@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "TOTP Generator",
   description:
     "Generate live two-factor authentication codes from a Base32 secret or an otpauth:// URI.",
-  category: "Crypto",
+  category: "Security",
   icon: "KeyRound",
   keywords: [
     "totp generator",

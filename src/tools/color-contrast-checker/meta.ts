@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Color Contrast Checker",
   description:
     "Check a foreground and background pair against WCAG 2.x contrast ratios and the APCA Lc scale.",
-  category: "Dev",
+  category: "Color",
   keywords: [
     "color contrast checker",
     "wcag contrast ratio",

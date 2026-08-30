@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "Color Blindness Simulator",
   description:
     "Preview any color palette or image under seven types of color vision deficiency, from protanopia to achromatopsia.",
-  category: "Dev",
+  category: "Color",
   keywords: [
     "color blindness simulator",
     "colorblind palette checker",

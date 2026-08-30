@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "Resistor Color Code Calculator",
   description:
     "Decode 3, 4, 5, and 6 band resistor color codes into resistance and tolerance, or encode a target resistance into bands.",
-  category: "Hardware",
+  category: "Electronics",
   keywords: [
     "resistor color code calculator",
     "resistor color code",

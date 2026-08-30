@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Self-Signed Certificate Generator",
   description:
     "Generate a self-signed X.509 certificate and private key for local development, in your browser.",
-  category: "Crypto",
+  category: "Security",
   keywords: [
     "self signed certificate generator",
     "create ssl certificate for localhost",

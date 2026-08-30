@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: "FileDigit",
   name: "Binary Format Decoder",
   description: "Decode protobuf, CBOR, and msgpack payloads to readable JSON in your browser.",
-  category: "Files",
+  category: "Data",
   keywords: [
     "protobuf decoder online",
     "decode protobuf without schema",

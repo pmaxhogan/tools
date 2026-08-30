@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "CSS Anchor Positioning Builder",
   description:
     "Build CSS anchor-positioned tooltips, menus, and popovers with flip fallbacks and a plain-CSS fallback.",
-  category: "Dev",
+  category: "CSS",
   keywords: [
     "css anchor positioning",
     "anchor-name",

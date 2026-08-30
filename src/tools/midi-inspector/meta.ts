@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   icon: "Piano",
   name: "MIDI Inspector",
   description: "Read a .mid file event by event, or watch a live MIDI device, all in your browser.",
-  category: "Dev",
+  category: "Audio",
   keywords: [
     "midi file viewer",
     "read midi file online",

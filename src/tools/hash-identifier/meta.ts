@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: "Fingerprint",
   name: "Hash Identifier",
   description: "Work out which algorithm likely produced an unknown hash, ranked by likelihood.",
-  category: "Crypto",
+  category: "Security",
   keywords: [
     "hash identifier",
     "what hash is this",

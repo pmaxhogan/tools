@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "SSH Key Generator",
   description:
     "Generate an Ed25519 or ECDSA SSH key pair in your browser, with fingerprint and PEM export.",
-  category: "Crypto",
+  category: "Security",
   keywords: [
     "ssh key generator",
     "generate ed25519 ssh key",

@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "LED Resistor Calculator",
   description:
     "Work out the current-limiting resistor for an LED from supply and forward voltage, with nearest E12, E24, and E96 standard values in both directions.",
-  category: "Hardware",
+  category: "Electronics",
   keywords: [
     "led resistor calculator",
     "current limiting resistor",

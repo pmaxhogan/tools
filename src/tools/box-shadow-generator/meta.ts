@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Box Shadow Generator",
   description:
     "Stack multiple CSS box-shadow layers visually, preview them on light and dark, and copy the CSS or the Tailwind value.",
-  category: "Dev",
+  category: "CSS",
   keywords: [
     "css box shadow generator",
     "layered box shadow",

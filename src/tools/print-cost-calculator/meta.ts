@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "3D Print Cost Calculator",
   description:
     "Filament and electricity cost for a single print, with optional labor, machine wear, and markup.",
-  category: "Hardware",
+  category: "3D Printing",
   keywords: [
     "3d print cost calculator",
     "filament cost calculator",

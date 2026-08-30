@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Display Info",
   description:
     "Live readout of your screen resolution, pixel density, refresh rate, color capabilities, and input features.",
-  category: "Network",
+  category: "Testers",
   keywords: [
     "display info",
     "screen resolution",

@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Sudoku Generator and Solver",
   description:
     "Generate puzzles with a unique solution at any difficulty, or paste one in to solve it and get step by step hints.",
-  category: "Generators",
+  category: "Games",
   keywords: [
     "sudoku generator",
     "sudoku solver",

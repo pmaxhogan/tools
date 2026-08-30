@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   matrixSlug: "clipboard",
   name: "Clipboard Inspector",
   description: "See every MIME type sitting on your clipboard with sizes and previews.",
-  category: "Files",
+  category: "Platform",
   keywords: [
     "clipboard inspector",
     "what is on my clipboard",

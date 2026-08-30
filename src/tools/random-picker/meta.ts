@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "Dice & Random Picker",
   description:
     "Roll dice from standard notation, flip coins, pick random items from a list, or split names into randomized even teams.",
-  category: "Generators",
+  category: "Games",
   keywords: [
     "dice roller",
     "random picker",

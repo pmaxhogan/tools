@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Clip Path Generator",
   description:
     "Drag shape handles over your own image and copy the matching CSS clip-path or SVG path.",
-  category: "Dev",
+  category: "CSS",
   keywords: [
     "css clip-path generator",
     "clip path polygon editor",

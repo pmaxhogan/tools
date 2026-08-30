@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: "Camera",
   name: "EXIF Time Shifter",
   description: "Fix a wrong camera clock by shifting the Exif timestamps in your photos.",
-  category: "Docs",
+  category: "Images",
   keywords: [
     "exif time shifter",
     "change photo date",

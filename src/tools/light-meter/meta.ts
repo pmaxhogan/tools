@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Light Meter",
   description:
     "Turn your camera into a light meter that estimates illuminance in lux or footcandles and color temperature in Kelvin.",
-  category: "Mobile",
+  category: "Hardware",
   icon: "Sun",
   keywords: [
     "light meter app browser",

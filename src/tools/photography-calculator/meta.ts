@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "Photography Calculators",
   description:
     "Depth of field, hyperfocal distance, exposure value, ND filter times, and field of view in one text box.",
-  category: "Geo",
+  category: "Images",
   keywords: [
     "depth of field calculator",
     "hyperfocal distance calculator",

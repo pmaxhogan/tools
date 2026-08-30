@@ -14,7 +14,7 @@ export const meta: ToolMeta = {
   icon: "Frame",
   name: "Screenshot Beautifier",
   description: "Frame code and screenshots with padding, a window chrome, and a gradient background.",
-  category: "Docs",
+  category: "Capture",
   keywords: [
     "screenshot beautifier",
     "pretty screenshot background",

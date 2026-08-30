@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Log File Analyzer",
   description:
     "Summarize an access or application log: traffic, status codes, top paths, slow requests and errors, without uploading it anywhere.",
-  category: "Dev",
+  category: "Homelab",
   keywords: [
     "log file analyzer",
     "nginx log analyzer",

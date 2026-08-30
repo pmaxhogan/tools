@@ -9,6 +9,15 @@ import sitemap from "@astrojs/sitemap";
 // https://astro.build/config
 export default defineConfig({
   site: "https://tools.maxhogan.dev",
+  // Category pages that were merged or renamed. Keep in sync with
+  // RETIRED_CATEGORY_SLUGS in src/tools/categories.ts.
+  redirects: {
+    "/category/crypto": "/category/security",
+    "/category/generators": "/category/games",
+    "/category/mobile": "/category/hardware",
+    "/category/science": "/category/rf",
+    "/category/physics": "/category/astronomy",
+  },
   vite: {
     plugins: [tailwindcss()],
     resolve: {

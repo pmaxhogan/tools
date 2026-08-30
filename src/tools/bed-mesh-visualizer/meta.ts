@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: "Grid3x3",
   name: "Bed Mesh Visualizer",
   description: "Turn 3D printer bed levelling output into a surface plot and a tramming verdict.",
-  category: "Hardware",
+  category: "3D Printing",
   keywords: [
     "bed mesh visualizer",
     "klipper bed mesh",

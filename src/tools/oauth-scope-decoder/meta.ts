@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   matrixSlug: "oauth-scopes",
   name: "OAuth Scope Decoder",
   description: "Turn an OAuth scope list into plain English access and an honest risk read.",
-  category: "Crypto",
+  category: "Security",
   keywords: [
     "oauth scopes explained",
     "what can this app access",

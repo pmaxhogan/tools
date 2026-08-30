@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Bingo Board Maker",
   description:
     "Turns a pasted list of items into randomized, printable bingo boards, with a seed for repeatable sets.",
-  category: "Generators",
+  category: "Games",
   keywords: [
     "bingo card generator",
     "bingo board maker",

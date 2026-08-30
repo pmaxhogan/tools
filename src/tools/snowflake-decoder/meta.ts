@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "Snowflake Decoder",
   description:
     "Pull timestamps and worker IDs out of snowflake IDs, Discord links, or a whole batch of them at once.",
-  category: "Dev",
+  category: "Data",
   keywords: [
     "snowflake id decoder",
     "discord snowflake",

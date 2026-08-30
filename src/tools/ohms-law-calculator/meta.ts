@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "Ohm's Law & LED Calculator",
   description:
     "Solve voltage, current, resistance, and power, plus LED resistor and voltage divider math.",
-  category: "Hardware",
+  category: "Electronics",
   keywords: [
     "ohms law calculator",
     "led resistor calculator",

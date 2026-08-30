@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "555 Timer Calculator",
   description:
     "Calculate astable and monostable 555 timer frequency, duty cycle, pulse width, and component values, with a wiring sketch.",
-  category: "Hardware",
+  category: "Electronics",
   keywords: [
     "555 timer calculator",
     "astable calculator",

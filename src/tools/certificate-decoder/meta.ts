@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Certificate Decoder",
   description:
     "Decode PEM or DER X.509 certificates to read expiry, SANs, issuer, fingerprints, and chain order.",
-  category: "Crypto",
+  category: "Security",
   icon: "FileKey",
   keywords: [
     "certificate decoder",

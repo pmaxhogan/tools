@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Text Encrypter",
   description:
     "Encrypt and decrypt text with a passphrase using AES-256-GCM, entirely on your device.",
-  category: "Crypto",
+  category: "Security",
   // The passphrase goes in the Password option below, which is flagged
   // sensitive: the panel masks it and the shell never writes it to the URL
   // fragment. sensitiveInput stays on because the message box still accepts the

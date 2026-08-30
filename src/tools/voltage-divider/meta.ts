@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Voltage Divider Calculator",
   description:
     "Work out output voltage, resistor values, loaded-divider sag, and common-supply ratio tables for a two-resistor divider.",
-  category: "Hardware",
+  category: "Electronics",
   keywords: [
     "voltage divider calculator",
     "resistor divider",

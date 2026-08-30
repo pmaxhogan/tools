@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Wikidata Cities Database",
   description:
     "Browse and query a self-contained SQLite database of 7,622 world cities and 255 countries with curated starting queries.",
-  category: "Data",
+  category: "Geo",
   keywords: [
     "cities database",
     "sqlite cities",

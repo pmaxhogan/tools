@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "PCB Trace Width Calculator",
   description:
     "Calculate IPC-2221 trace width for a target current, copper weight, and temperature rise, or the max current a given width can carry.",
-  category: "Hardware",
+  category: "Electronics",
   keywords: [
     "pcb trace width calculator",
     "ipc-2221 calculator",

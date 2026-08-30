@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "UUID Generator",
   description:
     "Generate RFC 9562 UUIDs on your own device: v4 random or v7 time-ordered, one at a time or a thousand at once, upper or lower case.",
-  category: "Generators",
+  category: "Dev",
   keywords: ["uuid", "guid", "uuid v4", "uuid v7", "uuid generator", "random id"],
   searchTerms: [
     "generate unique id",

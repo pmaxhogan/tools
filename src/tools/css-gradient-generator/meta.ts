@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "CSS Gradient Generator",
   description:
     "Build linear, radial, and conic CSS gradients visually, pick the interpolation color space, and copy the CSS.",
-  category: "Dev",
+  category: "CSS",
   keywords: [
     "css gradient generator",
     "linear gradient css",

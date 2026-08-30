@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "CSS Keyframes Builder",
   description:
     "Build @keyframes animations on a visual timeline, preview them live, and copy the CSS with a reduced motion guard.",
-  category: "Dev",
+  category: "CSS",
   keywords: [
     "css keyframes generator",
     "css animation builder",

@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Fluid Clamp Calculator",
   description:
     "Turn a min and max size into a responsive CSS clamp() expression, with a preview at six viewport widths.",
-  category: "Dev",
+  category: "CSS",
   keywords: [
     "css clamp calculator",
     "fluid typography",

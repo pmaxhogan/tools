@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   icon: "FileKey",
   name: "JWT Generator",
   description: "Build, sign, and verify JSON Web Tokens with HS256, RS256, or ES256 locally.",
-  category: "Crypto",
+  category: "Security",
   // The signing key goes in the option below, which is flagged sensitive: the
   // panel folds it away behind a Reveal button and the shell never writes it to
   // the URL fragment. sensitiveInput stays on because the input box still

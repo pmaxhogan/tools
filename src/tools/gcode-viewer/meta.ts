@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "G-code Viewer",
   description:
     "Visualize a G-code toolpath layer by layer, with filament, time and temperature stats.",
-  category: "Hardware",
+  category: "3D Printing",
   keywords: [
     "gcode viewer online",
     "view gcode in browser",

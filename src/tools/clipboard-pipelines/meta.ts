@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: "ClipboardPaste",
   name: "Clipboard Pipelines",
   description: "Save a chain of text transforms and apply the whole chain to anything you paste.",
-  category: "Files",
+  category: "Platform",
   keywords: [
     "clipboard pipeline",
     "chain text transforms",

@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   name: "Password Strength Checker",
   description:
     "Score a password's real entropy and crack time, with plain English reasons, on your device.",
-  category: "Crypto",
+  category: "Security",
   // The password is the input, so sensitiveInput keeps it out of the URL
   // fragment, browser history, and any link you might share.
   sensitiveInput: true,

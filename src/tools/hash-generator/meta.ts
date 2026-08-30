@@ -7,7 +7,7 @@ export const meta: ToolMeta = {
   name: "Hash & Checksum",
   description:
     "Hash text or files with MD5, SHA-1, SHA-256, SHA-384, and SHA-512 at once, and verify the result against a known hash.",
-  category: "Crypto",
+  category: "Security",
   keywords: [
     "hash generator",
     "md5 generator",
