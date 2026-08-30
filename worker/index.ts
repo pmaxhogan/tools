@@ -173,6 +173,68 @@ import { meta as numberToWordsMeta } from "../src/tools/number-to-words/meta";
 import { run as numberToWordsRun } from "../src/tools/number-to-words/index";
 import { meta as romanNumeralConverterMeta } from "../src/tools/roman-numeral-converter/meta";
 import { run as romanNumeralConverterRun } from "../src/tools/roman-numeral-converter/index";
+import { meta as antennaLengthCalculatorMeta } from "../src/tools/antenna-length-calculator/meta";
+import { run as antennaLengthCalculatorRun } from "../src/tools/antenna-length-calculator/index";
+import { meta as coaxCableLossMeta } from "../src/tools/coax-cable-loss/meta";
+import { run as coaxCableLossRun } from "../src/tools/coax-cable-loss/index";
+import { meta as dbmWattsVoltsMeta } from "../src/tools/dbm-watts-volts/meta";
+import { run as dbmWattsVoltsRun } from "../src/tools/dbm-watts-volts/index";
+import { meta as fresnelZoneMeta } from "../src/tools/fresnel-zone/meta";
+import { run as fresnelZoneRun } from "../src/tools/fresnel-zone/index";
+import { meta as lcResonanceMeta } from "../src/tools/lc-resonance/meta";
+import { run as lcResonanceRun } from "../src/tools/lc-resonance/index";
+import { meta as pathLossLinkBudgetMeta } from "../src/tools/path-loss-link-budget/meta";
+import { run as pathLossLinkBudgetRun } from "../src/tools/path-loss-link-budget/index";
+import { meta as vswrReturnLossMeta } from "../src/tools/vswr-return-loss/meta";
+import { run as vswrReturnLossRun } from "../src/tools/vswr-return-loss/index";
+import { meta as wavelengthFrequencyMeta } from "../src/tools/wavelength-frequency/meta";
+import { run as wavelengthFrequencyRun } from "../src/tools/wavelength-frequency/index";
+import { meta as tool555TimerCalculatorMeta } from "../src/tools/555-timer-calculator/meta";
+import { run as tool555TimerCalculatorRun } from "../src/tools/555-timer-calculator/index";
+import { meta as capacitorCodeDecoderMeta } from "../src/tools/capacitor-code-decoder/meta";
+import { run as capacitorCodeDecoderRun } from "../src/tools/capacitor-code-decoder/index";
+import { meta as ledResistorCalculatorMeta } from "../src/tools/led-resistor-calculator/meta";
+import { run as ledResistorCalculatorRun } from "../src/tools/led-resistor-calculator/index";
+import { meta as pcbTraceWidthMeta } from "../src/tools/pcb-trace-width/meta";
+import { run as pcbTraceWidthRun } from "../src/tools/pcb-trace-width/index";
+import { meta as voltageDividerMeta } from "../src/tools/voltage-divider/meta";
+import { run as voltageDividerRun } from "../src/tools/voltage-divider/index";
+import { meta as boxShadowGeneratorMeta } from "../src/tools/box-shadow-generator/meta";
+import { run as boxShadowGeneratorRun } from "../src/tools/box-shadow-generator/index";
+import { meta as clipPathGeneratorMeta } from "../src/tools/clip-path-generator/meta";
+import { run as clipPathGeneratorRun } from "../src/tools/clip-path-generator/index";
+import { meta as cssGradientGeneratorMeta } from "../src/tools/css-gradient-generator/meta";
+import { run as cssGradientGeneratorRun } from "../src/tools/css-gradient-generator/index";
+import { meta as cssKeyframesBuilderMeta } from "../src/tools/css-keyframes-builder/meta";
+import { run as cssKeyframesBuilderRun } from "../src/tools/css-keyframes-builder/index";
+import { meta as cubicBezierEasingEditorMeta } from "../src/tools/cubic-bezier-easing-editor/meta";
+import { run as cubicBezierEasingEditorRun } from "../src/tools/cubic-bezier-easing-editor/index";
+import { meta as fluidClampCalculatorMeta } from "../src/tools/fluid-clamp-calculator/meta";
+import { run as fluidClampCalculatorRun } from "../src/tools/fluid-clamp-calculator/index";
+import { meta as colorContrastCheckerMeta } from "../src/tools/color-contrast-checker/meta";
+import { run as colorContrastCheckerRun } from "../src/tools/color-contrast-checker/index";
+import { meta as bufferCalculatorMeta } from "../src/tools/buffer-calculator/meta";
+import { run as bufferCalculatorRun } from "../src/tools/buffer-calculator/index";
+import { meta as chemicalEquationBalancerMeta } from "../src/tools/chemical-equation-balancer/meta";
+import { run as chemicalEquationBalancerRun } from "../src/tools/chemical-equation-balancer/index";
+import { meta as dilutionCalculatorMeta } from "../src/tools/dilution-calculator/meta";
+import { run as dilutionCalculatorRun } from "../src/tools/dilution-calculator/index";
+import { meta as electronConfigurationMeta } from "../src/tools/electron-configuration/meta";
+import { run as electronConfigurationRun } from "../src/tools/electron-configuration/index";
+import { meta as empiricalFormulaCalculatorMeta } from "../src/tools/empirical-formula-calculator/meta";
+import { run as empiricalFormulaCalculatorRun } from "../src/tools/empirical-formula-calculator/index";
+import { meta as halfLifeDecayMeta } from "../src/tools/half-life-decay/meta";
+import { run as halfLifeDecayRun } from "../src/tools/half-life-decay/index";
+import { meta as molaritySolutionPrepMeta } from "../src/tools/molarity-solution-prep/meta";
+import { run as molaritySolutionPrepRun } from "../src/tools/molarity-solution-prep/index";
+import { meta as phPohCalculatorMeta } from "../src/tools/ph-poh-calculator/meta";
+import { run as phPohCalculatorRun } from "../src/tools/ph-poh-calculator/index";
+import { meta as stoichiometryCalculatorMeta } from "../src/tools/stoichiometry-calculator/meta";
+import { run as stoichiometryCalculatorRun } from "../src/tools/stoichiometry-calculator/index";
+import { meta as julianDateConverterMeta } from "../src/tools/julian-date-converter/meta";
+import { run as julianDateConverterRun } from "../src/tools/julian-date-converter/index";
+import { meta as magnitudeCalculatorMeta } from "../src/tools/magnitude-calculator/meta";
+import { run as magnitudeCalculatorRun } from "../src/tools/magnitude-calculator/index";
 
 export interface Env {
   /** Static assets from the Astro build. */
@@ -431,6 +493,43 @@ const ALL: Endpoint[] = [
   expose(natoPhoneticAlphabetMeta, natoPhoneticAlphabetRun, { sample: "Hello" }),
   expose(numberToWordsMeta, numberToWordsRun, { sample: "1234.56" }),
   expose(romanNumeralConverterMeta, romanNumeralConverterRun, { sample: "2026" }),
+  expose(antennaLengthCalculatorMeta, antennaLengthCalculatorRun, { sample: "146.52 MHz" }),
+  expose(coaxCableLossMeta, coaxCableLossRun, { sample: "100ft 446MHz" }),
+  expose(dbmWattsVoltsMeta, dbmWattsVoltsRun, { sample: "30dBm" }),
+  expose(fresnelZoneMeta, fresnelZoneRun, { sample: "5.8GHz 10km" }),
+  expose(lcResonanceMeta, lcResonanceRun, { sample: "L=10uH C=100pF" }),
+  expose(pathLossLinkBudgetMeta, pathLossLinkBudgetRun, { sample: "915 MHz 5 km" }),
+  expose(vswrReturnLossMeta, vswrReturnLossRun, { sample: "1.5" }),
+  expose(wavelengthFrequencyMeta, wavelengthFrequencyRun, { sample: "146.52 MHz" }),
+  expose(tool555TimerCalculatorMeta, tool555TimerCalculatorRun, { sample: "r1=10k r2=4.7k c=10n" }),
+  expose(capacitorCodeDecoderMeta, capacitorCodeDecoderRun, { sample: "104J" }),
+  expose(ledResistorCalculatorMeta, ledResistorCalculatorRun, { sample: "vin=9 if=20mA" }),
+  expose(pcbTraceWidthMeta, pcbTraceWidthRun, { sample: "current=3" }),
+  expose(voltageDividerMeta, voltageDividerRun, { sample: "vin=12 r1=1k r2=2k" }),
+  expose(boxShadowGeneratorMeta, boxShadowGeneratorRun),
+  expose(clipPathGeneratorMeta, clipPathGeneratorRun),
+  expose(cssGradientGeneratorMeta, cssGradientGeneratorRun),
+  expose(cssKeyframesBuilderMeta, cssKeyframesBuilderRun),
+  expose(cubicBezierEasingEditorMeta, cubicBezierEasingEditorRun),
+  expose(fluidClampCalculatorMeta, fluidClampCalculatorRun, { sample: "16px 24px 320px 1280px" }),
+  expose(colorContrastCheckerMeta, colorContrastCheckerRun, { sample: "#5b4bd6 on #f6f4f1" }),
+  expose(bufferCalculatorMeta, bufferCalculatorRun, { sample: "pKa=4.76, HA=0.1, A=0.15" }),
+  expose(chemicalEquationBalancerMeta, chemicalEquationBalancerRun, { sample: "Fe + O2 -> Fe2O3" }),
+  expose(dilutionCalculatorMeta, dilutionCalculatorRun, { sample: "C1=2 M, C2=0.1 M, V2=100 mL" }),
+  expose(electronConfigurationMeta, electronConfigurationRun, { sample: "Fe" }),
+  expose(empiricalFormulaCalculatorMeta, empiricalFormulaCalculatorRun, {
+    sample: "C: 40.0%, H: 6.7%, O: 53.3%, molarMass: 180.16",
+  }),
+  expose(halfLifeDecayMeta, halfLifeDecayRun, { sample: "remaining=25%" }),
+  expose(molaritySolutionPrepMeta, molaritySolutionPrepRun, { sample: "NaCl, C=0.5 M, V=250 mL" }),
+  expose(phPohCalculatorMeta, phPohCalculatorRun, { sample: "pH=3.4" }),
+  expose(stoichiometryCalculatorMeta, stoichiometryCalculatorRun, {
+    sample: "Fe + O2 -> Fe2O3 Fe: 10 g O2: 5 g actual Fe2O3: 12 g",
+  }),
+  expose(julianDateConverterMeta, julianDateConverterRun, { sample: "2000-01-01 12:00:00" }),
+  expose(magnitudeCalculatorMeta, magnitudeCalculatorRun, {
+    sample: "apparent: -1.46 parallax: 379.21 mas",
+  }),
 ];
 
 const ENDPOINTS: Endpoint[] = ALL.filter((e) => e.meta.http);

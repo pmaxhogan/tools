@@ -66,7 +66,12 @@ function safeDecode(s: string): string {
 
 export function run(input: string, _opts: UrlParserOpts): UrlParserResult {
   const raw = (input ?? "").trim();
-  if (!raw) throw new ToolError("empty-input", "Enter a URL to parse.");
+  if (!raw)
+    throw new ToolError(
+      "empty-input",
+      "Enter a URL to parse.",
+      "Paste a full URL like https://example.com/path?q=1, or a bare domain and https:// is assumed.",
+    );
 
   const { url, note } = parse(raw);
   const out: UrlParserResult = {};

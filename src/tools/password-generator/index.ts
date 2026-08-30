@@ -104,7 +104,11 @@ function generatePassword(opts: PasswordOpts): { value: string; poolSize: number
 
   const length = Math.floor(opts.length);
   if (!Number.isFinite(length) || length < 8 || length > 128)
-    throw new ToolError("bad-length", "Password length must be between 8 and 128.");
+    throw new ToolError(
+      "bad-length",
+      "Password length must be between 8 and 128.",
+      "Set Password length inside that range: 16 or more is a good default.",
+    );
 
   const next = makeRng(opts.seed || "");
   const chars = Array.from({ length }, () => pool[randomIndex(pool.length, next)] as string);
@@ -114,7 +118,11 @@ function generatePassword(opts: PasswordOpts): { value: string; poolSize: number
 function generatePassphrase(opts: PasswordOpts): { value: string; wordCount: number } {
   const count = Math.floor(opts.words);
   if (!Number.isFinite(count) || count < 3 || count > 12)
-    throw new ToolError("bad-word-count", "Word count must be between 3 and 12.");
+    throw new ToolError(
+      "bad-word-count",
+      "Word count must be between 3 and 12.",
+      "Set Word count inside that range: six words is the usual diceware recommendation.",
+    );
 
   const next = makeRng(opts.seed || "");
   const picked = Array.from(

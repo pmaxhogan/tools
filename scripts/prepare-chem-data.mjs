@@ -205,6 +205,21 @@ const DESCRIPTION_LIMIT = 200;
 /** Target for public/data/chem/**, gzip estimated. Overflow drops fields. */
 const SHIP_BUDGET_GZ_BYTES = 5 * 1024 * 1024;
 
+/**
+ * The index's own `syn` column: a much smaller cut of the per-record synonyms
+ * above, meant for search rather than display. The index is fetched by every
+ * visitor who opens the chemical lookup, so it carries a tighter budget of its
+ * own (below) rather than riding on the whole tier's 5 MB. `IUPAC_INDEX_MAX_LENGTH`
+ * keeps a long systematic name out of the column; the shard's own `synonyms`
+ * still carries it uncut.
+ */
+const INDEX_SYN_LIMIT = 4;
+const IUPAC_INDEX_MAX_LENGTH = 40;
+
+/** index.json's own budget. Tighter than SHIP_BUDGET_GZ_BYTES on purpose. */
+const INDEX_RAW_BUDGET_BYTES = 2.4 * 1024 * 1024;
+const INDEX_GZ_BUDGET_BYTES = 1 * 1024 * 1024;
+
 /** Rows per generated block. See the TS2590 note in emitChemData. */
 const ROWS_PER_BLOCK = 400;
 
@@ -2140,6 +2155,46 @@ function truncateSnippet(text) {
 }
 
 /**
+ * Case and punctuation insensitive key for "is this the same name written a
+ * different way". Used only to keep a `syn` entry from repeating the display
+ * name; `isJunkSynonym` already screens out registry numbers and the like.
+ */
+function normaliseForDedup(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+/**
+ * Up to INDEX_SYN_LIMIT alternative names for the compact index's `syn`
+ * column: PubChem's Title first when it differs from the display name, then a
+ * short IUPAC name, then the best of the record's own gathered synonyms
+ * (Wikipedia's OtherNames and tradename, already ordered that way) and finally
+ * any other Wikipedia title merged into this record. Near duplicates of the
+ * name and junk (CAS numbers, registry ids) are excluded exactly as the
+ * shard's own `synonyms` field excludes them.
+ */
+function pickIndexSynonyms({ name, iupacName, rawSynonyms, alsoWikipedia }, fact) {
+  const seen = new Set([normaliseForDedup(name)]);
+  const out = [];
+  const consider = (text) => {
+    if (out.length >= INDEX_SYN_LIMIT) return;
+    if (typeof text !== "string") return;
+    const clean = collapse(text);
+    if (!usable(clean) || isJunkSynonym(clean)) return;
+    const key = normaliseForDedup(clean);
+    if (key === "" || seen.has(key)) return;
+    seen.add(key);
+    out.push(clean);
+  };
+
+  consider(fact?.title);
+  const iupac = iupacName ?? fact?.iupacName;
+  if (typeof iupac === "string" && iupac.length < IUPAC_INDEX_MAX_LENGTH) consider(iupac);
+  for (const synonym of rawSynonyms) consider(synonym);
+  for (const alt of alsoWikipedia) consider(alt);
+  return out;
+}
+
+/**
  * Folds the parsed articles into one record per compound, deduplicating on
  * PubChem CID first, then CAS number, then normalized name, in that order. A
  * later duplicate fills gaps in the record already kept rather than replacing
@@ -2254,6 +2309,17 @@ function buildBroadRecords({ rows, props, ghsByCid, descriptions }) {
 
     const formula = looksLikeFormula(record.formula) ? record.formula : fact?.formula;
     const molarMass = record.molarMass ?? fact?.molarMass;
+    // Not written to the shard: only indexRow reads it, so it never touches
+    // shardRecord's output and shard bytes do not move when this changes.
+    const indexSyn = pickIndexSynonyms(
+      {
+        name,
+        iupacName: record.iupacName,
+        rawSynonyms: record.synonyms,
+        alsoWikipedia: record.alsoWikipedia,
+      },
+      fact,
+    );
     const out = {
       id: record.cid ?? (synthetic += 1),
       hasCid: record.cid !== undefined,
@@ -2266,6 +2332,7 @@ function buildBroadRecords({ rows, props, ghsByCid, descriptions }) {
       wikipedia: record.wikipedia,
       description: descriptions.get(record.wikipedia) || undefined,
       synonyms,
+      indexSyn,
       nfpa: record.nfpa,
       ghs,
       props: Object.keys(record.props).length > 0 ? record.props : undefined,
@@ -2901,9 +2968,14 @@ function shardRecord(record, { synonyms, descriptions }) {
   return out;
 }
 
-/** The index row: [id, name, formula, cas, molarMass, flags]. */
-function indexRow(record) {
-  return [
+/**
+ * The index row: [id, name, formula, cas, molarMass, flags, syn?]. `syn` is
+ * omitted, not emitted empty, when `synCap` is 0 or the record has nothing to
+ * offer, so an older 6 element row and a syn-less row this build chose to ship
+ * both read the same way to a consumer that only checks `row.length > 6`.
+ */
+function indexRow(record, synCap) {
+  const row = [
     record.id,
     record.name,
     record.formula ?? "",
@@ -2911,10 +2983,47 @@ function indexRow(record) {
     record.molarMass ?? 0,
     chemFlags(record),
   ];
+  if (synCap > 0 && record.indexSyn && record.indexSyn.length > 0) {
+    row.push(record.indexSyn.slice(0, synCap));
+  }
+  return row;
 }
 
-function renderBroadFiles(records, options) {
-  const index = records.map(indexRow);
+/**
+ * Renders index.json, on its own, tighter budget: INDEX_SYN_LIMIT synonyms
+ * per row if that fits INDEX_RAW_BUDGET_BYTES and INDEX_GZ_BUDGET_BYTES, else
+ * 3, then 2, then none at all. This runs once, ahead of the shard level
+ * synonyms/descriptions budget in renderBroadFilesWithinBudget below, because
+ * the index's cap does not depend on what the shards end up carrying.
+ */
+function buildIndexJson(records) {
+  const attempts = [INDEX_SYN_LIMIT, 3, 2, 0];
+  let last;
+  for (const cap of attempts) {
+    const body = Buffer.from(JSON.stringify(records.map((r) => indexRow(r, cap))));
+    const gz = gzipSync(body, { level: 9 }).length;
+    last = { body, gz, synCap: cap };
+    const fits = body.length <= INDEX_RAW_BUDGET_BYTES && gz <= INDEX_GZ_BUDGET_BYTES;
+    if (fits || cap === 0) {
+      if (cap < INDEX_SYN_LIMIT) {
+        log(
+          `  index.json with up to ${INDEX_SYN_LIMIT} synonyms per row was over its ` +
+            `${(INDEX_RAW_BUDGET_BYTES / 1e6).toFixed(1)} MB raw / ` +
+            `${(INDEX_GZ_BUDGET_BYTES / 1e6).toFixed(1)} MB gz budget; shipping ` +
+            (cap === 0 ? "no syn column instead" : `at most ${cap} synonym${cap === 1 ? "" : "s"} per row instead`),
+        );
+      }
+      return last;
+    }
+    log(
+      `  index.json with up to ${cap} synonyms: ${(body.length / 1e6).toFixed(2)} MB raw, ` +
+        `${(gz / 1e6).toFixed(2)} MB gz, over budget, retrying with fewer`,
+    );
+  }
+  return last;
+}
+
+function renderBroadFiles(records, options, indexResult) {
   const shards = new Map();
   for (const record of records) {
     const bucket = record.id % CHEM_SHARD_COUNT;
@@ -2925,7 +3034,9 @@ function renderBroadFiles(records, options) {
     }
     shard[String(record.id)] = shardRecord(record, options);
   }
-  const files = [{ name: "index.json", body: Buffer.from(JSON.stringify(index)) }];
+  const files = [
+    { name: "index.json", body: indexResult.body, bytes: indexResult.body.length, gz: indexResult.gz },
+  ];
   for (let bucket = 0; bucket < CHEM_SHARD_COUNT; bucket += 1) {
     files.push({
       name: `${bucket}.json`,
@@ -2935,8 +3046,10 @@ function renderBroadFiles(records, options) {
   let bytes = 0;
   let gz = 0;
   for (const file of files) {
-    file.bytes = file.body.length;
-    file.gz = gzipSync(file.body, { level: 9 }).length;
+    if (file.bytes === undefined) {
+      file.bytes = file.body.length;
+      file.gz = gzipSync(file.body, { level: 9 }).length;
+    }
     bytes += file.bytes;
     gz += file.gz;
   }
@@ -2944,11 +3057,15 @@ function renderBroadFiles(records, options) {
 }
 
 /**
- * Renders the shipped JSON, dropping fields if it will not fit. Synonyms go
- * first because a name search still works without them through the index, then
- * description snippets, which are the next largest and the least load bearing.
+ * Renders the shipped JSON, dropping fields if it will not fit. index.json's
+ * own `syn` column is sized first, against its own tighter budget (see
+ * buildIndexJson); then, against the whole tier's budget, shard synonyms go
+ * first because a name search still works without them through the index,
+ * then description snippets, which are the next largest and the least load
+ * bearing.
  */
 function renderBroadFilesWithinBudget(records) {
+  const indexResult = buildIndexJson(records);
   const attempts = [
     { synonyms: true, descriptions: true, dropped: [] },
     { synonyms: false, descriptions: true, dropped: ["synonyms"] },
@@ -2957,7 +3074,11 @@ function renderBroadFilesWithinBudget(records) {
   let last;
   for (let i = 0; i < attempts.length; i += 1) {
     const attempt = attempts[i];
-    last = { ...renderBroadFiles(records, attempt), dropped: attempt.dropped };
+    last = {
+      ...renderBroadFiles(records, attempt, indexResult),
+      dropped: attempt.dropped,
+      indexSynCap: indexResult.synCap,
+    };
     if (last.gz <= SHIP_BUDGET_GZ_BYTES) return last;
     const next = attempts[i + 1];
     log(
@@ -2987,7 +3108,8 @@ function emitChemIndex(meta) {
  * The intended flow for a panel is two fetches:
  *
  *   1. \`CHEM_INDEX_URL\` once, for every compound's id, name, formula, CAS
- *      number and molar mass. That is enough to run a search box.
+ *      number, molar mass and up to a few alternative names. That is enough
+ *      to run a search box that also answers to a synonym.
  *   2. \`chemShardUrl(id)\` for the one compound the person picked, which
  *      returns a ${CHEM_SHARD_COUNT}th of the corpus and holds the full record.
  *
@@ -3008,13 +3130,20 @@ export const CHEM_SHARD_COUNT = ${CHEM_SHARD_COUNT};
 
 /**
  * A row in the index. A tuple rather than an object, because ${meta.counts.compounds.toLocaleString("en-US")} objects
- * with six named keys each is roughly three times the bytes over the wire.
+ * with seven named keys each is roughly three times the bytes over the wire.
  *
- *   [id, name, formula, cas, molarMass, flags]
+ *   [id, name, formula, cas, molarMass, flags, syn?]
  *
  * \`formula\` and \`cas\` are the empty string when unknown, and \`molarMass\`
- * is 0 when unknown, so that the JSON stays compact. Read them through the
- * helpers below rather than testing the sentinels by hand.
+ * is 0 when unknown, so that the JSON stays compact. \`syn\` is up to
+ * ${meta.indexSynLimit} alternative names (PubChem's title when it differs from
+ * \`name\`, a short IUPAC name, then the best of the compound's own gathered
+ * synonyms), present only on a row that has one worth showing; an older 6
+ * element row and a row this build chose to ship without one both simply
+ * lack it, so read it as \`row[6] ?? []\` rather than assuming it is there.
+ * ${meta.indexSynCap < meta.indexSynLimit ? `This build shipped at most ${meta.indexSynCap} per row: the full ${meta.indexSynLimit} would have exceeded index.json's own size budget.` : `This build shipped the full ${meta.indexSynLimit} per row.`}
+ * Read every field through the helpers below rather than testing the
+ * sentinels by hand.
  */
 export type ChemIndexRow = [
   id: number,
@@ -3023,6 +3152,7 @@ export type ChemIndexRow = [
   cas: string,
   molarMass: number,
   flags: number,
+  syn?: string[],
 ];
 
 /** The parsed index: every row, in id order. */
@@ -3167,7 +3297,7 @@ const record: ChemRecord | undefined = chemRecordFrom(shard, row[0]);
 
 | File | Size | Gzipped | Contents |
 | ---- | ---- | ------- | -------- |
-| \`public/data/chem/index.json\` | ${shipped.files[0].bytes.toLocaleString("en-US")} bytes | ${shipped.files[0].gz.toLocaleString("en-US")} bytes | one \`[id, name, formula, cas, molarMass, flags]\` row per compound |
+| \`public/data/chem/index.json\` | ${shipped.files[0].bytes.toLocaleString("en-US")} bytes | ${shipped.files[0].gz.toLocaleString("en-US")} bytes | one \`[id, name, formula, cas, molarMass, flags, syn?]\` row per compound |
 | \`public/data/chem/<0..${broadMeta.shards - 1}>.json\` | ${(shipped.bytes - shipped.files[0].bytes).toLocaleString("en-US")} bytes total | ${(shipped.gz - shipped.files[0].gz).toLocaleString("en-US")} bytes total | full records, keyed by id, sharded by \`id % ${broadMeta.shards}\` |
 
 - The index is enough to run a search box. Fetch one shard only once someone
@@ -3176,6 +3306,13 @@ const record: ChemRecord | undefined = chemRecordFrom(shard, row[0]);
   this build could not resolve to a CID keeps a synthetic id at or above
   ${SYNTHETIC_ID_BASE.toLocaleString("en-US")}, which is well past PubChem's range, so the
   modulo sharding still works and no id ever collides with a real CID.
+- \`syn\`, the index's 7th column, is up to ${broadMeta.indexSynLimit} alternative names per
+  compound (PubChem's title, a short IUPAC name, then the best of the compound's own
+  synonyms), present only when the row has one worth showing. It is what lets a query
+  like "table salt" or "sulfuric acid" reach a compound whose Wikipedia article title
+  reads differently, without a shard fetch. index.json carries its own tighter budget,
+  ${(INDEX_RAW_BUDGET_BYTES / 1e6).toFixed(1)} MB raw and ${(INDEX_GZ_BUDGET_BYTES / 1e6).toFixed(1)} MB gzipped, separate from the whole tier's
+  budget above; this build shipped ${broadMeta.indexSynCap} per row${broadMeta.indexSynCap < broadMeta.indexSynLimit ? ", cut down from the full amount to fit" : ""}.
 - \`ghs.h\` here is codes only. \`H_STATEMENTS\` in \`ghs-statements.ts\` has
   the canonical wording, and repeating it per compound cost more than the whole
   index does.
@@ -3456,6 +3593,15 @@ if (broad) {
     /** The narrow tier, for the doc comment. Not a count of this dataset. */
     narrowChemicals: chemicals.length,
     shards: CHEM_SHARD_COUNT,
+    /** index.json's columns, in order. The last is optional; see ChemIndexRow's doc comment. */
+    columns: ["id", "name", "formula", "cas", "molarMass", "flags", "syn"],
+    /** How many alternative names index.json's `syn` column carries at most. */
+    indexSynLimit: INDEX_SYN_LIMIT,
+    /**
+     * How many it actually shipped with in this build: INDEX_SYN_LIMIT unless
+     * index.json's own size budget forced a cut, in which case it is 3, 2 or 0.
+     */
+    indexSynCap: shipped.indexSynCap,
     counts: {
       compounds: records.length,
       withNfpa: records.filter((r) => r.nfpa).length,
@@ -3473,6 +3619,8 @@ if (broad) {
       withFormula: records.filter((r) => r.formula !== undefined).length,
       withMolarMass: records.filter((r) => r.molarMass !== undefined).length,
       withDescription: records.filter((r) => r.description !== undefined).length,
+      /** Compounds whose index row carries at least one `syn` entry. */
+      withIndexSyn: records.filter((r) => r.indexSyn && r.indexSyn.length > 0).length,
       articlesRead: broad.titles,
     },
     /**
@@ -3549,7 +3697,11 @@ if (broad && broadMeta) {
     `  with NFPA ${c.withNfpa}, with GHS ${c.withGhs}, without GHS ${c.withoutGhs}, ` +
       `drugs ${c.drugs}, with CID ${c.withCid}, with CAS ${c.withCas}, ` +
       `with formula ${c.withFormula}, with molar mass ${c.withMolarMass}, ` +
-      `with a description ${c.withDescription}`,
+      `with a description ${c.withDescription}, with an index synonym ${c.withIndexSyn}`,
+  );
+  log(
+    `  index.json syn column: up to ${broadMeta.indexSynLimit} per row, shipped at most ` +
+      `${broadMeta.indexSynCap}${broadMeta.indexSynCap < broadMeta.indexSynLimit ? " (cut to fit its own size budget)" : ""}`,
   );
   log(`  broad GHS sources: ${broad.ghs.sourceCounts.map(([s, n]) => `${s} ${n}`).join(" | ")}`);
   const shardSizes = shipped.files.slice(1).map((f) => f.bytes);

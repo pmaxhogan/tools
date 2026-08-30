@@ -206,6 +206,7 @@ export function run(input: string, opts: SnowflakeOpts): SnowflakeResult {
     throw new ToolError(
       "empty-input",
       "Enter a snowflake ID, or paste a URL containing one, to decode.",
+      "Paste a numeric ID like 175928847299117063, or a link such as https://discord.com/channels/... , one per line.",
     );
 
   const platformKey = opts.platform in PLATFORMS ? opts.platform : "discord";

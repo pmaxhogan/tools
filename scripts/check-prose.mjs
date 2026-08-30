@@ -57,6 +57,14 @@ const DASH_ALLOWLIST = new Map([
     "regex character class that strips dash variants (minus sign, en dash, em dash) from user input; the dashes are the code's subject, not prose",
   ],
   [
+    "src/tools/stoichiometry-calculator/index.ts:153",
+    "regex character class that normalizes minus sign, en dash, and em dash in a pasted chemical equation; the dashes are the code's subject, not prose",
+  ],
+  [
+    "src/tools/chemical-equation-balancer/index.ts:165",
+    "regex character class that normalizes minus sign, en dash, and em dash in a pasted chemical equation; the dashes are the code's subject, not prose",
+  ],
+  [
     "src/tools/document-converter/index.ts:117",
     "HTML named-entity lookup table: the value for &mdash; is literally an em dash character",
   ],

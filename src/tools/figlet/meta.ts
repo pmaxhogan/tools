@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Type",
   matrixSlug: "figlet",
   name: "Figlet ASCII Banner",
-  description: "Render text as ASCII banner art in a choice of classic FIGlet fonts.",
+  description:
+    "Render text as an ASCII art banner in ten classic FIGlet fonts, with letter spacing and line width controls, ready to paste into a README.",
   category: "Text",
   keywords: [
     "figlet",

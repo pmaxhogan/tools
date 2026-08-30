@@ -21,7 +21,7 @@ import {
   type NfpaQuery,
   type Special,
 } from "@/tools/nfpa-704-fire-diamond/index";
-import { pubchemUrl, wikipediaUrl } from "@/tools/chemical-lookup/index";
+import { pubchemUrl, suggestions, wikipediaUrl } from "@/tools/chemical-lookup/index";
 import type { Chemical, NfpaRating } from "@/tools/_generated/chem-data";
 import { readFragment, writeFragment } from "@/lib/fragment";
 import { downloadBlob, downloadText } from "@/lib/download";
@@ -219,6 +219,25 @@ const nearby = computed(() =>
 
 const searchResults = computed<Chemical[]>(() =>
   search.value.trim() ? searchChemical(search.value, SEARCH_CAP) : [],
+);
+
+/**
+ * The typo path. `searchChemical` is exact by design, so a slipped letter
+ * turns up nothing at all; `suggestions` is the bounded edit distance scan the
+ * chemical lookup already owns. Only rows carrying a rating are offered here,
+ * because a row without one has nothing to load into the diamond.
+ */
+const searchSuggestions = computed<Chemical[]>(() =>
+  search.value.trim() && !searchResults.value.length
+    ? suggestions(search.value, 12)
+        .filter((c) => c.nfpa)
+        .slice(0, 3)
+    : [],
+);
+
+/** The same query, handed to the tool that searches every compound. */
+const searchAllLink = computed(
+  () => `/chemical-lookup#${new URLSearchParams({ i: search.value.trim() }).toString()}`,
 );
 
 /** The names of every exact match, one per line, for the copy button. */
@@ -551,8 +570,29 @@ onMounted(() => {
               </li>
             </ul>
             <p v-else-if="search.trim()" class="mt-1 text-xs text-muted-foreground">
-              Nothing rated matches that. Try the common name, a synonym, the CAS registry number,
-              or the formula.
+              Nothing rated matches that.
+              <template v-if="searchSuggestions.length">
+                Did you mean
+                <button
+                  v-for="(c, i) in searchSuggestions"
+                  :key="c.id"
+                  type="button"
+                  class="text-primary underline underline-offset-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  @click="pick(c)"
+                >
+                  {{ c.name }}{{ i < searchSuggestions.length - 1 ? "," : "?" }}
+                </button>
+              </template>
+              <template v-else>
+                Try the common name, a synonym, the CAS registry number, or the formula.
+              </template>
+            </p>
+            <p v-if="search.trim()" class="mt-1 text-xs text-muted-foreground">
+              This box searches only the compounds with a published rating.
+              <a :href="searchAllLink" class="text-primary underline underline-offset-2">
+                Search all 25,000 compounds
+              </a>
+              instead.
             </p>
           </div>
         </div>

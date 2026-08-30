@@ -156,10 +156,10 @@ Wave 1 (parallel, disjoint files):
 ## Progress
 
 - [x] Wave 1 built (aa190f7): 8973 tests, 213 pages, all gates green
-- [ ] Wave 1 pushed + CI green + QA
-- [ ] Wave 2 migration (6 partitions + shells)
-- [ ] Wave 2 pushed + QA
-- [ ] Wave 3 features/facelifts/EM/chem
+- [x] Wave 1 pushed + CI green + QA (findings fixed in wave 2)
+- [x] Wave 2 migration (6 partitions + shells + sweep): e0730c7
+- [x] Wave 2 pushed (9e2ff1c), CI green, live, QA clean (0 blockers, 0 bugs)
+- [x] Wave 3 in progress (uncommitted on main): Phase-1 facelift done; chem UX rebuilt on the 25k index (+ syn column); ToolShell on FileDrop + text carry; sensitive options agent running; wired so far: crypto x6, files/data x5, RF x8 (+worker), electronics x5 (+worker); running: CSS x6, image x6, chem calc x10, astronomy x5, minecraft x6, weather x4, coax verification
 - [ ] Wave 3 pushed + QA
 - [ ] Wave 4+ new tools by category
 - [ ] Perf pass

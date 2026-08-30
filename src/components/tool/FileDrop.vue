@@ -109,6 +109,21 @@ const props = withDefaults(
      * `compact` was being misused for.
      */
     bare?: boolean;
+    /**
+     * Whether the zone itself behaves like a button.
+     *
+     * On by default: the well is a focusable `role="button"` that opens the
+     * picker on click, Enter, and Space. Turn it off when the body already
+     * holds a real control, as the generic shell's input well does around its
+     * textarea: a role="button" with its own tab stop wrapped around a
+     * textarea is confusing for assistive technology, and the picker has a
+     * plain button of its own. With it off the zone drops its role, its tab
+     * stop, and its click and key handlers, and the built in label and hint
+     * body is not rendered unless the caller supplies its own through the
+     * default slot. Drop, drag highlighting, clipboard paste, the carry chip,
+     * and the exposed `open()` all keep working.
+     */
+    interactive?: boolean;
   }>(),
   {
     accept: undefined,
@@ -120,6 +135,7 @@ const props = withDefaults(
     compact: false,
     directory: false,
     bare: false,
+    interactive: true,
   },
 );
 
@@ -239,14 +255,17 @@ function onDragLeave(): void {
 /* ---------------------------------------------------------------- */
 
 /* The zone behaves like a button, but the actions slot puts real buttons
-   inside it. A click that started on one of those is theirs, not ours. */
+   inside it. A click that started on one of those is theirs, not ours. A non
+   interactive zone is not a button at all, so it opens nothing. */
 function onZoneClick(event: MouseEvent): void {
+  if (!props.interactive) return;
   const target = event.target as Element | null;
   if (target?.closest("button, a, input, label, select, textarea")) return;
   openPicker();
 }
 
 function onZoneKey(event: KeyboardEvent): void {
+  if (!props.interactive) return;
   if (event.target !== event.currentTarget) return;
   event.preventDefault();
   openPicker();
@@ -279,14 +298,16 @@ onUnmounted(() => {
 <template>
   <div ref="rootEl" class="flex flex-col gap-2">
     <div
-      role="button"
-      :tabindex="disabled ? -1 : 0"
-      :aria-label="ariaLabel"
-      :aria-disabled="disabled ? 'true' : undefined"
+      data-testid="filedrop-zone"
+      :role="interactive ? 'button' : undefined"
+      :tabindex="interactive ? (disabled ? -1 : 0) : undefined"
+      :aria-label="interactive ? ariaLabel : undefined"
+      :aria-disabled="interactive && disabled ? 'true' : undefined"
       class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)] transition-colors duration-[120ms] ease-out"
       :class="[
         dragging ? 'ring-2 ring-ring' : '',
-        disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-accent',
+        disabled ? 'cursor-not-allowed opacity-60' : '',
+        !disabled && interactive ? 'cursor-pointer hover:bg-accent' : '',
         bare ? '' : compact ? 'px-3 py-2' : 'px-4 py-6',
       ]"
       @click="onZoneClick"
@@ -308,9 +329,12 @@ onUnmounted(() => {
         @change="onPick"
       />
 
+      <!-- The built in label and hint body only makes sense on a zone you can
+           click. A non interactive zone renders whatever the caller's own body
+           is, and nothing at all when there is none. -->
       <slot :open="openPicker">
         <div
-          v-if="compact"
+          v-if="interactive && compact"
           class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm"
           data-testid="filedrop-body"
         >
@@ -325,7 +349,7 @@ onUnmounted(() => {
         </div>
 
         <div
-          v-else
+          v-else-if="interactive"
           class="flex flex-col items-center gap-1.5 text-center"
           data-testid="filedrop-body"
         >

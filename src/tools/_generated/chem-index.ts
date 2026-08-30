@@ -17,7 +17,8 @@
  * The intended flow for a panel is two fetches:
  *
  *   1. `CHEM_INDEX_URL` once, for every compound's id, name, formula, CAS
- *      number and molar mass. That is enough to run a search box.
+ *      number, molar mass and up to a few alternative names. That is enough
+ *      to run a search box that also answers to a synonym.
  *   2. `chemShardUrl(id)` for the one compound the person picked, which
  *      returns a 128th of the corpus and holds the full record.
  *
@@ -38,13 +39,20 @@ export const CHEM_SHARD_COUNT = 128;
 
 /**
  * A row in the index. A tuple rather than an object, because 25,248 objects
- * with six named keys each is roughly three times the bytes over the wire.
+ * with seven named keys each is roughly three times the bytes over the wire.
  *
- *   [id, name, formula, cas, molarMass, flags]
+ *   [id, name, formula, cas, molarMass, flags, syn?]
  *
  * `formula` and `cas` are the empty string when unknown, and `molarMass`
- * is 0 when unknown, so that the JSON stays compact. Read them through the
- * helpers below rather than testing the sentinels by hand.
+ * is 0 when unknown, so that the JSON stays compact. `syn` is up to
+ * 4 alternative names (PubChem's title when it differs from
+ * `name`, a short IUPAC name, then the best of the compound's own gathered
+ * synonyms), present only on a row that has one worth showing; an older 6
+ * element row and a row this build chose to ship without one both simply
+ * lack it, so read it as `row[6] ?? []` rather than assuming it is there.
+ * This build shipped at most 2 per row: the full 4 would have exceeded index.json's own size budget.
+ * Read every field through the helpers below rather than testing the
+ * sentinels by hand.
  */
 export type ChemIndexRow = [
   id: number,
@@ -53,6 +61,7 @@ export type ChemIndexRow = [
   cas: string,
   molarMass: number,
   flags: number,
+  syn?: string[],
 ];
 
 /** The parsed index: every row, in id order. */
@@ -165,6 +174,17 @@ export const CHEM_BROAD_META = {
   "builtAt": "2026-08-30",
   "narrowChemicals": 3050,
   "shards": 128,
+  "columns": [
+    "id",
+    "name",
+    "formula",
+    "cas",
+    "molarMass",
+    "flags",
+    "syn"
+  ],
+  "indexSynLimit": 4,
+  "indexSynCap": 2,
   "counts": {
     "compounds": 25248,
     "withNfpa": 1774,
@@ -176,6 +196,7 @@ export const CHEM_BROAD_META = {
     "withFormula": 24650,
     "withMolarMass": 24553,
     "withDescription": 25245,
+    "withIndexSyn": 18920,
     "articlesRead": 26080
   },
   "ghsSweepComplete": true,

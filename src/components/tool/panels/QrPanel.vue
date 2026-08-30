@@ -21,6 +21,9 @@ import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import OptionControl from "../OptionControl.vue";
 import CopyButton from "../CopyButton.vue";
+import FileDrop from "../FileDrop.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import EmptyState from "../EmptyState.vue";
 
 /**
  * Bespoke panel for the QR code generator. The generic ToolShell only knows
@@ -138,6 +141,11 @@ function utcToLocal(utc: string): string {
 const composedInput = computed(() => {
   switch (preset.value) {
     case "wifi":
+      // The security select always holds a value, so an untouched Wi-Fi form
+      // would still compose a non-empty line. buildPayload trims the blob and
+      // reads the first surviving line as the SSID, which silently encoded a
+      // network named "WPA". No SSID means nothing to encode.
+      if (!wifiSsid.value.trim()) return "";
       return [
         wifiSsid.value,
         wifiPassword.value,
@@ -237,8 +245,6 @@ const logoDataUrl = ref("");
 const logoName = ref("");
 const logoError = ref("");
 const logoPercent = ref(20);
-const dragging = ref(false);
-const logoInput = ref<HTMLInputElement | null>(null);
 
 const hasLogo = computed(() => logoDataUrl.value.length > 0);
 const logoSize = computed(() => logoPercent.value / 100);
@@ -275,20 +281,9 @@ async function loadLogo(file: File) {
   }
 }
 
-function onLogoDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
-  if (file) loadLogo(file);
-}
-
-function onLogoPick(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  loadLogo(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+function onLogoFiles(files: File[]) {
+  const file = files[0];
+  if (file) void loadLogo(file);
 }
 
 function clearLogo() {
@@ -305,11 +300,18 @@ function clearLogo() {
 const plainSvg = ref<string | null>(null);
 /** What the visitor sees and downloads: the code plus the logo, if any. */
 const svgOutput = ref<string | null>(null);
-const error = ref<{ message: string; fix?: string } | null>(null);
+const error = ref<{ message: string; fix?: string; code?: string } | null>(null);
 
 const previewSrc = computed(() =>
   svgOutput.value ? `data:image/svg+xml,${encodeURIComponent(svgOutput.value)}` : "",
 );
+
+/**
+ * A blank form is the panel waiting, not the panel failing, so the empty case
+ * renders as a designed empty state rather than the red alert an ErrorBanner
+ * would put on screen the moment the page loads.
+ */
+const awaitingInput = computed(() => error.value?.code === "empty-input");
 
 const warnings = computed(() =>
   scannabilityWarnings({
@@ -346,7 +348,7 @@ async function performRun() {
     svgOutput.value = null;
     error.value =
       e instanceof ToolError
-        ? { message: e.message, fix: e.fix }
+        ? { message: e.message, fix: e.fix, code: e.code }
         : { message: e instanceof Error ? e.message : String(e) };
   }
 }
@@ -635,7 +637,7 @@ async function downloadPng() {
                 id="qr-vcard-note"
                 v-model="vcardNote"
                 placeholder="Anything else worth carrying in the card"
-                class="min-h-16 border-0 bg-card text-sm shadow-none focus-visible:ring-0"
+                class="min-h-16 bg-card text-sm"
               />
             </div>
           </div>
@@ -666,7 +668,7 @@ async function downloadPng() {
                 id="qr-email-body"
                 v-model="emailBody"
                 placeholder="Optional prefilled body"
-                class="min-h-20 border-0 bg-card text-sm shadow-none focus-visible:ring-0"
+                class="min-h-20 bg-card text-sm"
               />
             </div>
           </div>
@@ -688,7 +690,7 @@ async function downloadPng() {
                 id="qr-sms-message"
                 v-model="smsMessage"
                 placeholder="Optional prefilled text"
-                class="min-h-20 border-0 bg-card text-sm shadow-none focus-visible:ring-0"
+                class="min-h-20 bg-card text-sm"
               />
             </div>
           </div>
@@ -779,7 +781,7 @@ async function downloadPng() {
                 id="qr-event-description"
                 v-model="eventDescription"
                 placeholder="Optional details"
-                class="min-h-16 border-0 bg-card text-sm shadow-none focus-visible:ring-0"
+                class="min-h-16 bg-card text-sm"
               />
             </div>
             <p class="text-xs text-muted-foreground">
@@ -794,75 +796,78 @@ async function downloadPng() {
               id="qr-text"
               v-model="textInput"
               placeholder="Type the text to encode"
-              class="min-h-28 border-0 bg-card font-mono text-sm shadow-none focus-visible:ring-0"
+              class="min-h-28 bg-card font-mono text-sm"
             />
           </div>
         </div>
 
-        <div
-          class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
-          :class="dragging ? 'ring-2 ring-ring' : ''"
-          @dragover.prevent="dragging = true"
-          @dragleave="dragging = false"
-          @drop.prevent="onLogoDrop"
+        <FileDrop
+          accept="image/*"
+          bare
+          label="Center logo: drop an image here, or pick one"
+          hint="It is read on your device and inlined into the code: your files and inputs never leave your device."
+          @files="onLogoFiles"
         >
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-              Center logo
-            </span>
-            <div class="flex items-center gap-1">
-              <Button v-if="hasLogo" variant="ghost" size="sm" @click="clearLogo"> Remove </Button>
-              <Button variant="ghost" size="sm" @click="logoInput?.click()">
-                {{ hasLogo ? "Replace" : "Add logo" }}
-              </Button>
-              <input
-                ref="logoInput"
-                type="file"
-                class="hidden"
-                accept="image/*"
-                @change="onLogoPick"
-              />
-            </div>
-          </div>
+          <template #default="{ open }">
+            <div class="flex flex-col gap-3 p-3">
+              <div class="flex items-center justify-between gap-2">
+                <span
+                  class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+                >
+                  Center logo
+                </span>
+                <div class="flex items-center gap-1">
+                  <Button v-if="hasLogo" variant="ghost" size="sm" @click="clearLogo">
+                    Remove
+                  </Button>
+                  <Button variant="ghost" size="sm" @click="open">
+                    {{ hasLogo ? "Replace" : "Add logo" }}
+                  </Button>
+                </div>
+              </div>
 
-          <p v-if="!hasLogo" class="text-xs text-muted-foreground">
-            Drop an image here, or pick one. It is read on your device and inlined into the code:
-            your files and inputs never leave your device.
-          </p>
+              <p v-if="!hasLogo" class="text-xs text-muted-foreground">
+                Drop an image here, or pick one. It is read on your device and inlined into the
+                code: your files and inputs never leave your device.
+              </p>
 
-          <div v-else class="flex flex-col gap-3">
-            <div class="flex items-center gap-3">
-              <span
-                class="grid size-10 shrink-0 place-items-center rounded-[6px] bg-card p-1 shadow-[var(--sh-inset)]"
-              >
-                <img :src="logoDataUrl" alt="" class="max-h-full max-w-full object-contain" />
-              </span>
-              <span class="min-w-0 truncate text-xs text-muted-foreground">{{ logoName }}</span>
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span class="text-xs text-muted-foreground tabular-nums">
-                Logo size: {{ logoPercent }}% of the code
-              </span>
-              <Slider
-                aria-label="Logo size"
-                :model-value="[logoPercent]"
-                :min="LOGO_MIN * 100"
-                :max="LOGO_MAX * 100"
-                :step="1"
-                class="py-2"
-                @update:model-value="(v) => (logoPercent = v?.[0] ?? logoPercent)"
-              />
-            </div>
-            <p class="text-xs text-muted-foreground">
-              Error correction is held at H (30% recovery) while a logo is in place, so the modules
-              behind it can still be reconstructed.
-            </p>
-          </div>
+              <div v-else class="flex flex-col gap-3">
+                <div class="flex items-center gap-3">
+                  <span
+                    class="grid size-10 shrink-0 place-items-center rounded-[6px] bg-card p-1 shadow-[var(--sh-inset)]"
+                  >
+                    <img :src="logoDataUrl" alt="" class="max-h-full max-w-full object-contain" />
+                  </span>
+                  <span class="min-w-0 truncate text-xs text-muted-foreground">{{ logoName }}</span>
+                </div>
+                <!-- The slider thumb is a span, so a drag on it would otherwise
+                     reach the zone's click handler and open the file picker. -->
+                <div class="flex flex-col gap-1.5" @click.stop>
+                  <span class="text-xs text-muted-foreground tabular-nums">
+                    Logo size: {{ logoPercent }}% of the code
+                  </span>
+                  <Slider
+                    aria-label="Logo size"
+                    :model-value="[logoPercent]"
+                    :min="LOGO_MIN * 100"
+                    :max="LOGO_MAX * 100"
+                    :step="1"
+                    class="py-2"
+                    @update:model-value="(v) => (logoPercent = v?.[0] ?? logoPercent)"
+                  />
+                </div>
+                <p class="text-xs text-muted-foreground">
+                  Error correction is held at H (30% recovery) while a logo is in place, so the
+                  modules behind it can still be reconstructed.
+                </p>
+              </div>
 
-          <p v-if="logoError" role="alert" class="text-xs text-destructive">
-            {{ logoError }}
-          </p>
-        </div>
+              <p v-if="logoError" role="alert" class="text-xs text-destructive">
+                {{ logoError }}
+              </p>
+            </div>
+          </template>
+        </FileDrop>
 
         <div class="grid grid-cols-2 gap-3">
           <div class="flex min-w-0 flex-col gap-1.5">
@@ -905,18 +910,14 @@ async function downloadPng() {
       </div>
 
       <div class="flex flex-col gap-3">
-        <div
-          v-if="error"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-medium text-destructive">
-            {{ error.message }}
-          </p>
-          <p v-if="error.fix" class="mt-1 text-muted-foreground">
-            {{ error.fix }}
-          </p>
-        </div>
+        <EmptyState
+          v-if="awaitingInput"
+          title="Nothing to encode yet"
+          :hint="error?.fix"
+          icon="QrCode"
+        />
+
+        <ErrorBanner v-else-if="error" :message="error.message" :hint="error.fix" />
 
         <!-- The well stays white in both themes: QR readers need reliable
              light/dark module contrast, which a dark-mode surface would break. -->

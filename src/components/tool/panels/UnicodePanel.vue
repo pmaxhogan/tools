@@ -7,7 +7,9 @@ import { copyText } from "@/lib/clipboard";
 import { search } from "@/tools/unicode-picker/index";
 import { CATEGORIES, type UnicodeEntry } from "@/tools/unicode-picker/data";
 import { Input } from "@/components/ui/input";
+import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
 import CopyButton from "../CopyButton.vue";
+import EmptyState from "../EmptyState.vue";
 
 /**
  * Bespoke panel for the unicode picker: a glyph grid you can scan, not a list
@@ -38,7 +40,18 @@ const ABBREVIATIONS: Record<string, string> = {
   "punctuation space": "PUNCSP",
 };
 
-const pills = [{ id: "all", label: "All" }, ...CATEGORIES];
+/**
+ * The category filter is one mutually exclusive choice, so it renders through
+ * the shared Segmented control rather than a hand rolled pill row: that buys
+ * radiogroup semantics, roving arrow-key focus, and the brand gradient on the
+ * active segment. It is wider than the four options the generic panel promotes
+ * automatically, which types.ts explicitly allows for a list that still reads
+ * well as a wrapped row of short labels.
+ */
+const categoryOptions: SegmentedOption[] = [
+  { value: "all", label: "All" },
+  ...CATEGORIES.map((c) => ({ value: c.id, label: c.label })),
+];
 
 const typed = ref("");
 const query = ref("");
@@ -136,7 +149,7 @@ onUnmounted(() => {
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <div class="flex flex-col gap-3">
       <div
-        class="flex items-center gap-2 rounded-[10px] bg-secondary px-3 shadow-[var(--sh-inset)]"
+        class="flex items-center gap-2 rounded-[10px] bg-secondary px-3 shadow-[var(--sh-inset)] focus-within:ring-3 focus-within:ring-ring/50"
       >
         <Search class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <Input
@@ -148,27 +161,12 @@ onUnmounted(() => {
         />
       </div>
 
-      <div
-        role="group"
-        aria-label="Filter by category"
-        class="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1"
-      >
-        <button
-          v-for="pill in pills"
-          :key="pill.id"
-          type="button"
-          :aria-pressed="category === pill.id"
-          class="shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors duration-[120ms]"
-          :class="
-            category === pill.id
-              ? 'border-transparent bg-primary text-primary-foreground'
-              : 'border-border bg-secondary text-muted-foreground hover:bg-accent hover:text-foreground'
-          "
-          @click="category = pill.id"
-        >
-          {{ pill.label }}
-        </button>
-      </div>
+      <Segmented
+        v-model="category"
+        :options="categoryOptions"
+        size="sm"
+        label="Filter by category"
+      />
     </div>
 
     <p v-if="results.length > CAP" class="text-xs text-muted-foreground">
@@ -211,13 +209,12 @@ onUnmounted(() => {
       </button>
     </div>
 
-    <p
+    <EmptyState
       v-else
-      class="rounded-[10px] bg-secondary px-3 py-6 text-center text-sm text-muted-foreground shadow-[var(--sh-inset)]"
-    >
-      Nothing matches that search. Try something shorter like "arrow", "dash" or "space", or paste
-      the character itself.
-    </p>
+      title="Nothing matches that search"
+      hint="Try something shorter like arrow, dash or space, pick a different category, or paste the character itself to identify it."
+      icon="Sigma"
+    />
 
     <div
       v-if="selected"

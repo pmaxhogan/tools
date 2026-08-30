@@ -1,5 +1,6 @@
 import { mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 import FileDrop from "./FileDrop.vue";
 import { clearCarriedInput, getCarriedInput, setCarriedInput } from "@/lib/carry-input";
 
@@ -286,5 +287,86 @@ describe("FileDrop", () => {
     const zone = wrapper.get('[role="button"]').classes();
     expect(zone).not.toContain("py-6");
     expect(zone).not.toContain("py-2");
+  });
+});
+
+describe("FileDrop when not interactive", () => {
+  /** The zone element itself, which is no longer addressable by its role. */
+  function zoneOf(wrapper: ReturnType<typeof mount>) {
+    return wrapper.get('[data-testid="filedrop-zone"]');
+  }
+
+  it("is not a button, has no tab stop, and does not open the picker on click", async () => {
+    const wrapper = mount(FileDrop, { props: { interactive: false }, global: { provide } });
+    const zone = zoneOf(wrapper);
+    expect(zone.attributes("role")).toBeUndefined();
+    expect(zone.attributes("tabindex")).toBeUndefined();
+    expect(zone.attributes("aria-label")).toBeUndefined();
+    expect(zone.classes()).not.toContain("cursor-pointer");
+
+    const input = wrapper.get('input[type="file"]').element as HTMLInputElement;
+    const click = vi.spyOn(input, "click").mockImplementation(() => {});
+    await zone.trigger("click");
+    await zone.trigger("keydown.enter");
+    await zone.trigger("keydown.space");
+    expect(click).not.toHaveBeenCalled();
+  });
+
+  it("hides the built in body unless the caller supplies one", () => {
+    const bare = mount(FileDrop, {
+      props: { interactive: false, hint: "PNG up to 50 MB" },
+      global: { provide },
+    });
+    expect(bare.find('[data-testid="filedrop-body"]').exists()).toBe(false);
+    expect(bare.text()).not.toContain("Drop a file here");
+
+    const withBody = mount(FileDrop, {
+      props: { interactive: false },
+      global: { provide },
+      slots: { default: "<p>Bring your own body</p>" },
+    });
+    expect(withBody.text()).toContain("Bring your own body");
+  });
+
+  it("still takes a drop, a paste, and the scoped open()", async () => {
+    const wrapper = mount(FileDrop, {
+      attachTo: document.body,
+      props: { interactive: false },
+      global: { provide },
+      slots: { default: `<button type="button" id="choose" @click="open">Open file</button>` },
+    });
+    const zone = zoneOf(wrapper);
+
+    await zone.trigger("drop", dropPayload([fileNamed("dropped.png")]));
+    expect(wrapper.emitted("files")?.[0]?.[0]).toHaveLength(1);
+
+    document.dispatchEvent(pasteEvent(fileNamed("pasted.png")));
+    await nextTick();
+    expect(wrapper.emitted("files")).toHaveLength(2);
+
+    const input = wrapper.get('input[type="file"]').element as HTMLInputElement;
+    const click = vi.spyOn(input, "click").mockImplementation(() => {});
+    await wrapper.get("#choose").trigger("click");
+    expect(click).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
+  it("still offers the carried file chip", () => {
+    setCarriedInput({
+      kind: "file",
+      file: fileNamed("held.png"),
+      fromSlug: "image-cropper",
+      fromName: "Image cropper",
+      at: Date.now(),
+    });
+    const wrapper = mount(FileDrop, { props: { interactive: false }, global: { provide } });
+    expect(wrapper.text()).toContain("Use held.png from Image cropper");
+  });
+
+  it("still shows the drag ring", async () => {
+    const wrapper = mount(FileDrop, { props: { interactive: false }, global: { provide } });
+    const zone = zoneOf(wrapper);
+    await zone.trigger("dragenter");
+    expect(zone.classes()).toContain("ring-2");
   });
 });

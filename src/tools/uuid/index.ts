@@ -49,7 +49,11 @@ export function v7(now = Date.now()): string {
 export function run(_input: undefined, opts: UuidOpts): string {
   const count = Math.floor(opts.count);
   if (!Number.isFinite(count) || count < 1 || count > 1000)
-    throw new ToolError("bad-count", "Count must be between 1 and 1000.");
+    throw new ToolError(
+      "bad-count",
+      "Count must be between 1 and 1000.",
+      "Set Count to a whole number in that range, then generate again.",
+    );
 
   const gen = opts.version === "v7" ? v7 : v4;
   const out = Array.from({ length: count }, () => gen());

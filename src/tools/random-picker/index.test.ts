@@ -7,13 +7,13 @@ const baseOpts = { mode: "dice", count: 1, seed: "" };
 describe("random-picker / dice", () => {
   it("rolls an exact, reproducible result from a seed", () => {
     const out = run("3d6+2", { ...baseOpts, seed: "test-seed-1" });
-    expect(out).toBe("Rolls: 5, 5, 2 | Modifier: +2 | Total: 14");
+    expect(out).toEqual({ Rolls: "5, 5, 2", Modifier: "+2", Total: "14" });
   });
 
   it("produces the same output every time for the same seed", () => {
     const a = run("2d6+3", { ...baseOpts, seed: "repeat-me" });
     const b = run("2d6+3", { ...baseOpts, seed: "repeat-me" });
-    expect(a).toBe(b);
+    expect(a).toEqual(b);
   });
 
   it("parses implicit single-die notation (d20)", () => {
@@ -42,34 +42,37 @@ describe("random-picker / dice", () => {
     expect(() => run("", baseOpts)).toThrowError(ToolError);
   });
 
-  it("formats rolls, modifier, and total readably", () => {
+  it("labels rolls, modifier, and total as their own rows", () => {
     const out = run("3d6+2", { ...baseOpts, seed: "format-check" });
-    expect(out).toMatch(/^Rolls: \d+(, \d+){2} \| Modifier: \+2 \| Total: \d+$/);
+    expect(Object.keys(out)).toEqual(["Rolls", "Modifier", "Total"]);
+    expect(out.Rolls).toMatch(/^\d+(, \d+){2}$/);
+    expect(out.Modifier).toBe("+2");
+    expect(out.Total).toMatch(/^\d+$/);
   });
 
-  it("omits the modifier segment when there is none", () => {
+  it("omits the modifier row when there is none", () => {
     const out = run("d20", { ...baseOpts, seed: "no-modifier" });
-    expect(out).toMatch(/^Rolls: \d+ \| Total: \d+$/);
+    expect(Object.keys(out)).toEqual(["Rolls", "Total"]);
   });
 });
 
 describe("random-picker / coin", () => {
   it("flips once by default", () => {
     const out = run("", { mode: "coin", count: 1, seed: "coin-seed" });
-    expect(["Heads", "Tails"]).toContain(out);
+    expect(Object.keys(out)).toEqual(["Result"]);
+    expect(["Heads", "Tails"]).toContain(out.Result);
   });
 
   it("flips N times and summarizes with a count", () => {
     const out = run("", { mode: "coin", count: 10, seed: "coin-seed-10" });
-    expect(out).toMatch(/^Flips: (Heads|Tails)(, (Heads|Tails)){9} \| Heads: \d+, Tails: \d+$/);
-    const headsMatch = out.match(/Heads: (\d+)/)!;
-    const tailsMatch = out.match(/Tails: (\d+)/)!;
-    expect(Number(headsMatch[1]) + Number(tailsMatch[1])).toBe(10);
+    expect(Object.keys(out)).toEqual(["Flips", "Heads", "Tails"]);
+    expect(out.Flips!.split(", ")).toHaveLength(10);
+    expect(Number(out.Heads) + Number(out.Tails)).toBe(10);
   });
 
   it("ignores the input text", () => {
     const out = run("this text is irrelevant", { mode: "coin", count: 1, seed: "ignore-me" });
-    expect(["Heads", "Tails"]).toContain(out);
+    expect(["Heads", "Tails"]).toContain(out.Result);
   });
 });
 
@@ -78,8 +81,8 @@ describe("random-picker / pick", () => {
 
   it("picks the requested number of distinct items", () => {
     const out = run(list, { mode: "pick", count: 3, seed: "pick-seed" });
-    expect(out.startsWith("Picked: ")).toBe(true);
-    const picked = out.replace("Picked: ", "").split(", ");
+    expect(Object.keys(out)).toEqual(["Picked"]);
+    const picked = out.Picked!.split(", ");
     expect(picked).toHaveLength(3);
     expect(new Set(picked).size).toBe(3);
     for (const p of picked) expect(["alice", "bob", "charlie", "dave", "eve"]).toContain(p);
@@ -105,19 +108,18 @@ describe("random-picker / teams", () => {
 
   it("splits 7 names into 3 teams as 3/2/2", () => {
     const out = run(names, { mode: "teams", count: 3, seed: "team-seed" });
-    const lines = out.split("\n");
-    expect(lines).toHaveLength(3);
-    const sizes = lines.map((l) => l.split(": ")[1]!.split(", ").length).sort((a, b) => b - a);
+    const rosters = Object.values(out);
+    expect(rosters).toHaveLength(3);
+    const sizes = rosters.map((r) => r.split(", ").length).sort((a, b) => b - a);
     expect(sizes).toEqual([3, 2, 2]);
   });
 
   it("labels each team and includes every name exactly once", () => {
     const out = run(names, { mode: "teams", count: 3, seed: "label-check" });
-    const lines = out.split("\n");
-    expect(lines[0]).toMatch(/^Team 1: /);
-    expect(lines[1]).toMatch(/^Team 2: /);
-    expect(lines[2]).toMatch(/^Team 3: /);
-    const allNames = lines.flatMap((l) => l.split(": ")[1]!.split(", ")).sort();
+    expect(Object.keys(out)).toEqual(["Team 1", "Team 2", "Team 3"]);
+    const allNames = Object.values(out)
+      .flatMap((r) => r.split(", "))
+      .sort();
     expect(allNames).toEqual(["a", "b", "c", "d", "e", "f", "g"]);
   });
 

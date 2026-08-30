@@ -1,0 +1,128 @@
+import type { ToolMeta } from "../types";
+
+export const meta: ToolMeta = {
+  slug: "ph-poh-calculator",
+  icon: "Rainbow",
+  name: "pH and pOH Calculator",
+  description: "Convert between pH, pOH, H+ and OH- concentration, including weak acids.",
+  category: "Chemistry",
+  keywords: [
+    "ph calculator",
+    "poh calculator",
+    "hydrogen ion concentration calculator",
+    "weak acid ph calculator",
+    "strong acid ph calculator",
+    "ka pka calculator",
+  ],
+  searchTerms: [
+    "convert ph to h+",
+    "h3o concentration",
+    "hydroxide concentration",
+    "acid dissociation",
+    "percent ionization",
+    "kw ion product of water",
+    "neutral ph temperature",
+    "five percent approximation",
+    "acetic acid ph",
+    "ammonia ph",
+    "pkw table",
+    "how acidic",
+  ],
+  input: "text/plain",
+  output: "application/json",
+  options: [
+    {
+      kind: "select",
+      id: "mode",
+      label: "Calculation",
+      default: "convert",
+      ui: "select",
+      options: [
+        {
+          value: "convert",
+          label: "From pH, pOH, [H+] or [OH-]",
+          synonyms: ["convert", "ph to poh", "ion concentration", "translate"],
+        },
+        {
+          value: "strong-acid",
+          label: "Strong acid concentration",
+          synonyms: ["hcl", "nitric", "sulfuric", "fully dissociated", "strong"],
+        },
+        {
+          value: "strong-base",
+          label: "Strong base concentration",
+          synonyms: ["naoh", "koh", "hydroxide", "alkali", "strong"],
+        },
+        {
+          value: "weak-acid",
+          label: "Weak acid with Ka or pKa",
+          synonyms: ["acetic", "formic", "buffer acid", "ka", "pka", "partial"],
+        },
+        {
+          value: "weak-base",
+          label: "Weak base with Kb or pKb",
+          synonyms: ["ammonia", "amine", "kb", "pkb", "partial"],
+        },
+      ],
+    },
+    {
+      kind: "select",
+      id: "temperature",
+      label: "Temperature",
+      default: "25",
+      ui: "select",
+      options: [
+        { value: "0", label: "0 C (ice water)", synonyms: ["freezing", "cold", "zero"] },
+        { value: "10", label: "10 C", synonyms: ["cold", "chilled"] },
+        { value: "20", label: "20 C (room)", synonyms: ["room temperature", "ambient"] },
+        { value: "25", label: "25 C (standard)", synonyms: ["standard", "textbook", "298 k"] },
+        { value: "30", label: "30 C", synonyms: ["warm"] },
+        { value: "37", label: "37 C (body)", synonyms: ["body temperature", "physiological", "blood"] },
+        { value: "40", label: "40 C", synonyms: ["warm"] },
+        { value: "50", label: "50 C", synonyms: ["hot"] },
+        { value: "60", label: "60 C", synonyms: ["hot"] },
+        { value: "80", label: "80 C", synonyms: ["very hot"] },
+        { value: "100", label: "100 C (boiling)", synonyms: ["boiling", "steam", "hot water"] },
+      ],
+    },
+    {
+      kind: "number",
+      id: "protons",
+      label: "Ionizable protons or hydroxides per formula unit",
+      default: 1,
+      min: 1,
+      max: 6,
+      step: 1,
+    },
+    { kind: "number", id: "decimals", label: "Decimal places", default: 3, min: 0, max: 6, step: 1 },
+  ],
+  examples: [
+    { label: "Convert a measured pH", input: "pH=3.4" },
+    { label: "Acetic acid at 0.1 M", input: "C=0.1, pKa=4.76", opts: { mode: "weak-acid" } },
+    {
+      label: "Very dilute strong acid",
+      input: "C=1e-8",
+      opts: { mode: "strong-acid" },
+    },
+  ],
+  http: { method: "GET", contentType: "application/json" },
+  copy: {
+    what: "Gives pH, pOH, hydrogen ion concentration and hydroxide concentration from any one of the four, and also works them out from an acid or base concentration. Strong acids and bases are solved with water autoionization included, so a very dilute strong acid comes out just below neutral instead of the impossible pH above 7 that the simple minus log gives. Weak acids and bases are solved from the full quadratic rather than the square root shortcut, and the result says whether the shortcut would have been within the usual five percent, along with the percent ionization.",
+    how: "Pick a calculation, then type the values you have as name=value pairs. A bare number is read as a pH, so \"3.4\" is enough for a conversion. For a weak acid write something like \"C=0.1, pKa=4.76\"; Ka and pKa are interchangeable, as are Kb and pKb. Set the temperature to see how Kw and the neutral point move, and raise the protons option for a diprotic acid such as sulfuric acid or a dihydroxide such as calcium hydroxide.",
+    why: "Most pH calculators assume 25 C without saying so, print pH 8 for a 1e-8 molar strong acid, and use the square root approximation for weak acids with no warning about when it breaks. This one carries a pKw table from 0 to 100 C, prints the neutral pH for the temperature you chose so an acidic or basic verdict means something, and solves both the strong acid and the weak acid cases properly. It runs entirely in your browser, so your inputs never leave your device.",
+    faq: [
+      {
+        q: "Why is neutral not always pH 7?",
+        a: "Neutral means the hydrogen ion and hydroxide concentrations are equal, which puts the pH at half of pKw. Water ionizes more as it gets hotter, so pKw falls from 14.94 at 0 C to 12.26 at 100 C and neutral moves from about 7.47 to about 6.13. Pure water at 50 C is neutral at pH 6.63, and calling it acidic because it is below 7 is a common mistake.",
+      },
+      {
+        q: "When does the five percent rule fail?",
+        a: "When the acid is strong enough or dilute enough that a real fraction of it ionizes. The shortcut x = square root of Ka times C assumes the undissociated concentration stays close to the starting concentration, which stops being true once ionization passes about five percent. This tool always solves the exact quadratic and then tells you how far off the shortcut would have landed.",
+      },
+      {
+        q: "Does it handle polyprotic acids?",
+        a: "Only the first ionization step, which is where nearly all of the pH comes from because the second and third constants are typically thousands of times smaller. The output says so on every weak acid result. For a strong polyprotic acid such as sulfuric acid, raise the protons option so the full ion concentration is used.",
+      },
+    ],
+  },
+};

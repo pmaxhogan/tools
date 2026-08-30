@@ -45,6 +45,37 @@ export function coerceOpts(
   return out;
 }
 
+/**
+ * True for an option whose value is a secret (see `TextOptionSpec.sensitive`).
+ * The flag lives on text options only, because a password, a shared secret and
+ * a PEM key are all free text; a select or a slider cannot hold one.
+ */
+export function isSensitiveOption(spec: OptionSpec): boolean {
+  return spec.kind === "text" && spec.sensitive === true;
+}
+
+/** The ids a tool declares sensitive, for filtering an options bag either way. */
+export function sensitiveOptionIds(specs: OptionSpec[] | undefined): Set<string> {
+  return new Set((specs ?? []).filter(isSensitiveOption).map((spec) => spec.id));
+}
+
+/**
+ * Drops every sensitive id from a bag of option values.
+ *
+ * Used in both directions by the generic shell: on the way out so a secret is
+ * never written to the URL, and on the way in so a crafted link cannot
+ * pre-fill one. `coerceOpts` cannot do this itself, because an example is
+ * allowed to carry a sensitive value and have it applied to the control.
+ */
+export function withoutSensitiveOpts<T>(
+  specs: OptionSpec[] | undefined,
+  raw: Record<string, T>,
+): Record<string, T> {
+  const secret = sensitiveOptionIds(specs);
+  if (secret.size === 0) return raw;
+  return Object.fromEntries(Object.entries(raw).filter(([key]) => !secret.has(key)));
+}
+
 export function readFragment(): FragmentState {
   const hash = window.location.hash.replace(/^#/, "");
   if (!hash) return { opts: {} };

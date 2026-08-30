@@ -13,7 +13,12 @@ export interface EpochResult {
 /** Parse a timestamp: unix seconds, unix millis, ISO 8601, or common date strings. */
 function parse(raw: string): Date {
   const s = raw.trim();
-  if (!s) throw new ToolError("empty-input", "Enter a timestamp to convert.");
+  if (!s)
+    throw new ToolError(
+      "empty-input",
+      "Enter a timestamp to convert.",
+      "Paste unix seconds (1754521200), unix milliseconds, or an ISO date like 2026-08-06T21:00:00Z.",
+    );
 
   if (/^-?\d+$/.test(s)) {
     const n = Number(s);
@@ -21,7 +26,11 @@ function parse(raw: string): Date {
     const ms = Math.abs(n) >= 1e12 ? n : n * 1000;
     const d = new Date(ms);
     if (isNaN(d.getTime()))
-      throw new ToolError("out-of-range", `"${s}" is outside the representable date range.`);
+      throw new ToolError(
+        "out-of-range",
+        `"${s}" is outside the representable date range.`,
+        "Use a value between about -8.64e15 and 8.64e15 milliseconds, which covers the years 271821 BC to 275760 AD.",
+      );
     return d;
   }
 

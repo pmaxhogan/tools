@@ -35,7 +35,12 @@ function maxDigitDescription(base: number): string {
 /** Parse a signed integer string in the given/auto-detected base into a BigInt. */
 function parse(raw: string, inputBaseOpt: string): Parsed {
   const trimmed = raw.trim();
-  if (!trimmed) throw new ToolError("empty-input", "Enter a number to convert.");
+  if (!trimmed)
+    throw new ToolError(
+      "empty-input",
+      "Enter a number to convert.",
+      "Type a decimal number, or use a prefix like 0xFF, 0b1010 or 0o17 to set the base.",
+    );
 
   let offset = 0;
   let negative = false;
@@ -73,7 +78,11 @@ function parse(raw: string, inputBaseOpt: string): Parsed {
   } else {
     const parsedBase = parseInt(inputBaseOpt, 10);
     if (!Number.isFinite(parsedBase) || parsedBase < 2 || parsedBase > 36)
-      throw new ToolError("bad-base", `Unsupported input base "${inputBaseOpt}".`);
+      throw new ToolError(
+        "bad-base",
+        `Unsupported input base "${inputBaseOpt}".`,
+        "Pick a base between 2 and 36, or leave the input base on auto-detect.",
+      );
     base = parsedBase;
   }
 
@@ -81,6 +90,7 @@ function parse(raw: string, inputBaseOpt: string): Parsed {
     throw new ToolError(
       "empty-input",
       `Enter digits after the "${trimmed.slice(offset, offset + prefixLen)}" prefix.`,
+      "Add the digits themselves, for example 0xFF rather than a bare 0x.",
     );
 
   let value = 0n;

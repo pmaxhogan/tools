@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Clock",
   matrixSlug: "epoch",
   name: "Epoch Converter",
-  description: "Convert unix timestamps to and from human-readable dates in any time zone.",
+  description:
+    "Convert unix timestamps to and from human-readable dates, in seconds or milliseconds, with ISO 8601 and relative time in any zone.",
   category: "Time",
   keywords: ["epoch", "unix timestamp", "timestamp converter", "unix time", "date converter"],
   searchTerms: [

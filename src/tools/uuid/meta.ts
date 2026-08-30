@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "uuid",
   icon: "FingerprintPattern",
   name: "UUID Generator",
-  description: "Generate v4 (random) or v7 (time-ordered) UUIDs, one or a thousand at a time.",
+  description:
+    "Generate RFC 9562 UUIDs on your own device: v4 random or v7 time-ordered, one at a time or a thousand at once, upper or lower case.",
   category: "Generators",
   keywords: ["uuid", "guid", "uuid v4", "uuid v7", "uuid generator", "random id"],
   searchTerms: [

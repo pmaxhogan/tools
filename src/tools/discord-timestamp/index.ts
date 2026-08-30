@@ -19,7 +19,11 @@ function parse(raw: string): Date {
     const ms = Math.abs(n) >= 1e12 ? n : n * 1000;
     const d = new Date(ms);
     if (isNaN(d.getTime()))
-      throw new ToolError("out-of-range", `"${s}" is outside the representable date range.`);
+      throw new ToolError(
+        "out-of-range",
+        `"${s}" is outside the representable date range.`,
+        "Discord takes unix seconds, so paste a value like 1754521200 or an ISO date instead.",
+      );
     return d;
   }
 

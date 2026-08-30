@@ -90,6 +90,35 @@ one has a fixed contract:
   greater than 6. You never wire the search field yourself; just supply good
   synonyms and, for large lists, good groups.
 - **No em or en dashes** in option labels, group labels, or synonyms (DESIGN.md).
+
+### Sensitive and multiline text options (`kind: "text"`)
+
+A `TextOptionSpec` (`src/tools/types.ts`) carries two extra flags for a
+password, a shared secret, or a signing key:
+
+- **`sensitive?: boolean`** marks the value a secret. `OptionControl.vue`
+  renders it as a masked `<input type="password">` with a show/hide toggle
+  (`aria-pressed`, `autocomplete="off"`), and `ToolShell.vue` never writes it
+  to the URL fragment and never pre-fills it from one, so a hand-crafted link
+  cannot leak or seed a password. A worked `example` in meta.ts may still set
+  the value (it is applied to the control on load), it is simply never
+  written back out. Set the tool's `sensitiveInput: true` too when the main
+  input box still accepts an older `"--- then the secret"` fallback form, so
+  the box itself stays out of the fragment as well.
+- **`multiline?: boolean`** renders a `Textarea` instead of a single line
+  input, for a value that genuinely wraps (a PEM block). A textarea cannot be
+  masked the way a password input can, so `sensitive: true` combined with
+  `multiline: true` collapses to a one line summary ("Key set (N
+  characters)") with a Reveal button once it holds a value, and folds back
+  once revealed and then hidden again. Only add `multiline` when the value
+  needs it (a PEM private key); a short secret should stay a single line
+  masked input.
+
+See `src/tools/hmac-generator/meta.ts` (`sensitive` only, single line) and
+`src/tools/jwt-generator/meta.ts` (`sensitive` + `multiline`, for the PEM
+signing key) for worked examples, including the `sensitiveInput` /
+`"---"`-fallback pairing.
+
 - `http`: include `{ method: 'GET', contentType: 'text/plain' | 'application/json' }`
   ONLY for cheap pure text transforms/generators. Omit for anything heavy.
 - `copy`: REAL page copy (rule 23 — thin pages don't rank, fake copy is worse):
@@ -159,17 +188,18 @@ All four live in `src/components/tool/` and are imported by path, e.g.
 The single input surface for files: drop, click, keyboard, clipboard paste, and
 the cross tool carry chip.
 
-| Prop        | Type      | Default                                 | Notes                                                    |
-| ----------- | --------- | --------------------------------------- | -------------------------------------------------------- |
-| `accept`    | `string`  | none                                    | HTML accept syntax; also filters the carry chip          |
-| `multiple`  | `boolean` | `false`                                 | otherwise only the first file is emitted                 |
-| `label`     | `string`  | `"Drop a file here or click to choose"` | headline inside the zone                                 |
-| `hint`      | `string`  | none                                    | second line, e.g. "PNG, JPEG or WebP up to 50 MB"        |
-| `disabled`  | `boolean` | `false`                                 | removes it from the tab order and ignores every input    |
-| `paste`     | `boolean` | `true`                                  | listens for document paste events carrying files         |
-| `compact`   | `boolean` | `false`                                 | single line variant for a "replace this file" affordance |
-| `directory` | `boolean` | `false`                                 | webkitdirectory; implies `multiple`                      |
-| `bare`      | `boolean` | `false`                                 | drops the zone's own padding for a custom body           |
+| Prop          | Type      | Default                                 | Notes                                                    |
+| ------------- | --------- | --------------------------------------- | -------------------------------------------------------- |
+| `accept`      | `string`  | none                                    | HTML accept syntax; also filters the carry chip          |
+| `multiple`    | `boolean` | `false`                                 | otherwise only the first file is emitted                 |
+| `label`       | `string`  | `"Drop a file here or click to choose"` | headline inside the zone                                 |
+| `hint`        | `string`  | none                                    | second line, e.g. "PNG, JPEG or WebP up to 50 MB"        |
+| `disabled`    | `boolean` | `false`                                 | removes it from the tab order and ignores every input    |
+| `paste`       | `boolean` | `true`                                  | listens for document paste events carrying files         |
+| `compact`     | `boolean` | `false`                                 | single line variant for a "replace this file" affordance |
+| `directory`   | `boolean` | `false`                                 | webkitdirectory; implies `multiple`                      |
+| `bare`        | `boolean` | `false`                                 | drops the zone's own padding for a custom body           |
+| `interactive` | `boolean` | `true`                                  | `false` strips the zone's role/tab stop/click-to-open    |
 
 - Emits: `files` with a `File[]`, from drop, picker, paste, and the carry chip.
 - Slots: default (replaces the whole inner body), `actions` (extra buttons such
@@ -182,6 +212,16 @@ the cross tool carry chip.
 - The zone is a focusable `role="button"` with Enter and Space activation and
   the standard focus ring. Clicks that start on a slotted button belong to that
   button, so `actions` content works normally.
+- `interactive: false` turns the zone into a plain drop/paste surface: no
+  `role`, no tab stop, no `aria-label`, and no click-to-open. Use it when the
+  body you slot in already holds a real control, the way `ToolShell.vue`'s
+  input well wraps a `Textarea` (a `role="button"` with its own tab stop
+  around a textarea is a mess for assistive technology). Drop, paste, the
+  carried-file chip, and the scoped `open()` from the default slot all keep
+  working; a plain button in the slot (e.g. "Open file...") stays the
+  keyboard and click path to the picker. The built in label/hint body only
+  renders when `interactive` is true; a non interactive zone renders whatever
+  the caller's slot supplies, or nothing.
 - Paste is one document listener for the whole page, however many zones are
   mounted: a Ctrl+V goes to the zone focus is inside, and otherwise to the
   first one mounted. Never add your own document paste listener beside it.

@@ -210,6 +210,53 @@ import { meta as regexTester } from "./regex-tester/meta";
 import { meta as semverRangeTester } from "./semver-range-tester/meta";
 import { meta as unifiedDiffPatchApplier } from "./unified-diff-patch-applier/meta";
 import { meta as xpathCssSelectorTester } from "./xpath-css-selector-tester/meta";
+import { meta as hmacGenerator } from "./hmac-generator/meta";
+import { meta as jwtGenerator } from "./jwt-generator/meta";
+import { meta as passwordStrengthChecker } from "./password-strength-checker/meta";
+import { meta as selfSignedCertificateGenerator } from "./self-signed-certificate-generator/meta";
+import { meta as sshKeyGenerator } from "./ssh-key-generator/meta";
+import { meta as textEncrypter } from "./text-encrypter/meta";
+import { meta as archiveViewer } from "./archive-viewer/meta";
+import { meta as logFileAnalyzer } from "./log-file-analyzer/meta";
+import { meta as mp3TagEditor } from "./mp3-tag-editor/meta";
+import { meta as torrentFileInspector } from "./torrent-file-inspector/meta";
+import { meta as xlsxViewer } from "./xlsx-viewer/meta";
+import { meta as antennaLengthCalculator } from "./antenna-length-calculator/meta";
+import { meta as coaxCableLoss } from "./coax-cable-loss/meta";
+import { meta as dbmWattsVolts } from "./dbm-watts-volts/meta";
+import { meta as fresnelZone } from "./fresnel-zone/meta";
+import { meta as lcResonance } from "./lc-resonance/meta";
+import { meta as pathLossLinkBudget } from "./path-loss-link-budget/meta";
+import { meta as vswrReturnLoss } from "./vswr-return-loss/meta";
+import { meta as wavelengthFrequency } from "./wavelength-frequency/meta";
+import { meta as tool555TimerCalculator } from "./555-timer-calculator/meta";
+import { meta as capacitorCodeDecoder } from "./capacitor-code-decoder/meta";
+import { meta as ledResistorCalculator } from "./led-resistor-calculator/meta";
+import { meta as pcbTraceWidth } from "./pcb-trace-width/meta";
+import { meta as voltageDivider } from "./voltage-divider/meta";
+import { meta as boxShadowGenerator } from "./box-shadow-generator/meta";
+import { meta as clipPathGenerator } from "./clip-path-generator/meta";
+import { meta as cssGradientGenerator } from "./css-gradient-generator/meta";
+import { meta as cssKeyframesBuilder } from "./css-keyframes-builder/meta";
+import { meta as cubicBezierEasingEditor } from "./cubic-bezier-easing-editor/meta";
+import { meta as fluidClampCalculator } from "./fluid-clamp-calculator/meta";
+import { meta as colorContrastChecker } from "./color-contrast-checker/meta";
+import { meta as exifViewerAndStripper } from "./exif-viewer-and-stripper/meta";
+import { meta as imageColorPaletteExtractor } from "./image-color-palette-extractor/meta";
+import { meta as imageToDataUrl } from "./image-to-data-url/meta";
+import { meta as imageWatermark } from "./image-watermark/meta";
+import { meta as memeGenerator } from "./meme-generator/meta";
+import { meta as bufferCalculator } from "./buffer-calculator/meta";
+import { meta as chemicalEquationBalancer } from "./chemical-equation-balancer/meta";
+import { meta as dilutionCalculator } from "./dilution-calculator/meta";
+import { meta as electronConfiguration } from "./electron-configuration/meta";
+import { meta as empiricalFormulaCalculator } from "./empirical-formula-calculator/meta";
+import { meta as halfLifeDecay } from "./half-life-decay/meta";
+import { meta as molaritySolutionPrep } from "./molarity-solution-prep/meta";
+import { meta as phPohCalculator } from "./ph-poh-calculator/meta";
+import { meta as stoichiometryCalculator } from "./stoichiometry-calculator/meta";
+import { meta as julianDateConverter } from "./julian-date-converter/meta";
+import { meta as magnitudeCalculator } from "./magnitude-calculator/meta";
 
 export const tools: ToolMeta[] = [
   airportCodeLookup,
@@ -412,6 +459,53 @@ export const tools: ToolMeta[] = [
   semverRangeTester,
   unifiedDiffPatchApplier,
   xpathCssSelectorTester,
+  hmacGenerator,
+  jwtGenerator,
+  passwordStrengthChecker,
+  selfSignedCertificateGenerator,
+  sshKeyGenerator,
+  textEncrypter,
+  archiveViewer,
+  logFileAnalyzer,
+  mp3TagEditor,
+  torrentFileInspector,
+  xlsxViewer,
+  antennaLengthCalculator,
+  coaxCableLoss,
+  dbmWattsVolts,
+  fresnelZone,
+  lcResonance,
+  pathLossLinkBudget,
+  vswrReturnLoss,
+  wavelengthFrequency,
+  tool555TimerCalculator,
+  capacitorCodeDecoder,
+  ledResistorCalculator,
+  pcbTraceWidth,
+  voltageDivider,
+  boxShadowGenerator,
+  clipPathGenerator,
+  cssGradientGenerator,
+  cssKeyframesBuilder,
+  cubicBezierEasingEditor,
+  fluidClampCalculator,
+  colorContrastChecker,
+  exifViewerAndStripper,
+  imageColorPaletteExtractor,
+  imageToDataUrl,
+  imageWatermark,
+  memeGenerator,
+  bufferCalculator,
+  chemicalEquationBalancer,
+  dilutionCalculator,
+  electronConfiguration,
+  empiricalFormulaCalculator,
+  halfLifeDecay,
+  molaritySolutionPrep,
+  phPohCalculator,
+  stoichiometryCalculator,
+  julianDateConverter,
+  magnitudeCalculator,
 ];
 
 /** Lazy loaders for tool logic, keyed by URL slug. */
@@ -642,6 +736,62 @@ export const loaders: Record<string, () => Promise<unknown>> = {
     import("./unified-diff-patch-applier/index").then((m) => m.default),
   "xpath-css-selector-tester": () =>
     import("./xpath-css-selector-tester/index").then((m) => m.default),
+  "hmac-generator": () => import("./hmac-generator/index").then((m) => m.default),
+  "jwt-generator": () => import("./jwt-generator/index").then((m) => m.default),
+  "password-strength-checker": () =>
+    import("./password-strength-checker/index").then((m) => m.default),
+  "self-signed-certificate-generator": () =>
+    import("./self-signed-certificate-generator/index").then((m) => m.default),
+  "ssh-key-generator": () => import("./ssh-key-generator/index").then((m) => m.default),
+  "text-encrypter": () => import("./text-encrypter/index").then((m) => m.default),
+  "archive-viewer": () => import("./archive-viewer/index").then((m) => m.default),
+  "log-file-analyzer": () => import("./log-file-analyzer/index").then((m) => m.default),
+  "mp3-tag-editor": () => import("./mp3-tag-editor/index").then((m) => m.default),
+  "torrent-file-inspector": () => import("./torrent-file-inspector/index").then((m) => m.default),
+  "xlsx-viewer": () => import("./xlsx-viewer/index").then((m) => m.default),
+  "antenna-length-calculator": () =>
+    import("./antenna-length-calculator/index").then((m) => m.default),
+  "coax-cable-loss": () => import("./coax-cable-loss/index").then((m) => m.default),
+  "dbm-watts-volts": () => import("./dbm-watts-volts/index").then((m) => m.default),
+  "fresnel-zone": () => import("./fresnel-zone/index").then((m) => m.default),
+  "lc-resonance": () => import("./lc-resonance/index").then((m) => m.default),
+  "path-loss-link-budget": () => import("./path-loss-link-budget/index").then((m) => m.default),
+  "vswr-return-loss": () => import("./vswr-return-loss/index").then((m) => m.default),
+  "wavelength-frequency": () => import("./wavelength-frequency/index").then((m) => m.default),
+  "555-timer-calculator": () => import("./555-timer-calculator/index").then((m) => m.default),
+  "capacitor-code-decoder": () => import("./capacitor-code-decoder/index").then((m) => m.default),
+  "led-resistor-calculator": () => import("./led-resistor-calculator/index").then((m) => m.default),
+  "pcb-trace-width": () => import("./pcb-trace-width/index").then((m) => m.default),
+  "voltage-divider": () => import("./voltage-divider/index").then((m) => m.default),
+  "box-shadow-generator": () => import("./box-shadow-generator/index").then((m) => m.default),
+  "clip-path-generator": () => import("./clip-path-generator/index").then((m) => m.default),
+  "css-gradient-generator": () => import("./css-gradient-generator/index").then((m) => m.default),
+  "css-keyframes-builder": () => import("./css-keyframes-builder/index").then((m) => m.default),
+  "cubic-bezier-easing-editor": () =>
+    import("./cubic-bezier-easing-editor/index").then((m) => m.default),
+  "fluid-clamp-calculator": () => import("./fluid-clamp-calculator/index").then((m) => m.default),
+  "color-contrast-checker": () => import("./color-contrast-checker/index").then((m) => m.default),
+  "exif-viewer-and-stripper": () =>
+    import("./exif-viewer-and-stripper/index").then((m) => m.default),
+  "image-color-palette-extractor": () =>
+    import("./image-color-palette-extractor/index").then((m) => m.default),
+  "image-to-data-url": () => import("./image-to-data-url/index").then((m) => m.default),
+  "image-watermark": () => import("./image-watermark/index").then((m) => m.default),
+  "meme-generator": () => import("./meme-generator/index").then((m) => m.default),
+  "buffer-calculator": () => import("./buffer-calculator/index").then((m) => m.default),
+  "chemical-equation-balancer": () =>
+    import("./chemical-equation-balancer/index").then((m) => m.default),
+  "dilution-calculator": () => import("./dilution-calculator/index").then((m) => m.default),
+  "electron-configuration": () => import("./electron-configuration/index").then((m) => m.default),
+  "empirical-formula-calculator": () =>
+    import("./empirical-formula-calculator/index").then((m) => m.default),
+  "half-life-decay": () => import("./half-life-decay/index").then((m) => m.default),
+  "molarity-solution-prep": () => import("./molarity-solution-prep/index").then((m) => m.default),
+  "ph-poh-calculator": () => import("./ph-poh-calculator/index").then((m) => m.default),
+  "stoichiometry-calculator": () =>
+    import("./stoichiometry-calculator/index").then((m) => m.default),
+  "julian-date-converter": () => import("./julian-date-converter/index").then((m) => m.default),
+  "magnitude-calculator": () => import("./magnitude-calculator/index").then((m) => m.default),
 };
 
 export function getTool(slug: string): ToolMeta | undefined {

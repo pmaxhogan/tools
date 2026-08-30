@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { OptionSpec } from "../tools/types";
-import { coerceOptValue, coerceOpts } from "./fragment";
+import {
+  coerceOptValue,
+  coerceOpts,
+  isSensitiveOption,
+  sensitiveOptionIds,
+  withoutSensitiveOpts,
+} from "./fragment";
 
 const numberSpec: OptionSpec = { kind: "number", id: "indent", label: "Indent", default: 2 };
 const sliderSpec: OptionSpec = {
@@ -13,6 +19,13 @@ const sliderSpec: OptionSpec = {
 };
 const booleanSpec: OptionSpec = { kind: "boolean", id: "header", label: "Header", default: true };
 const textSpec: OptionSpec = { kind: "text", id: "sort", label: "Sort by", default: "" };
+const secretSpec: OptionSpec = {
+  kind: "text",
+  id: "key",
+  label: "Key",
+  default: "",
+  sensitive: true,
+};
 const selectSpec: OptionSpec = {
   kind: "select",
   id: "mode",
@@ -64,5 +77,37 @@ describe("coerceOpts", () => {
 
   it("handles a tool with no options", () => {
     expect(coerceOpts(undefined, { indent: "4" })).toEqual({});
+  });
+});
+
+describe("sensitive options", () => {
+  it("marks only a text option that opted in", () => {
+    expect(isSensitiveOption(secretSpec)).toBe(true);
+    expect(isSensitiveOption(textSpec)).toBe(false);
+    expect(isSensitiveOption(selectSpec)).toBe(false);
+  });
+
+  it("collects the sensitive ids a tool declares", () => {
+    expect(sensitiveOptionIds([numberSpec, secretSpec, textSpec])).toEqual(new Set(["key"]));
+    expect(sensitiveOptionIds(undefined)).toEqual(new Set());
+  });
+
+  it("drops sensitive values from a bag and leaves the rest", () => {
+    expect(
+      withoutSensitiveOpts([secretSpec, textSpec, numberSpec], {
+        key: "hunter2",
+        sort: "name",
+        indent: "4",
+      }),
+    ).toEqual({ sort: "name", indent: "4" });
+  });
+
+  it("leaves a bag alone when nothing is sensitive", () => {
+    const raw = { sort: "name" };
+    expect(withoutSensitiveOpts([textSpec], raw)).toBe(raw);
+  });
+
+  it("still coerces a sensitive value, because an example may carry one", () => {
+    expect(coerceOpts([secretSpec], { key: "hunter2" })).toEqual({ key: "hunter2" });
   });
 });

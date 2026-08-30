@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Braces",
   matrixSlug: "json-tools",
   name: "JSON / JWT / Base64",
-  description: "Format, minify, decode tokens, and handle base64 and URL encoding.",
+  description:
+    "Format, minify and validate JSON, decode a JWT into its header and claims, and convert base64 or URL percent-encoding, all in one box.",
   category: "Data",
   keywords: [
     "json formatter",

@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "CalendarClock",
   matrixSlug: "cron",
   name: "Cron Parser",
-  description: "Build expressions, read them in English, preview the next ten runs.",
+  description:
+    "Read any cron expression in plain English, catch a mistake before it ships, and preview the next ten fire times in your scheduler's time zone.",
   category: "Time",
   keywords: [
     "cron",

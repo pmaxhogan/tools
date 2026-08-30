@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "KeyRound",
   matrixSlug: "password",
   name: "Password Generator",
-  description: "Random passwords and diceware passphrases with real entropy maths.",
+  description:
+    "Generate random passwords or EFF diceware passphrases in your browser, each one reported with its exact entropy in bits and a crack-time estimate.",
   category: "Crypto",
   keywords: [
     "password generator",

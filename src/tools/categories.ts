@@ -172,6 +172,27 @@ export const CATEGORIES: ToolCategory[] = [
       "Reference tools for physics and engineering, from the electromagnetic spectrum to unit-aware calculators.",
   },
   {
+    slug: "physics",
+    label: "Physics",
+    icon: "Orbit",
+    description:
+      "Visual physics: animated projectiles, ray diagrams, moving wave sources and orbits you can steer with real numbers.",
+  },
+  {
+    slug: "astronomy",
+    label: "Astronomy",
+    icon: "Moon",
+    description:
+      "Sky and orbit calculators: moon phases, planet positions and rise times, orbital transfers, Julian dates and magnitudes.",
+  },
+  {
+    slug: "weather-earth",
+    label: "Weather & Earth",
+    icon: "CloudSun",
+    description:
+      "Weather and earth science calculators: wind chill and heat index, dew point, pressure altitude, earthquake energy and tides.",
+  },
+  {
     slug: "chemistry",
     label: "Chemistry",
     icon: "TestTube",

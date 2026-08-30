@@ -31,7 +31,10 @@ export const meta: ToolMeta = {
   ],
   input: "text/plain",
   output: "application/json",
-  examples: [{ label: "Upcoming event date", input: "2026-12-25T18:00:00Z" }],
+  examples: [
+    { label: "Upcoming event date", input: "2026-12-25T18:00:00Z" },
+    { label: "Raw unix seconds", input: "1754521200" },
+  ],
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: 'Generates Discord\'s <t:UNIX:style> timestamp tags from a date or unix timestamp. Paste a time and get all seven display styles at once: short/long time, short/long date, short/long date-time, and relative ("in 2 hours"), each rendered in whatever timezone the reader viewing the message is in.',

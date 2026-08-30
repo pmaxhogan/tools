@@ -36,7 +36,7 @@ export const meta: ToolMeta = {
     "random number picker",
   ],
   input: "text/plain",
-  output: "text/plain",
+  output: "application/json",
   options: [
     {
       kind: "select",
@@ -89,6 +89,11 @@ export const meta: ToolMeta = {
       label: "Attack roll",
       input: "1d20+5",
       opts: { mode: "dice", count: "1", seed: "" },
+    },
+    {
+      label: "Split a standup into teams",
+      input: "Ada\nGrace\nAlan\nKatherine\nLinus\nBarbara\nDennis",
+      opts: { mode: "teams", count: "3", seed: "sprint-42" },
     },
   ],
   copy: {

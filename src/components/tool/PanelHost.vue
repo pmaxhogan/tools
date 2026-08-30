@@ -187,6 +187,20 @@ const panels: Record<string, Component> = {
   ),
   "regex-tester": defineAsyncComponent(() => import("./panels/RegexTesterPanel.vue")),
   "xpath-css-selector-tester": defineAsyncComponent(() => import("./panels/XPathTesterPanel.vue")),
+  "archive-viewer": defineAsyncComponent(() => import("./panels/ArchiveViewerPanel.vue")),
+  "mp3-tag-editor": defineAsyncComponent(() => import("./panels/Mp3TagEditorPanel.vue")),
+  "xlsx-viewer": defineAsyncComponent(() => import("./panels/XlsxViewerPanel.vue")),
+  "box-shadow-generator": defineAsyncComponent(() => import("./panels/BoxShadowPanel.vue")),
+  "clip-path-generator": defineAsyncComponent(() => import("./panels/ClipPathPanel.vue")),
+  "css-gradient-generator": defineAsyncComponent(() => import("./panels/GradientPanel.vue")),
+  "css-keyframes-builder": defineAsyncComponent(() => import("./panels/KeyframesPanel.vue")),
+  "cubic-bezier-easing-editor": defineAsyncComponent(() => import("./panels/BezierPanel.vue")),
+  "color-contrast-checker": defineAsyncComponent(() => import("./panels/ContrastPanel.vue")),
+  "exif-viewer-and-stripper": defineAsyncComponent(() => import("./panels/ExifViewerPanel.vue")),
+  "image-color-palette-extractor": defineAsyncComponent(() => import("./panels/PalettePanel.vue")),
+  "image-to-data-url": defineAsyncComponent(() => import("./panels/DataUrlPanel.vue")),
+  "image-watermark": defineAsyncComponent(() => import("./panels/WatermarkPanel.vue")),
+  "meme-generator": defineAsyncComponent(() => import("./panels/MemePanel.vue")),
 };
 
 const props = defineProps<{ meta: ToolMeta }>();

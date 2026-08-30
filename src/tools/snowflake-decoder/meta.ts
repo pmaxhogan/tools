@@ -64,6 +64,12 @@ export const meta: ToolMeta = {
       input: "175928847299117063",
       opts: { platform: "discord" },
     },
+    {
+      label: "Message link",
+      input:
+        "https://discord.com/channels/81384788765712384/381870129706958858/1234567890123456789",
+      opts: { platform: "discord" },
+    },
   ],
   http: { method: "GET", contentType: "application/json" },
   copy: {

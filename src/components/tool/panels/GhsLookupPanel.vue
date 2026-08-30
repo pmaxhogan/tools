@@ -361,6 +361,13 @@ onMounted(() => {
           <p v-else class="text-xs text-muted-foreground">
             Press Enter to add. Hover a code to read the UN wording.
           </p>
+          <p class="text-xs text-muted-foreground">
+            This page lists the compounds with a published classification. To find one by name,
+            synonym, CAS number, or formula,
+            <a href="/chemical-lookup" class="text-primary underline underline-offset-2">
+              search all 25,000 compounds </a
+            >.
+          </p>
         </div>
       </div>
     </section>

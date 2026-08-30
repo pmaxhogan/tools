@@ -33,7 +33,7 @@ early: it ships what finished and records the shortfall in the meta.
 | `chem-data.ts` | 1,652,015 bytes | CHEMICALS and CHEM_DATA_META |
 | `elements.ts` | 49,988 bytes | ELEMENTS, the 118 elements |
 | `ghs-statements.ts` | 17,983 bytes | H_STATEMENTS, P_STATEMENTS and PICTOGRAMS |
-| `chem-index.ts` | 8,572 bytes | types and helpers for the lazily fetched broad dataset, no bulk data |
+| `chem-index.ts` | 9,333 bytes | types and helpers for the lazily fetched broad dataset, no bulk data |
 
 ## The broad tier: public/data/chem/
 
@@ -61,7 +61,7 @@ const record: ChemRecord | undefined = chemRecordFrom(shard, row[0]);
 
 | File | Size | Gzipped | Contents |
 | ---- | ---- | ------- | -------- |
-| `public/data/chem/index.json` | 1,551,976 bytes | 631,135 bytes | one `[id, name, formula, cas, molarMass, flags]` row per compound |
+| `public/data/chem/index.json` | 2,486,283 bytes | 972,052 bytes | one `[id, name, formula, cas, molarMass, flags, syn?]` row per compound |
 | `public/data/chem/<0..127>.json` | 12,230,281 bytes total | 3,422,997 bytes total | full records, keyed by id, sharded by `id % 128` |
 
 - The index is enough to run a search box. Fetch one shard only once someone
@@ -70,6 +70,13 @@ const record: ChemRecord | undefined = chemRecordFrom(shard, row[0]);
   this build could not resolve to a CID keeps a synthetic id at or above
   900,000,000, which is well past PubChem's range, so the
   modulo sharding still works and no id ever collides with a real CID.
+- `syn`, the index's 7th column, is up to 4 alternative names per
+  compound (PubChem's title, a short IUPAC name, then the best of the compound's own
+  synonyms), present only when the row has one worth showing. It is what lets a query
+  like "table salt" or "sulfuric acid" reach a compound whose Wikipedia article title
+  reads differently, without a shard fetch. index.json carries its own tighter budget,
+  2.5 MB raw and 1.0 MB gzipped, separate from the whole tier's
+  budget above; this build shipped 2 per row, cut down from the full amount to fit.
 - `ghs.h` here is codes only. `H_STATEMENTS` in `ghs-statements.ts` has
   the canonical wording, and repeating it per compound cost more than the whole
   index does.

@@ -63,7 +63,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "Can I hash a file instead of text?",
-        a: "Not yet on this page: it currently hashes pasted or typed text. File hashing (via a drag-and-drop panel) is planned as a follow-up.",
+        a: "You can drop or pick a text file and it is read in as text, then hashed like anything else you paste. Binary files are not supported yet: they would be decoded as text first, which changes the bytes and so changes the digest. Checksums over raw binary files are a planned follow-up.",
       },
       {
         q: "Is MD5 or SHA-1 safe to use?",

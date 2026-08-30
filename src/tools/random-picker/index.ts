@@ -1,5 +1,12 @@
 import { ToolError, type ToolLogic } from "../types";
 
+/**
+ * Labeled rows, so the generic shell renders a KeyValueGrid and every value
+ * (a total, one team's roster, the heads/tails tally) gets its own copy button
+ * instead of being buried inside one pipe-separated line.
+ */
+export type RandomPickerResult = Record<string, string>;
+
 export interface RandomPickerOpts {
   /** 'dice' | 'coin' | 'pick' | 'teams' */
   mode: string;
@@ -78,7 +85,11 @@ function parseLines(input: string | undefined): string[] {
 function validateCount(count: number): number {
   const n = Math.floor(count);
   if (!Number.isFinite(n) || n < 1 || n > 100)
-    throw new ToolError("bad-count", "Count must be between 1 and 100.");
+    throw new ToolError(
+      "bad-count",
+      "Count must be between 1 and 100.",
+      "Set Count to a whole number in that range.",
+    );
   return n;
 }
 
@@ -143,11 +154,11 @@ export function rollDice(notation: DiceNotation, next: () => number): DiceResult
   return { rolls, modifier: notation.modifier, total };
 }
 
-function formatDiceResult({ rolls, modifier, total }: DiceResult): string {
-  const parts = [`Rolls: ${rolls.join(", ")}`];
-  if (modifier !== 0) parts.push(`Modifier: ${modifier > 0 ? "+" : ""}${modifier}`);
-  parts.push(`Total: ${total}`);
-  return parts.join(" | ");
+function formatDiceResult({ rolls, modifier, total }: DiceResult): RandomPickerResult {
+  const result: RandomPickerResult = { Rolls: rolls.join(", ") };
+  if (modifier !== 0) result.Modifier = `${modifier > 0 ? "+" : ""}${modifier}`;
+  result.Total = String(total);
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -158,11 +169,14 @@ function flipCoins(count: number, next: () => number): string[] {
   return Array.from({ length: count }, () => (next() < 0.5 ? "Heads" : "Tails"));
 }
 
-function formatCoinResult(flips: string[]): string {
-  if (flips.length === 1) return flips[0]!;
+function formatCoinResult(flips: string[]): RandomPickerResult {
+  if (flips.length === 1) return { Result: flips[0]! };
   const heads = flips.filter((f) => f === "Heads").length;
-  const tails = flips.length - heads;
-  return `Flips: ${flips.join(", ")} | Heads: ${heads}, Tails: ${tails}`;
+  return {
+    Flips: flips.join(", "),
+    Heads: String(heads),
+    Tails: String(flips.length - heads),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -171,7 +185,11 @@ function formatCoinResult(flips: string[]): string {
 
 export function pickItems(items: string[], count: number, next: () => number): string[] {
   if (items.length === 0)
-    throw new ToolError("empty-input", "Enter at least one item, one per line, to pick from.");
+    throw new ToolError(
+      "empty-input",
+      "Enter at least one item, one per line, to pick from.",
+      "Paste your list into the input with each item on its own line.",
+    );
   if (count > items.length)
     throw new ToolError(
       "not-enough-items",
@@ -190,6 +208,7 @@ export function splitTeams(names: string[], teamCount: number, next: () => numbe
     throw new ToolError(
       "empty-input",
       "Enter at least one name, one per line, to split into teams.",
+      "Paste the names into the input with each one on its own line.",
     );
   if (teamCount > names.length)
     throw new ToolError(
@@ -208,7 +227,7 @@ export function splitTeams(names: string[], teamCount: number, next: () => numbe
 // run
 // ---------------------------------------------------------------------------
 
-export function run(input: string, opts: RandomPickerOpts): string {
+export function run(input: string, opts: RandomPickerOpts): RandomPickerResult {
   const next = getRng(opts.seed ?? "");
 
   switch (opts.mode) {
@@ -223,12 +242,12 @@ export function run(input: string, opts: RandomPickerOpts): string {
     case "pick": {
       const count = validateCount(opts.count);
       const picked = pickItems(parseLines(input), count, next);
-      return `Picked: ${picked.join(", ")}`;
+      return { Picked: picked.join(", ") };
     }
     case "teams": {
       const count = validateCount(opts.count);
       const teams = splitTeams(parseLines(input), count, next);
-      return teams.map((t, i) => `Team ${i + 1}: ${t.join(", ")}`).join("\n");
+      return Object.fromEntries(teams.map((t, i) => [`Team ${i + 1}`, t.join(", ")]));
     }
     default:
       throw new ToolError(
@@ -239,4 +258,4 @@ export function run(input: string, opts: RandomPickerOpts): string {
   }
 }
 
-export default { run } satisfies ToolLogic<string, string, RandomPickerOpts>;
+export default { run } satisfies ToolLogic<string, RandomPickerResult, RandomPickerOpts>;

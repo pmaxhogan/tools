@@ -96,10 +96,37 @@ export interface SelectOptionSpec {
   ui?: "segmented" | "select";
 }
 
+/**
+ * A free text option.
+ *
+ * `sensitive` marks the value a secret (a password, a signing key, a shared
+ * secret). The generic panel then renders it masked with a show and hide
+ * toggle, never writes it to the URL fragment, and never pre-fills it from
+ * one, so a secret cannot land in browser history or in a link someone pastes
+ * into chat. A worked example may still carry one, and it is applied to the
+ * control; it is simply not written back out.
+ *
+ * `multiline` renders the control as a textarea rather than a one line input,
+ * for values that genuinely wrap (a PEM block). A textarea cannot be masked
+ * the way a password input can, so a sensitive multiline option collapses to a
+ * one line summary with a Reveal button once it holds a value.
+ */
+export interface TextOptionSpec {
+  kind: "text";
+  id: string;
+  label: string;
+  default: string;
+  placeholder?: string;
+  /** The value is a secret: masked in the UI and never written to the URL. */
+  sensitive?: boolean;
+  /** Render a textarea instead of a single line input. */
+  multiline?: boolean;
+}
+
 /** Schema-driven options — the generic tool panel renders these controls. */
 export type OptionSpec =
   | SelectOptionSpec
-  | { kind: "text"; id: string; label: string; default: string; placeholder?: string }
+  | TextOptionSpec
   | {
       kind: "number";
       id: string;

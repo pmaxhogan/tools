@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   matrixSlug: "escape",
   name: "Escape / Unescape",
   description:
-    "Escape or unescape text in over thirty formats: JSON, HTML, XML, URL, C, Python, Java, shell, SQL, base64, base32, base58, ascii85, uuencode, quoted-printable, ROT13/47, Morse, NATO phonetic, punycode, and more.",
+    "Escape or unescape text in over thirty formats, from JSON, HTML, XML and URL to C, Python, shell, SQL, base64, ROT13, Morse and punycode.",
   category: "Text",
   keywords: [
     "escape string",

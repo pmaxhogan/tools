@@ -123,6 +123,9 @@ export const meta: ToolMeta = {
       id: "ecc",
       label: "Error correction",
       default: "M",
+      // Four options, but each label carries a percentage: too long for a row
+      // of segments in the half-width column the panel puts this control in.
+      ui: "select",
       options: [
         {
           value: "L",
