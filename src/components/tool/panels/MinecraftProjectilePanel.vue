@@ -47,6 +47,7 @@ import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Segmented } from "@/components/ui/segmented";
 import type { SegmentedOption } from "@/components/ui/segmented";
+import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
 
 defineProps<{ meta: ToolMeta }>();
@@ -926,14 +927,7 @@ const enchantNotes = computed(() =>
     </div>
 
     <!-- error -->
-    <div
-      v-if="calc.error"
-      class="rounded-[14px] border border-destructive/40 bg-destructive/5 p-4 text-sm"
-      role="alert"
-    >
-      <p class="font-medium text-destructive">{{ calc.error.message }}</p>
-      <p v-if="calc.error.fix" class="text-muted-foreground">{{ calc.error.fix }}</p>
-    </div>
+    <ErrorBanner v-if="calc.error" :message="calc.error.message" :hint="calc.error.fix" />
 
     <!-- trajectory plot -->
     <div v-if="!calc.error" class="flex flex-col gap-2">

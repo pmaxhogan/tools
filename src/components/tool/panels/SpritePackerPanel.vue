@@ -14,7 +14,7 @@
  * runs, so the component renders inert on the server.
  */
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Download, FileArchive, TriangleAlert, X } from "lucide-vue-next";
+import { Download, FileArchive, X } from "lucide-vue-next";
 import { zipSync, type Zippable } from "fflate";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {
@@ -42,6 +42,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import OptionControl from "../OptionControl.vue";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 const props = defineProps<{ meta: ToolMeta }>();
 
@@ -109,10 +111,10 @@ interface Sprite {
 }
 
 const sprites = shallowRef<Sprite[]>([]);
-const dragging = ref(false);
 const loading = ref(false);
 const notice = ref<string | null>(null);
-const fileInput = ref<HTMLInputElement>();
+/* FileDrop owns the file picker. The folder button keeps its own input because
+   one FileDrop offers either a file picker or a folder picker, not both. */
 const folderInput = ref<HTMLInputElement>();
 
 const pack = shallowRef<PackResult | null>(null);
@@ -332,9 +334,8 @@ async function addFiles(incoming: File[]): Promise<void> {
   schedulePack();
 }
 
-function onDrop(e: DragEvent): void {
-  dragging.value = false;
-  void addFiles(Array.from(e.dataTransfer?.files ?? []));
+function onFiles(files: File[]): void {
+  void addFiles(files);
 }
 
 function onPickFiles(e: Event): void {
@@ -697,95 +698,90 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-5 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      bare
+      multiple
+      accept="image/*"
+      label="Sprites"
+      hint="Drop every sprite here at once, or click to choose the files"
+      @files="onFiles"
     >
-      <div class="flex flex-wrap items-center justify-between gap-2 px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Sprites
-        </span>
-        <div class="flex items-center gap-1">
-          <Button
-            v-if="sprites.length > 0"
-            variant="ghost"
-            size="sm"
-            :disabled="loading"
-            @click="clearAll"
-          >
-            Clear
-          </Button>
-          <Button variant="ghost" size="sm" :disabled="loading" @click="folderInput?.click()">
-            Choose folder…
-          </Button>
-          <Button variant="ghost" size="sm" :disabled="loading" @click="fileInput?.click()">
-            Choose files…
-          </Button>
+      <template #default="{ open }">
+        <div class="flex flex-wrap items-center justify-between gap-2 px-3 pt-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Sprites
+          </span>
+          <div class="flex items-center gap-1">
+            <Button
+              v-if="sprites.length > 0"
+              variant="ghost"
+              size="sm"
+              :disabled="loading"
+              @click="clearAll"
+            >
+              Clear
+            </Button>
+            <Button variant="ghost" size="sm" :disabled="loading" @click="folderInput?.click()">
+              Choose folder…
+            </Button>
+            <Button variant="ghost" size="sm" :disabled="loading" @click="open">
+              Choose files…
+            </Button>
+          </div>
+          <input ref="folderInput" type="file" class="hidden" multiple @change="onPickFiles" />
         </div>
-        <input
-          ref="fileInput"
-          type="file"
-          class="hidden"
-          multiple
-          accept="image/*"
-          @change="onPickFiles"
-        />
-        <input ref="folderInput" type="file" class="hidden" multiple @change="onPickFiles" />
-      </div>
 
-      <div class="px-3 pt-1 pb-4">
-        <p v-if="sprites.length === 0" class="text-sm text-muted-foreground">
-          Drop every sprite here at once, or pick the files, or point the folder button at a sprite
-          directory. PNG, JPEG, GIF, and WebP all work, and transparency is kept.
-        </p>
-        <template v-else>
-          <p class="text-sm text-muted-foreground" aria-live="polite">
-            {{ sprites.length === 1 ? "1 image" : `${sprites.length} images` }},
-            {{ formatBytes(totalBytes) }} in total.
-            <span v-if="loading">Decoding…</span>
+        <div class="px-3 pt-1 pb-4">
+          <p v-if="sprites.length === 0" class="text-sm text-muted-foreground">
+            Drop every sprite here at once, click to choose the files, or point the folder button at
+            a sprite directory. PNG, JPEG, GIF, and WebP all work, and transparency is kept.
           </p>
-          <ul class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            <li v-for="sprite in sprites" :key="sprite.key" class="min-w-0">
-              <div
-                class="flex items-center gap-2 rounded-[10px] border bg-card py-1.5 pr-1 pl-1.5 shadow-[var(--sh-sm)]"
-                @mouseenter="hoverId = sprite.id"
-                @mouseleave="hoverId = null"
-              >
-                <span
-                  class="checker grid size-10 shrink-0 place-items-center overflow-hidden rounded-[6px]"
+          <template v-else>
+            <p class="text-sm text-muted-foreground" aria-live="polite">
+              {{ sprites.length === 1 ? "1 image" : `${sprites.length} images` }},
+              {{ formatBytes(totalBytes) }} in total.
+              <span v-if="loading">Decoding…</span>
+            </p>
+            <ul class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <li v-for="sprite in sprites" :key="sprite.key" class="min-w-0">
+                <div
+                  class="flex items-center gap-2 rounded-[10px] border bg-card py-1.5 pr-1 pl-1.5 shadow-[var(--sh-sm)]"
+                  @mouseenter="hoverId = sprite.id"
+                  @mouseleave="hoverId = null"
                 >
-                  <img :src="sprite.url" :alt="sprite.name" class="max-h-10 max-w-10" />
-                </span>
-                <span class="flex min-w-0 flex-1 flex-col">
-                  <span class="truncate text-xs font-medium" :title="sprite.id">
-                    {{ sprite.id }}
+                  <span
+                    class="checker grid size-10 shrink-0 place-items-center overflow-hidden rounded-[6px]"
+                  >
+                    <img :src="sprite.url" :alt="sprite.name" class="max-h-10 max-w-10" />
                   </span>
-                  <span class="truncate text-xs text-muted-foreground tabular-nums">
-                    {{ dimsLabel(sprite) }}, {{ formatBytes(sprite.bytes) }}
+                  <span class="flex min-w-0 flex-1 flex-col">
+                    <span class="truncate text-xs font-medium" :title="sprite.id">
+                      {{ sprite.id }}
+                    </span>
+                    <span class="truncate text-xs text-muted-foreground tabular-nums">
+                      {{ dimsLabel(sprite) }}, {{ formatBytes(sprite.bytes) }}
+                    </span>
                   </span>
-                </span>
-                <button
-                  type="button"
-                  class="grid size-6 shrink-0 place-items-center rounded-full text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-                  :aria-label="`Remove ${sprite.id}`"
-                  :disabled="loading"
-                  @click="removeSprite(sprite.key)"
-                >
-                  <X class="size-3" aria-hidden="true" />
-                </button>
-              </div>
-            </li>
-          </ul>
-        </template>
+                  <button
+                    type="button"
+                    class="grid size-6 shrink-0 place-items-center rounded-full text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                    :aria-label="`Remove ${sprite.id}`"
+                    :disabled="loading"
+                    @click="removeSprite(sprite.key)"
+                  >
+                    <X class="size-3" aria-hidden="true" />
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </template>
 
-        <p v-if="notice" class="mt-2 text-xs text-muted-foreground" role="status">
-          {{ notice }}
-        </p>
-      </div>
-    </div>
+          <p v-if="notice" class="mt-2 text-xs text-muted-foreground" role="status">
+            {{ notice }}
+          </p>
+        </div>
+      </template>
+    </FileDrop>
 
     <!-- options -->
     <div v-if="gridOptions.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -798,17 +794,7 @@ onUnmounted(() => {
     </div>
 
     <!-- a pack that could not be solved -->
-    <div
-      v-if="error"
-      role="alert"
-      class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-    >
-      <span class="flex items-center gap-2 font-semibold text-destructive">
-        <TriangleAlert class="size-3.5 shrink-0" aria-hidden="true" />
-        {{ error.message }}
-      </span>
-      <span v-if="error.fix" class="text-muted-foreground">{{ error.fix }}</span>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <!-- atlas -->
     <template v-if="pack">
@@ -846,23 +832,16 @@ onUnmounted(() => {
           <template v-else>Point at a frame to read its rectangle.</template>
         </p>
 
-        <div
+        <ErrorBanner
           v-if="pack.unplaced.length > 0"
-          role="status"
-          class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
+          variant="warning"
+          :message="`${pack.unplaced.length} ${pack.unplaced.length === 1 ? 'sprite did not fit' : 'sprites did not fit'}`"
         >
-          <span class="flex items-center gap-2 font-semibold text-destructive">
-            <TriangleAlert class="size-3.5 shrink-0" aria-hidden="true" />
-            {{ pack.unplaced.length }}
-            {{ pack.unplaced.length === 1 ? "sprite did not fit" : "sprites did not fit" }}
-          </span>
-          <span class="font-mono break-words text-muted-foreground">
-            {{ pack.unplaced.join(", ") }}
-          </span>
-          <span class="text-muted-foreground">
+          <p class="font-mono break-words text-muted-foreground">{{ pack.unplaced.join(", ") }}</p>
+          <p class="mt-1 text-muted-foreground">
             Raise the maximum atlas side, turn on trimming, or allow 90 degree rotation.
-          </span>
-        </div>
+          </p>
+        </ErrorBanner>
       </div>
 
       <!-- export -->

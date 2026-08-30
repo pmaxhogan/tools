@@ -11,6 +11,9 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import CopyButton from "../CopyButton.vue";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 /**
  * Bespoke panel for the image toolbox. The generic ToolShell can render the
@@ -59,8 +62,6 @@ const edited = ref(false);
 
 const analysis = ref<Record<string, string> | null>(null);
 const error = ref<{ message: string; fix?: string } | null>(null);
-const dragging = ref(false);
-const fileInput = ref<HTMLInputElement>();
 const busy = ref(false);
 
 const targetWidth = ref(0);
@@ -230,20 +231,9 @@ async function readFile(file: File) {
   }
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
-  if (file) readFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+function onFiles(files: File[]) {
+  const file = files[0];
+  if (file) void readFile(file);
 }
 
 function clearFile() {
@@ -266,7 +256,6 @@ function clearFile() {
   exportedSize.value = null;
   exportedName.value = "";
   edited.value = false;
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -508,57 +497,48 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      bare
+      accept="image/*"
+      label="Image"
+      hint="Drop an image here or click to choose one"
+      @files="onFiles"
     >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Image
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-        <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
-      </div>
+      <template #default="{ open }">
+        <div class="flex items-center justify-between px-3 pt-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Image
+          </span>
+          <Button variant="ghost" size="sm" @click="open"> Open file… </Button>
+        </div>
 
-      <div v-if="hasFile" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ formatBytes(originalSize) }}</span>
-          <button
-            type="button"
-            aria-label="Remove image"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearFile"
+        <div class="px-3 pt-2 pb-3">
+          <span
+            v-if="hasFile"
+            class="inline-flex max-w-full items-center gap-2 self-start rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
-            <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
+            <span class="truncate font-medium">{{ fileName }}</span>
+            <span class="shrink-0 text-muted-foreground">{{ formatBytes(originalSize) }}</span>
+            <button
+              type="button"
+              aria-label="Remove image"
+              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+              @click="clearFile"
+            >
+              <X class="size-3.5" />
+            </button>
+          </span>
 
-      <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-        Drop an image here to read what is inside it, then resize, crop, convert, or remove its
-        metadata. Everything runs in this tab: your files and inputs never leave your device.
-      </p>
-    </div>
+          <p v-else class="text-sm text-muted-foreground">
+            Drop an image here to read what is inside it, then resize, crop, convert, or remove its
+            metadata. Everything runs in this tab: your files and inputs never leave your device.
+          </p>
+        </div>
+      </template>
+    </FileDrop>
 
     <!-- Errors from the logic layer -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <!-- Analysis -->
     <div v-if="analysisRows.length" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
@@ -596,13 +576,11 @@ onUnmounted(() => {
         <Button v-if="edited" variant="ghost" size="sm" @click="resetEdits"> Reset edits </Button>
       </div>
 
-      <p
+      <EmptyState
         v-if="decodeFailed"
-        class="rounded-[10px] bg-secondary px-3 py-6 text-center text-sm text-muted-foreground shadow-[var(--sh-inset)]"
-      >
-        This browser cannot decode this file as an image, so the editor is unavailable. The analysis
-        above still reads the file header directly.
-      </p>
+        title="This browser cannot decode this file as an image, so the editor is unavailable."
+        hint="The analysis above still reads the file header directly."
+      />
 
       <template v-else-if="canEdit">
         <div class="flex flex-col items-center gap-2">

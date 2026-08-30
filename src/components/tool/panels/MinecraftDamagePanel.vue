@@ -50,6 +50,7 @@ import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Segmented } from "@/components/ui/segmented";
 import type { SegmentedOption } from "@/components/ui/segmented";
+import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
 
 const props = defineProps<{ meta: ToolMeta }>();
@@ -1032,14 +1033,7 @@ watch(weapon, enforceEnchantGates);
     </div>
 
     <!-- error -->
-    <div
-      v-if="result.error"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      role="alert"
-    >
-      <p class="font-medium text-destructive">{{ result.error.message }}</p>
-      <p v-if="result.error.fix" class="text-muted-foreground">{{ result.error.fix }}</p>
-    </div>
+    <ErrorBanner v-if="result.error" :message="result.error.message" :hint="result.error.fix" />
 
     <!-- readout -->
     <div v-if="result.r" class="flex flex-col gap-3" aria-live="polite">

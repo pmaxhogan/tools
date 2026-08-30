@@ -169,15 +169,22 @@ the cross tool carry chip.
 | `paste`     | `boolean` | `true`                                  | listens for document paste events carrying files         |
 | `compact`   | `boolean` | `false`                                 | single line variant for a "replace this file" affordance |
 | `directory` | `boolean` | `false`                                 | webkitdirectory; implies `multiple`                      |
+| `bare`      | `boolean` | `false`                                 | drops the zone's own padding for a custom body           |
 
 - Emits: `files` with a `File[]`, from drop, picker, paste, and the carry chip.
 - Slots: default (replaces the whole inner body), `actions` (extra buttons such
-  as "Load sample" or "Use camera", rendered inside the zone). Providing the
-  default slot replaces the built in body including the `actions` outlet, so a
-  custom body brings its own buttons.
+  as "Load sample" or "Use camera"). The `actions` outlet renders in both cases:
+  inside the built in body, or below a custom one.
+- Opening the picker from your own button: the default slot receives `open`
+  (`<template #default="{ open }">`), and a button outside the zone reaches it
+  through a template ref (`dropRef.value?.open()`). Both are needed because a
+  click that starts on a button never reaches the zone's own handler.
 - The zone is a focusable `role="button"` with Enter and Space activation and
   the standard focus ring. Clicks that start on a slotted button belong to that
   button, so `actions` content works normally.
+- Paste is one document listener for the whole page, however many zones are
+  mounted: a Ctrl+V goes to the zone focus is inside, and otherwise to the
+  first one mounted. Never add your own document paste listener beside it.
 - Carry: on every emission it stores the first file in `src/lib/carry-input.ts`
   under the `toolSlug` and `toolName` that PanelHost provides, and it offers a
   matching file from another tool as a "Use <name> from <tool>" chip with a
@@ -185,16 +192,20 @@ the cross tool carry chip.
 
 ### ErrorBanner.vue
 
-| Prop          | Type                             | Default   | Notes                         |
-| ------------- | -------------------------------- | --------- | ----------------------------- |
-| `message`     | `string` (required)              |           | what went wrong, one sentence |
-| `title`       | `string`                         | none      | headline above the message    |
-| `hint`        | `string`                         | none      | how to fix it                 |
-| `variant`     | `"error" \| "warning" \| "info"` | `"error"` | tone                          |
-| `dismissible` | `boolean`                        | `false`   | renders the dismiss x         |
+| Prop          | Type                             | Default   | Notes                           |
+| ------------- | -------------------------------- | --------- | ------------------------------- |
+| `message`     | `string` (required)              |           | what went wrong, one sentence   |
+| `title`       | `string`                         | none      | headline above the message      |
+| `hint`        | `string`                         | none      | how to fix it                   |
+| `variant`     | `"error" \| "warning" \| "info"` | `"error"` | tone                            |
+| `dismissible` | `boolean`                        | `false`   | renders the dismiss x           |
+| `mono`        | `boolean`                        | `false`   | mono face for an engine message |
 
 - Emits: `dismiss`.
 - Slot: default, appended below the message (a retry button, a details block).
+  The wrapper only renders when the slot actually draws something, so a retry
+  button behind a `v-if` leaves no empty gap under the message while it is
+  hidden. Pass the `v-if` normally; do not guard the slot from the outside.
 - `role="alert"` for error, `role="status"` for warning and info, `aria-live`
   polite throughout.
 - A `ToolError` maps straight onto it: `:message="error.message"`
@@ -202,16 +213,20 @@ the cross tool carry chip.
 
 ### ProgressBar.vue
 
-| Prop     | Type           | Default | Notes                                     |
-| -------- | -------------- | ------- | ----------------------------------------- |
-| `value`  | `number`       | none    | 0 to 100, clamped; omit for indeterminate |
-| `label`  | `string`       | none    | caption on the left, also the aria-label  |
-| `detail` | `string`       | none    | caption on the right, e.g. "3 of 12"      |
-| `size`   | `"sm" \| "md"` | `"md"`  | 6px or 8px track                          |
+| Prop        | Type                                                 | Default       | Notes                                                      |
+| ----------- | ---------------------------------------------------- | ------------- | ---------------------------------------------------------- |
+| `value`     | `number`                                             | none          | 0 to 100, clamped; omit for indeterminate                  |
+| `label`     | `string`                                             | none          | caption on the left, also the aria-label                   |
+| `detail`    | `string`                                             | none          | caption on the right, e.g. "3 of 12"                       |
+| `size`      | `"sm" \| "md"`                                       | `"md"`        | 6px or 8px track                                           |
+| `track`     | `"secondary" \| "card"`                              | `"secondary"` | use `card` inside a `bg-secondary` inset well              |
+| `tone`      | `"brand" \| "success" \| "warning" \| "destructive"` | `"brand"`     | fill color; brand gradient unless it reports an outcome    |
+| `ariaLabel` | `string`                                             | none          | accessible name with no visible caption; wins over `label` |
 
 - No emits, no slots.
 - `role="progressbar"` with `aria-valuemin`, `aria-valuemax`, and
-  `aria-valuenow` (omitted while indeterminate). Brand gradient fill.
+  `aria-valuenow` (omitted while indeterminate). Brand gradient fill unless
+  `tone` says otherwise.
 - The indeterminate stripe is authored to look deliberate when frozen, because
   global.css disables every animation under `prefers-reduced-motion`.
 
@@ -266,6 +281,29 @@ restyling it. Those call the shared helper directly:
 It never throws, returns `true` when the write landed (so the panel can still
 run its own inline "Copied" flourish), and raises the same toasts CopyButton
 does. Like `download.ts` it touches the DOM, so only components may import it.
+
+### `readText()` for a Paste button
+
+The mirror of `copyText`, from the same module, for a control that fills the
+input from the clipboard without the visitor focusing the box first:
+
+    import { readText } from "@/lib/clipboard";
+
+    const pasted = await readText();
+    if (pasted !== null) input.value = pasted;
+
+It returns the clipboard text, or `null` when the browser blocked or does not
+support reading, and it never throws. On `null` it has already raised the error
+toast, which tells the visitor to press Ctrl+V instead, so the panel just keeps
+whatever input it had: never toast on top of it, and never treat `null` as an
+empty clipboard.
+
+Reading is far more restricted than writing, so `null` is an ordinary outcome
+rather than a bug. Firefox exposes no `readText` to page scripts at all, Safari
+gates it behind its own paste confirmation, and every browser refuses when the
+permission is denied or the document is not focused. A Paste button is
+therefore always an extra convenience beside the textarea, never the only way
+to get data into a tool.
 
 ### Toasts
 

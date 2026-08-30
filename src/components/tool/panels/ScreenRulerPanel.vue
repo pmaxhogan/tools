@@ -29,6 +29,8 @@ import {
 } from "@/tools/screen-ruler/index";
 import { formatBytes } from "@/lib/format";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 /**
  * Bespoke panel for Screen Ruler.
@@ -364,11 +366,9 @@ function onOverlayCancel(e: PointerEvent) {
  * ------------------------------------------------------------------ */
 
 const canvas = ref<HTMLCanvasElement>();
-const fileInput = ref<HTMLInputElement>();
 const fileName = ref("");
 const fileSize = ref(0);
 const decodeFailed = ref(false);
-const dropping = ref(false);
 const imgWidth = ref(0);
 const imgHeight = ref(0);
 const zoom = ref<"fit" | "50" | "100" | "200" | "400">("fit");
@@ -479,35 +479,10 @@ async function readFile(file: File) {
   paintCanvas();
 }
 
-function onDrop(e: DragEvent) {
-  dropping.value = false;
-  const file = e.dataTransfer?.files?.[0];
+/** Drop, picker, keyboard, clipboard paste, and the carry chip all land here. */
+function onFiles(files: File[]) {
+  const file = files[0];
   if (file) void readFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  void readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
-}
-
-function onPaste(e: ClipboardEvent) {
-  if (tab.value !== "screenshot") return;
-  const items = e.clipboardData?.items;
-  if (!items) return;
-  for (const item of Array.from(items)) {
-    if (item.kind !== "file") continue;
-    const file = item.getAsFile();
-    if (file && file.type.startsWith("image/")) {
-      e.preventDefault();
-      void readFile(file);
-      return;
-    }
-  }
 }
 
 function clearImage() {
@@ -521,7 +496,6 @@ function clearImage() {
   imageDragB.value = null;
   sample.value = null;
   clearSpace("image");
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /**
@@ -866,12 +840,10 @@ onMounted(() => {
     storageBlocked.value = true;
   }
   window.addEventListener("resize", onResize);
-  window.addEventListener("paste", onPaste);
 });
 
 onUnmounted(() => {
   window.removeEventListener("resize", onResize);
-  window.removeEventListener("paste", onPaste);
   window.removeEventListener("keydown", onOverlayKey);
   pixels.value = null;
 });
@@ -1013,66 +985,41 @@ onUnmounted(() => {
 
       <!-- --------------------------------------------- screenshot ---- -->
       <TabsContent value="screenshot" class="flex flex-col gap-4 pt-4">
-        <div
-          class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-          :class="dropping ? 'ring-2 ring-ring' : ''"
-          @dragover.prevent="dropping = true"
-          @dragleave="dropping = false"
-          @drop.prevent="onDrop"
+        <FileDrop
+          accept="image/*"
+          :paste="tab === 'screenshot'"
+          label="Drop a screenshot here or click to choose"
+          hint="You can also paste one with Ctrl or Cmd and V. Measurements and colors are read in image pixels. Everything runs in this tab: your files and inputs never leave your device."
+          @files="onFiles"
         >
-          <div class="flex items-center justify-between px-3 pt-2">
-            <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-              Screenshot
-            </span>
-            <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-            <input
-              ref="fileInput"
-              type="file"
-              class="hidden"
-              accept="image/*"
-              @change="onPickFile"
-            />
-          </div>
-
-          <div v-if="hasImage || decodeFailed" class="px-3 pt-2 pb-3">
-            <span
-              class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-            >
-              <span class="truncate font-medium">{{ fileName }}</span>
-              <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
-              <span v-if="hasImage" class="shrink-0 font-mono text-muted-foreground tabular-nums">
-                {{ imgWidth }} x {{ imgHeight }} px
-              </span>
-              <button
-                type="button"
-                aria-label="Remove image"
-                class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-                @click="clearImage"
+          <template v-if="hasImage || decodeFailed" #default>
+            <div class="flex justify-center">
+              <span
+                class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
               >
-                <X class="size-3.5" />
-              </button>
-            </span>
-          </div>
+                <span class="truncate font-medium">{{ fileName }}</span>
+                <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
+                <span v-if="hasImage" class="shrink-0 font-mono text-muted-foreground tabular-nums">
+                  {{ imgWidth }} x {{ imgHeight }} px
+                </span>
+                <button
+                  type="button"
+                  aria-label="Remove image"
+                  class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                  @click="clearImage"
+                >
+                  <X class="size-3.5" />
+                </button>
+              </span>
+            </div>
+          </template>
+        </FileDrop>
 
-          <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-            Drop a screenshot here, paste one with Ctrl or Cmd and V, or open a file. Measurements
-            and colors are read in image pixels. Everything runs in this tab: your files and inputs
-            never leave your device.
-          </p>
-        </div>
-
-        <p
+        <ErrorBanner
           v-if="decodeFailed"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <span class="font-medium text-destructive"
-            >This browser could not decode that file as an image.</span
-          >
-          <span class="mt-1 block text-muted-foreground">
-            Try a PNG, JPEG, WebP, GIF, or BMP screenshot.
-          </span>
-        </p>
+          message="This browser could not decode that file as an image."
+          hint="Try a PNG, JPEG, WebP, GIF, or BMP screenshot."
+        />
 
         <template v-if="hasImage">
           <div class="flex flex-wrap items-end gap-3">

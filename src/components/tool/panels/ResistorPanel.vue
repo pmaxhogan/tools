@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import ErrorBanner from "../ErrorBanner.vue";
 import KeyValueGrid from "../KeyValueGrid.vue";
 import OptionControl from "../OptionControl.vue";
 
@@ -781,14 +782,7 @@ onUnmounted(() => {
     </div>
 
     <!-- what the bands are worth -->
-    <div
-      v-if="outcome.error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">{{ outcome.error.message }}</p>
-      <p v-if="outcome.error.fix" class="mt-1 text-muted-foreground">{{ outcome.error.fix }}</p>
-    </div>
+    <ErrorBanner v-if="outcome.error" :message="outcome.error.message" :hint="outcome.error.fix" />
     <KeyValueGrid v-else-if="outcome.result" :record="outcome.result" />
 
     <!-- the typed path, secondary to the drawing -->

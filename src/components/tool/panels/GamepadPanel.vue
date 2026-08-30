@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
-import { Download, Gamepad2, Play, RotateCcw, Square, Trash2, Vibrate } from "lucide-vue-next";
+import { Download, Play, RotateCcw, Square, Trash2, Vibrate } from "lucide-vue-next";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import {
   analyzeDrift,
@@ -17,6 +17,8 @@ import {
 import { downloadText } from "@/lib/download";
 import OutputView from "../OutputView.vue";
 import CopyButton from "../CopyButton.vue";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -885,23 +887,19 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <p
+      <ErrorBanner
         v-if="checked && !supported"
-        role="alert"
-        class="rounded-[10px] bg-secondary p-3 text-xs text-muted-foreground shadow-[var(--sh-inset)]"
-      >
-        This browser does not expose the Gamepad API, so no controller can be read here. Chrome,
-        Edge, Firefox, and Safari all support it in recent versions; a page served over plain HTTP
-        or inside a restricted iframe may not get it.
-      </p>
+        variant="info"
+        message="This browser does not expose the Gamepad API, so no controller can be read here."
+        hint="Chrome, Edge, Firefox, and Safari all support it in recent versions; a page served over plain HTTP or inside a restricted iframe may not get it."
+      />
 
-      <div v-else-if="pads.length === 0" class="flex items-start gap-3 text-sm">
-        <Gamepad2 class="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-        <p class="text-muted-foreground">
-          No controller detected yet. Connect one, then press any button on it: browsers hide
-          connected gamepads from a page until you interact with one.
-        </p>
-      </div>
+      <EmptyState
+        v-else-if="pads.length === 0"
+        icon="Gamepad2"
+        title="No controller detected yet"
+        hint="Connect one, then press any button on it: browsers hide connected gamepads from a page until you interact with one."
+      />
 
       <div v-else class="flex flex-col gap-2">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"

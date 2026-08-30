@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Camera, CircleAlert, ImageUp, Lock, LockOpen, RotateCcw } from "lucide-vue-next";
+import { Camera, Lock, LockOpen, RotateCcw } from "lucide-vue-next";
 import { ToolError, type SelectOption, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   describeLux,
@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import CopyButton from "../CopyButton.vue";
 import OutputView from "../OutputView.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 /**
  * Bespoke panel for the Light Meter.
@@ -185,12 +187,10 @@ let lastOutputAt = 0;
  * ------------------------------------------------------------------ */
 
 const videoEl = ref<HTMLVideoElement>();
-const fileInput = ref<HTMLInputElement>();
 
 const running = ref(false);
 const starting = ref(false);
 const pausedByTab = ref(false);
-const dragging = ref(false);
 const source = ref<"camera" | "photo">("camera");
 
 const panelError = ref<PanelError | null>(null);
@@ -713,15 +713,8 @@ function acceptFile(file: File | null | undefined) {
   img.src = url;
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  acceptFile(e.dataTransfer?.files[0]);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  acceptFile(picker.files?.[0]);
-  picker.value = "";
+function onFiles(files: File[]) {
+  acceptFile(files[0]);
 }
 
 /* ------------------------------------------------------------------ *
@@ -886,17 +879,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Errors -->
-    <div
-      v-if="panelError"
-      role="alert"
-      class="flex flex-col gap-1 rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <span class="flex items-center gap-1.5 font-medium text-destructive">
-        <CircleAlert class="size-3.5" aria-hidden="true" />
-        {{ panelError.message }}
-      </span>
-      <span v-if="panelError.fix" class="text-muted-foreground">{{ panelError.fix }}</span>
-    </div>
+    <ErrorBanner v-if="panelError" :message="panelError.message" :hint="panelError.fix" />
 
     <!-- Live preview -->
     <div class="relative overflow-hidden rounded-[10px] bg-black shadow-[var(--sh-inset)]">
@@ -1136,31 +1119,12 @@ onUnmounted(() => {
     </div>
 
     <!-- One shot photo -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Read a photo instead
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()">
-          <ImageUp class="size-3.5" aria-hidden="true" />
-          Open file…
-        </Button>
-        <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
-      </div>
-      <div class="px-3 pt-1 pb-4">
-        <p class="max-w-[68ch] text-sm text-muted-foreground">
-          Drop a photo here for a one shot reading. The camera that took it already picked its own
-          exposure and tone curve, so a photo reads as relative brightness rather than an absolute
-          level, and it stops the live camera while it is shown.
-        </p>
-      </div>
-    </div>
+    <FileDrop
+      accept="image/*"
+      label="Read a photo instead"
+      hint="Drop a photo here for a one shot reading, or click to choose one. The camera that took it already picked its own exposure and tone curve, so a photo reads as relative brightness rather than an absolute level, and it stops the live camera while it is shown."
+      @files="onFiles"
+    />
 
     <!-- Report -->
     <OutputView v-if="output" :output="output" />

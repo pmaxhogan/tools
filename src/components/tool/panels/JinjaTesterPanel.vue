@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for the Jinja Template Tester.
@@ -106,6 +108,13 @@ let stopConnectionWatch: () => void = () => {};
 
 const output = ref("");
 const renderError = ref<TemplateError | null>(null);
+
+/** "Line 12: unexpected end of template", or just the message when there is no line. */
+const renderErrorMessage = computed(() => {
+  const err = renderError.value;
+  if (!err) return "";
+  return err.line !== null ? `Line ${err.line}: ${err.message}` : err.message;
+});
 const stateError = ref<{ message: string; fix?: string } | null>(null);
 
 /** The Pyodide instance is never made reactive: Vue must not proxy the runtime. */
@@ -130,6 +139,17 @@ const downloadPercent = computed(() => {
   if (!totalBytes.value) return 0;
   return Math.min(100, Math.round((downloadedBytes.value / totalBytes.value) * 100));
 });
+
+const engineLoadLabel = computed(() =>
+  engineState.value === "starting"
+    ? "Starting Python and loading jinja2…"
+    : "Downloading the engine…",
+);
+
+/* Starting has no byte count to report, so the right hand caption goes away. */
+const engineLoadDetail = computed(() =>
+  engineState.value === "starting" ? undefined : `${downloadPercent.value}%`,
+);
 
 const engineButtonLabel = computed(() => {
   if (engineState.value === "error") return "Try loading the engine again";
@@ -446,18 +466,7 @@ const stubbedFunctions = [
     </div>
 
     <!-- State parse error -->
-    <div
-      v-if="stateError"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ stateError.message }}
-      </p>
-      <p v-if="stateError.fix" class="mt-1 text-muted-foreground">
-        {{ stateError.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="stateError" :message="stateError.message" :hint="stateError.fix" />
 
     <!-- Engine opt-in card -->
     <div
@@ -481,27 +490,14 @@ const stubbedFunctions = [
         </Button>
       </div>
 
-      <div
+      <ProgressBar
         v-if="engineState === 'loading' || engineState === 'starting'"
-        class="flex flex-col gap-2"
-      >
-        <div class="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{{
-            engineState === "starting"
-              ? "Starting Python and loading jinja2…"
-              : "Downloading the engine…"
-          }}</span>
-          <span class="tabular-nums">{{
-            engineState === "starting" ? "" : `${downloadPercent}%`
-          }}</span>
-        </div>
-        <div class="h-1.5 overflow-hidden rounded-full bg-card">
-          <div
-            class="h-full rounded-full bg-primary transition-[width] duration-150"
-            :style="{ width: engineState === 'starting' ? '100%' : `${downloadPercent}%` }"
-          />
-        </div>
-      </div>
+        size="sm"
+        track="card"
+        :value="engineState === 'starting' ? 100 : downloadPercent"
+        :label="engineLoadLabel"
+        :detail="engineLoadDetail"
+      />
 
       <p v-if="metered && engineState === 'idle'" class="text-xs text-muted-foreground">
         Your connection looks metered, so the engine waits for you to start it.
@@ -512,18 +508,7 @@ const stubbedFunctions = [
         Safari is required.
       </p>
 
-      <div
-        v-if="engineError"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ engineError.message }}
-        </p>
-        <p v-if="engineError.fix" class="mt-1 text-muted-foreground">
-          {{ engineError.fix }}
-        </p>
-      </div>
+      <ErrorBanner v-if="engineError" :message="engineError.message" :hint="engineError.fix" />
     </div>
 
     <!-- Output -->
@@ -535,20 +520,12 @@ const stubbedFunctions = [
         <CopyButton :text="output" label="Copy" />
       </div>
 
-      <div
+      <ErrorBanner
         v-if="renderError"
-        role="alert"
-        class="rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-3 text-sm shadow-[var(--sh-inset)]"
-      >
-        <p class="font-medium text-destructive">
-          <span v-if="renderError.line !== null" class="font-mono"
-            >Line {{ renderError.line }}: </span
-          >{{ renderError.message }}
-        </p>
-        <p class="mt-1 font-mono text-xs text-muted-foreground">
-          {{ renderError.errorType }}
-        </p>
-      </div>
+        mono
+        :message="renderErrorMessage"
+        :hint="renderError.errorType"
+      />
 
       <pre
         v-else

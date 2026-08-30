@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for the Spectrogram Viewer.
@@ -70,8 +73,6 @@ const logic = shallowRef<SpecLogic | null>(null);
 const fileName = ref("");
 const fileSize = ref(0);
 const error = ref<{ message: string; fix?: string } | null>(null);
-const dragging = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
 const audioBuffer = shallowRef<AudioBuffer | null>(null);
 const mono = shallowRef<Float32Array | null>(null);
@@ -664,20 +665,9 @@ function rebuildPeaks() {
   peaks.value = mod.computeWaveformPeaks(samples, plotWidth.value);
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
-  if (file) readFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+function onFiles(files: File[]) {
+  const file = files[0];
+  if (file) void readFile(file);
 }
 
 function clearFile() {
@@ -686,7 +676,6 @@ function clearFile() {
   fileName.value = "";
   fileSize.value = 0;
   error.value = null;
-  if (fileInput.value) fileInput.value.value = "";
   draw();
 }
 
@@ -1210,14 +1199,10 @@ const stageValueNow = computed<number | undefined>(() => {
   return undefined;
 });
 
-const stageBarWidth = computed(() => {
-  if (stage.value === "analyzing") return `${progress.value}%`;
-  if (stage.value === "loading-engine") return `${Math.max(4, downloadPercent.value)}%`;
-  if (stage.value === "extracting") {
-    return extractRatio.value !== null ? `${Math.round(extractRatio.value * 100)}%` : "30%";
-  }
-  return "15%";
-});
+/** Size plus the decoded summary, shown beside the loaded file name. */
+const loadedFileHint = computed(() =>
+  summary.value ? `${formatBytes(fileSize.value)}, ${summary.value}` : formatBytes(fileSize.value),
+);
 
 /** True when this connection looks metered, for the one tap prompt copy. */
 const connectionMetered = computed(() => isMetered());
@@ -1237,67 +1222,35 @@ const hoverChipStyle = computed(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Audio or video
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-        <input
-          ref="fileInput"
-          type="file"
-          class="hidden"
-          accept="audio/*,video/*,.mkv,.ts,.m2ts,.avi,.flv,.wmv"
-          @change="onPickFile"
-        />
-      </div>
-
-      <div v-if="fileName" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
-          <span v-if="summary" class="shrink-0 text-muted-foreground tabular-nums">{{
-            summary
-          }}</span>
-          <button
-            type="button"
-            aria-label="Remove audio file"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearFile"
-          >
+    <div class="flex flex-col gap-2">
+      <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+        Audio or video
+      </span>
+      <FileDrop
+        v-if="fileName"
+        compact
+        accept="audio/*,video/*,.mkv,.ts,.m2ts,.avi,.flv,.wmv"
+        :label="fileName"
+        :hint="loadedFileHint"
+        @files="onFiles"
+      >
+        <template #actions>
+          <Button variant="ghost" size="icon-sm" aria-label="Remove audio file" @click="clearFile">
             <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
-
-      <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-        Drop an audio or video file here to see its waveform and its frequency spectrogram. WAV,
-        MP3, FLAC, OGG, and M4A all work, and a video's audio track is extracted locally first.
-        Everything runs in this tab: your files and inputs never leave your device.
-      </p>
+          </Button>
+        </template>
+      </FileDrop>
+      <FileDrop
+        v-else
+        accept="audio/*,video/*,.mkv,.ts,.m2ts,.avi,.flv,.wmv"
+        label="Drop an audio or video file here or click to choose"
+        hint="See its waveform and its frequency spectrogram. WAV, MP3, FLAC, OGG, and M4A all work, and a video's audio track is extracted locally first. Everything runs in this tab: your files and inputs never leave your device."
+        @files="onFiles"
+      />
     </div>
 
     <!-- Errors -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <!-- Metered engine prompt -->
     <div
@@ -1375,23 +1328,13 @@ const hoverChipStyle = computed(() => {
       v-if="busy"
       class="flex flex-col gap-2 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
     >
-      <div class="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{{ stageLabel }}</span>
-        <span class="tabular-nums">{{ stagePercentText }}</span>
-      </div>
-      <div
-        class="h-1.5 overflow-hidden rounded-full bg-card"
-        role="progressbar"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        :aria-valuenow="stageValueNow"
-        :aria-label="stageLabel"
-      >
-        <div
-          class="h-full rounded-full bg-primary transition-[width] duration-150"
-          :style="{ width: stageBarWidth }"
-        />
-      </div>
+      <ProgressBar
+        :value="stageValueNow"
+        :label="stageLabel"
+        :detail="stagePercentText"
+        size="sm"
+        track="card"
+      />
     </div>
 
     <!-- Plot -->

@@ -28,6 +28,8 @@ import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 const props = defineProps<{ meta: ToolMeta }>();
 
@@ -124,8 +126,6 @@ const shiftPreview = computed(() =>
 /* ---------------------------------------------------------------- */
 
 const files = shallowRef<File[]>([]);
-const dragging = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
 const totalBytes = computed(() => files.value.reduce((sum, f) => sum + f.size, 0));
 
@@ -147,19 +147,6 @@ function addFiles(incoming: File[]): void {
   files.value = next;
   results.value = [];
   runError.value = null;
-}
-
-function onDrop(e: DragEvent): void {
-  dragging.value = false;
-  addFiles(Array.from(e.dataTransfer?.files ?? []));
-}
-
-function onPickFiles(e: Event): void {
-  const input = e.target as HTMLInputElement;
-  const picked = Array.from(input.files ?? []);
-  // Cleared so picking the same file twice in a row still fires a change.
-  input.value = "";
-  addFiles(picked);
 }
 
 function removeFile(index: number): void {
@@ -313,75 +300,63 @@ function saveZip(): void {
 <template>
   <div class="flex flex-col gap-5 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex items-center justify-between gap-2 px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Photos
-        </span>
-        <div class="flex items-center gap-1">
-          <Button
-            v-if="files.length > 0"
-            variant="ghost"
-            size="sm"
-            :disabled="busy"
-            @click="clearAll"
-          >
-            Clear
-          </Button>
-          <Button variant="ghost" size="sm" :disabled="busy" @click="fileInput?.click()">
-            Choose files…
-          </Button>
+    <FileDrop accept="image/jpeg,.jpg,.jpeg,.tif,.tiff" multiple @files="addFiles">
+      <template #default="{ open }">
+        <div class="flex items-center justify-between gap-2 pb-1">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Photos
+          </span>
+          <div class="flex items-center gap-1">
+            <Button
+              v-if="files.length > 0"
+              variant="ghost"
+              size="sm"
+              :disabled="busy"
+              @click="clearAll"
+            >
+              Clear
+            </Button>
+            <Button variant="ghost" size="sm" :disabled="busy" @click="open">
+              Choose files…
+            </Button>
+          </div>
         </div>
-        <input
-          ref="fileInput"
-          type="file"
-          class="hidden"
-          multiple
-          accept="image/jpeg,.jpg,.jpeg,.tif,.tiff"
-          @change="onPickFiles"
-        />
-      </div>
 
-      <div class="px-3 pt-1 pb-4">
-        <p v-if="files.length === 0" class="text-sm text-muted-foreground">
-          Drop a whole shoot here, or pick the files. JPEG and raw TIFF both work, and the shift is
-          applied to every file at once.
-        </p>
-        <template v-else>
-          <p class="text-sm text-muted-foreground">
-            {{ files.length === 1 ? "1 file" : `${files.length} files` }},
-            {{ formatBytes(totalBytes) }} in total.
+        <div>
+          <p v-if="files.length === 0" class="text-sm text-muted-foreground">
+            Drop a whole shoot here, or pick the files. JPEG and raw TIFF both work, and the shift
+            is applied to every file at once.
           </p>
-          <ul class="mt-2 flex flex-wrap gap-2">
-            <li v-for="(file, i) in files" :key="`${file.name}-${i}`" class="min-w-0">
-              <span
-                class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-              >
-                <span class="truncate">{{ file.name }}</span>
-                <span class="shrink-0 text-muted-foreground tabular-nums">
-                  {{ formatBytes(file.size) }}
-                </span>
-                <button
-                  type="button"
-                  class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-                  :aria-label="`Remove ${file.name}`"
-                  :disabled="busy"
-                  @click="removeFile(i)"
+          <template v-else>
+            <p class="text-sm text-muted-foreground">
+              {{ files.length === 1 ? "1 file" : `${files.length} files` }},
+              {{ formatBytes(totalBytes) }} in total.
+            </p>
+            <ul class="mt-2 flex flex-wrap gap-2">
+              <li v-for="(file, i) in files" :key="`${file.name}-${i}`" class="min-w-0">
+                <span
+                  class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
                 >
-                  <X class="size-3" aria-hidden="true" />
-                </button>
-              </span>
-            </li>
-          </ul>
-        </template>
-      </div>
-    </div>
+                  <span class="truncate">{{ file.name }}</span>
+                  <span class="shrink-0 text-muted-foreground tabular-nums">
+                    {{ formatBytes(file.size) }}
+                  </span>
+                  <button
+                    type="button"
+                    class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                    :aria-label="`Remove ${file.name}`"
+                    :disabled="busy"
+                    @click="removeFile(i)"
+                  >
+                    <X class="size-3" aria-hidden="true" />
+                  </button>
+                </span>
+              </li>
+            </ul>
+          </template>
+        </div>
+      </template>
+    </FileDrop>
 
     <!-- shift controls -->
     <div class="flex flex-col gap-3">
@@ -417,25 +392,15 @@ function saveZip(): void {
       </p>
 
       <p class="text-xs text-muted-foreground">
-        GPS timestamps are not touched: satellite time was right even when the camera clock was
-        not. Only DateTime, DateTimeOriginal and DateTimeDigitized change, so every patched file
-        keeps its original length and its image data byte for byte. The whole shift runs in this
-        browser tab, so your files and inputs never leave your device.
+        GPS timestamps are not touched: satellite time was right even when the camera clock was not.
+        Only DateTime, DateTimeOriginal and DateTimeDigitized change, so every patched file keeps
+        its original length and its image data byte for byte. The whole shift runs in this browser
+        tab, so your files and inputs never leave your device.
       </p>
     </div>
 
     <!-- a failure of the run itself, not of one file -->
-    <div
-      v-if="runError"
-      role="alert"
-      class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-    >
-      <span class="flex items-center gap-2 font-semibold text-destructive">
-        <TriangleAlert class="size-3.5" aria-hidden="true" />
-        {{ runError.message }}
-      </span>
-      <span v-if="runError.fix" class="text-muted-foreground">{{ runError.fix }}</span>
-    </div>
+    <ErrorBanner v-if="runError" :message="runError.message" :hint="runError.fix" />
 
     <!-- results -->
     <div v-if="results.length > 0" class="flex flex-col gap-3">

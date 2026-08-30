@@ -1,6 +1,13 @@
 <script setup lang="ts">
-import { defineAsyncComponent, onBeforeUnmount, onMounted, provide, ref, type Component } from "vue";
-import { installToolShortcuts } from "@/lib/shortcuts";
+import {
+  defineAsyncComponent,
+  onBeforeUnmount,
+  onMounted,
+  provide,
+  ref,
+  type Component,
+} from "vue";
+import { KEYBOARD_FIRST_TOOLS, installToolShortcuts } from "@/lib/shortcuts";
 import { RECENT_TOOLS_KEY, rememberRecent } from "@/lib/recent-tools";
 import { readList, writeList } from "@/lib/prefs";
 import type { ToolMeta } from "@/tools/types";
@@ -178,6 +185,8 @@ const panels: Record<string, Component> = {
   "coordinate-converter": defineAsyncComponent(
     () => import("./panels/CoordinateConverterPanel.vue"),
   ),
+  "regex-tester": defineAsyncComponent(() => import("./panels/RegexTesterPanel.vue")),
+  "xpath-css-selector-tester": defineAsyncComponent(() => import("./panels/XPathTesterPanel.vue")),
 };
 
 const props = defineProps<{ meta: ToolMeta }>();
@@ -194,12 +203,15 @@ const isBespoke = panel !== ToolShell;
 // The `?` shortcut sheet for bespoke panels. ToolShell installs its own
 // listener (with run/copy/clear handlers), so this one only exists when a
 // bespoke panel is mounted; installing both would open the sheet twice.
+// KEYBOARD_FIRST_TOOLS get no sheet at all: on those the key you press is the
+// reading, and a modal that traps focus would break the tool (see shortcuts.ts).
+const showsShortcutSheet = isBespoke && !KEYBOARD_FIRST_TOOLS.has(props.meta.slug);
 const shortcutSheetOpen = ref(false);
 let uninstallShortcuts: (() => void) | undefined;
 
 onMounted(() => {
   writeList(RECENT_TOOLS_KEY, rememberRecent(readList(RECENT_TOOLS_KEY), props.meta.slug));
-  if (isBespoke) {
+  if (showsShortcutSheet) {
     uninstallShortcuts = installToolShortcuts({
       onShowHelp: () => {
         shortcutSheetOpen.value = true;
@@ -226,5 +238,5 @@ onBeforeUnmount(() => {
     </CapabilityGate>
     <component :is="panel" v-else :meta="meta" />
   </div>
-  <ShortcutSheet v-if="isBespoke" v-model:open="shortcutSheetOpen" />
+  <ShortcutSheet v-if="showsShortcutSheet" v-model:open="shortcutSheetOpen" />
 </template>

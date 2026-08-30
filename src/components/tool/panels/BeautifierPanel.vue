@@ -18,6 +18,8 @@ import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 import OptionControl from "../OptionControl.vue";
 
 /**
@@ -96,7 +98,6 @@ const fileName = ref("");
 const fileSize = ref(0);
 const decodeFailed = ref(false);
 const busy = ref(false);
-const dragging = ref(false);
 
 /** The decoded screenshot and the object URL keeping it alive, released together. */
 const sourceImage = shallowRef<HTMLImageElement | null>(null);
@@ -105,7 +106,6 @@ const sourceWidth = ref(0);
 const sourceHeight = ref(0);
 
 const previewCanvas = ref<HTMLCanvasElement>();
-const fileInput = ref<HTMLInputElement>();
 
 const format = ref<ExportFormat>("png");
 const renderError = ref("");
@@ -452,20 +452,9 @@ async function readFile(file: File): Promise<void> {
   }
 }
 
-function onDrop(e: DragEvent): void {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
+function onFiles(files: File[]): void {
+  const file = files[0];
   if (file) void readFile(file);
-}
-
-function onPickFile(e: Event): void {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  void readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
 }
 
 function clearImage(): void {
@@ -476,7 +465,6 @@ function clearImage(): void {
   renderError.value = "";
   exportNote.value = "";
   copyNote.value = "";
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -646,66 +634,63 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Screenshot -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      bare
+      accept="image/*"
+      label="Screenshot"
+      hint="Drop a screenshot here or click to choose one"
+      :paste="false"
+      @files="onFiles"
     >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Screenshot
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()">Open file…</Button>
-        <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
-      </div>
-
-      <div v-if="hasImage || decodeFailed" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span v-if="hasImage" class="shrink-0 text-muted-foreground tabular-nums">
-            {{ sourceWidth }} x {{ sourceHeight }} px
+      <template #default="{ open }">
+        <div class="flex items-center justify-between px-3 pt-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Screenshot
           </span>
-          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
-          <button
-            type="button"
-            aria-label="Remove screenshot"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearImage"
+          <Button variant="ghost" size="sm" @click="open">Open file…</Button>
+        </div>
+
+        <div v-if="hasImage || decodeFailed" class="px-3 pt-2 pb-3">
+          <span
+            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
-            <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
+            <span class="truncate font-medium">{{ fileName }}</span>
+            <span v-if="hasImage" class="shrink-0 text-muted-foreground tabular-nums">
+              {{ sourceWidth }} x {{ sourceHeight }} px
+            </span>
+            <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
+            <button
+              type="button"
+              aria-label="Remove screenshot"
+              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+              @click="clearImage"
+            >
+              <X class="size-3.5" />
+            </button>
+          </span>
+        </div>
 
-      <template v-else>
-        <p class="px-3 pt-1 pb-2 text-sm text-muted-foreground">
-          Drop a screenshot here, pick a file, or paste one from the clipboard. Everything runs in
-          this tab: your files and inputs never leave your device.
-        </p>
-        <p class="px-3 pb-4 text-xs text-muted-foreground">
-          Paste a screenshot with
-          <kbd class="rounded-[8px] border bg-card px-1.5 py-0.5 font-mono text-[11px]">Ctrl+V</kbd>
-          (Cmd+V on a Mac).
-        </p>
+        <template v-else>
+          <p class="px-3 pt-1 pb-2 text-sm text-muted-foreground">
+            Drop a screenshot here, click to choose a file, or paste one from the clipboard.
+            Everything runs in this tab: your files and inputs never leave your device.
+          </p>
+          <p class="px-3 pb-4 text-xs text-muted-foreground">
+            Paste a screenshot with
+            <kbd class="rounded-[8px] border bg-card px-1.5 py-0.5 font-mono text-[11px]">
+              Ctrl+V
+            </kbd>
+            (Cmd+V on a Mac).
+          </p>
+        </template>
       </template>
-    </div>
+    </FileDrop>
 
-    <p
+    <ErrorBanner
       v-if="decodeFailed"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <span class="font-medium text-destructive">
-        This browser could not decode that file as an image.
-      </span>
-      <span class="mt-1 block text-muted-foreground">
-        Try a PNG, JPEG, WebP, GIF, or BMP screenshot.
-      </span>
-    </p>
+      message="This browser could not decode that file as an image."
+      hint="Try a PNG, JPEG, WebP, GIF, or BMP screenshot."
+    />
 
     <!-- Composition options, straight from the tool's meta -->
     <div v-if="meta.options?.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

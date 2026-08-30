@@ -197,6 +197,19 @@ import { meta as weekNumber } from "./week-number/meta";
 import { meta as wikidataCitiesDatabase } from "./wikidata-cities-database/meta";
 import { meta as wireGaugeCalculator } from "./wire-gauge-calculator/meta";
 import { meta as wireguardConfigGenerator } from "./wireguard-config-generator/meta";
+import { meta as cipherTool } from "./cipher-tool/meta";
+import { meta as fancyTextGenerator } from "./fancy-text-generator/meta";
+import { meta as loremIpsumGenerator } from "./lorem-ipsum-generator/meta";
+import { meta as morseCodeTranslator } from "./morse-code-translator/meta";
+import { meta as natoPhoneticAlphabet } from "./nato-phonetic-alphabet/meta";
+import { meta as numberToWords } from "./number-to-words/meta";
+import { meta as romanNumeralConverter } from "./roman-numeral-converter/meta";
+import { meta as globPatternTester } from "./glob-pattern-tester/meta";
+import { meta as jsonpathQuery } from "./jsonpath-query/meta";
+import { meta as regexTester } from "./regex-tester/meta";
+import { meta as semverRangeTester } from "./semver-range-tester/meta";
+import { meta as unifiedDiffPatchApplier } from "./unified-diff-patch-applier/meta";
+import { meta as xpathCssSelectorTester } from "./xpath-css-selector-tester/meta";
 
 export const tools: ToolMeta[] = [
   airportCodeLookup,
@@ -386,6 +399,19 @@ export const tools: ToolMeta[] = [
   wikidataCitiesDatabase,
   wireGaugeCalculator,
   wireguardConfigGenerator,
+  cipherTool,
+  fancyTextGenerator,
+  loremIpsumGenerator,
+  morseCodeTranslator,
+  natoPhoneticAlphabet,
+  numberToWords,
+  romanNumeralConverter,
+  globPatternTester,
+  jsonpathQuery,
+  regexTester,
+  semverRangeTester,
+  unifiedDiffPatchApplier,
+  xpathCssSelectorTester,
 ];
 
 /** Lazy loaders for tool logic, keyed by URL slug. */
@@ -601,6 +627,21 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "wire-gauge-calculator": () => import("./wire-gauge-calculator/index").then((m) => m.default),
   "wireguard-config-generator": () =>
     import("./wireguard-config-generator/index").then((m) => m.default),
+  "cipher-tool": () => import("./cipher-tool/index").then((m) => m.default),
+  "fancy-text-generator": () => import("./fancy-text-generator/index").then((m) => m.default),
+  "lorem-ipsum-generator": () => import("./lorem-ipsum-generator/index").then((m) => m.default),
+  "morse-code-translator": () => import("./morse-code-translator/index").then((m) => m.default),
+  "nato-phonetic-alphabet": () => import("./nato-phonetic-alphabet/index").then((m) => m.default),
+  "number-to-words": () => import("./number-to-words/index").then((m) => m.default),
+  "roman-numeral-converter": () => import("./roman-numeral-converter/index").then((m) => m.default),
+  "glob-pattern-tester": () => import("./glob-pattern-tester/index").then((m) => m.default),
+  "jsonpath-query": () => import("./jsonpath-query/index").then((m) => m.default),
+  "regex-tester": () => import("./regex-tester/index").then((m) => m.default),
+  "semver-range-tester": () => import("./semver-range-tester/index").then((m) => m.default),
+  "unified-diff-patch-applier": () =>
+    import("./unified-diff-patch-applier/index").then((m) => m.default),
+  "xpath-css-selector-tester": () =>
+    import("./xpath-css-selector-tester/index").then((m) => m.default),
 };
 
 export function getTool(slug: string): ToolMeta | undefined {

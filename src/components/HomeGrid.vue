@@ -24,8 +24,11 @@ import { categoryByLabel, categoryPath, categoryRank } from "@/tools/categories"
  *
  * Three things here only exist after hydration, because all three read
  * localStorage and none of them may change the server-rendered HTML: the Pinned
- * row, the Recent row, and every card's star. They are appended above the grid
- * rather than reserving space in it, so the categorized list never moves.
+ * row, the Recent row, and every card's star. The star costs nothing to add
+ * (the cards already reserve its gutter), but the two rows are inserted above
+ * the categorized list, so a returning visitor does see that list shift down
+ * once. The alternative, holding blank space for rows that are empty for every
+ * first time visitor, is worse for more people.
  */
 export type GridTool = SearchTool & { icon?: string };
 
@@ -408,6 +411,14 @@ li:hover > .card-star,
 .card-star:focus-visible,
 .card-star[data-favorite="true"] {
   opacity: 1;
+}
+
+/* No hover to reveal it on a touch screen, and an invisible control that still
+   takes taps is worse than a visible one, so there it is always shown. */
+@media (hover: none) {
+  .card-star {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -20,6 +20,9 @@ import {
 import { useStickToBottom } from "@/lib/stick-to-bottom";
 import type { KeyValueRow } from "@/lib/key-value";
 import KeyValueGrid from "../KeyValueGrid.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
+import ProgressBar from "../ProgressBar.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -141,7 +144,6 @@ let fileId = 0;
 const presetChip = ref<ChipKey>("esp32");
 
 const fileError = ref<string | null>(null);
-const dragOver = ref(false);
 
 function seedOffset(index: number): string {
   const full = defaultOffsetsFor(presetChip.value).full;
@@ -169,17 +171,6 @@ async function addFiles(list: FileList | File[]) {
     }
   }
   if (mode.value === "single" && files.value.length > 1) mode.value = "advanced";
-}
-
-function onPick(event: Event) {
-  const input = event.target as HTMLInputElement;
-  if (input.files) void addFiles(input.files);
-  input.value = "";
-}
-
-function onDrop(event: DragEvent) {
-  dragOver.value = false;
-  if (event.dataTransfer?.files?.length) void addFiles(event.dataTransfer.files);
 }
 
 function removeFile(id: number) {
@@ -598,27 +589,14 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <label
-        class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[10px] border border-dashed px-4 py-8 text-center text-sm transition-colors"
-        :class="dragOver ? 'border-primary bg-accent' : 'border-input text-muted-foreground'"
-        @dragover.prevent="dragOver = true"
-        @dragleave.prevent="dragOver = false"
-        @drop.prevent="onDrop"
-      >
-        <input
-          type="file"
-          accept=".bin,application/octet-stream"
-          multiple
-          class="sr-only"
-          :disabled="busy"
-          @change="onPick"
-        />
-        <span class="font-medium text-foreground">Drop .bin files here, or click to choose</span>
-        <span
-          >Single file mode flashes one build at the chip's app offset. Switch to the offset table
-          to flash a bootloader, partition table and app together.</span
-        >
-      </label>
+      <FileDrop
+        accept=".bin,application/octet-stream"
+        multiple
+        :disabled="busy"
+        label="Drop .bin files here, or click to choose"
+        hint="Single file mode flashes one build at the chip's app offset. Switch to the offset table to flash a bootloader, partition table and app together."
+        @files="addFiles"
+      />
 
       <p v-if="fileError" role="alert" class="text-sm text-destructive">
         {{ fileError }}
@@ -709,42 +687,27 @@ onUnmounted(() => {
     </div>
 
     <!-- error -->
-    <div
-      v-if="errorTitle"
-      role="alert"
-      class="rounded-[18px] border border-destructive/50 bg-destructive/5 p-5 shadow-[var(--sh-sm)] sm:p-6"
-    >
-      <div class="flex items-start gap-2">
-        <AlertTriangle class="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
-        <div class="min-w-0">
-          <p class="font-medium text-destructive">
-            {{ errorTitle }}
-          </p>
-          <p v-if="errorDetail" class="mt-1 text-sm text-muted-foreground">
-            {{ errorDetail }}
-          </p>
-          <div
-            v-if="showManualReset"
-            class="mt-3 rounded-[10px] bg-secondary px-3 py-2 text-sm text-muted-foreground shadow-[var(--sh-inset)]"
-          >
-            <p class="font-medium text-foreground">Manual download mode</p>
-            <p class="mt-1">
-              Hold the BOOT button down, tap and release EN or RST, then release BOOT. The board is
-              now waiting for a flash. Click Connect and flash again.
-            </p>
-          </div>
-          <Button
-            v-if="canFallback"
-            variant="outline"
-            size="sm"
-            class="mt-3"
-            @click="fallbackTo115200"
-          >
-            Drop to 115200 and retry
-          </Button>
-        </div>
+    <ErrorBanner v-if="errorTitle" :message="errorTitle" :hint="errorDetail ?? undefined">
+      <div
+        v-if="showManualReset"
+        class="rounded-[10px] bg-secondary px-3 py-2 text-sm text-muted-foreground shadow-[var(--sh-inset)]"
+      >
+        <p class="font-medium text-foreground">Manual download mode</p>
+        <p class="mt-1">
+          Hold the BOOT button down, tap and release EN or RST, then release BOOT. The board is now
+          waiting for a flash. Click Connect and flash again.
+        </p>
       </div>
-    </div>
+      <Button
+        v-if="canFallback"
+        variant="outline"
+        size="sm"
+        :class="showManualReset ? 'mt-3' : ''"
+        @click="fallbackTo115200"
+      >
+        Drop to 115200 and retry
+      </Button>
+    </ErrorBanner>
 
     <!-- confirm -->
     <div
@@ -786,13 +749,11 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div
+          <ErrorBanner
             v-if="eraseAll"
-            class="mt-3 rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-          >
-            Erase whole flash is on. Every byte on the chip, including stored settings and Wi-Fi
-            calibration, will be wiped before writing.
-          </div>
+            class="mt-3"
+            message="Erase whole flash is on. Every byte on the chip, including stored settings and Wi-Fi calibration, will be wiped before writing."
+          />
 
           <ul v-if="warnings.length" class="mt-3 flex flex-col gap-1.5">
             <li
@@ -829,18 +790,7 @@ onUnmounted(() => {
         >
       </div>
 
-      <div
-        class="h-2 overflow-hidden rounded-full bg-secondary shadow-[var(--sh-inset)]"
-        role="progressbar"
-        :aria-valuenow="overallProgress"
-        aria-valuemin="0"
-        aria-valuemax="100"
-      >
-        <div
-          class="h-full rounded-full bg-primary transition-[width] duration-150"
-          :style="{ width: `${overallProgress}%` }"
-        />
-      </div>
+      <ProgressBar :value="overallProgress" />
 
       <div v-for="item in plan" :key="item.entry.id" class="flex flex-col gap-1">
         <div class="flex items-center gap-2 text-xs text-muted-foreground">
@@ -850,14 +800,10 @@ onUnmounted(() => {
             {{ item.entry.total ? Math.round((item.entry.written / item.entry.total) * 100) : 0 }}%
           </span>
         </div>
-        <div class="h-1.5 overflow-hidden rounded-full bg-secondary">
-          <div
-            class="h-full rounded-full bg-primary/70 transition-[width] duration-150"
-            :style="{
-              width: `${item.entry.total ? (item.entry.written / item.entry.total) * 100 : 0}%`,
-            }"
-          />
-        </div>
+        <ProgressBar
+          size="sm"
+          :value="item.entry.total ? (item.entry.written / item.entry.total) * 100 : 0"
+        />
       </div>
     </div>
 

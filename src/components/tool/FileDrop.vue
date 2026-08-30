@@ -1,3 +1,61 @@
+<script lang="ts">
+/**
+ * Document paste, shared by every mounted FileDrop.
+ *
+ * Module scope on purpose. A panel with two zones (before/after, cover/track)
+ * mounts two of these, and one listener per instance meant one Ctrl+V loaded
+ * the same file into both of them. So there is exactly one document listener
+ * however many zones are on the page, and it hands the paste to a single zone:
+ * the one focus is inside, and otherwise the first one mounted. Zones that are
+ * disabled, that opted out with `:paste="false"`, or whose element is no longer
+ * in the document are not candidates at all.
+ */
+interface PasteTarget {
+  root: () => HTMLElement | null;
+  enabled: () => boolean;
+  handle: (files: File[]) => void;
+}
+
+const pasteTargets: PasteTarget[] = [];
+let pasteListener: ((event: ClipboardEvent) => void) | null = null;
+
+function onDocumentPaste(event: ClipboardEvent): void {
+  const candidates = pasteTargets.filter((target) => {
+    const root = target.root();
+    return target.enabled() && !!root && root.isConnected;
+  });
+  if (candidates.length === 0) return;
+  const files = Array.from(event.clipboardData?.files ?? []);
+  if (files.length === 0) return;
+
+  const active = document.activeElement;
+  const focused = active
+    ? candidates.find((target) => {
+        const root = target.root();
+        return !!root && (root === active || root.contains(active));
+      })
+    : undefined;
+  (focused ?? candidates[0])?.handle(files);
+}
+
+function addPasteTarget(target: PasteTarget): void {
+  pasteTargets.push(target);
+  if (!pasteListener) {
+    pasteListener = onDocumentPaste;
+    document.addEventListener("paste", pasteListener);
+  }
+}
+
+function removePasteTarget(target: PasteTarget): void {
+  const index = pasteTargets.indexOf(target);
+  if (index >= 0) pasteTargets.splice(index, 1);
+  if (pasteTargets.length === 0 && pasteListener) {
+    document.removeEventListener("paste", pasteListener);
+    pasteListener = null;
+  }
+}
+</script>
+
 <script setup lang="ts">
 /**
  * The one file drop zone. Every panel that takes a file uses this instead of
@@ -45,6 +103,12 @@ const props = withDefaults(
     compact?: boolean;
     /** Pick a whole folder (webkitdirectory). */
     directory?: boolean;
+    /**
+     * Drop the zone's own padding, for a default slot body that brings its own
+     * layout. Without it a rich body has to fight the padding, which is what
+     * `compact` was being misused for.
+     */
+    bare?: boolean;
   }>(),
   {
     accept: undefined,
@@ -55,6 +119,7 @@ const props = withDefaults(
     paste: true,
     compact: false,
     directory: false,
+    bare: false,
   },
 );
 
@@ -69,6 +134,8 @@ const toolSlug = inject("toolSlug", "");
 const toolName = inject("toolName", "");
 
 const inputEl = ref<HTMLInputElement | null>(null);
+/** The wrapper element, so the shared paste listener can tell where focus is. */
+const rootEl = ref<HTMLElement | null>(null);
 const dragDepth = ref(0);
 const dragging = computed(() => dragDepth.value > 0 && !props.disabled);
 
@@ -79,7 +146,11 @@ const acceptsMany = computed(() => props.multiple || props.directory);
    object: one attribute, no cast, still type checked at the call sites. */
 const extraInputAttrs = computed(() => (props.directory ? { webkitdirectory: "" } : {}));
 
-const ariaLabel = computed(() => (props.hint ? `${props.label}. ${props.hint}` : props.label));
+const ariaLabel = computed(() => {
+  if (!props.hint) return props.label;
+  const head = props.label.replace(/[.!?]\s*$/, "");
+  return `${head}. ${props.hint}`;
+});
 
 /* ---------------------------------------------------------------- */
 /* carried input                                                     */
@@ -126,10 +197,18 @@ function emitFiles(list: File[]): void {
   }
 }
 
+/**
+ * Open the file picker. Exposed two ways, because a click on a button inside
+ * the zone deliberately does not reach the zone's own handler: as a scoped
+ * slot prop (`<template #default="{ open }">`) for a custom body, and through
+ * a template ref (`dropRef.open()`) for a button that lives outside the zone.
+ */
 function openPicker(): void {
   if (props.disabled) return;
   inputEl.value?.click();
 }
+
+defineExpose({ open: openPicker });
 
 function onPick(event: Event): void {
   const el = event.target as HTMLInputElement;
@@ -177,29 +256,28 @@ function onZoneKey(event: KeyboardEvent): void {
 /* paste                                                             */
 /* ---------------------------------------------------------------- */
 
-function onPaste(event: ClipboardEvent): void {
-  if (!props.paste || props.disabled) return;
-  const files = Array.from(event.clipboardData?.files ?? []);
-  if (files.length === 0) return;
-  emitFiles(files);
-}
+const pasteTarget: PasteTarget = {
+  root: () => rootEl.value,
+  enabled: () => props.paste && !props.disabled,
+  handle: (files) => emitFiles(files),
+};
 
 onMounted(() => {
   unsubscribe = subscribeCarriedInput((value) => {
     carried.value = value;
   });
-  document.addEventListener("paste", onPaste);
+  addPasteTarget(pasteTarget);
 });
 
 onUnmounted(() => {
   unsubscribe?.();
   unsubscribe = null;
-  document.removeEventListener("paste", onPaste);
+  removePasteTarget(pasteTarget);
 });
 </script>
 
 <template>
-  <div class="flex flex-col gap-2">
+  <div ref="rootEl" class="flex flex-col gap-2">
     <div
       role="button"
       :tabindex="disabled ? -1 : 0"
@@ -209,7 +287,7 @@ onUnmounted(() => {
       :class="[
         dragging ? 'ring-2 ring-ring' : '',
         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-accent',
-        compact ? 'px-3 py-2' : 'px-4 py-6',
+        bare ? '' : compact ? 'px-3 py-2' : 'px-4 py-6',
       ]"
       @click="onZoneClick"
       @keydown.enter="onZoneKey"
@@ -230,7 +308,7 @@ onUnmounted(() => {
         @change="onPick"
       />
 
-      <slot>
+      <slot :open="openPicker">
         <div
           v-if="compact"
           class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm"
@@ -259,6 +337,17 @@ onUnmounted(() => {
           </div>
         </div>
       </slot>
+
+      <!-- A custom body replaces the built in one, actions outlet included, so
+           the outlet is rendered again here for that case. Exactly one of the
+           two ever renders: this one only when the default slot took over. -->
+      <div
+        v-if="slots.default && slots.actions"
+        class="mt-2 flex flex-wrap items-center gap-2"
+        :class="compact ? '' : 'justify-center'"
+      >
+        <slot name="actions" />
+      </div>
     </div>
 
     <!-- Cross tool carry: the file the last tool held, one click away. -->

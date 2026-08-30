@@ -26,6 +26,9 @@ import { downloadUrl } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -50,8 +53,6 @@ const AUDIO_BITS_PER_SECOND = 128_000;
 const logic = shallowRef<TrimLogic | null>(null);
 
 const videoEl = ref<HTMLVideoElement>();
-const fileInput = ref<HTMLInputElement>();
-const dragging = ref(false);
 
 const fileName = ref("");
 const fileSize = ref(0);
@@ -177,18 +178,9 @@ function loadFile(file: File) {
   sourceUrl.value = URL.createObjectURL(file);
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
+function onFiles(files: File[]) {
+  const file = files[0];
   if (file) loadFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (file) loadFile(file);
-  // Reset so picking the same file again still fires a change event.
-  picker.value = "";
 }
 
 function clearFile() {
@@ -201,7 +193,6 @@ function clearFile() {
   playhead.value = 0;
   decodeFailed.value = false;
   error.value = null;
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -476,59 +467,35 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Video
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-        <input ref="fileInput" type="file" class="hidden" accept="video/*" @change="onPickFile" />
-      </div>
-
-      <div v-if="hasFile" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground tabular-nums">{{
-            formatBytes(fileSize)
-          }}</span>
-          <button
-            type="button"
-            aria-label="Remove video"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearFile"
-          >
+    <div class="flex flex-col gap-2">
+      <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+        Video
+      </span>
+      <FileDrop
+        v-if="hasFile"
+        compact
+        accept="video/*"
+        :label="fileName"
+        :hint="formatBytes(fileSize)"
+        @files="onFiles"
+      >
+        <template #actions>
+          <Button variant="ghost" size="icon-sm" aria-label="Remove video" @click="clearFile">
             <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
-
-      <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-        Drop a video here to cut a range out of it. Everything runs in this tab: your files and
-        inputs never leave your device.
-      </p>
+          </Button>
+        </template>
+      </FileDrop>
+      <FileDrop
+        v-else
+        accept="video/*"
+        label="Drop a video here or click to choose"
+        hint="Cut a range out of it. Everything runs in this tab: your files and inputs never leave your device."
+        @files="onFiles"
+      />
     </div>
 
     <!-- Errors -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <template v-if="hasFile">
       <!-- Preview -->
@@ -546,13 +513,11 @@ onUnmounted(() => {
           @seeked="onTimeUpdate"
           @error="onVideoError"
         />
-        <p
+        <ErrorBanner
           v-if="decodeFailed"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-        >
-          This browser cannot decode this file, so it cannot be trimmed here. Try an MP4, WebM, or
-          MOV recorded by a common camera or screen recorder.
-        </p>
+          message="This browser cannot decode this file, so it cannot be trimmed here."
+          hint="Try an MP4, WebM, or MOV recorded by a common camera or screen recorder."
+        />
         <p v-else class="font-mono text-xs text-muted-foreground tabular-nums">
           Playhead {{ clock(playhead) }} of {{ clock(duration) }}
         </p>
@@ -642,16 +607,7 @@ onUnmounted(() => {
           </span>
         </div>
 
-        <p
-          v-if="rangeError"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <span class="font-medium text-destructive">{{ rangeError.error }}</span>
-          <span v-if="rangeError.fix" class="mt-1 block text-muted-foreground">{{
-            rangeError.fix
-          }}</span>
-        </p>
+        <ErrorBanner v-if="rangeError" :message="rangeError.error" :hint="rangeError.fix" />
         <p v-else-if="plan" class="font-mono text-xs text-muted-foreground tabular-nums">
           Frames {{ plan.startFrame }} to {{ plan.endFrame - 1 }} ({{ plan.frameCount }} frames),
           {{ clock(plan.outDurationSec) }} out.
@@ -669,20 +625,7 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <div
-        v-if="recording"
-        class="h-2 overflow-hidden rounded-full bg-secondary"
-        role="progressbar"
-        :aria-valuenow="progressPercent"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        aria-label="Trim progress"
-      >
-        <div
-          class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-          :style="{ width: `${progressPercent}%` }"
-        />
-      </div>
+      <ProgressBar v-if="recording" :value="progressPercent" label="Trim progress" />
 
       <p v-if="recording" class="text-xs text-muted-foreground">
         The clip plays through once while it records, so this takes about as long as the range
@@ -690,14 +633,12 @@ onUnmounted(() => {
         the recording.
       </p>
 
-      <p
+      <ErrorBanner
         v-if="wentHidden"
-        role="status"
-        class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm text-muted-foreground"
-      >
-        This tab was in the background while the clip was recording, so frames may be missing or the
-        timing may drift. Run the trim again with the tab in front if the result looks wrong.
-      </p>
+        variant="info"
+        message="This tab was in the background while the clip was recording, so frames may be missing or the timing may drift."
+        hint="Run the trim again with the tab in front if the result looks wrong."
+      />
 
       <!-- Output -->
       <div v-if="outputUrl" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">

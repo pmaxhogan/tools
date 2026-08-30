@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import {
-  CircleAlert,
   Compass as CompassIcon,
   Gauge,
   RadioTower,
@@ -21,6 +20,7 @@ import {
   vectorMagnitude,
   type Vector3,
 } from "@/tools/mobile-sensors/index";
+import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
 
 /**
@@ -93,6 +93,13 @@ type Phase = "idle" | "waiting" | "live" | "unsupported" | "denied" | "error";
 
 const phase = ref<Phase>("idle");
 const errorDetail = ref<string | null>(null);
+
+/** What the denied banner explains, falling back to the iOS walkthrough. */
+const deniedDetail = computed(
+  () =>
+    errorDetail.value ||
+    "On iOS, open Settings > Safari > Motion & Orientation Access, turn it on, then reload this page and tap Enable sensors again.",
+);
 
 const hasOrientationApi = typeof window !== "undefined" && "DeviceOrientationEvent" in window;
 const hasMotionApi = typeof window !== "undefined" && "DeviceMotionEvent" in window;
@@ -457,35 +464,17 @@ onBeforeUnmount(() => {
         works from a direct tap. Nothing is stored between visits.
       </p>
 
-      <div
+      <ErrorBanner
         v-if="phase === 'unsupported'"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="flex items-center gap-1.5 font-medium text-destructive">
-          <CircleAlert class="size-4" aria-hidden="true" />
-          These sensors need a phone or tablet.
-        </p>
-        <p class="mt-1 text-muted-foreground">
-          No motion or orientation reading arrived from this browser, which is expected on a laptop
-          or desktop with no accelerometer or gyroscope. Open this page on a phone or tablet and tap
-          Enable sensors again.
-        </p>
-      </div>
+        title="These sensors need a phone or tablet."
+        message="No motion or orientation reading arrived from this browser, which is expected on a laptop or desktop with no accelerometer or gyroscope. Open this page on a phone or tablet and tap Enable sensors again."
+      />
 
-      <div
+      <ErrorBanner
         v-else-if="phase === 'denied'"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">Sensor permission was not granted.</p>
-        <p class="mt-1 text-muted-foreground">
-          {{
-            errorDetail ||
-            "On iOS, open Settings > Safari > Motion & Orientation Access, turn it on, then reload this page and tap Enable sensors again."
-          }}
-        </p>
-      </div>
+        title="Sensor permission was not granted."
+        :message="deniedDetail"
+      />
     </div>
 
     <template v-if="phase === 'live'">

@@ -24,6 +24,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import FileDrop from "../FileDrop.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for the animated QR file transfer.
@@ -150,7 +153,13 @@ const fps = ref<number>(fpsSpec.value?.default ?? FPS_RECOMMENDED);
 const fileNameInput = ref("");
 
 const reading = ref(false);
-const dragging = ref(false);
+
+/* The sender zone's second line, also its accessible description. */
+const senderHint = computed(
+  () =>
+    `Drop a file here or pick one with the button. Up to ${formatBytes(MAX_PAYLOAD_BYTES)}, ` +
+    `chunked and animated on this screen for the other device's camera to read.`,
+);
 const playing = ref(false);
 const looping = ref(true);
 const isFullscreen = ref(false);
@@ -160,7 +169,9 @@ const finishedPass = ref(false);
 
 const stageEl = ref<HTMLElement | null>(null);
 const canvasEl = ref<HTMLCanvasElement | null>(null);
-const fileInput = ref<HTMLInputElement | null>(null);
+/* The compact "choose another" zone: its button lives in the actions slot,
+   so it opens the picker through the component instead of the zone click. */
+const replaceDrop = ref<InstanceType<typeof FileDrop> | null>(null);
 
 const effectiveName = computed(
   () => fileNameInput.value.trim() || picked.value?.name || "file.bin",
@@ -274,15 +285,8 @@ async function acceptFile(file: File | null | undefined): Promise<void> {
   buildSource();
 }
 
-function onDrop(e: DragEvent): void {
-  dragging.value = false;
-  void acceptFile(e.dataTransfer?.files[0]);
-}
-
-function onPickFile(e: Event): void {
-  const picker = e.target as HTMLInputElement;
-  void acceptFile(picker.files?.[0]);
-  picker.value = "";
+function onFiles(files: File[]): void {
+  void acceptFile(files[0]);
 }
 
 /* ------------------------------------------------------------------ *
@@ -700,54 +704,38 @@ onUnmounted(() => {
 
     <!-- Sender -->
     <template v-if="direction === 'send'">
-      <div
-        v-if="sendError"
-        role="alert"
-        class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-sm shadow-[var(--sh-inset)]"
-      >
-        <span class="font-medium text-destructive">{{ sendError.message }}</span>
-        <span v-if="sendError.fix" class="text-muted-foreground">{{ sendError.fix }}</span>
-      </div>
+      <ErrorBanner v-if="sendError" :message="sendError.message" :hint="sendError.fix" />
 
       <!-- File input -->
-      <div
-        v-if="!payload"
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-        :class="dragging ? 'ring-2 ring-ring' : ''"
-        @dragover.prevent="dragging = true"
-        @dragleave="dragging = false"
-        @drop.prevent="onDrop"
-      >
-        <div class="flex items-center justify-between px-3 pt-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            File to send
-          </span>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()">Open file…</Button>
-          <input ref="fileInput" type="file" class="hidden" @change="onPickFile" />
-        </div>
-        <div class="px-3 pt-1 pb-4">
-          <p class="text-sm text-muted-foreground">
-            {{
-              reading
-                ? "Reading the file…"
-                : `Drop a file here or pick one with the button. Up to ${formatBytes(MAX_PAYLOAD_BYTES)}, chunked and animated on this screen for the other device's camera to read.`
-            }}
-          </p>
-        </div>
-      </div>
+      <FileDrop v-if="!payload" bare label="File to send" :hint="senderHint" @files="onFiles">
+        <template #default="{ open }">
+          <div class="flex items-center justify-between px-3 pt-2">
+            <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+              File to send
+            </span>
+            <Button variant="ghost" size="sm" @click="open">Open file…</Button>
+          </div>
+          <div class="px-3 pt-1 pb-4">
+            <p class="text-sm text-muted-foreground">
+              {{ reading ? "Reading the file…" : senderHint }}
+            </p>
+          </div>
+        </template>
+      </FileDrop>
 
-      <div
+      <FileDrop
         v-else
-        class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
+        ref="replaceDrop"
+        compact
+        :paste="false"
+        :label="picked?.name ?? 'Chosen file'"
+        :hint="formatBytes(picked?.size ?? 0)"
+        @files="onFiles"
       >
-        <span class="text-sm font-medium break-all">{{ picked?.name }}</span>
-        <span class="font-mono text-xs text-muted-foreground tabular-nums">
-          {{ formatBytes(picked?.size ?? 0) }}
-        </span>
-        <span class="grow" />
-        <Button variant="ghost" size="sm" @click="fileInput?.click()">Choose another…</Button>
-        <input ref="fileInput" type="file" class="hidden" @change="onPickFile" />
-      </div>
+        <template #actions>
+          <Button variant="ghost" size="sm" @click="replaceDrop?.open()">Choose another…</Button>
+        </template>
+      </FileDrop>
 
       <!-- Options -->
       <div v-if="payload" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -890,14 +878,7 @@ onUnmounted(() => {
 
     <!-- Receiver -->
     <template v-else>
-      <div
-        v-if="receiveError"
-        role="alert"
-        class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-sm shadow-[var(--sh-inset)]"
-      >
-        <span class="font-medium text-destructive">{{ receiveError.message }}</span>
-        <span v-if="receiveError.fix" class="text-muted-foreground">{{ receiveError.fix }}</span>
-      </div>
+      <ErrorBanner v-if="receiveError" :message="receiveError.message" :hint="receiveError.fix" />
 
       <div class="relative overflow-hidden rounded-[10px] bg-black shadow-[var(--sh-inset)]">
         <video
@@ -944,12 +925,7 @@ onUnmounted(() => {
           </span>
         </div>
 
-        <div class="h-2 w-full overflow-hidden rounded-full bg-card shadow-[var(--sh-inset)]">
-          <div
-            class="h-full rounded-full bg-[image:var(--grad-brand)] transition-[width] duration-150"
-            :style="{ width: `${progressPercent}%` }"
-          />
-        </div>
+        <ProgressBar :value="progressPercent" track="card" aria-label="Transfer progress" />
 
         <div class="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs tabular-nums">
           <span>{{ status.received }} of {{ status.total }} chunks</span>

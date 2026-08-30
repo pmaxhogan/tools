@@ -3,6 +3,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import SiteHeader from "@/components/SiteHeader.astro";
 import { iconFor } from "@/lib/tool-icons";
 import { relatedTools } from "@/lib/related-tools";
+import { KEYBOARD_FIRST_TOOLS } from "@/lib/shortcuts";
 import { categoryByLabel, categoryPath } from "@/tools/categories";
 import { tools } from "@/tools/registry";
 import type { ToolMeta } from "@/tools/types";
@@ -165,9 +166,15 @@ const jsonLd = {
       </details>
     </section>
 
-    <p class="mt-4 max-w-[72ch] text-xs text-muted-foreground">
-      Keyboard shortcuts: press <kbd>?</kbd> anywhere on this page to see them.
-    </p>
+    {
+      /* Not on a tool whose subject is the keyboard: those pages deliberately
+         have no shortcut sheet, so promising one would be wrong. */
+      !KEYBOARD_FIRST_TOOLS.has(meta.slug) && (
+        <p class="mt-4 max-w-[72ch] text-xs text-muted-foreground">
+          Keyboard shortcuts: press <kbd>?</kbd> anywhere on this page to see them.
+        </p>
+      )
+    }
 
     <footer class="mt-12 max-w-[72ch] border-t pt-6 text-xs text-muted-foreground">
       <p>

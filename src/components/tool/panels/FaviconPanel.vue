@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import CopyButton from "../CopyButton.vue";
+import FileDrop from "../FileDrop.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 /**
  * Bespoke panel for the favicon generator. The pure logic layer can only pack
@@ -90,9 +92,7 @@ const rasters = shallowRef<Raster[]>([]);
 const icoBlob = shallowRef<Blob | null>(null);
 const busy = ref(false);
 const downloadingAll = ref(false);
-const dragging = ref(false);
 const error = ref<{ message: string; fix?: string } | null>(null);
-const fileInput = ref<HTMLInputElement>();
 const mounted = ref(false);
 
 const hasSource = computed(() => sourceWidth.value > 0 && sourceHeight.value > 0);
@@ -385,27 +385,15 @@ async function loadFile(file: File) {
   await generate();
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
+function onFiles(files: File[]) {
+  const file = files[0];
   if (file) loadFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  loadFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
 }
 
 function reset() {
   releaseRasters();
   releaseSource();
   error.value = null;
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 function onCropChange(value: boolean) {
@@ -500,51 +488,52 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      accept="image/*"
+      bare
+      label="Drop a square image here, or pick one"
+      hint="PNG, JPEG, WebP, GIF and SVG all work, and your files and inputs never leave your device."
+      @files="onFiles"
     >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
-          >Source image</span
-        >
-        <div class="flex items-center gap-1">
-          <Button v-if="hasSource" variant="ghost" size="sm" @click="reset"> Clear </Button>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open image </Button>
-          <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
+      <template #default="{ open }">
+        <div class="flex items-center justify-between px-3 pt-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+            >Source image</span
+          >
+          <div class="flex items-center gap-1">
+            <Button v-if="hasSource" variant="ghost" size="sm" @click="reset"> Clear </Button>
+            <Button variant="ghost" size="sm" @click="open"> Open image </Button>
+          </div>
         </div>
-      </div>
 
-      <div v-if="!hasSource" class="px-3 pt-2 pb-6 text-center">
-        <p class="text-sm text-muted-foreground">
-          Drop a square image here, or pick one. PNG, JPEG, WebP, GIF and SVG all work, and your
-          files and inputs never leave your device.
-        </p>
-      </div>
-
-      <div v-else class="flex flex-wrap items-center gap-4 px-3 pt-3 pb-4">
-        <div
-          class="grid size-20 shrink-0 place-items-center rounded-[6px] bg-background p-1.5 shadow-[var(--sh-inset)]"
-        >
-          <img
-            :src="sourceUrl ?? ''"
-            alt="Source image preview"
-            class="max-h-full max-w-full object-contain"
-          />
-        </div>
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-sm font-medium">
-            {{ fileName }}
-          </p>
-          <p class="font-mono text-xs text-muted-foreground tabular-nums">
-            {{ sourceWidth }} x {{ sourceHeight }} pixels
+        <div v-if="!hasSource" class="px-3 pt-2 pb-6 text-center">
+          <p class="text-sm text-muted-foreground">
+            Drop a square image here, or pick one. PNG, JPEG, WebP, GIF and SVG all work, and your
+            files and inputs never leave your device.
           </p>
         </div>
-      </div>
-    </div>
+
+        <div v-else class="flex flex-wrap items-center gap-4 px-3 pt-3 pb-4">
+          <div
+            class="grid size-20 shrink-0 place-items-center rounded-[6px] bg-background p-1.5 shadow-[var(--sh-inset)]"
+          >
+            <img
+              :src="sourceUrl ?? ''"
+              alt="Source image preview"
+              class="max-h-full max-w-full object-contain"
+            />
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium">
+              {{ fileName }}
+            </p>
+            <p class="font-mono text-xs text-muted-foreground tabular-nums">
+              {{ sourceWidth }} x {{ sourceHeight }} pixels
+            </p>
+          </div>
+        </div>
+      </template>
+    </FileDrop>
 
     <div
       v-if="notices.length"
@@ -625,18 +614,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <p v-if="busy" class="text-sm text-muted-foreground" aria-live="polite">
       Rendering the icon sizes.

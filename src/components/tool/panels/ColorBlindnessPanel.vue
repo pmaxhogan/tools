@@ -19,6 +19,8 @@ import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 import OutputView from "../OutputView.vue";
 
 /**
@@ -251,12 +253,10 @@ const imageReady = ref(false);
 const imageError = ref<{ message: string; fix?: string } | null>(null);
 const processing = ref(false);
 const progress = ref(0);
-const dragging = ref(false);
 
 const imageWidth = ref(0);
 const imageHeight = ref(0);
 
-const fileInput = ref<HTMLInputElement>();
 const originalCanvas = ref<HTMLCanvasElement>();
 const simulatedCanvas = ref<HTMLCanvasElement>();
 
@@ -419,15 +419,8 @@ async function acceptImage(file: File | null | undefined) {
   await runSimulation();
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  void acceptImage(e.dataTransfer?.files[0]);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  void acceptImage(picker.files?.[0]);
-  picker.value = "";
+function onFiles(files: File[]) {
+  void acceptImage(files[0]);
 }
 
 const downloadName = computed(() => {
@@ -497,8 +490,8 @@ onUnmounted(() => {
             :aria-invalid="paletteError ? 'true' : undefined"
           />
           <p class="text-xs text-muted-foreground">
-            One color per line, or separated by commas. Short hex, long hex, bare hex, and rgb()
-            all parse.
+            One color per line, or separated by commas. Short hex, long hex, bare hex, and rgb() all
+            parse.
           </p>
         </div>
 
@@ -513,14 +506,7 @@ onUnmounted(() => {
           />
         </div>
 
-        <div
-          v-if="paletteError"
-          role="alert"
-          class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-        >
-          <span class="font-semibold text-destructive">{{ paletteError.message }}</span>
-          <span v-if="paletteError.fix" class="text-muted-foreground">{{ paletteError.fix }}</span>
-        </div>
+        <ErrorBanner v-if="paletteError" :message="paletteError.message" :hint="paletteError.fix" />
 
         <!-- swatches -->
         <div v-if="swatches.length > 0" class="flex flex-col gap-2">
@@ -545,7 +531,11 @@ onUnmounted(() => {
                 </figcaption>
               </figure>
 
-              <figure v-for="sim in row.sims" :key="sim.kind" class="flex w-[5.5rem] flex-col gap-1">
+              <figure
+                v-for="sim in row.sims"
+                :key="sim.kind"
+                class="flex w-[5.5rem] flex-col gap-1"
+              >
                 <div
                   class="h-11 w-full rounded-[8px] border"
                   :style="{ backgroundColor: sim.hex }"
@@ -572,33 +562,12 @@ onUnmounted(() => {
 
       <!-- image -->
       <TabsContent value="image" class="flex flex-col gap-4 pt-4">
-        <div
-          class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-          :class="dragging ? 'ring-2 ring-ring' : ''"
-          @dragover.prevent="dragging = true"
-          @dragleave="dragging = false"
-          @drop.prevent="onDrop"
-        >
-          <div class="flex items-center justify-between gap-2 px-3 pt-2">
-            <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-              Image
-            </span>
-            <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-            <input
-              ref="fileInput"
-              type="file"
-              class="hidden"
-              accept="image/*"
-              @change="onPickFile"
-            />
-          </div>
-          <div class="px-3 pt-1 pb-4">
-            <p class="text-sm text-muted-foreground">
-              Drop a picture here or pick one with the file button. It is drawn and transformed on a
-              canvas in this tab: your files and inputs never leave your device.
-            </p>
-          </div>
-        </div>
+        <FileDrop
+          accept="image/*"
+          label="Image"
+          hint="Drop a picture here or click to choose one. It is drawn and transformed on a canvas in this tab: your files and inputs never leave your device."
+          @files="onFiles"
+        />
 
         <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div class="flex w-full flex-col gap-1.5 sm:w-72">
@@ -624,14 +593,7 @@ onUnmounted(() => {
           </Button>
         </div>
 
-        <div
-          v-if="imageError"
-          role="alert"
-          class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-        >
-          <span class="font-semibold text-destructive">{{ imageError.message }}</span>
-          <span v-if="imageError.fix" class="text-muted-foreground">{{ imageError.fix }}</span>
-        </div>
+        <ErrorBanner v-if="imageError" :message="imageError.message" :hint="imageError.fix" />
 
         <div v-if="imageReady" class="flex flex-col gap-3">
           <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

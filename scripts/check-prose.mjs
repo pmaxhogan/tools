@@ -13,18 +13,24 @@
  *
  * Both rules govern *prose*, not source code, so comments are stripped
  * before scanning: block comments (/* *\/), line comments (// to end of
- * line), and HTML/template comments (<!-- -->). This is a heuristic, not a
- * parser — a `//` inside a string literal could in principle mask a real
- * hit — accepted here because this repo's actual dash usage is either in
- * doc comments (the common case) or in a handful of files that manipulate
- * dash characters as data, not prose (DASH_ALLOWLIST below).
+ * line), and HTML/template comments (<!-- -->).
+ *
+ * This is a heuristic, not a parser, so an opener only counts when what
+ * precedes it looks like code rather than the middle of a token: start of
+ * line, whitespace, or one of ( , { [ ; = . That matters. Without it,
+ * `accept="image/*"` reads as the start of a block comment and blanks
+ * everything up to the next `*\/`, which was silently skipping thousands of
+ * lines of real page copy (every meta.ts whose examples mention a MIME
+ * wildcard), and `https://` reads as a line comment and blanks the rest of
+ * that line. Formatted code always puts whitespace or an opening bracket
+ * before a real comment, so nothing genuine is missed by the rule.
  *
  * DASH_ALLOWLIST exempts specific file:line pairs where an em or en dash is
  * the literal subject of the code, not prose: a regex character class that
  * strips dash variants from input, and lookup tables whose values are the
  * dash characters themselves. Each entry documents why. This allowlist is
- * for genuine code, never for user-facing copy — a real prose violation
- * must be fixed, not allowlisted.
+ * for genuine code, never for user-facing copy. A real prose violation must
+ * be fixed, not allowlisted.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join, relative } from "node:path";
@@ -92,6 +98,20 @@ function walk(dir, out) {
   return out;
 }
 
+/** A `/` that starts a comment is preceded by one of these, or by nothing. */
+const COMMENT_LEAD = new Set(["(", ",", "{", "[", ";", "="]);
+
+/**
+ * True when the `/` at `i` can open a comment: only at the start of the file,
+ * after whitespace, or after an opening punctuation. Inside a token, as in
+ * `image/*` or `https://`, it is data, not an opener.
+ */
+function opensComment(text, i) {
+  if (i === 0) return true;
+  const prev = text[i - 1];
+  return /\s/.test(prev) || COMMENT_LEAD.has(prev);
+}
+
 /**
  * Blanks out block comments, line comments, and HTML/template comments,
  * replacing every non-newline character with a space so line and column
@@ -109,12 +129,12 @@ function stripComments(text) {
       const stop = end === -1 ? n : end + 3;
       out += text.slice(i, stop).replace(/[^\n]/g, " ");
       i = stop;
-    } else if (two === "/*") {
+    } else if (two === "/*" && opensComment(text, i)) {
       const end = text.indexOf("*/", i + 2);
       const stop = end === -1 ? n : end + 2;
       out += text.slice(i, stop).replace(/[^\n]/g, " ");
       i = stop;
-    } else if (two === "//") {
+    } else if (two === "//" && opensComment(text, i)) {
       let end = text.indexOf("\n", i);
       if (end === -1) end = n;
       out += text.slice(i, end).replace(/[^\n]/g, " ");
@@ -179,7 +199,7 @@ function main() {
 
   console.error(`check-prose: ${hits.length} hit(s):\n`);
   for (const hit of hits) {
-    console.error(`  ${hit.file}:${hit.line} — ${hit.reason}`);
+    console.error(`  ${hit.file}:${hit.line} - ${hit.reason}`);
     console.error(`    ${hit.text}`);
   }
   process.exit(1);

@@ -24,6 +24,8 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Segmented } from "@/components/ui/segmented";
 import type { SegmentedOption } from "@/components/ui/segmented";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 /**
  * Bespoke panel for the QR scanner. The generic ToolShell reads one textarea;
@@ -160,8 +162,6 @@ async function deepMayAutoload(): Promise<boolean> {
 /* upload                                                            */
 /* ---------------------------------------------------------------- */
 
-const fileInput = ref<HTMLInputElement>();
-const dragging = ref(false);
 /** The last uploaded image, kept so a deep scan tap can rerun it. */
 let lastUpload: RawImage | null = null;
 let lastUploadHits: ScanHit[] = [];
@@ -271,35 +271,12 @@ function acceptFile(file: File | null | undefined) {
   img.src = url;
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  acceptFile(e.dataTransfer?.files[0]);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  acceptFile(picker.files?.[0]);
-  picker.value = "";
-}
-
 /**
- * A QR screenshot is a common input and the visitor has not clicked into the
- * panel yet, so the paste listener sits on the window while upload mode is on.
+ * A QR screenshot is a common input, and FileDrop listens for a pasted file
+ * while it is mounted, which is exactly while upload mode is on.
  */
-function onPaste(e: ClipboardEvent) {
-  if (mode.value !== "upload") return;
-  const items = e.clipboardData?.items;
-  if (!items) return;
-  for (const item of items) {
-    if (item.kind === "file" && item.type.startsWith("image/")) {
-      const pasted = item.getAsFile();
-      if (pasted) {
-        e.preventDefault();
-        acceptFile(pasted);
-        return;
-      }
-    }
-  }
+function onFiles(files: File[]) {
+  acceptFile(files[0]);
 }
 
 /* ---------------------------------------------------------------- */
@@ -555,10 +532,7 @@ const deepDownloadPercent = computed(() => {
   return Math.min(100, Math.round((received / total) * 100));
 });
 
-if (typeof window !== "undefined") window.addEventListener("paste", onPaste);
-
 onUnmounted(() => {
-  if (typeof window !== "undefined") window.removeEventListener("paste", onPaste);
   stopCamera();
 });
 </script>
@@ -575,18 +549,7 @@ onUnmounted(() => {
     />
 
     <!-- Errors -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <!-- Deep scan download states -->
     <div
@@ -596,8 +559,8 @@ onUnmounted(() => {
       <ScanSearch class="size-4 shrink-0 text-muted-foreground" />
       <span class="text-muted-foreground">
         Deep scan finds small, warped, and damaged codes. It is a one time download of about
-        {{ formatBytes(DEEP_DOWNLOAD_BYTES) }} that is saved for next time, and it runs entirely
-        on your device.
+        {{ formatBytes(DEEP_DOWNLOAD_BYTES) }} that is saved for next time, and it runs entirely on
+        your device.
       </span>
       <Button size="sm" @click="mode === 'upload' ? startOfferedDeep() : confirmDeepDownload()">
         Download and scan
@@ -618,8 +581,8 @@ onUnmounted(() => {
       </span>
     </div>
     <div v-else-if="deepState === 'failed'" class="text-sm text-muted-foreground">
-      The deep scanner could not be loaded. The standard scan still works; check your connection
-      and try again.
+      The deep scanner could not be loaded. The standard scan still works; check your connection and
+      try again.
     </div>
 
     <!-- Busy -->
@@ -668,12 +631,7 @@ onUnmounted(() => {
           >Scanning… hold the code steady in the frame.</span
         >
         <span class="grow" />
-        <Button
-          variant="outline"
-          size="sm"
-          :aria-pressed="deepAssist"
-          @click="toggleDeepAssist"
-        >
+        <Button variant="outline" size="sm" :aria-pressed="deepAssist" @click="toggleDeepAssist">
           {{ deepAssist ? "Deep scan on" : "Deep scan" }}
         </Button>
         <Button
@@ -691,28 +649,12 @@ onUnmounted(() => {
 
     <!-- Upload -->
     <div v-else class="flex flex-col gap-3">
-      <div
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-        :class="dragging ? 'ring-2 ring-ring' : ''"
-        @dragover.prevent="dragging = true"
-        @dragleave="dragging = false"
-        @drop.prevent="onDrop"
-      >
-        <div class="flex items-center justify-between px-3 pt-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            Image
-          </span>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-          <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
-        </div>
-        <div class="px-3 pt-1 pb-4">
-          <p class="text-sm text-muted-foreground">
-            Drop an image of a QR code here, pick one with the file button, or press Ctrl+V to paste
-            a screenshot. It is decoded on your device: your files and inputs never leave your
-            device.
-          </p>
-        </div>
-      </div>
+      <FileDrop
+        accept="image/*"
+        label="Drop an image of a QR code here or click to choose"
+        hint="You can also press Ctrl+V to paste a screenshot. It is decoded on your device: your files and inputs never leave your device."
+        @files="onFiles"
+      />
 
       <div class="flex w-56 flex-col gap-1.5">
         <Label for="qr-inversion" class="text-xs text-muted-foreground">Color handling</Label>
@@ -743,7 +685,9 @@ onUnmounted(() => {
           </span>
         </span>
         <div class="flex items-center gap-1">
-          <span class="text-[11px] text-muted-foreground">found by {{ METHOD_LABELS[item.method] }}</span>
+          <span class="text-[11px] text-muted-foreground"
+            >found by {{ METHOD_LABELS[item.method] }}</span
+          >
           <CopyButton :text="item.result.text" label="Copy" />
           <Button v-if="index === 0" variant="ghost" size="sm" @click="scanAgain">
             Scan again
@@ -787,10 +731,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Detected but unreadable codes -->
-    <div
-      v-if="unreadCount > 0"
-      class="flex items-center gap-2 text-xs text-muted-foreground"
-    >
+    <div v-if="unreadCount > 0" class="flex items-center gap-2 text-xs text-muted-foreground">
       <ScanSearch class="size-3.5 shrink-0" />
       <span>
         The deep scan saw {{ unreadCount === 1 ? "a code shape" : `${unreadCount} code shapes` }} it

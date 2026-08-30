@@ -22,7 +22,10 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 import OutputView from "../OutputView.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for the G-code Viewer.
@@ -165,7 +168,6 @@ const fileName = ref("");
 const fileSize = ref(0);
 const pasted = ref("");
 const error = ref<{ message: string; fix?: string } | null>(null);
-const dragging = ref(false);
 const stage = ref<"idle" | "reading" | "parsing">("idle");
 
 const layerIndex = ref(0);
@@ -183,7 +185,6 @@ const buildingStack = ref(false);
 
 const viewportRef = ref<HTMLElement>();
 const canvasRef = ref<HTMLCanvasElement>();
-const fileInput = ref<HTMLInputElement>();
 
 /* ------------------------------------------------------------------ *
  * derived
@@ -331,20 +332,9 @@ async function readFile(file: File): Promise<void> {
   }
 }
 
-function onDrop(e: DragEvent): void {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
+function onFiles(files: File[]): void {
+  const file = files[0];
   if (file) void readFile(file);
-}
-
-function onPickFile(e: Event): void {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  void readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
 }
 
 let pasteTimer: ReturnType<typeof setTimeout> | undefined;
@@ -370,7 +360,6 @@ function clearFile(): void {
   error.value = null;
   layerIndex.value = 0;
   resetView();
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ------------------------------------------------------------------ *
@@ -911,61 +900,54 @@ onBeforeUnmount(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      bare
+      accept=".gcode,.gco,.g,.nc,.ngc,.tap,text/plain"
+      label="Program"
+      hint="Drop a .gcode, .gco or .nc file here, or click to choose one"
+      @files="onFiles"
     >
-      <div class="flex flex-wrap items-center justify-between gap-1 px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Program
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open a G-code file… </Button>
-        <input
-          ref="fileInput"
-          type="file"
-          class="hidden"
-          accept=".gcode,.gco,.g,.nc,.ngc,.tap,text/plain"
-          @change="onPickFile"
-        />
-      </div>
+      <template #default="{ open }">
+        <div class="flex flex-wrap items-center justify-between gap-1 px-3 pt-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Program
+          </span>
+          <Button variant="ghost" size="sm" @click="open"> Open a G-code file… </Button>
+        </div>
 
-      <div v-if="model" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
-          <button
-            type="button"
-            aria-label="Remove this program"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearFile"
+        <div v-if="model" class="px-3 pt-2 pb-3">
+          <span
+            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
-            <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
+            <span class="truncate font-medium">{{ fileName }}</span>
+            <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
+            <button
+              type="button"
+              aria-label="Remove this program"
+              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+              @click="clearFile"
+            >
+              <X class="size-3.5" />
+            </button>
+          </span>
+        </div>
 
-      <div v-else class="flex flex-col gap-2 px-3 pt-1 pb-3">
-        <p class="text-sm text-muted-foreground">
-          Drop a .gcode, .gco or .nc file here, or paste a short program below. Everything is walked
-          in this tab: your files and inputs never leave your device.
-        </p>
-        <Textarea
-          :model-value="pasted"
-          rows="4"
-          spellcheck="false"
-          placeholder="Paste G-code here, for example G28 then G1 X10 Y10 E1 F1200…"
-          class="resize-y bg-card font-mono text-xs"
-          @update:model-value="onPaste"
-          @dragover.prevent="dragging = true"
-          @drop.prevent="onDrop"
-        />
-      </div>
-    </div>
+        <div v-else class="flex flex-col gap-2 px-3 pt-1 pb-3">
+          <p class="text-sm text-muted-foreground">
+            Drop a .gcode, .gco or .nc file here, or paste a short program below. Everything is
+            walked in this tab: your files and inputs never leave your device.
+          </p>
+          <Textarea
+            :model-value="pasted"
+            rows="4"
+            spellcheck="false"
+            placeholder="Paste G-code here, for example G28 then G1 X10 Y10 E1 F1200…"
+            class="resize-y bg-card font-mono text-xs"
+            @update:model-value="onPaste"
+          />
+        </div>
+      </template>
+    </FileDrop>
 
     <!-- Status -->
     <p v-if="stage !== 'idle'" role="status" class="text-sm text-muted-foreground">
@@ -973,18 +955,7 @@ onBeforeUnmount(() => {
     </p>
 
     <!-- Errors -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <template v-if="model">
       <template v-if="hasDrawing">
@@ -1083,12 +1054,7 @@ onBeforeUnmount(() => {
             aria-live="polite"
           >
             <span class="shrink-0 tabular-nums">{{ statusText }}</span>
-            <span class="h-1 flex-1 overflow-hidden rounded-full bg-secondary">
-              <span
-                class="block h-full rounded-full bg-[image:var(--grad-brand)]"
-                :style="{ width: `${Math.round(buildProgress * 100)}%` }"
-              />
-            </span>
+            <ProgressBar class="flex-1" size="sm" :value="Math.round(buildProgress * 100)" />
           </div>
         </div>
 

@@ -136,9 +136,12 @@ const ICONS = { default: Info, success: Check, error: TriangleAlert } as const;
             {{ entry.description }}
           </p>
         </div>
+        <!-- No focus utilities on the dismiss button: global.css owns the one
+             :focus-visible treatment (DESIGN.md), and an `outline-none` here
+             would have suppressed it. -->
         <button
           type="button"
-          class="-mt-0.5 -mr-1 rounded-[8px] p-1 text-muted-foreground transition-colors duration-[120ms] outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none"
+          class="-mt-0.5 -mr-1 rounded-[8px] p-1 text-muted-foreground transition-colors duration-[120ms] hover:bg-muted hover:text-foreground motion-reduce:transition-none"
           aria-label="Dismiss notification"
           @click="dismissToast(entry.id)"
         >

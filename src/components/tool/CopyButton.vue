@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Component, ref } from "vue";
+import { type Component, onUnmounted, ref } from "vue";
 import { Check, Copy } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import type { ButtonVariants } from "@/components/ui/button";
@@ -80,6 +80,10 @@ async function copy() {
   timer = window.setTimeout(() => (copied.value = false), 1500);
   emit("copied");
 }
+
+// A panel can be swapped out inside the 1.5s window (a view transition, a tab
+// change), so the flourish timer never outlives the button.
+onUnmounted(() => clearTimeout(timer));
 </script>
 
 <template>

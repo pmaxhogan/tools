@@ -45,6 +45,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
 
 defineProps<{ meta: ToolMeta }>();
@@ -1026,24 +1027,16 @@ onMounted(() => {
 
       <!-- results -->
       <section class="flex min-w-0 flex-col gap-3" aria-label="Results" aria-live="polite">
-        <div
+        <ErrorBanner
           v-if="simulation.error"
-          class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
-          role="alert"
-        >
-          <p class="font-medium">{{ simulation.error.message }}</p>
-          <p v-if="simulation.error.fix" class="text-muted-foreground">
-            {{ simulation.error.fix }}
-          </p>
-        </div>
-        <div
+          :message="simulation.error.message"
+          :hint="simulation.error.fix"
+        />
+        <ErrorBanner
           v-else-if="wear.error && mode === 'durability'"
-          class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
-          role="alert"
-        >
-          <p class="font-medium">{{ wear.error.message }}</p>
-          <p v-if="wear.error.fix" class="text-muted-foreground">{{ wear.error.fix }}</p>
-        </div>
+          :message="wear.error.message"
+          :hint="wear.error.fix"
+        />
 
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div

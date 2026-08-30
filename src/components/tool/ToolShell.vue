@@ -17,6 +17,7 @@ import { coerceOpts, readFragment, writeFragment } from "@/lib/fragment";
 import { exampleOptsToState, isTextLike, pickExample, quickEntryPlaceholder } from "@/lib/examples";
 import { formatBytes } from "@/lib/format";
 import { recordToRows, rowsToText } from "@/lib/key-value";
+import { copyText } from "@/lib/clipboard";
 import { installToolShortcuts } from "@/lib/shortcuts";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -160,21 +161,42 @@ async function run() {
   }
 }
 
+function syncFragment() {
+  // An untouched example is the shell's suggestion, not the visitor's state,
+  // so it stays out of the URL: a link copied from a fresh page is either
+  // clean or exactly what they typed. The first real edit ends that.
+  if (exampleActive.value) return;
+  writeFragment({
+    // File bytes are never shareable state, so they are simply not
+    // persisted; neither is a secret input (passwords, signing keys).
+    input: hasInput && !fileBytes.value && !props.meta.sensitiveInput ? input.value : undefined,
+    opts: Object.fromEntries(Object.entries(opts.value).map(([k, v]) => [k, String(v)])),
+  });
+}
+
 function scheduleRun() {
   clearTimeout(debounce);
   debounce = setTimeout(() => {
     run();
-    // An untouched example is the shell's suggestion, not the visitor's state,
-    // so it stays out of the URL: a link copied from a fresh page is either
-    // clean or exactly what they typed. The first real edit ends that.
-    if (exampleActive.value) return;
-    writeFragment({
-      // File bytes are never shareable state, so they are simply not
-      // persisted; neither is a secret input (passwords, signing keys).
-      input: hasInput && !fileBytes.value && !props.meta.sensitiveInput ? input.value : undefined,
-      opts: Object.fromEntries(Object.entries(opts.value).map(([k, v]) => [k, String(v)])),
-    });
+    syncFragment();
   }, 150);
+}
+
+/**
+ * Runs now instead of after the debounce.
+ *
+ * The debounce exists to coalesce keystrokes. Loading or dropping a file is
+ * one deliberate act with nothing to coalesce, and waiting made the panel
+ * contradict itself: the file chip appears immediately while the previous
+ * "provide a file" message is still on screen, and because `isHint` reads
+ * `fileBytes`, that message turns from a neutral hint into a red error for the
+ * length of the debounce. Live QA caught exactly that frame on the WASM
+ * inspector's "Try a sample" and read it as the sample never reaching run().
+ */
+function runNow() {
+  clearTimeout(debounce);
+  void run();
+  syncFragment();
 }
 
 /** True while every option still matches what the example asked for. */
@@ -264,14 +286,18 @@ async function loadSample(example: FileExample) {
 /**
  * Copies the current output to the clipboard: the same text OutputView's own
  * copy button would send, built the same way (rowsToText over recordToRows
- * for a Record output, the raw string otherwise). A no-op with nothing to
- * copy or nowhere to put it.
+ * for a Record output, the raw string otherwise). A no-op when there is no
+ * output yet.
  */
 async function copyOutput(): Promise<void> {
-  if (output.value === null || typeof navigator === "undefined" || !navigator.clipboard) return;
+  if (output.value === null) return;
   const text =
     typeof output.value === "string" ? output.value : rowsToText(recordToRows(output.value));
-  await navigator.clipboard.writeText(text);
+  // Through the shared helper, never navigator.clipboard directly: the
+  // keyboard path has to raise the same "Copied" and "Copy failed" toasts the
+  // copy buttons do, or a shortcut that silently did nothing is
+  // indistinguishable from one that worked.
+  await copyText(text, "Output copied");
 }
 
 /**
@@ -354,7 +380,7 @@ function clearFileState() {
 /** The x on the file chip: drop the bytes and re-run on the empty string. */
 function clearFile() {
   clearFileState();
-  scheduleRun();
+  runNow();
 }
 
 async function readFile(file: File) {
@@ -364,7 +390,7 @@ async function readFile(file: File) {
     fileSize.value = file.size;
     // Clearing the textarea leaves the bytes intact (see the input watcher).
     input.value = "";
-    scheduleRun();
+    runNow();
     return;
   }
   clearFileState();

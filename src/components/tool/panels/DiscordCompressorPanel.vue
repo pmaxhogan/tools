@@ -34,6 +34,9 @@ import { downloadUrl } from "@/lib/download";
 import type { KeyValueRow } from "@/lib/key-value";
 import { useStickToBottom } from "@/lib/stick-to-bottom";
 import KeyValueGrid from "../KeyValueGrid.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
+import ProgressBar from "../ProgressBar.vue";
 import {
   MAX_CAP_MB,
   OVERHEAD_FLOOR_BYTES,
@@ -67,8 +70,6 @@ const supported = ref(false);
 
 const file = shallowRef<File | null>(null);
 const safeName = ref("");
-const fileInput = ref<HTMLInputElement>();
-const dragging = ref(false);
 
 const probing = ref(false);
 const durationSec = ref<number | null>(null);
@@ -365,18 +366,9 @@ function setFile(picked: File) {
   probe(picked);
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const picked = e.dataTransfer?.files[0];
+function onFiles(files: File[]) {
+  const picked = files[0];
   if (picked) setFile(picked);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const picked = picker.files?.[0];
-  if (picked) setFile(picked);
-  // Reset so picking the same file again still fires a change event.
-  picker.value = "";
 }
 
 function clearFile() {
@@ -592,52 +584,47 @@ onUnmounted(clearResult);
 
     <template v-else>
       <!-- Input -->
-      <div
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-        :class="dragging ? 'ring-2 ring-ring' : ''"
-        @dragover.prevent="dragging = true"
-        @dragleave="dragging = false"
-        @drop.prevent="onDrop"
-      >
-        <div class="flex items-center justify-between px-3 pt-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            Video
-          </span>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-          <input ref="fileInput" type="file" class="hidden" accept="video/*" @change="onPickFile" />
-        </div>
-
-        <div v-if="file" class="flex flex-wrap items-center gap-2 px-3 pt-2 pb-3">
-          <span
-            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-          >
-            <span class="truncate font-medium">{{ file.name }}</span>
-            <span class="shrink-0 text-muted-foreground tabular-nums">
-              {{ formatBytes(file.size) }}
+      <FileDrop accept="video/*" @files="onFiles">
+        <template #default="{ open }">
+          <div class="flex items-center justify-between pb-1">
+            <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+              Video
             </span>
-            <button
-              type="button"
-              aria-label="Remove video"
-              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-              @click="clearFile"
-            >
-              <X class="size-3.5" />
-            </button>
-          </span>
-          <span class="text-xs text-muted-foreground tabular-nums">
-            <template v-if="probing">Reading the clip…</template>
-            <template v-else-if="durationSec !== null">
-              {{ formatClock(durationSec) }}
-              <template v-if="sourceWidth">· {{ sourceWidth }} x {{ sourceHeight }}</template>
-            </template>
-          </span>
-        </div>
+            <Button variant="ghost" size="sm" @click="open"> Open file… </Button>
+          </div>
 
-        <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-          Drop a video here or pick one to get started. Everything runs in this tab: your files and
-          inputs never leave your device.
-        </p>
-      </div>
+          <div v-if="file" class="flex flex-wrap items-center gap-2">
+            <span
+              class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
+            >
+              <span class="truncate font-medium">{{ file.name }}</span>
+              <span class="shrink-0 text-muted-foreground tabular-nums">
+                {{ formatBytes(file.size) }}
+              </span>
+              <button
+                type="button"
+                aria-label="Remove video"
+                class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                @click="clearFile"
+              >
+                <X class="size-3.5" />
+              </button>
+            </span>
+            <span class="text-xs text-muted-foreground tabular-nums">
+              <template v-if="probing">Reading the clip…</template>
+              <template v-else-if="durationSec !== null">
+                {{ formatClock(durationSec) }}
+                <template v-if="sourceWidth">· {{ sourceWidth }} x {{ sourceHeight }}</template>
+              </template>
+            </span>
+          </div>
+
+          <p v-else class="text-sm text-muted-foreground">
+            Drop a video here or click to choose one. Everything runs in this tab: your files and
+            inputs never leave your device.
+          </p>
+        </template>
+      </FileDrop>
 
       <!-- Media engine -->
       <div
@@ -653,24 +640,12 @@ onUnmounted(clearResult);
           and work offline. Nothing is uploaded: your files and inputs never leave your device.
         </p>
 
-        <div v-if="engineState === 'loading'" class="flex flex-col gap-2">
-          <div
-            class="h-2 overflow-hidden rounded-full bg-background"
-            role="progressbar"
-            :aria-valuenow="Math.round(downloadPercent)"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            :aria-label="downloadLabel"
-          >
-            <div
-              class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-              :style="{ width: `${downloadPercent}%` }"
-            />
-          </div>
-          <p class="font-mono text-xs text-muted-foreground tabular-nums">
-            {{ downloadLabel }}
-          </p>
-        </div>
+        <ProgressBar
+          v-if="engineState === 'loading'"
+          :value="downloadPercent"
+          :label="downloadLabel"
+          track="card"
+        />
 
         <!-- This branch only ever renders while engineState is 'idle' (the
              sibling v-if already covers 'loading', the wrapper covers
@@ -751,18 +726,11 @@ onUnmounted(clearResult);
           same bit budget fewer pixels to spend on, which is how a tight cap stays sharp.
         </p>
 
-        <div
+        <ErrorBanner
           v-if="capState.issue"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-medium text-destructive">
-            {{ capState.issue.message }}
-          </p>
-          <p v-if="capState.issue.fix" class="mt-1 text-muted-foreground">
-            {{ capState.issue.fix }}
-          </p>
-        </div>
+          :message="capState.issue.message"
+          :hint="capState.issue.fix"
+        />
       </div>
 
       <!-- The plan -->
@@ -812,20 +780,11 @@ onUnmounted(clearResult);
         </span>
       </div>
 
-      <div
+      <ProgressBar
         v-if="running && overallPercent !== null"
-        class="h-2 overflow-hidden rounded-full bg-secondary"
-        role="progressbar"
-        :aria-valuenow="overallPercent"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        :aria-label="`Pass ${activePass} of 2`"
-      >
-        <div
-          class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-          :style="{ width: `${overallPercent}%` }"
-        />
-      </div>
+        :value="overallPercent"
+        :label="`Pass ${activePass} of 2`"
+      />
 
       <p class="text-xs text-muted-foreground">
         Pass 1 measures where the motion and detail are, pass 2 spends the bit budget against that
@@ -852,22 +811,12 @@ onUnmounted(clearResult);
       </details>
 
       <!-- Errors -->
-      <div
-        v-if="error"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ error.message }}
-        </p>
-        <p v-if="error.fix" class="mt-1 text-muted-foreground">
-          {{ error.fix }}
-        </p>
+      <ErrorBanner v-if="error" :message="error.message" :hint="error.fix">
         <pre
           v-if="error.log.length"
-          class="mt-2 max-h-40 overflow-auto font-mono text-xs whitespace-pre-wrap break-all text-muted-foreground"
+          class="max-h-40 overflow-auto font-mono text-xs whitespace-pre-wrap break-all text-muted-foreground"
           >{{ error.log.join("\n") }}</pre>
-      </div>
+      </ErrorBanner>
 
       <!-- Output -->
       <div v-if="result" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">

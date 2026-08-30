@@ -22,6 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download } from "lucide-vue-next";
 import CopyButton from "../CopyButton.vue";
 import OutputView from "../OutputView.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 /**
  * Bespoke panel for the Keyboard Layout Heatmap.
@@ -70,8 +72,6 @@ const layoutSpec = computed<SelectOptionSpec>(() => {
 const text = ref("");
 const layout = ref("qwerty");
 const mode = ref<"analyze" | "compare">("analyze");
-const dragging = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
 /** Which layout's heatmap the compare view is currently showing full size. */
 const heatmapLayoutId = ref("qwerty");
@@ -94,28 +94,9 @@ async function readFile(file: File) {
   text.value = await file.text();
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
-  if (file) readFile(file);
-}
-
-function onPaste(e: ClipboardEvent) {
-  const file = e.clipboardData?.files[0];
-  if (file) {
-    e.preventDefault();
-    readFile(file);
-  }
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+function onFiles(files: File[]) {
+  const file = files[0];
+  if (file) void readFile(file);
 }
 
 function loadSample() {
@@ -279,44 +260,32 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex flex-wrap items-center justify-between gap-1 px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Text
-        </span>
-        <div class="flex items-center gap-1">
-          <Button variant="ghost" size="sm" @click="loadSample"> Load sample paragraph </Button>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-          <input
-            ref="fileInput"
-            type="file"
-            class="hidden"
-            accept=".txt,text/plain"
-            @change="onPickFile"
-          />
+    <FileDrop accept=".txt,text/plain" @files="onFiles">
+      <template #default="{ open }">
+        <div class="flex flex-wrap items-center justify-between gap-1 pb-1">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Text
+          </span>
+          <div class="flex items-center gap-1">
+            <Button variant="ghost" size="sm" @click="loadSample"> Load sample paragraph </Button>
+            <Button variant="ghost" size="sm" @click="open"> Open file… </Button>
+          </div>
         </div>
-      </div>
 
-      <Textarea
-        v-model="text"
-        placeholder="Paste your writing, code, or a chat log here, or drop a .txt file…"
-        class="max-h-80 min-h-32 overflow-y-auto border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0 dark:bg-transparent"
-        @paste="onPaste"
-      />
+        <Textarea
+          v-model="text"
+          placeholder="Paste your writing, code, or a chat log here, or drop a .txt file…"
+          class="max-h-80 min-h-32 overflow-y-auto border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0 dark:bg-transparent"
+        />
 
-      <p
-        class="px-3 pb-2 text-xs"
-        :class="text.length > MAX_CHARACTERS ? 'text-destructive' : 'text-muted-foreground'"
-      >
-        {{ text.length.toLocaleString() }} / {{ MAX_CHARACTERS.toLocaleString() }} characters
-      </p>
-    </div>
+        <p
+          class="pt-2 text-xs"
+          :class="text.length > MAX_CHARACTERS ? 'text-destructive' : 'text-muted-foreground'"
+        >
+          {{ text.length.toLocaleString() }} / {{ MAX_CHARACTERS.toLocaleString() }} characters
+        </p>
+      </template>
+    </FileDrop>
 
     <Tabs v-model="mode" class="flex flex-col gap-4">
       <!-- Controls -->
@@ -339,14 +308,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Error -->
-      <div
-        v-if="error"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">{{ error.message }}</p>
-        <p v-if="error.fix" class="mt-1 text-muted-foreground">{{ error.fix }}</p>
-      </div>
+      <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
       <!-- Export -->
       <div v-if="report && !error" class="flex flex-wrap items-center gap-2">

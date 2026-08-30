@@ -16,6 +16,7 @@ import {
 } from "@/tools/countdown-timer/index";
 import { readFragment, writeFragment } from "@/lib/fragment";
 import CopyButton from "../CopyButton.vue";
+import ProgressBar from "../ProgressBar.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -789,20 +790,14 @@ onUnmounted(() => {
         }}
       </p>
 
-      <div
+      <ProgressBar
         v-if="mode === 'countdown'"
-        class="h-1.5 w-full overflow-hidden rounded-full bg-border"
-        role="progressbar"
-        :aria-valuemin="0"
-        :aria-valuemax="100"
-        :aria-valuenow="Math.round(progress * 100)"
+        class="w-full"
+        size="sm"
+        track="card"
+        :value="progress * 100"
         aria-label="Countdown progress"
-      >
-        <div
-          class="h-full rounded-full bg-[image:var(--grad-brand)] transition-[width] duration-150 ease-out"
-          :style="{ width: `${progress * 100}%` }"
-        ></div>
-      </div>
+      />
 
       <p v-if="mode === 'countdown' && endsAtText" class="text-xs text-muted-foreground">
         {{ cdFinished ? "Ended at" : "Ends at" }} {{ endsAtText }}

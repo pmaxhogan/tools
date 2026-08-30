@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from "vue";
-import { Aperture, Camera, CircleAlert, Mic, RefreshCw } from "lucide-vue-next";
+import { Aperture, Camera, Mic, RefreshCw } from "lucide-vue-next";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import {
   analyzeSamples,
@@ -19,6 +19,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import CopyButton from "../CopyButton.vue";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
 
 /**
@@ -197,13 +199,7 @@ function deviceSpec(id: string, label: string, list: DeviceEntry[], current: str
 }
 
 const cameraSpec = computed(() =>
-  deviceSpec(
-    "webcam-mic-camera",
-    "Camera",
-    cameraDevices.value,
-    selectedCameraId.value,
-    "Camera",
-  ),
+  deviceSpec("webcam-mic-camera", "Camera", cameraDevices.value, selectedCameraId.value, "Camera"),
 );
 const micSpec = computed(() =>
   deviceSpec(
@@ -518,12 +514,14 @@ const LEVEL_TEXT: Record<Level, string> = {
 };
 
 const LEVEL_HINT: Record<Level, string> = {
-  silent: "No sound is reaching the browser. Check that the right microphone is selected and that it is not muted in your system settings.",
+  silent:
+    "No sound is reaching the browser. Check that the right microphone is selected and that it is not muted in your system settings.",
   "very quiet":
     "Audible but thin. Move the microphone closer, or raise the input volume in your system sound settings.",
   good: "A healthy speaking level. This is what you want on a call.",
   loud: "Strong, with little headroom left. Back off slightly so sudden laughs do not distort.",
-  clipping: "The signal is hitting the ceiling and distorting. Lower the input volume or move back from the microphone.",
+  clipping:
+    "The signal is hitting the ceiling and distorting. Lower the input volume or move back from the microphone.",
 };
 
 const barClass = computed(() => LEVEL_BAR[level.value]);
@@ -799,19 +797,7 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <div
-        v-if="cameraError"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="flex items-start gap-1.5 font-medium text-destructive">
-          <CircleAlert class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          {{ cameraError.message }}
-        </p>
-        <p class="mt-1 text-muted-foreground">
-          {{ cameraError.fix }}
-        </p>
-      </div>
+      <ErrorBanner v-if="cameraError" :message="cameraError.message" :hint="cameraError.fix" />
 
       <div class="overflow-hidden rounded-[10px] bg-black shadow-[var(--sh-inset)]">
         <video
@@ -839,10 +825,7 @@ onUnmounted(() => {
         the preview above is, so it matches what other people see.
       </p>
 
-      <dl
-        v-if="videoRows"
-        class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[max-content_1fr]"
-      >
+      <dl v-if="videoRows" class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[max-content_1fr]">
         <template v-for="(value, key) in videoRows" :key="key">
           <dt class="text-xs text-muted-foreground sm:pt-0.5">{{ key }}</dt>
           <dd class="font-mono text-sm break-all tabular-nums">{{ value }}</dd>
@@ -870,26 +853,14 @@ onUnmounted(() => {
         </Button>
       </div>
 
-      <div
-        v-if="micError"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="flex items-start gap-1.5 font-medium text-destructive">
-          <CircleAlert class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          {{ micError.message }}
-        </p>
-        <p class="mt-1 text-muted-foreground">
-          {{ micError.fix }}
-        </p>
-      </div>
+      <ErrorBanner v-if="micError" :message="micError.message" :hint="micError.fix" />
 
-      <div v-if="!micOn" class="rounded-[10px] bg-secondary p-4 shadow-[var(--sh-inset)]">
-        <p class="max-w-[68ch] text-sm text-muted-foreground">
-          The microphone is off. Press Start microphone, then talk at your normal call volume and
-          watch the meter: you want it sitting in the green band, not pinned at either end.
-        </p>
-      </div>
+      <EmptyState
+        v-if="!micOn"
+        title="The microphone is off"
+        hint="Press Start microphone, then talk at your normal call volume and watch the meter: you want it sitting in the green band, not pinned at either end."
+        icon="Mic"
+      />
 
       <template v-else>
         <!-- level meter -->
@@ -917,7 +888,9 @@ onUnmounted(() => {
             />
           </div>
 
-          <div class="flex justify-between font-mono text-[10px] text-muted-foreground tabular-nums">
+          <div
+            class="flex justify-between font-mono text-[10px] text-muted-foreground tabular-nums"
+          >
             <span>-60 dB</span>
             <span>-40</span>
             <span>-20</span>
@@ -925,7 +898,8 @@ onUnmounted(() => {
           </div>
 
           <p class="text-xs text-muted-foreground">
-            {{ levelHint }} Peak hold {{ peakLabel }}<span v-if="clippedCount > 0">
+            {{ levelHint }} Peak hold {{ peakLabel
+            }}<span v-if="clippedCount > 0">
               , {{ clippedCount }} clipped samples in the last window</span
             >.
           </p>

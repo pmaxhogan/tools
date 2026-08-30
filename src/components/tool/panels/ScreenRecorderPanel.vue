@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import ErrorBanner from "../ErrorBanner.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for the Screen Recorder.
@@ -559,20 +561,14 @@ const convertLabel = computed(() => {
   return "Converting to MP4";
 });
 
-const convertBarWidth = computed(() => {
+/** Percent for the conversion bar, or undefined while there is nothing to report. */
+const convertPercent = computed<number | undefined>(() => {
   if (convertStage.value === "loading-engine" && downloadTotal.value > 0) {
-    return `${Math.max(4, Math.round((downloadBytes.value / downloadTotal.value) * 100))}%`;
+    return Math.max(4, Math.round((downloadBytes.value / downloadTotal.value) * 100));
   }
-  if (convertRatio.value !== null) return `${Math.max(4, Math.round(convertRatio.value * 100))}%`;
-  return "100%";
+  if (convertRatio.value !== null) return Math.max(4, Math.round(convertRatio.value * 100));
+  return undefined;
 });
-
-const convertIndeterminate = computed(
-  () =>
-    converting.value &&
-    !(convertStage.value === "loading-engine" && downloadTotal.value > 0) &&
-    convertRatio.value === null,
-);
 
 const connectionMetered = computed(() => isMetered());
 
@@ -762,47 +758,18 @@ onUnmounted(() => {
         v-if="converting"
         class="flex flex-col gap-2 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
       >
-        <div class="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{{ convertLabel }}</span>
-        </div>
-        <div
-          class="h-1.5 overflow-hidden rounded-full bg-card"
-          role="progressbar"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          :aria-label="convertLabel"
-        >
-          <div
-            class="h-full rounded-full bg-primary transition-[width] duration-150"
-            :class="{ 'convert-pulse': convertIndeterminate }"
-            :style="{ width: convertBarWidth }"
-          />
-        </div>
+        <ProgressBar :value="convertPercent" :label="convertLabel" size="sm" track="card" />
       </div>
 
       <p v-if="convertStage === 'done'" class="text-xs text-muted-foreground">
         MP4 saved. The WebM original is still available above.
       </p>
 
-      <div
-        v-if="convertError"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">{{ convertError.message }}</p>
-        <p v-if="convertError.fix" class="mt-1 text-muted-foreground">{{ convertError.fix }}</p>
-      </div>
+      <ErrorBanner v-if="convertError" :message="convertError.message" :hint="convertError.fix" />
     </div>
 
     <!-- Errors and notes -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">{{ error.message }}</p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">{{ error.fix }}</p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <p v-if="audioNote" class="text-xs text-muted-foreground">{{ audioNote }}</p>
 
@@ -829,10 +796,6 @@ onUnmounted(() => {
   background: currentColor;
 }
 
-.convert-pulse {
-  animation: convert-pulse 1.4s ease-in-out infinite;
-}
-
 @keyframes rec-blink {
   0%,
   100% {
@@ -843,19 +806,8 @@ onUnmounted(() => {
   }
 }
 
-@keyframes convert-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .rec-dot,
-  .convert-pulse {
+  .rec-dot {
     animation: none;
   }
 }

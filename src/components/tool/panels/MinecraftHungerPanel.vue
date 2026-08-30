@@ -55,6 +55,7 @@ import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Segmented } from "@/components/ui/segmented";
 import OutputView from "../OutputView.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -756,16 +757,11 @@ onMounted(() => {
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           How much of it you need
         </span>
-        <div
+        <ErrorBanner
           v-if="sustainRows.error"
-          class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
-          role="alert"
-        >
-          <p class="font-medium">{{ sustainRows.error.message }}</p>
-          <p v-if="sustainRows.error.fix" class="text-muted-foreground">
-            {{ sustainRows.error.fix }}
-          </p>
-        </div>
+          :message="sustainRows.error.message"
+          :hint="sustainRows.error.fix"
+        />
         <div v-else aria-live="polite">
           <OutputView :output="sustainRows.rows" />
         </div>

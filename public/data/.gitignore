@@ -1,5 +1,9 @@
-# wikidata-cities.sqlite is a committed, dated snapshot (see
-# scripts/prepare-wikidata.mjs to refresh). Nothing else lands here.
+# Committed, dated snapshots only. wikidata-cities.sqlite comes from
+# scripts/prepare-wikidata.mjs; chem/ is the broad chemistry dataset from
+# scripts/prepare-chem-data.mjs, fetched lazily by the chemistry tools.
+# Nothing else lands here.
 *
 !.gitignore
 !wikidata-cities.sqlite
+!chem/
+!chem/**

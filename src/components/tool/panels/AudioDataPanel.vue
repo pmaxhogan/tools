@@ -30,6 +30,8 @@ import { readFragment, writeFragment } from "@/lib/fragment";
 import { downloadBlob } from "@/lib/download";
 import OutputView from "../OutputView.vue";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -908,9 +910,7 @@ function toggleListening() {
  * offline decode of a dropped file
  * ------------------------------------------------------------------ */
 
-const dragging = ref(false);
 const decodingFile = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
 /** Average the channels, since every detector here works on one mono track. */
 function toMono(buffer: AudioBuffer, maxSamples: number): Float32Array {
@@ -956,20 +956,9 @@ async function readFile(file: File) {
   }
 }
 
-function onDrop(event: DragEvent) {
-  dragging.value = false;
-  const file = event.dataTransfer?.files[0];
+function onFiles(files: File[]) {
+  const file = files[0];
   if (file) void readFile(file);
-}
-
-function onPickFile(event: Event) {
-  const picker = event.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  void readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
 }
 
 /* ------------------------------------------------------------------ *
@@ -1139,18 +1128,9 @@ onUnmounted(() => {
     </div>
 
     <!-- errors from the input, the options, or the transport -->
-    <div
-      v-if="optionError || encodeState.error || actionError"
-      role="alert"
-      class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-    >
-      <template v-for="err in [optionError, encodeState.error, actionError]" :key="err?.message">
-        <template v-if="err">
-          <span class="font-semibold text-destructive">{{ err.message }}</span>
-          <span v-if="err.fix" class="text-muted-foreground">{{ err.fix }}</span>
-        </template>
-      </template>
-    </div>
+    <template v-for="err in [optionError, encodeState.error, actionError]" :key="err?.message">
+      <ErrorBanner v-if="err" :message="err.message" :hint="err.fix" />
+    </template>
 
     <!-- the symbolic representation -->
     <OutputView v-if="encodeRows" :output="encodeRows" />
@@ -1166,13 +1146,7 @@ onUnmounted(() => {
     </p>
 
     <!-- decode: microphone or a dropped file -->
-    <div
-      class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
+    <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Listen and decode
@@ -1189,16 +1163,16 @@ onUnmounted(() => {
             <Mic v-else class="size-3.5" aria-hidden="true" />
             {{ listening ? "Stop listening" : startingMic ? "Starting" : "Listen" }}
           </Button>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()">Open file</Button>
-          <input
-            ref="fileInput"
-            type="file"
-            class="hidden"
-            accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a"
-            @change="onPickFile"
-          />
         </div>
       </div>
+
+      <FileDrop
+        compact
+        accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a"
+        label="Drop a recording here or click to choose"
+        hint="WAV, MP3, FLAC, OGG or M4A"
+        @files="onFiles"
+      />
 
       <!-- signal level -->
       <div class="flex flex-col gap-1.5">
@@ -1244,18 +1218,9 @@ onUnmounted(() => {
 
       <p v-if="decodeStatus" class="text-xs text-muted-foreground">{{ decodeStatus }}</p>
 
-      <div
-        v-if="micError || decodeError"
-        role="alert"
-        class="flex flex-col gap-1 rounded-[8px] bg-card p-3 text-xs shadow-[var(--sh-sm)]"
-      >
-        <template v-for="err in [micError, decodeError]" :key="err?.message">
-          <template v-if="err">
-            <span class="font-semibold text-destructive">{{ err.message }}</span>
-            <span v-if="err.fix" class="text-muted-foreground">{{ err.fix }}</span>
-          </template>
-        </template>
-      </div>
+      <template v-for="err in [micError, decodeError]" :key="err?.message">
+        <ErrorBanner v-if="err" :message="err.message" :hint="err.fix" />
+      </template>
 
       <p class="text-xs text-muted-foreground">
         Press Listen to decode through the microphone, or drop a WAV or other audio file here to

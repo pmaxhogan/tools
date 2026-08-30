@@ -16,6 +16,8 @@ import {
 } from "@/tools/minecraft-loot-table-calculator/tables";
 import OptionControl from "../OptionControl.vue";
 import CopyButton from "../CopyButton.vue";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 /**
  * Split-workbench panel for the loot table calculator: a persistent picker
@@ -38,6 +40,14 @@ const looting = ref(0);
 const killedByPlayer = ref(true);
 const luckOfTheSea = ref(0);
 const openWater = ref(true);
+
+/* The picker's empty-state hint names the selected version, so it is built
+   here rather than interpolated inside the EmptyState prop. */
+const pickerHint = computed(
+  () =>
+    `The list shows every block, mob, fishing, and chest table that exists in Minecraft ${version.value}. ` +
+    `Search by name or by what it drops, like "flint" or "ender pearl".`,
+);
 const cropMature = ref(true);
 const mounted = ref(false);
 
@@ -465,25 +475,13 @@ onMounted(() => {
 
       <!-- Live results. -->
       <section class="flex min-w-0 flex-col gap-5" aria-live="polite">
-        <div
+        <EmptyState
           v-if="!table"
-          class="flex flex-col items-center gap-1 rounded-[10px] bg-secondary px-4 py-10 text-center shadow-[var(--sh-inset)]"
-        >
-          <p class="text-sm font-medium">Pick a loot table to see its exact odds</p>
-          <p class="max-w-md text-xs text-muted-foreground">
-            The list shows every block, mob, fishing, and chest table that exists in Minecraft
-            {{ version }}. Search by name or by what it drops, like "flint" or "ender pearl".
-          </p>
-        </div>
+          title="Pick a loot table to see its exact odds"
+          :hint="pickerHint"
+        />
 
-        <div
-          v-else-if="error"
-          class="rounded-[10px] bg-secondary px-4 py-3 text-sm shadow-[var(--sh-inset)]"
-          role="alert"
-        >
-          <p class="font-medium">{{ error.message }}</p>
-          <p v-if="error.fix" class="mt-1 text-muted-foreground">{{ error.fix }}</p>
-        </div>
+        <ErrorBanner v-else-if="error" :message="error.message" :hint="error.fix" />
 
         <template v-else-if="result">
           <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -493,12 +491,11 @@ onMounted(() => {
             </span>
           </div>
 
-          <div
+          <EmptyState
             v-if="!result.items.length"
-            class="rounded-[10px] bg-secondary px-3 py-6 text-center text-sm text-muted-foreground shadow-[var(--sh-inset)]"
-          >
-            Nothing drops with this context. Try a different tool or enchantment.
-          </div>
+            title="Nothing drops with this context"
+            hint="Try a different tool or enchantment."
+          />
 
           <template v-else>
             <!-- Headline stat tiles. -->

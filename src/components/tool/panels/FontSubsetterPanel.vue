@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import OptionControl from "../OptionControl.vue";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 /**
  * Bespoke panel for the Font Subsetter.
@@ -214,7 +216,6 @@ const format = ref(selectDefault(formatSpec.value));
 const characters = ref("");
 const ranges = ref("");
 
-const dragging = ref(false);
 const busy = ref(false);
 const busyLabel = ref("");
 const error = ref<PanelError | null>(null);
@@ -223,8 +224,6 @@ const result = shallowRef<SubsetOutput | null>(null);
 const stale = ref(false);
 const showAllGlyphs = ref(false);
 const previewNote = ref("");
-
-const fileInput = ref<HTMLInputElement>();
 
 /** The temporary families the preview renders in. Empty until a face loads. */
 const originalFamily = ref("");
@@ -487,27 +486,10 @@ async function loadFile(file: File): Promise<void> {
   }
 }
 
-function onDrop(e: DragEvent): void {
-  dragging.value = false;
-  const picked = e.dataTransfer?.files?.[0];
-  if (!picked) {
-    error.value = {
-      message: "Nothing in that drop was a file.",
-      fix: "Drop a .ttf, .otf, .woff, or .woff2 file, or use Open font to pick one.",
-    };
-    return;
-  }
-  void loadFile(picked);
-}
-
-function onPickFile(e: Event): void {
-  const picker = e.target as HTMLInputElement;
-  const picked = picker.files?.[0];
+function onFiles(files: File[]): void {
+  const picked = files[0];
   if (!picked) return;
-  void loadFile(picked).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+  void loadFile(picked);
 }
 
 function clearFile(): void {
@@ -522,7 +504,6 @@ function clearFile(): void {
   error.value = null;
   busy.value = false;
   busyLabel.value = "";
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -628,47 +609,42 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Font input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex flex-wrap items-center justify-between gap-2 px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Font
-        </span>
-        <div class="flex items-center gap-1">
-          <Button v-if="info" variant="ghost" size="sm" @click="clearFile">
-            <X class="size-4" />
-            Clear font
-          </Button>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open font </Button>
-          <input ref="fileInput" type="file" class="hidden" :accept="ACCEPT" @change="onPickFile" />
-        </div>
-      </div>
-
-      <div v-if="info" class="flex items-center gap-3 px-3 pt-1 pb-3">
-        <div
-          class="grid size-10 shrink-0 place-items-center rounded-[8px] bg-background shadow-[var(--sh-inset)]"
-        >
-          <FileType class="size-5 text-muted-foreground" />
-        </div>
-        <div class="min-w-0">
-          <div class="truncate font-mono text-sm">{{ fileName }}</div>
-          <div class="text-xs text-muted-foreground tabular-nums">
-            {{ info.formatLabel }} · {{ formatBytes(info.size) }} ·
-            {{ count(info.glyphCount) }} glyphs
+    <FileDrop :accept="ACCEPT" @files="onFiles">
+      <template #default="{ open }">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-1">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Font
+          </span>
+          <div class="flex items-center gap-1">
+            <Button v-if="info" variant="ghost" size="sm" @click="clearFile">
+              <X class="size-4" />
+              Clear font
+            </Button>
+            <Button variant="ghost" size="sm" @click="open"> Open font </Button>
           </div>
         </div>
-      </div>
 
-      <p v-else class="px-3 pt-1 pb-3 text-sm text-muted-foreground">
-        Drop a .ttf, .otf, .woff, or .woff2 file here, or use Open font. Nothing runs until a font
-        arrives, and the font stays in this tab.
-      </p>
-    </div>
+        <div v-if="info" class="flex items-center gap-3">
+          <div
+            class="grid size-10 shrink-0 place-items-center rounded-[8px] bg-background shadow-[var(--sh-inset)]"
+          >
+            <FileType class="size-5 text-muted-foreground" />
+          </div>
+          <div class="min-w-0">
+            <div class="truncate font-mono text-sm">{{ fileName }}</div>
+            <div class="text-xs text-muted-foreground tabular-nums">
+              {{ info.formatLabel }} · {{ formatBytes(info.size) }} ·
+              {{ count(info.glyphCount) }} glyphs
+            </div>
+          </div>
+        </div>
+
+        <p v-else class="text-sm text-muted-foreground">
+          Drop a .ttf, .otf, .woff, or .woff2 file here, or click to choose one. Nothing runs until
+          a font arrives, and the font stays in this tab.
+        </p>
+      </template>
+    </FileDrop>
 
     <!-- Busy -->
     <p v-if="busy" class="font-mono text-xs text-muted-foreground tabular-nums" aria-live="polite">
@@ -676,14 +652,7 @@ onUnmounted(() => {
     </p>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">{{ error.message }}</p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">{{ error.fix }}</p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <template v-if="info">
       <!-- What the font is -->

@@ -24,6 +24,8 @@ import { downloadBlob } from "@/lib/download";
 import { readFragment, writeFragment } from "@/lib/fragment";
 import OutputView from "../OutputView.vue";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -142,8 +144,6 @@ const encoding = ref<InputEncoding | null>(null);
 const pasteText = ref("");
 const busy = ref(false);
 const error = ref<Problem | null>(null);
-const dragging = ref(false);
-const fileInput = ref<HTMLInputElement | null>(null);
 
 const bytesPerRow = ref(16);
 const uppercase = ref(false);
@@ -282,20 +282,9 @@ async function readFile(file: File) {
   }
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
-  if (file) readFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+function onFiles(files: File[]) {
+  const file = files[0];
+  if (file) void readFile(file);
 }
 
 function loadPasted() {
@@ -316,7 +305,6 @@ function clearInput() {
   sourceName.value = "";
   error.value = null;
   resetView();
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ------------------------------------------------------------------ *
@@ -872,70 +860,60 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)] transition-colors"
-      :class="dragging ? 'ring-2 ring-ring/60' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Bytes
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open a file… </Button>
-        <input ref="fileInput" type="file" class="hidden" @change="onPickFile" />
-      </div>
-
-      <div v-if="bytes" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ sourceName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ formatBytes(byteLength) }}</span>
-          <span v-if="encoding" class="shrink-0 text-muted-foreground">read as {{ encoding }}</span>
-          <button
-            type="button"
-            aria-label="Close this file"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearInput"
-          >
-            <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
-
-      <div v-else class="flex flex-col gap-2 px-3 pt-1 pb-3">
-        <p class="text-sm text-muted-foreground">
-          Drop any file here, or use the button above. Everything is read in this tab: your files
-          and inputs never leave your device.
-        </p>
-        <Label for="hex-paste" class="text-xs text-muted-foreground">
-          Or paste a hex dump, a base64 string, or plain text you want the bytes of
-        </Label>
-        <Textarea
-          id="hex-paste"
-          v-model="pasteText"
-          rows="3"
-          class="bg-card font-mono text-xs"
-          placeholder="89504e470d0a1a0a"
-        />
-        <div>
-          <Button size="sm" variant="outline" @click="loadPasted">Read these bytes</Button>
+    <FileDrop @files="onFiles">
+      <template #default="{ open }">
+        <div class="flex items-center justify-between pb-1">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Bytes
+          </span>
+          <Button variant="ghost" size="sm" @click="open"> Open a file… </Button>
         </div>
-      </div>
-    </div>
+
+        <div v-if="bytes">
+          <span
+            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
+          >
+            <span class="truncate font-medium">{{ sourceName }}</span>
+            <span class="shrink-0 text-muted-foreground">{{ formatBytes(byteLength) }}</span>
+            <span v-if="encoding" class="shrink-0 text-muted-foreground"
+              >read as {{ encoding }}</span
+            >
+            <button
+              type="button"
+              aria-label="Close this file"
+              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+              @click="clearInput"
+            >
+              <X class="size-3.5" />
+            </button>
+          </span>
+        </div>
+
+        <div v-else class="flex flex-col gap-2">
+          <p class="text-sm text-muted-foreground">
+            Drop any file here, or click to choose one. Everything is read in this tab: your files
+            and inputs never leave your device.
+          </p>
+          <Label for="hex-paste" class="text-xs text-muted-foreground">
+            Or paste a hex dump, a base64 string, or plain text you want the bytes of
+          </Label>
+          <Textarea
+            id="hex-paste"
+            v-model="pasteText"
+            rows="3"
+            class="bg-card font-mono text-xs"
+            placeholder="89504e470d0a1a0a"
+          />
+          <div>
+            <Button size="sm" variant="outline" @click="loadPasted">Read these bytes</Button>
+          </div>
+        </div>
+      </template>
+    </FileDrop>
 
     <p v-if="busy" class="text-xs text-muted-foreground" aria-live="polite">Reading the file…</p>
 
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">{{ error.message }}</p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">{{ error.fix }}</p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <template v-if="bytes">
       <!-- Facts -->
@@ -1299,14 +1277,11 @@ onUnmounted(() => {
           run it again.
         </p>
 
-        <div
+        <ErrorBanner
           v-if="templateError"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-medium text-destructive">{{ templateError.message }}</p>
-          <p v-if="templateError.fix" class="mt-1 text-muted-foreground">{{ templateError.fix }}</p>
-        </div>
+          :message="templateError.message"
+          :hint="templateError.fix"
+        />
 
         <ul
           v-if="templateWarnings.length"
@@ -1466,14 +1441,11 @@ onUnmounted(() => {
         <p v-if="summaryBusy" class="text-xs text-muted-foreground" aria-live="polite">
           Hashing and measuring the whole file…
         </p>
-        <div
+        <ErrorBanner
           v-else-if="summaryError"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-medium text-destructive">{{ summaryError.message }}</p>
-          <p v-if="summaryError.fix" class="mt-1 text-muted-foreground">{{ summaryError.fix }}</p>
-        </div>
+          :message="summaryError.message"
+          :hint="summaryError.fix"
+        />
         <OutputView v-else-if="summary" :output="summary" />
       </div>
     </template>

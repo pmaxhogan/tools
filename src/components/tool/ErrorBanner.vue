@@ -9,7 +9,7 @@
  * already ship, and info reuses the neutral secondary hint block. Both stay
  * inside the existing vocabulary rather than inventing new variables.
  */
-import { computed } from "vue";
+import { Comment, Fragment, Text, computed, useSlots, type VNode } from "vue";
 import { CircleAlert, Info, TriangleAlert, X } from "lucide-vue-next";
 
 const props = withDefaults(
@@ -22,12 +22,19 @@ const props = withDefaults(
     hint?: string;
     variant?: "error" | "warning" | "info";
     dismissible?: boolean;
+    /**
+     * Render the message in the mono face. For a message passed through
+     * verbatim from an engine (a SQLite parse error, an ffmpeg line), where
+     * the exact characters and any column marker are the useful part.
+     */
+    mono?: boolean;
   }>(),
   {
     title: undefined,
     hint: undefined,
     variant: "error",
     dismissible: false,
+    mono: false,
   },
 );
 
@@ -56,6 +63,29 @@ const TONES = {
 
 const tone = computed(() => TONES[props.variant]);
 const role = computed(() => (props.variant === "error" ? "alert" : "status"));
+
+const slots = useSlots();
+
+/**
+ * Whether the default slot actually draws something.
+ *
+ * `$slots.default` is truthy the moment a parent passes a slot, even when
+ * everything inside it is `v-if`ed away: a discarded `v-if` still renders a
+ * comment placeholder vnode. Keying the wrapper off that left a stray `mt-2`
+ * of empty space under the message on every panel that conditionally shows a
+ * retry button, so the wrapper asks what the slot produced instead.
+ */
+function drawsSomething(nodes: VNode[] | undefined): boolean {
+  if (!nodes) return false;
+  return nodes.some((node) => {
+    if (node.type === Comment) return false;
+    if (node.type === Text) return String(node.children ?? "").trim() !== "";
+    if (node.type === Fragment) return drawsSomething(node.children as VNode[] | undefined);
+    return true;
+  });
+}
+
+const hasBody = computed(() => drawsSomething(slots.default?.()));
 </script>
 
 <template>
@@ -74,11 +104,16 @@ const role = computed(() => (props.variant === "error" ? "alert" : "status"));
 
     <div class="min-w-0 flex-1">
       <p v-if="title" class="font-medium" :class="tone.strong">{{ title }}</p>
-      <p :class="title ? 'mt-1 text-muted-foreground' : ['font-medium', tone.strong]">
+      <p
+        :class="[
+          title ? 'mt-1 text-muted-foreground' : ['font-medium', tone.strong],
+          mono ? 'font-mono text-[13px] break-words whitespace-pre-wrap' : '',
+        ]"
+      >
         {{ message }}
       </p>
       <p v-if="hint" class="mt-1 text-muted-foreground">{{ hint }}</p>
-      <div v-if="$slots.default" class="mt-2"><slot /></div>
+      <div v-if="hasBody" class="mt-2"><slot /></div>
     </div>
 
     <button

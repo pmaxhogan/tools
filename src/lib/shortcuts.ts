@@ -71,6 +71,20 @@ export const TOOL_SHORTCUTS: readonly ShortcutSpec[] = [
   },
 ];
 
+/**
+ * Tools whose subject IS the keyboard. On these the key you press is the
+ * reading, so opening a modal sheet on "?" (which then traps focus until it is
+ * dismissed) would break the tool at the exact moment it is being used. They
+ * get no shortcut sheet, and their page does not advertise one. PanelHost
+ * skips installing the listener for these slugs; ToolPage.astro skips the
+ * "press ? for shortcuts" line for the same set, from this one list.
+ */
+export const KEYBOARD_FIRST_TOOLS: ReadonlySet<string> = new Set([
+  "keycode",
+  "key-rollover-tester",
+  "media-key-tester",
+]);
+
 /** The minimal event shape `matchShortcut` needs, satisfied by a real KeyboardEvent. */
 export interface ShortcutEventLike {
   key: string;

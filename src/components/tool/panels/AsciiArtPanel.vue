@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { Download, FileImage, ImageOff, Sparkles } from "lucide-vue-next";
+import { Download, FileImage, Sparkles } from "lucide-vue-next";
 import { ToolError, type OptionSpec, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { toAscii, toBraille } from "@/tools/image-to-ascii/index";
 import type { AsciiCharset, AsciiColorMode, AsciiOptions } from "@/tools/image-to-ascii/index";
@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import CopyButton from "../CopyButton.vue";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 import OptionControl from "../OptionControl.vue";
 
 /**
@@ -184,7 +187,6 @@ const visibleOptions = computed<OptionSpec[]>(() =>
 
 const imageName = ref("");
 const imageReady = ref(false);
-const dragging = ref(false);
 const error = ref<{ message: string; fix?: string } | null>(null);
 
 const sourceWidth = ref(0);
@@ -207,7 +209,6 @@ const previewHtml = ref("");
 const containerWidth = ref(0);
 const advance = ref(FALLBACK_ADVANCE);
 
-const fileInput = ref<HTMLInputElement>();
 const previewBox = ref<HTMLElement>();
 
 /**
@@ -450,30 +451,9 @@ async function acceptImage(file: File | null | undefined) {
   adoptSource(image, file.name || "image", fit < 1);
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  void acceptImage(e.dataTransfer?.files[0]);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  void acceptImage(picker.files?.[0]);
-  picker.value = "";
-}
-
-function onPaste(e: ClipboardEvent) {
-  const items = e.clipboardData?.items;
-  if (!items) return;
-  for (const item of items) {
-    if (item.kind === "file" && item.type.startsWith("image/")) {
-      const pasted = item.getAsFile();
-      if (pasted) {
-        e.preventDefault();
-        void acceptImage(pasted);
-        return;
-      }
-    }
-  }
+/** Drop, picker, keyboard, clipboard paste, and the carry chip all land here. */
+function onFiles(files: File[]) {
+  void acceptImage(files[0]);
 }
 
 /* ------------------------------------------------------------------ *
@@ -737,7 +717,6 @@ watch(
 
 onMounted(() => {
   applyFragment();
-  window.addEventListener("paste", onPaste);
 
   void (async () => {
     try {
@@ -760,7 +739,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearTimeout(debounceTimer);
-  window.removeEventListener("paste", onPaste);
   sizeObserver?.disconnect();
   sizeObserver = null;
   releaseObjectUrl();
@@ -771,34 +749,19 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-5 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      accept="image/*"
+      label="Drop a picture here or click to choose"
+      hint="You can also paste one from the clipboard or load the sample. It is decoded and converted on a canvas in this tab: your files and inputs never leave your device."
+      @files="onFiles"
     >
-      <div class="flex flex-wrap items-center justify-between gap-2 px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Image
-        </span>
-        <div class="flex items-center gap-1">
-          <Button variant="ghost" size="sm" @click="loadSample">
-            <Sparkles class="size-3.5" aria-hidden="true" />
-            Load sample
-          </Button>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-          <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
-        </div>
-      </div>
-      <div class="px-3 pt-1 pb-4">
-        <p class="text-sm text-muted-foreground">
-          Drop a picture here, paste one from the clipboard, pick one with the file button, or load
-          the sample. It is decoded and converted on a canvas in this tab: your files and inputs
-          never leave your device.
-        </p>
-      </div>
-    </div>
+      <template #actions>
+        <Button variant="ghost" size="sm" @click="loadSample">
+          <Sparkles class="size-3.5" aria-hidden="true" />
+          Load sample
+        </Button>
+      </template>
+    </FileDrop>
 
     <!-- style and columns -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-6">
@@ -884,14 +847,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div
-      v-if="error"
-      role="alert"
-      class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-    >
-      <span class="font-semibold text-destructive">{{ error.message }}</span>
-      <span v-if="error.fix" class="text-muted-foreground">{{ error.fix }}</span>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <!-- preview -->
     <div v-show="imageReady" class="flex flex-col gap-2">
@@ -913,13 +869,12 @@ onUnmounted(() => {
       <p v-if="cappedNote" class="text-xs text-muted-foreground">{{ cappedNote }}</p>
     </div>
 
-    <p v-if="!imageReady" class="flex items-start gap-2 text-xs text-muted-foreground">
-      <ImageOff class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-      <span>
-        No image loaded yet. The preview shrinks the characters to fit the panel, so a wide grid
-        stays on one screen, and the invert option flips the art to suit a light background.
-      </span>
-    </p>
+    <EmptyState
+      v-if="!imageReady"
+      title="No image loaded yet"
+      hint="The preview shrinks the characters to fit the panel, so a wide grid stays on one screen, and the invert option flips the art to suit a light background."
+      icon="Image"
+    />
 
     <p v-if="props.meta.privacyNote" class="text-xs text-muted-foreground">
       {{ props.meta.privacyNote }}

@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
 
 /**
@@ -761,13 +762,7 @@ onUnmounted(() => {
         </p>
       </div>
 
-      <div
-        v-if="lockError"
-        role="alert"
-        class="rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="text-destructive">{{ lockError }}</p>
-      </div>
+      <ErrorBanner v-if="lockError" :message="lockError" />
 
       <div class="flex flex-col gap-1.5">
         <div class="flex items-center justify-between gap-2">
@@ -901,13 +896,7 @@ onUnmounted(() => {
         Enter a positive distance before starting the run.
       </p>
 
-      <div
-        v-if="dpiError"
-        role="alert"
-        class="rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="text-destructive">{{ dpiError }}</p>
-      </div>
+      <ErrorBanner v-if="dpiError" :message="dpiError" />
 
       <div v-else-if="dpiResult" class="flex flex-col gap-2">
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -970,13 +959,7 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <div
-        v-if="accelError"
-        role="alert"
-        class="rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="text-destructive">{{ accelError }}</p>
-      </div>
+      <ErrorBanner v-if="accelError" :message="accelError" />
 
       <div v-else-if="accelResult" class="flex flex-col gap-2">
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -1164,13 +1147,7 @@ onUnmounted(() => {
         <CopyButton v-if="reportJson" :text="reportJson" label="Copy report JSON" />
       </div>
 
-      <div
-        v-if="summaryError"
-        role="alert"
-        class="rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="text-destructive">{{ summaryError }}</p>
-      </div>
+      <ErrorBanner v-if="summaryError" :message="summaryError" />
 
       <OutputView v-else-if="summaryRows" :output="summaryRows" />
 

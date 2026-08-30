@@ -4,6 +4,7 @@ import { Star } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { FAVORITES_KEY, isFavorite, toggleFavorite } from "@/lib/favorites";
 import { onPrefsChange, readList, writeList } from "@/lib/prefs";
+import { toast } from "@/lib/toast";
 
 /**
  * Pins a tool, so it rides at the top of the homepage and the sidebar. The list
@@ -44,6 +45,10 @@ function toggle(): void {
   const next = toggleFavorite(readList(FAVORITES_KEY), props.slug);
   favorites.value = next;
   writeList(FAVORITES_KEY, next);
+  // The star itself fills and unfills, but on the homepage the card it belongs
+  // to only moves after a re-sort, and in the panel header nothing else on
+  // screen changes at all. Say what happened, the same way a copy does.
+  toast({ title: isFavorite(next, props.slug) ? "Added to favorites" : "Removed from favorites" });
 }
 
 onMounted(() => {

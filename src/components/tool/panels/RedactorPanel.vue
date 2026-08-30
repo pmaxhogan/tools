@@ -25,6 +25,9 @@ import {
 import { isMetered, onConnectionChange, shouldAutoDownload } from "@/lib/connection";
 import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for the redaction tool. The generic ToolShell has no way to
@@ -76,10 +79,8 @@ const fileName = ref("");
 const fileSize = ref(0);
 const decodeFailed = ref(false);
 const busy = ref(false);
-const dragging = ref(false);
 
 const canvas = ref<HTMLCanvasElement>();
-const fileInput = ref<HTMLInputElement>();
 
 /** The decoded image, never mutated. Every redraw starts from a copy of it. */
 const pristine = shallowRef<ImageData | null>(null);
@@ -333,20 +334,9 @@ async function readFile(file: File) {
   }
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
-  if (file) readFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+function onFiles(files: File[]) {
+  const file = files[0];
+  if (file) void readFile(file);
 }
 
 function clearFile() {
@@ -363,7 +353,6 @@ function clearFile() {
   imageToken += 1;
   ocrBoxes.value = null;
   smartNote.value = "";
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -917,57 +906,38 @@ async function downloadExport() {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Screenshot
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-        <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
-      </div>
-
-      <div v-if="hasImage || decodeFailed" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
-          <button
-            type="button"
-            aria-label="Remove image"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearFile"
-          >
+    <div class="flex flex-col gap-2">
+      <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+        Screenshot
+      </span>
+      <FileDrop
+        v-if="hasImage || decodeFailed"
+        compact
+        accept="image/*"
+        :label="fileName"
+        :hint="formatBytes(fileSize)"
+        @files="onFiles"
+      >
+        <template #actions>
+          <Button variant="ghost" size="icon-sm" aria-label="Remove image" @click="clearFile">
             <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
-
-      <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-        Drop a screenshot here, then drag rectangles over anything sensitive. The pixels underneath
-        are overwritten, not covered. Everything runs in this tab: your files and inputs never leave
-        your device.
-      </p>
+          </Button>
+        </template>
+      </FileDrop>
+      <FileDrop
+        v-else
+        accept="image/*"
+        label="Drop a screenshot here or click to choose"
+        hint="Then drag rectangles over anything sensitive. The pixels underneath are overwritten, not covered. Everything runs in this tab: your files and inputs never leave your device."
+        @files="onFiles"
+      />
     </div>
 
-    <p
+    <ErrorBanner
       v-if="decodeFailed"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <span class="font-medium text-destructive"
-        >This browser could not decode that file as an image.</span
-      >
-      <span class="mt-1 block text-muted-foreground">
-        Try a PNG, JPEG, WebP, GIF, or BMP screenshot.
-      </span>
-    </p>
+      message="This browser could not decode that file as an image."
+      hint="Try a PNG, JPEG, WebP, GIF, or BMP screenshot."
+    />
 
     <template v-if="hasImage">
       <!-- Mode -->
@@ -1037,19 +1007,7 @@ async function downloadExport() {
           </p>
 
           <div v-if="engineState === 'loading'" class="flex flex-col gap-2">
-            <div
-              class="h-2 overflow-hidden rounded-full bg-background"
-              role="progressbar"
-              :aria-valuenow="enginePercent"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              aria-label="OCR engine loading"
-            >
-              <div
-                class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-                :style="{ width: `${enginePercent}%` }"
-              />
-            </div>
+            <ProgressBar :value="enginePercent" label="OCR engine loading" track="card" />
             <p class="font-mono text-xs text-muted-foreground tabular-nums">
               {{ engineStatus || "starting the engine" }} · {{ enginePercent }}%
             </p>
@@ -1168,32 +1126,18 @@ async function downloadExport() {
           </div>
         </div>
 
-        <p
+        <ErrorBanner
           v-if="mode === 'pixelate' && randomness === 0"
-          role="note"
-          class="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-muted-foreground"
-        >
-          <span class="font-medium text-destructive"
-            >Randomness is off: this is a plain block average.</span
-          >
-          Every block is replaced with the flat average of the pixels it covers, and that average is
-          a fixed function of the source image, the exact case researchers have reconstructed by
-          rendering candidate words through the same block grid until the output matches. Raise the
-          randomness slider above 0% or switch to solid fill for anything you truly need gone.
-        </p>
-        <p
+          variant="warning"
+          title="Randomness is off: this is a plain block average."
+          message="Every block is replaced with the flat average of the pixels it covers, and that average is a fixed function of the source image, the exact case researchers have reconstructed by rendering candidate words through the same block grid until the output matches. Raise the randomness slider above 0% or switch to solid fill for anything you truly need gone."
+        />
+        <ErrorBanner
           v-else-if="pixelateChosen"
-          role="note"
-          class="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-muted-foreground"
-        >
-          <span class="font-medium text-destructive">Pixelate is still the weaker choice.</span>
-          When randomness is above 0%, each block mixes seeded random noise into its average,
-          generated fresh per region, so the output is no longer a fixed function of the source
-          image and the classic attack of rendering candidate words through the same block grid no
-          longer lands the same way. That makes reconstruction much harder, not impossible: a rough
-          trace of the original brightness still survives the average. Use solid fill for anything
-          you truly need gone.
-        </p>
+          variant="warning"
+          title="Pixelate is still the weaker choice."
+          message="When randomness is above 0%, each block mixes seeded random noise into its average, generated fresh per region, so the output is no longer a fixed function of the source image and the classic attack of rendering candidate words through the same block grid no longer lands the same way. That makes reconstruction much harder, not impossible: a rough trace of the original brightness still survives the average. Use solid fill for anything you truly need gone."
+        />
         <p v-else class="text-xs text-muted-foreground">
           Solid fill replaces every pixel under the rectangle with one flat color, so nothing of the
           original remains in the image data.

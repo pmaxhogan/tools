@@ -5,6 +5,7 @@ import { run } from "@/tools/clipboard-inspector/index";
 import type { ClipboardEntrySnapshot, ClipboardSnapshot } from "@/tools/clipboard-inspector/index";
 import { Button } from "@/components/ui/button";
 import { Clipboard } from "lucide-vue-next";
+import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
 
 /**
@@ -196,18 +197,7 @@ onUnmounted(() => {
       read after you click the button above, and nothing is stored or sent anywhere.
     </p>
 
-    <div
-      v-if="errorTitle"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ errorTitle }}
-      </p>
-      <p v-if="errorDetail" class="mt-1 text-muted-foreground">
-        {{ errorDetail }}
-      </p>
-    </div>
+    <ErrorBanner v-if="errorTitle" :message="errorTitle" :hint="errorDetail ?? undefined" />
 
     <OutputView v-if="output !== null" :output="output" />
 

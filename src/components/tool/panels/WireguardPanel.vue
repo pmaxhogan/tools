@@ -15,9 +15,9 @@ import {
 } from "@/tools/wireguard-config-generator/index";
 import { downloadText } from "@/lib/download";
 import { Button } from "@/components/ui/button";
-import { TriangleAlert } from "lucide-vue-next";
 import OptionControl from "../OptionControl.vue";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 /**
  * Bespoke panel for the WireGuard config generator. Every private key,
@@ -154,20 +154,10 @@ async function regeneratePeer(index: number) {
 
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
-    <div class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-3">
-      <div class="flex items-start gap-2">
-        <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" />
-        <div class="text-sm">
-          <p class="font-medium text-destructive">These keys exist only in this browser tab.</p>
-          <p class="mt-1 text-muted-foreground">
-            Every private key, preshared key, and config below was generated on your device just
-            now. Nothing is sent anywhere: your files and inputs never leave your device. Copy or
-            download what you need before you go. Refreshing or closing this page forgets
-            everything, and there is no way to get it back afterward.
-          </p>
-        </div>
-      </div>
-    </div>
+    <ErrorBanner
+      title="These keys exist only in this browser tab."
+      message="Every private key, preshared key, and config below was generated on your device just now. Nothing is sent anywhere: your files and inputs never leave your device. Copy or download what you need before you go. Refreshing or closing this page forgets everything, and there is no way to get it back afterward."
+    />
 
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
       <OptionControl
@@ -182,18 +172,7 @@ async function regeneratePeer(index: number) {
       {{ hasGenerated ? "Regenerate everything" : "Generate" }}
     </Button>
 
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <p v-if="!hasGenerated && !error" class="text-sm text-muted-foreground">
       Set the options above, then Generate to build a server config and one config per peer, each

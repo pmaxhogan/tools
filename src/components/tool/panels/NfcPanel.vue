@@ -46,6 +46,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import CopyButton from "@/components/tool/CopyButton.vue";
+import ErrorBanner from "@/components/tool/ErrorBanner.vue";
 import OutputView from "@/components/tool/OutputView.vue";
 
 const props = defineProps<{ meta: ToolMeta }>();
@@ -146,11 +147,8 @@ function describeNfcError(err: unknown): PanelError {
  * Compose
  * ------------------------------------------------------------------ */
 
-const kindSpec = computed<SelectOptionSpec | undefined>(
-  () =>
-    props.meta.options?.find(
-      (o): o is SelectOptionSpec => o.kind === "select" && o.id === "kind",
-    ),
+const kindSpec = computed<SelectOptionSpec | undefined>(() =>
+  props.meta.options?.find((o): o is SelectOptionSpec => o.kind === "select" && o.id === "kind"),
 );
 
 const composeKind = ref("text");
@@ -197,9 +195,9 @@ const hasComposeInput = computed(() => {
     case "vcard":
       return Boolean(
         vcardName.value.trim() ||
-          vcardTel.value.trim() ||
-          vcardEmail.value.trim() ||
-          vcardUrl.value.trim(),
+        vcardTel.value.trim() ||
+        vcardEmail.value.trim() ||
+        vcardUrl.value.trim(),
       );
     case "geo":
       return Boolean(geoLat.value.trim() || geoLon.value.trim());
@@ -630,9 +628,7 @@ onUnmounted(() => {
           <Input id="nfc-sms-number" v-model="smsNumber" placeholder="+1 555 0100" class="h-9" />
         </div>
         <div class="flex flex-col gap-1.5">
-          <Label for="nfc-sms-body" class="text-xs text-muted-foreground"
-            >Message (optional)</Label
-          >
+          <Label for="nfc-sms-body" class="text-xs text-muted-foreground">Message (optional)</Label>
           <Input id="nfc-sms-body" v-model="smsBody" placeholder="Message body" class="h-9" />
         </div>
       </div>
@@ -643,8 +639,8 @@ onUnmounted(() => {
       </div>
 
       <p v-else-if="composeKind === 'empty'" class="text-xs text-muted-foreground">
-        No value needed. An empty record clears a tag's content, which is useful before making a
-        tag read only.
+        No value needed. An empty record clears a tag's content, which is useful before making a tag
+        read only.
       </p>
 
       <div v-else-if="composeKind === 'raw-hex-decode'" class="flex flex-col gap-1.5">
@@ -665,16 +661,11 @@ onUnmounted(() => {
         </p>
       </div>
 
-      <div
+      <ErrorBanner
         v-if="composePreview.error"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">{{ composePreview.error.message }}</p>
-        <p v-if="composePreview.error.fix" class="mt-1 text-muted-foreground">
-          {{ composePreview.error.fix }}
-        </p>
-      </div>
+        :message="composePreview.error.message"
+        :hint="composePreview.error.fix"
+      />
 
       <OutputView v-if="composePreview.rows" :output="composePreview.rows" />
       <p v-else-if="!composePreview.error" class="text-xs text-muted-foreground">
@@ -703,14 +694,7 @@ onUnmounted(() => {
         >
       </div>
 
-      <div
-        v-if="scanError"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">{{ scanError.message }}</p>
-        <p v-if="scanError.fix" class="mt-1 text-muted-foreground">{{ scanError.fix }}</p>
-      </div>
+      <ErrorBanner v-if="scanError" :message="scanError.message" :hint="scanError.fix" />
 
       <div v-if="currentReading" class="flex flex-col gap-3">
         <p class="text-sm">
@@ -743,9 +727,12 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <p v-if="!scanning && !currentReading && !scanLog.length" class="text-xs text-muted-foreground">
-        Click Scan for tags, then hold an NFC tag to the back of the phone. Each reading is
-        decoded with the same rules as the Compose and Decode sections above.
+      <p
+        v-if="!scanning && !currentReading && !scanLog.length"
+        class="text-xs text-muted-foreground"
+      >
+        Click Scan for tags, then hold an NFC tag to the back of the phone. Each reading is decoded
+        with the same rules as the Compose and Decode sections above.
       </p>
     </div>
 
@@ -772,10 +759,15 @@ onUnmounted(() => {
         <span v-if="writeStatus" class="text-sm text-muted-foreground">{{ writeStatus }}</span>
       </div>
 
-      <div class="flex flex-col gap-2 rounded-[10px] border border-destructive/50 bg-destructive/5 p-3">
+      <div
+        class="flex flex-col gap-2 rounded-[10px] border border-destructive/50 bg-destructive/5 p-3"
+      >
         <div class="flex items-center gap-2">
           <Checkbox id="nfc-readonly" v-model="makeReadOnlyChecked" :disabled="writing" />
-          <Label for="nfc-readonly" class="flex items-center gap-1.5 text-sm font-medium text-destructive">
+          <Label
+            for="nfc-readonly"
+            class="flex items-center gap-1.5 text-sm font-medium text-destructive"
+          >
             <Lock class="size-3.5" aria-hidden="true" />
             Make read only after writing
           </Label>
@@ -792,14 +784,7 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <div
-        v-if="writeError"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">{{ writeError.message }}</p>
-        <p v-if="writeError.fix" class="mt-1 text-muted-foreground">{{ writeError.fix }}</p>
-      </div>
+      <ErrorBanner v-if="writeError" :message="writeError.message" :hint="writeError.fix" />
     </div>
   </div>
 </template>

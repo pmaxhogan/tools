@@ -17,6 +17,7 @@ import {
   type SendMode,
 } from "@/tools/serial-terminal/index";
 import { downloadText } from "@/lib/download";
+import ErrorBanner from "../ErrorBanner.vue";
 import { useStickToBottom } from "@/lib/stick-to-bottom";
 
 /**
@@ -669,11 +670,7 @@ function downloadLog() {
 /* auto scroll                                                       */
 /* ---------------------------------------------------------------- */
 
-const {
-  el: logEl,
-  stuck: stickToBottom,
-  onScroll: onLogScroll,
-} = useStickToBottom(visibleRows);
+const { el: logEl, stuck: stickToBottom, onScroll: onLogScroll } = useStickToBottom(visibleRows);
 
 watch([dtr, rts], () => {
   if (connected.value) void applySignals();
@@ -787,18 +784,7 @@ onUnmounted(() => {
         reset circuit doing its job.
       </p>
 
-      <div
-        v-if="errorTitle"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ errorTitle }}
-        </p>
-        <p v-if="errorDetail" class="mt-1 text-muted-foreground">
-          {{ errorDetail }}
-        </p>
-      </div>
+      <ErrorBanner v-if="errorTitle" :message="errorTitle" :hint="errorDetail ?? undefined" />
     </div>
 
     <!-- terminal -->
@@ -837,13 +823,7 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <div
-        v-if="baudHint"
-        role="status"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground"
-      >
-        {{ baudHint }}
-      </div>
+      <ErrorBanner v-if="baudHint" variant="warning" :message="baudHint" />
 
       <p v-if="hiddenRowCount" class="text-xs text-muted-foreground">
         Showing the most recent {{ MAX_RENDER }} rows. {{ hiddenRowCount }} older rows are still in
@@ -949,18 +929,7 @@ onUnmounted(() => {
         this tab's memory only and is gone when you close it.
       </p>
 
-      <div
-        v-if="sendError"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ sendError.message }}
-        </p>
-        <p v-if="sendError.fix" class="mt-1 text-muted-foreground">
-          {{ sendError.fix }}
-        </p>
-      </div>
+      <ErrorBanner v-if="sendError" :message="sendError.message" :hint="sendError.fix" />
     </div>
   </div>
 </template>

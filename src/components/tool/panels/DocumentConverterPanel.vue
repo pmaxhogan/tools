@@ -11,6 +11,9 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for the document converter.
@@ -215,7 +218,6 @@ const fontSize = ref(String(fontSizeMeta.default));
 const margin = ref(String(marginMeta.default));
 const pageNumbers = ref(pageNumbersMeta.default);
 
-const dragging = ref(false);
 const busy = ref(false);
 const busyLabel = ref("");
 /** 0 to 100 while a PDF is being read, null the rest of the time. */
@@ -228,8 +230,6 @@ const result = shallowRef<Result | null>(null);
 /** The HTML the last successful conversion went through, for the print path. */
 const printableHtml = ref<string | null>(null);
 const showSource = ref(false);
-
-const fileInput = ref<HTMLInputElement>();
 
 /** Discards the answer of a run that a newer run has already replaced. */
 let runToken = 0;
@@ -415,9 +415,8 @@ async function loadFile(file: File): Promise<void> {
   }
 }
 
-function onDrop(e: DragEvent): void {
-  dragging.value = false;
-  const picked = e.dataTransfer?.files?.[0];
+function onFiles(files: File[]): void {
+  const picked = files[0];
   if (!picked) {
     error.value = {
       message: "Nothing in that drop was a file.",
@@ -426,16 +425,6 @@ function onDrop(e: DragEvent): void {
     return;
   }
   void loadFile(picked);
-}
-
-function onPickFile(e: Event): void {
-  const picker = e.target as HTMLInputElement;
-  const picked = picker.files?.[0];
-  if (!picked) return;
-  void loadFile(picked).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
 }
 
 function clearFile(): void {
@@ -450,7 +439,6 @@ function clearFile(): void {
   pdfProgress.value = null;
   printableHtml.value = null;
   setResult(null);
-  if (fileInput.value) fileInput.value.value = "";
   if (pasted.value.trim() !== "") void convert();
 }
 
@@ -721,76 +709,60 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex flex-wrap items-center justify-between gap-2 px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Document
-        </span>
-        <div class="flex items-center gap-1">
-          <Button v-if="hasFile" variant="ghost" size="sm" @click="clearFile">
-            <X class="size-4" />
-            Clear file
-          </Button>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file </Button>
-          <input ref="fileInput" type="file" class="hidden" :accept="ACCEPT" @change="onPickFile" />
-        </div>
-      </div>
-
-      <div v-if="hasFile" class="flex items-center gap-3 px-3 pt-1 pb-3">
-        <div
-          class="grid size-10 shrink-0 place-items-center rounded-[8px] bg-background shadow-[var(--sh-inset)]"
-        >
-          <FileText class="size-5 text-muted-foreground" />
-        </div>
-        <div class="min-w-0">
-          <div class="truncate font-mono text-sm">{{ fileName }}</div>
-          <div class="text-xs text-muted-foreground tabular-nums">
-            {{ formatBytes(fileSize) }}
-            <template v-if="detected"> · read as {{ KIND_LABELS[detected] }}</template>
-            <template v-if="isPdfSource && pdfPageCount">
-              · {{ pdfPageCount }} {{ pdfPageCount === 1 ? "page" : "pages" }}
-            </template>
+    <FileDrop :accept="ACCEPT" @files="onFiles">
+      <template #default="{ open }">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-1">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Document
+          </span>
+          <div class="flex items-center gap-1">
+            <Button v-if="hasFile" variant="ghost" size="sm" @click="clearFile">
+              <X class="size-4" />
+              Clear file
+            </Button>
+            <Button variant="ghost" size="sm" @click="open"> Open file </Button>
           </div>
         </div>
-      </div>
 
-      <div v-else class="px-3 pt-1 pb-3">
-        <Label for="doc-paste" class="sr-only">Markdown, HTML or plain text</Label>
-        <Textarea
-          id="doc-paste"
-          :model-value="pasted"
-          rows="6"
-          spellcheck="false"
-          placeholder="Drop a .docx, .md, .html, .txt or .pdf file here, or paste Markdown, HTML or plain text."
-          class="min-h-32 resize-y border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0"
-          @update:model-value="(v) => (pasted = String(v))"
-        />
-      </div>
+        <div v-if="hasFile" class="flex items-center gap-3">
+          <div
+            class="grid size-10 shrink-0 place-items-center rounded-[8px] bg-background shadow-[var(--sh-inset)]"
+          >
+            <FileText class="size-5 text-muted-foreground" />
+          </div>
+          <div class="min-w-0">
+            <div class="truncate font-mono text-sm">{{ fileName }}</div>
+            <div class="text-xs text-muted-foreground tabular-nums">
+              {{ formatBytes(fileSize) }}
+              <template v-if="detected"> · read as {{ KIND_LABELS[detected] }}</template>
+              <template v-if="isPdfSource && pdfPageCount">
+                · {{ pdfPageCount }} {{ pdfPageCount === 1 ? "page" : "pages" }}
+              </template>
+            </div>
+          </div>
+        </div>
 
-      <p v-if="hasFile" class="border-t border-border/60 px-3 py-2 text-xs text-muted-foreground">
-        Clear the file to convert pasted text instead. Dropping another file replaces this one.
-      </p>
-    </div>
+        <div v-else>
+          <Label for="doc-paste" class="sr-only">Markdown, HTML or plain text</Label>
+          <Textarea
+            id="doc-paste"
+            :model-value="pasted"
+            rows="6"
+            spellcheck="false"
+            placeholder="Drop a .docx, .md, .html, .txt or .pdf file here, or paste Markdown, HTML or plain text."
+            class="min-h-32 resize-y border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0"
+            @update:model-value="(v) => (pasted = String(v))"
+          />
+        </div>
+
+        <p v-if="hasFile" class="mt-3 border-t border-border/60 pt-2 text-xs text-muted-foreground">
+          Clear the file to convert pasted text instead. Dropping another file replaces this one.
+        </p>
+      </template>
+    </FileDrop>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <!-- Formats -->
     <div class="flex flex-col gap-3 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">
@@ -916,25 +888,17 @@ onUnmounted(() => {
     </div>
 
     <!-- Progress -->
-    <div v-if="busy" class="flex flex-col gap-2">
-      <p class="font-mono text-xs text-muted-foreground tabular-nums" aria-live="polite">
-        {{ busyLabel }}<template v-if="pdfProgress !== null"> · {{ pdfProgress }}%</template>
-      </p>
-      <div
+    <template v-if="busy">
+      <ProgressBar
         v-if="pdfProgress !== null"
-        class="h-2 overflow-hidden rounded-full bg-secondary"
-        role="progressbar"
-        :aria-valuenow="pdfProgress"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        aria-label="PDF text extraction progress"
-      >
-        <div
-          class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-          :style="{ width: `${pdfProgress}%` }"
-        />
-      </div>
-    </div>
+        :value="pdfProgress"
+        :label="busyLabel"
+        :detail="`${pdfProgress}%`"
+      />
+      <p v-else class="font-mono text-xs text-muted-foreground tabular-nums" aria-live="polite">
+        {{ busyLabel }}
+      </p>
+    </template>
 
     <!-- Result -->
     <div v-if="result" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">

@@ -27,6 +27,8 @@ import {
 import { readFragment, writeFragment } from "@/lib/fragment";
 import { Button } from "@/components/ui/button";
 import CopyButton from "../CopyButton.vue";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -361,12 +363,11 @@ onUnmounted(() => clearTimeout(fragmentTimer));
         </li>
       </ol>
 
-      <p
+      <EmptyState
         v-else
-        class="rounded-[12px] bg-secondary px-3 py-4 text-sm text-muted-foreground shadow-[var(--sh-inset)]"
-      >
-        No steps yet. Pick a preset above or add a transform below.
-      </p>
+        title="No steps yet"
+        hint="Pick a preset above or add a transform below."
+      />
 
       <!-- Add a step -->
       <div class="flex max-w-xs flex-col gap-1.5">
@@ -381,23 +382,12 @@ onUnmounted(() => clearTimeout(fragmentTimer));
     </section>
 
     <!-- Result -->
-    <div
+    <ErrorBanner
       v-if="result.error"
-      :role="result.error.hint ? 'status' : 'alert'"
-      class="rounded-lg border px-3 py-2 text-sm"
-      :class="result.error.hint ? 'bg-secondary/60' : 'border-destructive/50 bg-destructive/5'"
-    >
-      <p
-        :class="
-          result.error.hint ? 'font-medium text-muted-foreground' : 'font-medium text-destructive'
-        "
-      >
-        {{ result.error.message }}
-      </p>
-      <p v-if="result.error.fix" class="mt-1 text-muted-foreground">
-        {{ result.error.fix }}
-      </p>
-    </div>
+      :message="result.error.message"
+      :hint="result.error.fix"
+      :variant="result.error.hint ? 'info' : 'error'"
+    />
 
     <OutputView v-if="result.output !== null" :output="result.output" />
   </div>

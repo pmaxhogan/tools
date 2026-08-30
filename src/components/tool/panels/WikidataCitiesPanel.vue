@@ -19,7 +19,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ErrorBanner from "../ErrorBanner.vue";
 import KeyValueGrid from "../KeyValueGrid.vue";
+import ProgressBar from "../ProgressBar.vue";
 import CopyButton from "../CopyButton.vue";
 
 /**
@@ -209,6 +211,13 @@ const loadPercent = computed(() => {
   return Math.min(100, Math.round((loadedBytes.value / total) * 100));
 });
 
+/** Byte counter beside the load bar, e.g. "12.4 MB of 30.1 MB". */
+const loadDetail = computed(() =>
+  totalBytes.value
+    ? `${formatBytes(loadedBytes.value)} of ${formatBytes(totalBytes.value)}`
+    : formatBytes(loadedBytes.value),
+);
+
 /**
  * Fetches the database with a byte-progress callback via the response's
  * readable stream. Falls back to a plain `arrayBuffer()` read when the
@@ -332,34 +341,19 @@ onMounted(() => {
         {{ loading ? "Loading the database…" : "Load the database" }}
       </Button>
 
-      <div v-if="loading" class="flex flex-col gap-2">
-        <div
-          class="h-2 overflow-hidden rounded-full bg-background"
-          role="progressbar"
-          :aria-valuenow="loadPercent"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          aria-label="Database download progress"
-        >
-          <div
-            class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-            :style="{ width: `${loadPercent}%` }"
-          />
-        </div>
-        <p class="font-mono text-xs text-muted-foreground tabular-nums">
-          {{ formatBytes(loadedBytes) }}
-          <template v-if="totalBytes"> of {{ formatBytes(totalBytes) }}</template>
-        </p>
-      </div>
+      <ProgressBar
+        v-if="loading"
+        :value="loadPercent"
+        label="Database download progress"
+        :detail="loadDetail"
+        track="card"
+      />
 
-      <div
+      <ErrorBanner
         v-if="loadError"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">{{ loadError }}</p>
-        <p class="mt-1 text-xs text-muted-foreground">Check your connection and try again.</p>
-      </div>
+        :message="loadError"
+        hint="Check your connection and try again."
+      />
     </div>
 
     <template v-else>
@@ -436,16 +430,11 @@ onMounted(() => {
           </p>
         </div>
 
-        <div
+        <ErrorBanner
           v-if="sqlError"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-mono text-destructive">{{ sqlError }}</p>
-          <p class="mt-1 text-xs text-muted-foreground">
-            That is SQLite's own message, passed through unchanged.
-          </p>
-        </div>
+          :message="sqlError"
+          hint="That is SQLite's own message, passed through unchanged."
+        />
 
         <div v-for="pane in panes" :key="pane.key" class="flex flex-col gap-2">
           <div class="flex flex-wrap items-center justify-between gap-2">

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { Bluetooth, Download, Plug, Trash2 } from "lucide-vue-next";
+import { Bluetooth, Download, Trash2 } from "lucide-vue-next";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,8 @@ import {
   uuidName,
   type CsvRow,
 } from "@/tools/ble-sensor-dashboard/index";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 /**
  * Bespoke panel for the BLE Sensor Dashboard. Web Bluetooth only exists in a
@@ -761,31 +763,16 @@ onUnmounted(() => {
         in Firefox, Safari or any browser on iOS. This version connects one device at a time.
       </p>
 
-      <div
-        v-if="errorTitle"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ errorTitle }}
-        </p>
-        <p v-if="errorDetail" class="mt-1 text-muted-foreground">
-          {{ errorDetail }}
-        </p>
-      </div>
+      <ErrorBanner v-if="errorTitle" :message="errorTitle" :hint="errorDetail ?? undefined" />
     </div>
 
     <!-- empty state -->
-    <div
+    <EmptyState
       v-if="state === 'idle'"
-      class="flex min-h-[180px] flex-col items-center justify-center gap-3 rounded-[18px] border bg-card p-8 text-center shadow-[var(--sh-inset)]"
-    >
-      <Plug class="size-6 text-muted-foreground" aria-hidden="true" />
-      <p class="text-muted-foreground">
-        Click Connect a sensor and pick your Bluetooth device. Each numeric reading gets a live tile
-        and chart, and the whole session exports as CSV.
-      </p>
-    </div>
+      icon="Plug"
+      title="No sensor connected"
+      hint="Click Connect a sensor and pick your Bluetooth device. Each numeric reading gets a live tile and chart, and the whole session exports as CSV."
+    />
 
     <!-- numeric field charts -->
     <div v-if="numericSeries.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2">

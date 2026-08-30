@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import OptionControl from "../OptionControl.vue";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
 import { ArrowDown, ArrowUp, Plus, X, Link as LinkIcon } from "lucide-vue-next";
 
@@ -399,38 +400,21 @@ onMounted(() => {
         </div>
 
         <!-- Warnings -->
-        <div
+        <ErrorBanner
           v-for="(message, wi) in warningsForStep(index)"
           :key="wi"
-          role="status"
-          class="rounded-lg bg-secondary/60 px-3 py-2 text-sm text-muted-foreground"
-        >
-          {{ message }}
-        </div>
+          :message="message"
+          variant="info"
+        />
 
         <!-- Step output or error -->
         <template v-if="resultFor(index)">
-          <div
+          <ErrorBanner
             v-if="resultFor(index)!.error"
-            :role="isHintError(index) ? 'status' : 'alert'"
-            class="rounded-lg border px-3 py-2 text-sm"
-            :class="
-              isHintError(index) ? 'bg-secondary/60' : 'border-destructive/50 bg-destructive/5'
-            "
-          >
-            <p
-              :class="
-                isHintError(index)
-                  ? 'font-medium text-muted-foreground'
-                  : 'font-medium text-destructive'
-              "
-            >
-              {{ resultFor(index)!.error!.message }}
-            </p>
-            <p v-if="resultFor(index)!.error!.fix" class="mt-1 text-muted-foreground">
-              {{ resultFor(index)!.error!.fix }}
-            </p>
-          </div>
+            :message="resultFor(index)!.error!.message"
+            :hint="resultFor(index)!.error!.fix"
+            :variant="isHintError(index) ? 'info' : 'error'"
+          />
           <OutputView
             v-else-if="resultFor(index)!.output !== undefined"
             :output="resultFor(index)!.output!"

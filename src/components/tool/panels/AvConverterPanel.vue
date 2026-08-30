@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import MediaShell from "../MediaShell.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import type { MediaBuildContext, MediaBuildResult } from "@/lib/ffmpeg";
 import {
   FORMATS,
@@ -265,18 +266,7 @@ function onFiles(files: { name: string; size: number }[]) {
           written to {{ spec.label }}.
         </p>
 
-        <div
-          v-if="mismatch"
-          role="status"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-medium text-destructive">
-            {{ mismatch.message }}
-          </p>
-          <p class="mt-1 text-muted-foreground">
-            {{ mismatch.fix }}
-          </p>
-        </div>
+        <ErrorBanner v-if="mismatch" :message="mismatch.message" :hint="mismatch.fix" />
 
         <p
           v-if="preview"

@@ -20,7 +20,7 @@
  * overwritten file.
  */
 import { computed, ref, watch } from "vue";
-import { Download, Eye, Play, TriangleAlert } from "lucide-vue-next";
+import { Download, Eye, Play } from "lucide-vue-next";
 import { diffLines } from "diff";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
@@ -44,7 +44,9 @@ import {
   type BatchOutputMode,
   type BatchPlan,
 } from "@/tools/batch-processor/index";
+import ErrorBanner from "../ErrorBanner.vue";
 import FsShell from "../FsShell.vue";
+import ProgressBar from "../ProgressBar.vue";
 import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -679,6 +681,11 @@ async function runTransform(handle: DirectoryHandleWrapper) {
 }
 
 const overwriteCount = computed(() => backup.value?.length ?? 0);
+/** Headline of the overwrite warning, which counts the files at risk. */
+const overwriteMessage = computed(
+  () =>
+    `${overwriteCount.value} existing file${overwriteCount.value === 1 ? "" : "s"} will be overwritten.`,
+);
 const canApply = computed(
   () => pendingOps.value.length > 0 && (overwriteCount.value === 0 || backupSaved.value),
 );
@@ -1088,25 +1095,11 @@ function onScan(next: FsScan) {
           </p>
 
           <!-- The loud one -->
-          <div
+          <ErrorBanner
             v-if="output === 'in-place'"
-            role="alert"
-            class="flex gap-2 rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-          >
-            <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" />
-            <div>
-              <p class="font-medium text-destructive">In place overwrites your original files.</p>
-              <p class="mt-1 text-muted-foreground">
-                The undo file that comes with every write batch lists the changes, but it cannot
-                bring back the contents of a file that was overwritten, because it never held the
-                old bytes. This tool makes its own backup instead: before anything is written it
-                reads the originals, and it will not let you apply the batch until you have saved
-                that backup file. If you would rather not depend on a backup at all, switch the
-                output to a subfolder or to name.processed.ext, and your originals stay exactly as
-                they are.
-              </p>
-            </div>
-          </div>
+            title="In place overwrites your original files."
+            message="The undo file that comes with every write batch lists the changes, but it cannot bring back the contents of a file that was overwritten, because it never held the old bytes. This tool makes its own backup instead: before anything is written it reads the originals, and it will not let you apply the batch until you have saved that backup file. If you would rather not depend on a backup at all, switch the output to a subfolder or to name.processed.ext, and your originals stay exactly as they are."
+          />
         </div>
 
         <!-- Preview and run -->
@@ -1174,25 +1167,12 @@ function onScan(next: FsScan) {
         </div>
 
         <!-- Reading progress -->
-        <div v-if="reading" class="flex flex-col gap-2">
-          <div
-            class="h-2 overflow-hidden rounded-full bg-secondary"
-            role="progressbar"
-            :aria-valuenow="readTotal ? Math.round((readDone / readTotal) * 100) : 0"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            aria-label="Reading and transforming files"
-          >
-            <div
-              class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-              :style="{ width: `${readTotal ? (readDone / readTotal) * 100 : 0}%` }"
-            />
-          </div>
-          <p class="font-mono text-xs text-muted-foreground tabular-nums">
-            Reading and transforming {{ readDone.toLocaleString() }} of
-            {{ readTotal.toLocaleString() }}
-          </p>
-        </div>
+        <ProgressBar
+          v-if="reading"
+          :value="readTotal ? (readDone / readTotal) * 100 : 0"
+          label="Reading and transforming files"
+          :detail="`${readDone.toLocaleString()} of ${readTotal.toLocaleString()}`"
+        />
 
         <!-- Ready to apply -->
         <div
@@ -1218,30 +1198,16 @@ function onScan(next: FsScan) {
             </p>
           </div>
 
-          <div
+          <ErrorBanner
             v-if="overwriteCount"
-            class="flex flex-col gap-2 rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2"
+            :message="overwriteMessage"
+            hint="Save the backup first. It holds the current contents of every one of those files, and it is the only thing that can put them back: the folder undo file lists the changes but cannot restore overwritten contents. The backup is built here in the tab and downloaded to your device."
           >
-            <p class="text-sm font-medium text-destructive">
-              {{ overwriteCount }} existing file{{ overwriteCount === 1 ? "" : "s" }} will be
-              overwritten.
-            </p>
-            <p class="text-xs text-muted-foreground">
-              Save the backup first. It holds the current contents of every one of those files, and
-              it is the only thing that can put them back: the folder undo file lists the changes
-              but cannot restore overwritten contents. The backup is built here in the tab and
-              downloaded to your device.
-            </p>
-            <Button
-              class="self-start"
-              variant="outline"
-              size="sm"
-              @click="downloadBackup(handle.name)"
-            >
+            <Button variant="outline" size="sm" @click="downloadBackup(handle.name)">
               <Download class="size-3.5" />
               {{ backupSaved ? "Download the backup again" : "Download backup of originals" }}
             </Button>
-          </div>
+          </ErrorBanner>
 
           <div class="flex flex-wrap items-center gap-2">
             <Button size="sm" :disabled="!canApply || busy" @click="applyNow(applyWrites)">
@@ -1263,18 +1229,7 @@ function onScan(next: FsScan) {
           </p>
         </div>
 
-        <div
-          v-if="error"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-medium text-destructive">
-            {{ error.message }}
-          </p>
-          <p v-if="error.fix" class="mt-1 text-muted-foreground">
-            {{ error.fix }}
-          </p>
-        </div>
+        <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
       </div>
     </template>
   </FsShell>

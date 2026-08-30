@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for the background remover.
@@ -46,7 +49,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
  * Nothing runs at import time and nothing touches the DOM until a file
  * arrives, so the component renders inert on the server.
  */
-defineProps<{ meta: ToolMeta }>();
+const props = defineProps<{ meta: ToolMeta }>();
 
 type MatteLogic = typeof import("@/tools/background-remover/index");
 
@@ -94,8 +97,6 @@ const sourceImg = shallowRef<HTMLImageElement | null>(null);
 const sourceWidth = ref(0);
 const sourceHeight = ref(0);
 const decodeFailed = ref(false);
-const dragging = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
 const engineState = ref<"idle" | "loading" | "ready">("idle");
 const downloadedBytes = ref(0);
@@ -152,6 +153,12 @@ const downloadLabel = computed(
     )} MB)`,
 );
 const resultExtension = computed(() => (resultType.value === "image/png" ? "png" : "jpg"));
+
+/** Body of the capability notice, which names the tool the page is showing. */
+const unsupportedMessage = computed(
+  () =>
+    `${props.meta.name} runs a neural network inside this tab, which needs WebAssembly. If this message stays, your browser has WebAssembly turned off or is too old to run it.`,
+);
 
 /* ---------------------------------------------------------------- */
 /* small helpers                                                     */
@@ -329,20 +336,10 @@ async function readFile(file: File) {
   }
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
-  if (file) readFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+/** Drop, picker, keyboard, clipboard paste, and the carry chip all land here. */
+function onFiles(files: File[]) {
+  const file = files[0];
+  if (file) void readFile(file);
 }
 
 function clearFile() {
@@ -355,7 +352,6 @@ function clearFile() {
   fileName.value = "";
   decodeFailed.value = false;
   error.value = null;
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -612,73 +608,45 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Capability gate -->
-    <div
+    <ErrorBanner
       v-if="!supported"
-      role="status"
-      class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-muted-foreground">This browser cannot run the matting model.</p>
-      <p class="mt-1 text-muted-foreground">
-        {{ meta.name }} runs a neural network inside this tab, which needs WebAssembly. If this
-        message stays, your browser has WebAssembly turned off or is too old to run it.
-      </p>
-    </div>
+      variant="info"
+      title="This browser cannot run the matting model."
+      :message="unsupportedMessage"
+    />
 
     <template v-else>
       <!-- Input -->
-      <div
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-        :class="dragging ? 'ring-2 ring-ring' : ''"
-        @dragover.prevent="dragging = true"
-        @dragleave="dragging = false"
-        @drop.prevent="onDrop"
+      <FileDrop
+        accept="image/*"
+        label="Drop a photo of a person here or click to choose"
+        hint="Everything runs in this tab: your files and inputs never leave your device."
+        @files="onFiles"
       >
-        <div class="flex items-center justify-between px-3 pt-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            Photo
-          </span>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-          <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
-        </div>
-
-        <div v-if="hasFile" class="px-3 pt-2 pb-3">
-          <span
-            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-          >
-            <span class="truncate font-medium">{{ fileName }}</span>
-            <span class="shrink-0 text-muted-foreground tabular-nums">
-              {{ sourceWidth }} x {{ sourceHeight }} px
-            </span>
-            <button
-              type="button"
-              aria-label="Remove photo"
-              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-              @click="clearFile"
+        <template v-if="hasFile" #default>
+          <div class="flex justify-center">
+            <span
+              class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
             >
-              <X class="size-3.5" />
-            </button>
-          </span>
-        </div>
-
-        <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-          Drop a photo of a person here, or pick one with the button. Everything runs in this tab:
-          your files and inputs never leave your device.
-        </p>
-      </div>
+              <span class="truncate font-medium">{{ fileName }}</span>
+              <span class="shrink-0 text-muted-foreground tabular-nums">
+                {{ sourceWidth }} x {{ sourceHeight }} px
+              </span>
+              <button
+                type="button"
+                aria-label="Remove photo"
+                class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                @click="clearFile"
+              >
+                <X class="size-3.5" />
+              </button>
+            </span>
+          </div>
+        </template>
+      </FileDrop>
 
       <!-- Errors -->
-      <div
-        v-if="error"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ error.message }}
-        </p>
-        <p v-if="error.fix" class="mt-1 text-muted-foreground">
-          {{ error.fix }}
-        </p>
-      </div>
+      <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
       <!-- Model -->
       <div
@@ -700,24 +668,12 @@ onUnmounted(() => {
           Your connection looks metered, so the model waits for you to start it.
         </p>
 
-        <div v-if="engineState === 'loading'" class="flex flex-col gap-2">
-          <div
-            class="h-2 overflow-hidden rounded-full bg-background"
-            role="progressbar"
-            :aria-valuenow="downloadPercent"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            :aria-label="downloadLabel"
-          >
-            <div
-              class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-              :style="{ width: `${downloadPercent}%` }"
-            />
-          </div>
-          <p class="font-mono text-xs text-muted-foreground tabular-nums">
-            {{ downloadLabel }}
-          </p>
-        </div>
+        <ProgressBar
+          v-if="engineState === 'loading'"
+          :value="downloadPercent"
+          :label="downloadLabel"
+          track="card"
+        />
 
         <Button v-else class="self-start" size="sm" @click="loadModel">
           Load model (6.3 MB)

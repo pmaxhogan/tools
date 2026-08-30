@@ -25,7 +25,10 @@ import {
 } from "@/tools/bpm-key-detector/index";
 import { formatBytes } from "@/lib/format";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 import OutputView from "../OutputView.vue";
+import ProgressBar from "../ProgressBar.vue";
 import CopyButton from "../CopyButton.vue";
 import { Button } from "@/components/ui/button";
 
@@ -114,8 +117,6 @@ const STAGE_PERCENT: Record<Stage, number> = {
 const fileName = ref("");
 const fileSize = ref(0);
 const stage = ref<Stage>("idle");
-const dragging = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
 const fileError = ref<{ message: string; fix?: string } | null>(null);
 const tempoError = ref<{ message: string; fix?: string } | null>(null);
@@ -483,20 +484,10 @@ async function analyze(samples: Float32Array, rate: number, token: number) {
   stage.value = "ready";
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
+/** Drop, picker, keyboard, clipboard paste, and the carry chip all land here. */
+function onFiles(files: File[]) {
+  const file = files[0];
   if (file) void readFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  void readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
 }
 
 function clearFile() {
@@ -504,7 +495,6 @@ function clearFile() {
   resetResults();
   fileName.value = "";
   fileSize.value = 0;
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ------------------------------------------------------------------ *
@@ -557,86 +547,50 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-5 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      :accept="`audio/*,video/*,${VIDEO_EXTENSIONS}`"
+      label="Drop an audio or video file here or click to choose"
+      hint="It measures the tempo and the musical key. WAV, MP3, FLAC, OGG, and M4A all work, and so does any video your browser can decode. Everything runs in this tab: your files and inputs never leave your device."
+      @files="onFiles"
     >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Audio or video
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-        <input
-          ref="fileInput"
-          type="file"
-          class="hidden"
-          :accept="`audio/*,video/*,${VIDEO_EXTENSIONS}`"
-          @change="onPickFile"
-        />
-      </div>
-
-      <div v-if="fileName" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
-          <span v-if="fullDuration > 0" class="shrink-0 text-muted-foreground tabular-nums">
-            {{ clock(fullDuration) }}
-          </span>
-          <button
-            type="button"
-            aria-label="Remove audio file"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearFile"
+      <template v-if="fileName" #default>
+        <div class="flex justify-center">
+          <span
+            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
-            <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
-
-      <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-        Drop an audio or video file here to measure its tempo and its musical key. WAV, MP3, FLAC,
-        OGG, and M4A all work, and so does any video your browser can decode. Everything runs in
-        this tab: your files and inputs never leave your device.
-      </p>
-    </div>
+            <span class="truncate font-medium">{{ fileName }}</span>
+            <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
+            <span v-if="fullDuration > 0" class="shrink-0 text-muted-foreground tabular-nums">
+              {{ clock(fullDuration) }}
+            </span>
+            <button
+              type="button"
+              aria-label="Remove audio file"
+              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+              @click="clearFile"
+            >
+              <X class="size-3.5" />
+            </button>
+          </span>
+        </div>
+      </template>
+    </FileDrop>
 
     <!-- File level errors -->
-    <div
-      v-if="fileError"
-      role="alert"
-      class="rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">{{ fileError.message }}</p>
-      <p v-if="fileError.fix" class="mt-1 text-muted-foreground">{{ fileError.fix }}</p>
-    </div>
+    <ErrorBanner v-if="fileError" :message="fileError.message" :hint="fileError.fix" />
 
     <!-- Progress -->
     <div
       v-if="busy"
       class="flex flex-col gap-2 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
     >
-      <div class="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{{ STAGE_LABEL[stage] }}</span>
-        <span class="tabular-nums">{{ STAGE_PERCENT[stage] }}%</span>
-      </div>
-      <div
-        class="h-1.5 overflow-hidden rounded-full bg-card"
-        role="progressbar"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        :aria-valuenow="STAGE_PERCENT[stage]"
-        :aria-label="STAGE_LABEL[stage]"
-      >
-        <div
-          class="h-full rounded-full bg-[image:var(--grad-brand)] transition-[width] duration-150"
-          :style="{ width: `${STAGE_PERCENT[stage]}%` }"
-        />
-      </div>
+      <ProgressBar
+        size="sm"
+        track="card"
+        :value="STAGE_PERCENT[stage]"
+        :label="STAGE_LABEL[stage]"
+        :detail="`${STAGE_PERCENT[stage]}%`"
+      />
       <p v-if="slowFile" class="text-xs text-muted-foreground">
         The measurement runs on this tab, so the page can sit still for a few seconds on a long
         track. Nothing is being uploaded while it works.
@@ -682,25 +636,13 @@ onUnmounted(() => {
             <span class="text-sm text-muted-foreground">bpm</span>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <div class="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Confidence</span>
-              <span class="tabular-nums">{{ percentText(tempo.confidence) }}</span>
-            </div>
-            <div
-              class="h-1.5 overflow-hidden rounded-full bg-card"
-              role="progressbar"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              aria-label="Tempo confidence"
-              :aria-valuenow="percentNumber(tempo.confidence)"
-            >
-              <div
-                class="h-full rounded-full bg-[image:var(--grad-brand)]"
-                :style="{ width: `${percentNumber(tempo.confidence)}%` }"
-              />
-            </div>
-          </div>
+          <ProgressBar
+            size="sm"
+            track="card"
+            label="Confidence"
+            :detail="percentText(tempo.confidence)"
+            :value="percentNumber(tempo.confidence)"
+          />
 
           <p v-if="marking" class="text-sm">
             <span class="font-medium">{{ marking.marking }}</span>
@@ -756,25 +698,13 @@ onUnmounted(() => {
             </span>
           </div>
 
-          <div class="flex flex-col gap-1.5">
-            <div class="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Confidence</span>
-              <span class="tabular-nums">{{ percentText(keyInfo.confidence) }}</span>
-            </div>
-            <div
-              class="h-1.5 overflow-hidden rounded-full bg-card"
-              role="progressbar"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              aria-label="Key confidence"
-              :aria-valuenow="percentNumber(keyInfo.confidence)"
-            >
-              <div
-                class="h-full rounded-full bg-[image:var(--grad-brand)]"
-                :style="{ width: `${percentNumber(keyInfo.confidence)}%` }"
-              />
-            </div>
-          </div>
+          <ProgressBar
+            size="sm"
+            track="card"
+            label="Confidence"
+            :detail="percentText(keyInfo.confidence)"
+            :value="percentNumber(keyInfo.confidence)"
+          />
 
           <div class="flex flex-col gap-1.5">
             <span class="text-xs text-muted-foreground">Mixes with</span>

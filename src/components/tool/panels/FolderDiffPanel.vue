@@ -26,6 +26,8 @@ import {
   type ReportRow,
 } from "@/tools/folder-diff/index";
 import { formatBytes } from "@/lib/format";
+import ErrorBanner from "../ErrorBanner.vue";
+import ProgressBar from "../ProgressBar.vue";
 import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +67,12 @@ const HASH_FLUSH_EVERY = 25;
 
 /** False until mounted, which keeps the capability check off the server. */
 const supported = ref(false);
+
+/** Body of the quiet fallback notice, which names the tool the page is showing. */
+const unsupportedMessage = computed(
+  () =>
+    `${props.meta.name} opens two folders in place, which needs the File System Access API. It is available in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop.`,
+);
 
 const dirA = shallowRef<DirectoryHandleWrapper | null>(null);
 const dirB = shallowRef<DirectoryHandleWrapper | null>(null);
@@ -499,17 +507,12 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Unsupported: PanelHost gates this first, so this is a quiet fallback. -->
-    <div
+    <ErrorBanner
       v-if="!supported"
-      role="status"
-      class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-muted-foreground">Checking folder access.</p>
-      <p class="mt-1 text-muted-foreground">
-        {{ props.meta.name }} opens two folders in place, which needs the File System Access API. It
-        is available in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop.
-      </p>
-    </div>
+      variant="info"
+      title="Checking folder access."
+      :message="unsupportedMessage"
+    />
 
     <template v-else>
       <!-- The two roots -->
@@ -692,42 +695,27 @@ onUnmounted(() => {
 
       <!-- Hashing progress -->
       <div v-if="resolving" class="flex flex-col gap-2">
-        <div
-          class="h-2 overflow-hidden rounded-full bg-secondary"
-          role="progressbar"
-          :aria-valuenow="resolveTotal ? Math.round((resolveDone / resolveTotal) * 100) : 0"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          aria-label="Comparing same-size files"
-        >
-          <div
-            class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-            :style="{ width: `${resolveTotal ? (resolveDone / resolveTotal) * 100 : 0}%` }"
-          />
-        </div>
-        <div class="flex flex-wrap items-center gap-3">
-          <span class="font-mono text-xs text-muted-foreground tabular-nums">
-            Comparing {{ resolveDone }} of {{ resolveTotal }}
-          </span>
-          <Button variant="outline" size="sm" @click="stopResolving"> Stop </Button>
-        </div>
+        <ProgressBar
+          :value="resolveTotal ? (resolveDone / resolveTotal) * 100 : 0"
+          label="Comparing same-size files"
+          :detail="`${resolveDone} of ${resolveTotal}`"
+        />
+        <Button class="self-start" variant="outline" size="sm" @click="stopResolving">
+          Stop
+        </Button>
       </div>
 
-      <div
+      <ErrorBanner
         v-if="resolveNotes.length && !resolving"
-        role="status"
-        class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
+        variant="info"
+        :message="`${plural(resolveNotes.length, 'file', 'files')} could not be read, so those pairs are still unresolved.`"
       >
-        <p class="font-medium">
-          {{ plural(resolveNotes.length, "file", "files") }} could not be read, so those pairs are
-          still unresolved.
-        </p>
-        <ul class="mt-1 list-disc pl-4 text-xs text-muted-foreground">
+        <ul class="list-disc pl-4 text-xs text-muted-foreground">
           <li v-for="note in resolveNotes.slice(0, 8)" :key="note">
             {{ note }}
           </li>
         </ul>
-      </div>
+      </ErrorBanner>
 
       <!-- The comparison -->
       <div v-if="bothScanned" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
@@ -790,18 +778,7 @@ onUnmounted(() => {
       </p>
 
       <!-- Errors -->
-      <div
-        v-if="error"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ error.message }}
-        </p>
-        <p v-if="error.fix" class="mt-1 text-muted-foreground">
-          {{ error.fix }}
-        </p>
-      </div>
+      <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
     </template>
   </div>
 </template>

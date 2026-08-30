@@ -20,6 +20,7 @@ import {
   type TimerState,
 } from "@/tools/pomodoro-timer/index";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import ErrorBanner from "../ErrorBanner.vue";
 import OptionControl from "../OptionControl.vue";
 import { Button } from "@/components/ui/button";
 
@@ -752,18 +753,9 @@ onUnmounted(() => {
     </div>
 
     <!-- errors -->
-    <div
-      v-if="scheduleInfo.error || stateError"
-      role="alert"
-      class="rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <template v-for="(err, i) in [scheduleInfo.error, stateError]" :key="i">
-        <template v-if="err">
-          <p class="font-medium text-destructive">{{ err.message }}</p>
-          <p v-if="err.fix" class="mt-1 text-muted-foreground">{{ err.fix }}</p>
-        </template>
-      </template>
-    </div>
+    <template v-for="(err, i) in [scheduleInfo.error, stateError]" :key="i">
+      <ErrorBanner v-if="err" :message="err.message" :hint="err.fix" />
+    </template>
 
     <!-- summary -->
     <dl class="flex flex-wrap gap-x-6 gap-y-2">

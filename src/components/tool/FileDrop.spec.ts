@@ -14,6 +14,13 @@ function dropPayload(files: File[]) {
   return { dataTransfer: { files } };
 }
 
+/** A document paste event carrying `files`, which happy-dom will not build. */
+function pasteEvent(...files: File[]): Event {
+  const event = new Event("paste");
+  Object.defineProperty(event, "clipboardData", { value: { files } });
+  return event;
+}
+
 beforeEach(() => {
   clearCarriedInput();
 });
@@ -188,6 +195,47 @@ describe("FileDrop", () => {
     expect(input.attributes("multiple")).toBeDefined();
   });
 
+  it("gives a pasted file to one zone only when a panel has two", async () => {
+    const first = mount(FileDrop, { attachTo: document.body, global: { provide } });
+    const second = mount(FileDrop, { attachTo: document.body, global: { provide } });
+
+    document.dispatchEvent(pasteEvent(fileNamed("shot.png")));
+    expect(first.emitted("files")).toHaveLength(1);
+    expect(second.emitted("files")).toBeUndefined();
+
+    first.unmount();
+    second.unmount();
+  });
+
+  it("gives a pasted file to the zone focus is inside", async () => {
+    const first = mount(FileDrop, { attachTo: document.body, global: { provide } });
+    const second = mount(FileDrop, { attachTo: document.body, global: { provide } });
+
+    (second.get('[role="button"]').element as HTMLElement).focus();
+    document.dispatchEvent(pasteEvent(fileNamed("shot.png")));
+    expect(second.emitted("files")).toHaveLength(1);
+    expect(first.emitted("files")).toBeUndefined();
+
+    first.unmount();
+    second.unmount();
+  });
+
+  it("skips a zone that opted out of paste", async () => {
+    const off = mount(FileDrop, {
+      attachTo: document.body,
+      props: { paste: false },
+      global: { provide },
+    });
+    const on = mount(FileDrop, { attachTo: document.body, global: { provide } });
+
+    document.dispatchEvent(pasteEvent(fileNamed("shot.png")));
+    expect(off.emitted("files")).toBeUndefined();
+    expect(on.emitted("files")).toHaveLength(1);
+
+    off.unmount();
+    on.unmount();
+  });
+
   it("renders the default slot instead of the built in body", () => {
     const wrapper = mount(FileDrop, {
       global: { provide },
@@ -195,5 +243,48 @@ describe("FileDrop", () => {
     });
     expect(wrapper.text()).toContain("Bring your own body");
     expect(wrapper.find('[data-testid="filedrop-body"]').exists()).toBe(false);
+  });
+
+  it("still renders the actions slot alongside a custom body", () => {
+    const wrapper = mount(FileDrop, {
+      global: { provide },
+      slots: {
+        default: "<p>Bring your own body</p>",
+        actions: '<button type="button" id="camera">Use camera</button>',
+      },
+    });
+    expect(wrapper.text()).toContain("Bring your own body");
+    expect(wrapper.findAll("#camera")).toHaveLength(1);
+  });
+
+  it("hands the custom body a way to open the picker", async () => {
+    const wrapper = mount(FileDrop, {
+      global: { provide },
+      slots: {
+        default: `<button type="button" id="choose" @click="open">Choose file</button>`,
+      },
+    });
+    const input = wrapper.get('input[type="file"]').element as HTMLInputElement;
+    const click = vi.spyOn(input, "click").mockImplementation(() => {});
+    await wrapper.get("#choose").trigger("click");
+    expect(click).toHaveBeenCalledTimes(1);
+  });
+
+  it("exposes open() to a button outside the zone", () => {
+    const wrapper = mount(FileDrop, { global: { provide } });
+    const input = wrapper.get('input[type="file"]').element as HTMLInputElement;
+    const click = vi.spyOn(input, "click").mockImplementation(() => {});
+    (wrapper.vm as unknown as { open: () => void }).open();
+    expect(click).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops the zone padding when bare", () => {
+    const padded = mount(FileDrop, { global: { provide } });
+    expect(padded.get('[role="button"]').classes()).toContain("py-6");
+
+    const wrapper = mount(FileDrop, { props: { bare: true }, global: { provide } });
+    const zone = wrapper.get('[role="button"]').classes();
+    expect(zone).not.toContain("py-6");
+    expect(zone).not.toContain("py-2");
   });
 });

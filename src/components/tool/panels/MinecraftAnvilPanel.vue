@@ -31,6 +31,8 @@ import {
   type AnvilVersionData,
 } from "@/tools/minecraft-anvil-calculator/data";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -977,28 +979,18 @@ onMounted(() => {
 
           <!-- right pane: plan and totals -->
           <div class="flex min-w-0 flex-col gap-3">
-            <div
+            <ErrorBanner
               v-if="plannerResult.error"
-              role="alert"
-              class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-            >
-              <p class="font-medium text-destructive">{{ plannerResult.error.message }}</p>
-              <p v-if="plannerResult.error.fix" class="mt-1 text-muted-foreground">
-                {{ plannerResult.error.fix }}
-              </p>
-            </div>
+              :message="plannerResult.error.message"
+              :hint="plannerResult.error.fix"
+            />
 
             <template v-else-if="plannerResult.plan">
-              <div
+              <ErrorBanner
                 v-if="plannerResult.creativeOnly"
-                class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-              >
-                <p class="font-medium text-destructive">No survival plan exists for this build.</p>
-                <p class="mt-1 text-muted-foreground">
-                  Showing the cheapest creative-only plan. Steps costing 40 or more are highlighted;
-                  a survival anvil refuses them.
-                </p>
-              </div>
+                title="No survival plan exists for this build."
+                message="Showing the cheapest creative-only plan. Steps costing 40 or more are highlighted; a survival anvil refuses them."
+              />
 
               <!-- stat tiles -->
               <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -1173,15 +1165,11 @@ onMounted(() => {
               </div>
             </template>
 
-            <div
+            <EmptyState
               v-else
-              class="rounded-[10px] bg-secondary px-3 py-6 text-center shadow-[var(--sh-inset)]"
-            >
-              <p class="text-sm text-muted-foreground">
-                Add books on the left and the cheapest merge order appears here. Your files and
-                inputs never leave your device.
-              </p>
-            </div>
+              title="Add books on the left and the cheapest merge order appears here."
+              hint="Your files and inputs never leave your device."
+            />
           </div>
         </div>
       </TabsContent>
@@ -1471,16 +1459,11 @@ onMounted(() => {
 
           <!-- right pane: result -->
           <div class="flex min-w-0 flex-col gap-3">
-            <div
+            <ErrorBanner
               v-if="combineResult.error"
-              role="alert"
-              class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-            >
-              <p class="font-medium text-destructive">{{ combineResult.error.message }}</p>
-              <p v-if="combineResult.error.fix" class="mt-1 text-muted-foreground">
-                {{ combineResult.error.fix }}
-              </p>
-            </div>
+              :message="combineResult.error.message"
+              :hint="combineResult.error.fix"
+            />
 
             <template v-else-if="combineResult.outcome">
               <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -1584,15 +1567,11 @@ onMounted(() => {
               </div>
             </template>
 
-            <div
+            <EmptyState
               v-else
-              class="rounded-[10px] bg-secondary px-3 py-6 text-center shadow-[var(--sh-inset)]"
-            >
-              <p class="text-sm text-muted-foreground">
-                Pick a sacrifice or a rename on the left to see the cost. Your files and inputs
-                never leave your device.
-              </p>
-            </div>
+              title="Pick a sacrifice or a rename on the left to see the cost."
+              hint="Your files and inputs never leave your device."
+            />
           </div>
         </div>
       </TabsContent>

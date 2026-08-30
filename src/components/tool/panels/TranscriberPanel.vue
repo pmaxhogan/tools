@@ -8,6 +8,9 @@ import { downloadText } from "@/lib/download";
 import { useStickToBottom } from "@/lib/stick-to-bottom";
 import { Button } from "@/components/ui/button";
 import CopyButton from "../CopyButton.vue";
+import FileDrop from "../FileDrop.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import ProgressBar from "../ProgressBar.vue";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -241,8 +244,6 @@ let stopConnectionWatch: () => void = () => {};
 
 const fileName = ref("");
 const fileSize = ref(0);
-const dragging = ref(false);
-const fileInput = ref<HTMLInputElement>();
 const decoding = ref(false);
 const audio = shallowRef<Float32Array | null>(null);
 const duration = ref(0);
@@ -583,20 +584,9 @@ async function readFile(file: File) {
   }
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
+function onFiles(files: File[]) {
+  const file = files[0];
   if (file) void readFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  void readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
 }
 
 function clearFile() {
@@ -606,7 +596,6 @@ function clearFile() {
   fileSize.value = 0;
   error.value = null;
   resetResult();
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -744,73 +733,63 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Capability gate -->
-    <div
+    <ErrorBanner
       v-if="!supported"
-      role="status"
-      class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-muted-foreground">This browser cannot run the speech model.</p>
-      <p class="mt-1 text-muted-foreground">
-        Transcriber runs Whisper inside this tab, which needs WebAssembly. Use a current version of
-        Chrome, Edge, Firefox, or Safari.
-      </p>
-    </div>
+      variant="info"
+      title="This browser cannot run the speech model."
+      message="Transcriber runs Whisper inside this tab, which needs WebAssembly. Use a current version of Chrome, Edge, Firefox, or Safari."
+    />
 
     <template v-else>
       <!-- Input -->
-      <div
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-        :class="dragging ? 'ring-2 ring-ring' : ''"
-        @dragover.prevent="dragging = true"
-        @dragleave="dragging = false"
-        @drop.prevent="onDrop"
+      <FileDrop
+        accept="audio/*,video/*"
+        bare
+        label="Audio or video"
+        hint="Drop an audio or video file here to turn its speech into text. Everything runs in this tab: your files and inputs never leave your device."
+        @files="onFiles"
       >
-        <div class="flex items-center justify-between px-3 pt-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            Audio or video
-          </span>
-          <Button variant="ghost" size="sm" :disabled="running" @click="fileInput?.click()">
-            Open file…
-          </Button>
-          <input
-            ref="fileInput"
-            type="file"
-            class="hidden"
-            accept="audio/*,video/*"
-            @change="onPickFile"
-          />
-        </div>
-
-        <div v-if="fileName" class="px-3 pt-2 pb-3">
-          <span
-            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-          >
-            <span class="truncate font-medium">{{ fileName }}</span>
-            <span class="shrink-0 text-muted-foreground tabular-nums">
-              {{ formatBytes(fileSize) }}
+        <template #default="{ open }">
+          <div class="flex items-center justify-between px-3 pt-2">
+            <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+              Audio or video
             </span>
-            <span v-if="decoding" class="shrink-0 text-muted-foreground">decoding…</span>
-            <span v-else-if="duration > 0" class="shrink-0 text-muted-foreground tabular-nums">{{
-              clockLabel(duration)
-            }}</span>
-            <button
-              v-if="!running"
-              type="button"
-              aria-label="Remove file"
-              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-              @click="clearFile"
-            >
-              <X class="size-3.5" />
-            </button>
-          </span>
-        </div>
+            <Button variant="ghost" size="sm" :disabled="running" @click="open">
+              Open file…
+            </Button>
+          </div>
 
-        <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-          Drop an audio or video file here to turn its speech into text. Whisper reads the audio
-          track, so a screen recording works as well as a voice memo. Everything runs in this tab:
-          your files and inputs never leave your device.
-        </p>
-      </div>
+          <div v-if="fileName" class="px-3 pt-2 pb-3">
+            <span
+              class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
+            >
+              <span class="truncate font-medium">{{ fileName }}</span>
+              <span class="shrink-0 text-muted-foreground tabular-nums">
+                {{ formatBytes(fileSize) }}
+              </span>
+              <span v-if="decoding" class="shrink-0 text-muted-foreground">decoding…</span>
+              <span v-else-if="duration > 0" class="shrink-0 text-muted-foreground tabular-nums">{{
+                clockLabel(duration)
+              }}</span>
+              <button
+                v-if="!running"
+                type="button"
+                aria-label="Remove file"
+                class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                @click="clearFile"
+              >
+                <X class="size-3.5" />
+              </button>
+            </span>
+          </div>
+
+          <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
+            Drop an audio or video file here to turn its speech into text. Whisper reads the audio
+            track, so a screen recording works as well as a voice memo. Everything runs in this tab:
+            your files and inputs never leave your device.
+          </p>
+        </template>
+      </FileDrop>
 
       <!-- Speech model -->
       <div
@@ -833,19 +812,7 @@ onUnmounted(() => {
         </p>
 
         <div v-if="engineStage !== 'idle'" class="flex flex-col gap-2">
-          <div
-            class="h-2 overflow-hidden rounded-full bg-background"
-            role="progressbar"
-            :aria-valuenow="Math.round(downloadPercent)"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            :aria-label="downloadLabel"
-          >
-            <div
-              class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-              :style="{ width: `${engineBarWidth}%` }"
-            />
-          </div>
+          <ProgressBar :value="engineBarWidth" :aria-label="downloadLabel" track="card" />
           <p class="font-mono text-xs text-muted-foreground tabular-nums">
             {{ downloadLabel }}
           </p>
@@ -928,34 +895,10 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <div
-        v-if="running"
-        class="h-2 overflow-hidden rounded-full bg-secondary"
-        role="progressbar"
-        :aria-valuenow="progress"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        aria-label="Transcription progress"
-      >
-        <div
-          class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-          :style="{ width: `${progress}%` }"
-        />
-      </div>
+      <ProgressBar v-if="running" :value="progress" aria-label="Transcription progress" />
 
       <!-- Errors -->
-      <div
-        v-if="error"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ error.message }}
-        </p>
-        <p v-if="error.fix" class="mt-1 text-muted-foreground">
-          {{ error.fix }}
-        </p>
-      </div>
+      <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
       <!-- Live text while the model works -->
       <div v-if="running" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
@@ -989,14 +932,12 @@ onUnmounted(() => {
         }}</pre>
       </div>
 
-      <div
+      <ErrorBanner
         v-else-if="!running && !decoding && audio && progress === 100"
-        role="status"
-        class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm text-muted-foreground"
-      >
-        The model finished without finding any speech in this file. Check that the recording has an
-        audible voice track, and try picking the language explicitly.
-      </div>
+        variant="info"
+        message="The model finished without finding any speech in this file."
+        hint="Check that the recording has an audible voice track, and try picking the language explicitly."
+      />
 
       <!-- Notes -->
       <div class="flex flex-col gap-1.5 text-xs text-muted-foreground">

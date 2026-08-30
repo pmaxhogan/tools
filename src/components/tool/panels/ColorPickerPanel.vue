@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 /**
  * Bespoke panel for the Color Suite.
@@ -525,16 +526,11 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div
+        <ErrorBanner
           v-if="convert.error"
-          role="alert"
-          class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-        >
-          <span class="font-semibold text-destructive">{{ convert.error.message }}</span>
-          <span v-if="convert.error.fix" class="text-muted-foreground">{{
-            convert.error.fix
-          }}</span>
-        </div>
+          :message="convert.error.message"
+          :hint="convert.error.fix"
+        />
 
         <div
           v-if="convert.formats.length > 0"
@@ -656,16 +652,11 @@ onUnmounted(() => {
           </Button>
         </div>
 
-        <div
+        <ErrorBanner
           v-if="contrast.error"
-          role="alert"
-          class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-        >
-          <span class="font-semibold text-destructive">{{ contrast.error.message }}</span>
-          <span v-if="contrast.error.fix" class="text-muted-foreground">
-            {{ contrast.error.fix }}
-          </span>
-        </div>
+          :message="contrast.error.message"
+          :hint="contrast.error.fix"
+        />
 
         <template v-if="contrast.rows.length > 0">
           <div
@@ -770,16 +761,11 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div
+        <ErrorBanner
           v-if="palette.error"
-          role="alert"
-          class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-        >
-          <span class="font-semibold text-destructive">{{ palette.error.message }}</span>
-          <span v-if="palette.error.fix" class="text-muted-foreground">{{
-            palette.error.fix
-          }}</span>
-        </div>
+          :message="palette.error.message"
+          :hint="palette.error.fix"
+        />
 
         <template v-if="palette.families.length > 0">
           <div class="flex flex-wrap items-center justify-between gap-2">

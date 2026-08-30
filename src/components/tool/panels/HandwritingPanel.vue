@@ -10,6 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import InkCanvas from "../InkCanvas.vue";
 
 /**
@@ -395,13 +396,7 @@ watch([guides, shape, baseWidth, pressure, color], persist);
       </span>
     </div>
 
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">{{ error }}</p>
-    </div>
+    <ErrorBanner v-if="error" :message="error" />
 
     <p class="text-xs text-muted-foreground">
       The ruled and signature guides are printed behind the ink by the page, so they never appear in

@@ -28,6 +28,8 @@ import {
 } from "@/tools/screenshot-annotator/index";
 import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 /**
  * Bespoke panel for the screenshot annotator. The generic ToolShell has no way
@@ -121,10 +123,8 @@ const fileName = ref("");
 const fileSize = ref(0);
 const decodeFailed = ref(false);
 const busy = ref(false);
-const dragging = ref(false);
 
 const canvas = ref<HTMLCanvasElement>();
-const fileInput = ref<HTMLInputElement>();
 const textInput = ref<HTMLInputElement>();
 
 /** The decoded screenshot, never mutated. Every repaint starts from a copy. */
@@ -399,20 +399,9 @@ async function readFile(file: File) {
   }
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
+function onFiles(files: File[]) {
+  const file = files[0];
   if (file) void readFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  void readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
 }
 
 function clearImage() {
@@ -425,7 +414,6 @@ function clearImage() {
   cancelText();
   resetDoc(0, 0);
   clearExportNote();
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /**
@@ -914,22 +902,14 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex items-center justify-between px-3 pt-2">
+    <FileDrop accept="image/*" :paste="false" @files="onFiles">
+      <div class="flex items-center justify-between pb-1">
         <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
           Screenshot
         </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()">Open file…</Button>
-        <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
       </div>
 
-      <div v-if="hasImage || decodeFailed" class="px-3 pt-2 pb-3">
+      <div v-if="hasImage || decodeFailed">
         <span
           class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
         >
@@ -947,30 +927,23 @@ onUnmounted(() => {
       </div>
 
       <template v-else>
-        <p class="px-3 pt-1 pb-2 text-sm text-muted-foreground">
-          Drop a screenshot here, pick a file, or paste one from the clipboard, then draw on it.
-          Everything runs in this tab: your files and inputs never leave your device.
+        <p class="text-sm text-muted-foreground">
+          Drop a screenshot here, click to choose one, or paste one from the clipboard, then draw on
+          it. Everything runs in this tab: your files and inputs never leave your device.
         </p>
-        <p class="px-3 pb-4 text-xs text-muted-foreground">
+        <p class="pt-2 text-xs text-muted-foreground">
           Paste a screenshot with
           <kbd class="rounded-[8px] border bg-card px-1.5 py-0.5 font-mono text-[11px]">Ctrl+V</kbd>
           (Cmd+V on a Mac).
         </p>
       </template>
-    </div>
+    </FileDrop>
 
-    <p
+    <ErrorBanner
       v-if="decodeFailed"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <span class="font-medium text-destructive"
-        >This browser could not decode that file as an image.</span
-      >
-      <span class="mt-1 block text-muted-foreground">
-        Try a PNG, JPEG, WebP, GIF, or BMP screenshot.
-      </span>
-    </p>
+      message="This browser could not decode that file as an image."
+      hint="Try a PNG, JPEG, WebP, GIF, or BMP screenshot."
+    />
 
     <template v-if="hasImage">
       <!-- Toolbar -->

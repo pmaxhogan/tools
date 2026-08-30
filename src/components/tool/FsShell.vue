@@ -65,7 +65,7 @@
  * declares `requires: ['fs-access']`).
  */
 import { computed, onMounted, ref, shallowRef } from "vue";
-import { Download, FolderOpen, RotateCw, TriangleAlert } from "lucide-vue-next";
+import { Download, FolderOpen, RotateCw } from "lucide-vue-next";
 import type { ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import {
@@ -86,6 +86,9 @@ import {
 import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
+import EmptyState from "./EmptyState.vue";
+import ErrorBanner from "./ErrorBanner.vue";
+import ProgressBar from "./ProgressBar.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -382,35 +385,26 @@ onMounted(() => {
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Unsupported: PanelHost normally catches this first, so this is a
          quiet fallback rather than the real message. -->
-    <div
+    <ErrorBanner
       v-if="!supported"
-      role="status"
-      class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-muted-foreground">Checking folder access.</p>
-      <p class="mt-1 text-muted-foreground">
-        {{ meta.name }} opens a folder in place, which needs the File System Access API. It is
-        available in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop.
-      </p>
-    </div>
+      variant="info"
+      title="Checking folder access."
+      :message="`${meta.name} opens a folder in place, which needs the File System Access API. It is available in Chromium browsers such as Chrome, Edge, Brave and Opera on desktop.`"
+    />
 
     <template v-else>
       <!-- Write warning -->
-      <div
+      <ErrorBanner
         v-if="mode === 'readwrite'"
-        class="flex gap-2 rounded-lg border border-[var(--input)] bg-secondary px-3 py-2 text-sm"
-      >
-        <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" />
-        <p class="text-muted-foreground">
-          This tool can change the folder you pick: it renames, writes and deletes files in place.
-          Nothing happens until you review the exact list of changes and confirm, and you can
-          download an undo file first.
-        </p>
-      </div>
+        variant="warning"
+        message="This tool can change the folder you pick: it renames, writes and deletes files in place. Nothing happens until you review the exact list of changes and confirm, and you can download an undo file first."
+      />
 
-      <!-- Folder -->
-      <div class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
-        <div class="flex flex-wrap items-center justify-between gap-2 px-3 pt-2">
+      <!-- Folder. The picker stays behind a real click: showDirectoryPicker is
+           the only way to get a handle a tool can write through, and a dropped
+           folder is read only, so there is no drop zone here. -->
+      <div class="flex flex-col gap-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
             Folder
           </span>
@@ -435,7 +429,10 @@ onMounted(() => {
           </div>
         </div>
 
-        <div v-if="dir" class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-3 pt-2 pb-3">
+        <div
+          v-if="dir"
+          class="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[10px] bg-secondary px-3 py-3 shadow-[var(--sh-inset)]"
+        >
           <span class="font-mono text-sm font-medium">{{ dir.name }}</span>
           <span v-if="summary" class="text-xs text-muted-foreground tabular-nums">{{
             summary
@@ -443,10 +440,12 @@ onMounted(() => {
           <span v-else-if="!scanning" class="text-xs text-muted-foreground">not scanned yet</span>
         </div>
 
-        <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-          Pick a folder to get started. Nothing is uploaded and nothing is copied anywhere: the
-          folder is opened in place, in this tab.
-        </p>
+        <EmptyState
+          v-else
+          icon="FolderOpen"
+          title="Pick a folder to get started."
+          hint="Nothing is uploaded and nothing is copied anywhere: the folder is opened in place, in this tab."
+        />
       </div>
 
       <!-- Standing privacy line: stays put once a folder is chosen, which is
@@ -455,11 +454,14 @@ onMounted(() => {
         The folder is read in this tab only: your files and inputs never leave your device.
       </p>
 
-      <!-- Scan progress -->
+      <!-- Scan progress. A walk has no total to count against, so the bar is
+           indeterminate and the running item count rides in the detail. -->
       <div v-if="scanning" class="flex flex-wrap items-center gap-3">
-        <span role="status" class="font-mono text-xs text-muted-foreground tabular-nums">
-          Reading folder… {{ scanCount.toLocaleString() }} items
-        </span>
+        <ProgressBar
+          class="min-w-[12rem] flex-1"
+          label="Reading folder…"
+          :detail="`${scanCount.toLocaleString()} items`"
+        />
         <Button variant="outline" size="sm" @click="stopScan"> Stop </Button>
       </div>
 
@@ -503,19 +505,16 @@ onMounted(() => {
           </p>
         </div>
 
-        <div
+        <ErrorBanner
           v-if="pending.conflicts.length"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
+          :message="`${plural(pending.conflicts.length, 'change', 'changes')} will be skipped.`"
         >
-          <p class="font-medium text-destructive">
-            {{ plural(pending.conflicts.length, "change", "changes") }} will be skipped.
-          </p>
-          <ul class="mt-1 list-disc pl-4 text-xs text-muted-foreground">
+          <ul class="list-disc pl-4 text-xs text-muted-foreground">
             <li v-for="issue in pending.conflicts.slice(0, 5)" :key="issue.index">
               {{ issue.reason }}
             </li>
           </ul>
-        </div>
+        </ErrorBanner>
 
         <div v-if="pending.irreversible.length" class="text-xs text-muted-foreground">
           <p v-for="note in pending.undoManifest.notes" :key="note">
@@ -545,24 +544,12 @@ onMounted(() => {
       </div>
 
       <!-- Write progress -->
-      <div v-if="busy" class="flex flex-col gap-2">
-        <div
-          class="h-2 overflow-hidden rounded-full bg-secondary"
-          role="progressbar"
-          :aria-valuenow="writeTotal ? Math.round((writeDone / writeTotal) * 100) : 0"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          aria-label="Applying changes"
-        >
-          <div
-            class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-            :style="{ width: `${writeTotal ? (writeDone / writeTotal) * 100 : 0}%` }"
-          />
-        </div>
-        <p class="font-mono text-xs text-muted-foreground tabular-nums">
-          Applying {{ writeDone }} of {{ writeTotal }}
-        </p>
-      </div>
+      <ProgressBar
+        v-if="busy"
+        :value="writeTotal ? (writeDone / writeTotal) * 100 : 0"
+        label="Applying changes"
+        :detail="`${writeDone} of ${writeTotal}`"
+      />
 
       <!-- Result -->
       <div
@@ -585,18 +572,7 @@ onMounted(() => {
       </div>
 
       <!-- Errors -->
-      <div
-        v-if="error"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ error.message }}
-        </p>
-        <p v-if="error.fix" class="mt-1 text-muted-foreground">
-          {{ error.fix }}
-        </p>
-      </div>
+      <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
     </template>
   </div>
 </template>

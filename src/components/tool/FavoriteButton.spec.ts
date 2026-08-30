@@ -14,17 +14,24 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import FavoriteButton from "./FavoriteButton.vue";
 import { FAVORITES_KEY } from "@/lib/favorites";
 import { PREFS_CHANGE_EVENT, writeList } from "@/lib/prefs";
+import { clearToasts, getToasts } from "@/lib/toast";
 
 function stored(): string[] {
   return JSON.parse(localStorage.getItem(FAVORITES_KEY) ?? "[]") as string[];
 }
 
+function toastTitles(): string[] {
+  return getToasts().map((t) => t.title);
+}
+
 beforeEach(() => {
   localStorage.clear();
+  clearToasts();
 });
 
 afterEach(() => {
   localStorage.clear();
+  clearToasts();
 });
 
 describe("FavoriteButton", () => {
@@ -68,6 +75,27 @@ describe("FavoriteButton", () => {
     await wrapper.get("button").trigger("click");
     expect(stored()).toEqual([]);
     expect(wrapper.get("button").attributes("aria-pressed")).toBe("false");
+  });
+
+  it("says what happened, since nothing else on screen may change", async () => {
+    const wrapper = mount(FavoriteButton, { props: { slug: "json-formatter" } });
+
+    await wrapper.get("button").trigger("click");
+    expect(toastTitles()).toEqual(["Added to favorites"]);
+
+    await wrapper.get("button").trigger("click");
+    expect(toastTitles()).toEqual(["Added to favorites", "Removed from favorites"]);
+  });
+
+  it("toasts once, from the star that was pressed", async () => {
+    const card = mount(FavoriteButton, { props: { slug: "json-formatter" } });
+    const header = mount(FavoriteButton, { props: { slug: "json-formatter" } });
+
+    await header.get("button").trigger("click");
+    await card.vm.$nextTick();
+
+    // Both stars fill, but following someone else's change is not an action.
+    expect(toastTitles()).toEqual(["Added to favorites"]);
   });
 
   it("puts the newest pin first and keeps the others", async () => {

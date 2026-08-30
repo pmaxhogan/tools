@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Download, Eye, EyeOff, ImageOff, TriangleAlert } from "lucide-vue-next";
+import { Download, Eye, EyeOff, ImageOff } from "lucide-vue-next";
 import type { SelectOption, SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import {
@@ -30,7 +30,10 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 import OutputView from "../OutputView.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for Image Steganography.
@@ -321,14 +324,11 @@ const tab = ref<"hide" | "reveal">("hide");
 const carrier = shallowRef<Carrier | null>(null);
 const hideError = ref<PanelError | null>(null);
 const hideBusy = ref(false);
-const hideDragging = ref(false);
-const hideFileInput = ref<HTMLInputElement>();
 const carrierCanvas = ref<HTMLCanvasElement>();
 
 const payloadKind = ref<"text" | "file">("text");
 const messageText = ref("");
 const payloadFile = shallowRef<{ name: string; bytes: Uint8Array } | null>(null);
-const payloadFileInput = ref<HTMLInputElement>();
 
 const password = ref("");
 const bits = ref("1");
@@ -373,8 +373,7 @@ const meterPercent = computed(() => {
 });
 
 const canHide = computed(
-  () =>
-    carrier.value !== null && payloadBytes.value > 0 && !overCapacity.value && !hideBusy.value,
+  () => carrier.value !== null && payloadBytes.value > 0 && !overCapacity.value && !hideBusy.value,
 );
 
 const embedRows = computed(() => (embedResult.value ? describeEmbed(embedResult.value) : null));
@@ -418,21 +417,12 @@ async function acceptPayloadFile(file: File | null | undefined) {
   }
 }
 
-function onCarrierDrop(e: DragEvent) {
-  hideDragging.value = false;
-  void acceptCarrier(e.dataTransfer?.files[0]);
+function onCarrierFiles(files: File[]) {
+  void acceptCarrier(files[0]);
 }
 
-function onCarrierPick(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  void acceptCarrier(picker.files?.[0]);
-  picker.value = "";
-}
-
-function onPayloadPick(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  void acceptPayloadFile(picker.files?.[0]);
-  picker.value = "";
+function onPayloadFiles(files: File[]) {
+  void acceptPayloadFile(files[0]);
 }
 
 /**
@@ -534,8 +524,6 @@ watch([showViz, vizChannel], async () => {
 const stego = shallowRef<Carrier | null>(null);
 const revealError = ref<PanelError | null>(null);
 const revealBusy = ref(false);
-const revealDragging = ref(false);
-const revealFileInput = ref<HTMLInputElement>();
 const stegoCanvas = ref<HTMLCanvasElement>();
 const revealPassword = ref("");
 const revealResult = shallowRef<ExtractResult | null>(null);
@@ -614,15 +602,8 @@ function downloadRecovered() {
   );
 }
 
-function onStegoDrop(e: DragEvent) {
-  revealDragging.value = false;
-  void acceptStego(e.dataTransfer?.files[0]);
-}
-
-function onStegoPick(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  void acceptStego(picker.files?.[0]);
-  picker.value = "";
+function onStegoFiles(files: File[]) {
+  void acceptStego(files[0]);
 }
 
 watch(revealPassword, () => {
@@ -654,30 +635,16 @@ onUnmounted(() => {
       <!-- hide                                                        -->
       <!-- ---------------------------------------------------------- -->
       <TabsContent value="hide" class="flex flex-col gap-4 pt-4">
-        <div
-          class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-          :class="hideDragging ? 'ring-2 ring-ring' : ''"
-          @dragover.prevent="hideDragging = true"
-          @dragleave="hideDragging = false"
-          @drop.prevent="onCarrierDrop"
-        >
-          <div class="flex items-center justify-between gap-2 px-3 pt-2">
-            <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-              Carrier image
-            </span>
-            <Button variant="ghost" size="sm" @click="hideFileInput?.click()"> Open file… </Button>
-            <input
-              ref="hideFileInput"
-              type="file"
-              class="hidden"
-              accept="image/*"
-              @change="onCarrierPick"
-            />
-          </div>
-          <p class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-            Drop the picture that will carry the data, or pick one with the file button. It is
-            decoded on a canvas in this tab: your files and inputs never leave your device.
-          </p>
+        <div class="flex flex-col gap-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Carrier image
+          </span>
+          <FileDrop
+            accept="image/*"
+            label="Drop the picture that will carry the data, or click to choose"
+            hint="It is decoded on a canvas in this tab: your files and inputs never leave your device."
+            @files="onCarrierFiles"
+          />
         </div>
 
         <div v-if="carrier" class="flex flex-wrap items-start gap-3">
@@ -692,13 +659,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div
-          v-if="carrier?.warning"
-          class="flex gap-2 rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
-          <p class="text-muted-foreground">{{ carrier.warning }}</p>
-        </div>
+        <ErrorBanner v-if="carrier?.warning" variant="warning" :message="carrier.warning" />
 
         <div
           v-if="carrier?.hasTransparency"
@@ -761,21 +722,15 @@ onUnmounted(() => {
         </div>
 
         <div v-else class="flex flex-col gap-2">
-          <div class="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" @click="payloadFileInput?.click()">
-              Choose a file…
-            </Button>
-            <input
-              ref="payloadFileInput"
-              type="file"
-              class="hidden"
-              @change="onPayloadPick"
-            />
-            <span v-if="payloadFile" class="min-w-0 text-xs text-muted-foreground">
-              <span class="font-mono text-foreground">{{ payloadFile.name }}</span>
-              , {{ formatBytes(payloadFile.bytes.length) }}
-            </span>
-          </div>
+          <FileDrop
+            compact
+            :paste="false"
+            :label="
+              payloadFile ? payloadFile.name : 'Drop the file to hide here or click to choose'
+            "
+            :hint="payloadFile ? formatBytes(payloadFile.bytes.length) : undefined"
+            @files="onPayloadFiles"
+          />
           <p class="text-xs text-muted-foreground">
             The file is hidden byte for byte. Its name is not stored, so the reveal step hands it
             back as recovered.bin for you to rename.
@@ -824,18 +779,11 @@ onUnmounted(() => {
           saved anywhere, so it has to be typed again to read the message back.
         </p>
 
-        <div
+        <ErrorBanner
           v-if="channels === 'rgba'"
-          class="flex gap-2 rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
-          <p class="text-muted-foreground">
-            Writing into the alpha channel leaves pixels that are not fully opaque. Canvas stores
-            those premultiplied, so the colors underneath can shift by one step when the PNG is
-            written and take the hidden bits with them. Red, green, and blue is the reliable choice
-            unless you have checked that the extra capacity survives.
-          </p>
-        </div>
+          variant="warning"
+          message="Writing into the alpha channel leaves pixels that are not fully opaque. Canvas stores those premultiplied, so the colors underneath can shift by one step when the PNG is written and take the hidden bits with them. Red, green, and blue is the reliable choice unless you have checked that the extra capacity survives."
+        />
 
         <!-- capacity meter -->
         <div class="flex flex-col gap-1.5">
@@ -848,24 +796,15 @@ onUnmounted(() => {
               <template v-if="capacity > 0">({{ meterPercent }} percent)</template>
             </span>
           </div>
-          <div
-            class="h-2 w-full overflow-hidden rounded-full bg-secondary shadow-[var(--sh-inset)]"
-            role="progressbar"
+          <ProgressBar
+            :value="meterPercent"
+            :tone="overCapacity ? 'destructive' : 'brand'"
             aria-label="Payload size against image capacity"
-            :aria-valuenow="meterPercent"
-            aria-valuemin="0"
-            aria-valuemax="100"
-          >
-            <div
-              class="h-full rounded-full transition-[width] duration-150"
-              :class="overCapacity ? 'bg-destructive' : 'bg-[image:var(--grad-brand)]'"
-              :style="{ width: `${overCapacity ? 100 : meterPercent}%` }"
-            />
-          </div>
+          />
           <p v-if="overCapacity" class="text-xs text-destructive">
             This payload is
-            {{ formatBytes(payloadBytes - capacity) }} too big for the image at these settings. Use a
-            bigger picture, 2 bits per channel, more channels, or a shorter message.
+            {{ formatBytes(payloadBytes - capacity) }} too big for the image at these settings. Use
+            a bigger picture, 2 bits per channel, more channels, or a shorter message.
           </p>
         </div>
 
@@ -884,25 +823,13 @@ onUnmounted(() => {
             <Download class="size-3.5" aria-hidden="true" />
             Download PNG
           </Button>
-          <Button
-            v-if="embedResult"
-            type="button"
-            variant="ghost"
-            @click="showViz = !showViz"
-          >
+          <Button v-if="embedResult" type="button" variant="ghost" @click="showViz = !showViz">
             <Eye class="size-3.5" aria-hidden="true" />
             {{ showViz ? "Hide bit plane" : "Show bit plane" }}
           </Button>
         </div>
 
-        <div
-          v-if="hideError"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-medium text-destructive">{{ hideError.message }}</p>
-          <p v-if="hideError.fix" class="mt-1 text-muted-foreground">{{ hideError.fix }}</p>
-        </div>
+        <ErrorBanner v-if="hideError" :message="hideError.message" :hint="hideError.fix" />
 
         <div v-if="embedResult" class="flex flex-col gap-3">
           <div class="grid grid-cols-1 gap-3" :class="showViz ? 'md:grid-cols-2' : ''">
@@ -965,32 +892,16 @@ onUnmounted(() => {
       <!-- reveal                                                      -->
       <!-- ---------------------------------------------------------- -->
       <TabsContent value="reveal" class="flex flex-col gap-4 pt-4">
-        <div
-          class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-          :class="revealDragging ? 'ring-2 ring-ring' : ''"
-          @dragover.prevent="revealDragging = true"
-          @dragleave="revealDragging = false"
-          @drop.prevent="onStegoDrop"
-        >
-          <div class="flex items-center justify-between gap-2 px-3 pt-2">
-            <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-              Stego image
-            </span>
-            <Button variant="ghost" size="sm" @click="revealFileInput?.click()">
-              Open file…
-            </Button>
-            <input
-              ref="revealFileInput"
-              type="file"
-              class="hidden"
-              accept="image/*"
-              @change="onStegoPick"
-            />
-          </div>
-          <p class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-            Drop the PNG that came out of the hide step. The settings are read from the header, so
-            there is nothing to remember except the password if one was used.
-          </p>
+        <div class="flex flex-col gap-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Stego image
+          </span>
+          <FileDrop
+            accept="image/*"
+            label="Drop the PNG that came out of the hide step, or click to choose"
+            hint="The settings are read from the header, so there is nothing to remember except the password if one was used."
+            @files="onStegoFiles"
+          />
         </div>
 
         <div v-if="stego" class="flex flex-wrap items-start gap-3">
@@ -1004,13 +915,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div
-          v-if="stego?.warning"
-          class="flex gap-2 rounded-[10px] border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
-          <p class="text-muted-foreground">{{ stego.warning }}</p>
-        </div>
+        <ErrorBanner v-if="stego?.warning" variant="warning" :message="stego.warning" />
 
         <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div class="flex w-full flex-col gap-1.5 sm:w-72">
@@ -1032,14 +937,7 @@ onUnmounted(() => {
           </Button>
         </div>
 
-        <div
-          v-if="revealError"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-medium text-destructive">{{ revealError.message }}</p>
-          <p v-if="revealError.fix" class="mt-1 text-muted-foreground">{{ revealError.fix }}</p>
-        </div>
+        <ErrorBanner v-if="revealError" :message="revealError.message" :hint="revealError.fix" />
 
         <div v-if="revealResult" class="flex flex-col gap-3">
           <div v-if="revealIsText" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">
@@ -1051,7 +949,7 @@ onUnmounted(() => {
             </div>
             <pre
               class="max-h-96 overflow-auto px-3 pt-1 pb-3 font-mono text-sm break-words whitespace-pre-wrap"
-            >{{ revealText }}</pre>
+              >{{ revealText }}</pre>
           </div>
 
           <div
@@ -1075,10 +973,7 @@ onUnmounted(() => {
           <OutputView v-if="revealRows" :output="revealRows" />
         </div>
 
-        <p
-          v-else-if="!revealError"
-          class="flex items-center gap-2 text-xs text-muted-foreground"
-        >
+        <p v-else-if="!revealError" class="flex items-center gap-2 text-xs text-muted-foreground">
           <ImageOff class="size-3.5" aria-hidden="true" />
           Nothing read yet. Load an image and press Reveal.
         </p>

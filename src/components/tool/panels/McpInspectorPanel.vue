@@ -24,6 +24,7 @@ import type {
 } from "@/tools/mcp-inspector/index";
 import { readFragment, writeFragment } from "@/lib/fragment";
 import { recordToRows, type KeyValueRow } from "@/lib/key-value";
+import ErrorBanner from "../ErrorBanner.vue";
 import KeyValueGrid from "../KeyValueGrid.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -752,19 +753,17 @@ onMounted(() => {
         </p>
       </fieldset>
 
-      <div
-        v-if="connectError"
-        role="alert"
-        class="flex flex-col gap-2 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-      >
-        <span class="font-semibold text-destructive">{{ connectError.message }}</span>
-        <span v-if="connectError.fix" class="text-muted-foreground">{{ connectError.fix }}</span>
-        <div v-if="connectError.corsBlocked">
-          <Button type="button" size="sm" variant="outline" @click="connect('relay')">
-            Retry through the relay
-          </Button>
-        </div>
-      </div>
+      <ErrorBanner v-if="connectError" :message="connectError.message" :hint="connectError.fix">
+        <Button
+          v-if="connectError.corsBlocked"
+          type="button"
+          size="sm"
+          variant="outline"
+          @click="connect('relay')"
+        >
+          Retry through the relay
+        </Button>
+      </ErrorBanner>
 
       <p class="text-xs text-muted-foreground">
         Authentication headers are not supported: this client connects to unauthenticated servers
@@ -903,14 +902,7 @@ onMounted(() => {
               </Button>
             </div>
 
-            <div
-              v-if="callError"
-              role="alert"
-              class="flex flex-col gap-1 rounded-[8px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-            >
-              <span class="font-semibold text-destructive">{{ callError.message }}</span>
-              <span v-if="callError.fix" class="text-muted-foreground">{{ callError.fix }}</span>
-            </div>
+            <ErrorBanner v-if="callError" :message="callError.message" :hint="callError.fix" />
 
             <div
               v-else-if="callRows"

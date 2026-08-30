@@ -44,6 +44,7 @@ import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Segmented } from "@/components/ui/segmented";
 import type { SegmentedOption } from "@/components/ui/segmented";
+import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
 
 defineProps<{ meta: ToolMeta }>();
@@ -799,16 +800,11 @@ onMounted(() => {
         </p>
       </div>
 
-      <div
+      <ErrorBanner
         v-if="mixturePlan.error"
-        class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
-        role="alert"
-      >
-        <p class="font-medium">{{ mixturePlan.error.message }}</p>
-        <p v-if="mixturePlan.error.fix" class="text-muted-foreground">
-          {{ mixturePlan.error.fix }}
-        </p>
-      </div>
+        :message="mixturePlan.error.message"
+        :hint="mixturePlan.error.fix"
+      />
       <div v-else-if="mixturePlan.plan" aria-live="polite">
         <OutputView :output="mixtureRows" />
         <p class="mt-1.5 text-xs text-muted-foreground">
@@ -956,14 +952,11 @@ onMounted(() => {
           counts ignore mob armor and natural regeneration.
         </p>
 
-        <div
+        <ErrorBanner
           v-if="sustain.error"
-          class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
-          role="alert"
-        >
-          <p class="font-medium">{{ sustain.error.message }}</p>
-          <p v-if="sustain.error.fix" class="text-muted-foreground">{{ sustain.error.fix }}</p>
-        </div>
+          :message="sustain.error.message"
+          :hint="sustain.error.fix"
+        />
         <div v-else-if="sustain.result" aria-live="polite">
           <OutputView :output="sustainRows" />
         </div>

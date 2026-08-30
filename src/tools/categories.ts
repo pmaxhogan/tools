@@ -158,6 +158,13 @@ export const CATEGORIES: ToolCategory[] = [
       "Coordinates, distances, bearings, sun times, GPX tracks and lookups for places, airports and countries.",
   },
   {
+    slug: "rf",
+    label: "RF",
+    icon: "Radio",
+    description:
+      "Radio spectrum references: who is allocated what frequency in the United States and worldwide, band plans, channel tables and RF exposure limits.",
+  },
+  {
     slug: "science",
     label: "Science",
     icon: "Atom",

@@ -5,7 +5,8 @@
  * It owns everything that is the same for every ffmpeg tool, so a tool panel
  * only has to describe its options and turn them into an ffmpeg command:
  *
- *   - input: drop zone, file picker, file chips with sizes
+ *   - input: the shared FileDrop zone (drop, click, keyboard, paste, and the
+ *     cross tool carry chip), with file chips and sizes as its body
  *   - the media engine: a one time ~31 MB download. On an unmetered connection
  *     it starts automatically on first visit and shows a byte counter; on a
  *     metered or Save-Data connection it waits for a one-tap start that names
@@ -15,7 +16,7 @@
  *     terminates the worker and restarts it from the browser cache
  *   - output: produced files with sizes, download buttons, and a preview for
  *     video, audio, and images
- *   - errors in the same box style the rest of the site uses
+ *   - errors through the shared ErrorBanner, progress through ProgressBar
  *
  * Contract for a tool panel:
  *
@@ -43,7 +44,10 @@
  *   multiple   boolean        accept more than one input file (default false)
  *   runLabel   string         run button text (default "Run")
  *   inputLabel string         label above the drop zone (default "File")
- *   hint       string         replaces the default drop zone helper text
+ *   hint       string         replaces the default drop zone helper text. It is
+ *                             one paragraph in the panels that pass it, so the
+ *                             first sentence becomes the zone's headline and the
+ *                             rest its second line; the words are unchanged.
  *   runDisabled boolean       forces the run button off regardless of input state
  *                             (default false). For an option combination that can
  *                             never produce a runnable command, such as a feature
@@ -81,6 +85,9 @@ import { formatBytes } from "@/lib/format";
 import { downloadUrl } from "@/lib/download";
 import { useStickToBottom } from "@/lib/stick-to-bottom";
 import { Button } from "@/components/ui/button";
+import ErrorBanner from "./ErrorBanner.vue";
+import FileDrop from "./FileDrop.vue";
+import ProgressBar from "./ProgressBar.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -141,8 +148,15 @@ interface PickedFile {
   safeName: string;
 }
 const picked = ref<PickedFile[]>([]);
-const inputEl = ref<HTMLInputElement>();
-const dragging = ref(false);
+
+/**
+ * The two zones are exclusive branches of one v-if, so exactly one is mounted
+ * at a time. They carry separate refs rather than sharing one, because Vue does
+ * not guarantee that the leaving branch clears a shared ref after the arriving
+ * branch has set it.
+ */
+const emptyDrop = ref<InstanceType<typeof FileDrop> | null>(null);
+const filledDrop = ref<InstanceType<typeof FileDrop> | null>(null);
 
 const running = ref(false);
 const canceling = ref(false);
@@ -181,6 +195,17 @@ const downloadLabel = computed(() => {
   return `Downloading media engine (${megabytes(downloadedBytes.value)} of ${megabytes(downloadTotal.value)} MB)`;
 });
 
+/**
+ * The byte counter, split out of `downloadLabel` so ProgressBar can put it on
+ * the right where every other bar on the site puts its counter. `downloadLabel`
+ * stays whole as the bar's accessible name, so the announcement is unchanged.
+ */
+const downloadDetail = computed(() =>
+  downloadTotal.value
+    ? `${megabytes(downloadedBytes.value)} of ${megabytes(downloadTotal.value)} MB`
+    : undefined,
+);
+
 const downloadPercent = computed(() =>
   downloadTotal.value ? Math.min(100, (downloadedBytes.value / downloadTotal.value) * 100) : 0,
 );
@@ -200,6 +225,33 @@ const canRun = computed(
 );
 
 const visibleLog = computed(() => logLines.value.slice(-30));
+
+/* ---------------------------------------------------------------- */
+/* the empty zone copy                                               */
+/* ---------------------------------------------------------------- */
+
+const DEFAULT_HINT =
+  "Drop a file here or pick one to get started. Everything runs in this tab: your files and inputs never leave your device.";
+
+/**
+ * FileDrop shows a headline and a second line; the `hint` prop the panels pass
+ * is one paragraph of two sentences. Split it at the first sentence end so the
+ * zone gets the shape it was designed for without a single word changing. A
+ * paragraph with no sentence break stays whole as the headline.
+ *
+ * The break is a period followed by whitespace, so a leading extension like
+ * ".gif" in "Drop a .gif here" is not a break.
+ */
+function splitZoneCopy(text: string): { label: string; hint?: string } {
+  const match = /\.\s+/.exec(text);
+  if (!match || match.index + match[0].length >= text.length) return { label: text };
+  return {
+    label: text.slice(0, match.index + 1),
+    hint: text.slice(match.index + match[0].length),
+  };
+}
+
+const zoneCopy = computed(() => splitZoneCopy(props.hint ?? DEFAULT_HINT));
 
 // The log tail stays pinned to the newest line unless the reader scrolls up.
 const { el: logEl, onScroll: onLogScroll } = useStickToBottom(() => logLines.value.length);
@@ -285,18 +337,9 @@ function setFiles(list: File[]) {
   );
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const files = Array.from(e.dataTransfer?.files ?? []);
-  if (files.length) setFiles(files);
-}
-
-function onPickFile(e: Event) {
-  const el = e.target as HTMLInputElement;
-  const files = Array.from(el.files ?? []);
-  if (files.length) setFiles(files);
-  // Reset so picking the same file again still fires a change event.
-  el.value = "";
+/** The explicit pick button, which sits inside whichever zone is mounted. */
+function openPicker() {
+  (filledDrop.value ?? emptyDrop.value)?.open();
 }
 
 function removeFile(index: number) {
@@ -494,69 +537,67 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Capability gate -->
-    <div
+    <ErrorBanner
       v-if="!supported"
-      role="status"
-      class="rounded-lg border bg-secondary/60 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-muted-foreground">Starting the media engine.</p>
-      <p class="mt-1 text-muted-foreground">
-        {{ meta.name }} runs ffmpeg inside this tab, which needs WebAssembly. If this message stays,
-        your browser has WebAssembly turned off or is too old to run it.
-      </p>
-    </div>
+      variant="info"
+      title="Starting the media engine."
+      :message="`${meta.name} runs ffmpeg inside this tab, which needs WebAssembly. If this message stays, your browser has WebAssembly turned off or is too old to run it.`"
+    />
 
     <template v-else>
       <!-- Input -->
-      <div
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-        :class="dragging ? 'ring-2 ring-ring' : ''"
-        @dragover.prevent="dragging = true"
-        @dragleave="dragging = false"
-        @drop.prevent="onDrop"
-      >
-        <div class="flex items-center justify-between px-3 pt-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            {{ inputLabel }}
-          </span>
-          <Button variant="ghost" size="sm" @click="inputEl?.click()"> Open file… </Button>
-          <input
-            ref="inputEl"
-            type="file"
-            class="hidden"
-            :accept="accept"
-            :multiple="multiple"
-            @change="onPickFile"
-          />
-        </div>
+      <div class="flex flex-col gap-2">
+        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+          {{ inputLabel }}
+        </span>
 
-        <div v-if="picked.length" class="flex flex-wrap gap-2 px-3 pt-2 pb-3">
-          <span
-            v-for="(item, index) in picked"
-            :key="item.safeName"
-            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-          >
-            <span class="truncate font-medium">{{ item.file.name }}</span>
-            <span class="shrink-0 text-muted-foreground tabular-nums">
-              {{ formatBytes(item.file.size) }}
-            </span>
-            <button
-              type="button"
-              aria-label="Remove file"
-              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-              @click="removeFile(index)"
+        <FileDrop
+          v-if="picked.length"
+          ref="filledDrop"
+          compact
+          :accept="accept"
+          :multiple="multiple"
+          @files="setFiles"
+        >
+          <div class="flex flex-wrap gap-2" data-testid="media-files">
+            <span
+              v-for="(item, index) in picked"
+              :key="item.safeName"
+              class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
             >
-              <X class="size-3.5" />
-            </button>
-          </span>
-        </div>
+              <span class="truncate font-medium">{{ item.file.name }}</span>
+              <span class="shrink-0 text-muted-foreground tabular-nums">
+                {{ formatBytes(item.file.size) }}
+              </span>
+              <button
+                type="button"
+                aria-label="Remove file"
+                class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                @click="removeFile(index)"
+              >
+                <X class="size-3.5" />
+              </button>
+            </span>
+          </div>
 
-        <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-          {{
-            hint ??
-            `Drop a file here or pick one to get started. Everything runs in this tab: your files and inputs never leave your device.`
-          }}
-        </p>
+          <template #actions>
+            <Button variant="ghost" size="sm" @click="openPicker"> Open file… </Button>
+          </template>
+        </FileDrop>
+
+        <FileDrop
+          v-else
+          ref="emptyDrop"
+          :accept="accept"
+          :multiple="multiple"
+          :label="zoneCopy.label"
+          :hint="zoneCopy.hint"
+          @files="setFiles"
+        >
+          <template #actions>
+            <Button variant="ghost" size="sm" @click="openPicker"> Open file… </Button>
+          </template>
+        </FileDrop>
       </div>
 
       <!-- Media engine -->
@@ -578,24 +619,14 @@ onUnmounted(() => {
           Your connection looks metered, so the engine waits for you to start it.
         </p>
 
-        <div v-if="engineState === 'loading'" class="flex flex-col gap-2">
-          <div
-            class="h-2 overflow-hidden rounded-full bg-background"
-            role="progressbar"
-            :aria-valuenow="Math.round(downloadPercent)"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            :aria-label="downloadLabel"
-          >
-            <div
-              class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-              :style="{ width: `${downloadPercent}%` }"
-            />
-          </div>
-          <p class="font-mono text-xs text-muted-foreground tabular-nums">
-            {{ downloadLabel }}
-          </p>
-        </div>
+        <ProgressBar
+          v-if="engineState === 'loading'"
+          :value="downloadPercent"
+          label="Downloading media engine"
+          :detail="downloadDetail"
+          :aria-label="downloadLabel"
+          track="card"
+        />
 
         <!-- This branch only ever renders while engineState is 'idle' (the
              sibling v-if already covers 'loading', the wrapper covers
@@ -634,20 +665,11 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <div
+      <ProgressBar
         v-if="running && ratio !== null"
-        class="h-2 overflow-hidden rounded-full bg-secondary"
-        role="progressbar"
-        :aria-valuenow="Math.round(ratio * 100)"
-        aria-valuemin="0"
-        aria-valuemax="100"
+        :value="Math.round(ratio * 100)"
         aria-label="Job progress"
-      >
-        <div
-          class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-          :style="{ width: `${Math.round(ratio * 100)}%` }"
-        />
-      </div>
+      />
 
       <slot name="notes" />
 
@@ -670,22 +692,12 @@ onUnmounted(() => {
       </details>
 
       <!-- Errors -->
-      <div
-        v-if="error"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ error.message }}
-        </p>
-        <p v-if="error.fix" class="mt-1 text-muted-foreground">
-          {{ error.fix }}
-        </p>
+      <ErrorBanner v-if="error" :message="error.message" :hint="error.fix">
         <pre
           v-if="error.log.length"
-          class="mt-2 max-h-40 overflow-auto font-mono text-xs whitespace-pre-wrap break-all text-muted-foreground"
+          class="max-h-40 overflow-auto font-mono text-xs whitespace-pre-wrap break-all text-muted-foreground"
           >{{ error.log.join("\n") }}</pre>
-      </div>
+      </ErrorBanner>
 
       <!-- Output -->
       <div v-if="outputs.length" class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]">

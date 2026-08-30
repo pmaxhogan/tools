@@ -12,7 +12,6 @@
  * it will not run without the undo manifest existing first.
  */
 import { computed, ref } from "vue";
-import { TriangleAlert } from "lucide-vue-next";
 import type { OptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import type { ExecuteResult, FsScan, WriteOp } from "@/lib/fs-access";
@@ -23,6 +22,7 @@ import {
   type RenamePreviewRow,
 } from "@/tools/bulk-rename/index";
 import { Button } from "@/components/ui/button";
+import ErrorBanner from "../ErrorBanner.vue";
 import FsShell from "../FsShell.vue";
 import OptionControl from "../OptionControl.vue";
 
@@ -207,40 +207,22 @@ async function apply(
         </p>
 
         <!-- Bad pattern: an error on the field, not a broken panel -->
-        <div
-          v-if="planError"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-medium text-destructive">
-            {{ planError.message }}
-          </p>
-          <p v-if="planError.fix" class="mt-1 text-muted-foreground">
-            {{ planError.fix }}
-          </p>
-        </div>
+        <ErrorBanner v-if="planError" :message="planError.message" :hint="planError.fix" />
 
         <!-- Collisions: said plainly, before anything is written -->
-        <div
+        <ErrorBanner
           v-if="plan.collisions.length"
-          role="alert"
-          class="flex gap-2 rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
+          :message="`${plural(plan.collisions.length, 'name clash', 'name clashes')} to fix first.`"
         >
-          <TriangleAlert class="mt-0.5 size-4 shrink-0 text-destructive" />
-          <div class="min-w-0">
-            <p class="font-medium text-destructive">
-              {{ plural(plan.collisions.length, "name clash", "name clashes") }} to fix first.
-            </p>
-            <ul class="mt-1 list-disc pl-4 text-xs break-words text-muted-foreground">
-              <li v-for="(collision, i) in plan.collisions.slice(0, 5)" :key="i">
-                {{ collision }}
-              </li>
-            </ul>
-            <p v-if="plan.collisions.length > 5" class="mt-1 text-xs text-muted-foreground">
-              and {{ plural(plan.collisions.length - 5, "more", "more") }}.
-            </p>
-          </div>
-        </div>
+          <ul class="list-disc pl-4 text-xs break-words text-muted-foreground">
+            <li v-for="(collision, i) in plan.collisions.slice(0, 5)" :key="i">
+              {{ collision }}
+            </li>
+          </ul>
+          <p v-if="plan.collisions.length > 5" class="mt-1 text-xs text-muted-foreground">
+            and {{ plural(plan.collisions.length - 5, "more", "more") }}.
+          </p>
+        </ErrorBanner>
 
         <!-- Preview -->
         <div class="flex flex-col gap-2 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]">

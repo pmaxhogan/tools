@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 /**
  * Bespoke panel for the GPX Track Viewer.
@@ -135,9 +137,7 @@ const fileName = ref("");
 const fileSize = ref(0);
 const pasted = ref("");
 const error = ref<{ message: string; fix?: string } | null>(null);
-const dragging = ref(false);
 const busy = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
 const trimStart = ref(0);
 const trimEnd = ref(0);
@@ -304,20 +304,9 @@ async function readFile(file: File) {
   await parseText(text, file.name, file.size);
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
-  if (file) readFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+function onFiles(files: File[]) {
+  const file = files[0];
+  if (file) void readFile(file);
 }
 
 let pasteTimer: ReturnType<typeof setTimeout> | undefined;
@@ -343,7 +332,6 @@ function clearTrack() {
   trimStart.value = 0;
   trimEnd.value = 0;
   resetView();
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -390,6 +378,13 @@ const sourceLabel = computed(() => {
   if (source === "geojson") return "GeoJSON";
   return "";
 });
+
+/** Size plus format, shown beside the loaded file name. */
+const loadedFileHint = computed(() =>
+  sourceLabel.value
+    ? `${formatBytes(fileSize.value)}, ${sourceLabel.value}`
+    : formatBytes(fileSize.value),
+);
 
 /* ---------------------------------------------------------------- */
 /* drawing                                                           */
@@ -896,75 +891,50 @@ watch([viewTrack, boxWidth], () => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Track
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open a track file… </Button>
-        <input
-          ref="fileInput"
-          type="file"
-          class="hidden"
-          accept=".gpx,.kml,.geojson,.json,application/gpx+xml,application/geo+json,application/json"
-          @change="onPickFile"
-        />
-      </div>
-
-      <div v-if="fullTrack" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
-          <span v-if="sourceLabel" class="shrink-0 text-muted-foreground">{{ sourceLabel }}</span>
-          <button
-            type="button"
-            aria-label="Remove track"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearTrack"
-          >
+    <div class="flex flex-col gap-2">
+      <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+        Track
+      </span>
+      <FileDrop
+        v-if="fullTrack"
+        compact
+        accept=".gpx,.kml,.geojson,.json,application/gpx+xml,application/geo+json,application/json"
+        :label="fileName"
+        :hint="loadedFileHint"
+        @files="onFiles"
+      >
+        <template #actions>
+          <Button variant="ghost" size="icon-sm" aria-label="Remove track" @click="clearTrack">
             <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
-
-      <div v-else class="flex flex-col gap-2 px-3 pt-1 pb-3">
-        <p class="text-sm text-muted-foreground">
-          Drop a .gpx, .kml or .geojson file here, or paste its text below. TCX is not supported, so
-          export a Garmin activity as GPX first. Everything is read in this tab: your files and
-          inputs never leave your device.
-        </p>
-        <Textarea
-          :model-value="pasted"
-          rows="4"
-          spellcheck="false"
-          placeholder="Paste the contents of a .gpx, .kml or .geojson file here…"
-          class="resize-y bg-card font-mono text-xs"
-          @update:model-value="onPaste"
-        />
-      </div>
+          </Button>
+        </template>
+      </FileDrop>
+      <FileDrop
+        v-else
+        accept=".gpx,.kml,.geojson,.json,application/gpx+xml,application/geo+json,application/json"
+        label="Drop a .gpx, .kml or .geojson file here or click to choose"
+        @files="onFiles"
+      >
+        <div class="flex flex-col gap-2">
+          <p class="text-sm text-muted-foreground">
+            Drop a .gpx, .kml or .geojson file here or click to choose, or paste its text below. TCX
+            is not supported, so export a Garmin activity as GPX first. Everything is read in this
+            tab: your files and inputs never leave your device.
+          </p>
+          <Textarea
+            :model-value="pasted"
+            rows="4"
+            spellcheck="false"
+            placeholder="Paste the contents of a .gpx, .kml or .geojson file here…"
+            class="resize-y bg-card font-mono text-xs"
+            @update:model-value="onPaste"
+          />
+        </div>
+      </FileDrop>
     </div>
 
     <!-- Errors -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <p v-if="busy" role="status" class="text-sm text-muted-foreground">Reading the track…</p>
 

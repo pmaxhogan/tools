@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useStickToBottom } from "@/lib/stick-to-bottom";
 import OutputView from "../OutputView.vue";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import {
   decodeInputReport,
   describeCollectionTree,
@@ -413,18 +415,7 @@ onUnmounted(() => {
         cannot be captured here.
       </p>
 
-      <div
-        v-if="errorTitle"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ errorTitle }}
-        </p>
-        <p v-if="errorDetail" class="mt-1 text-muted-foreground">
-          {{ errorDetail }}
-        </p>
-      </div>
+      <ErrorBanner v-if="errorTitle" :message="errorTitle" :hint="errorDetail ?? undefined" />
     </div>
 
     <!-- device description -->
@@ -482,12 +473,11 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <p
+      <EmptyState
         v-if="!visibleLog.length"
-        class="rounded-[10px] bg-secondary px-3 py-6 text-center text-sm text-muted-foreground shadow-[var(--sh-inset)]"
-      >
-        Waiting for input reports. Move the device or press one of its controls.
-      </p>
+        title="Waiting for input reports"
+        hint="Move the device or press one of its controls."
+      />
 
       <ol
         v-else
@@ -555,18 +545,11 @@ onUnmounted(() => {
         placeholder="05 01 09 02 A1 01 09 01 A1 00 ..."
       />
 
-      <div
+      <ErrorBanner
         v-if="dumpResult.error"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ dumpResult.error.message }}
-        </p>
-        <p v-if="dumpResult.error.fix" class="mt-1 text-muted-foreground">
-          {{ dumpResult.error.fix }}
-        </p>
-      </div>
+        :message="dumpResult.error.message"
+        :hint="dumpResult.error.fix"
+      />
 
       <OutputView v-if="dumpResult.output" :output="dumpResult.output" />
     </div>

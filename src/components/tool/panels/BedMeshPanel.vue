@@ -22,6 +22,8 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import OutputView from "../OutputView.vue";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 /**
  * Bespoke panel for the Bed Mesh Visualizer.
@@ -63,27 +65,10 @@ const SAMPLE_MESH = [
 ].join("\n");
 
 const meshText = ref("");
-const dragging = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
-async function readFile(file: File): Promise<void> {
-  meshText.value = await file.text();
-}
-
-function onDrop(e: DragEvent): void {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
-  if (file) void readFile(file);
-}
-
-function onPickFile(e: Event): void {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+async function onFiles(files: File[]): Promise<void> {
+  const file = files[0];
+  if (file) meshText.value = await file.text();
 }
 
 function loadSample(): void {
@@ -389,53 +374,41 @@ async function downloadIsoPng(): Promise<void> {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      bare
+      accept=".txt,.cfg,text/plain"
+      label="Mesh data"
+      hint="Drop a .txt or .cfg file here, or click to choose one"
+      @files="onFiles"
     >
-      <div class="flex flex-wrap items-center justify-between gap-1 px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Mesh data
-        </span>
-        <div class="flex items-center gap-1">
-          <Button variant="ghost" size="sm" @click="loadSample"> Load sample </Button>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-          <input
-            ref="fileInput"
-            type="file"
-            class="hidden"
-            accept=".txt,.cfg,text/plain"
-            @change="onPickFile"
-          />
+      <template #default="{ open }">
+        <div class="flex flex-wrap items-center justify-between gap-1 px-3 pt-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Mesh data
+          </span>
+          <div class="flex items-center gap-1">
+            <Button variant="ghost" size="sm" @click="loadSample"> Load sample </Button>
+            <Button variant="ghost" size="sm" @click="open"> Open file… </Button>
+          </div>
         </div>
-      </div>
 
-      <Textarea
-        v-model="meshText"
-        spellcheck="false"
-        rows="8"
-        placeholder="Paste BED_MESH_OUTPUT console text, a saved [bed_mesh default] block, a Marlin G29 or M420 V grid, or a plain grid of numbers, or drop a .txt or .cfg file…"
-        class="max-h-72 min-h-32 overflow-y-auto border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0 dark:bg-transparent"
-      />
-    </div>
+        <Textarea
+          v-model="meshText"
+          spellcheck="false"
+          rows="8"
+          placeholder="Paste BED_MESH_OUTPUT console text, a saved [bed_mesh default] block, a Marlin G29 or M420 V grid, or a plain grid of numbers, or drop a .txt or .cfg file…"
+          class="max-h-72 min-h-32 overflow-y-auto border-0 bg-transparent font-mono text-sm shadow-none focus-visible:ring-0 dark:bg-transparent"
+        />
+      </template>
+    </FileDrop>
 
     <!-- Errors and the empty-input hint -->
-    <div
+    <ErrorBanner
       v-if="error"
-      :role="isHint ? 'status' : 'alert'"
-      class="rounded-lg border px-3 py-2 text-sm"
-      :class="isHint ? 'bg-secondary/60' : 'border-destructive/50 bg-destructive/5'"
-    >
-      <p :class="isHint ? 'font-medium text-muted-foreground' : 'font-medium text-destructive'">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+      :message="error.message"
+      :hint="error.fix"
+      :variant="isHint ? 'info' : 'error'"
+    />
 
     <template v-if="rows">
       <!-- Verdict and advice, emphasized above the plain stats -->

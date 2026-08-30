@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { CircleAlert, Mic, Play, Square } from "lucide-vue-next";
+import { Mic, Play, Square } from "lucide-vue-next";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import {
   TIME_SIGNATURES,
@@ -27,6 +27,8 @@ import { Slider } from "@/components/ui/slider";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ErrorBanner from "../ErrorBanner.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for the Tuner & Metronome.
@@ -905,17 +907,7 @@ onUnmounted(() => {
           </div>
 
           <!-- errors -->
-          <div
-            v-if="micError"
-            role="alert"
-            class="flex items-start gap-2 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-          >
-            <CircleAlert class="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
-            <span class="flex flex-col gap-1">
-              <span class="font-semibold text-destructive">{{ micError.message }}</span>
-              <span class="text-muted-foreground">{{ micError.fix }}</span>
-            </span>
-          </div>
+          <ErrorBanner v-if="micError" :message="micError.message" :hint="micError.fix" />
 
           <!-- readout -->
           <div class="flex flex-col gap-3 rounded-[14px] bg-secondary p-4 shadow-[var(--sh-inset)]">
@@ -1024,14 +1016,7 @@ onUnmounted(() => {
             </p>
           </div>
 
-          <div
-            v-if="a4Error"
-            role="alert"
-            class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-          >
-            <span class="font-semibold text-destructive">{{ a4Error.message }}</span>
-            <span class="text-muted-foreground">{{ a4Error.fix }}</span>
-          </div>
+          <ErrorBanner v-if="a4Error" :message="a4Error.message" :hint="a4Error.fix" />
 
           <!-- strings -->
           <div class="flex flex-col gap-2">
@@ -1061,18 +1046,11 @@ onUnmounted(() => {
 
           <!-- input level -->
           <div class="flex flex-col gap-1.5">
-            <div class="flex justify-between text-xs text-muted-foreground tabular-nums">
-              <span>Input level</span>
-              <span>{{ listening ? `clarity ${clarityPercent}%` : "off" }}</span>
-            </div>
-            <div
-              class="h-2 w-full overflow-hidden rounded-full bg-secondary shadow-[var(--sh-inset)]"
-            >
-              <div
-                class="h-full rounded-full bg-primary transition-[width] duration-[120ms] ease-out"
-                :style="{ width: `${levelPercent}%` }"
-              />
-            </div>
+            <ProgressBar
+              :value="levelPercent"
+              label="Input level"
+              :detail="listening ? `clarity ${clarityPercent}%` : 'off'"
+            />
             <p class="text-xs text-muted-foreground">
               Clarity is how periodic the sound is. Above roughly 80 percent the reading is a note
               rather than noise, so a low number usually means room noise or a note that has already
@@ -1195,18 +1173,8 @@ onUnmounted(() => {
           </div>
 
           <!-- errors -->
-          <div
-            v-if="bpmError || metroError"
-            role="alert"
-            class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-          >
-            <template v-for="err in [bpmError, metroError]" :key="err?.message">
-              <template v-if="err">
-                <span class="font-semibold text-destructive">{{ err.message }}</span>
-                <span class="text-muted-foreground">{{ err.fix }}</span>
-              </template>
-            </template>
-          </div>
+          <ErrorBanner v-if="bpmError" :message="bpmError.message" :hint="bpmError.fix" />
+          <ErrorBanner v-if="metroError" :message="metroError.message" :hint="metroError.fix" />
 
           <!-- beat indicator -->
           <div class="flex flex-col gap-3 rounded-[14px] bg-secondary p-4 shadow-[var(--sh-inset)]">

@@ -24,7 +24,10 @@ import { computed, onBeforeUnmount, ref, shallowRef } from "vue";
 import { Search, Trash2, TriangleAlert } from "lucide-vue-next";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import FsShell from "../FsShell.vue";
+import ProgressBar from "../ProgressBar.vue";
 import {
   hashFile,
   readFileBytes,
@@ -511,24 +514,12 @@ onBeforeUnmount(() => {
           <Button v-if="hashing" variant="outline" size="sm" @click="stopHashing"> Stop </Button>
         </div>
 
-        <div v-if="hashing" class="flex flex-col gap-2">
-          <div
-            class="h-2 overflow-hidden rounded-full bg-card"
-            role="progressbar"
-            :aria-valuenow="hashTotal ? Math.round((hashDone / hashTotal) * 100) : 0"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            aria-label="Hashing candidate files"
-          >
-            <div
-              class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-              :style="{ width: `${hashTotal ? (hashDone / hashTotal) * 100 : 0}%` }"
-            />
-          </div>
-          <p class="font-mono text-xs text-muted-foreground tabular-nums">
-            Hashing {{ hashDone.toLocaleString() }} of {{ hashTotal.toLocaleString() }}
-          </p>
-        </div>
+        <ProgressBar
+          v-if="hashing"
+          :value="hashTotal ? (hashDone / hashTotal) * 100 : 0"
+          label="Hashing candidate files"
+          :detail="`${hashDone.toLocaleString()} of ${hashTotal.toLocaleString()}`"
+        />
 
         <p v-if="plan.unreadable.length" class="text-xs text-muted-foreground">
           {{ plural(plan.unreadable.length, "file", "files") }} could not be opened during the scan,
@@ -554,14 +545,11 @@ onBeforeUnmount(() => {
           </span>
         </div>
 
-        <p
+        <EmptyState
           v-else
-          role="status"
-          class="rounded-[10px] bg-secondary px-3 py-2 text-sm text-muted-foreground shadow-[var(--sh-inset)]"
-        >
-          No two files in this folder hold the same bytes. Every candidate that shared a size turned
-          out to have different contents, which is exactly what a size collision usually is.
-        </p>
+          title="No two files in this folder hold the same bytes."
+          hint="Every candidate that shared a size turned out to have different contents, which is exactly what a size collision usually is."
+        />
 
         <!-- Keep rule and view options -->
         <div
@@ -798,18 +786,7 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Errors -->
-      <div
-        v-if="error"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ error.message }}
-        </p>
-        <p v-if="error.fix" class="mt-1 text-muted-foreground">
-          {{ error.fix }}
-        </p>
-      </div>
+      <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
     </template>
   </FsShell>
 </template>

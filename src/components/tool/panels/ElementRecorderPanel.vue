@@ -22,6 +22,7 @@ import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";
 import OptionControl from "../OptionControl.vue";
 import OutputView from "../OutputView.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -1138,14 +1139,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Errors and notes -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">{{ error.message }}</p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">{{ error.fix }}</p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <p v-if="note" class="text-xs text-muted-foreground">{{ note }}</p>
 

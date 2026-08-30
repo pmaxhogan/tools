@@ -47,4 +47,43 @@ describe("ProgressBar", () => {
     expect(bar.attributes("aria-label")).toBe("Progress");
     expect(bar.classes()).toContain("h-1.5");
   });
+
+  it("names a captionless bar from ariaLabel", () => {
+    const wrapper = mount(ProgressBar, { props: { value: 10, ariaLabel: "Encoding video" } });
+    expect(wrapper.get('[role="progressbar"]').attributes("aria-label")).toBe("Encoding video");
+    // No caption row, so nothing visible was added alongside it.
+    expect(wrapper.text()).toBe("");
+  });
+
+  it("lets ariaLabel spell out a terse visible label", () => {
+    const wrapper = mount(ProgressBar, {
+      props: { value: 10, label: "Pass 2", ariaLabel: "Encoding, pass 2 of 2" },
+    });
+    expect(wrapper.get('[role="progressbar"]').attributes("aria-label")).toBe(
+      "Encoding, pass 2 of 2",
+    );
+    expect(wrapper.text()).toContain("Pass 2");
+  });
+
+  it("takes the contrasting track and a tone for the fill", () => {
+    const plain = mount(ProgressBar, { props: { value: 10 } });
+    expect(plain.get('[role="progressbar"]').classes()).toContain("bg-secondary");
+    expect(plain.get('[role="progressbar"] div').classes()).toContain(
+      "bg-[image:var(--grad-brand)]",
+    );
+
+    const wrapper = mount(ProgressBar, {
+      props: { value: 10, track: "card", tone: "destructive" },
+    });
+    expect(wrapper.get('[role="progressbar"]').classes()).toContain("bg-card");
+    expect(wrapper.get('[role="progressbar"]').classes()).not.toContain("bg-secondary");
+    expect(wrapper.get('[role="progressbar"] div').classes()).toContain("bg-destructive");
+  });
+
+  it("tones the indeterminate stripe too", () => {
+    const wrapper = mount(ProgressBar, { props: { tone: "success" } });
+    const stripe = wrapper.get('[role="progressbar"] div');
+    expect(stripe.classes()).toContain("stripe");
+    expect(stripe.classes()).toContain("bg-[color:var(--positive)]");
+  });
 });

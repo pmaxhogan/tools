@@ -19,6 +19,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for the OCR tool.
@@ -66,9 +69,6 @@ const imageEl = ref<HTMLImageElement>();
 const overlayEl = ref<HTMLCanvasElement>();
 const naturalWidth = ref(0);
 const naturalHeight = ref(0);
-
-const fileInput = ref<HTMLInputElement>();
-const dragging = ref(false);
 
 type EngineState = "idle" | "loading" | "ready";
 const engineState = ref<EngineState>("idle");
@@ -421,37 +421,8 @@ function onImageLoad() {
   drawBoxes();
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  acceptFile(e.dataTransfer?.files[0]);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  acceptFile(picker.files?.[0]);
-  // Reset so picking the same file again still fires a change event.
-  picker.value = "";
-}
-
-/**
- * Screenshots are the single most common OCR input, and a visitor who just
- * pressed PrtScn has not clicked anything on this page yet. So the listener
- * lives on the window rather than on the panel root, where focus would have to
- * be inside it already.
- */
-function onPaste(e: ClipboardEvent) {
-  const items = e.clipboardData?.items;
-  if (!items) return;
-  for (const item of items) {
-    if (item.kind === "file" && item.type.startsWith("image/")) {
-      const pasted = item.getAsFile();
-      if (pasted) {
-        e.preventDefault();
-        acceptFile(pasted);
-        return;
-      }
-    }
-  }
+function onFiles(files: File[]) {
+  acceptFile(files[0]);
 }
 
 function clearImage() {
@@ -462,7 +433,6 @@ function clearImage() {
   error.value = null;
   naturalWidth.value = 0;
   naturalHeight.value = 0;
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 function download() {
@@ -487,7 +457,6 @@ watch([showBoxes, result], () => {
 
 onMounted(() => {
   supported.value = typeof WebAssembly !== "undefined" && typeof Worker !== "undefined";
-  window.addEventListener("paste", onPaste);
   if (!supported.value) return;
   metered.value = isMetered();
   autoStartEngine();
@@ -502,7 +471,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   stopConnectionWatch();
-  window.removeEventListener("paste", onPaste);
   revoke();
   destroyWorker();
 });
@@ -511,53 +479,54 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      bare
+      accept="image/*"
+      label="Image"
+      hint="Drop a screenshot or photo here or click to choose one"
+      @files="onFiles"
     >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Image
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open file… </Button>
-        <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
-      </div>
+      <template #default="{ open }">
+        <div class="flex items-center justify-between px-3 pt-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Image
+          </span>
+          <Button variant="ghost" size="sm" @click="open"> Open file… </Button>
+        </div>
 
-      <div v-if="hasImage" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span v-if="file" class="shrink-0 text-muted-foreground">{{
-            formatBytes(file.size)
-          }}</span>
-          <button
-            type="button"
-            aria-label="Remove image"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearImage"
+        <div v-if="hasImage" class="px-3 pt-2 pb-3">
+          <span
+            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
-            <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
+            <span class="truncate font-medium">{{ fileName }}</span>
+            <span v-if="file" class="shrink-0 text-muted-foreground">{{
+              formatBytes(file.size)
+            }}</span>
+            <button
+              type="button"
+              aria-label="Remove image"
+              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+              @click="clearImage"
+            >
+              <X class="size-3.5" />
+            </button>
+          </span>
+        </div>
 
-      <div v-else class="px-3 pt-1 pb-4">
-        <p class="text-sm text-muted-foreground">
-          Drop a screenshot or photo here, pick one with the file button, or press Ctrl+V to paste
-          one straight from the clipboard. Everything runs in this tab: your files and inputs never
-          leave your device.
-        </p>
-        <p class="mt-2 text-xs text-muted-foreground">
-          Tesseract reads flat, level text well and struggles with anything else. A phone photo
-          taken at an angle, a curved page, or a rotated scan will come back garbled, so straighten
-          and crop the image before you run it and keep the text as large as you can.
-        </p>
-      </div>
-    </div>
+        <div v-else class="px-3 pt-1 pb-4">
+          <p class="text-sm text-muted-foreground">
+            Drop a screenshot or photo here, click to choose one, or press Ctrl+V to paste one
+            straight from the clipboard. Everything runs in this tab: your files and inputs never
+            leave your device.
+          </p>
+          <p class="mt-2 text-xs text-muted-foreground">
+            Tesseract reads flat, level text well and struggles with anything else. A phone photo
+            taken at an angle, a curved page, or a rotated scan will come back garbled, so
+            straighten and crop the image before you run it and keep the text as large as you can.
+          </p>
+        </div>
+      </template>
+    </FileDrop>
 
     <!-- Unsupported browser -->
     <p
@@ -569,18 +538,7 @@ onUnmounted(() => {
     </p>
 
     <!-- Errors -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <!-- Engine -->
     <template v-if="supported">
@@ -604,24 +562,13 @@ onUnmounted(() => {
           Your connection looks metered, so the engine waits for you to start it.
         </p>
 
-        <div v-if="engineState === 'loading'" class="flex flex-col gap-2">
-          <div
-            class="h-2 overflow-hidden rounded-full bg-background"
-            role="progressbar"
-            :aria-valuenow="progressPercent"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            aria-label="OCR engine loading"
-          >
-            <div
-              class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-              :style="{ width: `${progressPercent}%` }"
-            />
-          </div>
-          <p class="font-mono text-xs text-muted-foreground tabular-nums">
-            {{ status || "starting the engine" }} · {{ progressPercent }}%
-          </p>
-        </div>
+        <ProgressBar
+          v-if="engineState === 'loading'"
+          :value="progressPercent"
+          :label="status || 'starting the engine'"
+          :detail="`${progressPercent}%`"
+          track="card"
+        />
 
         <Button v-else class="self-start" size="sm" @click="loadEngine">
           {{ engineButtonLabel }}
@@ -700,20 +647,7 @@ onUnmounted(() => {
         </span>
       </div>
 
-      <div
-        v-if="running"
-        class="h-2 overflow-hidden rounded-full bg-secondary"
-        role="progressbar"
-        :aria-valuenow="progressPercent"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        aria-label="Recognition progress"
-      >
-        <div
-          class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
-          :style="{ width: `${progressPercent}%` }"
-        />
-      </div>
+      <ProgressBar v-if="running" :value="progressPercent" label="Recognition progress" />
     </template>
 
     <!-- Preview with the box overlay -->

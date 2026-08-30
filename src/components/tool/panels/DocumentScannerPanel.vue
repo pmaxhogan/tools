@@ -5,6 +5,8 @@ import { ToolError, type ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
 import { formatBytes } from "@/lib/format";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 import { downloadBlob } from "@/lib/download";
 import {
   buildScanPdf,
@@ -83,7 +85,6 @@ const CORNER_NAMES = ["Top left", "Top right", "Bottom right", "Bottom left"] as
 
 const fileName = ref("");
 const fileSize = ref(0);
-const dragging = ref(false);
 const busy = ref(false);
 const busyLabel = ref("");
 const problem = ref<{ message: string; fix?: string } | null>(null);
@@ -117,7 +118,6 @@ let stream: MediaStream | null = null;
 const canvasEl = ref<HTMLCanvasElement>();
 const previewEl = ref<HTMLCanvasElement>();
 const videoEl = ref<HTMLVideoElement>();
-const fileInput = ref<HTMLInputElement>();
 const stageEl = ref<HTMLDivElement>();
 
 const viewWidth = ref(0);
@@ -270,30 +270,10 @@ async function readFile(file: File): Promise<void> {
   }
 }
 
-function onDrop(e: DragEvent): void {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
+/** Drop, picker, keyboard, clipboard paste, and the carry chip all land here. */
+function onFiles(files: File[]): void {
+  const file = files[0];
   if (file) void readFile(file);
-}
-
-function onPickFile(e: Event): void {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  void readFile(file).then(() => {
-    picker.value = "";
-  });
-}
-
-function onPaste(e: ClipboardEvent): void {
-  const item = Array.from(e.clipboardData?.items ?? []).find((entry) =>
-    entry.type.startsWith("image/"),
-  );
-  const file = item?.getAsFile();
-  if (file) {
-    e.preventDefault();
-    void readFile(file);
-  }
 }
 
 function clearSource(): void {
@@ -904,7 +884,6 @@ async function downloadPdf(): Promise<void> {
 watch([mode, scale], () => schedulePreview());
 
 onMounted(() => {
-  window.addEventListener("paste", onPaste);
   const stage = stageEl.value;
   if (stage) {
     containerWidth.value = stage.clientWidth || MAX_VIEW_WIDTH;
@@ -922,7 +901,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  window.removeEventListener("paste", onPaste);
   clearTimeout(previewTimer);
   resizeObserver?.disconnect();
   resizeObserver = null;
@@ -934,57 +912,45 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Source -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      accept="image/*"
+      label="Drop a photo of a document here or click to choose"
+      hint="You can also paste one from the clipboard, or start the camera and capture a frame. The tool finds the page, straightens it, and stacks the results into a PDF. Everything runs in this tab: your files and inputs never leave your device."
+      @files="onFiles"
     >
-      <div class="flex flex-wrap items-center justify-between gap-2 px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Photo of the page
-        </span>
-        <div class="flex items-center gap-1">
-          <Button variant="ghost" size="sm" @click="fileInput?.click()">Open file…</Button>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="cameraStarting || cameraOn"
-            @click="startCamera"
+      <template v-if="hasImage" #default>
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <span
+            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
-            <Camera class="size-3.5" />
-            {{ cameraStarting ? "Starting…" : "Use camera" }}
-          </Button>
-          <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
-        </div>
-      </div>
-
-      <div v-if="hasImage" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span v-if="fileSize" class="shrink-0 text-muted-foreground">
-            {{ formatBytes(fileSize) }}
+            <span class="truncate font-medium">{{ fileName }}</span>
+            <span v-if="fileSize" class="shrink-0 text-muted-foreground">
+              {{ formatBytes(fileSize) }}
+            </span>
+            <button
+              type="button"
+              aria-label="Remove photo"
+              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+              @click="clearSource"
+            >
+              <X class="size-3.5" />
+            </button>
           </span>
-          <button
-            type="button"
-            aria-label="Remove photo"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearSource"
-          >
-            <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
+        </div>
+      </template>
 
-      <p v-else class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-        Drop a photo of a document here, paste one from the clipboard, or start the camera and
-        capture a frame. The tool finds the page, straightens it, and stacks the results into a PDF.
-        Everything runs in this tab: your files and inputs never leave your device.
-      </p>
-    </div>
+      <template #actions>
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="cameraStarting || cameraOn"
+          @click="startCamera"
+        >
+          <Camera class="size-3.5" />
+          {{ cameraStarting ? "Starting…" : "Use camera" }}
+        </Button>
+      </template>
+    </FileDrop>
 
     <!-- Camera -->
     <div
@@ -1009,14 +975,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <p
-      v-if="problem"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <span class="font-medium text-destructive">{{ problem.message }}</span>
-      <span v-if="problem.fix" class="mt-1 block text-muted-foreground">{{ problem.fix }}</span>
-    </p>
+    <ErrorBanner v-if="problem" :message="problem.message" :hint="problem.fix" />
 
     <!-- Working view -->
     <div v-show="hasImage" class="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">

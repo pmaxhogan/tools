@@ -37,6 +37,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import CopyButton from "../CopyButton.vue";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -615,14 +617,7 @@ const TABS: Array<{ id: Tab; label: string }> = [
 
       <!-- Live answers. -->
       <section class="flex min-w-0 flex-col gap-5" aria-live="polite">
-        <div
-          v-if="error"
-          class="rounded-[10px] bg-secondary px-4 py-3 text-sm shadow-[var(--sh-inset)]"
-          role="alert"
-        >
-          <p class="font-medium">{{ error.message }}</p>
-          <p v-if="error.fix" class="mt-1 text-muted-foreground">{{ error.fix }}</p>
-        </div>
+        <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
         <template v-else-if="spawns && cap && farm && proof">
           <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -674,13 +669,11 @@ const TABS: Array<{ id: Tab; label: string }> = [
 
           <!-- What spawns here. -->
           <div v-if="tab === 'spawns'" class="flex flex-col gap-3">
-            <div
+            <EmptyState
               v-if="!spawns.entries.length"
-              class="rounded-[10px] bg-secondary px-3 py-6 text-center text-sm text-muted-foreground shadow-[var(--sh-inset)]"
-            >
-              Minecraft {{ spawns.version }} lists no {{ spawns.categoryName.toLowerCase() }} spawns
-              for {{ spawns.biomeName }}. Nothing in this category ever appears here naturally.
-            </div>
+              :title="`Minecraft ${spawns.version} lists no ${spawns.categoryName.toLowerCase()} spawns for ${spawns.biomeName}`"
+              hint="Nothing in this category ever appears here naturally."
+            />
             <div v-else class="overflow-x-auto">
               <table class="w-full min-w-[34rem] border-collapse text-sm">
                 <thead>

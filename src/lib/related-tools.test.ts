@@ -14,45 +14,118 @@ const json = tool({
   slug: "json-formatter",
   name: "JSON Formatter",
   category: "Data",
-  keywords: ["json", "pretty print", "validate"],
+  keywords: ["json", "pretty print", "validate", "minify"],
 });
 
-describe("relatedTools", () => {
-  it("ranks same-category tools above unrelated tools with no overlap", () => {
-    const sameCategory = tool({ slug: "yaml-formatter", name: "YAML Formatter", category: "Data" });
-    const otherCategory = tool({ slug: "qr-code-generator", name: "QR Code Generator", category: "QR" });
-    const filler = Array.from({ length: 4 }, (_, i) =>
-      tool({ slug: `filler-${i}`, name: `Filler ${i}`, category: "Text" }),
-    );
+/** Four shared subject words, which is what CROSS_CATEGORY_MIN asks for. */
+const strongOutsider = tool({
+  slug: "yaml-beautifier",
+  name: "YAML Beautifier",
+  category: "Dev",
+  keywords: ["json", "pretty print", "minify"],
+});
 
-    const result = relatedTools(json, [json, sameCategory, otherCategory, ...filler]);
-    const slugs = result.map((t) => t.slug);
-    expect(slugs.indexOf("yaml-formatter")).toBeLessThan(slugs.indexOf("qr-code-generator"));
+const noOverlap = (slug: string, name: string, category = "Text") =>
+  tool({ slug, name, category, keywords: ["nothing", "shared", "here"] });
+
+describe("relatedTools", () => {
+  it("puts every category sibling ahead of an outsider that qualifies on overlap", () => {
+    const sibling = tool({ slug: "csv-viewer", name: "CSV Viewer", category: "Data" });
+
+    const result = relatedTools(json, [json, strongOutsider, sibling]);
+
+    expect(result.map((t) => t.slug)).toEqual(["csv-viewer", "yaml-beautifier"]);
   });
 
-  it("boosts tools by shared keyword and name vocabulary regardless of category", () => {
+  it("ranks siblings against each other by shared vocabulary", () => {
     const overlapping = tool({
-      slug: "json-to-csv",
-      name: "JSON to CSV",
-      category: "Dev",
-      keywords: ["json", "convert"],
+      slug: "json-schema-validator",
+      name: "JSON Schema Validator",
+      category: "Data",
+      keywords: ["json", "validate"],
     });
-    const unrelated = tool({ slug: "cron-parser", name: "Cron Parser", category: "Dev" });
+    const bare = tool({ slug: "sqlite-viewer", name: "SQLite Browser", category: "Data" });
 
-    const result = relatedTools(json, [json, overlapping, unrelated], 3);
-    const slugs = result.map((t) => t.slug);
-    expect(slugs.indexOf("json-to-csv")).toBeLessThan(slugs.indexOf("cron-parser"));
+    const result = relatedTools(json, [json, bare, overlapping]);
+
+    expect(result.map((t) => t.slug)).toEqual(["json-schema-validator", "sqlite-viewer"]);
+  });
+
+  it("never fills the list with tools that share nothing at all", () => {
+    const siblings = Array.from({ length: 2 }, (_, i) =>
+      tool({ slug: `data-${i}`, name: `Data ${i}`, category: "Data" }),
+    );
+    const strangers = Array.from({ length: 6 }, (_, i) => noOverlap(`stranger-${i}`, `Zed ${i}`));
+
+    const result = relatedTools(json, [json, ...siblings, ...strangers]);
+
+    expect(result.map((t) => t.slug)).toEqual(["data-0", "data-1"]);
+  });
+
+  it("does not treat a shared generic word like calculator as relatedness", () => {
+    // The live bug: a chemistry calculator recommending a 3D printing one.
+    const molar = tool({
+      slug: "molar-mass-calculator",
+      name: "Molar Mass Calculator",
+      category: "Chemistry",
+      keywords: ["molecular weight", "chemical formula", "grams per mole"],
+    });
+    const printCost = tool({
+      slug: "print-cost-calculator",
+      name: "3D Print Cost Calculator",
+      category: "Hardware",
+      keywords: ["filament weight", "grams of filament", "free online calculator"],
+    });
+    const chemistry = Array.from({ length: 3 }, (_, i) =>
+      tool({ slug: `chem-${i}`, name: `Chem ${i}`, category: "Chemistry" }),
+    );
+
+    const result = relatedTools(molar, [molar, printCost, ...chemistry]);
+
+    expect(result.map((t) => t.slug)).not.toContain("print-cost-calculator");
+    expect(result).toHaveLength(3);
+  });
+
+  it("reaches for weaker overlaps only when fewer than three tools qualify", () => {
+    // A category of one, so there are no siblings and nothing meets the bar.
+    const only = tool({
+      slug: "light-meter",
+      name: "Light Meter",
+      category: "Mobile",
+      keywords: ["lux", "exposure"],
+    });
+    const weak = tool({
+      slug: "photography-calculator",
+      name: "Photography Calculators",
+      category: "Geo",
+      keywords: ["exposure"],
+    });
+    const strangers = Array.from({ length: 4 }, (_, i) => noOverlap(`stranger-${i}`, `Zed ${i}`));
+
+    const result = relatedTools(only, [only, weak, ...strangers]);
+
+    expect(result.map((t) => t.slug)).toEqual(["photography-calculator"]);
   });
 
   it("finds relatedness through a single-hop search synonym", () => {
     // search-synonyms.ts maps "sound" -> ["audio", "tone"].
-    const soundTool = tool({ slug: "tone-generator", name: "Tone Generator", category: "Audio", keywords: ["sound"] });
-    const audioTool = tool({ slug: "audio-trimmer", name: "Audio Trimmer", category: "Media", keywords: ["audio"] });
-    const unrelated = tool({ slug: "cron-parser", name: "Cron Parser", category: "Dev" });
+    const soundTool = tool({
+      slug: "tone-generator",
+      name: "Tone Generator",
+      category: "Audio",
+      keywords: ["sound"],
+    });
+    const audioTool = tool({
+      slug: "audio-trimmer",
+      name: "Audio Trimmer",
+      category: "Media",
+      keywords: ["audio"],
+    });
+    const unrelated = noOverlap("cron-parser", "Cron Parser", "Dev");
 
     const result = relatedTools(soundTool, [soundTool, audioTool, unrelated], 3);
-    const slugs = result.map((t) => t.slug);
-    expect(slugs.indexOf("audio-trimmer")).toBeLessThan(slugs.indexOf("cron-parser"));
+
+    expect(result.map((t) => t.slug)).toEqual(["audio-trimmer"]);
   });
 
   it("excludes the tool itself even when it appears in allMetas", () => {
@@ -62,27 +135,25 @@ describe("relatedTools", () => {
   });
 
   it("breaks ties deterministically by name", () => {
-    const zeta = tool({ slug: "zeta", name: "Zeta Tool", category: "Text" });
-    const alpha = tool({ slug: "alpha", name: "Alpha Tool", category: "Text" });
-    const beta = tool({ slug: "beta", name: "Beta Tool", category: "Text" });
+    const zeta = tool({ slug: "zeta", name: "Zeta Tool", category: "Data" });
+    const alpha = tool({ slug: "alpha", name: "Alpha Tool", category: "Data" });
+    const beta = tool({ slug: "beta", name: "Beta Tool", category: "Data" });
 
     const result = relatedTools(json, [json, zeta, alpha, beta]);
     expect(result.map((t) => t.slug)).toEqual(["alpha", "beta", "zeta"]);
   });
 
-  it("clamps results to between 3 and 6, and never exceeds available candidates", () => {
+  it("clamps the requested count to between 3 and 6", () => {
     const many = Array.from({ length: 10 }, (_, i) =>
-      tool({ slug: `tool-${i}`, name: `Tool ${i}`, category: "Text" }),
+      tool({ slug: `tool-${i}`, name: `Tool ${i}`, category: "Data" }),
     );
     expect(relatedTools(json, [json, ...many]).length).toBe(6);
     expect(relatedTools(json, [json, ...many], 1).length).toBe(3);
     expect(relatedTools(json, [json, ...many], 100).length).toBe(6);
-
-    const few = [tool({ slug: "one", name: "One", category: "Text" })];
-    expect(relatedTools(json, [json, ...few]).length).toBe(1);
   });
 
-  it("returns an empty list when there are no other tools", () => {
+  it("returns an empty list rather than an unrelated one", () => {
     expect(relatedTools(json, [json])).toEqual([]);
+    expect(relatedTools(json, [json, noOverlap("stranger", "Zed")])).toEqual([]);
   });
 });

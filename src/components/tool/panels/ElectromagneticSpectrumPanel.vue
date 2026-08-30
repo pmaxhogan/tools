@@ -2,7 +2,8 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch, type Component } from "vue";
 import type { ToolMeta } from "@/tools/types";
 import { readFragment, writeFragment } from "@/lib/fragment";
-import { downloadBlob } from "@/lib/download";
+import { downloadBlob, downloadText } from "@/lib/download";
+import type { KeyValueRow } from "@/lib/key-value";
 import {
   AXIS_DECADES,
   describeFrequency,
@@ -11,11 +12,49 @@ import {
   formatKelvin,
   formatWavelength,
   frequencyToPosition,
-  interpretQuery,
+  parseJump,
   positionToFrequency,
   type Interpretation,
   type Readout,
 } from "@/tools/electromagnetic-spectrum/index";
+import { NAMED_CHANNELS, WIFI_CHANNELS } from "@/tools/electromagnetic-spectrum/data";
+import {
+  ALLOCATIONS,
+  ALLOCATION_META,
+  CHANNEL_TABLES,
+  allocationsAt,
+  licenseNeededAt,
+  type Allocation,
+  type AllocationRegion,
+  type AllocationService,
+  type AllocationStatus,
+  type MpeEnvironment,
+} from "@/tools/electromagnetic-spectrum/allocations";
+import {
+  REGION_HELP,
+  STATUS_HELP,
+  STATUS_LABELS,
+  STATUS_ORDER,
+  allocationsForRegion,
+  allocationsToCsv,
+  allocationsToJson,
+  describeAllocation,
+  formatRange,
+  packAllocations,
+  serviceLabel,
+  sourceLinkFor,
+  visibleAllocations,
+  REGION_LABELS,
+} from "@/tools/electromagnetic-spectrum/allocation-view";
+import { unifiedSearch } from "@/tools/electromagnetic-spectrum/lookup";
+import {
+  estimateExposure,
+  formatMeters,
+  formatPowerDensity,
+  formatWatts,
+  type PowerKind,
+} from "@/tools/electromagnetic-spectrum/exposure";
+import { BAND_EDUCATION, educationAt } from "@/tools/electromagnetic-spectrum/education";
 import {
   MIN_SPAN,
   axisLengthPx,
@@ -29,8 +68,10 @@ import {
   freqToAxisPx,
   mapHeightPx,
   packBands,
+  posToAxisPx,
   sceneToSvg,
   spectralStops,
+  viewStartPos,
   withAlpha,
   type AxisView,
   type Orientation,
@@ -38,16 +79,28 @@ import {
   type SceneRect,
 } from "@/tools/electromagnetic-spectrum/layout";
 import { Button } from "@/components/ui/button";
+import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import type { SelectOptionSpec } from "@/tools/types";
 import CopyButton from "../CopyButton.vue";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import FitText from "../FitText.vue";
+import KeyValueGrid from "../KeyValueGrid.vue";
 import {
+  Crosshair,
   Download,
+  ExternalLink,
   Link as LinkIcon,
   Search,
   Maximize2,
   Minimize2,
+  Printer,
   RotateCw,
   X,
+  ZoomIn,
+  ZoomOut,
   // Band icons: exactly the names in ICON_NAMES from the data module, so the
   // bundle only pulls the glyphs the tree actually references.
   Anchor,
@@ -469,7 +522,7 @@ const tooltipStyle = computed(() => {
 /* ------------------------------------------------------------------ */
 
 const jumpText = ref("");
-const results = computed<Interpretation[]>(() => interpretQuery(jumpText.value));
+const results = computed<Interpretation[]>(() => unifiedSearch(jumpText.value, region.value));
 const activeIndex = ref(0);
 const searchOpen = ref(false);
 const searchField = ref<"main" | "fullscreen">("main");
@@ -513,6 +566,10 @@ function pickInterpretation(it: Interpretation) {
   hoverFreq.value = null;
   locked.value = true;
   searchOpen.value = false;
+  if (it.allocationId) {
+    selectedAllocId.value = it.allocationId;
+    tab.value = "allocations";
+  }
   if (it.rangeHz) {
     // Zoom to fit the band or channel span with a little padding.
     const pLow = frequencyToPosition(it.rangeHz[0]);
@@ -841,6 +898,9 @@ function writeFragmentNow() {
   };
   if (pinnedFreq.value != null) opts.q = pinnedFreq.value.toExponential(4);
   if (orientationOverride.value) opts.o = orientationOverride.value === "horizontal" ? "h" : "v";
+  if (tab.value !== "allocations") opts.t = tab.value;
+  if (region.value !== "US") opts.r = region.value;
+  if (selectedAllocId.value) opts.a = selectedAllocId.value;
   writeFragment({ opts });
 }
 
@@ -859,6 +919,11 @@ function restoreFromFragment() {
     pinnedFreq.value = q;
     locked.value = true;
   }
+  if (opts.t && TAB_IDS.includes(opts.t as RefTab)) tab.value = opts.t as RefTab;
+  if (opts.r && REGION_IDS.includes(opts.r as AllocationRegion)) {
+    region.value = opts.r as AllocationRegion;
+  }
+  if (opts.a && ALLOCATIONS.some((a) => a.id === opts.a)) selectedAllocId.value = opts.a;
 }
 
 /** CopyButton asks for the link at click time, after the fragment is flushed. */
@@ -945,6 +1010,546 @@ function exportSvg() {
 }
 
 /* ------------------------------------------------------------------ */
+/* Allocation reference: shared state                                  */
+/* ------------------------------------------------------------------ */
+
+type RefTab = "allocations" | "rules" | "channels" | "exposure" | "learn";
+const TAB_IDS: RefTab[] = ["allocations", "rules", "channels", "exposure", "learn"];
+const REGION_IDS: AllocationRegion[] = ["US", "ITU2", "ITU1", "ITU3", "global"];
+
+const tab = ref<RefTab>("allocations");
+const region = ref<AllocationRegion>("US");
+const selectedAllocId = ref<string | null>(null);
+
+const REGION_OPTIONS: SegmentedOption[] = REGION_IDS.map((r) => ({
+  value: r,
+  label: r === "global" ? "Worldwide" : r === "US" ? "US" : r.replace("ITU", "Region "),
+}));
+
+const statusFilter = ref<"all" | AllocationStatus>("all");
+const STATUS_OPTIONS: SegmentedOption[] = [
+  { value: "all", label: "All" },
+  ...STATUS_ORDER.map((st) => ({ value: st, label: STATUS_LABELS[st] })),
+];
+
+const serviceFilter = ref<string>("all");
+const serviceSpec = computed<SelectOptionSpec>(() => {
+  const present = [...new Set(allocationsForRegion(region.value).map((a) => a.service))].sort(
+    (a, b) => serviceLabel(a).localeCompare(serviceLabel(b)),
+  );
+  return {
+    kind: "select",
+    id: "service",
+    label: "Service",
+    default: "all",
+    ui: "select",
+    options: [
+      { value: "all", label: "All services", synonyms: ["any", "everything"] },
+      ...present.map((sv) => ({ value: sv, label: serviceLabel(sv), synonyms: [sv] })),
+    ],
+  };
+});
+
+// A region switch can drop the chosen service from the table; fall back to all.
+watch(region, () => {
+  if (
+    serviceFilter.value !== "all" &&
+    !serviceSpec.value.options?.some((o) => o.value === serviceFilter.value)
+  ) {
+    serviceFilter.value = "all";
+  }
+  scheduleFragmentWrite();
+});
+
+watch(tab, scheduleFragmentWrite);
+
+const selectedAlloc = computed<Allocation | null>(
+  () => ALLOCATIONS.find((a) => a.id === selectedAllocId.value) ?? null,
+);
+
+/** Geometric center of an allocation, where the log axis draws its middle. */
+function allocCenter(a: Allocation): number {
+  return Math.sqrt(a.lowHz * a.highHz);
+}
+
+/** The frequency the Rules, Exposure and Learn tabs describe. */
+const focusFreq = computed<number | null>(() => {
+  if (pinnedFreq.value != null) return pinnedFreq.value;
+  if (selectedAlloc.value) return allocCenter(selectedAlloc.value);
+  return hoverFreq.value;
+});
+
+/* ------------------------------------------------------------------ */
+/* Allocation chart                                                    */
+/* ------------------------------------------------------------------ */
+
+const LANE_H = 20;
+const LANE_GAP = 3;
+const STRIP_TOP = 22;
+
+const filteredAllocs = computed<Allocation[]>(() =>
+  allocationsForRegion(region.value).filter(
+    (a) =>
+      (statusFilter.value === "all" || a.status === statusFilter.value) &&
+      (serviceFilter.value === "all" || a.service === serviceFilter.value),
+  ),
+);
+
+const lanes = computed(() => packAllocations(filteredAllocs.value));
+const stripHeight = computed(
+  () => STRIP_TOP + Math.max(1, lanes.value.laneCount) * (LANE_H + LANE_GAP) + 6,
+);
+
+/** The strip is always horizontal and full width, whatever the map orientation. */
+const stripView = computed<AxisView>(() => ({
+  center: center.value,
+  span: span.value,
+  lengthPx: cssW.value,
+}));
+
+interface Bar {
+  id: string;
+  x: number;
+  w: number;
+  y: number;
+  label: string;
+  status: AllocationStatus;
+  service: AllocationService;
+  alloc: Allocation;
+  text: string | null;
+}
+
+const bars = computed<Bar[]>(() => {
+  const view = stripView.value;
+  const start = viewStartPos(view);
+  return visibleAllocations(lanes.value, start, start + view.span).map((p) => {
+    const x1 = Math.max(0, posToAxisPx(p.posLow, view));
+    const x2 = Math.min(view.lengthPx, posToAxisPx(p.posHigh, view));
+    const w = Math.max(1.5, x2 - x1);
+    const maxChars = Math.floor((w - 8) / 5.6);
+    const label = p.allocation.label;
+    const text =
+      maxChars >= 4
+        ? label.length <= maxChars
+          ? label
+          : `${label.slice(0, Math.max(1, maxChars - 1))}…`
+        : null;
+    return {
+      id: p.allocation.id,
+      x: x1,
+      w,
+      y: STRIP_TOP + p.lane * (LANE_H + LANE_GAP),
+      label,
+      status: p.allocation.status,
+      service: p.allocation.service,
+      alloc: p.allocation,
+      text,
+    };
+  });
+});
+
+/** Decade ticks along the top of the strip, thinned so labels never collide. */
+const stripTicks = computed<{ x: number; label: string }[]>(() => {
+  const view = stripView.value;
+  if (view.lengthPx <= 0) return [];
+  const fHigh = axisPxToFreq(0, view);
+  const fLow = axisPxToFreq(view.lengthPx, view);
+  const kLo = Math.ceil(Math.log10(Math.max(fLow, 1e-3)));
+  const kHi = Math.floor(Math.log10(fHigh));
+  const stepK = Math.max(
+    1,
+    Math.ceil((kHi - kLo + 1) / Math.max(2, Math.floor(view.lengthPx / 90))),
+  );
+  const out: { x: number; label: string }[] = [];
+  for (let k = kLo; k <= kHi; k += stepK) {
+    const f = Math.pow(10, k);
+    out.push({ x: freqToAxisPx(f, view), label: formatFrequency(f) });
+  }
+  return out;
+});
+
+const markerX = computed<number | null>(() => {
+  const f = activeFreq.value;
+  if (f == null) return null;
+  const x = freqToAxisPx(f, stripView.value);
+  return x >= 0 && x <= cssW.value ? x : null;
+});
+
+function barFill(status: AllocationStatus): string {
+  switch (status) {
+    case "primary":
+      return withAlpha(colors.primary, 0.82);
+    case "secondary":
+      return withAlpha(colors.primary, 0.38);
+    case "unlicensed":
+      return withAlpha(colors.positive, 0.78);
+    case "restricted":
+      return withAlpha(colors.muted, 0.45);
+  }
+}
+
+function barText(status: AllocationStatus): string {
+  return status === "primary" || status === "unlicensed" ? colors.card : colors.fg;
+}
+
+// Drag to pan on the strip; a click that does not move selects a bar.
+let stripDown: { x: number; center: number; moved: boolean } | null = null;
+
+function onStripPointerDown(e: PointerEvent) {
+  if (e.button !== 0 && e.pointerType === "mouse") return;
+  (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+  stripDown = { x: e.clientX, center: center.value, moved: false };
+}
+
+function onStripPointerMove(e: PointerEvent) {
+  if (!stripDown) return;
+  const dx = e.clientX - stripDown.x;
+  if (!stripDown.moved && Math.abs(dx) > DRAG_THRESHOLD) stripDown.moved = true;
+  if (!stripDown.moved) return;
+  center.value = stripDown.center - (dx / Math.max(1, cssW.value)) * span.value;
+  clampView();
+  scheduleDraw();
+  scheduleFragmentWrite();
+}
+
+function onStripPointerUp(e: PointerEvent) {
+  (e.currentTarget as Element).releasePointerCapture?.(e.pointerId);
+  stripDown = null;
+}
+
+function onStripWheel(e: WheelEvent) {
+  e.preventDefault();
+  const rect = (e.currentTarget as Element).getBoundingClientRect();
+  const apx = e.clientX - rect.left;
+  const view = stripView.value;
+  if (e.ctrlKey || e.metaKey) {
+    const anchorPos = axisPxToPos(apx, view);
+    span.value = span.value * Math.exp(e.deltaY * 0.0016);
+    clampView();
+    center.value = centerHoldingAnchor(anchorPos, apx, stripView.value);
+    clampView();
+  } else {
+    center.value += ((e.deltaX || e.deltaY) / view.lengthPx) * span.value;
+    clampView();
+  }
+  scheduleDraw();
+  scheduleFragmentWrite();
+}
+
+/** A bar click: select it, pin the readout at its center, and describe it. */
+function selectBar(bar: Bar) {
+  if (stripDown?.moved) return;
+  selectedAllocId.value = bar.id;
+  pinnedFreq.value = allocCenter(bar.alloc);
+  hoverFreq.value = null;
+  locked.value = true;
+  scheduleDraw();
+  scheduleFragmentWrite();
+}
+
+function zoomToAlloc(a: Allocation) {
+  const pLow = frequencyToPosition(a.lowHz);
+  const pHigh = frequencyToPosition(a.highHz);
+  const lo = Math.min(pLow, pHigh);
+  const hi = Math.max(pLow, pHigh);
+  animateTo((lo + hi) / 2, (hi - lo) * 1.6 || MIN_SPAN);
+}
+
+function zoomBy(factor: number) {
+  span.value *= factor;
+  clampView();
+  scheduleDraw();
+  scheduleFragmentWrite();
+}
+
+/** Fit the view to the allocation table's range, 9 kHz to 275 GHz. */
+function fitRf() {
+  const pLow = frequencyToPosition(ALLOCATION_META.lowHz);
+  const pHigh = frequencyToPosition(ALLOCATION_META.highHz);
+  const lo = Math.min(pLow, pHigh);
+  const hi = Math.max(pLow, pHigh);
+  animateTo((lo + hi) / 2, (hi - lo) * 1.02);
+}
+
+function clearSelection() {
+  selectedAllocId.value = null;
+  scheduleFragmentWrite();
+}
+
+/** The rows currently in view, in frequency order, for the exports. */
+const visibleRows = computed<Allocation[]>(() => {
+  const ids = new Set(bars.value.map((b) => b.id));
+  return filteredAllocs.value.filter((a) => ids.has(a.id));
+});
+
+function exportCsv() {
+  downloadText(allocationsToCsv(visibleRows.value), "spectrum-allocations.csv", "text/csv");
+}
+
+function exportJson() {
+  downloadText(
+    allocationsToJson(visibleRows.value),
+    "spectrum-allocations.json",
+    "application/json",
+  );
+}
+
+const selectedLicense = computed(() =>
+  selectedAlloc.value ? licenseNeededAt(allocCenter(selectedAlloc.value)) : null,
+);
+
+const selectedSource = computed(() =>
+  selectedAlloc.value ? sourceLinkFor(selectedAlloc.value.source) : null,
+);
+
+/* ------------------------------------------------------------------ */
+/* Rules tab                                                           */
+/* ------------------------------------------------------------------ */
+
+const license = computed(() => (focusFreq.value != null ? licenseNeededAt(focusFreq.value) : null));
+const rulesAllocs = computed<Allocation[]>(() =>
+  focusFreq.value != null ? allocationsAt(focusFreq.value, region.value) : [],
+);
+
+const licenseFlags = computed<{ label: string; tone: "good" | "warn" | "muted" }[]>(() => {
+  const l = license.value;
+  if (!l) return [];
+  const flags: { label: string; tone: "good" | "warn" | "muted" }[] = [];
+  if (l.unlicensed) flags.push({ label: "Unlicensed use allowed", tone: "good" });
+  if (l.amateur) flags.push({ label: "Amateur allocation", tone: "good" });
+  if (l.restricted) flags.push({ label: "Restricted band", tone: "warn" });
+  if (l.federalOnly) flags.push({ label: "Federal only", tone: "warn" });
+  if (!flags.length) flags.push({ label: "Licensed services only", tone: "muted" });
+  return flags;
+});
+
+function selectFromRules(a: Allocation) {
+  selectedAllocId.value = a.id;
+  tab.value = "allocations";
+  zoomToAlloc(a);
+  scheduleFragmentWrite();
+}
+
+/* ------------------------------------------------------------------ */
+/* Channels tab                                                        */
+/* ------------------------------------------------------------------ */
+
+interface PlanRow {
+  id: string;
+  centerHz: number;
+  widthHz?: number;
+  label?: string;
+  note?: string;
+}
+interface Plan {
+  id: string;
+  name: string;
+  source: string;
+  rows: PlanRow[];
+}
+
+const NAMED_PLAN_NAMES: Record<string, string> = {
+  marine: "Marine VHF channels",
+  cb: "Citizens Band channels 1 to 40",
+  noaa: "NOAA Weather Radio channels",
+  fm: "FM broadcast channels 201 to 300",
+  tv: "Television channels",
+};
+
+const PLANS: Plan[] = [
+  ...(["2.4", "5", "6"] as const).map((band) => ({
+    id: `wifi-${band}`,
+    name: `Wi-Fi ${band} GHz channels`,
+    source: "47 CFR Part 15 and IEEE 802.11",
+    rows: WIFI_CHANNELS.filter((c) => c.band === band).map((c) => ({
+      id: String(c.channel),
+      centerHz: c.centerHz,
+      widthHz: c.width * 1e6,
+      label: `${c.width} MHz wide`,
+    })),
+  })),
+  ...Object.keys(NAMED_PLAN_NAMES).map((service) => ({
+    id: `named-${service}`,
+    name: NAMED_PLAN_NAMES[service]!,
+    source: "47 CFR Parts 73, 80 and 95; NOAA NWS",
+    rows: NAMED_CHANNELS.filter((c) => c.service === service).map((c) => ({
+      id: c.channel,
+      centerHz: c.centerHz,
+      widthHz: c.upperHz - c.lowerHz,
+      label: c.name,
+      note: c.notes,
+    })),
+  })),
+  ...CHANNEL_TABLES.map((t) => ({
+    id: t.id,
+    name: t.name,
+    source: t.source,
+    rows: t.channels.map((c) => ({
+      id: c.id,
+      centerHz: c.centerHz,
+      widthHz: c.widthHz,
+      label: c.label,
+      note: c.note,
+    })),
+  })),
+];
+
+const planId = ref<string>(PLANS[0]!.id);
+const planSearch = ref("");
+const PLAN_ROW_CAP = 200;
+
+const planSpec: SelectOptionSpec = {
+  kind: "select",
+  id: "plan",
+  label: "Channel plan",
+  default: PLANS[0]!.id,
+  ui: "select",
+  options: PLANS.map((p) => ({ value: p.id, label: p.name, synonyms: [p.id] })),
+};
+
+const plan = computed<Plan>(() => PLANS.find((p) => p.id === planId.value) ?? PLANS[0]!);
+
+const planRows = computed<PlanRow[]>(() => {
+  const q = planSearch.value.trim().toLowerCase();
+  const rows = plan.value.rows;
+  if (!q) return rows.slice(0, PLAN_ROW_CAP);
+  return rows
+    .filter((r) =>
+      [r.id, r.label ?? "", r.note ?? "", formatFrequency(r.centerHz)]
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
+    )
+    .slice(0, PLAN_ROW_CAP);
+});
+
+function showChannel(row: PlanRow) {
+  pinnedFreq.value = row.centerHz;
+  hoverFreq.value = null;
+  locked.value = true;
+  if (row.widthHz) {
+    const lo = row.centerHz - row.widthHz / 2;
+    const hi = row.centerHz + row.widthHz / 2;
+    const pA = frequencyToPosition(lo);
+    const pB = frequencyToPosition(hi);
+    animateTo((pA + pB) / 2, Math.abs(pA - pB) * 6 || MIN_SPAN);
+  } else {
+    animateTo(frequencyToPosition(row.centerHz), Math.min(span.value, 1 / AXIS_DECADES));
+  }
+  scheduleFragmentWrite();
+}
+
+/* ------------------------------------------------------------------ */
+/* Exposure tab                                                        */
+/* ------------------------------------------------------------------ */
+
+const expFreqText = ref("146 MHz");
+const expPower = ref("50");
+const expKind = ref<PowerKind>("erp");
+const expGain = ref("2.15");
+const expDistance = ref("10");
+const expEnv = ref<MpeEnvironment>("uncontrolled");
+const expDuty = ref("100");
+
+const POWER_KIND_OPTIONS: SegmentedOption[] = [
+  { value: "erp", label: "ERP" },
+  { value: "eirp", label: "EIRP" },
+  { value: "tx", label: "TX power + gain" },
+];
+const ENV_OPTIONS: SegmentedOption[] = [
+  { value: "uncontrolled", label: "General public" },
+  { value: "controlled", label: "Occupational" },
+];
+
+const expFreqHz = computed<number | null>(() => {
+  try {
+    return parseJump(expFreqText.value);
+  } catch {
+    return null;
+  }
+});
+
+const expError = computed<string | null>(() => {
+  if (expFreqHz.value == null) return "Enter a frequency such as 146 MHz, 2.4 GHz or 7.1 MHz.";
+  if (!(Number(expPower.value) > 0)) return "Power must be a positive number of watts.";
+  if (!(Number(expDistance.value) > 0)) return "Distance must be a positive number of meters.";
+  return null;
+});
+
+const exposure = computed(() => {
+  if (expError.value || expFreqHz.value == null) return null;
+  return estimateExposure({
+    freqHz: expFreqHz.value,
+    powerW: Number(expPower.value),
+    powerKind: expKind.value,
+    gainDbi: Number(expGain.value) || 0,
+    distanceM: Number(expDistance.value),
+    environment: expEnv.value,
+    dutyCycle: Math.min(100, Math.max(0, Number(expDuty.value) || 100)) / 100,
+  });
+});
+
+const exposureRows = computed<KeyValueRow[]>(() => {
+  const e = exposure.value;
+  if (!e) return [];
+  const rows: KeyValueRow[] = [
+    { key: "EIRP", value: formatWatts(e.eirpW) },
+    { key: "ERP", value: formatWatts(e.erpW) },
+    { key: "Estimated power density", value: formatPowerDensity(e.powerDensityMwCm2) },
+    {
+      key: "FCC limit",
+      value: e.limit
+        ? `${formatPowerDensity(e.limit.powerDensityMwCm2)} (${e.limit.formula}, ${e.limit.averagingMinutes} min average)`
+        : "No FCC limit is defined below 300 kHz or above 100 GHz",
+    },
+    {
+      key: "Share of limit",
+      value: e.percentOfLimit == null ? "n/a" : `${Number(e.percentOfLimit.toPrecision(3))}%`,
+    },
+    {
+      key: "Distance to meet the limit",
+      value: e.complianceDistanceM == null ? "n/a" : formatMeters(e.complianceDistanceM),
+    },
+    { key: "Wavelength", value: formatWavelength(e.wavelengthM) },
+    {
+      key: "Routine evaluation",
+      value: e.exempt
+        ? `Exempt: at or under the single source threshold${e.exemption ? ` of ${formatWatts(e.exemption.thresholdErpWatts)} ERP at ${formatMeters(e.exemption.separationM)}` : ""}`
+        : e.exemption
+          ? `Not exempt: threshold is ${formatWatts(e.exemption.thresholdErpWatts)} ERP at ${formatMeters(e.exemption.separationM)}${e.exemption.clampedToMinimum ? " (distance raised to the lambda over 2 pi floor)" : ""}`
+          : "No exemption threshold is defined at this frequency",
+    },
+  ];
+  if (e.limit?.electricFieldVm) {
+    rows.push({
+      key: "Electric field limit",
+      value: `${Number(e.limit.electricFieldVm.toPrecision(3))} V/m`,
+    });
+  }
+  return rows;
+});
+
+const exposureCopy = computed(() =>
+  exposureRows.value.map((r) => `${r.key}: ${r.value}`).join("\n"),
+);
+
+function useFocusFrequency() {
+  if (focusFreq.value != null) expFreqText.value = formatFrequency(focusFreq.value);
+}
+
+/* ------------------------------------------------------------------ */
+/* Learn tab                                                           */
+/* ------------------------------------------------------------------ */
+
+const learnNote = computed(() =>
+  focusFreq.value != null ? educationAt(focusFreq.value) : undefined,
+);
+
+function printPage() {
+  window.print();
+}
+
+/* ------------------------------------------------------------------ */
 /* Lifecycle                                                           */
 /* ------------------------------------------------------------------ */
 
@@ -1008,7 +1613,7 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-4 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Toolbar -->
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2 print:hidden">
       <div class="relative min-w-[220px] flex-1">
         <div
           class="flex items-center rounded-[10px] border bg-secondary shadow-[var(--sh-inset)] focus-within:ring-2 focus-within:ring-[color:var(--ring)]"
@@ -1437,7 +2042,647 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <p class="text-xs text-muted-foreground">
+    <!-- Allocation reference -->
+    <div class="flex flex-col gap-3 print:hidden">
+      <div class="flex flex-wrap items-start justify-between gap-2">
+        <div class="min-w-0">
+          <h2 class="text-base font-semibold">Spectrum allocations</h2>
+          <p class="text-xs text-muted-foreground">
+            Who is allocated what from 9 kHz to 275 GHz. The chart shares the axis above, so panning
+            or zooming either one moves both.
+          </p>
+        </div>
+        <Segmented v-model="region" :options="REGION_OPTIONS" label="Region" size="sm" wrap />
+      </div>
+      <p class="text-xs text-muted-foreground">{{ REGION_HELP[region] }}</p>
+
+      <Tabs v-model="tab" class="w-full">
+        <TabsList class="flex w-full flex-wrap">
+          <TabsTrigger value="allocations">Chart</TabsTrigger>
+          <TabsTrigger value="rules">Rules</TabsTrigger>
+          <TabsTrigger value="channels">Channels</TabsTrigger>
+          <TabsTrigger value="exposure">Exposure</TabsTrigger>
+          <TabsTrigger value="learn">Learn</TabsTrigger>
+        </TabsList>
+
+        <!-- Chart -->
+        <TabsContent value="allocations" class="flex flex-col gap-3 pt-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <Segmented
+              v-model="statusFilter"
+              :options="STATUS_OPTIONS"
+              label="Status filter"
+              size="sm"
+              wrap
+            />
+            <div class="min-w-[200px]">
+              <SearchableSelect v-model="serviceFilter" :spec="serviceSpec" />
+            </div>
+            <div class="ml-auto flex flex-wrap items-center gap-1">
+              <Button variant="outline" size="sm" aria-label="Zoom in" @click="zoomBy(1 / 1.5)">
+                <ZoomIn class="size-4" />
+              </Button>
+              <Button variant="outline" size="sm" aria-label="Zoom out" @click="zoomBy(1.5)">
+                <ZoomOut class="size-4" />
+              </Button>
+              <Button variant="outline" size="sm" @click="fitRf">Fit RF</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label="Export visible rows as CSV"
+                @click="exportCsv"
+              >
+                <Download class="size-4" />
+                CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label="Export visible rows as JSON"
+                @click="exportJson"
+              >
+                <Download class="size-4" />
+                JSON
+              </Button>
+            </div>
+          </div>
+
+          <div class="overflow-hidden rounded-[14px] border bg-card shadow-[var(--sh-inset)]">
+            <svg
+              tabindex="0"
+              role="img"
+              :aria-label="`Spectrum allocation chart, ${bars.length} of ${filteredAllocs.length} bands in view. Arrow keys pan, plus and minus zoom, drag to pan, click a band to select it.`"
+              :width="cssW"
+              :height="stripHeight"
+              :viewBox="`0 0 ${cssW} ${stripHeight}`"
+              class="block w-full cursor-grab touch-none select-none outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] active:cursor-grabbing"
+              @pointerdown="onStripPointerDown"
+              @pointermove="onStripPointerMove"
+              @pointerup="onStripPointerUp"
+              @pointercancel="onStripPointerUp"
+              @wheel="onStripWheel"
+              @keydown="onKeydown"
+            >
+              <g v-for="t in stripTicks" :key="t.x">
+                <line
+                  :x1="t.x"
+                  :x2="t.x"
+                  :y1="STRIP_TOP - 6"
+                  :y2="stripHeight"
+                  :stroke="colors.border"
+                  stroke-width="1"
+                />
+                <text :x="t.x + 3" y="12" font-size="10" :fill="colors.muted">{{ t.label }}</text>
+              </g>
+              <g
+                v-for="bar in bars"
+                :key="bar.id"
+                :transform="`translate(${bar.x}, ${bar.y})`"
+                class="cursor-pointer"
+                @click="selectBar(bar)"
+              >
+                <title>{{ bar.label }}: {{ formatRange(bar.alloc.lowHz, bar.alloc.highHz) }}</title>
+                <rect
+                  :width="bar.w"
+                  :height="LANE_H"
+                  rx="3"
+                  :fill="barFill(bar.status)"
+                  :stroke="bar.id === selectedAllocId ? colors.fg : 'none'"
+                  stroke-width="1.5"
+                  :stroke-dasharray="bar.status === 'secondary' ? '3 2' : undefined"
+                />
+                <text
+                  v-if="bar.text"
+                  x="5"
+                  :y="LANE_H / 2 + 3.5"
+                  font-size="10"
+                  :fill="barText(bar.status)"
+                  style="pointer-events: none"
+                >
+                  {{ bar.text }}
+                </text>
+              </g>
+              <line
+                v-if="markerX != null"
+                :x1="markerX"
+                :x2="markerX"
+                y1="0"
+                :y2="stripHeight"
+                :stroke="colors.primary"
+                stroke-width="1.5"
+                stroke-dasharray="4 3"
+              />
+            </svg>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <span
+              v-for="st in STATUS_ORDER"
+              :key="st"
+              class="inline-flex items-center gap-1.5"
+              :title="STATUS_HELP[st]"
+            >
+              <span
+                class="inline-block size-3 rounded-[3px]"
+                :style="{
+                  background: barFill(st),
+                  outline: st === 'secondary' ? `1px dashed ${colors.primary}` : 'none',
+                }"
+              />
+              {{ STATUS_LABELS[st] }}
+            </span>
+            <span class="ml-auto"
+              >{{ bars.length }} of {{ filteredAllocs.length }} rows in view</span
+            >
+          </div>
+
+          <div
+            v-if="selectedAlloc"
+            class="overflow-hidden rounded-[14px] border bg-card shadow-[var(--sh-sm)]"
+          >
+            <div
+              class="flex items-center justify-between gap-3 border-b bg-[image:var(--grad-brand-soft)] px-4 py-2.5"
+            >
+              <div class="min-w-0">
+                <div
+                  class="text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase"
+                >
+                  {{ serviceLabel(selectedAlloc.service) }}
+                </div>
+                <div class="truncate text-sm font-semibold">{{ selectedAlloc.label }}</div>
+              </div>
+              <div class="flex shrink-0 items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Zoom to this band"
+                  @click="zoomToAlloc(selectedAlloc)"
+                >
+                  <Crosshair class="size-4" />
+                </Button>
+                <CopyButton :text="describeAllocation(selectedAlloc)" label="Copy" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Clear selection"
+                  @click="clearSelection"
+                >
+                  <X class="size-4" />
+                </Button>
+              </div>
+            </div>
+            <div class="flex flex-col gap-3 px-4 py-3 text-sm">
+              <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                <span class="rounded-[6px] border bg-secondary px-2 py-0.5 font-mono">
+                  {{ formatRange(selectedAlloc.lowHz, selectedAlloc.highHz) }}
+                </span>
+                <span
+                  class="rounded-[6px] px-2 py-0.5 font-medium"
+                  :style="{
+                    background: barFill(selectedAlloc.status),
+                    color: barText(selectedAlloc.status),
+                  }"
+                  :title="STATUS_HELP[selectedAlloc.status]"
+                >
+                  {{ STATUS_LABELS[selectedAlloc.status] }}
+                </span>
+                <span class="rounded-[6px] bg-secondary px-2 py-0.5">{{
+                  REGION_LABELS[selectedAlloc.region]
+                }}</span>
+                <span
+                  v-if="selectedAlloc.users?.length"
+                  class="rounded-[6px] bg-secondary px-2 py-0.5"
+                >
+                  {{ selectedAlloc.users.join(" and ") }}
+                </span>
+              </div>
+              <p class="leading-relaxed">{{ selectedAlloc.summary }}</p>
+              <div v-if="selectedAlloc.rules?.length">
+                <div
+                  class="mb-1 text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase"
+                >
+                  Rules
+                </div>
+                <ul class="list-disc space-y-1 pl-5 text-sm leading-relaxed">
+                  <li v-for="rule in selectedAlloc.rules" :key="rule">{{ rule }}</li>
+                </ul>
+              </div>
+              <p v-if="selectedAlloc.notes" class="text-sm leading-relaxed text-muted-foreground">
+                {{ selectedAlloc.notes }}
+              </p>
+              <p
+                v-if="selectedLicense"
+                class="rounded-[10px] bg-secondary px-3 py-2 text-sm leading-relaxed"
+              >
+                {{ selectedLicense.summary }}
+              </p>
+              <p class="text-xs text-muted-foreground">
+                Source: {{ selectedAlloc.source }}.
+                <a
+                  v-if="selectedSource"
+                  :href="selectedSource.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-[color:var(--primary)] underline-offset-2 hover:underline"
+                >
+                  {{ selectedSource.title }}
+                  <ExternalLink class="size-3" />
+                </a>
+              </p>
+            </div>
+          </div>
+          <EmptyState
+            v-else
+            title="No band selected"
+            hint="Click a bar on the chart, or search above for a band such as 2m, GMRS, radio astronomy, or 5 GHz Wi-Fi."
+            icon="Radio"
+          />
+        </TabsContent>
+
+        <!-- Rules -->
+        <TabsContent value="rules" class="flex flex-col gap-3 pt-4">
+          <template v-if="license && focusFreq != null">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-mono text-sm">{{ formatFrequency(focusFreq) }}</span>
+              <span
+                v-for="flag in licenseFlags"
+                :key="flag.label"
+                class="rounded-[6px] px-2 py-0.5 text-xs font-medium"
+                :class="
+                  flag.tone === 'good'
+                    ? 'bg-[color:var(--positive-soft)] text-[color:var(--positive)]'
+                    : flag.tone === 'warn'
+                      ? 'bg-destructive/10 text-destructive'
+                      : 'bg-secondary text-muted-foreground'
+                "
+              >
+                {{ flag.label }}
+              </span>
+              <CopyButton
+                :text="[license.summary, ...license.rules].join('\n')"
+                label="Copy"
+                class="ml-auto"
+              />
+            </div>
+            <p class="rounded-[10px] bg-secondary px-3 py-2 text-sm leading-relaxed">
+              {{ license.summary }}
+            </p>
+            <div v-if="license.rules.length">
+              <div
+                class="mb-1 text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase"
+              >
+                What the rules say
+              </div>
+              <ul class="list-disc space-y-1 pl-5 text-sm leading-relaxed">
+                <li v-for="rule in license.rules" :key="rule">{{ rule }}</li>
+              </ul>
+            </div>
+            <div v-if="rulesAllocs.length">
+              <div
+                class="mb-1 text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase"
+              >
+                Allocations here ({{ REGION_LABELS[region] }})
+              </div>
+              <ul class="divide-y divide-border/60 rounded-[10px] border">
+                <li
+                  v-for="a in rulesAllocs"
+                  :key="a.id"
+                  class="flex flex-wrap items-center gap-2 px-3 py-2 text-sm"
+                >
+                  <span
+                    class="rounded-[6px] px-1.5 py-0.5 text-xs font-medium"
+                    :style="{ background: barFill(a.status), color: barText(a.status) }"
+                  >
+                    {{ STATUS_LABELS[a.status] }}
+                  </span>
+                  <span class="min-w-0 flex-1 truncate">
+                    <span class="font-medium">{{ a.label }}</span>
+                    <span class="text-muted-foreground"> {{ formatRange(a.lowHz, a.highHz) }}</span>
+                  </span>
+                  <Button variant="ghost" size="sm" @click="selectFromRules(a)">Show</Button>
+                </li>
+              </ul>
+            </div>
+            <ErrorBanner
+              variant="info"
+              message="Educational summary only. The FCC Table of Frequency Allocations and the service rules govern; footnotes, coordination zones and geographic limits are not modeled."
+            />
+          </template>
+          <EmptyState
+            v-else
+            title="Pick a frequency first"
+            hint="Click the spectrum, select a band on the chart, or search for one, and this tab answers whether you may transmit there and under which license."
+            icon="Radio"
+          />
+        </TabsContent>
+
+        <!-- Channels -->
+        <TabsContent value="channels" class="flex flex-col gap-3 pt-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="min-w-[260px] flex-1">
+              <SearchableSelect v-model="planId" :spec="planSpec" />
+            </div>
+            <div
+              class="flex min-w-[200px] flex-1 items-center rounded-[10px] border bg-secondary shadow-[var(--sh-inset)] focus-within:ring-2 focus-within:ring-[color:var(--ring)]"
+            >
+              <Search class="ml-2.5 size-4 shrink-0 text-muted-foreground" />
+              <input
+                v-model="planSearch"
+                type="text"
+                placeholder="Filter channels"
+                aria-label="Filter channels"
+                class="h-9 w-full bg-transparent px-2 text-sm outline-none"
+              />
+            </div>
+          </div>
+          <p class="text-xs text-muted-foreground">
+            {{ plan.rows.length }} channels. Source: {{ plan.source }}.
+          </p>
+          <div class="overflow-x-auto rounded-[10px] border">
+            <table class="w-full text-sm">
+              <thead class="bg-secondary text-left text-xs text-muted-foreground">
+                <tr>
+                  <th class="px-3 py-2 font-medium">Channel</th>
+                  <th class="px-3 py-2 font-medium">Center</th>
+                  <th class="px-3 py-2 font-medium">Width</th>
+                  <th class="px-3 py-2 font-medium">Notes</th>
+                  <th class="px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border/60">
+                <tr
+                  v-for="row in planRows"
+                  :key="row.id + row.centerHz"
+                  class="hover:bg-secondary/60"
+                >
+                  <td class="px-3 py-1.5 font-mono">{{ row.id }}</td>
+                  <td class="px-3 py-1.5 font-mono tabular-nums">
+                    {{ formatFrequency(row.centerHz) }}
+                  </td>
+                  <td class="px-3 py-1.5 font-mono tabular-nums text-muted-foreground">
+                    {{ row.widthHz ? formatFrequency(row.widthHz) : "" }}
+                  </td>
+                  <td class="px-3 py-1.5 text-muted-foreground">
+                    {{ [row.label, row.note].filter(Boolean).join(". ") }}
+                  </td>
+                  <td class="px-2 py-1 text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      :aria-label="`Show channel ${row.id} on the spectrum`"
+                      @click="showChannel(row)"
+                    >
+                      <Crosshair class="size-4" />
+                      <span class="hidden sm:inline">Show</span>
+                    </Button>
+                  </td>
+                </tr>
+                <tr v-if="!planRows.length">
+                  <td colspan="5" class="px-3 py-4 text-center text-muted-foreground">
+                    No channel matches that filter.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
+
+        <!-- Exposure -->
+        <TabsContent value="exposure" class="flex flex-col gap-3 pt-4">
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label class="flex flex-col gap-1 text-xs text-muted-foreground">
+              <span class="flex items-center justify-between">
+                Frequency
+                <button
+                  v-if="focusFreq != null"
+                  type="button"
+                  class="text-[color:var(--primary)] hover:underline"
+                  @click="useFocusFrequency"
+                >
+                  use {{ formatFrequency(focusFreq) }}
+                </button>
+              </span>
+              <input
+                v-model="expFreqText"
+                type="text"
+                class="h-9 rounded-[10px] border bg-secondary px-2.5 font-mono text-sm text-foreground shadow-[var(--sh-inset)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+                placeholder="146 MHz"
+              />
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-muted-foreground">
+              Power (watts)
+              <input
+                v-model="expPower"
+                type="number"
+                min="0"
+                step="any"
+                inputmode="decimal"
+                class="h-9 rounded-[10px] border bg-secondary px-2.5 font-mono text-sm text-foreground shadow-[var(--sh-inset)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+              />
+            </label>
+            <div class="flex flex-col gap-1 text-xs text-muted-foreground">
+              Power is
+              <Segmented
+                v-model="expKind"
+                :options="POWER_KIND_OPTIONS"
+                label="Power kind"
+                size="sm"
+                wrap
+              />
+            </div>
+            <label
+              v-if="expKind === 'tx'"
+              class="flex flex-col gap-1 text-xs text-muted-foreground"
+            >
+              Antenna gain (dBi)
+              <input
+                v-model="expGain"
+                type="number"
+                step="any"
+                inputmode="decimal"
+                class="h-9 rounded-[10px] border bg-secondary px-2.5 font-mono text-sm text-foreground shadow-[var(--sh-inset)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+              />
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-muted-foreground">
+              Distance to people (meters)
+              <input
+                v-model="expDistance"
+                type="number"
+                min="0"
+                step="any"
+                inputmode="decimal"
+                class="h-9 rounded-[10px] border bg-secondary px-2.5 font-mono text-sm text-foreground shadow-[var(--sh-inset)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+              />
+            </label>
+            <label class="flex flex-col gap-1 text-xs text-muted-foreground">
+              Duty cycle (%)
+              <input
+                v-model="expDuty"
+                type="number"
+                min="0"
+                max="100"
+                step="any"
+                inputmode="decimal"
+                class="h-9 rounded-[10px] border bg-secondary px-2.5 font-mono text-sm text-foreground shadow-[var(--sh-inset)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+              />
+            </label>
+            <div class="flex flex-col gap-1 text-xs text-muted-foreground">
+              Environment
+              <Segmented
+                v-model="expEnv"
+                :options="ENV_OPTIONS"
+                label="Exposure environment"
+                size="sm"
+                wrap
+              />
+            </div>
+          </div>
+
+          <ErrorBanner v-if="expError" :message="expError" variant="warning" />
+          <template v-else-if="exposure">
+            <div
+              class="flex flex-wrap items-center justify-between gap-2 rounded-[10px] px-3 py-2 text-sm font-medium"
+              :class="
+                exposure.pass === null
+                  ? 'bg-secondary text-muted-foreground'
+                  : exposure.pass
+                    ? 'bg-[color:var(--positive-soft)] text-[color:var(--positive)]'
+                    : 'bg-destructive/10 text-destructive'
+              "
+              role="status"
+            >
+              <span>
+                {{
+                  exposure.pass === null
+                    ? "No FCC power density limit applies at this frequency"
+                    : exposure.pass
+                      ? `Under the ${expEnv === "controlled" ? "occupational" : "general public"} limit`
+                      : `Over the ${expEnv === "controlled" ? "occupational" : "general public"} limit`
+                }}
+                <span v-if="exposure.percentOfLimit != null" class="font-mono">
+                  ({{ Number(exposure.percentOfLimit.toPrecision(3)) }}% of the limit)
+                </span>
+              </span>
+              <CopyButton :text="exposureCopy" label="Copy" />
+            </div>
+            <ErrorBanner
+              v-if="exposure.nearField"
+              variant="warning"
+              message="That distance is inside the reactive near field, where the far field formula does not apply."
+              hint="The rule limits field strength there rather than power density. Treat this result as a rough upper bound only."
+            />
+            <KeyValueGrid :rows="exposureRows" :columns="2" />
+            <details class="rounded-[10px] border px-3 py-2 text-sm">
+              <summary class="cursor-pointer font-medium">Assumptions behind this number</summary>
+              <ul class="mt-2 list-disc space-y-1 pl-5 leading-relaxed text-muted-foreground">
+                <li v-for="a in exposure.assumptions" :key="a">{{ a }}</li>
+              </ul>
+            </details>
+          </template>
+          <ErrorBanner
+            variant="info"
+            title="Educational estimate, not a compliance evaluation"
+            message="The formulas are the ones in 47 CFR 1.1310 and 1.1307(b), but a real evaluation accounts for antenna patterns, ground reflection, the near field, feedline loss and every other source at the site. Use this to see whether a station is nowhere near the limit or worth evaluating properly."
+          />
+        </TabsContent>
+
+        <!-- Learn -->
+        <TabsContent value="learn" class="flex flex-col gap-3 pt-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <p class="text-xs text-muted-foreground">
+              What each part of the spectrum is, how it travels, what it passes through, and what it
+              does to people.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label="Print the allocation list"
+              @click="printPage"
+            >
+              <Printer class="size-4" />
+              Print
+            </Button>
+          </div>
+          <div
+            v-if="learnNote"
+            class="rounded-[14px] border bg-[image:var(--grad-brand-soft)] p-4 text-sm"
+          >
+            <div
+              class="mb-1 text-[11px] font-semibold tracking-[0.06em] text-muted-foreground uppercase"
+            >
+              At {{ focusFreq != null ? formatFrequency(focusFreq) : "" }}
+            </div>
+            <p class="leading-relaxed">{{ learnNote.what }}</p>
+          </div>
+          <div class="grid gap-3 md:grid-cols-2">
+            <article
+              v-for="note in BAND_EDUCATION"
+              :key="note.bandId"
+              class="flex flex-col gap-2 rounded-[14px] border bg-card p-4 text-sm shadow-[var(--sh-sm)]"
+              :class="learnNote?.bandId === note.bandId ? 'ring-2 ring-[color:var(--ring)]' : ''"
+            >
+              <h3 class="font-semibold">{{ note.what.split(/[,.]/)[0] }}</h3>
+              <p class="leading-relaxed">{{ note.what }}</p>
+              <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs leading-relaxed">
+                <dt class="font-medium text-muted-foreground">Travels</dt>
+                <dd>{{ note.propagation }}</dd>
+                <dt class="font-medium text-muted-foreground">Penetrates</dt>
+                <dd>{{ note.penetration }}</dd>
+                <dt class="font-medium text-muted-foreground">Health</dt>
+                <dd>{{ note.health }}</dd>
+              </dl>
+            </article>
+          </div>
+          <div class="rounded-[10px] border px-3 py-2 text-xs text-muted-foreground">
+            <div class="mb-1 font-semibold">
+              Sources (retrieved {{ ALLOCATION_META.retrieved }})
+            </div>
+            <ul class="flex flex-col gap-0.5">
+              <li v-for="src in ALLOCATION_META.sources" :key="src.id">
+                <a
+                  :href="src.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-[color:var(--primary)] underline-offset-2 hover:underline"
+                >
+                  {{ src.title }}
+                  <ExternalLink class="size-3" />
+                </a>
+              </li>
+            </ul>
+            <p class="mt-2 leading-relaxed">{{ ALLOCATION_META.disclaimer }}</p>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+
+    <!-- Print view: the band list for the chosen region, with no controls -->
+    <div class="hidden print:block">
+      <h2 class="text-base font-semibold">Spectrum allocations, {{ REGION_LABELS[region] }}</h2>
+      <p class="text-xs">{{ ALLOCATION_META.disclaimer }}</p>
+      <table class="mt-2 w-full text-xs">
+        <thead>
+          <tr class="text-left">
+            <th class="py-1 pr-2">Band</th>
+            <th class="py-1 pr-2">Range</th>
+            <th class="py-1 pr-2">Service</th>
+            <th class="py-1 pr-2">Status</th>
+            <th class="py-1">Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="a in filteredAllocs" :key="a.id" class="border-t align-top">
+            <td class="py-1 pr-2 font-medium">{{ a.label }}</td>
+            <td class="py-1 pr-2 whitespace-nowrap">{{ formatRange(a.lowHz, a.highHz) }}</td>
+            <td class="py-1 pr-2">{{ serviceLabel(a.service) }}</td>
+            <td class="py-1 pr-2">{{ STATUS_LABELS[a.status] }}</td>
+            <td class="py-1">{{ a.summary }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="text-xs text-muted-foreground print:hidden">
       Gamma rays are at the start of the axis and ELF radio at the end. Band boundaries follow
       common conventions and broadcast allocations are United States allocations. The ionizing flag
       uses an approximate 10 eV threshold. Everything runs in your browser: your files and inputs

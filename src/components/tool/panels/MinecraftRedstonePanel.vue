@@ -46,6 +46,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Segmented } from "@/components/ui/segmented";
 import type { SegmentedOption } from "@/components/ui/segmented";
 import OutputView from "../OutputView.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 defineProps<{ meta: ToolMeta }>();
 
@@ -779,16 +780,11 @@ onMounted(() => {
 
           <!-- results -->
           <div class="flex flex-col gap-3">
-            <div
+            <ErrorBanner
               v-if="conversion.error"
-              class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
-              role="alert"
-            >
-              <p class="font-medium">{{ conversion.error.message }}</p>
-              <p v-if="conversion.error.fix" class="text-muted-foreground">
-                {{ conversion.error.fix }}
-              </p>
-            </div>
+              :message="conversion.error.message"
+              :hint="conversion.error.fix"
+            />
             <div v-else aria-live="polite">
               <OutputView :output="conversionRows" />
             </div>
@@ -924,16 +920,11 @@ onMounted(() => {
             </div>
 
             <!-- plan detail -->
-            <div
+            <ErrorBanner
               v-if="!clockShown && delaySolution.error"
-              class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
-              role="alert"
-            >
-              <p class="font-medium">{{ delaySolution.error.message }}</p>
-              <p v-if="delaySolution.error.fix" class="text-muted-foreground">
-                {{ delaySolution.error.fix }}
-              </p>
-            </div>
+              :message="delaySolution.error.message"
+              :hint="delaySolution.error.fix"
+            />
             <div
               v-else-if="!clockShown && delaySolution.value"
               class="flex flex-col gap-2 rounded-[14px] bg-secondary p-3 shadow-[var(--sh-inset)]"
@@ -959,16 +950,11 @@ onMounted(() => {
               </p>
             </div>
 
-            <div
+            <ErrorBanner
               v-if="clockShown && clockSolution.error"
-              class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
-              role="alert"
-            >
-              <p class="font-medium">{{ clockSolution.error.message }}</p>
-              <p v-if="clockSolution.error.fix" class="text-muted-foreground">
-                {{ clockSolution.error.fix }}
-              </p>
-            </div>
+              :message="clockSolution.error.message"
+              :hint="clockSolution.error.fix"
+            />
             <div
               v-else-if="clockShown && shownClock"
               class="flex flex-col gap-2 rounded-[14px] bg-secondary p-3 shadow-[var(--sh-inset)]"
@@ -1064,16 +1050,11 @@ onMounted(() => {
           </div>
 
           <div class="flex flex-col gap-3">
-            <div
+            <ErrorBanner
               v-if="throughputResult.error"
-              class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
-              role="alert"
-            >
-              <p class="font-medium">{{ throughputResult.error.message }}</p>
-              <p v-if="throughputResult.error.fix" class="text-muted-foreground">
-                {{ throughputResult.error.fix }}
-              </p>
-            </div>
+              :message="throughputResult.error.message"
+              :hint="throughputResult.error.fix"
+            />
             <template v-else-if="throughputResult.rate && throughputResult.fill">
               <div class="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-live="polite">
                 <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
@@ -1222,16 +1203,11 @@ onMounted(() => {
           </div>
 
           <div class="flex flex-col gap-3">
-            <div
+            <ErrorBanner
               v-if="signalTable.error"
-              class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
-              role="alert"
-            >
-              <p class="font-medium">{{ signalTable.error.message }}</p>
-              <p v-if="signalTable.error.fix" class="text-muted-foreground">
-                {{ signalTable.error.fix }}
-              </p>
-            </div>
+              :message="signalTable.error.message"
+              :hint="signalTable.error.fix"
+            />
             <template v-else-if="signalTable.value">
               <div class="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-live="polite">
                 <div class="rounded-[10px] bg-secondary px-3 py-2 shadow-[var(--sh-inset)]">
@@ -1344,13 +1320,7 @@ onMounted(() => {
           </div>
 
           <div class="flex flex-col gap-3">
-            <div
-              v-if="referenceRows.error"
-              class="rounded-[10px] border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm"
-              role="alert"
-            >
-              <p class="font-medium">{{ referenceRows.error.message }}</p>
-            </div>
+            <ErrorBanner v-if="referenceRows.error" :message="referenceRows.error.message" />
             <div
               v-else
               class="max-h-[26rem] overflow-auto rounded-[10px] bg-secondary p-1 shadow-[var(--sh-inset)]"

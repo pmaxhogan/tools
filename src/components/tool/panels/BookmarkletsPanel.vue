@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronDown, GripVertical, MousePointer2 } from "lucide-vue-next";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 /**
  * Bespoke panel for the Bookmarklet Shelf.
@@ -197,14 +198,7 @@ onUnmounted(() => {
 
             <p class="text-sm text-muted-foreground">{{ link.entry.description }}</p>
 
-            <div
-              v-if="link.error"
-              role="alert"
-              class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-            >
-              <p class="font-medium text-destructive">{{ link.error.message }}</p>
-              <p v-if="link.error.fix" class="mt-1 text-muted-foreground">{{ link.error.fix }}</p>
-            </div>
+            <ErrorBanner v-if="link.error" :message="link.error.message" :hint="link.error.fix" />
 
             <div>
               <Button variant="ghost" size="sm" @click="link.open = !link.open">
@@ -218,8 +212,7 @@ onUnmounted(() => {
               <pre
                 v-if="link.open"
                 class="mt-2 overflow-x-auto rounded-[8px] bg-background p-3 font-mono text-xs shadow-[var(--sh-inset)]"
-              >{{ link.readable }}</pre
-              >
+                >{{ link.readable }}</pre>
             </div>
           </div>
         </div>
@@ -251,23 +244,17 @@ onUnmounted(() => {
             />
           </div>
 
-          <div
-            v-if="customError"
-            role="alert"
-            class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-          >
-            <p class="font-medium text-destructive">{{ customError.message }}</p>
-            <p v-if="customError.fix" class="mt-1 text-muted-foreground">{{ customError.fix }}</p>
-          </div>
+          <ErrorBanner v-if="customError" :message="customError.message" :hint="customError.fix" />
 
           <template v-if="customUrl">
             <div class="flex flex-col gap-1.5">
               <span class="text-xs text-muted-foreground">Bookmarklet URL</span>
-              <div class="flex items-start gap-2 rounded-[8px] bg-card p-2 shadow-[var(--sh-inset)]">
+              <div
+                class="flex items-start gap-2 rounded-[8px] bg-card p-2 shadow-[var(--sh-inset)]"
+              >
                 <pre
                   class="min-w-0 flex-1 overflow-x-auto font-mono text-xs break-all whitespace-pre-wrap"
-                >{{ customUrl }}</pre
-                >
+                  >{{ customUrl }}</pre>
                 <CopyButton :text="customUrl" label="Copy URL" />
               </div>
             </div>
@@ -306,22 +293,14 @@ onUnmounted(() => {
             />
           </div>
 
-          <div
-            v-if="decodeError"
-            role="alert"
-            class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-          >
-            <p class="font-medium text-destructive">{{ decodeError.message }}</p>
-            <p v-if="decodeError.fix" class="mt-1 text-muted-foreground">{{ decodeError.fix }}</p>
-          </div>
+          <ErrorBanner v-if="decodeError" :message="decodeError.message" :hint="decodeError.fix" />
 
           <div v-if="decodedSource" class="flex flex-col gap-1.5">
             <span class="text-xs text-muted-foreground">Decoded source</span>
             <div class="flex items-start gap-2 rounded-[8px] bg-card p-2 shadow-[var(--sh-inset)]">
-              <pre
-                class="min-w-0 flex-1 overflow-x-auto font-mono text-xs whitespace-pre-wrap"
-              >{{ decodedSource }}</pre
-              >
+              <pre class="min-w-0 flex-1 overflow-x-auto font-mono text-xs whitespace-pre-wrap">{{
+                decodedSource
+              }}</pre>
               <CopyButton :text="decodedSource" label="Copy source" />
             </div>
           </div>
@@ -330,7 +309,10 @@ onUnmounted(() => {
     </Tabs>
 
     <p class="text-xs text-muted-foreground">
-      {{ meta.privacyNote ?? "Every bookmarklet here runs entirely in your browser, so your files and inputs never leave your device." }}
+      {{
+        meta.privacyNote ??
+        "Every bookmarklet here runs entirely in your browser, so your files and inputs never leave your device."
+      }}
     </p>
   </div>
 </template>

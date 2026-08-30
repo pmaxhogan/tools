@@ -12,6 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 import InkCanvas from "../InkCanvas.vue";
 
 /**
@@ -104,10 +106,8 @@ const activeId = ref<number | null>(null);
 const operation = ref("merge");
 const busy = ref(false);
 const busyLabel = ref("");
-const dragging = ref(false);
 const error = ref<{ message: string; fix?: string } | null>(null);
 const results = ref<ResultFile[]>([]);
-const fileInput = ref<HTMLInputElement>();
 const logic = shallowRef<PdfLogic | null>(null);
 
 const stripThumbs = ref<PageThumb[]>([]);
@@ -425,16 +425,15 @@ async function addFiles(list: File[]) {
   }
 }
 
-function pdfsFrom(list: FileList | null | undefined): File[] {
+function pdfsFrom(list: readonly File[] | null | undefined): File[] {
   if (!list) return [];
   return [...list].filter(
     (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
   );
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const picked = pdfsFrom(e.dataTransfer?.files);
+function onFiles(list: File[]) {
+  const picked = pdfsFrom(list);
   if (picked.length === 0) {
     error.value = {
       message: "Nothing in that drop was a PDF file.",
@@ -443,15 +442,6 @@ function onDrop(e: DragEvent) {
     return;
   }
   void addFiles(picked);
-}
-
-function onPickFiles(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const picked = pdfsFrom(picker.files);
-  void addFiles(picked).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
 }
 
 function removeFile(id: number) {
@@ -485,7 +475,6 @@ function clearAll() {
   signStrokes.value = 0;
   typedName.value = "";
   signPage.value = 1;
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -752,7 +741,6 @@ const signFace = ref("script");
 const typedName = ref("");
 const signPad = ref<InstanceType<typeof InkCanvas>>();
 const signStrokes = ref(0);
-const signFileInput = ref<HTMLInputElement>();
 const signNote = ref("");
 
 /** The signature itself: one PNG or JPEG, whichever way it was made. */
@@ -900,10 +888,11 @@ async function refreshTypedSignature() {
 
 /* -- upload -- */
 
-async function onPickSignature(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  picker.value = "";
+function onSignatureFiles(list: File[]) {
+  void acceptSignature(list[0]);
+}
+
+async function acceptSignature(file: File | undefined) {
   if (!file) return;
   signNote.value = "";
   if (!/^image\/(png|jpeg)$/.test(file.type) && !/\.(png|jpe?g)$/i.test(file.name)) {
@@ -1177,132 +1166,115 @@ onUnmounted(() => {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      bare
+      multiple
+      accept="application/pdf,.pdf"
+      label="PDF files"
+      hint="Drop one or more PDF files here, or click to choose them"
+      @files="onFiles"
     >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          PDF files
-        </span>
-        <div class="flex items-center gap-1">
-          <Button v-if="files.length" variant="ghost" size="sm" @click="clearAll"> Clear </Button>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open files </Button>
-          <input
-            ref="fileInput"
-            type="file"
-            class="hidden"
-            accept="application/pdf,.pdf"
-            multiple
-            @change="onPickFiles"
-          />
+      <template #default="{ open }">
+        <div class="flex items-center justify-between px-3 pt-2">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            PDF files
+          </span>
+          <div class="flex items-center gap-1">
+            <Button v-if="files.length" variant="ghost" size="sm" @click="clearAll"> Clear </Button>
+            <Button variant="ghost" size="sm" @click="open"> Open files </Button>
+          </div>
         </div>
-      </div>
 
-      <p v-if="!files.length" class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
-        Drop one or more PDF files here, or pick them. Merging uses the order of this list, and
-        every other operation works on the file you select. Everything runs in this tab: your files
-        and inputs never leave your device.
-      </p>
+        <p v-if="!files.length" class="px-3 pt-1 pb-4 text-sm text-muted-foreground">
+          Drop one or more PDF files here, or click to choose them. Merging uses the order of this
+          list, and every other operation works on the file you select. Everything runs in this tab:
+          your files and inputs never leave your device.
+        </p>
 
-      <ul v-else class="divide-y divide-border/60">
-        <li v-for="(file, index) in files" :key="file.id" class="flex items-center gap-3 px-3 py-2">
-          <div
-            class="grid h-14 w-11 shrink-0 place-items-center overflow-hidden rounded-[4px] bg-background shadow-[var(--sh-inset)]"
+        <ul v-else class="divide-y divide-border/60">
+          <li
+            v-for="(file, index) in files"
+            :key="file.id"
+            class="flex items-center gap-3 px-3 py-2"
           >
-            <img
-              v-if="file.thumbUrl"
-              :src="file.thumbUrl"
-              :alt="`First page of ${file.name}`"
-              class="max-h-full max-w-full object-contain"
-            />
-            <span v-else class="font-mono text-[10px] text-muted-foreground">PDF</span>
-          </div>
+            <div
+              class="grid h-14 w-11 shrink-0 place-items-center overflow-hidden rounded-[4px] bg-background shadow-[var(--sh-inset)]"
+            >
+              <img
+                v-if="file.thumbUrl"
+                :src="file.thumbUrl"
+                :alt="`First page of ${file.name}`"
+                class="max-h-full max-w-full object-contain"
+              />
+              <span v-else class="font-mono text-[10px] text-muted-foreground">PDF</span>
+            </div>
 
-          <button
-            type="button"
-            class="min-w-0 flex-1 rounded-[6px] px-1 py-1 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            :aria-pressed="file.id === activeId"
-            :disabled="file.error !== null"
-            @click="activeId = file.id"
-          >
-            <span
-              class="block truncate text-sm"
-              :class="file.id === activeId ? 'font-semibold' : 'font-medium'"
+            <button
+              type="button"
+              class="min-w-0 flex-1 rounded-[6px] px-1 py-1 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              :aria-pressed="file.id === activeId"
+              :disabled="file.error !== null"
+              @click="activeId = file.id"
             >
-              {{ file.name }}
-            </span>
-            <span class="block font-mono text-xs text-muted-foreground tabular-nums">
-              <template v-if="file.error">Could not be read</template>
-              <template v-else>
-                {{ file.pageCount }} {{ file.pageCount === 1 ? "page" : "pages" }},
-                {{ formatBytes(file.size) }}
-                <template v-if="file.id === activeId"> (selected)</template>
-              </template>
-            </span>
-          </button>
+              <span
+                class="block truncate text-sm"
+                :class="file.id === activeId ? 'font-semibold' : 'font-medium'"
+              >
+                {{ file.name }}
+              </span>
+              <span class="block font-mono text-xs text-muted-foreground tabular-nums">
+                <template v-if="file.error">Could not be read</template>
+                <template v-else>
+                  {{ file.pageCount }} {{ file.pageCount === 1 ? "page" : "pages" }},
+                  {{ formatBytes(file.size) }}
+                  <template v-if="file.id === activeId"> (selected)</template>
+                </template>
+              </span>
+            </button>
 
-          <div class="flex shrink-0 items-center gap-0.5">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Move file up"
-              :disabled="index === 0"
-              @click="moveFile(index, -1)"
-            >
-              <ArrowUp class="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Move file down"
-              :disabled="index === files.length - 1"
-              @click="moveFile(index, 1)"
-            >
-              <ArrowDown class="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Remove file"
-              @click="removeFile(file.id)"
-            >
-              <X class="size-4" />
-            </Button>
-          </div>
-        </li>
-      </ul>
-    </div>
+            <div class="flex shrink-0 items-center gap-0.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Move file up"
+                :disabled="index === 0"
+                @click="moveFile(index, -1)"
+              >
+                <ArrowUp class="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Move file down"
+                :disabled="index === files.length - 1"
+                @click="moveFile(index, 1)"
+              >
+                <ArrowDown class="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Remove file"
+                @click="removeFile(file.id)"
+              >
+                <X class="size-4" />
+              </Button>
+            </div>
+          </li>
+        </ul>
+      </template>
+    </FileDrop>
 
     <!-- Per file problems, kept beside the list they belong to -->
-    <div
+    <ErrorBanner
       v-for="file in files.filter((f) => f.error !== null)"
       :key="`err-${file.id}`"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">{{ file.name }}: {{ file.error?.message }}</p>
-      <p v-if="file.error?.fix" class="mt-1 text-muted-foreground">
-        {{ file.error.fix }}
-      </p>
-    </div>
+      :message="`${file.name}: ${file.error?.message}`"
+      :hint="file.error?.fix"
+    />
 
     <!-- Operation errors -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <p v-if="busy" class="text-sm text-muted-foreground" aria-live="polite">{{ busyLabel }}.</p>
 
@@ -1780,18 +1752,14 @@ onUnmounted(() => {
               </template>
 
               <template v-else>
-                <div class="flex flex-wrap items-center gap-2">
-                  <Button variant="outline" size="sm" @click="signFileInput?.click()">
-                    Choose a signature image
-                  </Button>
-                  <input
-                    ref="signFileInput"
-                    type="file"
-                    class="hidden"
-                    accept="image/png,image/jpeg"
-                    @change="onPickSignature"
-                  />
-                </div>
+                <FileDrop
+                  compact
+                  accept="image/png,image/jpeg"
+                  label="Choose a signature image"
+                  hint="Drop a PNG or JPEG here, or click to choose one"
+                  :paste="false"
+                  @files="onSignatureFiles"
+                />
                 <p class="text-xs text-muted-foreground">
                   A PNG with a transparent background sits on the page cleanly. A JPEG works too,
                   but it carries its own white rectangle with it, which will cover whatever it is

@@ -5,6 +5,8 @@ import { PROBES, run } from "@/tools/browser-privacy-check/index";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Loader2, ShieldCheck, TriangleAlert, X } from "lucide-vue-next";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
 import CopyButton from "../CopyButton.vue";
 
@@ -479,8 +481,8 @@ const buttonLabel = computed(() => {
   <div class="flex flex-col gap-5 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <p class="text-xs text-muted-foreground">
-        Nothing runs until you press the button. Every probe below is collected and analyzed on
-        this device: your files and inputs never leave your device.
+        Nothing runs until you press the button. Every probe below is collected and analyzed on this
+        device: your files and inputs never leave your device.
       </p>
 
       <Button :disabled="running" @click="runCheck">
@@ -516,19 +518,22 @@ const buttonLabel = computed(() => {
           class="size-3 shrink-0 text-muted-foreground"
           aria-hidden="true"
         />
-        <span v-else class="size-2.5 shrink-0 rounded-full border border-input" aria-hidden="true" />
+        <span
+          v-else
+          class="size-2.5 shrink-0 rounded-full border border-input"
+          aria-hidden="true"
+        />
       </div>
     </div>
 
-    <p
+    <EmptyState
       v-if="!hasRun && !running"
-      class="rounded-[10px] bg-secondary p-4 text-sm text-muted-foreground shadow-[var(--sh-inset)]"
-    >
-      Nothing has run yet. Press "Run privacy check" to collect every probe below from this
-      browser and see what it reveals.
-    </p>
+      title="Nothing has run yet"
+      hint='Press "Run privacy check" to collect every probe below from this browser and see what it reveals.'
+      icon="ShieldCheck"
+    />
 
-    <p v-if="errorMessage" role="alert" class="text-xs text-destructive">{{ errorMessage }}</p>
+    <ErrorBanner v-if="errorMessage" :message="errorMessage" />
 
     <template v-if="hasRun && !running && output">
       <div
@@ -574,8 +579,7 @@ const buttonLabel = computed(() => {
 
       <p class="text-xs text-muted-foreground">
         The WebRTC probe opens a connection with no STUN server, so gathering candidates makes no
-        network request of its own. Every probe result stays in this page; nothing is sent
-        anywhere.
+        network request of its own. Every probe result stays in this page; nothing is sent anywhere.
       </p>
 
       <details class="rounded-[10px] bg-secondary p-4 shadow-[var(--sh-inset)]">
@@ -586,8 +590,7 @@ const buttonLabel = computed(() => {
           </div>
           <pre
             class="max-h-96 overflow-auto rounded-[10px] bg-card px-3 py-3 font-mono text-xs whitespace-pre-wrap shadow-[var(--sh-inset)]"
-            >{{ rawJson }}</pre
-          >
+            >{{ rawJson }}</pre>
         </div>
       </details>
     </template>

@@ -5,8 +5,11 @@ import { run } from "@/tools/totp-generator/index";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import CopyButton from "../CopyButton.vue";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 import KeyValueGrid from "../KeyValueGrid.vue";
 import OptionControl from "../OptionControl.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Bespoke panel for the TOTP generator: a live authenticator rather than the
@@ -192,73 +195,59 @@ const metaRows = computed(() => {
 
     <!-- the live code -->
     <div
+      v-if="groupedCode !== null"
       class="flex flex-col gap-4 rounded-[10px] bg-secondary p-5 shadow-[var(--sh-inset)] sm:p-6"
     >
-      <template v-if="groupedCode !== null">
-        <!-- Only the code itself is a live region: the countdown beside it
-             changes every tick and would be announced without end. -->
-        <div
-          class="flex flex-wrap items-center justify-between gap-3"
-          role="status"
-          aria-live="polite"
+      <!-- Only the code itself is a live region: the countdown beside it
+           changes every tick and would be announced without end. -->
+      <div
+        class="flex flex-wrap items-center justify-between gap-3"
+        role="status"
+        aria-live="polite"
+      >
+        <span
+          class="font-mono text-4xl leading-none font-semibold tracking-[0.06em] tabular-nums sm:text-5xl"
+          >{{ groupedCode }}</span
         >
-          <span
-            class="font-mono text-4xl leading-none font-semibold tracking-[0.06em] tabular-nums sm:text-5xl"
-            >{{ groupedCode }}</span
-          >
-          <CopyButton :text="plainCode" label="Copy code" />
-        </div>
+        <CopyButton :text="plainCode" label="Copy code" />
+      </div>
 
-        <div v-if="!isCounterBased" class="flex flex-col gap-1.5">
-          <div
-            class="h-1.5 w-full overflow-hidden rounded-full bg-border"
-            role="progressbar"
-            :aria-valuemin="0"
-            :aria-valuemax="effectivePeriod"
-            :aria-valuenow="validForSeconds ?? 0"
-            aria-label="Seconds until this code changes"
-          >
-            <div
-              class="h-full rounded-full transition-[width] duration-150 ease-out"
-              :class="isExpiring ? 'bg-destructive' : 'bg-primary'"
-              :style="{ width: `${remainingFraction * 100}%` }"
-            ></div>
-          </div>
-          <p class="text-xs" :class="isExpiring ? 'text-destructive' : 'text-muted-foreground'">
-            Valid for {{ validForSeconds ?? 0 }}s of {{ effectivePeriod }}s
-          </p>
-        </div>
+      <div v-if="!isCounterBased" class="flex flex-col gap-1.5">
+        <ProgressBar
+          size="sm"
+          :value="remainingFraction * 100"
+          :tone="isExpiring ? 'destructive' : 'brand'"
+          aria-label="Seconds until this code changes"
+        />
+        <p class="text-xs" :class="isExpiring ? 'text-destructive' : 'text-muted-foreground'">
+          Valid for {{ validForSeconds ?? 0 }}s of {{ effectivePeriod }}s
+        </p>
+      </div>
 
-        <div class="grid gap-3 sm:grid-cols-2">
-          <!-- Both branches return codes here: for HOTP they are the codes at
+      <div class="grid gap-3 sm:grid-cols-2">
+        <!-- Both branches return codes here: for HOTP they are the codes at
                the counter either side, and the counter itself is a metadata row. -->
-          <div class="flex flex-col gap-0.5">
-            <span class="text-xs text-muted-foreground">Previous code</span>
-            <span class="font-mono text-sm tabular-nums">{{ result?.["Previous"] }}</span>
-          </div>
-          <div class="flex flex-col gap-0.5">
-            <span class="text-xs text-muted-foreground">Next code</span>
-            <span class="font-mono text-sm tabular-nums">{{ result?.["Next"] }}</span>
-          </div>
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs text-muted-foreground">Previous code</span>
+          <span class="font-mono text-sm tabular-nums">{{ result?.["Previous"] }}</span>
         </div>
-      </template>
-
-      <p v-else-if="error === null" class="text-sm text-muted-foreground">
-        Paste a Base32 secret or an otpauth:// URI to start generating codes.
-      </p>
-
-      <p v-else class="text-sm text-muted-foreground">No code yet.</p>
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs text-muted-foreground">Next code</span>
+          <span class="font-mono text-sm tabular-nums">{{ result?.["Next"] }}</span>
+        </div>
+      </div>
     </div>
+
+    <EmptyState
+      v-else-if="error === null"
+      title="No code yet"
+      hint="Paste a Base32 secret or an otpauth:// URI to start generating codes."
+    />
+
+    <EmptyState v-else title="No code yet" />
 
     <!-- error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">{{ error.message }}</p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">{{ error.fix }}</p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <!-- metadata -->
     <KeyValueGrid :rows="metaRows" surface="card" :copy="false" />

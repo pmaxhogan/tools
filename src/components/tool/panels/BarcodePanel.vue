@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import OptionControl from "../OptionControl.vue";
 import CopyButton from "../CopyButton.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 /**
  * Bespoke panel for the barcode generator, sibling to QrPanel. The generic
@@ -158,7 +159,10 @@ const result = computed<BarcodeResult>(() => {
       .filter(Boolean);
     if (values.length === 0) return { svg: null, warnings: [], error: null, used: 0, capacity };
 
-    const perLine = values.map((value) => ({ value, encoded: encode(value, symbology, encodeOptions) }));
+    const perLine = values.map((value) => ({
+      value,
+      encoded: encode(value, symbology, encodeOptions),
+    }));
     const printList: EncodedBarcode[] = [];
     for (const { encoded } of perLine) {
       for (let i = 0; i < copiesValue.value; i++) printList.push(encoded);
@@ -326,18 +330,7 @@ function printOutput() {
       </div>
 
       <div class="flex flex-col gap-3">
-        <div
-          v-if="result.error"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-medium text-destructive">
-            {{ result.error.message }}
-          </p>
-          <p v-if="result.error.fix" class="mt-1 text-muted-foreground">
-            {{ result.error.fix }}
-          </p>
-        </div>
+        <ErrorBanner v-if="result.error" :message="result.error.message" :hint="result.error.fix" />
 
         <!-- The well stays white in both themes: a barcode reader needs
              reliable light on dark contrast, which a dark mode surface would

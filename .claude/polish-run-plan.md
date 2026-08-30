@@ -155,7 +155,7 @@ Wave 1 (parallel, disjoint files):
 
 ## Progress
 
-- [ ] Wave 1 built
+- [x] Wave 1 built (aa190f7): 8973 tests, 213 pages, all gates green
 - [ ] Wave 1 pushed + CI green + QA
 - [ ] Wave 2 migration (6 partitions + shells)
 - [ ] Wave 2 pushed + QA
@@ -164,3 +164,13 @@ Wave 1 (parallel, disjoint files):
 - [ ] Wave 4+ new tools by category
 - [ ] Perf pass
 - [ ] Final: memory, report artifact, gallery artifact, notification
+
+## QA findings log
+
+Wave 1 live QA (headless /browse, claude-in-chrome extension was not connected):
+- [ ] FavoriteButton: no toast on toggle (add "Added to favorites"/"Removed from favorites")
+- [ ] ToolShell Ctrl+Shift+C: copy runs but no toast (route through copyText; verify in real Chrome)
+- [ ] ToolShell "Try a sample" for binary file tools (wasm-inspector, uf2-inspector): fetched bytes never reach run(), empty-input error shown
+- [ ] related-tools: small categories padded with unrelated fillers (molar-mass got print-cost + minecraft); only pad past category matches when overlap score > 0, min 3
+- [ ] NEEDS MAX: static.cloudflareinsights.com/beacon.min.js is injected on every page (Cloudflare Web Analytics zone toggle, pre-existing). Violates hard rule 2; disable in the Cloudflare dashboard (Analytics > Web Analytics, or the zone's "Automatic setup").
+- (by design) sidebar search filters the sidebar only; palette needs two Esc when a query is typed.

@@ -697,7 +697,7 @@ export interface Interpretation {
   /** Stable key for v-for. */
   id: string;
   /** What kind of reading produced this candidate. */
-  kind: "frequency" | "wavelength" | "energy" | "band" | "wifi" | "channel";
+  kind: "frequency" | "wavelength" | "energy" | "band" | "wifi" | "channel" | "allocation" | "plan";
   /** Primary label, for example "2.462 GHz" or "VHF". */
   label: string;
   /** Secondary line, for example a band path or the channel width. */
@@ -708,6 +708,10 @@ export interface Interpretation {
   rangeHz?: [number, number];
   /** Optional lucide-vue-next icon name. */
   icon?: string;
+  /** Set on "allocation" candidates: the allocation row id to select. */
+  allocationId?: string;
+  /** Set on "plan" candidates: the channel table id the channel came from. */
+  tableId?: string;
 }
 
 /** How many candidates the dropdown holds before the list is cut. */

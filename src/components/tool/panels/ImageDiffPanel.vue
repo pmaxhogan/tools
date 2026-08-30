@@ -27,6 +27,8 @@ import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Slider } from "@/components/ui/slider";
 import OutputView from "../OutputView.vue";
+import FileDrop from "../FileDrop.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 /**
  * Bespoke panel for the Perceptual Image Diff.
@@ -123,9 +125,7 @@ interface Slot {
 }
 
 const files = ref<Record<Zone, Slot | null>>({ before: null, after: null });
-const dragging = ref<Zone | null>(null);
 /** Which zone a paste lands in: whichever one was touched last. */
-const lastZone = ref<Zone>("before");
 
 const threshold = ref(T_DEFAULT);
 const includeAA = ref(AA_DEFAULT);
@@ -144,7 +144,6 @@ const stage = ref("");
 const ready = ref(false);
 const error = ref<{ message: string; fix?: string } | null>(null);
 
-const fileInput = ref<HTMLInputElement>();
 const diffCanvas = ref<HTMLCanvasElement>();
 const beforeCanvas = ref<HTMLCanvasElement>();
 const afterCanvas = ref<HTMLCanvasElement>();
@@ -254,38 +253,11 @@ async function acceptFile(zone: Zone, file: File | null | undefined) {
   void compare();
 }
 
-function pick(zone: Zone) {
-  lastZone.value = zone;
-  fileInput.value?.click();
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  void acceptFile(lastZone.value, picker.files?.[0]);
-  picker.value = "";
-}
-
-function onDrop(zone: Zone, e: DragEvent) {
-  dragging.value = null;
-  lastZone.value = zone;
-  void acceptFile(zone, e.dataTransfer?.files[0]);
-}
-
-/** A pasted screenshot lands in whichever zone was touched last. */
-function onPaste(e: ClipboardEvent) {
-  const items = e.clipboardData?.items;
-  if (!items) return;
-  for (let i = 0; i < items.length; i += 1) {
-    const item = items[i];
-    if (item && item.kind === "file" && item.type.startsWith("image/")) {
-      const file = item.getAsFile();
-      if (file) {
-        e.preventDefault();
-        void acceptFile(lastZone.value, file);
-        return;
-      }
-    }
-  }
+/* Drop, pick and paste all arrive here, one zone at a time. FileDrop owns the
+   single document paste listener for the page and hands the files to the zone
+   focus is inside, so a pasted screenshot still lands where the user is. */
+function onFiles(zone: Zone, files: File[]) {
+  void acceptFile(zone, files[0]);
 }
 
 /* ------------------------------------------------------------------ *
@@ -516,13 +488,11 @@ onMounted(() => {
   if (state.opts["includeAA"] === "true") includeAA.value = true;
   const v = state.opts["view"];
   if (v === "diff" || v === "ssim" || v === "both") view.value = v;
-  window.addEventListener("paste", onPaste);
 });
 
 onUnmounted(() => {
   clearTimeout(debounceTimer);
   seq += 1;
-  window.removeEventListener("paste", onPaste);
   releaseZone("before");
   releaseZone("after");
   lastDiff = null;
@@ -535,49 +505,50 @@ onUnmounted(() => {
   <div class="flex flex-col gap-5 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- the pair of drop zones -->
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <div
+      <FileDrop
         v-for="zone in ZONES"
         :key="zone.key"
-        class="flex flex-col gap-2 rounded-[10px] bg-secondary p-3 shadow-[var(--sh-inset)]"
-        :class="dragging === zone.key ? 'ring-2 ring-ring' : ''"
-        @click="lastZone = zone.key"
-        @dragover.prevent="dragging = zone.key"
-        @dragleave="dragging = null"
-        @drop.prevent="onDrop(zone.key, $event)"
+        accept="image/*"
+        bare
+        :label="zone.label"
+        :hint="`${zone.hint} Drop it here, paste it, or pick a file.`"
+        @files="(files: File[]) => onFiles(zone.key, files)"
       >
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            {{ zone.label }}
-          </span>
-          <Button variant="ghost" size="sm" @click="pick(zone.key)"> Open file… </Button>
-        </div>
+        <template #default="{ open }">
+          <div class="flex flex-col gap-2 p-3">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+                {{ zone.label }}
+              </span>
+              <Button variant="ghost" size="sm" @click="open"> Open file… </Button>
+            </div>
 
-        <div v-if="files[zone.key]" class="flex items-start gap-3">
-          <img
-            :src="files[zone.key]?.url"
-            :alt="`${zone.label} image thumbnail`"
-            class="h-16 w-16 rounded-[8px] border bg-card object-contain"
-          />
-          <div class="flex min-w-0 flex-col gap-0.5">
-            <span class="truncate font-mono text-xs" :title="files[zone.key]?.name">
-              {{ files[zone.key]?.name }}
-            </span>
-            <span class="text-xs text-muted-foreground tabular-nums">
-              {{ files[zone.key]?.width }} by {{ files[zone.key]?.height }} pixels
-            </span>
-            <span class="text-xs text-muted-foreground tabular-nums">
-              {{ formatBytes(files[zone.key]?.size ?? 0) }}
-            </span>
+            <div v-if="files[zone.key]" class="flex items-start gap-3">
+              <img
+                :src="files[zone.key]?.url"
+                :alt="`${zone.label} image thumbnail`"
+                class="h-16 w-16 rounded-[8px] border bg-card object-contain"
+              />
+              <div class="flex min-w-0 flex-col gap-0.5">
+                <span class="truncate font-mono text-xs" :title="files[zone.key]?.name">
+                  {{ files[zone.key]?.name }}
+                </span>
+                <span class="text-xs text-muted-foreground tabular-nums">
+                  {{ files[zone.key]?.width }} by {{ files[zone.key]?.height }} pixels
+                </span>
+                <span class="text-xs text-muted-foreground tabular-nums">
+                  {{ formatBytes(files[zone.key]?.size ?? 0) }}
+                </span>
+              </div>
+            </div>
+
+            <p v-else class="text-sm text-muted-foreground">
+              {{ zone.hint }} Drop it here, paste it, or pick a file.
+            </p>
           </div>
-        </div>
-
-        <p v-else class="text-sm text-muted-foreground">
-          {{ zone.hint }} Drop it here, paste it, or pick a file.
-        </p>
-      </div>
+        </template>
+      </FileDrop>
     </div>
-
-    <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="onPickFile" />
 
     <!-- options -->
     <div class="flex flex-wrap items-end gap-4">
@@ -627,14 +598,7 @@ onUnmounted(() => {
     </div>
 
     <!-- error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-    >
-      <span class="font-semibold text-destructive">{{ error.message }}</span>
-      <span v-if="error.fix" class="text-muted-foreground">{{ error.fix }}</span>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <!-- status -->
     <div v-if="processing" role="status" class="text-xs text-muted-foreground">

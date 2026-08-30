@@ -6,6 +6,8 @@ import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";
 import { copyText } from "@/lib/clipboard";
 import type { KeyValueRow } from "@/lib/key-value";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 import KeyValueGrid from "../KeyValueGrid.vue";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -80,9 +82,7 @@ const page = ref(0);
 const pageSize = ref(100);
 
 const error = ref<{ message: string; fix?: string } | null>(null);
-const dragging = ref(false);
 const busy = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
 const statsColumn = ref<string | null>(null);
 const copiedKey = ref<string | null>(null);
@@ -209,20 +209,10 @@ async function openFile(file: File) {
   }
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
-  if (file) openFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  openFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+/** Drop, picker, keyboard, clipboard paste, and the carry chip all land here. */
+function onFiles(files: File[]) {
+  const file = files[0];
+  if (file) void openFile(file);
 }
 
 function clearFile() {
@@ -232,7 +222,6 @@ function clearFile() {
   fileSize.value = 0;
   error.value = null;
   busy.value = false;
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -384,74 +373,37 @@ function exportCsv() {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
+    <FileDrop
+      accept=".parquet,.parq,.pq"
+      label="Drop a .parquet file here or click to choose"
+      hint="The reader is JavaScript running in this tab: your files and inputs never leave your device. Only the rows you ask for are decoded, so a file with millions of rows still opens quickly. Files up to 200 MB are accepted."
+      @files="onFiles"
     >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Parquet file
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()">
-          Open a .parquet file…
-        </Button>
-        <input
-          ref="fileInput"
-          type="file"
-          accept=".parquet,.parq,.pq"
-          class="hidden"
-          @change="onPickFile"
-        />
-      </div>
-
-      <div v-if="info" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
-          <button
-            type="button"
-            aria-label="Close this file"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearFile"
+      <template v-if="info" #default>
+        <div class="flex justify-center">
+          <span
+            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
-            <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
-
-      <div v-else class="px-3 pt-1 pb-3">
-        <p class="text-sm text-muted-foreground">
-          Drop a .parquet file here, or use the button above. The reader is JavaScript running in
-          this tab: your files and inputs never leave your device.
-        </p>
-        <p class="mt-2 text-xs text-muted-foreground">
-          Only the rows you ask for are decoded, so a file with millions of rows still opens
-          quickly. Files up to 200 MB are accepted.
-        </p>
-      </div>
-    </div>
+            <span class="truncate font-medium">{{ fileName }}</span>
+            <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
+            <button
+              type="button"
+              aria-label="Close this file"
+              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+              @click="clearFile"
+            >
+              <X class="size-3.5" />
+            </button>
+          </span>
+        </div>
+      </template>
+    </FileDrop>
 
     <p v-if="busy && !info" class="text-xs text-muted-foreground">Reading the file…</p>
     <p v-else-if="busy" class="text-xs text-muted-foreground">Decoding rows…</p>
 
     <!-- Errors -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <template v-if="info">
       <!-- File header -->

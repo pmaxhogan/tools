@@ -1,0 +1,44 @@
+prepare 25248 rows: 44.3ms
+sulfuric acid      7.5ms  Sulfonated phenolics/sulfuric acid[name:700], Chlorosulfuric acid[name:620], Fluorosulfuric acid[name:620], Disulfuric acid[name:620], Nitrosylsulfuric acid[name:620]
+water              2.6ms  Water blue[name:800], Properties of water[name:620], Heavy water[name:620], Semiheavy water[name:620], Tritiated water[name:620]
+table salt        15.2ms  (none)
+sodium chloride    17.8ms  Sodium chlorite[fuzzy:190], Sodium chlorate[fuzzy:180], Radium chloride[fuzzy:180], Barium chloride[fuzzy:170], Cadmium chloride[fuzzy:170]
+ethanol            1.5ms  Ethanolamine[name:800], Ethanolamine-O-sulfate[name:800], Methanol[name:620], Phenoxyethanol[name:620], 2-Butoxyethanol[name:620]
+acetylsalicylic acid    11.3ms  Acetylsalicylic acid/dipyridamole[name:800]
+acetone            2.3ms  Acetone[name:1000], Acetone azine[name:800], Acetone oxime[name:800], Acetone cyanohydrin[name:800], Acetone imine[name:800]
+h2so4              3.1ms  Sulfonated phenolics/sulfuric acid[formula:600]
+O4SH2              5.4ms  Sulfonated phenolics/sulfuric acid[formula:580]
+67-64-1            8.6ms  Acetone[cas:560], Gadolinium(III) oxalate[cas:420]
+7664               5.4ms  Ammonia[cas:420], Phosphoric acid[cas:420], Hydrofluoric acid[cas:420], Sulfonated phenolics/sulfuric acid[cas:420], Noroxycodone[cas:420]
+mass:98-99         7.2ms  Phosgene[mass:300], Cycloheptane[mass:300], Cyclohexanone[mass:300], Triethylborane[mass:300], Furfuryl alcohol[mass:300]
+180.16             7.5ms  Fluorenone[mass:300], (E)-Stilbene[mass:300], Caffeic acid[mass:300], Propylparaben[mass:300], 1D-chiro-Inositol[mass:300]
+acetne             4.1ms  Acetone[fuzzy:190]
+ibuprofn           5.9ms  Ibuprofen[fuzzy:190]
+sodium chlor      13.9ms  Sodium chlorate[name:800], Sodium chlorite[name:800], Sodium chloroacetate[name:800], Sodium chlorodifluoroacetate[name:800], Sodium silox[fuzzy:170]
+caffeine           1.6ms  Caffeine[name:1000], Caffeine citrate[name:800], 8-Bromocaffeine[name:620], D9-Caffeine[name:620], Ergotamine/caffeine[name:620]
+zzzzzzq            2.6ms  (none)
+a                  4.2ms  Aurin[name:800], Aldrin[name:800], Alliin[name:800], Arsine[name:800], Acetone[name:800]
+{
+  "Name": "Acetone",
+  "Also known as": "propan-2-one, 2-Propanone, Acetonum, Dimethyl ketone, Dimethyl carbonyl, Ketone propane, β-Ketopropane, Propanone, Pyroacetic spirit (archaic), Spirit of Saturn (archaic)",
+  "Formula": "C3H6O",
+  "Molar mass": "58.08 g/mol",
+  "Exact mass": "58.041864811 g/mol",
+  "CAS number": "67-64-1",
+  "PubChem CID": "180",
+  "Density": "0.7845 g/cm^3 (25 °C)",
+  "Melting point": "-94.9 °C",
+  "Boiling point": "56.08 °C",
+  "Flash point": "-20 °C",
+  "NFPA 704": "Health 1, Fire 3, Instability 0 (Wikipedia)",
+  "GHS signal word": "Danger",
+  "GHS pictograms": "GHS02 Flame, GHS07 Exclamation Mark",
+  "GHS hazard statements": "H225 Highly Flammable liquid and vapor; H319 Causes serious eye irritation; H336 May cause drowsiness or dizziness",
+  "GHS precautionary statements": "P210 Keep away from heat, hot surface, sparks, open flames and other ignition sources. No smoking.; P233 Keep container tightly closed.; P240 Ground/bond container and receiving equipment.; P241 Use explosion-proof [electrical/ventilating/lighting/.../] equipment.; P242 Use only non-sparking tools.; P243 Take precautionary measures against static discharge.; P261 Avoid breathing dust/fume/gas/mist/vapors/spray.; P264+P265 Wash hands [and ...] thoroughly after handling. Do not touch eyes.; P271 Use only outdoors or in a well-ventilated area.; P280 Wear protective gloves/protective clothing/eye protection/face protection/hearing protection/...; P303+P361+P353 IF ON SKIN (or hair): Take off Immediately all contaminated clothing. Rinse SKIN with water [or shower].; P304+P340 IF INHALED: Remove person to fresh air and keep comfortable for breathing.; P305+P351+P338 IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses if present and easy to do - continue rinsing.; P319 Get medical help if you feel unwell.; P337+P317 If eye irritation persists: Get medical help.; P370+P378 In case of fire: Use ... to extinguish.; P403+P233 Store in a well-ventilated place. Keep container tightly closed.; P403+P235 Store in a well-ventilated place. Keep cool.; P405 Store locked up.; P501 Dispose of contents/container to ...",
+  "Description": "Acetone is an organic compound with the formula 2CO.",
+  "Attribution": "Text from Wikipedia: Acetone, CC BY-SA 4.0",
+  "Wikipedia": "https://en.wikipedia.org/wiki/Acetone",
+  "PubChem": "https://pubchem.ncbi.nlm.nih.gov/compound/180",
+  "Sources": "PubChem (public domain, US National Library of Medicine) and English Wikipedia (CC BY-SA 4.0), credited by the article link above.",
+  "Note": "Reference only. Nothing here is a basis for a workplace safety decision. Verify every rating against the safety data sheet, NFPA 704 itself, and the authority having jurisdiction."
+}

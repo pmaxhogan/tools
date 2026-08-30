@@ -8,6 +8,8 @@ import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import ErrorBanner from "../ErrorBanner.vue";
+import FileDrop from "../FileDrop.vue";
 
 /**
  * Bespoke panel for the SQLite browser. The generic ToolShell has no vocabulary
@@ -67,10 +69,8 @@ const pageSize = ref<string | null>(null);
 const encoding = ref<string | null>(null);
 
 const error = ref<{ message: string; fix?: string } | null>(null);
-const dragging = ref(false);
 const busy = ref(false);
 const dirty = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
 const selected = ref("");
 const selectedIsView = ref(false);
@@ -206,20 +206,9 @@ async function readFile(file: File) {
   await openBytes(new Uint8Array(buffer), file.name, file.size);
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const file = e.dataTransfer?.files[0];
-  if (file) readFile(file);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const file = picker.files?.[0];
-  if (!file) return;
-  readFile(file).then(() => {
-    // Reset so picking the same file again still fires a change event.
-    picker.value = "";
-  });
+function onFiles(files: File[]) {
+  const file = files[0];
+  if (file) void readFile(file);
 }
 
 function clearFile() {
@@ -229,7 +218,6 @@ function clearFile() {
   fileSize.value = 0;
   sqlText.value = "";
   error.value = null;
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* ---------------------------------------------------------------- */
@@ -409,67 +397,49 @@ function exportCsv(pane: Pane) {
 <template>
   <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
     <!-- Input -->
-    <div
-      class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-      :class="dragging ? 'ring-2 ring-ring' : ''"
-      @dragover.prevent="dragging = true"
-      @dragleave="dragging = false"
-      @drop.prevent="onDrop"
-    >
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-          Database
-        </span>
-        <Button variant="ghost" size="sm" @click="fileInput?.click()">
-          Open a database file…
-        </Button>
-        <input ref="fileInput" type="file" class="hidden" @change="onPickFile" />
-      </div>
+    <FileDrop @files="onFiles">
+      <template #default="{ open }">
+        <div class="flex items-center justify-between pb-1">
+          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Database
+          </span>
+          <Button variant="ghost" size="sm" @click="open"> Open a database file… </Button>
+        </div>
 
-      <div v-if="db" class="px-3 pt-2 pb-3">
-        <span
-          class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-        >
-          <span class="truncate font-medium">{{ fileName }}</span>
-          <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
-          <button
-            type="button"
-            aria-label="Close this database"
-            class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            @click="clearFile"
+        <div v-if="db">
+          <span
+            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
           >
-            <X class="size-3.5" />
-          </button>
-        </span>
-      </div>
+            <span class="truncate font-medium">{{ fileName }}</span>
+            <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
+            <button
+              type="button"
+              aria-label="Close this database"
+              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+              @click="clearFile"
+            >
+              <X class="size-3.5" />
+            </button>
+          </span>
+        </div>
 
-      <div v-else class="px-3 pt-1 pb-3">
-        <p class="text-sm text-muted-foreground">
-          Drop a .db, .sqlite or .sqlite3 file here, or use the button above. SQLite is compiled to
-          WebAssembly and runs in this tab: your files and inputs never leave your device.
-        </p>
-        <p class="mt-2 text-xs text-muted-foreground">
-          The whole file is held in memory, so a database of a few hundred megabytes or more will
-          make this tab struggle. For those, a desktop client is the better tool.
-        </p>
-      </div>
-    </div>
+        <div v-else>
+          <p class="text-sm text-muted-foreground">
+            Drop a .db, .sqlite or .sqlite3 file here, or click to choose one. SQLite is compiled to
+            WebAssembly and runs in this tab: your files and inputs never leave your device.
+          </p>
+          <p class="mt-2 text-xs text-muted-foreground">
+            The whole file is held in memory, so a database of a few hundred megabytes or more will
+            make this tab struggle. For those, a desktop client is the better tool.
+          </p>
+        </div>
+      </template>
+    </FileDrop>
 
     <p v-if="busy" class="text-xs text-muted-foreground">Opening the database…</p>
 
     <!-- Errors -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ error.message }}
-      </p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">
-        {{ error.fix }}
-      </p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <template v-if="db && info">
       <!-- Header facts -->
@@ -706,18 +676,12 @@ function exportCsv(pane: Pane) {
           </p>
         </div>
 
-        <div
+        <ErrorBanner
           v-if="sqlError"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-        >
-          <p class="font-mono text-destructive">
-            {{ sqlError }}
-          </p>
-          <p class="mt-1 text-xs text-muted-foreground">
-            That is SQLite's own message, passed through unchanged.
-          </p>
-        </div>
+          mono
+          :message="sqlError"
+          hint="That is SQLite's own message, passed through unchanged."
+        />
 
         <div v-for="pane in sqlPanes" :key="pane.key" class="flex flex-col gap-2">
           <div class="flex flex-wrap items-center justify-between gap-2">

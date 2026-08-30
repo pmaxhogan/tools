@@ -33,6 +33,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import CopyButton from "../CopyButton.vue";
+import FileDrop from "../FileDrop.vue";
+import ErrorBanner from "../ErrorBanner.vue";
+import ProgressBar from "../ProgressBar.vue";
 
 /**
  * Local File Drop: the live surface.
@@ -106,8 +109,6 @@ const security = ref<string>("");
 const peerName = ref<string>("");
 const error = ref<UiError | null>(null);
 const notice = ref<string>("");
-const dragging = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
 const outgoing = ref<OutgoingBatch | null>(null);
 const incoming = ref<IncomingBatch | null>(null);
@@ -532,16 +533,7 @@ function newRoom() {
 /* sending                                                          */
 /* ---------------------------------------------------------------- */
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const files = Array.from(e.dataTransfer?.files ?? []);
-  if (files.length) offerFiles(files);
-}
-
-function onPickFiles(e: Event) {
-  const input = e.target as HTMLInputElement;
-  const files = Array.from(input.files ?? []);
-  input.value = "";
+function onFiles(files: File[]) {
   if (files.length) offerFiles(files);
 }
 
@@ -848,14 +840,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Errors -->
-    <div
-      v-if="error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">{{ error.message }}</p>
-      <p v-if="error.fix" class="mt-1 text-muted-foreground">{{ error.fix }}</p>
-    </div>
+    <ErrorBanner v-if="error" :message="error.message" :hint="error.fix" />
 
     <!-- Landing: create or join -->
     <div v-if="phase === 'idle'" class="grid gap-4 sm:grid-cols-2">
@@ -972,29 +957,30 @@ onUnmounted(() => {
 
     <!-- Connected: send surface -->
     <template v-if="connected">
-      <div
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-        :class="dragging ? 'ring-2 ring-ring' : ''"
-        @dragover.prevent="dragging = true"
-        @dragleave="dragging = false"
-        @drop.prevent="onDrop"
+      <FileDrop
+        multiple
+        bare
+        label="Send files"
+        hint="Drop files here or pick them. They stream straight to the other device over the encrypted WebRTC channel; nothing is uploaded anywhere."
+        @files="onFiles"
       >
-        <div class="flex items-center justify-between px-3 pt-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            Send files
-          </span>
-          <Button variant="ghost" size="sm" :disabled="busySending" @click="fileInput?.click()">
-            Choose files…
-          </Button>
-          <input ref="fileInput" type="file" class="hidden" multiple @change="onPickFiles" />
-        </div>
-        <div class="px-3 pt-1 pb-4">
-          <p class="text-sm text-muted-foreground">
-            Drop files here or pick them. They stream straight to the other device over the
-            encrypted WebRTC channel; nothing is uploaded anywhere.
-          </p>
-        </div>
-      </div>
+        <template #default="{ open }">
+          <div class="flex items-center justify-between px-3 pt-2">
+            <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+              Send files
+            </span>
+            <Button variant="ghost" size="sm" :disabled="busySending" @click="open">
+              Choose files…
+            </Button>
+          </div>
+          <div class="px-3 pt-1 pb-4">
+            <p class="text-sm text-muted-foreground">
+              Drop files here or pick them. They stream straight to the other device over the
+              encrypted WebRTC channel; nothing is uploaded anywhere.
+            </p>
+          </div>
+        </template>
+      </FileDrop>
 
       <!-- Outgoing batch -->
       <div
@@ -1035,18 +1021,7 @@ onUnmounted(() => {
           </Button>
         </div>
         <template v-if="outProgress">
-          <div
-            class="h-2 w-full overflow-hidden rounded-full bg-secondary"
-            role="progressbar"
-            :aria-valuenow="Math.round(outProgress.percent)"
-            aria-valuemin="0"
-            aria-valuemax="100"
-          >
-            <div
-              class="h-full rounded-full bg-primary transition-[width] duration-200"
-              :style="{ width: `${outProgress.percent}%` }"
-            />
-          </div>
+          <ProgressBar :value="outProgress.percent" aria-label="Sending progress" />
           <p class="text-xs text-muted-foreground">
             {{ outProgress.label }}
             <template v-if="outProgress.rateLabel"> · {{ outProgress.rateLabel }}</template>
@@ -1111,18 +1086,7 @@ onUnmounted(() => {
           </li>
         </ul>
         <template v-if="inProgress">
-          <div
-            class="h-2 w-full overflow-hidden rounded-full bg-secondary"
-            role="progressbar"
-            :aria-valuenow="Math.round(inProgress.percent)"
-            aria-valuemin="0"
-            aria-valuemax="100"
-          >
-            <div
-              class="h-full rounded-full bg-primary transition-[width] duration-200"
-              :style="{ width: `${inProgress.percent}%` }"
-            />
-          </div>
+          <ProgressBar :value="inProgress.percent" aria-label="Receiving progress" />
           <p class="text-xs text-muted-foreground">
             {{ inProgress.label }}
             <template v-if="inProgress.rateLabel"> · {{ inProgress.rateLabel }}</template>

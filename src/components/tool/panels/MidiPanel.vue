@@ -11,6 +11,8 @@ import type { SegmentedOption } from "@/components/ui/segmented";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import CopyButton from "@/components/tool/CopyButton.vue";
+import ErrorBanner from "@/components/tool/ErrorBanner.vue";
+import FileDrop from "@/components/tool/FileDrop.vue";
 import {
   applyControlMeter,
   controllerName,
@@ -95,8 +97,6 @@ const fileName = ref("");
 const fileSize = ref(0);
 const file = shallowRef<MidiFile | null>(null);
 const fileError = ref<{ message: string; fix?: string } | null>(null);
-const dragging = ref(false);
-const fileInput = ref<HTMLInputElement>();
 const middleC = ref("4");
 const selectedTrack = ref(0);
 
@@ -127,19 +127,9 @@ async function readFile(picked: File) {
   }
 }
 
-function onDrop(e: DragEvent) {
-  dragging.value = false;
-  const picked = e.dataTransfer?.files[0];
+function onFiles(files: File[]) {
+  const picked = files[0];
   if (picked) void readFile(picked);
-}
-
-function onPickFile(e: Event) {
-  const picker = e.target as HTMLInputElement;
-  const picked = picker.files?.[0];
-  if (!picked) return;
-  void readFile(picked).then(() => {
-    picker.value = "";
-  });
 }
 
 function clearFile() {
@@ -147,7 +137,6 @@ function clearFile() {
   fileName.value = "";
   fileSize.value = 0;
   fileError.value = null;
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 /* derived summary ------------------------------------------------- */
@@ -579,64 +568,35 @@ onUnmounted(() => {
       class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6"
     >
       <!-- Input -->
-      <div
-        class="rounded-[10px] bg-secondary shadow-[var(--sh-inset)]"
-        :class="dragging ? 'ring-2 ring-ring' : ''"
-        @dragover.prevent="dragging = true"
-        @dragleave="dragging = false"
-        @drop.prevent="onDrop"
-      >
-        <div class="flex items-center justify-between px-3 pt-2">
-          <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            MIDI file
-          </span>
-          <Button variant="ghost" size="sm" @click="fileInput?.click()"> Open a .mid file… </Button>
-          <input
-            ref="fileInput"
-            type="file"
-            accept=".mid,.midi,audio/midi,audio/x-midi"
-            class="hidden"
-            @change="onPickFile"
-          />
-        </div>
-
-        <div v-if="file" class="px-3 pt-2 pb-3">
-          <span
-            class="inline-flex max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-1 pl-3 text-xs shadow-[var(--sh-sm)]"
-          >
-            <span class="truncate font-medium">{{ fileName }}</span>
-            <span class="shrink-0 text-muted-foreground">{{ formatBytes(fileSize) }}</span>
-            <button
-              type="button"
-              aria-label="Close this file"
-              class="grid size-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-              @click="clearFile"
-            >
+      <div class="flex flex-col gap-2">
+        <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+          MIDI file
+        </span>
+        <FileDrop
+          v-if="file"
+          compact
+          accept=".mid,.midi,audio/midi,audio/x-midi"
+          :label="fileName"
+          :hint="formatBytes(fileSize)"
+          @files="onFiles"
+        >
+          <template #actions>
+            <Button variant="ghost" size="icon-sm" aria-label="Close this file" @click="clearFile">
               <X class="size-3.5" />
-            </button>
-          </span>
-        </div>
-        <div v-else class="px-3 pt-1 pb-3">
-          <p class="text-sm text-muted-foreground">
-            Drop a .mid or .midi file here, or use the button above. The file is parsed in this tab:
-            your files and inputs never leave your device.
-          </p>
-        </div>
+            </Button>
+          </template>
+        </FileDrop>
+        <FileDrop
+          v-else
+          accept=".mid,.midi,audio/midi,audio/x-midi"
+          label="Drop a .mid or .midi file here or click to choose"
+          hint="The file is parsed in this tab: your files and inputs never leave your device."
+          @files="onFiles"
+        />
       </div>
 
       <!-- Error -->
-      <div
-        v-if="fileError"
-        role="alert"
-        class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-      >
-        <p class="font-medium text-destructive">
-          {{ fileError.message }}
-        </p>
-        <p v-if="fileError.fix" class="mt-1 text-muted-foreground">
-          {{ fileError.fix }}
-        </p>
-      </div>
+      <ErrorBanner v-if="fileError" :message="fileError.message" :hint="fileError.fix" />
 
       <!-- Empty helper -->
       <p v-if="!file && !fileError" class="text-sm text-muted-foreground">
@@ -831,13 +791,7 @@ onUnmounted(() => {
           </template>
         </div>
 
-        <div
-          v-if="liveError"
-          role="alert"
-          class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-        >
-          {{ liveError }}
-        </div>
+        <ErrorBanner v-if="liveError" :message="liveError" />
 
         <!-- Device chips -->
         <div v-if="access" class="flex flex-wrap gap-2">

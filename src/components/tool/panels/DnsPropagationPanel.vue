@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Check, RefreshCw, Search, TriangleAlert } from "lucide-vue-next";
+import ErrorBanner from "../ErrorBanner.vue";
 
 /**
  * Bespoke panel for DNS Propagation.
@@ -337,14 +338,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div
-        v-if="inputError"
-        role="alert"
-        class="flex flex-col gap-1 rounded-[10px] bg-secondary p-3 text-xs shadow-[var(--sh-inset)]"
-      >
-        <span class="font-semibold text-destructive">{{ inputError.message }}</span>
-        <span v-if="inputError.fix" class="text-muted-foreground">{{ inputError.fix }}</span>
-      </div>
+      <ErrorBanner v-if="inputError" :message="inputError.message" :hint="inputError.fix" />
 
       <p v-if="props.meta.privacyNote" class="text-xs text-muted-foreground">
         {{ props.meta.privacyNote }}

@@ -22,6 +22,8 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import FitText from "@/components/tool/FitText.vue";
+import EmptyState from "../EmptyState.vue";
+import ErrorBanner from "../ErrorBanner.vue";
 
 const props = defineProps<{ meta: ToolMeta }>();
 
@@ -379,28 +381,17 @@ async function exportCardPng(index: number) {
       type your own to reproduce a set. The page link captures it either way.
     </p>
 
-    <div
+    <EmptyState
       v-if="usableCount === 0"
-      class="rounded-[10px] bg-secondary px-3 py-6 text-center shadow-[var(--sh-inset)]"
-    >
-      <p class="text-sm text-muted-foreground">
-        Paste a list of items above, one per line, and a board fills in here. Your files and inputs
-        never leave your device.
-      </p>
-    </div>
+      title="No board yet"
+      hint="Paste a list of items above, one per line, and a board fills in here. Your files and inputs never leave your device."
+    />
 
-    <div
+    <ErrorBanner
       v-else-if="result.error"
-      role="alert"
-      class="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm"
-    >
-      <p class="font-medium text-destructive">
-        {{ result.error.message }}
-      </p>
-      <p v-if="result.error.fix" class="mt-1 text-muted-foreground">
-        {{ result.error.fix }}
-      </p>
-    </div>
+      :message="result.error.message"
+      :hint="result.error.fix"
+    />
 
     <div v-else class="bingo-print-area flex flex-col gap-6">
       <div
