@@ -11,6 +11,7 @@ import {
   memeFilename,
   readCanvasSize,
   run,
+  swatchHex,
   wrapText,
   type MeasureText,
   type Size,
@@ -178,6 +179,36 @@ describe("memeFilename", () => {
   it("always names a PNG", () => {
     expect(memeFilename("cat.jpg")).toBe("cat-meme.png");
     expect(memeFilename("")).toBe("meme-meme.png");
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* swatchHex                                                           */
+/* ------------------------------------------------------------------ */
+
+describe("swatchHex", () => {
+  it("expands 3 digit shorthand", () => {
+    expect(swatchHex("#fff", "#000000")).toBe("#ffffff");
+    expect(swatchHex("abc", "#000000")).toBe("#aabbcc");
+  });
+
+  it("drops the alpha digit from 4 digit shorthand", () => {
+    expect(swatchHex("#fff8", "#000000")).toBe("#ffffff");
+  });
+
+  it("lowercases a plain 6 digit hex and passes it through", () => {
+    expect(swatchHex("#5B4BD6", "#000000")).toBe("#5b4bd6");
+    expect(swatchHex("5b4bd6", "#000000")).toBe("#5b4bd6");
+  });
+
+  it("drops the alpha pair from 8 digit hex", () => {
+    expect(swatchHex("#5b4bd680", "#000000")).toBe("#5b4bd6");
+  });
+
+  it("falls back for anything that is not hex, including a color name", () => {
+    expect(swatchHex("red", "#000000")).toBe("#000000");
+    expect(swatchHex("oklch(0.63 0.22 29)", "#000000")).toBe("#000000");
+    expect(swatchHex("", "#000000")).toBe("#000000");
   });
 });
 

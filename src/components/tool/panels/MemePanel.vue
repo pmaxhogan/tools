@@ -14,7 +14,7 @@
  * wide or 6000, and the position survives switching pictures, which is what
  * people do when they are trying a caption on three different images.
  */
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { Clipboard, Download, ImageOff, Sparkles } from "lucide-vue-next";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
@@ -22,6 +22,7 @@ import {
   MEME_FONT_STACK,
   layoutMeme,
   memeFilename,
+  swatchHex,
 } from "@/tools/meme-generator/index";
 import type { MeasureText, MemeLayout, Size } from "@/tools/meme-generator/index";
 import { downloadBlob } from "@/lib/download";
@@ -70,6 +71,15 @@ const MODE_OPTIONS = [
   { value: "caption", label: "Caption bar" },
 ];
 
+/**
+ * What each native color swatch shows. The refs above stay free text, since
+ * the canvas fillStyle they feed and the paired text box both understand any
+ * CSS color, but the swatch itself only understands six digit hex.
+ */
+const colorSwatch = computed(() => swatchHex(color.value, "#ffffff"));
+const outlineSwatch = computed(() => swatchHex(outline.value || "#000000", "#000000"));
+const blankColorSwatch = computed(() => swatchHex(blankColor.value, "#111111"));
+
 const blankSpec = computed<SelectOptionSpec>(() => {
   const found = props.meta.options?.find((o) => o.kind === "select" && o.id === "blank");
   if (found && found.kind === "select") return found;
@@ -93,10 +103,13 @@ const fileName = ref("meme");
 const error = ref<PanelError | null>(null);
 const canvas = ref<HTMLCanvasElement>();
 
-/** The decoded picture. Deliberately not reactive. */
-let picture: HTMLImageElement | null = null;
+/**
+ * The decoded picture. A `shallowRef` rather than a plain variable: Vue must
+ * never proxy the element, but the ref itself still has to be trackable, or
+ * `sourceSize` below never notices a picture arrived (see the comment there).
+ */
+const picture = shallowRef<HTMLImageElement | null>(null);
 let pictureUrl = "";
-const hasPicture = ref(false);
 
 function releasePicture(): void {
   if (pictureUrl) {
@@ -105,14 +118,23 @@ function releasePicture(): void {
   }
 }
 
-/** The canvas the layout is computed against: the picture, or a blank preset. */
+/**
+ * The canvas the layout is computed against: the picture, or a blank preset.
+ *
+ * The `picture.value` read has to happen unconditionally, not behind
+ * `!picture.value ||`, because Vue only tracks a dependency it actually read
+ * on the last run: short circuiting past it on the first evaluation (picture
+ * still null) would leave this computed subscribed to nothing but `blank`,
+ * so loading a picture would change `picture.value` and never invalidate it.
+ */
 const sourceSize = computed<Size | null>(() => {
   if (blank.value !== "none") return BLANK_SIZES[blank.value] ?? null;
-  if (!picture || !hasPicture.value) return null;
-  const scale = Math.min(1, MAX_EDGE / Math.max(picture.naturalWidth, picture.naturalHeight));
+  const img = picture.value;
+  if (!img) return null;
+  const scale = Math.min(1, MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
   return {
-    width: Math.max(1, Math.round(picture.naturalWidth * scale)),
-    height: Math.max(1, Math.round(picture.naturalHeight * scale)),
+    width: Math.max(1, Math.round(img.naturalWidth * scale)),
+    height: Math.max(1, Math.round(img.naturalHeight * scale)),
   };
 });
 
@@ -135,21 +157,18 @@ async function acceptImage(file: File | undefined): Promise<void> {
   });
   if (!ok || !image.naturalWidth) {
     URL.revokeObjectURL(url);
-    picture = null;
-    hasPicture.value = false;
+    picture.value = null;
     error.value = {
       message: "That image could not be decoded.",
       fix: "Try a different file, or re-save it as a PNG or JPEG.",
     };
     return;
   }
-  picture = image;
+  picture.value = image;
   pictureUrl = url;
-  hasPicture.value = true;
   fileName.value = file.name || "meme";
   blank.value = "none";
   error.value = null;
-  render();
 }
 
 function onFiles(files: File[]): void {
@@ -239,9 +258,9 @@ function render(): void {
   ctx.fillStyle = layout.barHeight > 0 ? layout.barColor : blankColor.value;
   ctx.fillRect(0, 0, layout.canvas.width, layout.canvas.height);
 
-  if (blank.value === "none" && picture) {
+  if (blank.value === "none" && picture.value) {
     ctx.drawImage(
-      picture,
+      picture.value,
       layout.imageAt.x,
       layout.imageAt.y,
       layout.imageAt.width,
@@ -270,6 +289,16 @@ function render(): void {
   syncFragment();
 }
 
+/**
+ * Redraws on every setting that can change the picture. `picture` and `blank`
+ * are what decide whether a `<canvas>` exists at all (see `sourceSize`), so
+ * `flush: "post"` matters here, not just for tidiness: the default "pre"
+ * timing runs this callback before Vue has patched the DOM, meaning the very
+ * first draw after a picture loads, or after picking a blank canvas for the
+ * first time, would find `canvas.value` still undefined and silently draw
+ * nothing. Waiting for "post" guarantees the element is there once one of
+ * these actually turns `ready` on.
+ */
 watch(
   [
     mode,
@@ -283,12 +312,14 @@ watch(
     uppercase,
     blank,
     blankColor,
+    picture,
     topX,
     topY,
     bottomX,
     bottomY,
   ],
   render,
+  { flush: "post" },
 );
 
 /* ---------------------------------------------------------------- */
@@ -507,7 +538,7 @@ const ready = computed(() => sourceSize.value !== null);
         <input
           id="meme-blank-color"
           type="color"
-          :value="blankColor"
+          :value="blankColorSwatch"
           aria-label="Pick the blank canvas color"
           class="h-9 w-14 cursor-pointer rounded-[8px] border bg-card p-1"
           @input="blankColor = ($event.target as HTMLInputElement).value"
@@ -584,7 +615,7 @@ const ready = computed(() => sourceSize.value !== null);
           <input
             id="meme-color"
             type="color"
-            :value="color"
+            :value="colorSwatch"
             aria-label="Pick the text color"
             class="h-9 w-10 shrink-0 cursor-pointer rounded-[8px] border bg-card p-1"
             @input="color = ($event.target as HTMLInputElement).value"
@@ -599,7 +630,7 @@ const ready = computed(() => sourceSize.value !== null);
           <input
             id="meme-outline"
             type="color"
-            :value="outline || '#000000'"
+            :value="outlineSwatch"
             aria-label="Pick the outline color"
             class="h-9 w-10 shrink-0 cursor-pointer rounded-[8px] border bg-card p-1"
             @input="outline = ($event.target as HTMLInputElement).value"

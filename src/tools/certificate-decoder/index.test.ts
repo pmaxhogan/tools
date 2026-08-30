@@ -103,8 +103,8 @@ function derOf(pem: string): Uint8Array {
 }
 
 describe("certificate-decoder", () => {
-  it("decodes a leaf certificate down to the pinned openssl values", () => {
-    const out = run(LEAF_PEM, { now: NOW_VALID });
+  it("decodes a leaf certificate down to the pinned openssl values", async () => {
+    const out = await run(LEAF_PEM, { now: NOW_VALID });
 
     expect(out["Subject"]).toBe("C=US, O=Example Test Org, CN=test.example.com");
     expect(out["Issuer"]).toBe("C=US, O=Example Test Org, CN=Example Test Intermediate CA");
@@ -133,20 +133,20 @@ describe("certificate-decoder", () => {
     expect(out["Chain order"]).toBeUndefined();
   });
 
-  it("reports expiry in plain English on both sides of the window", () => {
-    expect(run(LEAF_PEM, { now: NOW_VALID })["Validity"]).toBe("expires in 42 days");
-    expect(run(LEAF_PEM, { now: NOW_EXPIRED })["Validity"]).toBe("EXPIRED 10 days ago");
-    expect(run(LEAF_PEM, { now: NOW_TOO_EARLY })["Validity"]).toBe(
+  it("reports expiry in plain English on both sides of the window", async () => {
+    expect((await run(LEAF_PEM, { now: NOW_VALID }))["Validity"]).toBe("expires in 42 days");
+    expect((await run(LEAF_PEM, { now: NOW_EXPIRED }))["Validity"]).toBe("EXPIRED 10 days ago");
+    expect((await run(LEAF_PEM, { now: NOW_TOO_EARLY }))["Validity"]).toBe(
       "not valid yet, starts in 10 days",
     );
   });
 
-  it("falls back to the wall clock when no now is injected", () => {
-    expect(run(LEAF_PEM)["Validity"]).toMatch(/expires in|EXPIRED|not valid yet/);
+  it("falls back to the wall clock when no now is injected", async () => {
+    expect((await run(LEAF_PEM))["Validity"]).toMatch(/expires in|EXPIRED|not valid yet/);
   });
 
-  it("describes an RSA self signed root", () => {
-    const out = run(ROOT_PEM, { now: NOW_VALID });
+  it("describes an RSA self signed root", async () => {
+    const out = await run(ROOT_PEM, { now: NOW_VALID });
     expect(out["Serial"]).toBe("04D2");
     expect(out["Public key"]).toBe("RSA 2048");
     expect(out["Signature algorithm"]).toBe("RSA PKCS#1 v1.5 with SHA-256");
@@ -162,8 +162,8 @@ describe("certificate-decoder", () => {
     );
   });
 
-  it("describes an EC intermediate with a path length constraint", () => {
-    const out = run(INTER_PEM, { now: NOW_VALID });
+  it("describes an EC intermediate with a path length constraint", async () => {
+    const out = await run(INTER_PEM, { now: NOW_VALID });
     expect(out["Serial"]).toBe("1A2B3C");
     expect(out["Public key"]).toBe("EC P-256");
     expect(out["Signature algorithm"]).toBe("RSA PKCS#1 v1.5 with SHA-256");
@@ -171,8 +171,8 @@ describe("certificate-decoder", () => {
     expect(out["Key usage"]).toBe("Digital signature, Certificate signing, CRL signing");
   });
 
-  it("describes an Ed25519 certificate that carries no key usage extension", () => {
-    const out = run(ED_PEM, { now: NOW_VALID });
+  it("describes an Ed25519 certificate that carries no key usage extension", async () => {
+    const out = await run(ED_PEM, { now: NOW_VALID });
     expect(out["Serial"]).toBe("7B");
     expect(out["Public key"]).toBe("Ed25519");
     expect(out["Signature algorithm"]).toBe("Ed25519");
@@ -183,8 +183,8 @@ describe("certificate-decoder", () => {
     );
   });
 
-  it("numbers every certificate and reports a correct chain", () => {
-    const out = run([LEAF_PEM, INTER_PEM, ROOT_PEM].join("\n"), { now: NOW_VALID });
+  it("numbers every certificate and reports a correct chain", async () => {
+    const out = await run([LEAF_PEM, INTER_PEM, ROOT_PEM].join("\n"), { now: NOW_VALID });
     expect(out["Certificates found"]).toBe("3");
     expect(out["Cert 1: Subject"]).toBe("C=US, O=Example Test Org, CN=test.example.com");
     expect(out["Cert 2: Subject"]).toBe(
@@ -199,30 +199,30 @@ describe("certificate-decoder", () => {
     expect(out["Chain note"]).toContain("does not verify chain signatures");
   });
 
-  it("flags a chain that is missing its root", () => {
-    const out = run([LEAF_PEM, INTER_PEM].join("\n"), { now: NOW_VALID });
+  it("flags a chain that is missing its root", async () => {
+    const out = await run([LEAF_PEM, INTER_PEM].join("\n"), { now: NOW_VALID });
     expect(out["Chain order"]).toBe(
       "Order looks correct, but the last certificate is not self signed, so the chain is probably missing its root.",
     );
   });
 
-  it("flags a reversed chain", () => {
-    const out = run([ROOT_PEM, INTER_PEM, LEAF_PEM].join("\n"), { now: NOW_VALID });
+  it("flags a reversed chain", async () => {
+    const out = await run([ROOT_PEM, INTER_PEM, LEAF_PEM].join("\n"), { now: NOW_VALID });
     expect(out["Chain 1 to 2"]).toContain("does not match");
     expect(out["Chain order"]).toBe(
       "The chain looks reversed: the root is first. Put the leaf certificate first, then each issuer after it.",
     );
   });
 
-  it("names the pair that does not chain", () => {
-    const out = run([LEAF_PEM, ED_PEM].join("\n"), { now: NOW_VALID });
+  it("names the pair that does not chain", async () => {
+    const out = await run([LEAF_PEM, ED_PEM].join("\n"), { now: NOW_VALID });
     expect(out["Chain 1 to 2"]).toContain("does not match");
     expect(out["Chain order"]).toBe(
       "Order is wrong: certificates 1 and 2 do not chain. Put the leaf first, then each issuer after it.",
     );
   });
 
-  it("extracts certificates out of noisy surrounding text with CRLF line endings", () => {
+  it("extracts certificates out of noisy surrounding text with CRLF line endings", async () => {
     const noisy = [
       "server {",
       "  ssl_certificate /etc/nginx/fullchain.pem;",
@@ -239,35 +239,35 @@ describe("certificate-decoder", () => {
       .join("\n")
       .replace(/\n/g, "\r\n");
 
-    const out = run(noisy, { now: NOW_VALID });
+    const out = await run(noisy, { now: NOW_VALID });
     expect(out["Certificates found"]).toBe("2");
     expect(out["Cert 1: Serial"]).toBe("0BADC0DE");
     expect(out["Cert 2: Serial"]).toBe("1A2B3C");
   });
 
-  it("accepts a bare base64 certificate with no PEM armor", () => {
-    const out = run(base64Of(LEAF_PEM), { now: NOW_VALID });
+  it("accepts a bare base64 certificate with no PEM armor", async () => {
+    const out = await run(base64Of(LEAF_PEM), { now: NOW_VALID });
     expect(out["Serial"]).toBe("0BADC0DE");
     expect(out["SHA-1 fingerprint"]).toBe(
       "CB:D7:74:7E:03:25:AB:65:61:A3:90:E7:27:FD:A0:8C:5C:6C:E8:23",
     );
   });
 
-  it("accepts raw DER bytes from a dropped file", () => {
-    const out = run(derOf(LEAF_PEM), { now: NOW_VALID });
+  it("accepts raw DER bytes from a dropped file", async () => {
+    const out = await run(derOf(LEAF_PEM), { now: NOW_VALID });
     expect(out["Subject"]).toBe("C=US, O=Example Test Org, CN=test.example.com");
     expect(out["Public key"]).toBe("EC P-256");
   });
 
-  it("accepts a dropped PEM file as bytes", () => {
+  it("accepts a dropped PEM file as bytes", async () => {
     const bytes = new TextEncoder().encode(`${LEAF_PEM}\n${INTER_PEM}\n`);
-    const out = run(bytes, { now: NOW_VALID });
+    const out = await run(bytes, { now: NOW_VALID });
     expect(out["Certificates found"]).toBe("2");
     expect(out["Cert 1: Serial"]).toBe("0BADC0DE");
   });
 
-  it("adds RDN components and every extension in full view", () => {
-    const out = run(LEAF_PEM, { now: NOW_VALID, view: "full" });
+  it("adds RDN components and every extension in full view", async () => {
+    const out = await run(LEAF_PEM, { now: NOW_VALID, view: "full" });
     expect(out["Subject components"]).toBe("C=US, O=Example Test Org, CN=test.example.com");
     expect(out["Issuer components"]).toBe(
       "C=US, O=Example Test Org, CN=Example Test Intermediate CA",
@@ -280,16 +280,16 @@ describe("certificate-decoder", () => {
     expect(out["Serial"]).toBe("0BADC0DE");
   });
 
-  it("leaves the extension rows out of summary view", () => {
-    const out = run(LEAF_PEM, { now: NOW_VALID });
+  it("leaves the extension rows out of summary view", async () => {
+    const out = await run(LEAF_PEM, { now: NOW_VALID });
     expect(Object.keys(out).some((k) => k.startsWith("Extension "))).toBe(false);
     expect(out["Subject components"]).toBeUndefined();
   });
 
   describe("errors", () => {
-    const codeOf = (fn: () => unknown): string => {
+    const codeOf = async (fn: () => unknown): Promise<string> => {
       try {
-        fn();
+        await fn();
       } catch (err) {
         expect(err).toBeInstanceOf(ToolError);
         return (err as ToolError).code;
@@ -297,27 +297,27 @@ describe("certificate-decoder", () => {
       throw new Error("expected a ToolError");
     };
 
-    it("throws empty-input on an empty string", () => {
-      expect(codeOf(() => run("  \n  "))).toBe("empty-input");
+    it("throws empty-input on an empty string", async () => {
+      expect(await codeOf(() => run("  \n  "))).toBe("empty-input");
     });
 
-    it("throws empty-input on zero bytes", () => {
-      expect(codeOf(() => run(new Uint8Array(0)))).toBe("empty-input");
+    it("throws empty-input on zero bytes", async () => {
+      expect(await codeOf(() => run(new Uint8Array(0)))).toBe("empty-input");
     });
 
-    it("throws no-cert when nothing certificate shaped is present", () => {
-      expect(codeOf(() => run("hello world, no certificate here"))).toBe("no-cert");
+    it("throws no-cert when nothing certificate shaped is present", async () => {
+      expect(await codeOf(() => run("hello world, no certificate here"))).toBe("no-cert");
     });
 
-    it("throws no-cert on unrelated PEM armor", () => {
+    it("throws no-cert on unrelated PEM armor", async () => {
       const dh = "-----BEGIN DH PARAMETERS-----\nAAAA\n-----END DH PARAMETERS-----";
-      expect(codeOf(() => run(dh))).toBe("no-cert");
+      expect(await codeOf(() => run(dh))).toBe("no-cert");
     });
 
-    it("names a private key block instead of decoding it", () => {
+    it("names a private key block instead of decoding it", async () => {
       let caught: ToolError | undefined;
       try {
-        run("-----BEGIN PRIVATE KEY-----\nAAAA\n-----END PRIVATE KEY-----");
+        await run("-----BEGIN PRIVATE KEY-----\nAAAA\n-----END PRIVATE KEY-----");
       } catch (err) {
         caught = err as ToolError;
       }
@@ -326,10 +326,10 @@ describe("certificate-decoder", () => {
       expect(caught?.fix).toContain("certificate signing request");
     });
 
-    it("names a certificate signing request instead of decoding it", () => {
+    it("names a certificate signing request instead of decoding it", async () => {
       let caught: ToolError | undefined;
       try {
-        run("-----BEGIN CERTIFICATE REQUEST-----\nAAAA\n-----END CERTIFICATE REQUEST-----");
+        await run("-----BEGIN CERTIFICATE REQUEST-----\nAAAA\n-----END CERTIFICATE REQUEST-----");
       } catch (err) {
         caught = err as ToolError;
       }
@@ -337,16 +337,16 @@ describe("certificate-decoder", () => {
       expect(caught?.message).toContain("CERTIFICATE REQUEST");
     });
 
-    it("throws bad-der on a corrupt PEM body", () => {
+    it("throws bad-der on a corrupt PEM body", async () => {
       const broken = "-----BEGIN CERTIFICATE-----\nQUJDREVGRw==\n-----END CERTIFICATE-----";
-      expect(codeOf(() => run(broken))).toBe("bad-der");
+      expect(await codeOf(() => run(broken))).toBe("bad-der");
     });
 
-    it("says which certificate of a bundle failed", () => {
+    it("says which certificate of a bundle failed", async () => {
       const broken = "-----BEGIN CERTIFICATE-----\nQUJDREVGRw==\n-----END CERTIFICATE-----";
       let caught: ToolError | undefined;
       try {
-        run([LEAF_PEM, broken].join("\n"));
+        await run([LEAF_PEM, broken].join("\n"));
       } catch (err) {
         caught = err as ToolError;
       }
@@ -354,8 +354,8 @@ describe("certificate-decoder", () => {
       expect(caught?.message).toBe("Certificate 2 of 2 could not be parsed as X.509 DER.");
     });
 
-    it("throws bad-der on random bytes", () => {
-      expect(codeOf(() => run(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8])))).toBe("bad-der");
+    it("throws bad-der on random bytes", async () => {
+      expect(await codeOf(() => run(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8])))).toBe("bad-der");
     });
   });
 });

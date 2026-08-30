@@ -102,9 +102,18 @@ onMounted(() => {
  * derived
  * ------------------------------------------------------------------ */
 
-/** The colors actually painted, which is the flattened pair when alpha was used. */
-const fgHex = computed(() => (report.value ? formatHex(report.value.effectiveForeground) : "#000"));
-const bgHex = computed(() => (report.value ? formatHex(report.value.effectiveBackground) : "#fff"));
+/**
+ * The colors actually painted, which is the flattened pair when alpha was
+ * used. The fallback has to be a full six digit hex too: a native
+ * `<input type="color">` bound to the three digit shorthand "#000" or "#fff"
+ * logs "does not conform to the required format" and drops the value.
+ */
+const fgHex = computed(() =>
+  report.value ? formatHex(report.value.effectiveForeground) : "#000000",
+);
+const bgHex = computed(() =>
+  report.value ? formatHex(report.value.effectiveBackground) : "#ffffff",
+);
 
 const ratioText = computed(() => (report.value ? `${report.value.ratio.toFixed(2)}:1` : ""));
 const lcText = computed(() => (report.value ? report.value.lc.toFixed(1) : ""));

@@ -235,6 +235,28 @@ import { meta as julianDateConverterMeta } from "../src/tools/julian-date-conver
 import { run as julianDateConverterRun } from "../src/tools/julian-date-converter/index";
 import { meta as magnitudeCalculatorMeta } from "../src/tools/magnitude-calculator/meta";
 import { run as magnitudeCalculatorRun } from "../src/tools/magnitude-calculator/index";
+import { meta as isotopeAbundanceLookupMeta } from "../src/tools/isotope-abundance-lookup/meta";
+import { run as isotopeAbundanceLookupRun } from "../src/tools/isotope-abundance-lookup/index";
+import { meta as orbitalMechanicsCalculatorMeta } from "../src/tools/orbital-mechanics-calculator/meta";
+import { run as orbitalMechanicsCalculatorRun } from "../src/tools/orbital-mechanics-calculator/index";
+import { meta as windChillHeatIndexDewPointMeta } from "../src/tools/wind-chill-heat-index-dew-point/meta";
+import { run as windChillHeatIndexDewPointRun } from "../src/tools/wind-chill-heat-index-dew-point/index";
+import { meta as pressureAltitudeMeta } from "../src/tools/pressure-altitude/meta";
+import { run as pressureAltitudeRun } from "../src/tools/pressure-altitude/index";
+import { meta as earthquakeMagnitudeEnergyMeta } from "../src/tools/earthquake-magnitude-energy/meta";
+import { run as earthquakeMagnitudeEnergyRun } from "../src/tools/earthquake-magnitude-energy/index";
+import { meta as netherPortalCalculatorMeta } from "../src/tools/nether-portal-calculator/meta";
+import { run as netherPortalCalculatorRun } from "../src/tools/nether-portal-calculator/index";
+import { meta as beaconCalculatorMeta } from "../src/tools/beacon-calculator/meta";
+import { run as beaconCalculatorRun } from "../src/tools/beacon-calculator/index";
+import { meta as tickTimeConverterMeta } from "../src/tools/tick-time-converter/meta";
+import { run as tickTimeConverterRun } from "../src/tools/tick-time-converter/index";
+import { meta as pixelCircleGeneratorMeta } from "../src/tools/pixel-circle-generator/meta";
+import { run as pixelCircleGeneratorRun } from "../src/tools/pixel-circle-generator/index";
+import { meta as moonPhaseCalculatorMeta } from "../src/tools/moon-phase-calculator/meta";
+import { run as moonPhaseCalculatorRun } from "../src/tools/moon-phase-calculator/index";
+import { meta as planetPositionsMeta } from "../src/tools/planet-positions/meta";
+import { run as planetPositionsRun } from "../src/tools/planet-positions/index";
 
 export interface Env {
   /** Static assets from the Astro build. */
@@ -530,6 +552,19 @@ const ALL: Endpoint[] = [
   expose(magnitudeCalculatorMeta, magnitudeCalculatorRun, {
     sample: "apparent: -1.46 parallax: 379.21 mas",
   }),
+  expose(isotopeAbundanceLookupMeta, isotopeAbundanceLookupRun, { sample: "C" }),
+  expose(orbitalMechanicsCalculatorMeta, orbitalMechanicsCalculatorRun, {
+    sample: "body: Earth altitude: 400 km",
+  }),
+  expose(windChillHeatIndexDewPointMeta, windChillHeatIndexDewPointRun),
+  expose(pressureAltitudeMeta, pressureAltitudeRun),
+  expose(earthquakeMagnitudeEnergyMeta, earthquakeMagnitudeEnergyRun),
+  expose(netherPortalCalculatorMeta, netherPortalCalculatorRun),
+  expose(beaconCalculatorMeta, beaconCalculatorRun),
+  expose(tickTimeConverterMeta, tickTimeConverterRun),
+  expose(pixelCircleGeneratorMeta, pixelCircleGeneratorRun),
+  expose(moonPhaseCalculatorMeta, moonPhaseCalculatorRun, { sample: "2024-01-25" }),
+  expose(planetPositionsMeta, planetPositionsRun, { sample: "St Louis" }),
 ];
 
 const ENDPOINTS: Endpoint[] = ALL.filter((e) => e.meta.http);

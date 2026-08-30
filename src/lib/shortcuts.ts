@@ -83,6 +83,9 @@ export const KEYBOARD_FIRST_TOOLS: ReadonlySet<string> = new Set([
   "keycode",
   "key-rollover-tester",
   "media-key-tester",
+  "reaction-time-test",
+  "click-speed-test",
+  "typing-speed-test",
 ]);
 
 /** The minimal event shape `matchShortcut` needs, satisfied by a real KeyboardEvent. */

@@ -1,8 +1,14 @@
 // `reflect-metadata` must be evaluated before @peculiar/x509 is imported: the
 // ASN.1 schema decorators read the metadata reflection API at module scope and
 // throw at import time without it. Keep this as the first import of the file.
+// @peculiar/x509 itself is loaded lazily (see ../../lib/x509): in the
+// production build it lands in a chunk shared with other tools, and a static
+// import of it here would risk evaluating before this reflect-metadata
+// import has run. `import type` below is erased at compile time, so it does
+// not reintroduce that static import.
 import "reflect-metadata";
-import * as x509 from "@peculiar/x509";
+import type * as X509 from "@peculiar/x509";
+import { loadX509, type X509 as X509Module } from "../../lib/x509";
 import { ToolError, type ToolLogic } from "../types";
 
 export interface SelfSignedCertOpts {
@@ -236,7 +242,11 @@ function keyGenParams(algorithm: KeyAlgorithm) {
     : { name: "ECDSA", namedCurve: "P-256" };
 }
 
-function extensionsFor(usage: UsagePreset, algorithm: KeyAlgorithm): x509.Extension[] {
+function extensionsFor(
+  x509: X509Module,
+  usage: UsagePreset,
+  algorithm: KeyAlgorithm,
+): X509.Extension[] {
   if (usage === "ca") {
     return [
       new x509.BasicConstraintsExtension(true, 0, true),
@@ -266,6 +276,7 @@ export async function run(
   _input: undefined,
   opts: SelfSignedCertOpts,
 ): Promise<SelfSignedCertResult> {
+  const x509 = await loadX509();
   const commonName = textOption(opts.commonName) || "localhost";
   const organization = textOption(opts.organization);
   const country = textOption(opts.country);
@@ -297,7 +308,7 @@ export async function run(
     "verify",
   ])) as CryptoKeyPair;
 
-  const extensions = extensionsFor(usage, algorithm);
+  const extensions = extensionsFor(x509, usage, algorithm);
   if (sans.dns.length > 0 || sans.ip.length > 0) {
     // The extension takes a flat list of typed general names, so hostnames and
     // IP addresses are two different `type` values rather than two fields.

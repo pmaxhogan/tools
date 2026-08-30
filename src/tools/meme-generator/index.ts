@@ -408,6 +408,34 @@ export function layoutMeme(image: Size, opts: MemeOpts, measure: MeasureText): M
   };
 }
 
+/**
+ * Expand free typed hex to the six digit lowercase form a native
+ * `<input type="color">` accepts: 3 and 4 digit shorthand, with or without
+ * the leading hash, plus the plain 6 and 8 digit forms. Any alpha digits are
+ * dropped, since the swatch has no alpha channel of its own.
+ *
+ * The text field next to each swatch stays free text (the canvas fillStyle
+ * it feeds understands any CSS color, named colors included), so this only
+ * has to cover hex: anything else, including a color name, is not something
+ * this function reads. Passing text like that straight to the native input
+ * is exactly what the browser warns about and refuses to set, so it falls
+ * back to `fallback` instead of forwarding text the swatch cannot use.
+ */
+export function swatchHex(text: string, fallback: string): string {
+  const body = text.trim().replace(/^#/, "");
+  if (/^[0-9a-fA-F]{3}$/.test(body) || /^[0-9a-fA-F]{4}$/.test(body)) {
+    return `#${body
+      .slice(0, 3)
+      .split("")
+      .map((c) => c + c)
+      .join("")}`.toLowerCase();
+  }
+  if (/^[0-9a-fA-F]{6}$/.test(body) || /^[0-9a-fA-F]{8}$/.test(body)) {
+    return `#${body.slice(0, 6)}`.toLowerCase();
+  }
+  return fallback;
+}
+
 /** "photo.jpg" becomes "photo-meme.png". */
 export function memeFilename(name: string): string {
   const trimmed = name.trim() || "meme";

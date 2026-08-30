@@ -1,10 +1,16 @@
 // `reflect-metadata` must be evaluated before @peculiar/x509 is imported: the
 // ASN.1 schema decorators read the metadata reflection API at module scope and
 // throw at import time without it. Keep this as the first import of the file.
+// @peculiar/x509 itself is loaded lazily (see ../../lib/x509): in the
+// production build it lands in a chunk shared with other tools, and a static
+// import of it here would risk evaluating before this reflect-metadata
+// import has run. `import type` below is erased at compile time, so it does
+// not reintroduce that static import.
 import "reflect-metadata";
-import * as x509 from "@peculiar/x509";
+import type * as X509 from "@peculiar/x509";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { sha1 } from "@noble/hashes/legacy.js";
+import { loadX509, type X509 as X509Module } from "../../lib/x509";
 import { ToolError, type ToolLogic } from "../types";
 
 export interface CertificateDecoderOpts {
@@ -147,7 +153,7 @@ function describePublicKey(algorithm: Algorithm): string {
 }
 
 /** "ECDSA with SHA-256", "Ed25519" (no hash on the pure EdDSA algorithms). */
-function describeSignature(algorithm: x509.HashedAlgorithm): string {
+function describeSignature(algorithm: X509.HashedAlgorithm): string {
   const base = SIGNATURE_NAMES[algorithm.name] ?? algorithm.name;
   const hash = algorithm.hash?.name;
   return hash ? `${base} with ${hash}` : base;
@@ -158,7 +164,7 @@ function describeKeyUsage(flags: number): string {
   return words.length ? words.join(", ") : "none set";
 }
 
-function describeDistinguishedName(name: x509.Name): string {
+function describeDistinguishedName(name: X509.Name): string {
   const parts: string[] = [];
   for (const rdn of name.toJSON()) {
     for (const [key, values] of Object.entries(rdn)) {
@@ -242,7 +248,10 @@ function extractCandidates(text: string): string[] {
   );
 }
 
-function parseCandidates(candidates: (string | Uint8Array)[]): x509.X509Certificate[] {
+function parseCandidates(
+  x509: X509Module,
+  candidates: (string | Uint8Array)[],
+): X509.X509Certificate[] {
   const total = candidates.length;
   return candidates.map((candidate, i) => {
     try {
@@ -263,12 +272,12 @@ function parseCandidates(candidates: (string | Uint8Array)[]): x509.X509Certific
   });
 }
 
-function decodeInput(input: string | Uint8Array): x509.X509Certificate[] {
+function decodeInput(x509: X509Module, input: string | Uint8Array): X509.X509Certificate[] {
   if (input instanceof Uint8Array) {
     if (input.length === 0) throw new ToolError("empty-input", "Drop or paste a certificate.");
     const asText = new TextDecoder("utf-8", { fatal: false }).decode(input);
-    if (asText.includes("-----BEGIN")) return parseCandidates(extractCandidates(asText));
-    return parseCandidates([input]);
+    if (asText.includes("-----BEGIN")) return parseCandidates(x509, extractCandidates(asText));
+    return parseCandidates(x509, [input]);
   }
 
   const text = input ?? "";
@@ -279,7 +288,7 @@ function decodeInput(input: string | Uint8Array): x509.X509Certificate[] {
       "Paste a PEM block starting with -----BEGIN CERTIFICATE----- or drop a .crt, .cer, or .pem file.",
     );
   }
-  return parseCandidates(extractCandidates(text));
+  return parseCandidates(x509, extractCandidates(text));
 }
 
 /* ------------------------------------------------------------------ */
@@ -287,7 +296,8 @@ function decodeInput(input: string | Uint8Array): x509.X509Certificate[] {
 /* ------------------------------------------------------------------ */
 
 function summaryRows(
-  cert: x509.X509Certificate,
+  x509: X509Module,
+  cert: X509.X509Certificate,
   der: Uint8Array,
   now: number,
   prefix: string,
@@ -364,7 +374,7 @@ function summaryRows(
   if (aki?.keyId) row("Authority key identifier", normalizeHexString(aki.keyId));
 }
 
-function fullRows(cert: x509.X509Certificate, prefix: string, out: CertificateDecoderResult): void {
+function fullRows(cert: X509.X509Certificate, prefix: string, out: CertificateDecoderResult): void {
   put(out, `${prefix}Subject components`, describeDistinguishedName(cert.subjectName));
   put(out, `${prefix}Issuer components`, describeDistinguishedName(cert.issuerName));
   for (const ext of cert.extensions) {
@@ -377,7 +387,11 @@ function fullRows(cert: x509.X509Certificate, prefix: string, out: CertificateDe
   }
 }
 
-function chainRows(certs: x509.X509Certificate[], out: CertificateDecoderResult): void {
+function chainRows(
+  x509: X509Module,
+  certs: X509.X509Certificate[],
+  out: CertificateDecoderResult,
+): void {
   const broken: number[] = [];
   for (let i = 0; i < certs.length - 1; i += 1) {
     const linked = certs[i].issuer === certs[i + 1].subject;
@@ -426,11 +440,12 @@ function chainRows(certs: x509.X509Certificate[], out: CertificateDecoderResult)
 /* Entry point                                                         */
 /* ------------------------------------------------------------------ */
 
-export function run(
+export async function run(
   input: string | Uint8Array,
   opts: CertificateDecoderOpts = {},
-): CertificateDecoderResult {
-  const certs = decodeInput(input);
+): Promise<CertificateDecoderResult> {
+  const x509 = await loadX509();
+  const certs = decodeInput(x509, input);
   const now = typeof opts.now === "number" ? opts.now : Date.now();
   const full = opts.view === "full";
 
@@ -440,11 +455,11 @@ export function run(
   certs.forEach((cert, i) => {
     const prefix = certs.length > 1 ? `Cert ${i + 1}: ` : "";
     const der = new Uint8Array(cert.rawData);
-    summaryRows(cert, der, now, prefix, out);
+    summaryRows(x509, cert, der, now, prefix, out);
     if (full) fullRows(cert, prefix, out);
   });
 
-  if (certs.length > 1) chainRows(certs, out);
+  if (certs.length > 1) chainRows(x509, certs, out);
   return out;
 }
 

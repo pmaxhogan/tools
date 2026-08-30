@@ -28,53 +28,88 @@ Three tools shipped after the original matrix with no CSV row of their own
 added to `tool-matrix.csv` in this same pass, but they are not tracked here
 since they are already built; see the CSV directly for their grades.
 
+## Status summary
+
+Counts as of 2026-08-30, one row per category, matched by slug (checking each
+idea's slug against the shipped tool's URL slug, directory name and its
+meta.ts `matrixSlug` where the two differ).
+
+| Category | Shipped | In progress | Not started | Total |
+| --- | --- | --- | --- | --- |
+| Dev | 14 | 0 | 11 | 25 |
+| Text | 7 | 0 | 4 | 11 |
+| Crypto | 6 | 0 | 0 | 6 |
+| Files | 2 | 0 | 1 | 3 |
+| Data | 1 | 0 | 1 | 2 |
+| Audio | 1 | 0 | 4 | 5 |
+| Images | 5 | 0 | 0 | 5 |
+| Docs | 0 | 0 | 2 | 2 |
+| QR | 0 | 0 | 1 | 1 |
+| Time | 0 | 0 | 1 | 1 |
+| Hardware | 5 | 0 | 0 | 5 |
+| RF | 8 | 0 | 0 | 8 |
+| Chemistry | 10 | 0 | 0 | 10 |
+| Astronomy | 3 | 1 | 1 | 5 |
+| Physics | 0 | 0 | 4 | 4 |
+| Weather & Earth | 3 | 0 | 1 | 4 |
+| Minecraft | 0 | 4 | 2 | 6 |
+| Testers | 0 | 2 | 1 | 3 |
+| Generators | 0 | 1 | 2 | 3 |
+| Network | 0 | 0 | 2 | 2 |
+| Homelab | 0 | 0 | 1 | 1 |
+| Media | 0 | 0 | 2 | 2 |
+| Finance | 0 | 0 | 2 | 2 |
+| Math | 0 | 0 | 4 | 4 |
+| Biology | 0 | 0 | 3 | 3 |
+| **Total** | **65** | **8** | **50** | **123** |
+
 ## Dev
 
-- [ ] **Regex Tester** (`regex-tester`): Live match highlighting, capture
+- [x] **Regex Tester** (`regex-tester`) (shipped 2026-08-30): Live match highlighting, capture
   groups and a plain English explanation of any regular expression. No
   dependency beyond native `RegExp`. Needs panel (highlighted match view over
   the input text).
-- [ ] **JSONPath Query** (`jsonpath-query`): Run a JSONPath expression against
+- [x] **JSONPath Query** (`jsonpath-query`) (shipped 2026-08-30): Run a JSONPath expression against
   pasted JSON and see every match highlighted in the tree. Dependency: a small
   JSONPath engine (e.g. jsonpath-plus). Needs panel (tree view with match
   highlighting).
-- [ ] **XPath and CSS Selector Tester** (`xpath-css-selector-tester`): Test
+- [x] **XPath and CSS Selector Tester** (`xpath-css-selector-tester`) (shipped 2026-08-30): Test
   XPath or CSS selectors against pasted HTML and see every match highlighted
   in context. Dependency: native `DOMParser`, `document.evaluate` and
   `querySelectorAll`. Needs panel (highlighted HTML preview).
-- [ ] **Glob Pattern Tester** (`glob-pattern-tester`): Check a list of paths
+- [x] **Glob Pattern Tester** (`glob-pattern-tester`) (shipped 2026-08-30): Check a list of paths
   against a glob pattern and see which ones match. Dependency: a small glob
   matcher (e.g. picomatch). Generic shell ok.
-- [ ] **Semver Range Tester** (`semver-range-tester`): Check whether a version
+- [x] **Semver Range Tester** (`semver-range-tester`) (shipped 2026-08-30): Check whether a version
   satisfies a semver range, with the rule spelled out in plain English.
   Dependency: the `semver` package. Generic shell ok.
-- [ ] **Unified Diff and Patch Applier** (`unified-diff-patch-applier`): Apply
+- [x] **Unified Diff and Patch Applier** (`unified-diff-patch-applier`) (shipped 2026-08-30): Apply
   a unified diff patch to pasted text and preview the result before download.
   Dependency: a diff/patch library (e.g. `diff`). Needs panel (before/after
   preview with hunk status).
-- [ ] **Cubic Bezier Easing Editor** (`cubic-bezier-easing-editor`): Drag
+- [x] **Cubic Bezier Easing Editor** (`cubic-bezier-easing-editor`) (shipped 2026-08-30): Drag
   control points on a curve and copy the matching CSS or JS easing function.
   No dependency beyond canvas/SVG. Needs panel (draggable curve editor).
-- [ ] **CSS Gradient Generator** (`css-gradient-generator`): Build linear,
+- [x] **CSS Gradient Generator** (`css-gradient-generator`) (shipped 2026-08-30): Build linear,
   radial and conic gradients visually with draggable color stops and copy the
   CSS. No dependency. Needs panel (color stop editor with live preview).
-- [ ] **Fluid Clamp Calculator** (`fluid-clamp-calculator`): Turn a min and
+- [x] **Fluid Clamp Calculator** (`fluid-clamp-calculator`) (shipped 2026-08-30): Turn a min and
   max size across a viewport range into a responsive CSS `clamp()`
   expression. No dependency. Generic shell ok.
-- [ ] **Box Shadow Generator** (`box-shadow-generator`): Stack multiple shadow
+- [x] **Box Shadow Generator** (`box-shadow-generator`) (shipped 2026-08-30): Stack multiple shadow
   layers visually and copy the CSS `box-shadow` value. No dependency. Needs
   panel (layer list with live preview).
-- [ ] **CSS Keyframes Builder** (`css-keyframes-builder`): Build `@keyframes`
+- [x] **CSS Keyframes Builder** (`css-keyframes-builder`) (shipped 2026-08-30): Build `@keyframes`
   animations on a visual timeline and preview them live. No dependency. Needs
   panel (timeline editor with preview).
-- [ ] **Clip Path Generator** (`clip-path-generator`): Drag shape handles over
+- [x] **Clip Path Generator** (`clip-path-generator`) (shipped 2026-08-30): Drag shape handles over
   an image and copy the matching CSS `clip-path`. No dependency. Needs panel
   (draggable shape editor over an image).
-- [ ] **Color Contrast Checker** (`color-contrast-checker`): Check a
+- [x] **Color Contrast Checker** (`color-contrast-checker`) (shipped 2026-08-30): Check a
   foreground and background color pair against WCAG contrast ratios, with a
   pass/fail readout for AA and AAA. No dependency (WCAG formula is a few
   lines of math). Generic shell ok.
-- [ ] **Log File Analyzer** (`log-file-analyzer`): Filter, search and get
+- [x] **Log File Analyzer** (`log-file-analyzer`) (shipped 2026-08-30): Filter, search and get
   stats across a large log file without a server. No required dependency
   (custom line parsing), a virtualized list helps for very large files. Needs
   panel (filterable, virtualized log table).
@@ -116,26 +151,26 @@ since they are already built; see the CSV directly for their grades.
 
 ## Text
 
-- [ ] **Fancy Text Generator** (`fancy-text-generator`): Turn plain text into
+- [x] **Fancy Text Generator** (`fancy-text-generator`) (shipped 2026-08-30): Turn plain text into
   unicode bold, italic, script and other styled variants for social bios. No
   dependency (unicode character mapping tables). Generic shell ok.
-- [ ] **Morse Code Translator** (`morse-code-translator`): Translate text to
+- [x] **Morse Code Translator** (`morse-code-translator`) (shipped 2026-08-30): Translate text to
   and from Morse code, with audible playback of the tones. Dependency: Web
   Audio API (native) for tone playback. Needs panel (playback controls and
   timing display).
-- [ ] **NATO Phonetic Alphabet** (`nato-phonetic-alphabet`): Spell out any
+- [x] **NATO Phonetic Alphabet** (`nato-phonetic-alphabet`) (shipped 2026-08-30): Spell out any
   text using the NATO phonetic alphabet, with audio playback of each word.
   Dependency: SpeechSynthesis API (native) or bundled short audio clips. Needs
   panel (per-word playback controls).
-- [ ] **Number to Words** (`number-to-words`): Spell out a number in English
+- [x] **Number to Words** (`number-to-words`) (shipped 2026-08-30): Spell out a number in English
   words, including currency and ordinal forms. No dependency. Generic shell
   ok.
-- [ ] **Roman Numeral Converter** (`roman-numeral-converter`): Convert between
+- [x] **Roman Numeral Converter** (`roman-numeral-converter`) (shipped 2026-08-30): Convert between
   Arabic numbers and Roman numerals in either direction. No dependency.
   Generic shell ok.
-- [ ] **Cipher Tool** (`cipher-tool`): Encode and decode text with Caesar,
+- [x] **Cipher Tool** (`cipher-tool`) (shipped 2026-08-30): Encode and decode text with Caesar,
   ROT13 and Vigenere ciphers. No dependency. Generic shell ok.
-- [ ] **Lorem Ipsum Generator** (`lorem-ipsum-generator`): Generate
+- [x] **Lorem Ipsum Generator** (`lorem-ipsum-generator`) (shipped 2026-08-30): Generate
   placeholder paragraphs, sentences or word counts of lorem ipsum text. No
   dependency. Generic shell ok.
 - [ ] **Readability Score** (`readability-score`): Flesch-Kincaid and other
@@ -152,35 +187,35 @@ since they are already built; see the CSV directly for their grades.
 
 ## Crypto
 
-- [ ] **SSH Key Generator** (`ssh-key-generator`): Generate an ed25519
+- [x] **SSH Key Generator** (`ssh-key-generator`) (shipped 2026-08-30): Generate an ed25519
   OpenSSH key pair locally, with fingerprint and PEM/OpenSSH export.
   Dependency: WebCrypto Ed25519 (native in modern browsers) plus an OpenSSH
   wire-format encoder. Needs panel (key pair display with per-part copy).
-- [ ] **Text Encrypter** (`text-encrypter`): Encrypt and decrypt text with a
+- [x] **Text Encrypter** (`text-encrypter`) (shipped 2026-08-30): Encrypt and decrypt text with a
   passphrase using AES-GCM, entirely locally. Dependency: WebCrypto (native).
   Generic shell ok.
-- [ ] **JWT Generator** (`jwt-generator`): Build and sign a JWT with HS256 or
+- [x] **JWT Generator** (`jwt-generator`) (shipped 2026-08-30): Build and sign a JWT with HS256 or
   RS256 from a header and payload you edit. Dependency: WebCrypto (native) for
   signing. Needs panel (header/payload editors plus signed token output,
   companion to the existing `jwt-vulnerability-check`).
-- [ ] **Self-Signed Certificate Generator** (`self-signed-certificate-generator`):
+- [x] **Self-Signed Certificate Generator** (`self-signed-certificate-generator`) (shipped 2026-08-30):
   Generate a self-signed X.509 certificate and key pair for local
   development. Dependency: `@peculiar/x509` plus WebCrypto. Needs panel
   (certificate field form plus PEM output and download).
-- [ ] **HMAC Generator** (`hmac-generator`): Compute and verify HMAC digests
+- [x] **HMAC Generator** (`hmac-generator`) (shipped 2026-08-30): Compute and verify HMAC digests
   for a message and secret key, companion to the existing `hash-generator`.
   Dependency: WebCrypto (native). Generic shell ok.
-- [ ] **Password Strength Checker** (`password-strength-checker`): Score a
+- [x] **Password Strength Checker** (`password-strength-checker`) (shipped 2026-08-30): Score a
   password's real entropy and estimated crack time, with plain English
   reasons. Dependency: `zxcvbn` or `zxcvbn-ts`. Needs panel (live strength
   meter).
 
 ## Files
 
-- [ ] **Archive Viewer** (`archive-viewer`): Browse and extract zip and tar
+- [x] **Archive Viewer** (`archive-viewer`) (shipped 2026-08-30): Browse and extract zip and tar
   archives without unpacking them to disk. Dependency: `fflate`. Needs panel
   (file tree with extract).
-- [ ] **Torrent File Inspector** (`torrent-file-inspector`): Decode a
+- [x] **Torrent File Inspector** (`torrent-file-inspector`) (shipped 2026-08-30): Decode a
   `.torrent` file's trackers, file list and info hash. Dependency: a small
   bencode parser (hand-rolled or a tiny lib). Needs panel (tracker/file list
   view).
@@ -190,7 +225,7 @@ since they are already built; see the CSV directly for their grades.
 
 ## Data
 
-- [ ] **XLSX Viewer** (`xlsx-viewer`): Open, sort and filter Excel
+- [x] **XLSX Viewer** (`xlsx-viewer`) (shipped 2026-08-30): Open, sort and filter Excel
   spreadsheets without uploading them anywhere. Dependency: SheetJS (`xlsx`),
   lazy loaded. Needs panel (spreadsheet grid with sheet tabs).
 - [ ] **Word Cloud Generator** (`word-cloud-generator`): Turn pasted text into
@@ -200,7 +235,7 @@ since they are already built; see the CSV directly for their grades.
 
 ## Audio
 
-- [ ] **MP3 Tag Editor** (`mp3-tag-editor`): Read and edit ID3 tags and cover
+- [x] **MP3 Tag Editor** (`mp3-tag-editor`) (shipped 2026-08-30): Read and edit ID3 tags and cover
   art on MP3 files in the browser. Dependency: an ID3 read/write library.
   Needs panel (tag form plus cover art preview).
 - [ ] **Voice Recorder** (`voice-recorder`): Record from the microphone with a
@@ -219,21 +254,21 @@ since they are already built; see the CSV directly for their grades.
 
 ## Images
 
-- [ ] **EXIF Viewer and Stripper** (`exif-viewer-and-stripper`): See every
+- [x] **EXIF Viewer and Stripper** (`exif-viewer-and-stripper`) (shipped 2026-08-30): See every
   EXIF field in a photo and export a clean copy with it removed. Dependency:
   `exifr` for parsing, canvas re-encode to strip. Needs panel (image preview
   plus EXIF table).
-- [ ] **Image Color Palette Extractor** (`image-color-palette-extractor`):
+- [x] **Image Color Palette Extractor** (`image-color-palette-extractor`) (shipped 2026-08-30):
   Pull the dominant colors out of an image as hex, rgb and named swatches.
   Dependency: canvas pixel sampling, optionally a quantization lib. Needs
   panel (image preview with swatch list).
-- [ ] **Image to Data URL** (`image-to-data-url`): Convert an image to a
+- [x] **Image to Data URL** (`image-to-data-url`) (shipped 2026-08-30): Convert an image to a
   base64 data URL, or decode a data URL back to a file. No dependency. Needs
   panel (image preview alongside the encoded text).
-- [ ] **Image Watermark** (`image-watermark`): Overlay a text or logo
+- [x] **Image Watermark** (`image-watermark`) (shipped 2026-08-30): Overlay a text or logo
   watermark on one image or a whole batch, with position and tiling controls.
   No dependency (canvas API). Needs panel (live positioning preview).
-- [ ] **Meme Generator** (`meme-generator`): Add classic caption text to any
+- [x] **Meme Generator** (`meme-generator`) (shipped 2026-08-30): Add classic caption text to any
   image and export it, no account needed. No dependency (canvas API). Needs
   panel (drag-to-position text over the image).
 
@@ -263,99 +298,104 @@ since they are already built; see the CSV directly for their grades.
 
 ## Hardware
 
-- [ ] **LED Resistor Calculator** (`led-resistor-calculator`): Work out the
+- [x] **LED Resistor Calculator** (`led-resistor-calculator`) (shipped 2026-08-30): Work out the
   current-limiting resistor for an LED from supply and forward voltage. No
   dependency. Generic shell ok.
-- [ ] **Voltage Divider Calculator** (`voltage-divider`): Work out output
+- [x] **Voltage Divider Calculator** (`voltage-divider`) (shipped 2026-08-30): Work out output
   voltage or either resistor value for a two-resistor divider. No dependency.
   Generic shell ok.
-- [ ] **555 Timer Calculator** (`555-timer-calculator`): Astable and
+- [x] **555 Timer Calculator** (`555-timer-calculator`) (shipped 2026-08-30): Astable and
   monostable frequency, duty cycle and component values. No dependency.
   Generic shell ok.
-- [ ] **Capacitor Code Decoder** (`capacitor-code-decoder`): Decode 3-digit
+- [x] **Capacitor Code Decoder** (`capacitor-code-decoder`) (shipped 2026-08-30): Decode 3-digit
   and letter capacitor codes into capacitance and tolerance. No dependency.
   Generic shell ok.
-- [ ] **PCB Trace Width Calculator** (`pcb-trace-width`): IPC-2221 trace width
+- [x] **PCB Trace Width Calculator** (`pcb-trace-width`) (shipped 2026-08-30): IPC-2221 trace width
   for a target current, copper weight and temperature rise. No dependency.
   Generic shell ok.
 
 ## RF
 
-- [ ] **Antenna Length Calculator** (`antenna-length-calculator`):
+- [x] **Antenna Length Calculator** (`antenna-length-calculator`) (shipped 2026-08-30):
   Quarter-wave and dipole antenna lengths for any frequency. No dependency.
   Generic shell ok.
-- [ ] **Path Loss and Link Budget** (`path-loss-link-budget`): Free space
+- [x] **Path Loss and Link Budget** (`path-loss-link-budget`) (shipped 2026-08-30): Free space
   path loss and a full link budget from transmit power to receiver
   sensitivity. No dependency. Generic shell ok.
-- [ ] **Fresnel Zone Calculator** (`fresnel-zone`): Fresnel zone radius and
+- [x] **Fresnel Zone Calculator** (`fresnel-zone`) (shipped 2026-08-30): Fresnel zone radius and
   clearance for a wireless link, with a visual clearance profile. No
   dependency. Needs panel (clearance profile diagram).
-- [ ] **VSWR and Return Loss Converter** (`vswr-return-loss`): Convert between
+- [x] **VSWR and Return Loss Converter** (`vswr-return-loss`) (shipped 2026-08-30): Convert between
   VSWR, return loss and reflection coefficient. No dependency. Generic shell
   ok.
-- [ ] **dBm, Watts and Volts Converter** (`dbm-watts-volts-converter`):
+- [x] **dBm, Watts and Volts Converter** (`dbm-watts-volts-converter`) (shipped 2026-08-30):
   Convert RF power between dBm, watts and volts across common impedances. No
   dependency. Generic shell ok.
-- [ ] **Coax Cable Loss Calculator** (`coax-cable-loss`): Signal loss over a
+- [x] **Coax Cable Loss Calculator** (`coax-cable-loss`) (shipped 2026-08-30): Signal loss over a
   coax run by cable type, length and frequency. Dependency: a bundled
   attenuation table per common cable type. Generic shell ok.
-- [ ] **Wavelength and Frequency Converter** (`wavelength-frequency-converter`):
+- [x] **Wavelength and Frequency Converter** (`wavelength-frequency-converter`) (shipped 2026-08-30):
   Convert between frequency and wavelength for any part of the spectrum. No
   dependency. Generic shell ok.
-- [ ] **LC Resonance Calculator** (`lc-resonance`): Resonant frequency of an
+- [x] **LC Resonance Calculator** (`lc-resonance`) (shipped 2026-08-30): Resonant frequency of an
   LC circuit from inductance and capacitance. No dependency. Generic shell
   ok.
 
+Note: band plans, channel tables, regulatory rules and the RF exposure
+calculator shipped inside the Electromagnetic Spectrum tool
+(`electromagnetic-spectrum`) rather than as separate tools tracked in this
+list.
+
 ## Chemistry
 
-- [ ] **Chemical Equation Balancer** (`chemical-equation-balancer`): Balance
+- [x] **Chemical Equation Balancer** (`chemical-equation-balancer`) (shipped 2026-08-30): Balance
   any chemical equation automatically and show the working. No dependency
   (matrix-based balancing algorithm). Generic shell ok.
-- [ ] **Stoichiometry Calculator** (`stoichiometry-calculator`): Mole ratios,
+- [x] **Stoichiometry Calculator** (`stoichiometry-calculator`) (shipped 2026-08-30): Mole ratios,
   limiting reactant and theoretical yield from a balanced equation and given
   reactant amounts. No dependency. Generic shell ok.
-- [ ] **Half-Life and Decay Calculator** (`half-life-decay`): Remaining
+- [x] **Half-Life and Decay Calculator** (`half-life-decay`) (shipped 2026-08-30): Remaining
   quantity over time for any half-life, with a decay curve. No dependency.
   Needs panel (decay curve chart).
-- [ ] **Dilution Calculator** (`dilution-calculator`): Solve C1V1 equals C2V2
+- [x] **Dilution Calculator** (`dilution-calculator`) (shipped 2026-08-30): Solve C1V1 equals C2V2
   for any missing concentration or volume. No dependency. Generic shell ok.
-- [ ] **Molarity and Solution Prep** (`molarity-solution-prep`): Work out
+- [x] **Molarity and Solution Prep** (`molarity-solution-prep`) (shipped 2026-08-30): Work out
   moles, volume or concentration, with a step-by-step prep recipe. No
   dependency. Generic shell ok.
-- [ ] **pH and pOH Calculator** (`ph-poh-calculator`): Convert between pH,
+- [x] **pH and pOH Calculator** (`ph-poh-calculator`) (shipped 2026-08-30): Convert between pH,
   pOH, H+ and OH- concentration, including weak acid Ka. No dependency.
   Generic shell ok.
-- [ ] **Buffer Calculator** (`buffer-calculator`): Henderson-Hasselbalch
+- [x] **Buffer Calculator** (`buffer-calculator`) (shipped 2026-08-30): Henderson-Hasselbalch
   buffer pH and capacity from acid and conjugate base amounts. No dependency.
   Generic shell ok.
-- [ ] **Electron Configuration Viewer** (`electron-configuration`): Aufbau
+- [x] **Electron Configuration Viewer** (`electron-configuration`) (shipped 2026-08-30): Aufbau
   order electron configuration and orbital diagram for any element, reusing
   the existing periodic table dataset. No dependency. Needs panel (orbital
   diagram render).
-- [ ] **Isotope Abundance Lookup** (`isotope-abundance-lookup`): Natural
+- [x] **Isotope Abundance Lookup** (`isotope-abundance-lookup`) (shipped 2026-08-30): Natural
   isotopes, abundance and atomic mass contribution for any element.
   Dependency: a bundled isotope abundance dataset (NIST/IUPAC values,
   committed). Generic shell ok.
-- [ ] **Empirical Formula Calculator** (`empirical-formula-calculator`): Turn
+- [x] **Empirical Formula Calculator** (`empirical-formula-calculator`) (shipped 2026-08-30): Turn
   mass percent composition into an empirical and molecular formula. No
   dependency. Generic shell ok.
 
 ## Astronomy
 
-- [ ] **Moon Phase Calculator** (`moon-phase-calculator`): Today's moon phase
+- [x] **Moon Phase Calculator** (`moon-phase-calculator`) (in progress 2026-08-30): Today's moon phase
   and illumination, animated across any date range. No dependency (hand-rolled
   lunar phase algorithm). Needs panel (animated moon visual).
 - [ ] **Planet Positions and Rise/Set** (`planet-positions-rise-set`): Rise,
   set and sky position for the naked-eye planets from any location.
   Dependency: a bundled simplified orbital-elements dataset (committed, no
   runtime fetch). Needs panel (sky position display).
-- [ ] **Orbital Mechanics Calculator** (`orbital-mechanics-calculator`):
+- [x] **Orbital Mechanics Calculator** (`orbital-mechanics-calculator`) (shipped 2026-08-30):
   Hohmann transfer, escape velocity and orbital period, with a transfer orbit
   diagram. No dependency. Needs panel (transfer orbit diagram).
-- [ ] **Julian Date Converter** (`julian-date-converter`): Convert between
+- [x] **Julian Date Converter** (`julian-date-converter`) (shipped 2026-08-30): Convert between
   calendar dates and Julian and modified Julian dates. No dependency. Generic
   shell ok.
-- [ ] **Magnitude Calculator** (`magnitude-calculator`): Convert between
+- [x] **Magnitude Calculator** (`magnitude-calculator`) (shipped 2026-08-30): Convert between
   apparent and absolute magnitude using the distance modulus. No dependency.
   Generic shell ok.
 
@@ -382,13 +422,13 @@ diagram, never a plain form-and-number calculator.
 
 ## Weather & Earth
 
-- [ ] **Wind Chill, Heat Index and Dew Point** (`wind-chill-heat-index-calculator`):
+- [x] **Wind Chill, Heat Index and Dew Point** (`wind-chill-heat-index-calculator`) (shipped 2026-08-30):
   NWS formulas for wind chill, heat index and dew point in one calculator. No
   dependency. Generic shell ok.
-- [ ] **Pressure Altitude Calculator** (`pressure-altitude-calculator`):
+- [x] **Pressure Altitude Calculator** (`pressure-altitude-calculator`) (shipped 2026-08-30):
   Pressure and density altitude from field elevation, altimeter setting and
   temperature, for pilots. No dependency. Generic shell ok.
-- [ ] **Earthquake Magnitude and Energy** (`earthquake-magnitude-energy-calculator`):
+- [x] **Earthquake Magnitude and Energy** (`earthquake-magnitude-energy-calculator`) (shipped 2026-08-30):
   Convert between earthquake magnitude scales and the energy they release. No
   dependency. Generic shell ok.
 - [ ] **Tide and Moon Illumination Calculator** (`tide-moon-illumination-calculator`):
@@ -401,10 +441,10 @@ diagram, never a plain form-and-number calculator.
 
 ## Minecraft
 
-- [ ] **Minecraft Nether Portal Calculator** (`minecraft-nether-portal-calculator`):
+- [x] **Minecraft Nether Portal Calculator** (`minecraft-nether-portal-calculator`) (in progress 2026-08-30):
   Overworld and Nether portal linking coordinates using the 1:8 ratio. No
   dependency. Generic shell ok.
-- [ ] **Minecraft Pixel Circle Generator** (`minecraft-pixel-circle-generator`):
+- [x] **Minecraft Pixel Circle Generator** (`minecraft-pixel-circle-generator`) (in progress 2026-08-30):
   Exportable block-grid circles and arcs for builds, at any radius. No
   dependency. Needs panel (grid canvas render plus export).
 - [ ] **Minecraft MOTD Color Code Generator** (`minecraft-motd-color-code-generator`):
@@ -414,10 +454,10 @@ diagram, never a plain form-and-number calculator.
 - [ ] **Minecraft NBT Viewer** (`minecraft-nbt-viewer`): Browse and edit NBT
   data from a world save or item, as a tree. Dependency: an NBT binary
   parser. Needs panel (tree view with edit).
-- [ ] **Minecraft Beacon Calculator** (`minecraft-beacon-calculator`): Pyramid
+- [x] **Minecraft Beacon Calculator** (`minecraft-beacon-calculator`) (in progress 2026-08-30): Pyramid
   layer requirements and effect range for any beacon size. No dependency.
   Generic shell ok.
-- [ ] **Minecraft Tick Time Converter** (`minecraft-tick-time-converter`):
+- [x] **Minecraft Tick Time Converter** (`minecraft-tick-time-converter`) (in progress 2026-08-30):
   Convert between game ticks, redstone ticks and real time, companion to the
   existing redstone timing calculator. No dependency. Generic shell ok.
 
@@ -426,16 +466,16 @@ diagram, never a plain form-and-number calculator.
 - [ ] **Typing Speed Test** (`typing-speed-test`): Words per minute and
   accuracy against generated or custom passages. No dependency. Needs panel
   (live typed-text highlighting plus timer).
-- [ ] **Reaction Time Test** (`reaction-time-test`): Measure visual reaction
+- [x] **Reaction Time Test** (`reaction-time-test`) (in progress 2026-08-30): Measure visual reaction
   time across repeated trials, with a distribution chart. No dependency.
   Needs panel (stimulus display, timing capture, distribution chart).
-- [ ] **Click Speed Test** (`click-speed-test`): Clicks per second over a
+- [x] **Click Speed Test** (`click-speed-test`) (in progress 2026-08-30): Clicks per second over a
   fixed window, with a running best score. No dependency. Needs panel (click
   target plus live counter).
 
 ## Generators
 
-- [ ] **Sudoku Generator and Solver** (`sudoku-generator-solver`): Generate
+- [x] **Sudoku Generator and Solver** (`sudoku-generator-solver`) (in progress 2026-08-30): Generate
   puzzles with a unique solution at any difficulty, or solve one you paste
   in. No dependency (hand-rolled generator/solver). Needs panel (interactive
   grid).

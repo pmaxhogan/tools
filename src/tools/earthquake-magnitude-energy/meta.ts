@@ -1,0 +1,135 @@
+import type { ToolMeta } from "../types";
+
+export const meta: ToolMeta = {
+  slug: "earthquake-magnitude-energy",
+  matrixSlug: "earthquake-magnitude-energy-calculator",
+  icon: "Waves",
+  name: "Earthquake Magnitude and Energy Calculator",
+  description:
+    "Seismic moment, radiated energy and TNT equivalent from earthquake magnitude, with comparisons to famous earthquakes, magnitude to magnitude energy ratios, and the reverse lookup from energy or moment.",
+  category: "Weather & Earth",
+  keywords: [
+    "earthquake magnitude calculator",
+    "seismic energy calculator",
+    "earthquake tnt equivalent",
+    "seismic moment calculator",
+    "moment magnitude calculator",
+    "earthquake energy comparison",
+  ],
+  searchTerms: [
+    "hanks kanamori formula",
+    "gutenberg richter energy magnitude",
+    "richter scale energy",
+    "modified mercalli intensity",
+    "magnitude to energy ratio",
+    "how much bigger is a magnitude 8",
+    "tohoku earthquake energy",
+  ],
+  input: "none",
+  output: "application/json",
+  options: [
+    {
+      kind: "select",
+      id: "mode",
+      label: "Start from",
+      default: "magnitude",
+      ui: "segmented",
+      options: [
+        { value: "magnitude", label: "Magnitude", synonyms: ["mw", "moment magnitude"] },
+        { value: "energy", label: "Radiated energy", synonyms: ["joules", "tnt equivalent"] },
+        { value: "moment", label: "Seismic moment", synonyms: ["n*m", "dyne-cm"] },
+        {
+          value: "compare",
+          label: "Compare two magnitudes",
+          synonyms: ["ratio", "how much bigger", "energy ratio"],
+        },
+      ],
+    },
+    {
+      kind: "number",
+      id: "magnitude",
+      label: "Magnitude (Mw)",
+      default: 6.7,
+      min: -1,
+      max: 10,
+      step: 0.1,
+    },
+    { kind: "number", id: "energy", label: "Radiated energy", default: 2e15, min: 0, step: 1 },
+    {
+      kind: "select",
+      id: "energyUnit",
+      label: "Energy unit",
+      default: "J",
+      ui: "segmented",
+      options: [
+        { value: "J", label: "joules", synonyms: ["j", "energy in joules"] },
+        { value: "kt", label: "kilotons TNT", synonyms: ["kt", "kilotons"] },
+        { value: "Mt", label: "megatons TNT", synonyms: ["mt", "megatons"] },
+      ],
+    },
+    {
+      kind: "number",
+      id: "moment",
+      label: "Seismic moment",
+      default: 3.9e22,
+      min: 0,
+      step: 1,
+    },
+    {
+      kind: "select",
+      id: "momentUnit",
+      label: "Moment unit",
+      default: "N-m",
+      ui: "segmented",
+      options: [
+        { value: "N-m", label: "newton meters (N*m)", synonyms: ["nm", "si unit"] },
+        { value: "dyne-cm", label: "dyne centimeters", synonyms: ["dyne-cm", "cgs unit"] },
+      ],
+    },
+    {
+      kind: "number",
+      id: "magnitudeA",
+      label: "Magnitude A",
+      default: 6,
+      min: -1,
+      max: 10,
+      step: 0.1,
+    },
+    {
+      kind: "number",
+      id: "magnitudeB",
+      label: "Magnitude B",
+      default: 7,
+      min: -1,
+      max: 10,
+      step: 0.1,
+    },
+  ],
+  examples: [
+    { label: "1994 Northridge, magnitude 6.7", opts: { mode: "magnitude", magnitude: "6.7" } },
+    {
+      label: "How much bigger is magnitude 8 than 6?",
+      opts: { mode: "compare", magnitudeA: "6", magnitudeB: "8" },
+    },
+  ],
+  http: { method: "GET", contentType: "application/json" },
+  copy: {
+    what: "Converts earthquake moment magnitude (Mw) to seismic moment (Hanks and Kanamori, 1979), radiated energy (Gutenberg and Richter, restated in SI units by Choy and Boatwright, 1995), and TNT equivalent, then compares the result against three well known earthquakes: the 2011 Tohoku earthquake (Mw 9.1), the 1906 San Francisco earthquake (about Mw 7.9) and the 1994 Northridge earthquake (Mw 6.7). It also computes the energy and ground motion amplitude ratio between any two magnitudes, gives a rough Modified Mercalli Intensity estimate, and runs the same relations in reverse from a radiated energy or seismic moment value.",
+    how: "Pick what you are starting from, magnitude, radiated energy, seismic moment, or two magnitudes to compare, and enter the value in whichever unit you have it. Every result shows seismic moment, radiated energy, TNT equivalent, the comparisons against the three reference earthquakes, and a rough shaking intensity estimate, all at once.",
+    why: "Most earthquake energy calculators do one direction of one formula and quote a bare number. This one is explicit that seismic moment and radiated energy are two different quantities related by two different formulas, keeps its 1.5-slope logarithmic relations named and sourced, and gives context through real comparisons and a magnitude-to-magnitude ratio calculator rather than a number with nothing to measure it against. It runs entirely in your browser, so your inputs never leave your device.",
+    faq: [
+      {
+        q: "How much more energy does one whole magnitude number release?",
+        a: "About 31.6 times more, which is 10 raised to the 1.5 power. That 1.5 slope comes directly from both the seismic moment and radiated energy formulas. Ground motion amplitude, by contrast, only grows 10 times per whole magnitude unit, since amplitude is what the logarithmic magnitude scale is built from directly.",
+      },
+      {
+        q: "Is comparing an earthquake to a TNT yield fair?",
+        a: "Only loosely. The TNT equivalent here is computed from radiated seismic energy, which is a small and variable fraction, often a percent or less, of the total energy an earthquake releases; most goes into heat and permanent rock deformation along the fault, not into the seismic waves that get radiated outward. A nuclear weapon yield, by contrast, is closer to its total energy release.",
+      },
+      {
+        q: "Why is the Modified Mercalli Intensity only a rough estimate?",
+        a: "Real shaking intensity depends heavily on depth, distance from the epicenter, and local soil and rock conditions, which is why the same magnitude earthquake can flatten one town and barely be felt in the next. The table here gives the typical maximum intensity felt near the epicenter of a shallow earthquake, not a prediction for any specific location.",
+      },
+    ],
+  },
+};

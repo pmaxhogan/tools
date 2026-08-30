@@ -69,6 +69,30 @@ const outline = ref("#000000");
 const format = ref("image/png");
 const quality = ref(90);
 
+/**
+ * What each native color swatch shows. `color` and `outline` stay free text,
+ * since the canvas fillStyle they feed and the text box beside each swatch
+ * both understand any CSS color, but a native `<input type="color">` only
+ * accepts six digit hex: bound to shorthand like "#fff" it logs "does not
+ * conform to the required format" and drops the value instead of showing it.
+ */
+function swatchHex(raw: string, fallback: string): string {
+  const body = raw.trim().replace(/^#/, "");
+  if (/^[0-9a-fA-F]{3}$/.test(body) || /^[0-9a-fA-F]{4}$/.test(body)) {
+    return `#${body
+      .slice(0, 3)
+      .split("")
+      .map((c) => c + c)
+      .join("")}`.toLowerCase();
+  }
+  if (/^[0-9a-fA-F]{6}$/.test(body) || /^[0-9a-fA-F]{8}$/.test(body)) {
+    return `#${body.slice(0, 6)}`.toLowerCase();
+  }
+  return fallback;
+}
+const colorSwatch = computed(() => swatchHex(color.value, "#ffffff"));
+const outlineSwatch = computed(() => swatchHex(outline.value || "#000000", "#000000"));
+
 const KIND_OPTIONS = [
   { value: "text", label: "Text" },
   { value: "image", label: "Logo" },
@@ -582,7 +606,7 @@ const sizeNote = computed(() => {
               <input
                 id="wm-color"
                 type="color"
-                :value="color"
+                :value="colorSwatch"
                 aria-label="Pick the text color"
                 class="h-9 w-10 shrink-0 cursor-pointer rounded-[8px] border bg-card p-1"
                 @input="color = ($event.target as HTMLInputElement).value"
@@ -596,7 +620,7 @@ const sizeNote = computed(() => {
               <input
                 id="wm-outline"
                 type="color"
-                :value="outline || '#000000'"
+                :value="outlineSwatch"
                 aria-label="Pick the outline color"
                 class="h-9 w-10 shrink-0 cursor-pointer rounded-[8px] border bg-card p-1"
                 @input="outline = ($event.target as HTMLInputElement).value"

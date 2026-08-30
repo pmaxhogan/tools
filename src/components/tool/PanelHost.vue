@@ -201,6 +201,11 @@ const panels: Record<string, Component> = {
   "image-to-data-url": defineAsyncComponent(() => import("./panels/DataUrlPanel.vue")),
   "image-watermark": defineAsyncComponent(() => import("./panels/WatermarkPanel.vue")),
   "meme-generator": defineAsyncComponent(() => import("./panels/MemePanel.vue")),
+  "pixel-circle-generator": defineAsyncComponent(() => import("./panels/PixelCirclePanel.vue")),
+  "click-speed-test": defineAsyncComponent(() => import("./panels/ClickSpeedPanel.vue")),
+  "reaction-time-test": defineAsyncComponent(() => import("./panels/ReactionTimePanel.vue")),
+  "sudoku-generator-solver": defineAsyncComponent(() => import("./panels/SudokuPanel.vue")),
+  "moon-phase-calculator": defineAsyncComponent(() => import("./panels/MoonPhasePanel.vue")),
 };
 
 const props = defineProps<{ meta: ToolMeta }>();

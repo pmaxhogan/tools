@@ -77,6 +77,26 @@ const margin = ref<number>((marginSpec.value.default as number) ?? 4);
 const color = ref("#000000");
 const background = ref("#ffffff");
 
+/**
+ * Expand and lowercase a 3 or 6 digit hex value, or null when it is not one.
+ * The foreground and background swatches below are native
+ * `<input type="color">` elements, which only accept six digit hex: a shared
+ * link written by hand, or one from an older version of this page, could
+ * carry the three digit shorthand, and setting that straight onto the swatch
+ * logs "does not conform to the required format" and drops the value.
+ */
+function parseHex(raw: string): string | null {
+  const body = raw.trim().replace(/^#/, "");
+  if (/^[0-9a-fA-F]{3}$/.test(body)) {
+    return `#${body
+      .split("")
+      .map((c) => c + c)
+      .join("")}`.toLowerCase();
+  }
+  if (/^[0-9a-fA-F]{6}$/.test(body)) return `#${body.toLowerCase()}`;
+  return null;
+}
+
 /** Rendered pixel width baked into the SVG, and the PNG export size. */
 const RENDER_SIZE = 1024;
 
@@ -389,8 +409,14 @@ onMounted(() => {
   if (frag.opts.preset) preset.value = frag.opts.preset;
   if (frag.opts.ecc) ecc.value = frag.opts.ecc;
   if (frag.opts.margin !== undefined) margin.value = Number(frag.opts.margin);
-  if (frag.opts.fg) color.value = frag.opts.fg;
-  if (frag.opts.bg) background.value = frag.opts.bg;
+  if (frag.opts.fg) {
+    const hex = parseHex(frag.opts.fg);
+    if (hex) color.value = hex;
+  }
+  if (frag.opts.bg) {
+    const hex = parseHex(frag.opts.bg);
+    if (hex) background.value = hex;
+  }
 
   // Wifi is intentionally excluded: its fragment input is never written, so
   // there is nothing sensitive to read back either.

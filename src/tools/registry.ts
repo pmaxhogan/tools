@@ -257,6 +257,20 @@ import { meta as phPohCalculator } from "./ph-poh-calculator/meta";
 import { meta as stoichiometryCalculator } from "./stoichiometry-calculator/meta";
 import { meta as julianDateConverter } from "./julian-date-converter/meta";
 import { meta as magnitudeCalculator } from "./magnitude-calculator/meta";
+import { meta as isotopeAbundanceLookup } from "./isotope-abundance-lookup/meta";
+import { meta as orbitalMechanicsCalculator } from "./orbital-mechanics-calculator/meta";
+import { meta as windChillHeatIndexDewPoint } from "./wind-chill-heat-index-dew-point/meta";
+import { meta as pressureAltitude } from "./pressure-altitude/meta";
+import { meta as earthquakeMagnitudeEnergy } from "./earthquake-magnitude-energy/meta";
+import { meta as netherPortalCalculator } from "./nether-portal-calculator/meta";
+import { meta as beaconCalculator } from "./beacon-calculator/meta";
+import { meta as tickTimeConverter } from "./tick-time-converter/meta";
+import { meta as pixelCircleGenerator } from "./pixel-circle-generator/meta";
+import { meta as clickSpeedTest } from "./click-speed-test/meta";
+import { meta as reactionTimeTest } from "./reaction-time-test/meta";
+import { meta as sudokuGeneratorSolver } from "./sudoku-generator-solver/meta";
+import { meta as moonPhaseCalculator } from "./moon-phase-calculator/meta";
+import { meta as planetPositions } from "./planet-positions/meta";
 
 export const tools: ToolMeta[] = [
   airportCodeLookup,
@@ -506,6 +520,20 @@ export const tools: ToolMeta[] = [
   stoichiometryCalculator,
   julianDateConverter,
   magnitudeCalculator,
+  isotopeAbundanceLookup,
+  orbitalMechanicsCalculator,
+  windChillHeatIndexDewPoint,
+  pressureAltitude,
+  earthquakeMagnitudeEnergy,
+  netherPortalCalculator,
+  beaconCalculator,
+  tickTimeConverter,
+  pixelCircleGenerator,
+  clickSpeedTest,
+  reactionTimeTest,
+  sudokuGeneratorSolver,
+  moonPhaseCalculator,
+  planetPositions,
 ];
 
 /** Lazy loaders for tool logic, keyed by URL slug. */
@@ -792,6 +820,25 @@ export const loaders: Record<string, () => Promise<unknown>> = {
     import("./stoichiometry-calculator/index").then((m) => m.default),
   "julian-date-converter": () => import("./julian-date-converter/index").then((m) => m.default),
   "magnitude-calculator": () => import("./magnitude-calculator/index").then((m) => m.default),
+  "isotope-abundance-lookup": () =>
+    import("./isotope-abundance-lookup/index").then((m) => m.default),
+  "orbital-mechanics-calculator": () =>
+    import("./orbital-mechanics-calculator/index").then((m) => m.default),
+  "wind-chill-heat-index-dew-point": () =>
+    import("./wind-chill-heat-index-dew-point/index").then((m) => m.default),
+  "pressure-altitude": () => import("./pressure-altitude/index").then((m) => m.default),
+  "earthquake-magnitude-energy": () =>
+    import("./earthquake-magnitude-energy/index").then((m) => m.default),
+  "nether-portal-calculator": () =>
+    import("./nether-portal-calculator/index").then((m) => m.default),
+  "beacon-calculator": () => import("./beacon-calculator/index").then((m) => m.default),
+  "tick-time-converter": () => import("./tick-time-converter/index").then((m) => m.default),
+  "pixel-circle-generator": () => import("./pixel-circle-generator/index").then((m) => m.default),
+  "click-speed-test": () => import("./click-speed-test/index").then((m) => m.default),
+  "reaction-time-test": () => import("./reaction-time-test/index").then((m) => m.default),
+  "sudoku-generator-solver": () => import("./sudoku-generator-solver/index").then((m) => m.default),
+  "moon-phase-calculator": () => import("./moon-phase-calculator/index").then((m) => m.default),
+  "planet-positions": () => import("./planet-positions/index").then((m) => m.default),
 };
 
 export function getTool(slug: string): ToolMeta | undefined {
