@@ -161,7 +161,7 @@ Wave 1 (parallel, disjoint files):
 - [x] Wave 2 pushed (9e2ff1c), CI green, live, QA clean (0 blockers, 0 bugs)
 - [x] Wave 3 in progress (uncommitted on main): Phase-1 facelift done; chem UX rebuilt on the 25k index (+ syn column); ToolShell on FileDrop + text carry; sensitive options agent running; wired so far: crypto x6, files/data x5, RF x8 (+worker), electronics x5 (+worker); running: CSS x6, image x6, chem calc x10, astronomy x5, minecraft x6, weather x4, coax verification
 - [x] Wave 3 pushed (9616414), CI green, live; QA running
-- [x] Wave 4 pushed (0f65125), CI green, live: 291 pages, 11373 tests; QA running
+- [x] Wave 4 pushed (0f65125), CI green, live: 291 pages, 11373 tests; QA clean (all 14 new tools, keyboard-first ? rule, categories). The first wave-4 QA pass reported the cert and meme bugs as unfixed because its headless profile kept the previous deploy's service-worker precache (old x509 chunk 404 on the server); a fresh-profile re-check passed all four. Lesson: clear the SW before re-testing a fix.
 - [ ] Perf pass: NOT done (time); see backlog
 - [ ] Final: memory, report artifact, gallery artifact, notification
 
