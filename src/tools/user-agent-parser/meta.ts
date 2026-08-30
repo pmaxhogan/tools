@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "MonitorSmartphone",
   matrixSlug: "ua",
   name: "User-Agent Parser",
-  description: "Decode a UA string into browser, engine, OS and device.",
+  description:
+    "Decode a raw User-Agent string into browser name and version, rendering engine, operating system, and device type.",
   category: "Network",
   keywords: [
     "user agent parser",

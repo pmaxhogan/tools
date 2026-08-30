@@ -4,7 +4,8 @@ export const meta: ToolMeta = {
   slug: "pipelines",
   icon: "Workflow",
   name: "Composable Pipelines",
-  description: "Chain tools together and share the whole chain as a URL.",
+  description:
+    "Chain this site's text tools into one flow, feeding each tool's output into the next, and share the whole pipeline as a URL.",
   category: "Platform",
   keywords: [
     "chain tools together",

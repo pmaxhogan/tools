@@ -67,7 +67,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "Is my expression sent to a server?",
-        a: "No. Parsing and the run preview happen entirely in your browser; the page makes no network requests with your input.",
+        a: "No. Parsing and the run preview happen entirely in your browser; your files and inputs never leave your device.",
       },
     ],
   },

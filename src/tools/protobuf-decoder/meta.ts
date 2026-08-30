@@ -78,6 +78,7 @@ export const meta: ToolMeta = {
       ],
     },
   ],
+  examples: [{ label: "Message with a nested field and a repeated field", file: "sample.pb" }],
   copy: {
     what: "Turns a binary payload into readable JSON. It handles protobuf, CBOR, and MessagePack, and by default it works out which one you gave it by trying all three and keeping the decoder that consumed every byte. Protobuf is decoded straight from the wire format with no .proto file, so you get field numbers, wire types, nested messages, repeated fields, and 64 bit values kept exact as decimal strings. CBOR and MessagePack come back with their byte strings shown as a hex preview, their timestamps as ISO dates, and their bignums intact, so nothing is quietly rounded or dropped.",
     how: "Drop the payload as a file, or paste it as base64, base64url, or a hex dump with any spacing and an optional 0x prefix. Leave Format on Auto detect for an unknown blob, or pin it to Protobuf, CBOR, or MessagePack when you already know and want the exact decoder error if it does not parse. The result lists the format it picked and why, the byte length, the top level field count for protobuf, and the decoded JSON in a copyable block.",

@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Usb",
   matrixSlug: "hid",
   name: "HID Report Explorer",
-  description: "Inspect the raw HID reports coming off any USB device.",
+  description:
+    "Inspect the raw HID input reports streaming off any USB or Bluetooth device, decoded byte by byte with usage names.",
   category: "Hardware",
   keywords: [
     "webhid report viewer",

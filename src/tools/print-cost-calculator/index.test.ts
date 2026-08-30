@@ -226,6 +226,29 @@ describe("print-cost-calculator: run", () => {
     expect(() => run("", { ...base, failureRatePercent: 51 })).toThrowError(ToolError);
   });
 
+  it("computes the meta.ts examples without throwing", () => {
+    const slicerOut = run("Filament used: 23.4g\nEstimated printing time: 3h 12m", {
+      ...base,
+      material: "pla",
+      spoolPrice: 20,
+      spoolGrams: 1000,
+      printerWatts: 120,
+    });
+    expect(slicerOut["Filament amount"]).toBe("23.40 g PLA");
+
+    const quoteOut = run("", {
+      ...base,
+      grams: 48,
+      material: "petg",
+      hours: 4,
+      minutes: 30,
+      markupPercent: 40,
+      failureRatePercent: 10,
+    });
+    expect(quoteOut["Filament amount"]).toBe("48.00 g PETG");
+    expect(quoteOut.Total).toBeDefined();
+  });
+
   it("throws bad-option for an invalid markup percent", () => {
     expect(() => run("", { ...base, markupPercent: 501 })).toThrowError(ToolError);
   });

@@ -9,27 +9,43 @@ const dismissedExamples = new Set<string>();
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, shallowRef, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from "vue";
 import type { SelectOptionSpec, ToolExample, ToolMeta } from "@/tools/types";
 import { ToolError, type ToolLogic } from "@/tools/types";
 import { loaders } from "@/tools/registry";
 import { coerceOpts, readFragment, writeFragment } from "@/lib/fragment";
 import { exampleOptsToState, isTextLike, pickExample, quickEntryPlaceholder } from "@/lib/examples";
 import { formatBytes } from "@/lib/format";
+import { recordToRows, rowsToText } from "@/lib/key-value";
+import { installToolShortcuts } from "@/lib/shortcuts";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { ChevronRight, Sparkles, X } from "lucide-vue-next";
 import OptionControl from "./OptionControl.vue";
 import OutputView from "./OutputView.vue";
+import ShortcutSheet from "./ShortcutSheet.vue";
 
 /**
  * The generic tool island. Renders input (paste / drop / file picker),
  * schema-driven options, and output with copy actions. State round-trips
  * through the URL fragment. Tools needing bespoke UI provide their own
- * island instead — this shell covers the common shape.
+ * island instead; this shell covers the common shape.
  */
 const props = defineProps<{ meta: ToolMeta }>();
+
+// Shared components (FileDrop, ShareLinkButton, ...) read these instead of
+// taking the whole meta as a prop. PanelHost already provides both for every
+// panel it mounts, including this one, but ToolShell provides them again so
+// the generic shell always has them even if it is ever mounted on its own.
+provide("toolSlug", props.meta.slug);
+provide("toolName", props.meta.name);
+
+/** The shell's own root element, so the Esc shortcut can tell whether focus sits inside it. */
+const rootEl = ref<HTMLElement>();
+
+/** Opened by the `?` shortcut; see installToolShortcuts below. */
+const shortcutSheetOpen = ref(false);
 
 /**
  * Tools whose string output is wide "ASCII art" rows rather than prose: each
@@ -245,7 +261,62 @@ async function loadSample(example: FileExample) {
   }
 }
 
+/**
+ * Copies the current output to the clipboard: the same text OutputView's own
+ * copy button would send, built the same way (rowsToText over recordToRows
+ * for a Record output, the raw string otherwise). A no-op with nothing to
+ * copy or nowhere to put it.
+ */
+async function copyOutput(): Promise<void> {
+  if (output.value === null || typeof navigator === "undefined" || !navigator.clipboard) return;
+  const text =
+    typeof output.value === "string" ? output.value : rowsToText(recordToRows(output.value));
+  await navigator.clipboard.writeText(text);
+}
+
+/**
+ * The Esc shortcut: clears whatever is currently occupying the input, in the
+ * same priority a visitor would expect from the chips shown above the box (a
+ * loaded file first, then a worked example, then plain typed text).
+ */
+function clearInputShortcut(): void {
+  if (fileBytes.value) {
+    clearFile();
+    return;
+  }
+  if (exampleActive.value) {
+    clearExample();
+    return;
+  }
+  if (input.value) input.value = "";
+}
+
+let uninstallShortcuts: (() => void) | undefined;
+
 onMounted(async () => {
+  uninstallShortcuts = installToolShortcuts({
+    onShowHelp: () => {
+      shortcutSheetOpen.value = true;
+    },
+    onRun: () => {
+      run();
+    },
+    onCopyOutput: () => {
+      void copyOutput();
+    },
+    onClearInput: clearInputShortcut,
+    isInsideToolIsland: (e) => rootEl.value?.contains(e.target as Node) ?? false,
+    // Not just the shortcut sheet: an open SearchableSelect dropdown (an
+    // option picker, the example picker) is also a reka-ui DismissableLayer,
+    // and it owns Escape itself (closing the dropdown). Without this check,
+    // Escape while a dropdown is open would both close the dropdown AND wipe
+    // the tool's input, since this listener sits on document and fires
+    // regardless. Every reka-ui layer (Dialog, Combobox/Select, Popover)
+    // marks its host with data-dismissable-layer, so one query covers all of
+    // them without naming the sheet specifically.
+    isDialogOpen: () => document.querySelector("[data-dismissable-layer]") !== null,
+  });
+
   const mod = (await loaders[props.meta.slug]()) as ToolLogic;
   logic = mod;
 
@@ -267,6 +338,10 @@ onMounted(async () => {
   }
 
   run();
+});
+
+onBeforeUnmount(() => {
+  uninstallShortcuts?.();
 });
 
 function clearFileState() {
@@ -322,7 +397,10 @@ function onPickFile(e: Event) {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6">
+  <div
+    ref="rootEl"
+    class="flex flex-col gap-4 rounded-[18px] border bg-card p-5 shadow-[var(--sh-sm)] sm:p-6"
+  >
     <!--
       Quick-entry tools read options first: the text box is a shorthand for the
       controls below it, not the thing you came to fill in. The grid is spelled
@@ -504,6 +582,8 @@ function onPickFile(e: Event) {
       <OutputView v-if="output !== null && !error" :output="output" />
     </div>
   </div>
+
+  <ShortcutSheet v-model:open="shortcutSheetOpen" />
 </template>
 
 <style scoped>

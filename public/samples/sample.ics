@@ -1,0 +1,23 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//tools.maxhogan.dev//ICS Inspector sample//EN
+BEGIN:VEVENT
+UID:sample-1@tools.maxhogan.dev
+DTSTAMP:20260815T090000Z
+DTSTART:20260901T230000Z
+DTEND:20260902T000000Z
+SUMMARY:Quarterly planning sync
+LOCATION:Conference Room B
+ORGANIZER;CN=Alex Rivera:mailto:alex@example.com
+DESCRIPTION:Review roadmap priorities and confirm owners for next quarter.
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:sample-2@tools.maxhogan.dev
+DTSTAMP:20260815T090000Z
+DTSTART;VALUE=DATE:20260904
+DTEND;VALUE=DATE:20260905
+SUMMARY:Company holiday
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR

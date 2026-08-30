@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Shuffle",
   matrixSlug: "random",
   name: "Dice & Random Picker",
-  description: "Dice, coin flips, list pickers and team splitters.",
+  description:
+    "Roll dice from standard notation, flip coins, pick random items from a list, or split names into randomized even teams.",
   category: "Generators",
   keywords: [
     "dice roller",

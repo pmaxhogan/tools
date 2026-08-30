@@ -191,3 +191,129 @@ Wikidata Cities Database,wikidata-cities-database,Query a baked SQLite of world 
 Document Scanner,document-scanner,Photo to a deskewed cropped multi page PDF,Docs,Yes,A-,A-,B+,B+,3.2
 Handwriting Pad,handwriting-pad,Pressure aware ink canvas with SVG and PNG export,Images,Yes,B,B-,B,B-,2.6
 Image Upscaler,image-upscaler,Real-ESRGAN 4x upscaling on WebGPU with a WASM fallback,Local AI,Yes,A-,B+,B,B,3.0
+Bingo Board Maker,bingo-card-generator,"Randomized printable bingo boards from a pasted list, with a seed for repeatable sets",Generators,Yes,B,A-,B,A-,3.33
+Display Info,display-info,"Live readout of screen resolution, pixel density, refresh rate, color gamut and input features",Network,Yes,A-,B+,B,A-,3.32
+Electromagnetic Spectrum,electromagnetic-spectrum,"Interactive to scale map of the EM spectrum with live frequency, wavelength and energy readouts",Science,Yes,B,A-,A-,B+,3.47
+Regex Tester,regex-tester,"Live match highlighting, capture groups and a plain English explanation of any pattern",Dev,Yes,A-,A,C+,A,3.42
+JSONPath Query,jsonpath-query,Run JSONPath queries against pasted JSON and see matches highlighted inline,Dev,Yes,B+,B+,B,B,3.13
+XPath and CSS Selector Tester,xpath-css-selector-tester,Test XPath and CSS selectors against pasted HTML and see every match highlighted,Dev,Yes,B+,B+,B,B,3.13
+Glob Pattern Tester,glob-pattern-tester,Check file paths against a glob pattern and see which ones match,Dev,Yes,A-,B,B+,B-,3.15
+Semver Range Tester,semver-range-tester,"Check whether a version satisfies a semver range, with plain English rules",Dev,Yes,A-,B,B,B-,3.06
+Unified Diff and Patch Applier,unified-diff-patch-applier,Apply a unified diff patch to pasted text and preview the result before download,Dev,Yes,B,B+,B+,B-,3.11
+Cubic Bezier Easing Editor,cubic-bezier-easing-editor,Drag control points on a curve and copy the matching CSS or JS easing function,Dev,Yes,A-,B+,C+,B+,3.06
+CSS Gradient Generator,css-gradient-generator,"Build linear, radial and conic gradients visually and copy the CSS",Dev,Yes,A-,A-,C,A-,3.18
+Fluid Clamp Calculator,fluid-clamp-calculator,Turn a min and max size into a responsive CSS clamp() expression,Dev,Yes,A-,B+,B,B,3.21
+Box Shadow Generator,box-shadow-generator,Stack multiple shadow layers visually and copy the CSS box-shadow value,Dev,Yes,A-,B+,C+,B+,3.06
+CSS Keyframes Builder,css-keyframes-builder,Build @keyframes animations on a visual timeline and preview them live,Dev,Yes,B,B,B,B-,2.92
+Clip Path Generator,clip-path-generator,Drag shape handles over an image and copy the matching CSS clip-path,Dev,Yes,B,B,B,B-,2.92
+Fancy Text Generator,fancy-text-generator,"Turn plain text into unicode bold, italic, script and other styled variants",Text,Yes,A,B,C,A-,2.99
+Morse Code Translator,morse-code-translator,"Translate text to and from Morse code, with audible playback of the tones",Text,Yes,A-,B,C+,B+,2.95
+NATO Phonetic Alphabet,nato-phonetic-alphabet,"Spell out any text using the NATO phonetic alphabet, with audio playback",Text,Yes,A+,B-,C,B,2.83
+Number to Words,number-to-words,"Spell out a number in English words, including currency and ordinal forms",Text,Yes,A,B,C+,B+,3.01
+Roman Numeral Converter,roman-numeral-converter,Convert between Arabic numbers and Roman numerals in either direction,Text,Yes,A+,B-,C,A-,2.94
+Cipher Tool,cipher-tool,"Encode and decode text with Caesar, ROT13 and Vigenere ciphers",Text,Yes,A-,B,C+,B,2.9
+Lorem Ipsum Generator,lorem-ipsum-generator,"Generate placeholder paragraphs, sentences or word counts of lorem ipsum text",Text,Yes,A+,B,C-,B+,2.9
+SSH Key Generator,ssh-key-generator,"Generate an ed25519 OpenSSH key pair locally, with fingerprint and export",Crypto,Yes,B,A-,A-,B+,3.47
+Text Encrypter,text-encrypter,"Encrypt and decrypt text with a passphrase using AES-GCM, entirely locally",Crypto,Yes,B+,B+,B+,B,3.22
+JWT Generator,jwt-generator,Build and sign a JWT with HS256 or RS256 from a header and payload you edit,Crypto,Yes,B,A-,B,B+,3.26
+Self-Signed Certificate Generator,self-signed-certificate-generator,Generate a self-signed X.509 certificate and key pair for local development,Crypto,Yes,B+,B+,B+,B,3.22
+HMAC Generator,hmac-generator,Compute and verify HMAC digests for a message and secret key,Crypto,Yes,A-,B,C+,B,2.9
+Password Strength Checker,password-strength-checker,"Score a password's real entropy and crack time, with plain English reasons",Crypto,Yes,A-,B+,C,A-,3.03
+Archive Viewer,archive-viewer,Browse and extract zip and tar archives without unpacking them to disk,Files,Yes,B,A-,B+,B+,3.35
+XLSX Viewer,xlsx-viewer,"Open, sort and filter Excel spreadsheets without uploading them anywhere",Data,Yes,B,A-,B,A-,3.33
+MP3 Tag Editor,mp3-tag-editor,Read and edit ID3 tags and cover art on MP3 files in the browser,Audio,Yes,B,B,B,B,2.97
+Torrent File Inspector,torrent-file-inspector,"Decode a .torrent file's trackers, file list and info hash",Files,Yes,B-,B,B+,B-,2.95
+Log File Analyzer,log-file-analyzer,"Filter, search and get stats across large log files without a server",Dev,Yes,B,A-,B,B,3.22
+EXIF Viewer and Stripper,exif-viewer-and-stripper,See every EXIF field in a photo and export a clean copy with it removed,Images,Yes,A-,A-,B,A-,3.47
+Image Color Palette Extractor,image-color-palette-extractor,"Pull the dominant colors out of an image as hex, rgb and named swatches",Images,Yes,A-,B+,C+,B+,3.06
+Image to Data URL,image-to-data-url,"Convert an image to a base64 data URL, or decode one back to a file",Images,Yes,A+,B,C,B+,2.98
+Image Watermark,image-watermark,Overlay a text or logo watermark on one image or a whole batch,Images,Yes,B-,B+,B,B+,3.06
+Meme Generator,meme-generator,"Add classic caption text to any image and export it, no account needed",Images,Yes,B-,B,D+,A-,2.53
+Color Contrast Checker,color-contrast-checker,Check a foreground and background pair against WCAG contrast ratios,Dev,Yes,A-,A-,C+,A-,3.26
+Invoice Generator,invoice-generator,"Build a line-item invoice with tax and a logo, and export it as a PDF",Docs,Yes,B,A-,B,A-,3.33
+vCard Generator,vcard-generator,Build a vCard contact file with a scannable QR code to add it instantly,QR,Yes,A-,B+,B,B+,3.26
+ICS Event Generator,ics-event-generator,Build a single calendar event and download it or generate add-to-calendar links,Time,Yes,A-,B+,B,B,3.21
+Word Cloud Generator,word-cloud-generator,"Turn pasted text into a weighted word cloud image, sized by frequency",Data,Yes,B,B,C+,B+,2.81
+Font Viewer,font-viewer,Load a local font file and preview it as a specimen sheet and glyph table,Docs,Yes,A-,B,B,B-,3.06
+LED Resistor Calculator,led-resistor-calculator,Work out the current-limiting resistor for an LED from supply and forward voltage,Hardware,Yes,A+,B+,C+,B+,3.18
+Voltage Divider Calculator,voltage-divider,Work out output voltage or resistor values for a two-resistor divider,Hardware,Yes,A+,B,C+,B,3.02
+555 Timer Calculator,555-timer-calculator,"Astable and monostable frequency, duty cycle and component values",Hardware,Yes,A,B,C+,B,2.96
+Capacitor Code Decoder,capacitor-code-decoder,Decode 3-digit and letter capacitor codes into capacitance and tolerance,Hardware,Yes,A,B-,B,B-,3.01
+PCB Trace Width Calculator,pcb-trace-width,"IPC-2221 trace width for a target current, copper weight and temperature rise",Hardware,Yes,A-,B,B,B-,3.06
+Antenna Length Calculator,antenna-length-calculator,Quarter-wave and dipole antenna lengths for any frequency,RF,Yes,A,B+,B,B+,3.32
+Path Loss and Link Budget,path-loss-link-budget,Free space path loss and full link budget from transmit power to receiver,RF,Yes,A-,B+,B,B-,3.17
+Fresnel Zone Calculator,fresnel-zone,"Fresnel zone radius and clearance for a wireless link, with a visual profile",RF,Yes,A-,B,B,B-,3.06
+VSWR and Return Loss Converter,vswr-return-loss,"Convert between VSWR, return loss and reflection coefficient",RF,Yes,A,B,B+,B-,3.21
+"dBm, Watts and Volts Converter",dbm-watts-volts-converter,"Convert RF power between dBm, watts and volts across common impedances",RF,Yes,A+,B,C+,B,3.02
+Coax Cable Loss Calculator,coax-cable-loss,"Signal loss over a coax run by cable type, length and frequency",RF,Yes,A-,B,B,B-,3.06
+Wavelength and Frequency Converter,wavelength-frequency-converter,Convert between frequency and wavelength for any part of the spectrum,RF,Yes,A+,B,C,B,2.94
+LC Resonance Calculator,lc-resonance,Resonant frequency of an LC circuit from inductance and capacitance,RF,Yes,A,B-,B,C+,2.95
+Chemical Equation Balancer,chemical-equation-balancer,Balance any chemical equation automatically and show the working,Chemistry,Yes,B,A-,B,A-,3.33
+Stoichiometry Calculator,stoichiometry-calculator,"Mole ratios, limiting reactant and theoretical yield from a balanced equation",Chemistry,Yes,B,A-,B,A-,3.33
+Half-Life and Decay Calculator,half-life-decay,"Remaining quantity over time for any half-life, with a decay curve",Chemistry,Yes,A-,B+,B,B+,3.26
+Dilution Calculator,dilution-calculator,Solve C1V1 equals C2V2 for any missing concentration or volume,Chemistry,Yes,A,B+,C+,B+,3.12
+Molarity and Solution Prep,molarity-solution-prep,"Work out moles, volume or concentration, with a step-by-step prep recipe",Chemistry,Yes,A-,B+,B,B,3.21
+pH and pOH Calculator,ph-poh-calculator,"Convert between pH, pOH, H+ and OH- concentration, including weak acids",Chemistry,Yes,A-,A-,C+,A-,3.26
+Buffer Calculator,buffer-calculator,Henderson-Hasselbalch buffer pH and capacity from acid and conjugate base,Chemistry,Yes,B-,B,B,B-,2.86
+Electron Configuration Viewer,electron-configuration,Aufbau order electron configuration and orbital diagram for any element,Chemistry,Yes,A-,B+,B,B+,3.26
+Isotope Abundance Lookup,isotope-abundance-lookup,"Natural isotopes, abundance and atomic mass contribution for any element",Chemistry,Yes,A-,B,B,C+,3.0
+Empirical Formula Calculator,empirical-formula-calculator,Turn mass percent composition into an empirical and molecular formula,Chemistry,Yes,A-,B,B,B-,3.06
+Moon Phase Calculator,moon-phase-calculator,"Today's moon phase and illumination, animated across any date range",Astronomy,Yes,B-,A-,C+,A-,3.06
+Planet Positions and Rise/Set,planet-positions-rise-set,"Rise, set and sky position for the naked-eye planets from any location",Astronomy,Yes,C+,B+,B,B,2.94
+Orbital Mechanics Calculator,orbital-mechanics-calculator,"Hohmann transfer, escape velocity and orbital period, with a transfer diagram",Astronomy,Yes,B,B,A-,B-,3.12
+Julian Date Converter,julian-date-converter,Convert between calendar dates and Julian and modified Julian dates,Astronomy,Yes,A,B-,B,C+,2.95
+Magnitude Calculator,magnitude-calculator,Convert between apparent and absolute magnitude using the distance modulus,Astronomy,Yes,A-,B-,B,C+,2.89
+Projectile Motion Simulator,projectile-motion-simulator,"Animated trajectory from launch angle, speed, gravity and drag, with range and max height",Physics,Yes,B,A-,B,A-,3.33
+Optics Ray Diagram,optics-ray-diagram,"Interactive ray diagram for thin lenses and mirrors, built on Snell's law",Physics,Yes,B,B+,B,B+,3.12
+Doppler Effect Visualizer,doppler-effect-visualizer,Animated wavefronts and pitch shift for a moving sound source,Physics,Yes,B,B,B+,B,3.06
+Orbital Plot Visualizer,orbital-plot-visualizer,"Animated two-body orbit from eccentricity and semi-major axis, per Kepler's laws",Physics,Yes,B,B,B+,B-,3.01
+"Wind Chill, Heat Index and Dew Point",wind-chill-heat-index-calculator,"NWS formulas for wind chill, heat index and dew point in one calculator",Weather & Earth,Yes,A-,A-,C+,A-,3.26
+Pressure Altitude Calculator,pressure-altitude-calculator,"Pressure and density altitude from field elevation, altimeter setting and temperature",Weather & Earth,Yes,A-,B+,B,B,3.21
+Earthquake Magnitude and Energy,earthquake-magnitude-energy-calculator,Convert between earthquake magnitude scales and the energy they release,Weather & Earth,Yes,A-,B,B,B-,3.06
+Tide and Moon Illumination Calculator,tide-moon-illumination-calculator,Approximate tide timing and a lunar illumination table for any date range,Weather & Earth,Yes,B,B,B,B-,2.92
+Minecraft Nether Portal Calculator,minecraft-nether-portal-calculator,Overworld and Nether portal linking coordinates using the 1:8 ratio,Minecraft,Yes,A-,A-,B,A-,3.47
+Minecraft Pixel Circle Generator,minecraft-pixel-circle-generator,"Exportable block-grid circles and arcs for builds, any radius",Minecraft,Yes,A-,B+,C+,B+,3.06
+Minecraft MOTD Color Code Generator,minecraft-motd-color-code-generator,Build a formatted server MOTD with live color and formatting code preview,Minecraft,Yes,A+,B+,C+,B+,3.18
+Minecraft NBT Viewer,minecraft-nbt-viewer,"Browse and edit NBT data from a world save or item, as a tree",Minecraft,Yes,B,B+,B,B,3.07
+Minecraft Beacon Calculator,minecraft-beacon-calculator,Pyramid layer requirements and effect range for any beacon size,Minecraft,Yes,A-,B+,C+,B+,3.06
+Minecraft Tick Time Converter,minecraft-tick-time-converter,"Convert between game ticks, redstone ticks and real time",Minecraft,Yes,A+,B,B,B-,3.18
+Typing Speed Test,typing-speed-test,Words per minute and accuracy against generated or custom passages,Testers,Yes,B-,A-,D+,A,2.82
+Reaction Time Test,reaction-time-test,"Measure visual reaction time across repeated trials, with a distribution chart",Testers,Yes,A-,B+,C,A-,3.03
+Click Speed Test,click-speed-test,"Clicks per second over a fixed window, with a running best score",Testers,Yes,A+,B,D+,A-,2.84
+Sudoku Generator and Solver,sudoku-generator-solver,"Generate puzzles with a unique solution at any difficulty, or solve one you paste in",Generators,Yes,B,B+,C+,A-,2.98
+Maze Generator,maze-generator,"Generate printable mazes at any size, with an optional solution overlay",Generators,Yes,B-,B,B,B,2.91
+Word Search Generator,word-search-generator,"Build a printable word search from your own word list, any grid size",Generators,Yes,B-,B+,B,B+,3.06
+Meta Tags and OG Preview,meta-tags-og-preview,Edit meta tags and preview how the page card renders on social platforms,Dev,Yes,A-,B+,B,B+,3.26
+Robots.txt Tester,robots-txt-tester,"Test a URL against robots.txt rules, or build a robots.txt from scratch",Dev,Yes,A-,B,B+,B,3.19
+Markdown Preview,markdown-preview,"Live rendered preview of Markdown as you type, with export to HTML",Dev,Yes,A,B+,C,B+,3.03
+HTML Live Preview,html-live-preview,"Sandboxed live preview of HTML, CSS and JS as you edit, no server round trip",Dev,Yes,A-,B+,C+,B+,3.06
+Sitemap Inspector,sitemap-inspector,"Parse an XML sitemap, validate every URL and show coverage stats",Dev,Yes,A-,B,B,B-,3.06
+Code Formatter,code-formatter,"Format JavaScript, CSS, HTML and more with Prettier, entirely locally",Dev,Yes,B,A-,C+,A-,3.12
+Minifier,minifier,"Minify JavaScript, CSS and HTML and see the size saved",Dev,Yes,B-,B+,C,B+,2.77
+GraphQL Formatter,graphql-formatter,Pretty print and validate GraphQL queries and schemas,Dev,Yes,A-,B-,B,C+,2.89
+Dotenv to JSON,dotenv-to-json,Convert between .env files and JSON in either direction,Dev,Yes,A+,B-,B+,C+,3.1
+.gitignore Generator,gitignore-generator,Combine language and tool templates into one .gitignore file,Dev,Yes,A-,B+,C,B+,2.97
+Readability Score,readability-score,Flesch-Kincaid and other readability scores for pasted text,Text,Yes,A-,B+,C+,B+,3.06
+Word Frequency Counter,word-frequency-counter,Count and rank word and phrase frequency across pasted text,Text,Yes,A,B,C,B,2.88
+Text Cleaner,text-cleaner,"Normalize whitespace, smart quotes and line endings in pasted text",Text,Yes,A-,B,C+,B-,2.86
+Find and Replace (Regex),find-and-replace-regex,Find and replace across pasted text with regex and live match preview,Text,Yes,A-,B+,C+,B,3.01
+Directory Tree Generator,directory-tree-generator,Turn a dropped folder or pasted file list into an ASCII directory tree,Files,Yes,A-,B,B,B-,3.06
+Chmod Calculator,chmod-calculator,"Convert Unix file permissions between checkboxes, octal and symbolic form",Homelab,Yes,A+,B,C+,B,3.02
+HTTP Status Codes,http-status-codes,Searchable reference for every HTTP status code and what it means,Dev,Yes,A+,B+,C,A-,3.15
+Well-Known Ports,well-known-ports,Searchable reference for well-known and registered TCP and UDP ports,Network,Yes,A+,B,C+,B+,3.07
+MAC Address OUI Lookup,mac-address-oui-lookup,"Look up the vendor behind a MAC address prefix, or generate a random one",Network,Yes,A-,B,B,B,3.11
+Voice Recorder,voice-recorder,"Record from the microphone with a live waveform, trim and export",Audio,Yes,A-,B+,C+,B+,3.06
+Text to Speech,text-to-speech,"Read text aloud with the browser's built-in voices, and export it as audio",Audio,Yes,A-,B+,C,B+,2.97
+Audio Extractor,audio-extractor,Pull the audio track out of a video file in the format you choose,Media,Yes,B-,B+,B,B+,3.06
+Video Speed and Reverse,video-speed-reverse,"Change video playback speed or reverse it, re-encoded locally",Media,Yes,B,B,B,B-,2.92
+Sound Level Meter,sound-level-meter,"Live decibel readout from the microphone, with a running peak and average",Audio,Yes,A-,B,B+,B,3.19
+Audio Joiner,audio-joiner,"Concatenate multiple audio files into one, with crossfade options",Audio,Yes,A-,B,C+,B-,2.86
+Compound Interest Calculator,compound-interest-calculator,"Growth of a balance over time with compounding, contributions and a chart",Finance,Yes,A,A-,C+,A-,3.32
+Loan Amortization Calculator,loan-amortization-calculator,"Full payment schedule and interest paid over a loan's life, with a chart",Finance,Yes,A-,A-,C+,A-,3.26
+Statistics Calculator,statistics-calculator,"Mean, median, mode, standard deviation and regression from pasted data",Math,Yes,A-,B+,C+,B+,3.06
+Function Grapher,function-grapher,"Plot and compare multiple functions with pan, zoom and trace",Math,Yes,B-,B+,C,A-,2.84
+Prime Factorization Calculator,prime-factorization-calculator,"Break any number into its prime factors, with GCD and LCM",Math,Yes,A+,B-,C,B,2.83
+Percentage Calculator,percentage-calculator,"Every common percentage question in one calculator, change included",Math,Yes,A+,B+,C-,A,3.11
+Punnett Square Calculator,punnett-square-calculator,Monohybrid and dihybrid cross grids from parent genotypes,Biology,Yes,A-,B,B,B,3.11
+DNA/RNA Translator,dna-rna-translator,"Transcribe and translate a sequence using the codon table, with reverse complement",Biology,Yes,A-,B+,B,B,3.21
+Population Growth Calculator,population-growth-calculator,"Exponential and logistic population growth over time, with a chart",Biology,Yes,A-,B-,B,C+,2.89

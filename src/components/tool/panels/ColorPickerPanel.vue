@@ -17,6 +17,7 @@ import {
 } from "@/tools/color-picker/index";
 import type { ParsedColor, Swatch, Vec3 } from "@/tools/color-picker/index";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import { copyText } from "@/lib/clipboard";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -428,11 +429,10 @@ const paletteSpec = computed<SelectOptionSpec>(() => {
 const copiedKey = ref<string | null>(null);
 
 async function copySwatch(key: string, hex: string) {
-  try {
-    await navigator.clipboard.writeText(hex);
-  } catch {
-    return;
-  }
+  // A swatch cell is not a button we can swap for CopyButton without
+  // restyling the strip, so it copies through the shared helper instead: same
+  // toast, same wording, just no button chrome.
+  if (!(await copyText(hex))) return;
   copiedKey.value = key;
   clearTimeout(copyTimer);
   copyTimer = setTimeout(() => (copiedKey.value = null), 1500);

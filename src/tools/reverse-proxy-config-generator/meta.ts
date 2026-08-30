@@ -95,6 +95,18 @@ export const meta: ToolMeta = {
     },
     { kind: "boolean", id: "wwwRedirect", label: "Redirect www to apex domain", default: false },
   ],
+  examples: [
+    {
+      label: "app.example.com to a local Node server",
+      input: "app.example.com -> http://127.0.0.1:3000",
+      opts: { server: "nginx" },
+    },
+    {
+      label: "Caddy config with static asset caching",
+      input: "static.example.com -> http://127.0.0.1:8080",
+      opts: { server: "caddy", cache: "static-assets", wwwRedirect: "true" },
+    },
+  ],
   copy: {
     what: "Builds a complete nginx server block or Caddyfile site block for proxying a domain to a local or internal upstream, with TLS termination, websocket upgrade headers, common security headers (HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy), real client IP forwarding, gzip, upload size limits, proxy timeouts, static asset caching, and an optional www to apex redirect. It can generate nginx, Caddy, or both at once.",
     how: "Type a line like app.example.com -> http://127.0.0.1:3000, or fill in the domain and upstream fields directly, then toggle the options for TLS, websockets, headers, caching, and redirects. Copy the nginx block into /etc/nginx/sites-available or the Caddyfile block into /etc/caddy/Caddyfile, then reload the server.",

@@ -26,6 +26,7 @@ import {
 } from "@/tools/clipboard-pipelines/index";
 import { readFragment, writeFragment } from "@/lib/fragment";
 import { Button } from "@/components/ui/button";
+import CopyButton from "../CopyButton.vue";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,7 +60,6 @@ function defaultChain(): string {
 const text = ref("");
 const rows = ref<Row[]>(toRows(parseChain(defaultChain())));
 const clipboardHint = ref<string | null>(null);
-const linkCopied = ref(false);
 
 /* -------------------------------------------------------------------------- */
 /* The chain                                                                  */
@@ -193,18 +193,11 @@ async function pasteFromClipboard() {
   }
 }
 
-async function copyLink() {
+/** CopyButton asks for the link at click time, which is when it is current. */
+function pipelineLink(): string {
   // The fragment write is debounced, so flush it before reading the address bar.
   syncFragment(true);
-  if (typeof window === "undefined") return;
-  try {
-    await navigator.clipboard.writeText(window.location.href);
-    linkCopied.value = true;
-    setTimeout(() => (linkCopied.value = false), 1500);
-  } catch {
-    clipboardHint.value =
-      "Copying was blocked. Copy the address bar by hand to share this pipeline.";
-  }
+  return window.location.href;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -267,10 +260,13 @@ onUnmounted(() => clearTimeout(fragmentTimer));
           </span>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" @click="copyLink">
-            <Link class="size-4" />
-            {{ linkCopied ? "Link copied" : "Copy pipeline link" }}
-          </Button>
+          <CopyButton
+            :get-text="pipelineLink"
+            :icon="Link"
+            label="Copy pipeline link"
+            variant="outline"
+            size="sm"
+          />
           <Button v-if="rows.length" variant="ghost" size="sm" @click="clearChain">
             <Trash2 class="size-4" />
             Clear

@@ -50,6 +50,7 @@ export const meta: ToolMeta = {
       ],
     },
   ],
+  examples: [{ label: "3 block RP2040 firmware sample", file: "sample.uf2" }],
   copy: {
     what: "Parses a UF2 firmware file block by block: the magic numbers, flags, target flash address and payload size of every 512 byte block. It reports which family IDs the file declares (an RP2350 build often carries more than one, such as the secure Arm image plus an absolute or data partition ID), the contiguous address ranges the file writes to and any gaps between them, whether the block numbers form a clean sequence, and any MD5 or extension tag metadata the file embeds, such as a firmware version string or device description.",
     how: "Drop a .uf2 file onto the panel or pick one with the file button. You can also paste the file as base64 or as a hex dump. The Detail option switches between a summary (block count, families, flags, address ranges, and a pass or fail verdict) and a block table listing every block's address and size, capped at 200 rows for very large files.",

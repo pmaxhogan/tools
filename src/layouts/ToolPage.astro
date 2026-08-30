@@ -2,7 +2,9 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import SiteHeader from "@/components/SiteHeader.astro";
 import { iconFor } from "@/lib/tool-icons";
+import { relatedTools } from "@/lib/related-tools";
 import { categoryByLabel, categoryPath } from "@/tools/categories";
+import { tools } from "@/tools/registry";
 import type { ToolMeta } from "@/tools/types";
 import type { LucideIcon } from "lucide-vue-next";
 
@@ -23,6 +25,15 @@ const Icon = iconFor(meta.icon) as LucideIcon;
 // conditional rather than pointing at a bare /category/.
 const category = categoryByLabel(meta.category);
 const CategoryIcon = category ? (iconFor(category.icon) as LucideIcon) : null;
+
+// Static HTML (no client directive) so the related links are in the page for
+// SEO and work with JS disabled, same reasoning as the breadcrumb icon above.
+const related = relatedTools(meta, tools).map((t) => ({
+  slug: t.slug,
+  name: t.name,
+  description: t.description,
+  Icon: iconFor(t.icon) as LucideIcon,
+}));
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -95,6 +106,37 @@ const jsonLd = {
       <slot />
     </div>
 
+    {
+      related.length > 0 && (
+        <section class="mt-12">
+          <h2 class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+            Related tools
+          </h2>
+          <ul class="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((t) => (
+              <li>
+                <a
+                  href={`/${t.slug}`}
+                  class="related-tool-card flex h-full gap-3 rounded-[14px] border bg-card p-5 shadow-[var(--sh-sm)]"
+                >
+                  <span
+                    class="grid size-9 shrink-0 place-items-center rounded-[10px] bg-[color:var(--accent-soft)] text-[color:var(--primary)]"
+                    aria-hidden="true"
+                  >
+                    <t.Icon class="size-[18px]" stroke-width={2} />
+                  </span>
+                  <span class="min-w-0">
+                    <span class="block font-semibold">{t.name}</span>
+                    <span class="mt-1 block text-sm text-muted-foreground">{t.description}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
     <section class="mt-12 max-w-[72ch] space-y-3 border-t pt-6 text-sm">
       <details>
         <summary class="cursor-pointer font-medium">What it does</summary>
@@ -123,6 +165,10 @@ const jsonLd = {
       </details>
     </section>
 
+    <p class="mt-4 max-w-[72ch] text-xs text-muted-foreground">
+      Keyboard shortcuts: press <kbd>?</kbd> anywhere on this page to see them.
+    </p>
+
     <footer class="mt-12 max-w-[72ch] border-t pt-6 text-xs text-muted-foreground">
       <p>
         No ads, no accounts, no limits.{" "}
@@ -134,3 +180,30 @@ const jsonLd = {
     </footer>
   </main>
 </BaseLayout>
+
+<style>
+  /* Same hover treatment as HomeGrid's .tool-card, kept local since this is
+     the only static (non-hydrated) card grid on the site. */
+  .related-tool-card {
+    transition:
+      transform 160ms cubic-bezier(0.2, 0.7, 0.3, 1),
+      box-shadow 160ms cubic-bezier(0.2, 0.7, 0.3, 1),
+      border-color 120ms ease-out;
+  }
+
+  .related-tool-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sh-md);
+    border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .related-tool-card {
+      transition: border-color 120ms ease-out;
+    }
+
+    .related-tool-card:hover {
+      transform: none;
+    }
+  }
+</style>

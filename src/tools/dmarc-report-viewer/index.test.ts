@@ -1,7 +1,15 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { gzipSync, strToU8, zipSync } from "fflate";
 import { run } from "./index";
 import { ToolError } from "../types";
+
+const SAMPLE_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../../public/samples/dmarc-report.xml",
+);
 
 /**
  * A realistic aggregate report for example.com covering 2026-08-01 to 2026-08-02.
@@ -487,5 +495,15 @@ describe("dmarc-report-viewer advice is aware of the published policy", () => {
     for (const p of ["none", "quarantine", "reject"]) {
       expect(run(reportAt(p, 60, 40), {})).not.toMatch(/[–—]/);
     }
+  });
+});
+
+describe("dmarc-report-viewer: public/samples/dmarc-report.xml (the meta.ts example)", () => {
+  it("decodes to the same 3 source report as the inline fixture", () => {
+    const bytes = new Uint8Array(readFileSync(SAMPLE_PATH));
+    const out = run(bytes, {});
+    expect(out).toContain("Domain:      example.com");
+    expect(out).toMatch(/Messages:\s+200/);
+    expect(verdictFor(out, "192.0.2.55")).toContain("likely spoofing (both fail)");
   });
 });

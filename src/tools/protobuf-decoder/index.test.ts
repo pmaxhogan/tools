@@ -1,8 +1,16 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { encode as encodeMsgpack } from "@msgpack/msgpack";
 import { encode as encodeCbor } from "cbor-x";
 import { describe, expect, it } from "vitest";
 import { ToolError } from "../types";
 import { asPrintableText, decodeProtobuf, renderJson, run, toBytes, toJsonValue } from "./index";
+
+const SAMPLE_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../../public/samples/sample.pb",
+);
 
 /**
  * The CBOR and msgpack fixtures are round trips through the real encoders. The
@@ -352,5 +360,21 @@ describe("protobuf-decoder: errors", () => {
 
   it("falls back to auto for an unknown format option", () => {
     expect(run(PB_SMALL, { format: "yaml" }).Format).toBe("Protobuf (auto detected)");
+  });
+});
+
+describe("protobuf-decoder: public/samples/sample.pb (the meta.ts example)", () => {
+  it("auto detects it as protobuf and decodes the nested and repeated fields", () => {
+    const bytes = new Uint8Array(readFileSync(SAMPLE_PATH));
+    const rows = run(bytes, { format: "auto" });
+    expect(rows.Format).toBe("Protobuf (auto detected)");
+    expect(decodedOf(rows)).toEqual({
+      "1 (varint)": 150,
+      "2 (string)": "hello",
+      "3 (message)": { "1 (varint)": 42, "2 (varint)": 1 },
+      "4 (varint)": [1, 2],
+      "5 (fixed64)": { uint: "4607182418800017408", double: 1 },
+      "6 (fixed32)": { uint: 1065353216, float: 1 },
+    });
   });
 });

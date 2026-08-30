@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "resistor",
   icon: "Cable",
   name: "Resistor Color Code Calculator",
-  description: "Decode and encode 4, 5 and 6 band resistors.",
+  description:
+    "Decode 3, 4, 5, and 6 band resistor color codes into resistance and tolerance, or encode a target resistance into bands.",
   category: "Hardware",
   keywords: [
     "resistor color code calculator",

@@ -146,3 +146,29 @@ describe("run", () => {
     expect(out).not.toContain("[Timer]");
   });
 });
+
+describe("run: the meta.ts examples", () => {
+  it("fills ExecStart from the quick entry command when exec is empty", () => {
+    const out = run("/usr/bin/node /srv/app/server.js", {
+      ...DEFAULT_OPTS,
+      exec: "",
+      description: "My Node app",
+    });
+    expect(out).toContain("ExecStart=/usr/bin/node /srv/app/server.js");
+    expect(out).toContain("Description=My Node app");
+  });
+
+  it("builds a oneshot backup service with a 3am timer", () => {
+    const out = run("", {
+      ...DEFAULT_OPTS,
+      description: "Nightly backup",
+      exec: "/usr/local/bin/backup.sh",
+      type: "oneshot",
+      timer: true,
+      onCalendar: "*-*-* 03:00:00",
+    });
+    expect(out).toContain("ExecStart=/usr/local/bin/backup.sh");
+    expect(out).toContain("Type=oneshot");
+    expect(out).toContain("OnCalendar=*-*-* 03:00:00");
+  });
+});

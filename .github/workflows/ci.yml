@@ -1,8 +1,11 @@
 name: CI
 
 # The Cloudflare Worker deploys straight from main, so this is the only gate
-# between a push and production. Keep it fast: no builds, no browsers, just the
-# three checks that catch the mistakes reviews miss.
+# between a push and production. Keep it fast: no browsers, just lint,
+# typecheck, tests, and a build that proves main is deployable. The build sets
+# SKIP_NETWORK_PREPARE so it never depends on huggingface.co or jsdelivr.net
+# (the model and pyodide stagers fetch from those on a cold cache); everything
+# else the build needs comes from node_modules or committed repo files.
 on:
   push:
     branches: [main]
@@ -33,3 +36,7 @@ jobs:
       - run: npm run typecheck
 
       - run: npm test
+
+      - run: npm run build
+        env:
+          SKIP_NETWORK_PREPARE: "1"

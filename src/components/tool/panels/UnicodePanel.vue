@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { Check, Search } from "lucide-vue-next";
 import type { ToolMeta } from "@/tools/types";
 import { readFragment, writeFragment } from "@/lib/fragment";
+import { copyText } from "@/lib/clipboard";
 import { search } from "@/tools/unicode-picker/index";
 import { CATEGORIES, type UnicodeEntry } from "@/tools/unicode-picker/data";
 import { Input } from "@/components/ui/input";
@@ -68,11 +69,9 @@ function tooltip(entry: UnicodeEntry): string {
 
 async function pick(entry: UnicodeEntry) {
   selected.value = entry;
-  try {
-    await navigator.clipboard.writeText(entry.char);
-  } catch {
-    return;
-  }
+  // The grid cell is the copy affordance here, so it copies through the shared
+  // helper rather than a CopyButton, which would restyle the grid.
+  if (!(await copyText(entry.char))) return;
   copiedKey.value = entry.codepoint;
   clearTimeout(copyTimer);
   copyTimer = setTimeout(() => (copiedKey.value = null), 1200);

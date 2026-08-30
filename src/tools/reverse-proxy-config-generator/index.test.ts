@@ -227,3 +227,22 @@ describe("buildNginx / buildCaddy", () => {
     expect(out).toContain("reverse_proxy http://127.0.0.1:3000 {");
   });
 });
+
+describe("run: the meta.ts examples", () => {
+  it("builds nginx for the quick entry line", () => {
+    const out = run("app.example.com -> http://127.0.0.1:3000", { ...DEFAULT_OPTS, server: "nginx" });
+    expect(out).toContain("server_name app.example.com;");
+    expect(out).toContain("proxy_pass http://127.0.0.1:3000;");
+  });
+
+  it("builds Caddy with static asset caching and a www redirect", () => {
+    const out = run("static.example.com -> http://127.0.0.1:8080", {
+      ...DEFAULT_OPTS,
+      server: "caddy",
+      cache: "static-assets",
+      wwwRedirect: true,
+    });
+    expect(out).toContain("static.example.com {");
+    expect(out).toContain("reverse_proxy http://127.0.0.1:8080 {");
+  });
+});

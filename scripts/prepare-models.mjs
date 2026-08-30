@@ -69,6 +69,16 @@ const publicDir = join(root, "public");
 const cacheDir = join(root, ".model-cache");
 const manifestPath = join(publicDir, "models", "manifest.json");
 
+// CI-only escape hatch: most of this manifest is fetched from huggingface.co
+// on a cold cache, which a build gate should never depend on. Setting this
+// skips staging entirely rather than reaching for the network; public/models
+// and public/tesseract are then simply absent from that build's dist/, which
+// astro build and generate-sw.mjs both already tolerate.
+if (process.env.SKIP_NETWORK_PREPARE) {
+  console.log("prepare-models: SKIP_NETWORK_PREPARE is set, skipping (would fetch from huggingface.co)");
+  process.exit(0);
+}
+
 /**
  * Bumped by hand whenever the entry list below changes in a way that must
  * invalidate an already-staged public/ tree.

@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Scissors",
   matrixSlug: "audio-trim",
   name: "Audio Trimmer",
-  description: "Cut, fade and loudness-normalize audio in your browser.",
+  description:
+    "Cut a clip from an audio file, add fade in and fade out, and loudness normalize the result, right in your browser.",
   category: "Media",
   keywords: [
     "audio trimmer",

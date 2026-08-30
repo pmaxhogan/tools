@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "gamepad",
   icon: "Gamepad2",
   name: "Gamepad Tester",
-  description: "Test buttons and axes, and quantify analogue stick drift.",
+  description:
+    "Test every button, trigger, and analog stick on a connected gamepad, and quantify analog stick drift precisely.",
   category: "Testers",
   keywords: [
     "gamepad tester",

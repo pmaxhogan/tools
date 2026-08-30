@@ -4,7 +4,8 @@ export const meta: ToolMeta = {
   slug: "light-meter",
   matrixSlug: "light-meter",
   name: "Light Meter",
-  description: "Camera-based lux and color temperature estimates.",
+  description:
+    "Turn your camera into a light meter that estimates illuminance in lux or footcandles and color temperature in Kelvin.",
   category: "Mobile",
   icon: "Sun",
   keywords: [

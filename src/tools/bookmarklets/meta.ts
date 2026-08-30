@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "bookmarklets",
   icon: "Bookmark",
   name: "Bookmarklet Shelf",
-  description: "Run the ruler, picker and audits on somebody else's page.",
+  description:
+    "Turn JavaScript into a bookmarklet URL, or use ready made bookmarklets for outlining elements and auditing any page.",
   category: "Platform",
   keywords: [
     "bookmarklet",
@@ -67,7 +68,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "Do bookmarklets send my data anywhere?",
-        a: "No. Every bookmarklet on this page runs entirely inside the tab you invoke it on, reads and modifies only that page, and makes no network requests of its own.",
+        a: "No. Every bookmarklet on this page runs entirely inside the tab you invoke it on, reads and modifies only that page, and your files and inputs never leave your device.",
       },
       {
         q: "Why does a bookmarklet sometimes get blocked on a site?",

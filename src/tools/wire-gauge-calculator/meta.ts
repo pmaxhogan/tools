@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "wire-gauge",
   icon: "Zap",
   name: "Wire Gauge Calculator",
-  description: "AWG sizing, ampacity, and voltage drop over distance.",
+  description:
+    "Look up AWG and metric wire sizes, calculate voltage drop over a run, and find the smallest gauge that meets ampacity.",
   category: "Hardware",
   keywords: [
     "wire gauge calculator",

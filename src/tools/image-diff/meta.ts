@@ -4,7 +4,8 @@ export const meta: ToolMeta = {
   slug: "image-diff",
   icon: "ImageMinus",
   name: "Perceptual Image Diff",
-  description: "Pixel and SSIM comparison that highlights what actually changed.",
+  description:
+    "Compare two images with pixel level and SSIM analysis at once, highlighting exactly what changed between them.",
   category: "Capture",
   keywords: [
     "compare two images online",

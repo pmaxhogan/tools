@@ -39,6 +39,7 @@ export const meta: ToolMeta = {
       min: 0,
     },
   ],
+  examples: [{ label: "Two event sample calendar", file: "sample.ics" }],
   copy: {
     what: "Reads any .ics calendar file, from a meeting invite to a multi-event export, and shows every field of its events: title, start and end time, location, description, organizer, status, and recurrence rule. For the event you pick, it also builds ready-to-click Google Calendar and Outlook add links, all without uploading the file anywhere.",
     how: "Drop an .ics file onto the page or paste its raw text. If the file has more than one event, each one is summarized on its own row and you can set the event number option to choose which event the add-to-calendar links are built for. Copy any field or link with its copy button.",

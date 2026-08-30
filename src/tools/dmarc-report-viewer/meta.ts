@@ -55,6 +55,7 @@ export const meta: ToolMeta = {
       default: true,
     },
   ],
+  examples: [{ label: "3 source aggregate report", file: "dmarc-report.xml" }],
   copy: {
     what: "Reads the DMARC aggregate report that mailbox providers send to your rua address and turns it into something you can actually read. It handles the .zip, .gz, and .xml attachment forms, including archives that hold several reports at once, and it decodes the published policy into plain English. The per-source table shows every sending IP with its message count, disposition, aligned SPF and DKIM results, and a verdict: aligned pass, forwarder, SPF-only pass, or likely spoofing.",
     how: "Save the report attachment out of the DMARC email, then drop it on the input or use the file picker. You can also paste the raw XML if you have already unzipped it. Switch to the full view to see every record row with its header-from and raw authentication results, or turn off grouping to keep each record separate.",

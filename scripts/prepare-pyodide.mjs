@@ -66,6 +66,16 @@ const outDir = join(publicDir, "pyodide");
 const pkgDir = join(root, "node_modules", "pyodide");
 const manifestPath = join(outDir, "manifest.json");
 
+// CI-only escape hatch: the jinja2/markupsafe wheels are fetched from
+// cdn.jsdelivr.net on a cold cache, which a build gate should never depend
+// on. Setting this skips staging entirely; public/pyodide is then simply
+// absent from that build's dist/, which astro build and generate-sw.mjs both
+// already tolerate.
+if (process.env.SKIP_NETWORK_PREPARE) {
+  console.log("prepare-pyodide: SKIP_NETWORK_PREPARE is set, skipping (would fetch from cdn.jsdelivr.net)");
+  process.exit(0);
+}
+
 function fail(message) {
   console.error(`prepare-pyodide: ${message}`);
   process.exit(1);

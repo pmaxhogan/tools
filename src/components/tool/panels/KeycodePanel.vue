@@ -13,7 +13,7 @@ import OutputView from "../OutputView.vue";
 defineProps<{ meta: ToolMeta }>();
 
 interface HistoryEntry {
-  /** Dedupe/display identity — the raw event.key. */
+  /** Dedupe/display identity: the raw event.key. */
   id: string;
   label: string;
   code: string;

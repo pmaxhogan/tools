@@ -2,6 +2,7 @@ import type { ToolMeta } from "../types";
 
 export const meta: ToolMeta = {
   slug: "minecraft-xp-calculator",
+  matrixSlug: "minecraft-xp",
   icon: "Sparkles",
   name: "Minecraft XP Calculator",
   description:

@@ -7,6 +7,7 @@ import { formatBytes } from "@/lib/format";
 import { downloadText } from "@/lib/download";
 import { useStickToBottom } from "@/lib/stick-to-bottom";
 import { Button } from "@/components/ui/button";
+import CopyButton from "../CopyButton.vue";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -255,14 +256,12 @@ const live = ref("");
 // scrolls up.
 const { el: liveEl, onScroll: onLiveScroll } = useStickToBottom(live);
 const chunks = shallowRef<TranscriptRow[]>([]);
-const copied = ref(false);
 
 type TranscriptRow = { text: string; start: number | null; end: number | null };
 
 const error = ref<{ message: string; fix?: string } | null>(null);
 
 let elapsedTimer = 0;
-let copiedTimer = 0;
 
 /* ---------------------------------------------------------------- */
 /* small helpers                                                     */
@@ -706,21 +705,6 @@ async function transcribe() {
 /* output                                                            */
 /* ---------------------------------------------------------------- */
 
-async function copyTranscript() {
-  if (!transcript.value) return;
-  try {
-    await navigator.clipboard.writeText(transcript.value);
-    copied.value = true;
-    window.clearTimeout(copiedTimer);
-    copiedTimer = window.setTimeout(() => (copied.value = false), 1500);
-  } catch (e) {
-    error.value = describe(e, {
-      message: "This browser refused clipboard access.",
-      fix: "Select the transcript and copy it by hand, or use the download button.",
-    });
-  }
-}
-
 function downloadTranscript() {
   if (!transcript.value) return;
   const type = MIME_FOR_FORMAT[format.value] ?? "text/plain";
@@ -747,7 +731,6 @@ onMounted(() => {
 onUnmounted(() => {
   stopConnectionWatch();
   window.clearInterval(elapsedTimer);
-  window.clearTimeout(copiedTimer);
   void disposePipeline();
   if (audioCtx && audioCtx.state !== "closed") {
     audioCtx.close().catch(() => {
@@ -995,9 +978,7 @@ onUnmounted(() => {
             Transcript
           </span>
           <div class="flex items-center gap-2">
-            <Button variant="ghost" size="sm" @click="copyTranscript">
-              {{ copied ? "Copied" : "Copy" }}
-            </Button>
+            <CopyButton :text="transcript" label="Copy" />
             <Button variant="outline" size="sm" @click="downloadTranscript">
               Download {{ downloadName }}
             </Button>

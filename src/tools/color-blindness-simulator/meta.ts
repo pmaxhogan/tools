@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "colorblind",
   icon: "Eye",
   name: "Color Blindness Simulator",
-  description: "Preview palettes and images under color vision deficiencies.",
+  description:
+    "Preview any color palette or image under seven types of color vision deficiency, from protanopia to achromatopsia.",
   category: "Dev",
   keywords: [
     "color blindness simulator",

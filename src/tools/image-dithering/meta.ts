@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "dither",
   icon: "Grid3x3",
   name: "Image Dithering",
-  description: "Retro and e-ink dithering algorithms with a live preview.",
+  description:
+    "Convert an image to a fixed palette with classic error diffusion or ordered dithering algorithms and a live preview.",
   category: "Images",
   keywords: [
     "image dithering online",

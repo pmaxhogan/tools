@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "CaseSensitive",
   matrixSlug: "case",
   name: "Case Converter",
-  description: "camelCase, snake_case, kebab-case, Title Case and URL slugs.",
+  description:
+    "Convert text into camelCase, snake_case, kebab-case, Title Case, UPPERCASE, and URL safe slugs all at once.",
   category: "Text",
   keywords: [
     "case converter",

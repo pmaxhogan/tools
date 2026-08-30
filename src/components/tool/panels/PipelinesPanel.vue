@@ -18,8 +18,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import OptionControl from "../OptionControl.vue";
+import CopyButton from "../CopyButton.vue";
 import OutputView from "../OutputView.vue";
-import { ArrowDown, ArrowUp, Plus, X, Link as LinkIcon, Check } from "lucide-vue-next";
+import { ArrowDown, ArrowUp, Plus, X, Link as LinkIcon } from "lucide-vue-next";
 
 /**
  * The Composable Pipelines builder.
@@ -46,7 +47,6 @@ const ROLE_LABELS: Record<NodeRole, string> = {
 const steps = ref<PipelineStep[]>([]);
 const inputText = ref("");
 const runResult = ref<PipelineRun | null>(null);
-const linkCopied = ref(false);
 
 /** Real registry wiring for the engine. */
 const metaFor = (slug: string): ToolMeta | undefined => getTool(slug);
@@ -258,15 +258,10 @@ function scheduleRun(): void {
 
 watch([steps, inputText], scheduleRun, { deep: true });
 
-async function copyLink(): Promise<void> {
+/** CopyButton asks for the link at click time, after the fragment is written. */
+function pipelineLink(): string {
   persistFragment();
-  try {
-    await navigator.clipboard.writeText(window.location.href);
-    linkCopied.value = true;
-    setTimeout(() => (linkCopied.value = false), 1500);
-  } catch {
-    // Clipboard can be denied; the link is still in the address bar.
-  }
+  return window.location.href;
 }
 
 onMounted(() => {
@@ -460,11 +455,13 @@ onMounted(() => {
       <!-- Final output + share -->
       <div class="flex flex-col gap-3 border-t pt-4">
         <div class="flex flex-wrap items-center gap-2">
-          <Button @click="copyLink">
-            <Check v-if="linkCopied" class="size-4" />
-            <LinkIcon v-else class="size-4" />
-            {{ linkCopied ? "Link copied" : "Copy pipeline link" }}
-          </Button>
+          <CopyButton
+            :get-text="pipelineLink"
+            :icon="LinkIcon"
+            label="Copy pipeline link"
+            variant="default"
+            size="default"
+          />
           <Button variant="ghost" @click="clearPipeline"> Clear </Button>
         </div>
 

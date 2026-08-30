@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Download, Sigma, X } from "lucide-vue-next";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";
+import { copyText } from "@/lib/clipboard";
 import type { KeyValueRow } from "@/lib/key-value";
 import KeyValueGrid from "../KeyValueGrid.vue";
 import { Button } from "@/components/ui/button";
@@ -348,11 +349,9 @@ async function onCellClick(e: MouseEvent) {
   const column = picked.value[c];
   if (!row || column === undefined) return;
 
-  try {
-    await navigator.clipboard.writeText(mod.formatValue(row[column]));
-  } catch {
-    return;
-  }
+  // Click to copy a cell: a table cell cannot become a CopyButton without
+  // rebuilding the table, so it goes through the shared clipboard helper.
+  if (!(await copyText(mod.formatValue(row[column])))) return;
   copiedKey.value = `${r}:${c}`;
   clearTimeout(copyTimer);
   copyTimer = setTimeout(() => (copiedKey.value = null), 1200);

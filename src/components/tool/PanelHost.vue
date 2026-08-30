@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { defineAsyncComponent, type Component } from "vue";
+import { defineAsyncComponent, onBeforeUnmount, onMounted, provide, ref, type Component } from "vue";
+import { installToolShortcuts } from "@/lib/shortcuts";
+import { RECENT_TOOLS_KEY, rememberRecent } from "@/lib/recent-tools";
+import { readList, writeList } from "@/lib/prefs";
 import type { ToolMeta } from "@/tools/types";
 import ToolShell from "./ToolShell.vue";
 import CapabilityGate from "./CapabilityGate.vue";
 import PopoutButton from "./PopoutButton.vue";
+import ShareLinkButton from "./ShareLinkButton.vue";
+import FavoriteButton from "./FavoriteButton.vue";
+import ShortcutSheet from "./ShortcutSheet.vue";
 
 /**
  * Picks the tool's UI surface: a bespoke panel when one exists, else the
@@ -176,10 +182,42 @@ const panels: Record<string, Component> = {
 
 const props = defineProps<{ meta: ToolMeta }>();
 const panel = panels[props.meta.slug] ?? ToolShell;
+// Shared components (FileDrop, ShareLinkButton, ...) read these instead of
+// taking the whole meta as a prop.
+provide("toolSlug", props.meta.slug);
+provide("toolName", props.meta.name);
+
+// Opening a tool page counts as using it: the Recent rows on the home page
+// and in the sidebar read this list. A slug list is a preference (rule 7).
+const isBespoke = panel !== ToolShell;
+
+// The `?` shortcut sheet for bespoke panels. ToolShell installs its own
+// listener (with run/copy/clear handlers), so this one only exists when a
+// bespoke panel is mounted; installing both would open the sheet twice.
+const shortcutSheetOpen = ref(false);
+let uninstallShortcuts: (() => void) | undefined;
+
+onMounted(() => {
+  writeList(RECENT_TOOLS_KEY, rememberRecent(readList(RECENT_TOOLS_KEY), props.meta.slug));
+  if (isBespoke) {
+    uninstallShortcuts = installToolShortcuts({
+      onShowHelp: () => {
+        shortcutSheetOpen.value = true;
+      },
+      isDialogOpen: () => document.querySelector("[data-dismissable-layer]") !== null,
+    });
+  }
+});
+
+onBeforeUnmount(() => {
+  uninstallShortcuts?.();
+});
 </script>
 
 <template>
-  <div class="mb-2 flex justify-end">
+  <div class="mb-2 flex items-center justify-end gap-1">
+    <FavoriteButton :slug="meta.slug" />
+    <ShareLinkButton />
     <PopoutButton />
   </div>
   <div data-popout-root>
@@ -188,4 +226,5 @@ const panel = panels[props.meta.slug] ?? ToolShell;
     </CapabilityGate>
     <component :is="panel" v-else :meta="meta" />
   </div>
+  <ShortcutSheet v-if="isBespoke" v-model:open="shortcutSheetOpen" />
 </template>

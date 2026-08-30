@@ -168,6 +168,24 @@ export const meta: ToolMeta = {
       ],
     },
   ],
+  examples: [
+    {
+      label: "Node app started from a quick-entry command",
+      input: "/usr/bin/node /srv/app/server.js",
+      opts: { exec: "", description: "My Node app" },
+    },
+    {
+      label: "Nightly backup script with a .timer",
+      input: "",
+      opts: {
+        description: "Nightly backup",
+        exec: "/usr/local/bin/backup.sh",
+        type: "oneshot",
+        timer: "true",
+        onCalendar: "*-*-* 03:00:00",
+      },
+    },
+  ],
   copy: {
     what: "Builds a complete systemd .service unit file from a form: description, ExecStart/ExecStop, working directory, user and group, restart policy with a configurable RestartSec, ordering against the network target, environment variables, and a security hardening block (NoNewPrivileges, ProtectSystem=strict, ProtectHome, PrivateTmp, and more) turned on by default. It can also generate a matching .timer unit as a systemd-native alternative to cron.",
     how: "Enter the command to run and adjust the restart, ordering, and hardening options to match your service. Copy the rendered unit into /etc/systemd/system/yourservice.service, then run systemctl daemon-reload, systemctl enable --now yourservice. Turn on the timer option to also get a .timer skeleton for scheduled jobs instead of a long-running daemon.",

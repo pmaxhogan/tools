@@ -4,7 +4,8 @@ export const meta: ToolMeta = {
   slug: "folder-diff",
   icon: "FolderSync",
   name: "Folder Diff",
-  description: "Compare two local folders and see exactly what changed.",
+  description:
+    "Compare two folders on your own machine and see exactly which files were added, removed, or changed by content hash.",
   category: "Files",
   keywords: [
     "compare two folders",

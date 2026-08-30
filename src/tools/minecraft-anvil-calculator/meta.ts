@@ -2,6 +2,7 @@ import type { ToolMeta } from "../types";
 
 export const meta: ToolMeta = {
   slug: "minecraft-anvil-calculator",
+  matrixSlug: "minecraft-anvil",
   icon: "Anvil",
   name: "Minecraft Anvil Calculator",
   description:

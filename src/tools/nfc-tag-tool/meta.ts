@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Nfc",
   matrixSlug: "nfc",
   name: "NFC Tag Reader and Writer",
-  description: "Read and write NFC tags from Android Chrome, right in the tab.",
+  description:
+    "Encode and decode NFC tag records, text, URLs, Wi-Fi credentials, vCards, and more, and write them from Android Chrome.",
   category: "Hardware",
   keywords: [
     "nfc tag writer",

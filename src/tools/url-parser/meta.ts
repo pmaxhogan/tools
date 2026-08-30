@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Link",
   matrixSlug: "url",
   name: "URL Parser",
-  description: "Break a URL apart and edit query params as a table.",
+  description:
+    "Break a URL into scheme, host, port, path, query parameters, and fragment, with percent-encoding decoded on every field.",
   category: "Network",
   keywords: [
     "url parser",

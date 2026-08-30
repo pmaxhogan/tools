@@ -1,6 +1,14 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { readSleb128, readUleb128, run } from "./index";
 import { ToolError } from "../types";
+
+const SAMPLE_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../../public/samples/sample.wasm",
+);
 
 /**
  * Fixtures are hand-built byte arrays so every field under test is visible in
@@ -191,5 +199,16 @@ describe("wasm-inspector", () => {
 
   it("throws a ToolError on a LEB128 number that never terminates", () => {
     expect(() => readUleb128(Uint8Array.from([0x80, 0x80]), 0)).toThrowError(ToolError);
+  });
+});
+
+describe("wasm-inspector: public/samples/sample.wasm (the meta.ts example)", () => {
+  it("decodes a memory import and a memory export", () => {
+    const bytes = new Uint8Array(readFileSync(SAMPLE_PATH));
+    const out = run(bytes, { view: "summary" });
+    expect(out.Version).toBe("1");
+    expect(out.Imports).toBe("1: env.log (func)");
+    expect(out.Exports).toBe("1: mem (memory 0)");
+    expect(out.Memory).toBe("#0: initial 1 page, no maximum, not shared");
   });
 });

@@ -136,3 +136,152 @@ URL in a labeled record row is acceptable) and flag "needs custom panel".
 - [ ] No edits outside `src/tools/<slug>/`
 - [ ] Final report: one line status, output shape chosen, whether a custom
       panel is needed, any missing dep or follow-up
+
+## Shared components (bespoke panels)
+
+This section is the exception to "the UI is not part of this task": it governs
+`src/components/tool/panels/*.vue`, not the pure logic layer.
+
+**Rule: a panel MUST use these four components. Never hand roll a drop zone, an
+error banner, a progress bar, or an empty state.** They were extracted because
+120 panels had drifted into 43 drop zones, 95 error blocks, and 35 progress bars
+that disagreed on radius, tone, focus, and wording. A new variant is a
+regression, not a preference. If one of them cannot express what your panel
+needs, extend the component (and its spec) rather than forking the markup.
+
+All four live in `src/components/tool/` and are imported by path, e.g.
+`import FileDrop from "@/components/tool/FileDrop.vue"`. Each ships a
+`<Name>.spec.ts` next to it that runs in the `components` vitest project
+(`npx vitest run --project components`).
+
+### FileDrop.vue
+
+The single input surface for files: drop, click, keyboard, clipboard paste, and
+the cross tool carry chip.
+
+| Prop        | Type      | Default                                 | Notes                                                    |
+| ----------- | --------- | --------------------------------------- | -------------------------------------------------------- |
+| `accept`    | `string`  | none                                    | HTML accept syntax; also filters the carry chip          |
+| `multiple`  | `boolean` | `false`                                 | otherwise only the first file is emitted                 |
+| `label`     | `string`  | `"Drop a file here or click to choose"` | headline inside the zone                                 |
+| `hint`      | `string`  | none                                    | second line, e.g. "PNG, JPEG or WebP up to 50 MB"        |
+| `disabled`  | `boolean` | `false`                                 | removes it from the tab order and ignores every input    |
+| `paste`     | `boolean` | `true`                                  | listens for document paste events carrying files         |
+| `compact`   | `boolean` | `false`                                 | single line variant for a "replace this file" affordance |
+| `directory` | `boolean` | `false`                                 | webkitdirectory; implies `multiple`                      |
+
+- Emits: `files` with a `File[]`, from drop, picker, paste, and the carry chip.
+- Slots: default (replaces the whole inner body), `actions` (extra buttons such
+  as "Load sample" or "Use camera", rendered inside the zone). Providing the
+  default slot replaces the built in body including the `actions` outlet, so a
+  custom body brings its own buttons.
+- The zone is a focusable `role="button"` with Enter and Space activation and
+  the standard focus ring. Clicks that start on a slotted button belong to that
+  button, so `actions` content works normally.
+- Carry: on every emission it stores the first file in `src/lib/carry-input.ts`
+  under the `toolSlug` and `toolName` that PanelHost provides, and it offers a
+  matching file from another tool as a "Use <name> from <tool>" chip with a
+  dismiss x. The store is in memory only, so nothing is persisted.
+
+### ErrorBanner.vue
+
+| Prop          | Type                             | Default   | Notes                         |
+| ------------- | -------------------------------- | --------- | ----------------------------- |
+| `message`     | `string` (required)              |           | what went wrong, one sentence |
+| `title`       | `string`                         | none      | headline above the message    |
+| `hint`        | `string`                         | none      | how to fix it                 |
+| `variant`     | `"error" \| "warning" \| "info"` | `"error"` | tone                          |
+| `dismissible` | `boolean`                        | `false`   | renders the dismiss x         |
+
+- Emits: `dismiss`.
+- Slot: default, appended below the message (a retry button, a details block).
+- `role="alert"` for error, `role="status"` for warning and info, `aria-live`
+  polite throughout.
+- A `ToolError` maps straight onto it: `:message="error.message"`
+  `:hint="error.fix"`.
+
+### ProgressBar.vue
+
+| Prop     | Type           | Default | Notes                                     |
+| -------- | -------------- | ------- | ----------------------------------------- |
+| `value`  | `number`       | none    | 0 to 100, clamped; omit for indeterminate |
+| `label`  | `string`       | none    | caption on the left, also the aria-label  |
+| `detail` | `string`       | none    | caption on the right, e.g. "3 of 12"      |
+| `size`   | `"sm" \| "md"` | `"md"`  | 6px or 8px track                          |
+
+- No emits, no slots.
+- `role="progressbar"` with `aria-valuemin`, `aria-valuemax`, and
+  `aria-valuenow` (omitted while indeterminate). Brand gradient fill.
+- The indeterminate stripe is authored to look deliberate when frozen, because
+  global.css disables every animation under `prefers-reduced-motion`.
+
+### EmptyState.vue
+
+| Prop    | Type                | Default | Notes                                   |
+| ------- | ------------------- | ------- | --------------------------------------- |
+| `title` | `string` (required) |         | one short line saying what is missing   |
+| `hint`  | `string`            | none    | how to fill it                          |
+| `icon`  | `string`            | none    | lucide export name, e.g. `"FileSearch"` |
+
+- No emits. Slot: `actions`, for a chip such as "Load example".
+- `icon` resolves through `src/lib/tool-icons.ts`, which is a curated map: a
+  name it does not carry silently falls back to the wrench, so add the icon
+  there first if it is missing.
+
+## Copying to the clipboard
+
+Never call `navigator.clipboard.writeText` from a panel. Every copy affordance
+goes through one of two shared pieces so the success and failure toasts read
+the same everywhere.
+
+### `<CopyButton>` (the default)
+
+| Prop         | Type                              | Default    |
+| ------------ | --------------------------------- | ---------- |
+| `text`       | `string`                          | none       |
+| `getText`    | `() => string \| Promise<string>` | none       |
+| `label`      | `string`                          | icon only  |
+| `variant`    | Button variant                    | `"ghost"`  |
+| `size`       | Button size                       | `"sm"`     |
+| `disabled`   | `boolean`                         | `false`    |
+| `icon`       | a lucide component                | `Copy`     |
+| `toastTitle` | `string`                          | `"Copied"` |
+
+Emits `copied` and `failed`. Supply `text` for a value already in state:
+
+    <CopyButton :text="jsonText" label="Copy JSON" />
+
+Supply `getText` when the value has to be produced at click time (serializing
+a canvas, flushing the debounced URL fragment before reading the address bar).
+`getText` may be async and takes precedence over `text`. If it throws, the user
+gets an error toast and the button emits `failed`; nothing is written.
+
+### `copyText()` for copy affordances that are not buttons
+
+A swatch, a table cell, or a grid cell cannot become a `<CopyButton>` without
+restyling it. Those call the shared helper directly:
+
+    import { copyText } from "@/lib/clipboard";
+
+It never throws, returns `true` when the write landed (so the panel can still
+run its own inline "Copied" flourish), and raises the same toasts CopyButton
+does. Like `download.ts` it touches the DOM, so only components may import it.
+
+### Toasts
+
+`toast({ title, description?, variant?, durationMs? })` from `@/lib/toast`
+queues a message; the single `<Toaster>` in BaseLayout renders it. The store is
+one shared module instance across every island, so a panel can toast into the
+layout. Stack is capped at 3, default 2500 ms, pauses on hover. Titles and
+descriptions are user-facing prose: no em or en dashes, and an error gets a fix
+hint, not just a failure.
+
+## Favorites, recents, share
+
+`PanelHost` renders `<FavoriteButton :slug>`, `<ShareLinkButton />` and
+`<PopoutButton />` above every tool and records the slug in the recent list on
+mount. Panels never do any of this themselves. Both lists are slug lists in
+localStorage (`favorite-tools`, `recent-tools`), which rule 7 allows because a
+list of slugs is a preference; content never goes there. `src/lib/prefs.ts`
+owns the read/write/subscribe helpers and fires `prefs-change` so the home
+grid, sidebar, and buttons stay in sync in the same tab.

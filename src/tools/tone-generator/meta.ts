@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "tone",
   icon: "AudioWaveform",
   name: "Signal Generator",
-  description: "Sine, square and sweep tones for speaker and subwoofer testing.",
+  description:
+    "Generate sine, square, triangle, sawtooth, noise, and swept tones for testing speakers, subwoofers, and hearing.",
   category: "Audio",
   keywords: [
     "tone generator",

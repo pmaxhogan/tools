@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Hourglass",
   matrixSlug: "duration",
   name: "Duration Calculator",
-  description: "Add and subtract clock times and durations.",
+  description:
+    "Add and subtract clock times, unit shorthand like 90m or 1.5h, and plain durations in a single expression or one per line.",
   category: "Time",
   keywords: [
     "duration calculator",

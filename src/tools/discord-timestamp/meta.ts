@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Watch",
   matrixSlug: "discord-time",
   name: "Discord Timestamps",
-  description: "Generate tags that render in every reader's own timezone.",
+  description:
+    "Generate Discord's timestamp tags from a date or unix time, rendered in every reader's own local timezone automatically.",
   category: "Time",
   keywords: [
     "discord timestamp",

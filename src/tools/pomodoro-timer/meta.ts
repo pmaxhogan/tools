@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "pomodoro",
   icon: "Clock3",
   name: "Pomodoro Timer",
-  description: "Work and break cycles in a pop-out always-on-top window.",
+  description:
+    "Run a Pomodoro work and break schedule as a live, always on top pop-out timer with configurable session counts.",
   category: "Time",
   keywords: [
     "pomodoro timer online",

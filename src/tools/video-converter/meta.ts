@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Video",
   matrixSlug: "av-converter",
   name: "A/V Converter",
-  description: "Convert video and audio between formats locally with ffmpeg.",
+  description:
+    "Convert video and audio between MP4, WebM, MKV, GIF, MP3, WAV, and more, running ffmpeg locally in your browser.",
   category: "Media",
   keywords: [
     "video converter",

@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch, type Component } from "vue";
+import { History, Star } from "lucide-vue-next";
 import { highlightHtml, searchTools, type SearchTool } from "@/lib/search";
 import { iconFor } from "@/lib/tool-icons";
+import { FAVORITES_KEY } from "@/lib/favorites";
+import { onPrefsChange, readList } from "@/lib/prefs";
+import { RECENT_TOOLS_KEY } from "@/lib/recent-tools";
 import {
   CATEGORIES,
   categoryByLabel,
@@ -47,9 +51,56 @@ interface Section {
   label: string | null;
   category: ToolCategory | null;
   items: SidebarTool[];
+  /**
+   * A Pinned or Recent shortcut block. These repeat tools that also appear
+   * further down, so they never carry `aria-current`: the page marker belongs
+   * on the one row that sits in the categorized list.
+   */
+  shortcut?: boolean;
+  /** Heading icon for a block that names no category. */
+  lead?: Component;
 }
 
 const byName = (a: SidebarTool, b: SidebarTool) => a.name.localeCompare(b.name);
+
+/* ------------------------------------------------------- pinned and recent */
+
+/**
+ * The two preference lists (rule 7: slugs are a preference, not content). Read
+ * on mount and kept in step with the other surfaces through `prefs-change`, so
+ * starring a tool on its page adds it to this list without a reload.
+ */
+const favorites = ref<string[]>([]);
+const recents = ref<string[]>([]);
+const stops: Array<() => void> = [];
+
+/** How many tools the sidebar's Recent block shows. The stored list is longer. */
+const RECENT_GROUP_MAX = 5;
+
+const bySlug = computed(() => {
+  const map = new Map<string, SidebarTool>();
+  for (const tool of props.tools) if (!map.has(tool.slug)) map.set(tool.slug, tool);
+  return map;
+});
+
+/** The tools named by a slug list, in list order, skipping ones we do not have. */
+function resolve(slugs: readonly string[], max = Number.POSITIVE_INFINITY): SidebarTool[] {
+  const out: SidebarTool[] = [];
+  for (const slug of slugs) {
+    const tool = bySlug.value.get(slug);
+    if (tool) out.push(tool);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+function refreshFavorites(): void {
+  favorites.value = readList(FAVORITES_KEY);
+}
+
+function refreshRecents(): void {
+  recents.value = readList(RECENT_TOOLS_KEY);
+}
 
 /**
  * The single category a query names, if any. The whole trimmed query is matched
@@ -90,7 +141,7 @@ const sections = computed<Section[]>(() => {
       if (list) list.push(tool);
       else groups.set(tool.category, [tool]);
     }
-    return [...groups.entries()]
+    const all: Section[] = [...groups.entries()]
       .sort(([a], [b]) => categoryRank(a) - categoryRank(b) || a.localeCompare(b))
       .map(([label, items]) => ({
         key: label,
@@ -98,6 +149,32 @@ const sections = computed<Section[]>(() => {
         category: categoryByLabel(label) ?? null,
         items: [...items].sort(byName),
       }));
+
+    // Shortcuts ride above the categorized list, and only with an empty search
+    // box: once someone is searching, the results are what the list is for.
+    const recent = resolve(recents.value, RECENT_GROUP_MAX);
+    if (recent.length) {
+      all.unshift({
+        key: "recent",
+        label: "Recent",
+        category: null,
+        items: recent,
+        shortcut: true,
+        lead: History,
+      });
+    }
+    const pinned = resolve(favorites.value);
+    if (pinned.length) {
+      all.unshift({
+        key: "pinned",
+        label: "Pinned",
+        category: null,
+        items: pinned,
+        shortcut: true,
+        lead: Star,
+      });
+    }
+    return all;
   }
 
   const matches = searchTools(props.tools, q).map((result) => result.tool);
@@ -270,6 +347,9 @@ function restoreScroll() {
 
 function onAfterSwap() {
   currentPath.value = window.location.pathname.replace(/^\/+/, "").replace(/\/+$/, "");
+  // A navigation is the one moment the recent list is most likely to have moved.
+  refreshRecents();
+  refreshFavorites();
   restoreScroll();
   // The handle is server rendered fresh on every swap, so its value resets.
   applyWidth(widthRem);
@@ -384,11 +464,16 @@ onMounted(() => {
   document.addEventListener("keydown", onHandleKeydown);
   document.addEventListener("dblclick", onHandleDoubleClick);
   applyWidth(readStoredWidth());
+  refreshFavorites();
+  refreshRecents();
+  stops.push(onPrefsChange(FAVORITES_KEY, refreshFavorites));
+  stops.push(onPrefsChange(RECENT_TOOLS_KEY, refreshRecents));
   nextTick(settleActive);
 });
 
 onUnmounted(() => {
   endDrag();
+  for (const stop of stops.splice(0)) stop();
   document.removeEventListener("astro:before-swap", saveScroll);
   document.removeEventListener("astro:after-swap", onAfterSwap);
   document.removeEventListener("pointerdown", onHandlePointerDown);
@@ -436,7 +521,16 @@ onUnmounted(() => {
             />
             <span class="min-w-0 truncate">{{ section.label }}</span>
           </a>
-          <span v-else class="block px-2 py-1">{{ section.label }}</span>
+          <span v-else class="flex items-center gap-2 px-2 py-1">
+            <component
+              :is="section.lead"
+              v-if="section.lead"
+              class="size-4 shrink-0"
+              :stroke-width="2"
+              aria-hidden="true"
+            />
+            <span class="min-w-0 truncate">{{ section.label }}</span>
+          </span>
         </h3>
         <ul :class="section.label ? 'mt-1' : ''">
           <li v-for="entry in section.items" :key="entry.tool.slug">
@@ -447,7 +541,9 @@ onUnmounted(() => {
                 }
               "
               :href="`/${entry.tool.slug}`"
-              :aria-current="entry.tool.slug === currentPath ? 'page' : undefined"
+              :aria-current="
+                !section.shortcut && entry.tool.slug === currentPath ? 'page' : undefined
+              "
               :data-active="entry.index === activeIndex ? 'true' : undefined"
               class="sidebar-link flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
               @mousemove="onHover(entry.index)"

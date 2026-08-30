@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Binary",
   matrixSlug: "base-convert",
   name: "Base Converter",
-  description: "Binary, octal, decimal and hex with a bitwise visualizer.",
+  description:
+    "Convert integers between binary, octal, decimal, hexadecimal, and base 36 with arbitrary precision and a bitwise visualizer.",
   category: "Text",
   keywords: [
     "base converter",

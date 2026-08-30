@@ -58,6 +58,7 @@ export const meta: ToolMeta = {
       ],
     },
   ],
+  examples: [{ label: "Module with a memory import and export", file: "sample.wasm" }],
   copy: {
     what: "Parses a WebAssembly binary and tells you what is inside it. It reads the magic bytes and version, walks the whole section table, and reports the type count, every import and export with its kind, the function and global counts, the memory limits in pages, the start function, and the data and element segment counts. It also works out which post-MVP proposals the module leans on: shared memory for threads, multiple memories, bulk memory, multi-value, SIMD, reference types, exception handling, and tail calls. The parser is hand written, so there is no toolchain to install and nothing to configure.",
     how: "Drop a .wasm file onto the panel or pick one with the file button. You can also paste the module as base64, as a hex dump with or without a 0x prefix, or as a data:application/wasm;base64 URL. The Detail option switches between a summary, a section table with every section id, size and byte offset, and a full list of imports and exports. Every row has its own copy button.",

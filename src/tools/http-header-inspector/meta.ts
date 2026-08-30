@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "headers",
   icon: "FileSearch",
   name: "HTTP Header Inspector",
-  description: "See exactly what headers your browser is sending.",
+  description:
+    "See exactly which HTTP request headers your browser sends, with a plain English explanation for User-Agent, Sec-CH-UA, and more.",
   category: "Network",
   keywords: [
     "what headers is my browser sending",

@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Sigma",
   matrixSlug: "unicode",
   name: "Unicode Picker",
-  description: "Search and copy symbols, arrows, maths and HTML entities.",
+  description:
+    "Search a curated set of Unicode symbols, arrows, math operators, Greek letters, and HTML entities, and copy any of them.",
   category: "Text",
   keywords: [
     "unicode character search",
@@ -44,7 +45,7 @@ export const meta: ToolMeta = {
       id: "category",
       label: "Category",
       default: "all",
-      // Kept in sync with CATEGORIES in ./data.ts by a test — meta stays
+      // Kept in sync with CATEGORIES in ./data.ts by a test; meta stays
       // dependency-free because the registry imports it eagerly. Flat, not
       // grouped: every option already IS a category, so nesting them under
       // invented meta-categories would add structure the data does not have,

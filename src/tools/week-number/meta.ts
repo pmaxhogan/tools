@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "CalendarDays",
   matrixSlug: "iso-week",
   name: "Week & Day Numbers",
-  description: "ISO week, day-of-year and quarter lookups.",
+  description:
+    "Look up the ISO 8601 week number, day of year, quarter, and weekday for any date, including tricky year boundary cases.",
   category: "Time",
   keywords: [
     "iso week number",

@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "AudioWaveform",
   matrixSlug: "spectrogram",
   name: "Spectrogram Viewer",
-  description: "Waveform and frequency spectrogram for any audio or video file.",
+  description:
+    "Draw a waveform and frequency spectrogram for any audio file, or extract and chart the audio track from a video first.",
   category: "Media",
   keywords: [
     "spectrogram viewer",

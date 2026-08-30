@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "mouse",
   icon: "Mouse",
   name: "Mouse Polling Rate and DPI Tester",
-  description: "Measure real polling rate and actual counts per inch.",
+  description:
+    "Measure a mouse's actual polling rate in Hz and real DPI from a physical move, not the numbers printed on the box.",
   category: "Testers",
   keywords: [
     "mouse polling rate test",

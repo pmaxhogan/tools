@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "ArrowDownAZ",
   matrixSlug: "lines",
   name: "Line Tools",
-  description: "Sort, deduplicate, reverse and shuffle lines of text.",
+  description:
+    "Sort lines alphabetically or naturally, remove duplicates, reverse the order, or shuffle any block of pasted text.",
   category: "Text",
   keywords: [
     "line sorter",

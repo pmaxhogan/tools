@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Frame",
   matrixSlug: "frame-extract",
   name: "Frame Extractor",
-  description: "Scrub a video and save exact frames as PNG.",
+  description:
+    "Scrub any video frame by frame and save exact frames as full resolution PNG, JPEG, or WebP stills, including bursts.",
   category: "Media",
   keywords: [
     "extract frame from video",

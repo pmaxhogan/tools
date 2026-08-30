@@ -3,6 +3,7 @@ import "@/styles/global.css";
 import { ClientRouter } from "astro:transitions";
 import CommandPalette from "@/components/CommandPalette.vue";
 import Sidebar from "@/components/Sidebar.astro";
+import Toaster from "@/components/Toaster.vue";
 import { tools } from "@/tools/registry";
 
 const paletteTools = tools.map((t) => ({
@@ -77,7 +78,7 @@ const og = ogImage ? new URL(ogImage, site).href : undefined;
       // state is derived in one function, applied before paint on first load,
       // and re-applied on astro:after-swap (fires after the DOM swap, before
       // paint) so navigating never flashes the wrong theme. localStorage holds
-      // preferences only — rule 7.
+      // preferences only, rule 7.
       function applyHtmlState() {
         const html = document.documentElement;
         const stored = localStorage.getItem("theme");
@@ -183,6 +184,17 @@ const og = ogImage ? new URL(ogImage, site).href : undefined;
       })();
     </script>
     <CommandPalette client:idle tools={paletteTools} />
+    {
+      /*
+       * One toast renderer for the whole site. Every island imports the same
+       * `@/lib/toast` module chunk, so a CopyButton deep inside a lazily
+       * hydrated panel writes to the very store this island reads (see the
+       * comment in src/lib/toast.ts). `transition:persist` keeps the island and
+       * its timers alive across a ClientRouter navigation, the same way the
+       * header theme state is re-applied rather than rebuilt on every swap.
+       */
+    }
+    <Toaster client:idle transition:persist="toaster" />
     <script>
       if (import.meta.env.PROD && "serviceWorker" in navigator) {
         navigator.serviceWorker.register("/sw.js");

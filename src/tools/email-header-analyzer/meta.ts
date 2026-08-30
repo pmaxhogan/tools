@@ -96,7 +96,7 @@ Message-ID: <abc123@example.com>`,
     faq: [
       {
         q: "Are the SPF, DKIM and DMARC verdicts actually verified?",
-        a: "No, and no browser tool can verify them. The results shown are parsed straight out of the Authentication-Results header that the receiving mail server wrote when it accepted the message. Real verification means fetching the sender SPF record, the DKIM public key at selector._domainkey, and the DMARC policy from DNS, then recomputing the signature over the message body. This tool makes no DNS lookups and no network requests, so it reports what was recorded rather than pretending to re-check it.",
+        a: "No, and no browser tool can verify them. The results shown are parsed straight out of the Authentication-Results header that the receiving mail server wrote when it accepted the message. Real verification means fetching the sender SPF record, the DKIM public key at selector._domainkey, and the DMARC policy from DNS, then recomputing the signature over the message body. This tool does no DNS lookups, so it reports what was recorded rather than pretending to re-check it.",
       },
       {
         q: "How do I get the raw headers out of my mail client?",

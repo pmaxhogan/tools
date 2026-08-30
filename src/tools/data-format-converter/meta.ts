@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "ArrowRightLeft",
   matrixSlug: "data-convert",
   name: "Data Format Converter",
-  description: "Convert between CSV, JSON, YAML and TOML in any direction.",
+  description:
+    "Convert data between CSV, JSON, YAML, and TOML in any direction, auto detecting the source format from what you paste.",
   category: "Data",
   keywords: [
     "csv to json",

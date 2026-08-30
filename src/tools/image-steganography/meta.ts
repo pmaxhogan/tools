@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "stego",
   icon: "EyeOff",
   name: "Image Steganography",
-  description: "Hide and recover data inside image pixels.",
+  description:
+    "Hide a text message or a whole file inside an image's pixel bits, then extract it back out, entirely in your browser.",
   category: "Images",
   keywords: [
     "steganography online",

@@ -1,6 +1,14 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { run, googleCalendarUrl, outlookUrl, effectiveEnd, type ParsedEvent } from "./index";
 import { ToolError } from "../types";
+
+const SAMPLE_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../../public/samples/sample.ics",
+);
 
 const CRLF = "\r\n";
 
@@ -227,5 +235,16 @@ describe("ics-inspector", () => {
     expect(googleCalendarUrl(event)).toContain("calendar.google.com");
     expect(outlookUrl(event)).toContain("outlook.live.com");
     expect(outlookUrl(event)).toContain("HQ");
+  });
+});
+
+describe("ics-inspector: public/samples/sample.ics (the meta.ts example)", () => {
+  it("parses both events and links the first by default", () => {
+    const bytes = new Uint8Array(readFileSync(SAMPLE_PATH));
+    const out = run(bytes, {});
+    expect(out["Events"]).toBe("2");
+    expect(out["Event 1"]).toContain("Quarterly planning sync");
+    expect(out["Event 2"]).toContain("Company holiday");
+    expect(out["Google Calendar link (event 1)"]).toContain("calendar.google.com");
   });
 });

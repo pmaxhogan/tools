@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "wasm-support",
   icon: "Binary",
   name: "WebAssembly Feature Check",
-  description: "Which WebAssembly features this browser actually supports.",
+  description:
+    "Test which post-MVP WebAssembly proposals, like SIMD, threads, and garbage collection, your current browser actually supports.",
   category: "Dev",
   keywords: [
     "webassembly feature detection",

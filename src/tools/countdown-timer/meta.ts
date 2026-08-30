@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "timer",
   icon: "Hourglass",
   name: "Countdown Timer and Stopwatch",
-  description: "Shareable-URL countdowns and stopwatches.",
+  description:
+    "Run a countdown to a date or duration, or a stopwatch with lap tracking, with the full state packed into a shareable URL.",
   category: "Time",
   keywords: [
     "online countdown timer",

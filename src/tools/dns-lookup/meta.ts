@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "dns",
   icon: "Globe",
   name: "DNS Lookup",
-  description: "Query records over DNS-over-HTTPS with no server of your own.",
+  description:
+    "Query A, AAAA, MX, TXT, and other DNS records over DNS-over-HTTPS through Cloudflare, Google, or dns.sb, no server needed.",
   category: "Network",
   keywords: [
     "dns lookup",

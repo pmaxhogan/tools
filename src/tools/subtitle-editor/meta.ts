@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Captions",
   matrixSlug: "subtitles",
   name: "Subtitle Editor",
-  description: "Convert, resync, shift and clean SRT and VTT subtitle files.",
+  description:
+    "Convert between SRT and WebVTT subtitles, shift or resync cue timing from anchor points, and clean up messy captions.",
   category: "Media",
   keywords: [
     "srt to vtt converter",

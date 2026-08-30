@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   BLOCK_SIZE,
@@ -10,6 +13,11 @@ import {
   familyLabel,
   run,
 } from "./index";
+
+const SAMPLE_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../../public/samples/sample.uf2",
+);
 import { ToolError } from "../types";
 
 const RP2040 = 0xe48bff56;
@@ -304,5 +312,15 @@ describe("uf2-inspector: errors", () => {
     const base64 = btoa(binary);
     const out = run(base64, { view: "summary" });
     expect(out.Verdict).toBe("Looks valid");
+  });
+});
+
+describe("uf2-inspector: public/samples/sample.uf2 (the meta.ts example)", () => {
+  it("decodes as a valid 3 block RP2040 file", () => {
+    const bytes = new Uint8Array(readFileSync(SAMPLE_PATH));
+    const out = run(bytes, { view: "summary" });
+    expect(out.Verdict).toBe("Looks valid");
+    expect(out.Families).toBe("RP2040 (0xe48bff56): 3 blocks");
+    expect(out.Blocks).toBe("3 blocks (numBlocks field agrees)");
   });
 });

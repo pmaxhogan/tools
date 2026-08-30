@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { Check, Copy, Download, Eraser, Undo2 } from "lucide-vue-next";
+import { Download, Eraser, Undo2 } from "lucide-vue-next";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { readFragment, writeFragment } from "@/lib/fragment";
 import { downloadBlob, downloadText } from "@/lib/download";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
+import CopyButton from "../CopyButton.vue";
 import InkCanvas from "../InkCanvas.vue";
 
 /**
@@ -104,7 +105,6 @@ const pressure = ref(true);
 const pad = ref<InstanceType<typeof InkCanvas>>();
 const strokeCount = ref(0);
 const busy = ref(false);
-const copied = ref(false);
 const error = ref("");
 const mounted = ref(false);
 
@@ -189,14 +189,14 @@ async function downloadSvg() {
   }
 }
 
-async function copySvg() {
+/**
+ * CopyButton asks for the SVG at click time. Serializing the pad is the slow
+ * part, so the busy flag still wraps it and the button stays disabled.
+ */
+async function svgForCopy(): Promise<string> {
   busy.value = true;
   try {
-    await navigator.clipboard.writeText(await svgText());
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 1500);
-  } catch (e) {
-    fail(e);
+    return await svgText();
   } finally {
     busy.value = false;
   }
@@ -374,11 +374,14 @@ watch([guides, shape, baseWidth, pressure, color], persist);
         <Download class="size-4" />
         Download SVG
       </Button>
-      <Button variant="outline" size="sm" :disabled="!hasInk || busy" @click="copySvg">
-        <Check v-if="copied" class="size-4" />
-        <Copy v-else class="size-4" />
-        {{ copied ? "Copied" : "Copy as SVG" }}
-      </Button>
+      <CopyButton
+        :get-text="svgForCopy"
+        :disabled="!hasInk || busy"
+        label="Copy as SVG"
+        variant="outline"
+        size="sm"
+        @failed="fail"
+      />
       <Button variant="outline" size="sm" :disabled="!hasInk || busy" @click="downloadPng(1)">
         <Download class="size-4" />
         PNG 1x

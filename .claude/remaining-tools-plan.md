@@ -1,3 +1,5 @@
+HISTORICAL: everything below shipped by 2026-08-23; see .claude/polish-run-plan.md for current work.
+
 # Remaining tool-matrix rows: standing plan (updated 2026-08-19)
 
 Goal set by Max on 2026-08-19: all major planned tool batches complete, pushed

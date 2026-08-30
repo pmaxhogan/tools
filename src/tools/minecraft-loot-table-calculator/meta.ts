@@ -12,6 +12,7 @@ const VERSION_SYNONYMS: Record<string, string[]> = {
 
 export const meta: ToolMeta = {
   slug: "minecraft-loot-table-calculator",
+  matrixSlug: "minecraft-loot",
   icon: "Gem",
   name: "Minecraft Loot Table Calculator",
   description:

@@ -64,7 +64,7 @@ export const meta: ToolMeta = {
       },
       {
         q: "Can anyone else see the generated IDs?",
-        a: "No. Generation happens entirely on your device; the page makes no network requests with your data.",
+        a: "No. Generation happens entirely on your device; your files and inputs never leave your device.",
       },
     ],
   },

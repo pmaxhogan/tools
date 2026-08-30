@@ -4,7 +4,8 @@ export const meta: ToolMeta = {
   slug: "keycode",
   icon: "Keyboard",
   name: "Keycode Info",
-  description: "Live key, code, keyCode and modifier readout.",
+  description:
+    "Show a live readout of every keyboard event field: key, code, legacy keyCode, active modifiers, location, and repeat state.",
   category: "Testers",
   keywords: [
     "keycode",

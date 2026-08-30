@@ -225,6 +225,25 @@ export const meta: ToolMeta = {
       step: 0.5,
     },
   ],
+  examples: [
+    {
+      label: "Pasted PrusaSlicer summary",
+      input: "Filament used: 23.4g\nEstimated printing time: 3h 12m",
+      opts: { material: "pla", spoolPrice: "20", spoolGrams: "1000", printerWatts: "120" },
+    },
+    {
+      label: "PETG print with markup for a customer quote",
+      input: "",
+      opts: {
+        grams: "48",
+        material: "petg",
+        hours: "4",
+        minutes: "30",
+        markupPercent: "40",
+        failureRatePercent: "10",
+      },
+    },
+  ],
   copy: {
     what: "Calculates what a single 3D print actually costs: filament by weight or length, electricity from your printer's average draw and the print time, plus optional machine wear, labor, post processing, a failure allowance, and a markup for quoting a customer. Paste a slicer summary from PrusaSlicer or Cura and it prefills the filament weight, length, and print time automatically.",
     how: "Enter grams of filament used, or a length in meters if that is what your slicer reports; pick the material so the density is right for the meters conversion. Set your spool price and weight, printer wattage, and electricity price, then add print time. Optional fields cover machine depreciation, labor, post processing, failure rate, and markup for a customer quote.",

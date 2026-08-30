@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "heatmap",
   icon: "Keyboard",
   name: "Keyboard Layout Heatmap",
-  description: "Key and finger load for any text, across keyboard layouts.",
+  description:
+    "Show per key press counts and finger load for any pasted text, compared across ten common keyboard layouts.",
   category: "Testers",
   keywords: [
     "keyboard heatmap",

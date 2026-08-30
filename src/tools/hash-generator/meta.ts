@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   icon: "Hash",
   matrixSlug: "hash",
   name: "Hash & Checksum",
-  description: "Hash text or files and verify against a known-good value.",
+  description:
+    "Hash text or files with MD5, SHA-1, SHA-256, SHA-384, and SHA-512 at once, and verify the result against a known hash.",
   category: "Crypto",
   keywords: [
     "hash generator",

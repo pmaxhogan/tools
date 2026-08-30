@@ -43,7 +43,6 @@ import FitText from "../FitText.vue";
 import {
   Download,
   Link as LinkIcon,
-  Check,
   Search,
   Maximize2,
   Minimize2,
@@ -201,7 +200,6 @@ const pointerPx = ref<{ x: number; y: number } | null>(null);
 /** Which breadcrumb segment is hovered, so it can bold. */
 const hoveredSegment = ref<number | null>(null);
 
-const linkCopied = ref(false);
 const reducedMotion = ref(false);
 
 /* ------------------------------------------------------------------ */
@@ -863,11 +861,10 @@ function restoreFromFragment() {
   }
 }
 
-async function copyLink() {
+/** CopyButton asks for the link at click time, after the fragment is flushed. */
+function shareLink(): string {
   writeFragmentNow();
-  await navigator.clipboard.writeText(window.location.href);
-  linkCopied.value = true;
-  setTimeout(() => (linkCopied.value = false), 1500);
+  return window.location.href;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1097,11 +1094,14 @@ onUnmounted(() => {
           <Download class="size-4" />
           SVG
         </Button>
-        <Button variant="outline" size="sm" aria-label="Copy shareable link" @click="copyLink">
-          <Check v-if="linkCopied" class="size-4 text-[color:var(--positive)]" />
-          <LinkIcon v-else class="size-4" />
-          {{ linkCopied ? "Copied" : "Link" }}
-        </Button>
+        <CopyButton
+          :get-text="shareLink"
+          :icon="LinkIcon"
+          label="Link"
+          variant="outline"
+          size="sm"
+          aria-label="Copy shareable link"
+        />
         <Button
           variant="outline"
           size="sm"
