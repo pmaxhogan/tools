@@ -161,25 +161,26 @@ Wave 1 (parallel, disjoint files):
 - [x] Wave 2 pushed (9e2ff1c), CI green, live, QA clean (0 blockers, 0 bugs)
 - [x] Wave 3 in progress (uncommitted on main): Phase-1 facelift done; chem UX rebuilt on the 25k index (+ syn column); ToolShell on FileDrop + text carry; sensitive options agent running; wired so far: crypto x6, files/data x5, RF x8 (+worker), electronics x5 (+worker); running: CSS x6, image x6, chem calc x10, astronomy x5, minecraft x6, weather x4, coax verification
 - [x] Wave 3 pushed (9616414), CI green, live; QA running
-- [ ] Wave 4+ new tools by category
-- [ ] Perf pass
+- [x] Wave 4 pushed (0f65125), CI green, live: 291 pages, 11373 tests; QA running
+- [ ] Perf pass: NOT done (time); see backlog
 - [ ] Final: memory, report artifact, gallery artifact, notification
 
 ## QA findings log
 
 Wave 1 live QA (headless /browse, claude-in-chrome extension was not connected):
-- [ ] FavoriteButton: no toast on toggle (add "Added to favorites"/"Removed from favorites")
-- [ ] ToolShell Ctrl+Shift+C: copy runs but no toast (route through copyText; verify in real Chrome)
-- [ ] ToolShell "Try a sample" for binary file tools (wasm-inspector, uf2-inspector): fetched bytes never reach run(), empty-input error shown
-- [ ] related-tools: small categories padded with unrelated fillers (molar-mass got print-cost + minecraft); only pad past category matches when overlap score > 0, min 3
+- [x] FavoriteButton: no toast on toggle (add "Added to favorites"/"Removed from favorites")
+- [x] ToolShell Ctrl+Shift+C: copy runs but no toast (route through copyText; verify in real Chrome)
+- [x] ToolShell "Try a sample" for binary file tools (wasm-inspector, uf2-inspector): fetched bytes never reach run(), empty-input error shown
+- [x] related-tools: small categories padded with unrelated fillers (molar-mass got print-cost + minecraft); only pad past category matches when overlap score > 0, min 3
 - [ ] NEEDS MAX: static.cloudflareinsights.com/beacon.min.js is injected on every page (Cloudflare Web Analytics zone toggle, pre-existing). Violates hard rule 2; disable in the Cloudflare dashboard (Analytics > Web Analytics, or the zone's "Automatic setup").
 - (by design) sidebar search filters the sidebar only; palette needs two Esc when a query is typed.
 
 Component gallery artifact (native comments): https://claude.ai/code/artifact/a780ea4a-e57d-4f5e-a51a-8d9e67f3db94 (Max: lgtm, 2026-08-30)
 
 Wave 3 live QA (headless /browse): 28 of 30 new tools clean; chem search, FileDrop shell, sensitive options, facelift regressions all pass.
-- [ ] BLOCKER self-signed-certificate-generator (and very likely certificate-decoder): tsyringe reflect-metadata check runs at x509 chunk eval before rolldown's lazy CJS init; fix = lazy import of @peculiar/x509 (agent running)
-- [ ] meme-generator never loads a picture (sample or upload); blank canvas works (agent running)
-- [ ] native <input type=color> given 3-digit hex on color-contrast-checker / image-to-data-url (agent running)
+- [x] (fixed 0f65125) BLOCKER self-signed-certificate-generator (and very likely certificate-decoder): tsyringe reflect-metadata check runs at x509 chunk eval before rolldown's lazy CJS init; fix = lazy import of @peculiar/x509 (agent running)
+- [x] (fixed 0f65125) meme-generator never loads a picture (sample or upload); blank canvas works (agent running)
+- [x] (fixed 0f65125) native <input type=color> given 3-digit hex on color-contrast-checker / image-to-data-url (agent running)
 - (by design) keycode pad captures Tab only while focused; Escape releases
 - (data, follow-up) plain "Aspirin" (CID 2244) is absent from the broad chem index while 7 aspirin combinations are present; check the merge/dedupe step in prepare-chem-data.mjs
+Final report artifact (native comments): https://claude.ai/code/artifact/98bfd84b-a441-4782-9be3-f45252dea2c1

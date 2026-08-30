@@ -49,19 +49,19 @@ meta.ts `matrixSlug` where the two differ).
 | Hardware | 5 | 0 | 0 | 5 |
 | RF | 8 | 0 | 0 | 8 |
 | Chemistry | 10 | 0 | 0 | 10 |
-| Astronomy | 3 | 1 | 1 | 5 |
+| Astronomy | 5 | 0 | 0 | 5 |
 | Physics | 0 | 0 | 4 | 4 |
 | Weather & Earth | 3 | 0 | 1 | 4 |
-| Minecraft | 0 | 4 | 2 | 6 |
-| Testers | 0 | 2 | 1 | 3 |
-| Generators | 0 | 1 | 2 | 3 |
+| Minecraft | 4 | 0 | 2 | 6 |
+| Testers | 2 | 0 | 1 | 3 |
+| Generators | 1 | 0 | 2 | 3 |
 | Network | 0 | 0 | 2 | 2 |
 | Homelab | 0 | 0 | 1 | 1 |
 | Media | 0 | 0 | 2 | 2 |
 | Finance | 0 | 0 | 2 | 2 |
 | Math | 0 | 0 | 4 | 4 |
 | Biology | 0 | 0 | 3 | 3 |
-| **Total** | **65** | **8** | **50** | **123** |
+| **Total** | **74** | **0** | **49** | **123** |
 
 ## Dev
 
@@ -382,10 +382,10 @@ list.
 
 ## Astronomy
 
-- [x] **Moon Phase Calculator** (`moon-phase-calculator`) (in progress 2026-08-30): Today's moon phase
+- [x] **Moon Phase Calculator** (`moon-phase-calculator`) (shipped 2026-08-30): Today's moon phase
   and illumination, animated across any date range. No dependency (hand-rolled
   lunar phase algorithm). Needs panel (animated moon visual).
-- [ ] **Planet Positions and Rise/Set** (`planet-positions-rise-set`): Rise,
+- [x] **Planet Positions and Rise/Set** (`planet-positions-rise-set`) (shipped 2026-08-30 as planet-positions): Rise,
   set and sky position for the naked-eye planets from any location.
   Dependency: a bundled simplified orbital-elements dataset (committed, no
   runtime fetch). Needs panel (sky position display).
@@ -441,10 +441,10 @@ diagram, never a plain form-and-number calculator.
 
 ## Minecraft
 
-- [x] **Minecraft Nether Portal Calculator** (`minecraft-nether-portal-calculator`) (in progress 2026-08-30):
+- [x] **Minecraft Nether Portal Calculator** (`minecraft-nether-portal-calculator`) (shipped 2026-08-30):
   Overworld and Nether portal linking coordinates using the 1:8 ratio. No
   dependency. Generic shell ok.
-- [x] **Minecraft Pixel Circle Generator** (`minecraft-pixel-circle-generator`) (in progress 2026-08-30):
+- [x] **Minecraft Pixel Circle Generator** (`minecraft-pixel-circle-generator`) (shipped 2026-08-30):
   Exportable block-grid circles and arcs for builds, at any radius. No
   dependency. Needs panel (grid canvas render plus export).
 - [ ] **Minecraft MOTD Color Code Generator** (`minecraft-motd-color-code-generator`):
@@ -454,10 +454,10 @@ diagram, never a plain form-and-number calculator.
 - [ ] **Minecraft NBT Viewer** (`minecraft-nbt-viewer`): Browse and edit NBT
   data from a world save or item, as a tree. Dependency: an NBT binary
   parser. Needs panel (tree view with edit).
-- [x] **Minecraft Beacon Calculator** (`minecraft-beacon-calculator`) (in progress 2026-08-30): Pyramid
+- [x] **Minecraft Beacon Calculator** (`minecraft-beacon-calculator`) (shipped 2026-08-30): Pyramid
   layer requirements and effect range for any beacon size. No dependency.
   Generic shell ok.
-- [x] **Minecraft Tick Time Converter** (`minecraft-tick-time-converter`) (in progress 2026-08-30):
+- [x] **Minecraft Tick Time Converter** (`minecraft-tick-time-converter`) (shipped 2026-08-30):
   Convert between game ticks, redstone ticks and real time, companion to the
   existing redstone timing calculator. No dependency. Generic shell ok.
 
@@ -466,16 +466,16 @@ diagram, never a plain form-and-number calculator.
 - [ ] **Typing Speed Test** (`typing-speed-test`): Words per minute and
   accuracy against generated or custom passages. No dependency. Needs panel
   (live typed-text highlighting plus timer).
-- [x] **Reaction Time Test** (`reaction-time-test`) (in progress 2026-08-30): Measure visual reaction
+- [x] **Reaction Time Test** (`reaction-time-test`) (shipped 2026-08-30): Measure visual reaction
   time across repeated trials, with a distribution chart. No dependency.
   Needs panel (stimulus display, timing capture, distribution chart).
-- [x] **Click Speed Test** (`click-speed-test`) (in progress 2026-08-30): Clicks per second over a
+- [x] **Click Speed Test** (`click-speed-test`) (shipped 2026-08-30): Clicks per second over a
   fixed window, with a running best score. No dependency. Needs panel (click
   target plus live counter).
 
 ## Generators
 
-- [x] **Sudoku Generator and Solver** (`sudoku-generator-solver`) (in progress 2026-08-30): Generate
+- [x] **Sudoku Generator and Solver** (`sudoku-generator-solver`) (shipped 2026-08-30): Generate
   puzzles with a unique solution at any difficulty, or solve one you paste
   in. No dependency (hand-rolled generator/solver). Needs panel (interactive
   grid).
