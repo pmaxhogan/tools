@@ -112,6 +112,8 @@ const MATERIAL_OPTIONS: SegmentedOption[] = [
 
 const UNIT_OPTIONS: SegmentedOption[] = [
   { value: "m", label: "m" },
+  { value: "cm", label: "cm" },
+  { value: "mm", label: "mm" },
   { value: "ft", label: "ft" },
 ];
 
@@ -322,7 +324,7 @@ const allRowsText = computed<string>(() =>
  * constant (PROJECT.md rule 27)
  * ------------------------------------------------------------------ */
 
-/** Common sizes with full ampacity coverage: NEC 310.16 (14 to 4/0) plus the chassis table (16 to 30). */
+/** Common sizes with full ampacity coverage: NEC 310.16 (14 to 4/0) plus the small gauge table (16 to 30). */
 const REFERENCE_GAUGES = [
   "0000",
   "000",
@@ -355,12 +357,16 @@ interface ReferenceRow {
   ampacity: string;
 }
 
-/** The single ampacity figure the table shows: the NEC 60C column, or the chassis open-air figure below 14 AWG. */
+/**
+ * The single ampacity figure the table shows: the NEC 60C column, or below
+ * 14 AWG the power transmission figure, the same one size-for rates those
+ * gauges at, so a highlighted row agrees with the recommendation above it.
+ */
 function firstAmpacity(out: Record<string, string>): string {
   const nec = out["Ampacity, NEC 310.16 copper (60C / 75C / 90C)"];
   if (nec) return nec.split(" / ")[0];
   const chassis = out["Chassis wiring reference (hobbyist, not code)"];
-  const chassisMatch = chassis?.match(/^([\d.]+\s*A)/);
+  const chassisMatch = chassis?.match(/\/ ([\d.]+\s*A) continuous power transmission$/);
   return chassisMatch ? chassisMatch[1] : "not tabulated";
 }
 
@@ -470,7 +476,7 @@ onUnmounted(() => clearTimeout(debounce));
           type="number"
           inputmode="decimal"
           min="0"
-          step="0.1"
+          step="any"
           placeholder="15"
           class="h-8 font-mono"
           @update:model-value="(v) => setField('amps', String(v))"
@@ -485,7 +491,7 @@ onUnmounted(() => clearTimeout(debounce));
           type="number"
           inputmode="decimal"
           min="0"
-          step="1"
+          step="any"
           placeholder="120"
           class="h-8 font-mono"
           @update:model-value="(v) => setField('volts', String(v))"
@@ -501,7 +507,7 @@ onUnmounted(() => clearTimeout(debounce));
             type="number"
             inputmode="decimal"
             min="0"
-            step="0.1"
+            step="any"
             placeholder="25"
             class="h-8 min-w-0 flex-1 font-mono"
             @update:model-value="(v) => setField('length', String(v))"
@@ -534,7 +540,7 @@ onUnmounted(() => clearTimeout(debounce));
           type="number"
           inputmode="decimal"
           min="0"
-          step="0.5"
+          step="any"
           placeholder="3"
           class="h-8 font-mono"
           @update:model-value="(v) => setField('maxDropPct', String(v))"

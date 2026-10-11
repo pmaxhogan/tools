@@ -181,6 +181,58 @@ describe("wire-gauge-calculator: size-for mode", () => {
     expect(strict["Recommended gauge"]).toBe("4 AWG");
   });
 
+  it("recommends gauges below 14 AWG for small loads, rated at the power transmission figure", () => {
+    const out = sizeFor("0.1A 1V 1ft maxdrop=100");
+    expect(out["Recommended gauge"]).toBe("30 AWG");
+    expect(out["Ampacity constraint"]).toContain("0.142 A allowed at 30 AWG (copper, power transmission reference, not code)");
+    expect(out["Small gauge note"]).toContain("0.86 A");
+
+    // 2 A is over 20 AWG's 1.5 A and within 18 AWG's 2.3 A.
+    expect(sizeFor("2A 0.5m 12V")["Recommended gauge"]).toBe("18 AWG");
+    // Just over 16 AWG's 3.7 A moves into the NEC table, which carries no small gauge note.
+    const nec = sizeFor("4A 0.5m 12V");
+    expect(nec["Recommended gauge"]).toBe("14 AWG");
+    expect(nec["Ampacity constraint"]).toContain("(copper, 75C)");
+    expect(nec["Small gauge note"]).toBeUndefined();
+  });
+
+  it("lets voltage drop push a small load up through the small gauges", () => {
+    // 1% of 5 V over a 10 m round trip needs at least 0.345 mm2: 22 AWG (0.326) fails, 20 AWG (0.518) passes.
+    expect(sizeFor("0.1A 5m 5V maxdrop=1")["Recommended gauge"]).toBe("20 AWG");
+  });
+
+  it("still floors aluminum at 12 AWG, the smallest size with aluminum ampacity data", () => {
+    const out = sizeFor("0.1A 1m 12V aluminum");
+    expect(out["Recommended gauge"]).toBe("12 AWG");
+    expect(out["Ampacity constraint"]).toContain("(aluminum, 75C)");
+  });
+
+  it("accepts decimal lengths in m, cm, mm, and ft", () => {
+    const m = drop("2A 0.45m 22awg 12V");
+    expect(drop("2A 45cm 22awg 12V")).toEqual(m);
+    expect(drop("2A 450mm 22awg 12V")).toEqual(m);
+    expect(drop("current=2 length=45.0cm gauge=22awg voltage=12")).toEqual(m);
+    expect(drop("current=2 length=450millimeters gauge=22awg voltage=12")).toEqual(m);
+    const ft = drop("2A 1.5ft 22awg 12V");
+    expect(ft).toEqual(drop("2A 0.4572m 22awg 12V"));
+  });
+
+  it("keeps a mm2 wire size distinct from a mm length", () => {
+    const out = drop("2A 450mm 0.5mm2 12V");
+    expect(out.Wire).toBe("0.5 mm2");
+  });
+
+  it("reads mA and mV as milli units instead of dropping the prefix", () => {
+    expect(sizeFor("100mA 1V 1ft maxdrop=100")).toEqual(sizeFor("0.1A 1V 1ft maxdrop=100"));
+    expect(sizeFor("current=100mA voltage=1000mV length=1ft maxdrop=100")).toEqual(sizeFor("0.1A 1V 1ft maxdrop=100"));
+  });
+
+  it("reports a tiny drop in millivolts rather than rounding it to zero", () => {
+    const out = sizeFor("0.1A 1V 1m maxdrop=100 temp=75");
+    expect(out["Voltage drop"]).toMatch(/ mV$/);
+    expect(out["Voltage drop"]).not.toBe("0.00 mV");
+  });
+
   it("throws missing-values naming what is missing", () => {
     try {
       sizeFor("30m 120V");

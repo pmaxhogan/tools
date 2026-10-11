@@ -72,9 +72,13 @@ export const meta: ToolMeta = {
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: 'Looks up AWG and metric wire sizes (diameter, area, resistance, and NEC 310.16-style ampacity), calculates voltage drop over a run for DC, single-phase, or three-phase circuits, and finds the smallest gauge that satisfies both ampacity and a voltage drop target. Input is plain text like "12 awg", "20A 30m 12awg 120V", or "20A 30m 120V", not a form.',
-    how: 'Pick a mode, then type the wire size or circuit values as space or comma separated tokens, either bare with units ("20A 30m 12awg 120V copper dc") or as key=value pairs ("current=20 length=30m gauge=12awg voltage=120"). Lookup mode accepts an AWG gauge ("12 awg", "4/0", "0000") or a metric size ("2.5 mm2"); voltage-drop and size-for accept current, one-way length in meters or feet, voltage, and optional material and phase.',
+    how: 'Pick a mode, then type the wire size or circuit values as space or comma separated tokens, either bare with units ("20A 30m 12awg 120V copper dc") or as key=value pairs ("current=20 length=30m gauge=12awg voltage=120"). Lookup mode accepts an AWG gauge ("12 awg", "4/0", "0000") or a metric size ("2.5 mm2"); voltage-drop and size-for accept current (A or mA), one-way length in m, cm, mm, or ft (decimals are fine), voltage, and optional material and phase. Sizing starts at 30 AWG for copper, so a small electronics load gets a small wire.',
     why: "Most wire gauge calculators online cover either the AWG chart or voltage drop, not both, and rarely show the NEC ampacity columns and hobbyist chassis-wiring figures side by side with an honest source note. This one covers lookup, voltage drop, and reverse sizing in one place, computed directly from the AWG formula rather than a static rounded table, and your inputs never leave your device.",
     faq: [
+      {
+        q: "How are wires thinner than 14 AWG rated when sizing a run?",
+        a: "The NEC table starts at 14 AWG, so copper sizes from 16 down to 30 AWG use the commonly reprinted power transmission figures, which are conservative and meant for bundled or enclosed wire. The result also shows the higher open-air chassis wiring figure for comparison. Those small sizes suit electronics and low-voltage work, not building circuits.",
+      },
       {
         q: "Is the ampacity table here code-compliant for my installation?",
         a: "No. The NEC 310.16-style figures are a common reference for THHN/THWN-2 conductors under typical conditions, not a substitute for the full code tables, temperature and bundling adjustments, or a licensed electrician. Always follow your local electrical code for real installations.",

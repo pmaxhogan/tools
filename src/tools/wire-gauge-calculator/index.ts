@@ -155,8 +155,20 @@ const AWG_TO_NEC_LABEL: Record<number, string> = {
   [-3]: "4/0",
 };
 
-/** Ordered thinnest-to-thickest, for the "size-for" search. */
-const NEC_ORDER: { label: string; n: number }[] = [
+/**
+ * Ordered thinnest-to-thickest, for the "size-for" search. The sizes below
+ * 14 AWG are not in the NEC table; they take their copper ampacity from
+ * CHASSIS_TABLE's power transmission column (see `sizeForAmpacity`).
+ */
+const SIZE_FOR_ORDER: { label: string; n: number }[] = [
+  { label: "30", n: 30 },
+  { label: "28", n: 28 },
+  { label: "26", n: 26 },
+  { label: "24", n: 24 },
+  { label: "22", n: 22 },
+  { label: "20", n: 20 },
+  { label: "18", n: 18 },
+  { label: "16", n: 16 },
   { label: "14", n: 14 },
   { label: "12", n: 12 },
   { label: "10", n: 10 },
@@ -354,26 +366,56 @@ function normalizePhase(v: string, tokenForError: string): "dc" | "ac1" | "ac3" 
   throw new ToolError("bad-token", `Unrecognized phase "${tokenForError}".`, "Use dc, ac1 (single-phase), or ac3 (three-phase).");
 }
 
-function parseLengthValue(v: string, tokenForError: string): number {
-  const m = v.match(/^([+-]?\d*\.?\d+)\s*(m|meter|meters|meter|meters|ft|feet|foot)?$/i);
-  if (!m || m[1] === "") {
-    throw new ToolError("bad-token", `Could not parse length "${tokenForError}".`, "Use a number with m or ft, like 30m or 100ft.");
-  }
-  const num = Number(m[1]);
-  if (!Number.isFinite(num)) throw new ToolError("bad-token", `Could not parse length "${tokenForError}".`);
-  const unit = (m[2] || "m").toLowerCase();
-  if (unit.startsWith("ft") || unit.startsWith("feet") || unit.startsWith("foot")) return num * 0.3048;
-  return num;
+/** Length unit -> meters. A bare number is meters. */
+const LENGTH_UNIT_M: Record<string, number> = {
+  m: 1,
+  meter: 1,
+  meters: 1,
+  cm: 0.01,
+  centimeter: 0.01,
+  centimeters: 0.01,
+  mm: 0.001,
+  millimeter: 0.001,
+  millimeters: 0.001,
+  ft: 0.3048,
+  feet: 0.3048,
+  foot: 0.3048,
+};
+
+const LENGTH_RE = new RegExp(`^([+-]?\\d*\\.?\\d+)(${Object.keys(LENGTH_UNIT_M).join("|")})?$`, "i");
+
+/** "30m", "2.5ft", "45cm", "300mm" (or a bare number of meters) -> meters, or null when it is not a length. */
+function matchLength(v: string, requireUnit: boolean): number | null {
+  const m = v.match(LENGTH_RE);
+  if (!m || (requireUnit && !m[2])) return null;
+  return Number(m[1]) * LENGTH_UNIT_M[(m[2] || "m").toLowerCase()];
 }
 
-function parsePlainNumber(v: string, label: string, tokenForError: string): number {
-  const m = v.match(/^([+-]?\d*\.?\d+)\s*[a-zA-Z]*$/);
+function parseLengthValue(v: string, tokenForError: string): number {
+  const meters = matchLength(v, false);
+  if (meters === null || !Number.isFinite(meters)) {
+    throw new ToolError(
+      "bad-token",
+      `Could not parse length "${tokenForError}".`,
+      "Use a number with m, cm, mm, or ft, like 30m, 45cm, or 100ft.",
+    );
+  }
+  return meters;
+}
+
+/**
+ * A number with an optional unit suffix. `unit` is the base unit letter ("a"
+ * or "v"); a milli prefix on it ("100mA", "500mV") scales by 1/1000 rather
+ * than being read as the base unit.
+ */
+function parsePlainNumber(v: string, label: string, tokenForError: string, unit?: string): number {
+  const m = v.match(/^([+-]?\d*\.?\d+)\s*([a-zA-Z]*)$/);
   if (!m || m[1] === "") {
     throw new ToolError("bad-token", `Could not parse ${label} "${tokenForError}".`, `Use a plain number for ${label}.`);
   }
   const num = Number(m[1]);
   if (!Number.isFinite(num)) throw new ToolError("bad-token", `Could not parse ${label} "${tokenForError}".`);
-  return num;
+  return unit && m[2].toLowerCase() === `m${unit}` ? num / 1000 : num;
 }
 
 function parsePercent(v: string, tokenForError: string): number {
@@ -411,10 +453,10 @@ function parseWireTokens(raw: string): Fields {
       }
       switch (kind) {
         case "current":
-          fields.current = parsePlainNumber(valRaw, "current", token);
+          fields.current = parsePlainNumber(valRaw, "current", token, "a");
           break;
         case "voltage":
-          fields.voltage = parsePlainNumber(valRaw, "voltage", token);
+          fields.voltage = parsePlainNumber(valRaw, "voltage", token, "v");
           break;
         case "length":
           fields.lengthM = parseLengthValue(valRaw, token);
@@ -462,31 +504,24 @@ function parseWireTokens(raw: string): Fields {
       continue;
     }
 
-    const mA = token.match(/^([+-]?\d*\.?\d+)a$/i);
-    if (mA) {
-      fields.current = Number(mA[1]);
+    if (/^[+-]?\d*\.?\d+m?a$/i.test(token)) {
+      fields.current = parsePlainNumber(token, "current", token, "a");
       continue;
     }
-    const mV = token.match(/^([+-]?\d*\.?\d+)v$/i);
-    if (mV) {
-      fields.voltage = Number(mV[1]);
+    if (/^[+-]?\d*\.?\d+m?v$/i.test(token)) {
+      fields.voltage = parsePlainNumber(token, "voltage", token, "v");
       continue;
     }
-    const mM = token.match(/^([+-]?\d*\.?\d+)(m|meter|meters|meter|meters)$/i);
-    if (mM) {
-      fields.lengthM = Number(mM[1]);
-      continue;
-    }
-    const mFt = token.match(/^([+-]?\d*\.?\d+)(ft|feet|foot)$/i);
-    if (mFt) {
-      fields.lengthM = Number(mFt[1]) * 0.3048;
+    const meters = matchLength(token, true);
+    if (meters !== null) {
+      fields.lengthM = meters;
       continue;
     }
 
     throw new ToolError(
       "bad-token",
       `Could not determine what "${token}" means.`,
-      "Add a unit like A, V, m, or ft, use a wire size like 12awg or 4/0, or use key=value syntax such as current=20.",
+      "Add a unit like A, V, m, cm, mm, or ft, use a wire size like 12awg or 4/0, or use key=value syntax such as current=20.",
     );
   }
 
@@ -497,6 +532,18 @@ function assertPositive(name: string, value: number): void {
   if (!Number.isFinite(value) || value <= 0) {
     throw new ToolError("impossible", `${name} must be a positive number, got ${value}.`, `Provide a positive value for ${name}.`);
   }
+}
+
+/** Volts to two decimals, switching to millivolts when that would round a real drop to 0.00 V. */
+function formatVolts(v: number): string {
+  if (v >= 0.1) return `${v.toFixed(2)} V`;
+  const mv = v * 1000;
+  return mv >= 0.01 ? `${mv.toFixed(2)} mV` : "<0.01 mV";
+}
+
+function formatPercent(pct: number): string {
+  if (pct >= 0.1) return `${pct.toFixed(2)}%`;
+  return pct >= 0.001 ? `${pct.toFixed(3)}%` : "<0.001%";
 }
 
 // ---------------------------------------------------------------------------
@@ -565,7 +612,7 @@ function runVoltageDrop(raw: string): WireGaugeResult {
   const f = parseWireTokens(raw);
   const missing: string[] = [];
   if (f.current === undefined) missing.push("current (e.g. 20A)");
-  if (f.lengthM === undefined) missing.push("length (e.g. 30m or 100ft)");
+  if (f.lengthM === undefined) missing.push("length (e.g. 30m, 45cm, or 100ft)");
   if (f.gaugeAreaMm2 === undefined) missing.push("gauge (e.g. 12awg)");
   if (f.voltage === undefined) missing.push("voltage (e.g. 120V)");
   if (missing.length > 0) {
@@ -604,8 +651,8 @@ function runVoltageDrop(raw: string): WireGaugeResult {
     Material: material,
     Circuit: phase === "ac3" ? "three-phase" : phase === "ac1" ? "single-phase AC" : "DC / single-phase",
     "Resistance used": `${rPerKm.toFixed(3)} ohm/km`,
-    "Voltage drop": `${vdrop.toFixed(2)} V`,
-    "Percent drop": `${pct.toFixed(2)}%`,
+    "Voltage drop": formatVolts(vdrop),
+    "Percent drop": formatPercent(pct),
     Verdict: verdict,
     Formula: phase === "ac3" ? "Vdrop = sqrt(3) x I x R x L (one-way length)" : "Vdrop = 2 x I x R x L (round trip over one-way length)",
   };
@@ -615,11 +662,35 @@ function runVoltageDrop(raw: string): WireGaugeResult {
 // Mode: size-for
 // ---------------------------------------------------------------------------
 
+/**
+ * The ampacity "size-for" holds a gauge to, with the basis it came from. 14
+ * AWG and up use the NEC table. Smaller copper sizes use the conservative
+ * power transmission figure, not the open-air chassis one: a run is usually
+ * bundled or enclosed, and that column also stays below 14 AWG's NEC figure,
+ * so a thinner wire is never rated above a thicker one.
+ */
+function sizeForAmpacity(
+  label: string,
+  n: number,
+  material: "copper" | "aluminum",
+  tempColumn: 60 | 75 | 90,
+): { amps: number; basis: string } | undefined {
+  const nec = NEC_AMPACITY[label];
+  if (nec) {
+    if (material === "aluminum") return nec.al75 === undefined ? undefined : { amps: nec.al75, basis: "aluminum, 75C" };
+    const amps = tempColumn === 60 ? nec.cu60 : tempColumn === 90 ? nec.cu90 : nec.cu75;
+    return { amps, basis: `copper, ${tempColumn}C` };
+  }
+  const small = CHASSIS_TABLE[n];
+  if (small && material === "copper") return { amps: small.powerA, basis: "copper, power transmission reference, not code" };
+  return undefined;
+}
+
 function runSizeFor(raw: string): WireGaugeResult {
   const f = parseWireTokens(raw);
   const missing: string[] = [];
   if (f.current === undefined) missing.push("current (e.g. 20A)");
-  if (f.lengthM === undefined) missing.push("length (e.g. 30m or 100ft)");
+  if (f.lengthM === undefined) missing.push("length (e.g. 30m, 45cm, or 100ft)");
   if (f.voltage === undefined) missing.push("voltage (e.g. 120V)");
   if (missing.length > 0) {
     throw new ToolError(
@@ -644,32 +715,37 @@ function runSizeFor(raw: string): WireGaugeResult {
   const rho1000 = material === "copper" ? 17.24 : 26.5;
   const attempts: string[] = [];
 
-  for (const { label, n } of NEC_ORDER) {
-    const entry = NEC_AMPACITY[label];
-    const ampacity = material === "copper" ? (tempColumn === 60 ? entry.cu60 : tempColumn === 90 ? entry.cu90 : entry.cu75) : entry.al75;
+  for (const { label, n } of SIZE_FOR_ORDER) {
+    const rated = sizeForAmpacity(label, n, material, tempColumn);
 
     const areaMm2 = awgAreaMm2(n);
     const rPerM = rho1000 / areaMm2 / 1000;
     const vdrop = phase === "ac3" ? Math.sqrt(3) * current * rPerM * lengthM : 2 * current * rPerM * lengthM;
     const pct = (vdrop / voltage) * 100;
 
-    if (ampacity === undefined) {
+    if (rated === undefined) {
       attempts.push(`${label} AWG: no ${material} ampacity data at this rating`);
       continue;
     }
+    const ampacity = rated.amps;
 
     const ampacityPass = current <= ampacity;
     const dropPass = pct <= maxDropPct;
     if (ampacityPass && dropPass) {
-      return {
+      const out: WireGaugeResult = {
         "Recommended gauge": `${label} AWG`,
         Material: material,
         Circuit: phase === "ac3" ? "three-phase" : phase === "ac1" ? "single-phase AC" : "DC / single-phase",
-        "Ampacity constraint": `${current} A required, ${ampacity} A allowed at ${label} AWG (${material}, ${material === "copper" ? tempColumn : 75}C) -> pass`,
-        "Voltage drop constraint": `${pct.toFixed(2)}% drop, ${maxDropPct}% limit -> pass`,
-        "Voltage drop": `${vdrop.toFixed(2)} V`,
+        "Ampacity constraint": `${current} A required, ${ampacity} A allowed at ${label} AWG (${rated.basis}) -> pass`,
+        "Voltage drop constraint": `${formatPercent(pct)} drop, ${maxDropPct}% limit -> pass`,
+        "Voltage drop": formatVolts(vdrop),
         Formula: phase === "ac3" ? "Vdrop = sqrt(3) x I x R x L" : "Vdrop = 2 x I x R x L",
       };
+      if (!(label in NEC_AMPACITY)) {
+        out["Small gauge note"] =
+          `Sizes below 14 AWG suit electronics and low-voltage wiring, not building circuits. ${label} AWG is rated here at the conservative power transmission figure; the open-air chassis wiring figure is ${CHASSIS_TABLE[n].chassisA} A.`;
+      }
+      return out;
     }
 
     attempts.push(
@@ -681,7 +757,7 @@ function runSizeFor(raw: string): WireGaugeResult {
 
   throw new ToolError(
     "impossible",
-    `No gauge up to 4/0 AWG satisfies both the ampacity and ${maxDropPct}% voltage drop requirements for ${current}A over ${lengthM}m at ${voltage}V. Largest tried: ${attempts[attempts.length - 1]}.`,
+    `No gauge up to 4/0 AWG satisfies both the ampacity and ${maxDropPct}% voltage drop requirements for ${current}A over ${Number(lengthM.toFixed(3))}m at ${voltage}V. Largest tried: ${attempts[attempts.length - 1]}.`,
     "Increase the wire size beyond 4/0 AWG, shorten the run, raise the supply voltage, or relax the drop limit.",
   );
 }
