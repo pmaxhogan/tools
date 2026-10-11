@@ -110,6 +110,12 @@ const MATERIAL_OPTIONS: SegmentedOption[] = [
   { value: "aluminum", label: "Aluminum" },
 ];
 
+/** How size-for rates copper below 14 AWG: values are the tool's own `install=` words. */
+const INSTALL_OPTIONS: SegmentedOption[] = [
+  { value: "enclosed", label: "Bundled or enclosed" },
+  { value: "open", label: "Open air" },
+];
+
 const UNIT_OPTIONS: SegmentedOption[] = [
   { value: "m", label: "m" },
   { value: "cm", label: "cm" },
@@ -130,6 +136,7 @@ const fields = reactive({
   lengthUnit: "m",
   material: "copper",
   maxDropPct: "3",
+  install: "enclosed",
 });
 
 type FieldKey = keyof typeof fields;
@@ -187,7 +194,9 @@ const composed = computed<string>(() => {
     token("material", fields.material),
   ];
   if (fields.mode === "voltage-drop") parts.push(token("gauge", fields.gauge));
-  if (fields.mode === "size-for") parts.push(token("maxdrop", fields.maxDropPct));
+  if (fields.mode === "size-for") {
+    parts.push(token("maxdrop", fields.maxDropPct), token("install", fields.install));
+  }
 
   return parts.filter((p): p is string => p !== null).join(" ");
 });
@@ -253,7 +262,10 @@ function panelOpts(): Record<string, string> {
     opts.unit = fields.lengthUnit;
     opts.material = fields.material;
   }
-  if (fields.mode === "size-for") opts.maxdrop = fields.maxDropPct;
+  if (fields.mode === "size-for") {
+    opts.maxdrop = fields.maxDropPct;
+    opts.install = fields.install;
+  }
   return opts;
 }
 
@@ -429,6 +441,7 @@ onMounted(() => {
   fields.lengthUnit = pickSegment(UNIT_OPTIONS, frag.opts.unit) ?? fields.lengthUnit;
   fields.material = pickSegment(MATERIAL_OPTIONS, frag.opts.material) ?? fields.material;
   if (frag.opts.maxdrop !== undefined) fields.maxDropPct = frag.opts.maxdrop;
+  fields.install = pickSegment(INSTALL_OPTIONS, frag.opts.install) ?? fields.install;
 
   // A shared link carries the free text shorthand, so it becomes the live
   // input and the box holding it opens, the way the generic shell does it.
@@ -546,6 +559,16 @@ onUnmounted(() => clearTimeout(debounce));
           @update:model-value="(v) => setField('maxDropPct', String(v))"
         />
       </div>
+
+      <div v-if="fields.mode === 'size-for'" class="flex min-w-0 flex-col gap-1.5">
+        <span class="text-xs text-muted-foreground">Wire run (sizes below 14 AWG)</span>
+        <Segmented
+          :model-value="fields.install"
+          :options="INSTALL_OPTIONS"
+          label="Wire run"
+          @update:model-value="(v: string) => setField('install', v)"
+        />
+      </div>
     </div>
 
     <div
@@ -608,6 +631,7 @@ onUnmounted(() => clearTimeout(debounce));
       >
         <p class="text-xs text-muted-foreground">
           Copper wire, common sizes. Each row is this tool's own lookup, not a separate table.
+          Ampacity below 14 AWG is the bundled or enclosed figure.
         </p>
         <div class="overflow-x-auto">
           <table class="w-full min-w-[32rem] border-collapse text-sm">

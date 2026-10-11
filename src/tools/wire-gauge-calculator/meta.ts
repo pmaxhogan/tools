@@ -77,7 +77,7 @@ export const meta: ToolMeta = {
     faq: [
       {
         q: "How are wires thinner than 14 AWG rated when sizing a run?",
-        a: "The NEC table starts at 14 AWG, so copper sizes from 16 down to 30 AWG use the commonly reprinted power transmission figures, which are conservative and meant for bundled or enclosed wire. The result also shows the higher open-air chassis wiring figure for comparison. Those small sizes suit electronics and low-voltage work, not building circuits.",
+        a: "The NEC table starts at 14 AWG, so copper sizes from 16 down to 30 AWG use the commonly reprinted power transmission figures, which are conservative and meant for bundled or enclosed wire. Switch the wire run to open air (or add install=open) to use the higher chassis wiring figures for short runs in free air, capped at the 14 AWG rating. Those small sizes suit electronics and low-voltage work, not building circuits.",
       },
       {
         q: "Is the ampacity table here code-compliant for my installation?",

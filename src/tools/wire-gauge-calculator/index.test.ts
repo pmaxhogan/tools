@@ -196,6 +196,27 @@ describe("wire-gauge-calculator: size-for mode", () => {
     expect(nec["Small gauge note"]).toBeUndefined();
   });
 
+  it("rates small gauges at the open-air chassis figure when the run is open", () => {
+    expect(sizeFor("2A 0.5m 12V")["Recommended gauge"]).toBe("18 AWG");
+    const open = sizeFor("2A 0.5m 12V install=open");
+    expect(open["Recommended gauge"]).toBe("26 AWG");
+    expect(open["Ampacity constraint"]).toContain("2.2 A allowed at 26 AWG (copper, open-air chassis wiring reference, not code)");
+    expect(open["Small gauge note"]).toContain("0.361 A");
+    expect(sizeFor("2A 0.5m 12V open-air")).toEqual(open);
+    expect(sizeFor("2A 0.5m 12V install=enclosed")).toEqual(sizeFor("2A 0.5m 12V"));
+    expect(getCode(() => sizeFor("2A 0.5m 12V install=sideways"))).toBe("bad-token");
+  });
+
+  it("caps the open-air figure at 14 AWG's rating so a thinner wire is never rated higher", () => {
+    // 16 AWG's chassis figure is 22 A, above 14 AWG's 20 A at 75C.
+    expect(sizeFor("20A 0.2m 120V open")["Ampacity constraint"]).toContain("20 A allowed at 16 AWG");
+    expect(sizeFor("21A 0.2m 120V open")["Recommended gauge"]).toBe("12 AWG");
+  });
+
+  it("leaves 14 AWG and larger unaffected by the open-air setting", () => {
+    expect(sizeFor("20A 30m 120V open")).toEqual(sizeFor("20A 30m 120V"));
+  });
+
   it("lets voltage drop push a small load up through the small gauges", () => {
     // 1% of 5 V over a 10 m round trip needs at least 0.345 mm2: 22 AWG (0.326) fails, 20 AWG (0.518) passes.
     expect(sizeFor("0.1A 5m 5V maxdrop=1")["Recommended gauge"]).toBe("20 AWG");

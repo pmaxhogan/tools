@@ -298,7 +298,18 @@ function looksLikeGaugeToken(t: string): boolean {
 // Free-text token parsing for voltage-drop / size-for
 // ---------------------------------------------------------------------------
 
-type FieldKind = "current" | "length" | "gauge" | "voltage" | "material" | "phase" | "maxdrop" | "temp";
+type FieldKind = "current" | "length" | "gauge" | "voltage" | "material" | "phase" | "maxdrop" | "temp" | "install";
+
+type Install = "enclosed" | "open";
+
+const INSTALL_WORDS: Record<string, Install> = {
+  enclosed: "enclosed",
+  bundled: "enclosed",
+  open: "open",
+  openair: "open",
+  "open-air": "open",
+  chassis: "open",
+};
 
 const KEY_FIELD: Record<string, FieldKind> = {
   i: "current",
@@ -337,6 +348,8 @@ const KEY_FIELD: Record<string, FieldKind> = {
   col: "temp",
   rating: "temp",
   insulation: "temp",
+  install: "install",
+  installation: "install",
 };
 
 interface Fields {
@@ -349,6 +362,13 @@ interface Fields {
   phase?: "dc" | "ac1" | "ac3";
   maxDropPct?: number;
   tempColumn?: 60 | 75 | 90;
+  install?: Install;
+}
+
+function normalizeInstall(v: string, tokenForError: string): Install {
+  const install = INSTALL_WORDS[v.toLowerCase()];
+  if (!install) throw new ToolError("bad-token", `Unrecognized installation "${tokenForError}".`, "Use install=enclosed or install=open.");
+  return install;
 }
 
 function normalizeMaterial(v: string, tokenForError: string): "copper" | "aluminum" {
@@ -479,6 +499,9 @@ function parseWireTokens(raw: string): Fields {
         case "temp":
           fields.tempColumn = parseTempColumn(valRaw, token);
           break;
+        case "install":
+          fields.install = normalizeInstall(valRaw, token);
+          break;
       }
       continue;
     }
@@ -497,6 +520,10 @@ function parseWireTokens(raw: string): Fields {
     }
     if (["dc", "ac1", "single", "singlephase", "single-phase", "1p", "ac3", "three", "threephase", "three-phase", "3p"].includes(lower)) {
       fields.phase = normalizePhase(lower, token);
+      continue;
+    }
+    if (lower in INSTALL_WORDS) {
+      fields.install = INSTALL_WORDS[lower];
       continue;
     }
     if (/^\d*\.?\d+%$/.test(token)) {
@@ -664,16 +691,18 @@ function runVoltageDrop(raw: string): WireGaugeResult {
 
 /**
  * The ampacity "size-for" holds a gauge to, with the basis it came from. 14
- * AWG and up use the NEC table. Smaller copper sizes use the conservative
- * power transmission figure, not the open-air chassis one: a run is usually
- * bundled or enclosed, and that column also stays below 14 AWG's NEC figure,
- * so a thinner wire is never rated above a thicker one.
+ * AWG and up use the NEC table. Smaller copper sizes default to the
+ * conservative power transmission figure, since a run is usually bundled or
+ * enclosed; `install` "open" switches them to the open-air chassis figure.
+ * That column runs past 14 AWG's NEC figure (22 A at 16 AWG), so it is capped
+ * there: a thinner wire is never rated above a thicker one.
  */
 function sizeForAmpacity(
   label: string,
   n: number,
   material: "copper" | "aluminum",
   tempColumn: 60 | 75 | 90,
+  install: Install,
 ): { amps: number; basis: string } | undefined {
   const nec = NEC_AMPACITY[label];
   if (nec) {
@@ -682,8 +711,13 @@ function sizeForAmpacity(
     return { amps, basis: `copper, ${tempColumn}C` };
   }
   const small = CHASSIS_TABLE[n];
-  if (small && material === "copper") return { amps: small.powerA, basis: "copper, power transmission reference, not code" };
-  return undefined;
+  if (!small || material !== "copper") return undefined;
+  if (install === "open") {
+    const cap14 = NEC_AMPACITY["14"];
+    const cap = tempColumn === 60 ? cap14.cu60 : tempColumn === 90 ? cap14.cu90 : cap14.cu75;
+    return { amps: Math.min(small.chassisA, cap), basis: "copper, open-air chassis wiring reference, not code" };
+  }
+  return { amps: small.powerA, basis: "copper, power transmission reference, not code" };
 }
 
 function runSizeFor(raw: string): WireGaugeResult {
@@ -711,12 +745,13 @@ function runSizeFor(raw: string): WireGaugeResult {
   const phase = f.phase ?? "dc";
   const maxDropPct = f.maxDropPct ?? 3;
   const tempColumn = f.tempColumn ?? 75;
+  const install = f.install ?? "enclosed";
 
   const rho1000 = material === "copper" ? 17.24 : 26.5;
   const attempts: string[] = [];
 
   for (const { label, n } of SIZE_FOR_ORDER) {
-    const rated = sizeForAmpacity(label, n, material, tempColumn);
+    const rated = sizeForAmpacity(label, n, material, tempColumn, install);
 
     const areaMm2 = awgAreaMm2(n);
     const rPerM = rho1000 / areaMm2 / 1000;
@@ -742,8 +777,12 @@ function runSizeFor(raw: string): WireGaugeResult {
         Formula: phase === "ac3" ? "Vdrop = sqrt(3) x I x R x L" : "Vdrop = 2 x I x R x L",
       };
       if (!(label in NEC_AMPACITY)) {
+        const small = CHASSIS_TABLE[n];
         out["Small gauge note"] =
-          `Sizes below 14 AWG suit electronics and low-voltage wiring, not building circuits. ${label} AWG is rated here at the conservative power transmission figure; the open-air chassis wiring figure is ${CHASSIS_TABLE[n].chassisA} A.`;
+          "Sizes below 14 AWG suit electronics and low-voltage wiring, not building circuits. " +
+          (install === "open"
+            ? `${label} AWG is rated here at the open-air chassis wiring figure, for short runs in free air; bundled or enclosed, the power transmission figure is ${small.powerA} A.`
+            : `${label} AWG is rated here at the conservative power transmission figure; the open-air chassis wiring figure is ${small.chassisA} A.`);
       }
       return out;
     }
