@@ -318,3 +318,4 @@ Punnett Square Calculator,punnett-square-calculator,Monohybrid and dihybrid cros
 DNA/RNA Translator,dna-rna-translator,"Transcribe and translate a sequence using the codon table, with reverse complement",Biology,Yes,A-,B+,B,B,3.21
 Population Growth Calculator,population-growth-calculator,"Exponential and logistic population growth over time, with a chart",Biology,Yes,A-,B-,B,C+,2.89
 MIDI Inspector,midi-inspector,"Read a .mid file event by event, or watch a live MIDI device, all in your browser",Dev,Yes,B+,C+,B+,C+,2.85
+Dial-Up Loading GIF Maker,dial-up-loading-gif,"Turn any image or animated GIF into a GIF that loads in line by line at uneven dial-up speed",Images,Yes,B,B-,A-,B,3.0

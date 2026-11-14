@@ -46,6 +46,7 @@ import { meta as cssAnchorPositioningBuilder } from "./css-anchor-positioning-bu
 import { meta as csvViewer } from "./csv-viewer/meta";
 import { meta as dataFormatConverter } from "./data-format-converter/meta";
 import { meta as decodeAnything } from "./decode-anything/meta";
+import { meta as dialUpLoadingGif } from "./dial-up-loading-gif/meta";
 import { meta as diffChecker } from "./diff-checker/meta";
 import { meta as discordTimestamp } from "./discord-timestamp/meta";
 import { meta as discordVideoCompressor } from "./discord-video-compressor/meta";
@@ -309,6 +310,7 @@ export const tools: ToolMeta[] = [
   csvViewer,
   dataFormatConverter,
   decodeAnything,
+  dialUpLoadingGif,
   diffChecker,
   discordTimestamp,
   discordVideoCompressor,
@@ -576,6 +578,7 @@ export const loaders: Record<string, () => Promise<unknown>> = {
   "csv-viewer": () => import("./csv-viewer/index").then((m) => m.default),
   "data-format-converter": () => import("./data-format-converter/index").then((m) => m.default),
   "decode-anything": () => import("./decode-anything/index").then((m) => m.default),
+  "dial-up-loading-gif": () => import("./dial-up-loading-gif/index").then((m) => m.default),
   "diff-checker": () => import("./diff-checker/index").then((m) => m.default),
   "discord-timestamp": () => import("./discord-timestamp/index").then((m) => m.default),
   "discord-video-compressor": () =>

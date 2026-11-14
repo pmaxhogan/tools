@@ -53,6 +53,7 @@ const panels: Record<string, Component> = {
   "css-anchor-positioning-builder": defineAsyncComponent(
     () => import("./panels/AnchorBuilderPanel.vue"),
   ),
+  "dial-up-loading-gif": defineAsyncComponent(() => import("./panels/DialUpGifPanel.vue")),
   "discord-video-compressor": defineAsyncComponent(
     () => import("./panels/DiscordCompressorPanel.vue"),
   ),
