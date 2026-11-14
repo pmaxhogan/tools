@@ -1,0 +1,11 @@
+# stack-template: dotfiles/gitattributes@1 746d72033bd1
+* text=auto eol=lf
+
+# Binary files: never normalise line endings or diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.jar binary
+*.keystore binary
+*.jks binary
+*.apk binary

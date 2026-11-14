@@ -1,0 +1,64 @@
+# stack-template: dependabot/npm@1 eb5e18f484c9
+version: 2
+
+# Canonical Dependabot policy (stack standard deps.dependabot-policy):
+#   - weekly, Monday 06:00 in the owner's timezone: one batch a week, not a daily flood
+#   - one `minor-and-patch` PR per ecosystem; majors stay separate PRs so they get reviewed
+#   - a `security` group so vulnerability fixes land together, any semver type
+#   - cooldown: majors wait 14 days, minors 3, patches 0. GitHub applies a 3-day default to
+#     everything when unconfigured; this overrides it so fresh major releases can settle
+#     (most of our toolchain breakage was fresh-release breakage).
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+      # No update-types here on purpose: a security fix is merged on green regardless
+      # of semver type (D-DEP-6).
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+      semver-minor-days: 3
+      semver-patch-days: 0
+    commit-message:
+      prefix: "deps"
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Chicago
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+      semver-minor-days: 3
+      semver-patch-days: 0
+    commit-message:
+      prefix: "deps(actions)"

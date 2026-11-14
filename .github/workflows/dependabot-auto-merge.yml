@@ -1,0 +1,112 @@
+# stack-template: automerge/workflow-run@1 804ca102c80e
+name: Dependabot auto-merge
+
+# Merge-on-green for repos where native auto-merge and rulesets do not exist
+# (private repos on GitHub Free). Runs after the CI workflow finishes green on
+# a Dependabot PR and merges it directly. Policy (stack standard
+# deps.dependabot-policy):
+#   - minor and patch: merge
+#   - major: merge only when EVERY bumped package is @types/* or a dev-only
+#     dependency; production majors wait for a human
+#   - security updates (the `security` group): merge regardless of semver type
+#   - no semver update type (calendar-versioned artifacts): hold, ONE comment
+# The coverage ratchet runs inside CI, so a bump that moves coverage turns CI
+# red and never reaches this workflow.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  auto-merge:
+    # actor is whoever pushed the head commit: a human push onto a Dependabot
+    # branch opts that PR out of auto-merge.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.actor.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      OWNER: ${{ github.repository_owner }}
+      HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Find the open Dependabot PR for this run
+        id: pr
+        run: |
+          number="$(gh api "repos/$GH_REPO/pulls?state=open&head=$OWNER:$HEAD_BRANCH" \
+            --jq "[.[] | select(.user.login == \"dependabot[bot]\" and .head.sha == \"$HEAD_SHA\")][0].number // empty")"
+          if [ -z "$number" ]; then
+            echo "No open Dependabot PR at $HEAD_SHA on $HEAD_BRANCH (stale run or already merged)."
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      # dependabot/fetch-metadata needs a pull_request payload, which a
+      # workflow_run event does not carry, so parse the same
+      # `updated-dependencies` YAML it reads out of Dependabot's commit message.
+      - name: Classify update
+        id: meta
+        if: steps.pr.outputs.number != ''
+        run: |
+          gh api "repos/$GH_REPO/commits/$HEAD_SHA" --jq .commit.message > msg.txt
+          node - <<'JS' >> "$GITHUB_OUTPUT"
+          const fs = require("fs");
+          const msg = fs.readFileSync("msg.txt", "utf8");
+          const deps = [];
+          let cur = null;
+          for (const line of msg.split("\n")) {
+            const name = line.match(/^- dependency-name:\s*(\S+)/);
+            if (name) deps.push((cur = { name: name[1] }));
+            const type = line.match(/^\s+dependency-type:\s*(\S+)/);
+            if (type && cur) cur.type = type[1];
+            const upd = line.match(/^\s+update-type:\s*version-update:semver-(\w+)/);
+            if (upd && cur) cur.update = upd[1];
+          }
+          // grouped security PRs live on dependabot/<ecosystem>/security-<hash>
+          const security = /^dependabot\/[\w-]+\/(?:[\w.-]+\/)*security-[0-9a-f]{6,}$/.test(process.env.HEAD_BRANCH || "");
+          let kind;
+          if (!deps.length || deps.some((d) => !d.update)) kind = "unknown";
+          else if (deps.every((d) => d.update !== "major")) kind = "minor-or-patch";
+          else if (
+            deps.filter((d) => d.update === "major")
+              .every((d) => d.name.startsWith("@types/") || d.type === "direct:development")
+          ) kind = "dev-major";
+          else kind = "major";
+          if (security && kind !== "unknown") kind = "security";
+          console.error(JSON.stringify({ deps, security, kind }));
+          console.log(`kind=${kind}`);
+          JS
+
+      - name: Merge
+        if: contains(fromJSON('["minor-or-patch","dev-major","security"]'), steps.meta.outputs.kind)
+        run: |
+          gh pr merge "${{ steps.pr.outputs.number }}" --squash --match-head-commit "$HEAD_SHA"
+          # A merge made with the workflow token does not trigger push
+          # workflows, so start CI on the default branch by hand.
+          if gh workflow run ci.yml --ref main; then
+            echo "dispatched ci.yml on main"
+          else
+            echo "::warning::merged, but could not dispatch ci.yml - post-merge CI/deploy did not run"
+          fi
+
+      - name: Leave production majors and unclassified updates for a human
+        if: steps.meta.outputs.kind == 'major' || steps.meta.outputs.kind == 'unknown'
+        run: |
+          if [ "${{ steps.meta.outputs.kind }}" = "major" ]; then
+            body="Major version bump of a production dependency, not auto-merging. Review and merge by hand."
+          else
+            # e.g. calendar-versioned artifacts like the Compose BOM.
+            body="Dependabot reported no semver update type, not auto-merging. Review and merge by hand."
+          fi
+          already="$(gh api "repos/$GH_REPO/issues/${{ steps.pr.outputs.number }}/comments" \
+            --jq "[.[] | select(.body == \"$body\")] | length")"
+          if [ "$already" = "0" ]; then
+            gh pr comment "${{ steps.pr.outputs.number }}" --body "$body"
+          fi

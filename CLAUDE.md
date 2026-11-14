@@ -113,3 +113,14 @@ the plan for all 168 tools.
    the file changes and the break only shows up in CI. Parallel tool agents do
    not edit `vitest.config.ts`: they report the path and the orchestrator adds
    it, the same as `registry.ts`.
+
+<!-- stack:begin (managed by the stack plugin; edit via /stack:remember or by hand, keep the markers) -->
+
+## Stack
+
+- mode: deps.dependabot-mechanism=workflow-run
+- exception: auth.web - tools.maxhogan.dev is not behind Cloudflare Access. Reason: it is a public site built for search traffic, with a public stateless curl API under /api. (2026-11-14)
+- exception: style.ascii-only - No scripts/check-ascii.mjs. Reason: the tools here handle Unicode, so 411 tracked text files legitimately contain non-ASCII (test vectors, emoji, public/data); scripts/check-prose.mjs is the dash gate and runs in npm run lint. (2026-11-14)
+- exception: test.coverage-ratchet - No coverage reporters and no ratchet. Reason: the repo ships by direct push so only Dependabot PRs could be gated, and CI is kept fast because it is the only gate before deploy. (2026-11-14)
+
+<!-- stack:end -->
