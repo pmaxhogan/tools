@@ -42,7 +42,9 @@ entry, and build verification. The result is a live page at `/<url-slug>`.
    image preview, editable tables), create `src/components/tool/panels/<PascalName>Panel.vue`
    following an existing panel as reference, and register it in the panel map used
    by `src/pages/[slug].astro`.
-7. **Verify:** `npx vitest run src/tools/<url-slug>` green, `npm run build` green,
+7. **Verify:** `npx vitest run src/tools/<url-slug>` green (or
+   `npm run test:changed` if you touched anything outside the tool's directory;
+   the full suite is left to CI), `npm run build` green,
    then load `/<url-slug>` with the dev server and confirm: input paste works,
    output renders, copy button works, options round-trip through the URL fragment.
 8. **Definition of done** is PROJECT.md section 5. Run down the checklist before

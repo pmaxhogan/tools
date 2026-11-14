@@ -1,4 +1,4 @@
-import path from "node:path";
+import { createRequire } from "node:module";
 import { beforeAll, describe, expect, it } from "vitest";
 import initSqlJs from "sql.js";
 import { ToolError } from "../types";
@@ -28,9 +28,15 @@ const WEIRD = 'my "table"';
 
 const OPTS: SqliteOpts = { maxRows: 100, maxCell: 40 };
 
+// Resolved the way node resolves the package, not from the working directory:
+// a git worktree has no node_modules of its own and finds the main checkout's
+// by walking up, which a cwd-relative path cannot do.
+const require = createRequire(import.meta.url);
+const locateFile = (file: string) => require.resolve(`sql.js/dist/${file}`);
+
 beforeAll(async () => {
   const SQL = await initSqlJs({
-    locateFile: (file: string) => path.join(process.cwd(), "node_modules", "sql.js", "dist", file),
+    locateFile,
   });
 
   const database = new SQL.Database();
@@ -104,8 +110,7 @@ describe("introspect", () => {
 
   it("leaves out SQLite internal objects", async () => {
     const SQL = await initSqlJs({
-      locateFile: (file: string) =>
-        path.join(process.cwd(), "node_modules", "sql.js", "dist", file),
+      locateFile,
     });
     const other = new SQL.Database();
     other.run(`

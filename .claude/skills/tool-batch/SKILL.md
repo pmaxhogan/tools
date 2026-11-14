@@ -42,7 +42,9 @@ merge conflicts.
      labels or synonyms. `src/tools/escape-unescape/meta.ts` is the reference.
 5. **After each agent lands (or all at once):** wire registry.ts (meta import +
    lazy loader, alphabetized), then run the full gate:
-   - `npx vitest run` (whole suite - catches cross-tool surprises)
+   - `npm run test:changed` (every test the batch can reach through imports,
+     which is where cross-tool surprises come from; CI runs the whole suite on
+     push, so do not run it here)
    - `npm run build` (catches type and import errors in the astro graph)
    - `npx eslint src/tools` (purity rules)
    - spot-review each tool's meta copy against DESIGN.md copy rules

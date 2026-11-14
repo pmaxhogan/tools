@@ -46,7 +46,18 @@ the plan for all 168 tools.
 
 ## Commands
 
-- `npm test` / `npx vitest run src/tools/<slug>` — logic tests
+- `npm run test:changed` - the local test command. Runs only the tests that
+  the import graph connects to a file differing from `origin/main`: unpushed
+  commits, staged, unstaged, and untracked files all count. Arguments pass
+  through (`npm run test:changed -- --project components`). When the change is
+  confined to one tool, `npx vitest run src/tools/<slug>` is quicker still,
+  because it skips working out what is affected.
+- `npm test` - the whole suite. CI runs it on every pull request and on main,
+  so there is no need to run it locally before a commit or a push.
+- `test:changed` cannot see a file a test reads from disk instead of importing
+  (a fixture, a vector file, source scanned as text). Those paths are listed in
+  `forceRerunTriggers` in `vitest.config.ts`, and a change to any of them runs
+  the whole suite. See hard rule 8.
 - `npm run build` — runs `scripts/build.mjs`: every `prepare-*.mjs` stager in
   parallel (disjoint public/ subtrees), then astro build, then
   `scripts/generate-sw.mjs` (service worker)
@@ -89,3 +100,8 @@ the plan for all 168 tools.
    that disagreed, so the same file reported a different size depending on
    which tool you opened. `format.ts` is pure, so tool logic may import it
    too; `download.ts` touches the DOM, so only components may.
+8. A test that reads a file from disk (`readFileSync` on a fixture or vector
+   file, or scanning a source file as text) must add that path to
+   `forceRerunTriggers` in `vitest.config.ts`, in the same change. Otherwise
+   `npm run test:changed` never selects the test when that file changes, and
+   the break only shows up in CI. Importing the file needs no entry.

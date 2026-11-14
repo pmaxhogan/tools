@@ -39,7 +39,8 @@ Nothing is logged, nothing is stored.
 ```
 npm install
 npm run dev        # dev server
-npm test           # vitest suite for all tool logic
+npm run test:changed  # only the tests affected by what differs from origin/main
+npm test           # the whole vitest suite (CI runs this on every push)
 npm run build      # static build + service worker generation
 npm run lint       # eslint, including purity rules for src/tools
 npm run typecheck  # astro check (.astro, .ts) + vue-tsc (.vue)

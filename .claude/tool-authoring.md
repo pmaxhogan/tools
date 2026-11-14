@@ -47,7 +47,15 @@ files.
 - Minimum: happy path + two edge cases + every `ToolError` branch you wrote.
 - Tests must be deterministic (use the seed option for random tools; never
   depend on wall-clock time without injecting it).
-- Verify with: `npx vitest run src/tools/<url-slug>` — must be green before you finish.
+- Verify with: `npx vitest run src/tools/<url-slug>` - must be green before you finish.
+  That is the whole local requirement for a single tool. If you touched anything
+  outside the tool's directory, run `npm run test:changed` instead; it runs every
+  test affected by what differs from `origin/main`. The full suite is CI's job.
+- Prefer importing a fixture over reading it from disk. If a test has to read a
+  file with `readFileSync` (a binary sample, a vector file), add that path to
+  `forceRerunTriggers` in `vitest.config.ts` in the same change. `test:changed`
+  follows imports only, so without the entry it skips your test when the file
+  changes.
 
 ## Rules for meta.ts
 
@@ -181,7 +189,8 @@ needs, extend the component (and its spec) rather than forking the markup.
 All four live in `src/components/tool/` and are imported by path, e.g.
 `import FileDrop from "@/components/tool/FileDrop.vue"`. Each ships a
 `<Name>.spec.ts` next to it that runs in the `components` vitest project
-(`npx vitest run --project components`).
+(`npx vitest run --project components`, or `npm run test:changed` to run only
+the specs your edit can reach).
 
 ### FileDrop.vue
 

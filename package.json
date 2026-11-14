@@ -11,6 +11,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "test": "vitest run",
+    "test:changed": "vitest run --changed origin/main",
     "lint": "eslint . && node scripts/check-spelling.mjs && node scripts/check-prose.mjs",
     "format": "prettier -w .",
     "typecheck": "astro check && vue-tsc --noEmit"
