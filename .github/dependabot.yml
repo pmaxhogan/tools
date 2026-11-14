@@ -29,6 +29,14 @@ updates:
       # @astrojs/check stops at 6.x, so TypeScript 7 cannot be checked yet.
       - dependency-name: typescript
         versions: [">=6.1.0"]
+      # satori renders the Open Graph cards at build time. 0.63 resolves the
+      # card's `100%` size against the padded frame's outer box, which pushed
+      # the card off the canvas and clipped the footer (src/lib/og.test.ts now
+      # catches that), and it rendered each card about 3x slower on the CI
+      # runner (74 ms to 228 ms). Move past 0.29 by hand, with the layout
+      # reworked and a look at the built /og/*.png files.
+      - dependency-name: satori
+        versions: [">=0.30.0"]
       # The in-browser ML runtime. onnxruntime-web is pinned (dependency and
       # override) because a newer transformers.js pin broke Whisper session
       # creation, and CI cannot run real inference, so a green run proves
@@ -74,10 +82,9 @@ updates:
         applies-to: security-updates
         patterns:
           - "*"
+    # Dependabot rejects the per-semver cooldown keys for github-actions (the
+    # whole file fails validation), so this ecosystem gets the flat default.
     cooldown:
       default-days: 3
-      semver-major-days: 14
-      semver-minor-days: 3
-      semver-patch-days: 0
     commit-message:
       prefix: "deps(actions)"
