@@ -44,6 +44,14 @@ updates:
       # transcriber, background remover, upscaler and QR deep scan in a browser.
       - dependency-name: "@huggingface/transformers"
       - dependency-name: onnxruntime-web
+      # The firmware flasher talks to a chip over Web Serial, so only flashing
+      # a real board proves a new esptool-js works. 0.7 changed chip detection
+      # and added input validation to writeFlash.
+      - dependency-name: esptool-js
+      # The three packages above are also pinned in
+      # src/lib/held-dependencies.test.ts, which fails CI when their locked
+      # version moves. These entries only stop the weekly noise; the test is
+      # what keeps a bot from merging them, security updates included.
     groups:
       minor-and-patch:
         applies-to: version-updates
