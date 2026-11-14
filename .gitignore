@@ -60,3 +60,6 @@ training/qr-detector/eval-js/node_modules/
 # Private inputs must never enter this public repo.
 training/qr-detector/eval-js/failures/
 training/qr-detector/eval-js/diag*/
+
+# Playwright MCP page snapshots from a browser-driving agent session
+.playwright-mcp/

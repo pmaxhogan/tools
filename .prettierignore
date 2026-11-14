@@ -22,3 +22,7 @@ public/wawoff2/
 # template and its JSON files are recorded eval results, so neither is
 # hand-formatted. eslint ignores the same directory.
 training/
+
+# Page snapshots a Playwright MCP session leaves behind. Local agent output,
+# never committed.
+.playwright-mcp/

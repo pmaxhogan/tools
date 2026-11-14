@@ -12,8 +12,8 @@
     "astro": "astro",
     "test": "vitest run",
     "test:changed": "vitest run --changed origin/main",
-    "lint": "eslint . && prettier --check . && node scripts/check-spelling.mjs && node scripts/check-prose.mjs",
-    "format": "prettier -w .",
+    "lint": "eslint . && prettier --check . --experimental-cli && node scripts/check-spelling.mjs && node scripts/check-prose.mjs",
+    "format": "prettier -w . --experimental-cli",
     "typecheck": "astro check && vue-tsc --noEmit"
   },
   "overrides": {
