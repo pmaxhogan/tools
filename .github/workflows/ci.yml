@@ -1,8 +1,12 @@
 name: CI
 
-# The Cloudflare Worker deploys straight from main, so this is the only gate
-# between a push and production. Keep it fast: no browsers, just lint,
-# typecheck, tests, and a build that proves main is deployable. The build sets
+# The Cloudflare Worker deploys straight from main through Workers Builds, which
+# starts on the same push and does not wait for this workflow. So this is not
+# what holds a bad commit back: scripts/build.mjs runs the same `npm run check`
+# inside the Workers Builds build, and a failing check fails that build before
+# anything deploys. This workflow is what pull requests and Dependabot's
+# auto-merge wait on, and where a failure is easiest to read. Keep it fast: no
+# browsers, just lint, typecheck, tests, and a build. The build sets
 # SKIP_NETWORK_PREPARE so it never depends on huggingface.co or jsdelivr.net
 # (the model and pyodide stagers fetch from those on a cold cache); everything
 # else the build needs comes from node_modules or committed repo files.

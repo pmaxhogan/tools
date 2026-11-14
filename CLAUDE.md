@@ -84,10 +84,16 @@ the plan for all 168 tools.
   check that is not reachable from `lint`, `typecheck`, `test` or `build`
   does not run in CI.
 - CI (`.github/workflows/ci.yml`) runs `npm run check` on every pull request
-  and on main, in one job. It is the only gate before the deploy, so keep it
-  green.
+  and on main, in one job. It is what Dependabot's auto-merge waits on, and
+  the place to read a failure. It does not hold the deploy back: Workers
+  Builds starts on the same push and never waits for it.
 - Deploy: push to main; the git-connected Cloudflare Worker "tools" builds and
-  deploys automatically (`wrangler.jsonc` is the config).
+  deploys automatically (`wrangler.jsonc` is the config). The gate is inside
+  that build. Workers Builds runs `npm run build`, and when `scripts/build.mjs`
+  sees `WORKERS_CI=1` it runs the whole of `npm run check` first, so a commit
+  with a failing check fails the build and is never deployed. The live site
+  stays on the last good commit. A red "Workers Builds: tools" check on a
+  commit means exactly that; the log is in the Cloudflare dashboard.
 - **Node 26.** `.nvmrc` pins it for local work, CI and Workers Builds, and
   `engines` says the same. astro 7.4.10 refuses anything older than 22.23.4,
   which is why the project moved off 22. Node 26 ships npm 11, so change

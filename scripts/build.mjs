@@ -10,11 +10,36 @@
  * Output from parallel children is buffered per script and printed as each
  * finishes, so logs never interleave mid-line. Any child failing fails the
  * build with that child's output attached.
+ *
+ * The deploy gate lives here too. Cloudflare Workers Builds runs this script
+ * on every push and deploys what it produces, and it does not wait for the
+ * GitHub Actions run of the same commit: the two start together and the
+ * deploy used to finish first, so a commit that failed CI was already live.
+ * Workers Builds has no "wait for CI" setting. So when this script is run by
+ * Workers Builds (it sets WORKERS_CI=1), it runs the whole gate instead,
+ * `scripts/check.mjs`: lint, both type checkers, the tests, and this build as
+ * one of its steps. Anything red fails the build, and a failed build is never
+ * deployed. Locally and in GitHub Actions it is just the build.
  */
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
+
+// TOOLS_GATE_RUNNING marks the build step that check.mjs itself starts, so the
+// gate runs once and that inner build is a plain build.
+if (process.env.WORKERS_CI === "1" && !process.env.TOOLS_GATE_RUNNING) {
+  console.log("build: Workers Builds detected, running the full gate before anything can deploy");
+  const gate = spawnSync(process.execPath, ["scripts/check.mjs"], {
+    cwd: root,
+    stdio: "inherit",
+    env: { ...process.env, TOOLS_GATE_RUNNING: "1" },
+  });
+  if (gate.status !== 0) {
+    console.error("build: the gate failed, so there is nothing to deploy");
+  }
+  process.exit(gate.status ?? 1);
+}
 
 const PREPARE = [
   "scripts/prepare-ffmpeg.mjs",

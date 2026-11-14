@@ -23,7 +23,11 @@
  * four cores, all four ran about three times slower than alone and the step
  * took 144s. So with four cores or fewer, the tests wait until at most one
  * other task is still going. Nothing is skipped: it is the same work in a
- * better order. With more cores than that, everything starts at once.
+ * better order. With more cores than that, everything starts at once. With
+ * two cores or under 12 GB, the tasks run one at a time.
+ *
+ * Workers Builds runs this too, through scripts/build.mjs, as the gate in
+ * front of every deploy.
  */
 import { spawn } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
@@ -104,30 +108,48 @@ if (sync.code !== 0) {
 /** Tasks that keep every core busy on their own. */
 const WIDE = new Set(["test"]);
 const cores = availableParallelism();
-const crowded = cores <= 4;
+const gb = totalmem() / 2 ** 30;
+// Two type checkers, the build and eslint together hold several GB. On a
+// machine with little memory or two cores (a Workers Builds builder can be
+// that small) overlap buys nothing and risks the build being killed, so the
+// tasks run one after another there. CHECK_SERIAL=1 forces it anywhere.
+const serial = process.env.CHECK_SERIAL === "1" || cores <= 2 || gb < 12;
+const crowded = !serial && cores <= 4;
 const waits = crowded ? tasks.filter((name) => WIDE.has(name)) : [];
 
 console.log(
-  `check: ${cores} cores, ${(totalmem() / 2 ** 30).toFixed(1)} GB. Running ${tasks.join(", ")}` +
+  `check: ${cores} cores, ${gb.toFixed(1)} GB. Running ${tasks.join(", ")}` +
+    (serial ? " (one at a time)" : "") +
     (waits.length ? ` (${waits.join(", ")} after the others thin out)` : ""),
 );
 
-// Resolves once at most one task that started straight away is still running.
-let running = tasks.length - waits.length;
-let thinned;
-const thinnedOut = new Promise((resolve) => (thinned = resolve));
-if (running <= 1) thinned();
+async function runTask(name) {
+  const result = await run(npm, ["run", "--silent", name]);
+  report(name, result);
+  return { name, ...result };
+}
 
-const results = await Promise.all(
-  tasks.map(async (name) => {
-    const waited = waits.includes(name);
-    if (waited) await thinnedOut;
-    const result = await run(npm, ["run", "--silent", name]);
-    if (!waited && --running <= 1) thinned();
-    report(name, result);
-    return { name, ...result };
-  }),
-);
+let results;
+if (serial) {
+  results = [];
+  for (const name of tasks) results.push(await runTask(name));
+} else {
+  // Resolves once at most one task that started straight away is still running.
+  let running = tasks.length - waits.length;
+  let thinned;
+  const thinnedOut = new Promise((resolve) => (thinned = resolve));
+  if (running <= 1) thinned();
+
+  results = await Promise.all(
+    tasks.map(async (name) => {
+      const waited = waits.includes(name);
+      if (waited) await thinnedOut;
+      const result = await runTask(name);
+      if (!waited && --running <= 1) thinned();
+      return result;
+    }),
+  );
+}
 
 const width = Math.max(...results.map((r) => r.name.length));
 console.log("");
