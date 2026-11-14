@@ -77,7 +77,9 @@ the plan for all 168 tools.
   strict settings.
 - `npm run check` - what CI runs: every part of `lint` and `typecheck`, plus
   `test` and `build`, all at the same time (`scripts/check.mjs`). About 30
-  seconds locally. It reads the steps out of the `lint` and `typecheck`
+  seconds locally. CI sets `SKIP_NETWORK_PREPARE=1` for it; without that, the
+  build step fetches the models and pyodide the first time, which is slow on
+  a cold `.model-cache`. It reads the steps out of the `lint` and `typecheck`
   scripts, so a step added to either one is in CI with no second edit. A
   check that is not reachable from `lint`, `typecheck`, `test` or `build`
   does not run in CI.
@@ -86,10 +88,13 @@ the plan for all 168 tools.
   green.
 - Deploy: push to main; the git-connected Cloudflare Worker "tools" builds and
   deploys automatically (`wrangler.jsonc` is the config).
-- **Lockfile rule:** Workers Builds runs npm 10.9.2, which requires `@emnapi/*`
-  entries that npm 11 omits. After changing dependencies, regenerate the lock
-  with `npx -y npm@10.9.2 install --package-lock-only` or CI's `npm ci` fails
-  with a lockfile-sync error. Drop this once the build image ships npm 11.
+- **Node 26.** `.nvmrc` pins it for local work, CI and Workers Builds, and
+  `engines` says the same. astro 7.4.10 refuses anything older than 22.23.4,
+  which is why the project moved off 22. Node 26 ships npm 11, so change
+  dependencies with the project's own `npm`: there is no longer a separate
+  npm version to regenerate the lockfile with. (The old rule was to use npm
+  10.9.2 because the Node 22 build image needed `@emnapi/*` entries that an
+  early npm 11 left out. The lockfile now installs cleanly under both.)
 
 ## Project skills
 
