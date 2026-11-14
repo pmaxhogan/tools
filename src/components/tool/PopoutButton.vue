@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
-import { PictureInPicture2 } from "lucide-vue-next";
+import { PictureInPicture2 } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import { findPopoutRoot, isPopoutSupported, popOut, type PopoutHandle } from "@/lib/popout";
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Download, ImageOff, RotateCcw, X } from "lucide-vue-next";
+import { Download, ImageOff, RotateCcw, X } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { Check, Search } from "lucide-vue-next";
+import { Check, Search } from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import { readFragment, writeFragment } from "@/lib/fragment";
 import { copyText } from "@/lib/clipboard";

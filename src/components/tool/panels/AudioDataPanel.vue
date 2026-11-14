@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { Download, Mic, MicOff, Play, Square } from "lucide-vue-next";
+import { Download, Mic, MicOff, Play, Square } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {
   buildFskFrame,

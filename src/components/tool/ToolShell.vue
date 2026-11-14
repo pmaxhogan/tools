@@ -30,7 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { ChevronRight, Sparkles, X } from "lucide-vue-next";
+import { ChevronRight, Sparkles, X } from "@lucide/vue";
 import FileDrop from "./FileDrop.vue";
 import OptionControl from "./OptionControl.vue";
 import OutputView from "./OutputView.vue";

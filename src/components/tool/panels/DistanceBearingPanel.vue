@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { ArrowLeftRight, ChevronDown, ChevronRight, LocateFixed } from "lucide-vue-next";
+import { ArrowLeftRight, ChevronDown, ChevronRight, LocateFixed } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   compassPoint,

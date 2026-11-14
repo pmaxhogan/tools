@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { Trash2 } from "lucide-vue-next";
+import { Trash2 } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {
   CLIP_PRESETS,

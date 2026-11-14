@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Check, X } from "lucide-vue-next";
+import { Check, X } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { shouldAutoDownload, isMetered, onConnectionChange } from "@/lib/connection";
 import { formatBytes } from "@/lib/format";

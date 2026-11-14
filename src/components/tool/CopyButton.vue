@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type Component, onUnmounted, ref } from "vue";
-import { Check, Copy } from "lucide-vue-next";
+import { Check, Copy } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import type { ButtonVariants } from "@/components/ui/button";
 import { copyText } from "@/lib/clipboard";

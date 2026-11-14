@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import CopyButton from "../CopyButton.vue";
 import OutputView from "../OutputView.vue";
-import { Loader2, RefreshCw } from "lucide-vue-next";
+import { Loader2, RefreshCw } from "@lucide/vue";
 
 /**
  * Bespoke panel for the HTTP Header Inspector.

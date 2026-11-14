@@ -20,7 +20,7 @@
  * component renders inert on the server.
  */
 import { computed, ref, shallowRef } from "vue";
-import { Download, FileArchive, Play, TriangleAlert, X } from "lucide-vue-next";
+import { Download, FileArchive, Play, TriangleAlert, X } from "@lucide/vue";
 import { zipSync } from "fflate";
 import { ToolError, type OptionSpec, type ToolMeta } from "@/tools/types";
 import { formatBytes } from "@/lib/format";

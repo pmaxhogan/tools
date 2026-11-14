@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { ArrowLeft, ArrowRight, Camera, Download, RefreshCw, Trash2, X } from "lucide-vue-next";
+import { ArrowLeft, ArrowRight, Camera, Download, RefreshCw, Trash2, X } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Segmented, type SegmentedOption } from "@/components/ui/segmented";

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { ArrowDown, ArrowUp } from "lucide-vue-next";
+import { ArrowDown, ArrowUp } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import { readFragment, writeFragment } from "@/lib/fragment";

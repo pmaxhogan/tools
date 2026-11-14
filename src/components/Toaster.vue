@@ -2,7 +2,7 @@
      this pattern has everywhere; a second word would only pad it. -->
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
-import { Check, Info, TriangleAlert, X } from "lucide-vue-next";
+import { Check, Info, TriangleAlert, X } from "@lucide/vue";
 import { type Toast, dismissToast, subscribeToasts } from "@/lib/toast";
 
 /**

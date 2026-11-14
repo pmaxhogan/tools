@@ -127,7 +127,7 @@ import {
   Thermometer,
   Tv,
   Wifi,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 
 /**
  * Bespoke panel for the Electromagnetic Spectrum explorer.

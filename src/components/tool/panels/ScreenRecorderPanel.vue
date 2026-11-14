@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, shallowRef } from "vue";
-import { Download, Loader2, Monitor } from "lucide-vue-next";
+import { Download, Loader2, Monitor } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import {
   QUALITY,

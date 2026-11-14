@@ -10,7 +10,7 @@
  * inside the existing vocabulary rather than inventing new variables.
  */
 import { Comment, Fragment, Text, computed, useSlots, type VNode } from "vue";
-import { CircleAlert, Info, TriangleAlert, X } from "lucide-vue-next";
+import { CircleAlert, Info, TriangleAlert, X } from "@lucide/vue";
 
 const props = withDefaults(
   defineProps<{

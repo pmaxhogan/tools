@@ -15,7 +15,7 @@
  * people do when they are trying a caption on three different images.
  */
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Clipboard, Download, ImageOff, Sparkles } from "lucide-vue-next";
+import { Clipboard, Download, ImageOff, Sparkles } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   BLANK_SIZES,

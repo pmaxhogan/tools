@@ -10,7 +10,7 @@
  * through the URL fragment so a specific set of boards is shareable.
  */
 import { computed, onMounted, ref, watch } from "vue";
-import { ImageDown, Printer, Shuffle } from "lucide-vue-next";
+import { ImageDown, Printer, Shuffle } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { cleanItems, generateBoards } from "@/tools/bingo-card-generator/index";
 import { readFragment, writeFragment } from "@/lib/fragment";

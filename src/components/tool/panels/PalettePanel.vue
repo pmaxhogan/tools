@@ -19,7 +19,7 @@
  * allocating 160 MB of RGBA before the first sample is taken.
  */
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Check, Download, ImageOff, Sparkles } from "lucide-vue-next";
+import { Check, Download, ImageOff, Sparkles } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   cssVariables,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Camera, Download, Maximize2, Pause, Play, Repeat, RotateCcw } from "lucide-vue-next";
+import { Camera, Download, Maximize2, Pause, Play, Repeat, RotateCcw } from "@lucide/vue";
 import jsQR from "jsqr";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {

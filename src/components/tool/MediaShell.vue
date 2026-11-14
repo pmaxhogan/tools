@@ -67,7 +67,7 @@
  * is mounted in a browser.
  */
 import { computed, onMounted, onUnmounted, ref, shallowRef, useSlots } from "vue";
-import { Check, X } from "lucide-vue-next";
+import { Check, X } from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import {

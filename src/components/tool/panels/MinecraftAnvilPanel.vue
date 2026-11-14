@@ -12,7 +12,7 @@
  * through the URL fragment so a specific build is shareable.
  */
 import { computed, onMounted, ref, watch } from "vue";
-import { ArrowRight, Plus, Sparkles, Trash2 } from "lucide-vue-next";
+import { ArrowRight, Plus, Sparkles, Trash2 } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   type AnvilItem,

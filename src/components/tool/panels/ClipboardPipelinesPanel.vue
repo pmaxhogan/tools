@@ -13,7 +13,7 @@
  * option uses, so a link opens with the pipeline already built.
  */
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { ArrowDown, ArrowUp, ClipboardPaste, Link, Trash2, X } from "lucide-vue-next";
+import { ArrowDown, ArrowUp, ClipboardPaste, Link, Trash2, X } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import {

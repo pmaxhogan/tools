@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { Link } from "lucide-vue-next";
+import { Link } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import { copyText } from "@/lib/clipboard";
 

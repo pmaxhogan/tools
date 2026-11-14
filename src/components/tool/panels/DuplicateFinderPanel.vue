@@ -21,7 +21,7 @@
  * src/tools/duplicate-finder/index.ts; this file renders what it returns.
  */
 import { computed, onBeforeUnmount, ref, shallowRef } from "vue";
-import { Search, Trash2, TriangleAlert } from "lucide-vue-next";
+import { Search, Trash2, TriangleAlert } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import EmptyState from "../EmptyState.vue";

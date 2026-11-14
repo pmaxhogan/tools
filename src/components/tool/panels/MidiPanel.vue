@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
-import { CircleAlert, FileMusic, Music4, Radio, Trash2, X } from "lucide-vue-next";
+import { CircleAlert, FileMusic, Music4, Radio, Trash2, X } from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import { formatBytes } from "@/lib/format";

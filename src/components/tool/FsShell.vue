@@ -65,7 +65,7 @@
  * declares `requires: ['fs-access']`).
  */
 import { computed, onMounted, ref, shallowRef } from "vue";
-import { Download, FolderOpen, RotateCw } from "lucide-vue-next";
+import { Download, FolderOpen, RotateCw } from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import {

@@ -20,7 +20,7 @@
  * persisted anywhere.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { Redo2, RotateCcw } from "lucide-vue-next";
+import { Redo2, RotateCcw } from "@lucide/vue";
 import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {

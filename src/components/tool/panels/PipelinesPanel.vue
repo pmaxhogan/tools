@@ -21,7 +21,7 @@ import OptionControl from "../OptionControl.vue";
 import CopyButton from "../CopyButton.vue";
 import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
-import { ArrowDown, ArrowUp, Plus, X, Link as LinkIcon } from "lucide-vue-next";
+import { ArrowDown, ArrowUp, Plus, X, Link as LinkIcon } from "@lucide/vue";
 
 /**
  * The Composable Pipelines builder.

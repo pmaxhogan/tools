@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { ArrowLeftRight, Check, X } from "lucide-vue-next";
+import { ArrowLeftRight, Check, X } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { Plus, RotateCcw, Trash2 } from "lucide-vue-next";
+import { Plus, RotateCcw, Trash2 } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   DEFAULT_SETTINGS,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, shallowRef, watch } from "vue";
-import { FileText, X } from "lucide-vue-next";
+import { FileText, X } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { formatBytes } from "@/lib/format";
 import { downloadBlob, downloadText } from "@/lib/download";

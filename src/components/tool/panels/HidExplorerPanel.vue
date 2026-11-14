@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
-import { Pause, Play, Plug, Trash2, Usb } from "lucide-vue-next";
+import { Pause, Play, Plug, Trash2, Usb } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

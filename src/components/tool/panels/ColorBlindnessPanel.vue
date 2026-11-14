@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Download, ImageOff } from "lucide-vue-next";
+import { Download, ImageOff } from "@lucide/vue";
 import type { SelectGroup, SelectOption, SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import {

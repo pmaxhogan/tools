@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { Bell, BellOff, Flag, Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-vue-next";
+import { Bell, BellOff, Flag, Pause, Play, RotateCcw, Volume2, VolumeX } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   decodeTimerState,

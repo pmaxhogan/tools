@@ -4,7 +4,7 @@ import type { ToolMeta } from "@/tools/types";
 import { FEATURE_PROBES, run } from "@/tools/wasm-feature-detector/index";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, RefreshCw, X } from "lucide-vue-next";
+import { Check, RefreshCw, X } from "@lucide/vue";
 import CopyButton from "../CopyButton.vue";
 
 /**

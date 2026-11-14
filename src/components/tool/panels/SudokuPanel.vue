@@ -21,7 +21,7 @@
  * mark, is session state and never touches the fragment.
  */
 import { computed, nextTick, onMounted, ref, watch } from "vue";
-import { Eraser, Lightbulb, Pencil, Printer, RotateCcw, Shuffle } from "lucide-vue-next";
+import { Eraser, Lightbulb, Pencil, Printer, RotateCcw, Shuffle } from "@lucide/vue";
 import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {

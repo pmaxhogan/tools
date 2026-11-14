@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { X } from "lucide-vue-next";
+import { X } from "@lucide/vue";
 import { ToolError, type SelectOption, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   bpmFromTaps,

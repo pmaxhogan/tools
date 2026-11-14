@@ -191,7 +191,7 @@ export interface ToolMeta {
    */
   searchTerms?: string[];
   /**
-   * Name of the lucide-vue-next icon for this tool (e.g. "QrCode", "Clock").
+   * Name of the @lucide/vue icon for this tool (e.g. "QrCode", "Clock").
    * Rendered on tool cards, the sidebar, and the tool page header. Resolved
    * through the curated map in src/lib/tool-icons.ts so only used icons ship.
    */

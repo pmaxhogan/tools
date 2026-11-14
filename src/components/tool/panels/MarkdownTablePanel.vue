@@ -11,7 +11,7 @@ import {
   Minus,
   Plus,
   X,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   addColumn,

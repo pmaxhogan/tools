@@ -16,7 +16,7 @@
  * values the engine would reject.
  */
 import { computed, onMounted, ref, watch } from "vue";
-import { ArrowLeftRight } from "lucide-vue-next";
+import { ArrowLeftRight } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   matchup,

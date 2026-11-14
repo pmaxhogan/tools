@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Check, GripVertical, X, Zap } from "lucide-vue-next";
+import { Check, GripVertical, X, Zap } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import { isMetered, onConnectionChange, shouldAutoDownload } from "@/lib/connection";
 import { formatBytes } from "@/lib/format";

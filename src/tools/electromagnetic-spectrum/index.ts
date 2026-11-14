@@ -706,7 +706,7 @@ export interface Interpretation {
   frequencyHz: number;
   /** Low and high edges in hertz, so the panel can zoom to fit. */
   rangeHz?: [number, number];
-  /** Optional lucide-vue-next icon name. */
+  /** Optional @lucide/vue icon name. */
   icon?: string;
   /** Set on "allocation" candidates: the allocation row id to select. */
   allocationId?: string;

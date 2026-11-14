@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from "vue";
-import { ChevronLeft, ChevronRight, X } from "lucide-vue-next";
+import { ChevronLeft, ChevronRight, X } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import {
   formatTimecode,

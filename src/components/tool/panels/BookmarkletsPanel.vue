@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronDown, GripVertical, MousePointer2 } from "lucide-vue-next";
+import { ChevronDown, GripVertical, MousePointer2 } from "@lucide/vue";
 import CopyButton from "../CopyButton.vue";
 import ErrorBanner from "../ErrorBanner.vue";
 

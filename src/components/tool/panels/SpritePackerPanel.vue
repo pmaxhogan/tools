@@ -14,7 +14,7 @@
  * runs, so the component renders inert on the server.
  */
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Download, FileArchive, X } from "lucide-vue-next";
+import { Download, FileArchive, X } from "@lucide/vue";
 import { zipSync, type Zippable } from "fflate";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {

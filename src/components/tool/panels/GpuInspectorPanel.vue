@@ -6,7 +6,7 @@ import type { GpuSnapshot } from "@/tools/gpu-inspector/index";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
 import type { SegmentedOption } from "@/components/ui/segmented";
-import { RefreshCw } from "lucide-vue-next";
+import { RefreshCw } from "@lucide/vue";
 import OutputView from "../OutputView.vue";
 
 /**
@@ -46,9 +46,10 @@ interface GpuLike {
   getPreferredCanvasFormat?: () => string;
   wgslLanguageFeatures?: Iterable<string>;
 }
-interface NavigatorWithGpu extends Navigator {
-  gpu?: GpuLike;
-}
+// TypeScript 6 types navigator.gpu as always present. It is not: browsers
+// without WebGPU leave it undefined, so swap the built-in member for the
+// optional, narrower shape this panel actually reads.
+type NavigatorWithGpu = Omit<Navigator, "gpu"> & { gpu?: GpuLike };
 
 /**
  * The standard GPUSupportedLimits members (WebGPU spec). adapter.limits

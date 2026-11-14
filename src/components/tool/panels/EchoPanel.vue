@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import CopyButton from "@/components/tool/CopyButton.vue";
 import OutputView from "@/components/tool/OutputView.vue";
-import { Radio, Send, TriangleAlert } from "lucide-vue-next";
+import { Radio, Send, TriangleAlert } from "@lucide/vue";
 
 /**
  * Bespoke panel for Echo Endpoint.

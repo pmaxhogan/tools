@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { Bluetooth, Download, Trash2 } from "lucide-vue-next";
+import { Bluetooth, Download, Trash2 } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

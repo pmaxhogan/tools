@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { Check, RefreshCw, Search, TriangleAlert } from "lucide-vue-next";
+import { Check, RefreshCw, Search, TriangleAlert } from "@lucide/vue";
 import ErrorBanner from "../ErrorBanner.vue";
 
 /**

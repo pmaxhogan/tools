@@ -31,7 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import OutputView from "@/components/tool/OutputView.vue";
 import CopyButton from "@/components/tool/CopyButton.vue";
-import { Check, CircleAlert, Play, Square, Trash2 } from "lucide-vue-next";
+import { Check, CircleAlert, Play, Square, Trash2 } from "@lucide/vue";
 
 defineProps<{ meta: ToolMeta }>();
 

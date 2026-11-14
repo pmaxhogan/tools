@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, shallowRef } from "vue";
 import jsQR from "jsqr";
-import { Check, ScanSearch, X } from "lucide-vue-next";
+import { Check, ScanSearch, X } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { interpret, type DecodeResult } from "@/tools/qr-code-scanner/index";
 import type { RawImage } from "@/tools/qr-code-scanner/detector";

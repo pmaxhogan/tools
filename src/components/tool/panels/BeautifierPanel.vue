@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Copy, Download, X } from "lucide-vue-next";
+import { Copy, Download, X } from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import {
   BACKGROUNDS,

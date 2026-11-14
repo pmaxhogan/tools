@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { Mic, Play, Square } from "lucide-vue-next";
+import { Mic, Play, Square } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import {
   TIME_SIGNATURES,

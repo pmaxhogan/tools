@@ -44,7 +44,7 @@
  * always the default pool.
  */
 import { computed, onMounted, ref, watch } from "vue";
-import { ChevronRight, HardDrive, Plus, RotateCcw, Trash2, X } from "lucide-vue-next";
+import { ChevronRight, HardDrive, Plus, RotateCcw, Trash2, X } from "@lucide/vue";
 import { ToolError, type OptionSpec, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { parseShorthand, run, type RaidzOpts } from "@/tools/raidz-calculator/index";
 import {

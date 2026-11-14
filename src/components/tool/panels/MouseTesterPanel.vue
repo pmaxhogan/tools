@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Crosshair, Gauge, MousePointerClick, RotateCcw } from "lucide-vue-next";
+import { Crosshair, Gauge, MousePointerClick, RotateCcw } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {
   accelerationCheck,

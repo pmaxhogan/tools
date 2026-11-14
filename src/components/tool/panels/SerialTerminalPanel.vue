@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Download, Plug, Send, Trash2, Usb } from "lucide-vue-next";
+import { Download, Plug, Send, Trash2, Usb } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

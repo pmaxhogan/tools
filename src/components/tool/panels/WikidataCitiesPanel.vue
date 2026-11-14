@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef, watch } from "vue";
-import { Download, Play } from "lucide-vue-next";
+import { Download, Play } from "@lucide/vue";
 import initSqlJs from "sql.js";
 import wasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import type { ToolMeta } from "@/tools/types";

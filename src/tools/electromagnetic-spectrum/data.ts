@@ -50,7 +50,7 @@ export interface Band {
   /** Approximate display color for a swatch (visible sub-bands only). */
   color?: string;
   /**
-   * Optional lucide-vue-next icon NAME (a string, never an imported component,
+   * Optional @lucide/vue icon NAME (a string, never an imported component,
    * so this data module stays pure). The panel maps the name to a component.
    * The full set of names used across the tree is listed in ICON_NAMES below.
    */
@@ -67,9 +67,9 @@ export interface Band {
 }
 
 /**
- * Every lucide-vue-next icon NAME referenced by a band's `icon` field. The panel
- * agent should import exactly this set from "lucide-vue-next". Each name was
- * verified to exist as an export in node_modules/lucide-vue-next.
+ * Every @lucide/vue icon NAME referenced by a band's `icon` field. The panel
+ * agent should import exactly this set from "@lucide/vue". Each name was
+ * verified to exist as an export in node_modules/@lucide/vue.
  *
  *   Anchor, Antenna, Atom, Bluetooth, Clock, CloudRain, Eye, Microwave,
  *   Plane, Radar, Radiation, RadioReceiver, RadioTower, Router, Satellite,

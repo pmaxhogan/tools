@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import type { CSSProperties } from "vue";
-import { Crop, Download, MousePointerClick, Video, X } from "lucide-vue-next";
+import { Crop, Download, MousePointerClick, Video, X } from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import {
   DEFAULT_MIME_CANDIDATES,

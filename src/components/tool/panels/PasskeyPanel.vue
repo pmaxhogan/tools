@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { ArrowRight, KeyRound, LogIn } from "lucide-vue-next";
+import { ArrowRight, KeyRound, LogIn } from "@lucide/vue";
 import { ToolError, type OptionSpec, type ToolMeta } from "@/tools/types";
 import { run } from "@/tools/passkey-tester/index";
 import { Button } from "@/components/ui/button";

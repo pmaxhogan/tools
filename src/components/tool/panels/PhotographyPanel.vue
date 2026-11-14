@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
-import { ChevronRight } from "lucide-vue-next";
+import { ChevronRight } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { run } from "@/tools/photography-calculator/index";
 import { readFragment, writeFragment } from "@/lib/fragment";

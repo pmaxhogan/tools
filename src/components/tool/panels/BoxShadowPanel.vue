@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from "lucide-vue-next";
+import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {
   DEFAULT_LAYER,

@@ -8,7 +8,7 @@ import {
   Download,
   Search,
   X,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";

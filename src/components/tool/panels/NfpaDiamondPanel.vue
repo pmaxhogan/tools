@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { Download, Search, TriangleAlert } from "lucide-vue-next";
+import { Download, Search, TriangleAlert } from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import {
   DISCLAIMER,

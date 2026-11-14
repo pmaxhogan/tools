@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { RotateCcw } from "lucide-vue-next";
+import { RotateCcw } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {
   EASING_PRESETS,

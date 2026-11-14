@@ -5,7 +5,7 @@ import HomeGrid from "@/components/HomeGrid.vue";
 import { iconFor } from "@/lib/tool-icons";
 import { CATEGORIES, type ToolCategory } from "@/tools/categories";
 import { tools } from "@/tools/registry";
-import type { LucideIcon } from "lucide-vue-next";
+import type { LucideIcon } from "@lucide/vue";
 
 export function getStaticPaths() {
   return CATEGORIES.map((category) => ({ params: { slug: category.slug }, props: { category } }));

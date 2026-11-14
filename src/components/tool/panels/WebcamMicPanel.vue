@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from "vue";
-import { Aperture, Camera, Mic, RefreshCw } from "lucide-vue-next";
+import { Aperture, Camera, Mic, RefreshCw } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import {
   analyzeSamples,

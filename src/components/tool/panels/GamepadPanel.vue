@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
-import { Download, Play, RotateCcw, Square, Trash2, Vibrate } from "lucide-vue-next";
+import { Download, Play, RotateCcw, Square, Trash2, Vibrate } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import {
   analyzeDrift,

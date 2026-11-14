@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { X } from "lucide-vue-next";
+import { X } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { isEngineReady, isMediaSupported, runJob } from "@/lib/ffmpeg";
 import { isMetered, shouldAutoDownload } from "@/lib/connection";

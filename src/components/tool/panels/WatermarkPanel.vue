@@ -17,7 +17,7 @@
  * costs a quarter of a gigabyte of memory per copy and no watermark needs it.
  */
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Download, FileArchive, ImageOff, Sparkles, X } from "lucide-vue-next";
+import { Download, FileArchive, ImageOff, Sparkles, X } from "@lucide/vue";
 import { zipSync } from "fflate";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {

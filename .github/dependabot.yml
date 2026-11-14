@@ -17,6 +17,25 @@ updates:
       time: "06:00"
       timezone: America/Chicago
     open-pull-requests-limit: 5
+    ignore:
+      # vue-tsc 3.3.12 to 3.3.14 turn `//` and `/*` inside a template attribute
+      # value into a comment in the generated code (vuejs/language-tools#6322),
+      # which breaks type checking of XPathTesterPanel and BatchProcessorPanel.
+      # 3.3.11 is the newest clean release and is pinned exactly in
+      # package.json. Drop this entry once a fixed version ships.
+      - dependency-name: vue-tsc
+        versions: ["3.3.12", "3.3.13", "3.3.14"]
+      # typescript-eslint 8 caps its TypeScript peer below 6.1 and
+      # @astrojs/check stops at 6.x, so TypeScript 7 cannot be checked yet.
+      - dependency-name: typescript
+        versions: [">=6.1.0"]
+      # The in-browser ML runtime. onnxruntime-web is pinned (dependency and
+      # override) because a newer transformers.js pin broke Whisper session
+      # creation, and CI cannot run real inference, so a green run proves
+      # nothing here. Bump these two together by hand and verify the
+      # transcriber, background remover, upscaler and QR deep scan in a browser.
+      - dependency-name: "@huggingface/transformers"
+      - dependency-name: onnxruntime-web
     groups:
       minor-and-patch:
         applies-to: version-updates

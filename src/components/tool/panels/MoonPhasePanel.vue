@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { LocateFixed, Pause, Play } from "lucide-vue-next";
+import { LocateFixed, Pause, Play } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   moonSnapshot,

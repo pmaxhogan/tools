@@ -10,7 +10,7 @@ import {
 } from "@/tools/monitor-test/index";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-vue-next";
+import { ChevronLeft, ChevronRight, Maximize2, X } from "@lucide/vue";
 
 /**
  * Bespoke panel for the Monitor Test Suite: a catalog of test cards plus the

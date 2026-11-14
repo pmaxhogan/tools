@@ -4,7 +4,7 @@ import type { ToolMeta } from "@/tools/types";
 import { PROBES, run } from "@/tools/browser-privacy-check/index";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Loader2, ShieldCheck, TriangleAlert, X } from "lucide-vue-next";
+import { Check, Loader2, ShieldCheck, TriangleAlert, X } from "@lucide/vue";
 import EmptyState from "../EmptyState.vue";
 import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";

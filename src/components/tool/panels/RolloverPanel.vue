@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from "vue";
-import { Play, RotateCcw, Square } from "lucide-vue-next";
+import { Play, RotateCcw, Square } from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import {

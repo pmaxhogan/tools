@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download } from "lucide-vue-next";
+import { Download } from "@lucide/vue";
 import CopyButton from "../CopyButton.vue";
 import OutputView from "../OutputView.vue";
 import ErrorBanner from "../ErrorBanner.vue";

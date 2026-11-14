@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import CopyButton from "@/components/tool/CopyButton.vue";
-import { Check, RefreshCw, Search, TriangleAlert } from "lucide-vue-next";
+import { Check, RefreshCw, Search, TriangleAlert } from "@lucide/vue";
 
 /**
  * Bespoke panel for DNS Lookup. Sibling of DnsPropagationPanel, scaled down to

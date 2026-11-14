@@ -14,7 +14,7 @@
  * file owns the inputs, the preview, and the URL fragment.
  */
 import { computed, onMounted, ref, watch } from "vue";
-import { ArrowLeftRight, Check, X } from "lucide-vue-next";
+import { ArrowLeftRight, Check, X } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   analyzePair,

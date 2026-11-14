@@ -26,7 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OutputView from "@/components/tool/OutputView.vue";
-import { Play, Search } from "lucide-vue-next";
+import { Play, Search } from "@lucide/vue";
 
 const props = defineProps<{ meta: ToolMeta }>();
 

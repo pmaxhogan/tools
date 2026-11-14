@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Download, FileType, X } from "lucide-vue-next";
+import { Download, FileType, X } from "@lucide/vue";
 import { ToolError, type OptionSpec, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import type { FontFormat, FontInfo, PresetName, SubsetResult } from "@/tools/font-subsetter/index";
 import { formatBytes } from "@/lib/format";

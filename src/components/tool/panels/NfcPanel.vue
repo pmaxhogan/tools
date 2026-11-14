@@ -24,7 +24,7 @@
  * the phone directly, and nothing about them is sent to this site.
  */
 import { computed, onUnmounted, ref, watch } from "vue";
-import { Lock, Radio, Send, Square } from "lucide-vue-next";
+import { Lock, Radio, Send, Square } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   TAG_CAPACITIES,

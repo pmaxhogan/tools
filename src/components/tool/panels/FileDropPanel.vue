@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import QRCode from "qrcode";
-import { Check, Download, FileIcon, Send, X } from "lucide-vue-next";
+import { Check, Download, FileIcon, Send, X } from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";
 import {

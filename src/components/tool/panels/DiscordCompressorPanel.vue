@@ -19,7 +19,7 @@
  * Nothing touches the DOM until the component is mounted in a browser.
  */
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
-import { Check, X } from "lucide-vue-next";
+import { Check, X } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   MediaJobError,

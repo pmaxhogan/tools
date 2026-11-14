@@ -161,7 +161,7 @@ import {
   Workflow,
   Wrench,
   Zap,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 
 const ICONS: Record<string, Component> = {
   Anchor,

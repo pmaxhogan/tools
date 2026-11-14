@@ -12,7 +12,7 @@
  * click count is session state, not shareable content.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { RotateCcw, Trash2 } from "lucide-vue-next";
+import { RotateCcw, Trash2 } from "@lucide/vue";
 import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import { summarize, type ClickSummary } from "@/tools/click-speed-test/index";

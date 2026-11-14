@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, shallowRef, watch } from "vue";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, X } from "lucide-vue-next";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, X } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";

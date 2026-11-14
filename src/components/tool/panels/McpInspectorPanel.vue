@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Activity, Play, Plug, Trash2, TriangleAlert } from "lucide-vue-next";
+import { Activity, Play, Plug, Trash2, TriangleAlert } from "@lucide/vue";
 
 /**
  * Bespoke panel for the MCP Inspector: a live Streamable HTTP client.

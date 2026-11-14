@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Copy, Download, Redo2, Trash2, Undo2, X } from "lucide-vue-next";
+import { Copy, Download, Redo2, Trash2, Undo2, X } from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";

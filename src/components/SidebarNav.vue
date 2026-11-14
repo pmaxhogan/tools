@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch, type Component } from "vue";
-import { History, Star } from "lucide-vue-next";
+import { History, Star } from "@lucide/vue";
 import { highlightHtml, searchTools, type SearchTool } from "@/lib/search";
 import { iconFor } from "@/lib/tool-icons";
 import { FAVORITES_KEY } from "@/lib/favorites";

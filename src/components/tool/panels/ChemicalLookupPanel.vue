@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { Search, Sparkles, X } from "lucide-vue-next";
+import { Search, Sparkles, X } from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import {
   DISCLAIMER,

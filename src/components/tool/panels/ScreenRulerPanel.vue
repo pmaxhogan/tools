@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import type { CSSProperties } from "vue";
-import { Check, Crosshair, Pipette, Ruler, Trash2, X } from "lucide-vue-next";
+import { Check, Crosshair, Pipette, Ruler, Trash2, X } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

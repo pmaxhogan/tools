@@ -4,7 +4,7 @@ import type { ToolMeta } from "@/tools/types";
 import { run } from "@/tools/clipboard-inspector/index";
 import type { ClipboardEntrySnapshot, ClipboardSnapshot } from "@/tools/clipboard-inspector/index";
 import { Button } from "@/components/ui/button";
-import { Clipboard } from "lucide-vue-next";
+import { Clipboard } from "@lucide/vue";
 import ErrorBanner from "../ErrorBanner.vue";
 import OutputView from "../OutputView.vue";
 

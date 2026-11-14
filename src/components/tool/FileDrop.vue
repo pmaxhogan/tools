@@ -75,7 +75,7 @@ function removePasteTarget(target: PasteTarget): void {
  * your device.
  */
 import { computed, inject, onMounted, onUnmounted, ref, useSlots } from "vue";
-import { Upload, X } from "lucide-vue-next";
+import { Upload, X } from "@lucide/vue";
 import {
   clearCarriedInput,
   carriedFileMatches,

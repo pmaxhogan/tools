@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { ChevronLeft, ChevronRight, Download, Play, Search, X } from "lucide-vue-next";
+import { ChevronLeft, ChevronRight, Download, Play, Search, X } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   MAX_INPUT_BYTES,

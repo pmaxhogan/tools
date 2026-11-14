@@ -20,7 +20,7 @@
  * overwritten file.
  */
 import { computed, ref, watch } from "vue";
-import { Download, Eye, Play } from "lucide-vue-next";
+import { Download, Eye, Play } from "@lucide/vue";
 import { diffLines } from "diff";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { ToolError } from "@/tools/types";

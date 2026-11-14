@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, shallowRef } from "vue";
-import { AlertTriangle, CheckCircle2, Eraser, Loader2, Usb, X, Zap } from "lucide-vue-next";
+import { AlertTriangle, CheckCircle2, Eraser, Loader2, Usb, X, Zap } from "@lucide/vue";
 // Type-only import: esptool-js ships ESM with extensionless internal imports
 // that Node cannot resolve during the SSR build, so the runtime values are
 // pulled in with a dynamic import inside the connect handler instead.

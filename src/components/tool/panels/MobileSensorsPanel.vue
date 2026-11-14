@@ -7,7 +7,7 @@ import {
   SunMedium,
   TabletSmartphone,
   Waves,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import type { ToolMeta } from "@/tools/types";
 import { Button } from "@/components/ui/button";
 import {

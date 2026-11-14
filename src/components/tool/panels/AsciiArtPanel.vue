@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { Download, FileImage, Sparkles } from "lucide-vue-next";
+import { Download, FileImage, Sparkles } from "@lucide/vue";
 import { ToolError, type OptionSpec, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import { toAscii, toBraille } from "@/tools/image-to-ascii/index";
 import type { AsciiCharset, AsciiColorMode, AsciiOptions } from "@/tools/image-to-ascii/index";

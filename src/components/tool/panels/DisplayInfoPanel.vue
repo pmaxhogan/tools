@@ -8,7 +8,7 @@ import type {
   ScreenSummary,
 } from "@/tools/display-info/index";
 import { Button } from "@/components/ui/button";
-import { Monitor, RefreshCw } from "lucide-vue-next";
+import { Monitor, RefreshCw } from "@lucide/vue";
 import OutputView from "../OutputView.vue";
 
 /**

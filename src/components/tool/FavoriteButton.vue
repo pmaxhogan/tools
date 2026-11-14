@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { Star } from "lucide-vue-next";
+import { Star } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import { FAVORITES_KEY, isFavorite, toggleFavorite } from "@/lib/favorites";
 import { onPrefsChange, readList, writeList } from "@/lib/prefs";

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { Plus, X } from "lucide-vue-next";
+import { Plus, X } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {
   DISCLAIMER,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef } from "vue";
-import { ChevronLeft, ChevronRight, Download, Sigma, X } from "lucide-vue-next";
+import { ChevronLeft, ChevronRight, Download, Sigma, X } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";

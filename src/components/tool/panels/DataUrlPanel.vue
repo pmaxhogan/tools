@@ -21,7 +21,7 @@
  * so "Keep the original file" is the default and it copies the bytes untouched.
  */
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
-import { Download, FileImage, Sparkles } from "lucide-vue-next";
+import { Download, FileImage, Sparkles } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {
   INLINE_WARN_BYTES,

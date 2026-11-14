@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { Maximize2, Minimize2, RotateCcw } from "lucide-vue-next";
+import { Maximize2, Minimize2, RotateCcw } from "@lucide/vue";
 import { ToolError, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   coverageGrid,

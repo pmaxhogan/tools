@@ -26,7 +26,7 @@ import {
   Sparkles,
   TriangleAlert,
   X,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { zipSync } from "fflate";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {

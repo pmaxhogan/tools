@@ -19,7 +19,7 @@
  * component is mounted, so it renders inert on the server.
  */
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
-import { X } from "lucide-vue-next";
+import { X } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import { formatBytes } from "@/lib/format";
 import { downloadUrl } from "@/lib/download";

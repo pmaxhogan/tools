@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
-import { Link } from "lucide-vue-next";
+import { Link } from "@lucide/vue";
 import CopyButton from "./CopyButton.vue";
 import { clearToasts, getToasts } from "@/lib/toast";
 

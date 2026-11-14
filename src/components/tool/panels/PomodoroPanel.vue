@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { Bell, BellOff, Pause, Play, RotateCcw, SkipForward } from "lucide-vue-next";
+import { Bell, BellOff, Pause, Play, RotateCcw, SkipForward } from "@lucide/vue";
 import { ToolError, type OptionSpec, type ToolMeta } from "@/tools/types";
 import {
   buildSchedule,

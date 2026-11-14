@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { Camera, Lock, LockOpen, RotateCcw } from "lucide-vue-next";
+import { Camera, Lock, LockOpen, RotateCcw } from "@lucide/vue";
 import { ToolError, type SelectOption, type SelectOptionSpec, type ToolMeta } from "@/tools/types";
 import {
   describeLux,

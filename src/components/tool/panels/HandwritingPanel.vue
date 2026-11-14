@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { Download, Eraser, Undo2 } from "lucide-vue-next";
+import { Download, Eraser, Undo2 } from "@lucide/vue";
 import type { SelectOptionSpec, ToolMeta } from "@/tools/types";
 import { readFragment, writeFragment } from "@/lib/fragment";
 import { downloadBlob, downloadText } from "@/lib/download";
