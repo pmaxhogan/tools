@@ -26,8 +26,16 @@ export interface MediaActionSpec {
 
 /** Every MediaSessionAction the panel should attempt to register, in registration order. */
 export const MEDIA_ACTIONS: MediaActionSpec[] = [
-  { action: "play", label: "Play", keyHint: "Play/Pause media key, or the OS overlay's play button." },
-  { action: "pause", label: "Pause", keyHint: "Play/Pause media key, or the OS overlay's pause button." },
+  {
+    action: "play",
+    label: "Play",
+    keyHint: "Play/Pause media key, or the OS overlay's play button.",
+  },
+  {
+    action: "pause",
+    label: "Pause",
+    keyHint: "Play/Pause media key, or the OS overlay's pause button.",
+  },
   { action: "stop", label: "Stop", keyHint: "Stop media key (rare on modern keyboards)." },
   {
     action: "seekbackward",

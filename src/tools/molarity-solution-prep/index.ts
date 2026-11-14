@@ -418,8 +418,8 @@ const VOLUME_UNITS: Record<string, number> = {
   cl: 0.01,
   ml: 1e-3,
   ul: 1e-6,
-  "µl": 1e-6,
-  "μl": 1e-6,
+  µl: 1e-6,
+  μl: 1e-6,
   nl: 1e-9,
   cc: 1e-3,
 };
@@ -429,8 +429,8 @@ const CONC_EXACT: Record<string, number> = {
   M: 1,
   mM: 1e-3,
   uM: 1e-6,
-  "µM": 1e-6,
-  "μM": 1e-6,
+  µM: 1e-6,
+  μM: 1e-6,
   nM: 1e-9,
   pM: 1e-12,
 };
@@ -447,8 +447,8 @@ const CONC_LOWER: Record<string, number> = {
 const MASS_UNITS: Record<string, number> = {
   ng: 1e-9,
   ug: 1e-6,
-  "µg": 1e-6,
-  "μg": 1e-6,
+  µg: 1e-6,
+  μg: 1e-6,
   mg: 1e-3,
   g: 1,
   gram: 1,
@@ -796,7 +796,8 @@ export function run(input: string, opts?: Partial<MolarityOpts>): Record<string,
     out["Mass to weigh out"] =
       `${fmt(weighOut, d)} g at ${(r.purity * 100).toFixed(2)}% assay (${fmt(r.mass, d)} g of pure compound)`;
 
-  out["Normality"] = `${fmt(r.concentration * n, d)} N at ${n} equivalent${n === 1 ? "" : "s"} per mole`;
+  out["Normality"] =
+    `${fmt(r.concentration * n, d)} N at ${n} equivalent${n === 1 ? "" : "s"} per mole`;
   out["Percent weight in volume"] = `${fmt((r.mass / (r.volume * 1000)) * 100, d)}% w/v`;
   out["Parts per million"] = `${fmt((r.mass * 1000) / r.volume, d)} ppm (mg per liter)`;
   out["Mass concentration"] = `${fmt(r.mass / r.volume, d)} g/L`;
@@ -812,7 +813,8 @@ export function run(input: string, opts?: Partial<MolarityOpts>): Record<string,
       out["Solvent mass"] = `${fmt(solventGrams, d)} g`;
       out["Molality"] = `${fmt(r.moles / (solventGrams / 1000), d)} mol/kg`;
       out["Percent weight in weight"] = `${fmt((r.mass / solutionGrams) * 100, d)}% w/w`;
-      out["Mole fraction of solute"] = `${fmt(r.moles / (r.moles + solventGrams / 18.015), d)} (taking the solvent as water)`;
+      out["Mole fraction of solute"] =
+        `${fmt(r.moles / (r.moles + solventGrams / 18.015), d)} (taking the solvent as water)`;
     }
   } else {
     out["Molality"] =

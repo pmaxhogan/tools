@@ -26,8 +26,7 @@ export const meta: ToolMeta = {
   ],
   input: "application/json",
   output: "application/json",
-  privacyNote:
-    "The recording stays in the page and downloads directly; nothing is uploaded.",
+  privacyNote: "The recording stays in the page and downloads directly; nothing is uploaded.",
   options: [
     {
       kind: "select",

@@ -255,14 +255,24 @@ describe("nextTransition", () => {
 
   it("returns the remaining ms in the current phase while running", () => {
     const started = 1_700_000_000_000;
-    const state: TimerState = { config, startedAtMs: started, elapsedBeforePauseMs: 0, phaseIndex: 0 };
+    const state: TimerState = {
+      config,
+      startedAtMs: started,
+      elapsedBeforePauseMs: 0,
+      phaseIndex: 0,
+    };
     const now = started + 10 * 60_000; // 10 minutes into a 25 minute work phase
     expect(nextTransition(state, now)).toBe(15 * 60_000);
   });
 
   it("returns null once the whole schedule has finished", () => {
     const started = 1_700_000_000_000;
-    const state: TimerState = { config, startedAtMs: started, elapsedBeforePauseMs: 0, phaseIndex: 0 };
+    const state: TimerState = {
+      config,
+      startedAtMs: started,
+      elapsedBeforePauseMs: 0,
+      phaseIndex: 0,
+    };
     const total = totalDuration(buildSchedule(config));
     expect(nextTransition(state, started + total + 1)).toBeNull();
   });

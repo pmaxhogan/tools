@@ -435,7 +435,10 @@ function renderGradientBody(test: MonitorTest, width: number, height: number): s
   } else {
     const from = String(test.params.from ?? "#000000");
     const to = String(test.params.to ?? "#ffffff");
-    stops = [`<stop offset="0%" stop-color="${from}"/>`, `<stop offset="100%" stop-color="${to}"/>`];
+    stops = [
+      `<stop offset="0%" stop-color="${from}"/>`,
+      `<stop offset="100%" stop-color="${to}"/>`,
+    ];
   }
 
   const defs = `<defs><linearGradient id="${gradId}" x1="0%" y1="0%" x2="${x2}" y2="${y2}">${stops.join("")}</linearGradient></defs>`;
@@ -667,10 +670,7 @@ function renderMotionBody(test: MonitorTest, width: number, height: number): str
  * get a single reference frame (the block at its start position); every
  * other kind renders the full static pattern.
  */
-export function renderPatternSvg(
-  testId: string,
-  opts: { width: number; height: number },
-): string {
+export function renderPatternSvg(testId: string, opts: { width: number; height: number }): string {
   const test = findTest(testId);
   const width = clampDim(opts?.width, DEFAULT_WIDTH);
   const height = clampDim(opts?.height, DEFAULT_HEIGHT);

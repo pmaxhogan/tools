@@ -216,7 +216,9 @@ function pausePlayback() {
 // Derived from the navigator type so eslint's no-undef (which does not read
 // the DOM lib globals in .vue files) stays quiet without losing type safety.
 type SessionAction = Parameters<MediaSession["setActionHandler"]>[0];
-type SessionActionDetails = Parameters<NonNullable<Parameters<MediaSession["setActionHandler"]>[1]>>[0];
+type SessionActionDetails = Parameters<
+  NonNullable<Parameters<MediaSession["setActionHandler"]>[1]>
+>[0];
 
 function actionDetails(details: SessionActionDetails): Record<string, unknown> | undefined {
   const out: Record<string, unknown> = {};
@@ -397,8 +399,8 @@ function onSummarizeClick() {
         <p class="font-medium">This browser does not expose the Media Session API.</p>
         <p class="mt-1 text-muted-foreground">
           Hardware key routing through navigator.mediaSession is not available here, so the action
-          grid below cannot register handlers. Keyboard-only mode still works: press a media key
-          and watch the event log below.
+          grid below cannot register handlers. Keyboard-only mode still works: press a media key and
+          watch the event log below.
         </p>
       </div>
     </div>

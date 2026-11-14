@@ -153,7 +153,12 @@ async function runDamage() {
     for (const level of [1, 2, 3, 4]) {
       await freshMob();
       const slots = ["head", "chest", "legs", "feet"].slice(0, pieces);
-      const items = { head: "diamond_helmet", chest: "diamond_chestplate", legs: "diamond_leggings", feet: "diamond_boots" };
+      const items = {
+        head: "diamond_helmet",
+        chest: "diamond_chestplate",
+        legs: "diamond_leggings",
+        feet: "diamond_boots",
+      };
       for (const slot of slots)
         await equipItem(slot, enchantedItem(items[slot], "protection", level, syntax));
       // Equipment attribute modifiers apply on the entity's next tick on
@@ -165,8 +170,11 @@ async function runDamage() {
       const after = await readHealth();
       samples.push({
         equipped: { material: "diamond", pieces, protection: level },
-        armor: armorAttr, toughness: toughAttr, amount: 10,
-        type: "mob_attack", taken: round(1000 - after),
+        armor: armorAttr,
+        toughness: toughAttr,
+        amount: 10,
+        type: "mob_attack",
+        taken: round(1000 - after),
       });
     }
   }
@@ -176,7 +184,12 @@ async function runDamage() {
     await freshMob();
     await rcon.cmd(`effect give ${SEL} minecraft:resistance 1000 ${amp}`);
     await rcon.cmd(`damage ${SEL} 10 minecraft:mob_attack`);
-    samples.push({ resistance: amp + 1, amount: 10, type: "mob_attack", taken: round(1000 - await readHealth()) });
+    samples.push({
+      resistance: amp + 1,
+      amount: 10,
+      type: "mob_attack",
+      taken: round(1000 - (await readHealth())),
+    });
   }
 
   // Bypassing damage types for contrast.
@@ -185,7 +198,13 @@ async function runDamage() {
     await rcon.cmd(`attribute ${SEL} ${prefix}armor base set 20`);
     const res = await rcon.cmd(`damage ${SEL} 10 minecraft:${type}`);
     if (/Applied/i.test(res))
-      samples.push({ armor: 20, toughness: 0, amount: 10, type, taken: round(1000 - await readHealth()) });
+      samples.push({
+        armor: 20,
+        toughness: 0,
+        amount: 10,
+        type,
+        taken: round(1000 - (await readHealth())),
+      });
   }
 
   await rcon.cmd(`kill ${SEL}`);
@@ -230,7 +249,11 @@ async function runFall() {
 
 // ------------------------------------------------------------------ loot --
 const FLAGSHIP = [
-  { table: "blocks/diamond_ore", block: "diamond_ore", tools: [null, ["fortune", 1], ["fortune", 2], ["fortune", 3], ["silk_touch", 1]] },
+  {
+    table: "blocks/diamond_ore",
+    block: "diamond_ore",
+    tools: [null, ["fortune", 1], ["fortune", 2], ["fortune", 3], ["silk_touch", 1]],
+  },
   { table: "blocks/redstone_ore", block: "redstone_ore", tools: [null, ["fortune", 3]] },
   { table: "blocks/lapis_ore", block: "lapis_ore", tools: [null, ["fortune", 3]] },
   { table: "blocks/gravel", block: "gravel", tools: [null, ["fortune", 3]] },
@@ -264,7 +287,11 @@ async function runLoot() {
       for (let i = 0; i < PER_ROLL; i++) {
         await mineRoll(f.block, toolStr);
         const totals = await chestTotalsAndReset();
-        const sig = Object.entries(totals).sort().map(([k, v]) => `${k}:${v}`).join(",") || "nothing";
+        const sig =
+          Object.entries(totals)
+            .sort()
+            .map(([k, v]) => `${k}:${v}`)
+            .join(",") || "nothing";
         hist[sig] = (hist[sig] ?? 0) + 1;
       }
       out.perRoll[key] = { rolls: PER_ROLL, histogram: hist };

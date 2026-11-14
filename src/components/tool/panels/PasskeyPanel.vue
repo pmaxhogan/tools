@@ -421,8 +421,7 @@ onMounted(() => {
           <p class="text-xs text-muted-foreground">
             <template v-if="credentialId">
               This asks for the passkey created in this session, credential ID
-              <span class="font-mono break-all">{{ credentialId }}</span
-              >.
+              <span class="font-mono break-all">{{ credentialId }}</span>.
             </template>
             <template v-else>
               No passkey has been created in this session, so this asks for any discoverable passkey

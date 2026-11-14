@@ -487,7 +487,9 @@ function resolveChoice(
   fallback: string,
 ): string {
   if (value === undefined || value === null || value === "") return fallback;
-  const key = String(value).toLowerCase().replace(/[^a-z]/g, "");
+  const key = String(value)
+    .toLowerCase()
+    .replace(/[^a-z]/g, "");
   const hit = aliases[key];
   if (!hit) {
     throw new ToolError(

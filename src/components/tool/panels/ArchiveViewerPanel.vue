@@ -660,10 +660,8 @@ function ratioLabel(entry: ArchiveEntry): string {
           <FileWarning class="mt-0.5 size-3.5 shrink-0" />
           <span>
             This entry asked to be written to
-            <code class="font-mono">{{ selected.rawPath }}</code
-            >, outside the archive root. It is shown and saved as
-            <code class="font-mono">{{ selected.path }}</code
-            >.
+            <code class="font-mono">{{ selected.rawPath }}</code>, outside the archive root. It is
+            shown and saved as <code class="font-mono">{{ selected.path }}</code>.
           </span>
         </p>
 

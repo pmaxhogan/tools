@@ -21,7 +21,8 @@ describe("buildRecord: exact NDEF byte vectors", () => {
   it("encodes a URL record for https://example.com to the documented bytes", () => {
     const built = buildRecord("url", "https://example.com");
     expect(Array.from(built.bytes)).toEqual([
-      0xd1, 0x01, 0x0c, 0x55, 0x04, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d,
+      0xd1, 0x01, 0x0c, 0x55, 0x04, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f,
+      0x6d,
     ]);
   });
 
@@ -94,7 +95,10 @@ describe("decode round trips", () => {
   });
 
   it("round trips a vCard's N/FN, TEL, EMAIL and URL fields", () => {
-    const record = roundTrip("vcard", "Jane Doe;+15551234567;jane@example.com;https://example.com/jane");
+    const record = roundTrip(
+      "vcard",
+      "Jane Doe;+15551234567;jane@example.com;https://example.com/jane",
+    );
     expect(record.kind).toBe("vcard");
     if (record.kind === "vcard") {
       expect(record.name).toBe("Jane Doe");
@@ -140,7 +144,12 @@ describe("decode round trips", () => {
   it("decodes an unrecognized well-known type as unknown rather than failing", () => {
     const bytes = encodeMessage([{ tnf: 0x01, type: "X", payload: Uint8Array.of(1, 2, 3) }]);
     const decoded = decodeMessage(bytes);
-    expect(decoded[0]).toEqual({ kind: "unknown", tnf: 1, type: "X", bytes: Uint8Array.of(1, 2, 3) });
+    expect(decoded[0]).toEqual({
+      kind: "unknown",
+      tnf: 1,
+      type: "X",
+      bytes: Uint8Array.of(1, 2, 3),
+    });
   });
 });
 
@@ -319,7 +328,11 @@ describe("ToolError: bad-ndef", () => {
   it("rejects a Wi-Fi record with no Credential attribute", () => {
     const bogusWsc = buildRecord("text", "placeholder");
     // Swap in a MIME record whose payload has no Credential TLV at all.
-    const record = { tnf: 0x02, type: "application/vnd.wfa.wsc", payload: Uint8Array.of(0, 0, 0, 0) };
+    const record = {
+      tnf: 0x02,
+      type: "application/vnd.wfa.wsc",
+      payload: Uint8Array.of(0, 0, 0, 0),
+    };
     const bytes = encodeMessage([record]);
     expect(bogusWsc).toBeTruthy();
     expect(() => decodeMessage(bytes)).toThrow(/Credential/i);

@@ -175,7 +175,10 @@ async function runLookup(requestUrl: string) {
     body = await response.text();
   } catch {
     if (runId !== seq) return;
-    networkError.value = { message: "unreachable", detail: "The resolver response could not be read." };
+    networkError.value = {
+      message: "unreachable",
+      detail: "The resolver response could not be read.",
+    };
     running.value = false;
     return;
   }
@@ -363,7 +366,9 @@ onMounted(() => {
     </div>
 
     <!-- result -->
-    <p v-if="running" class="text-xs text-muted-foreground">Waiting for {{ lastQuery?.resolverLabel }}…</p>
+    <p v-if="running" class="text-xs text-muted-foreground">
+      Waiting for {{ lastQuery?.resolverLabel }}…
+    </p>
 
     <div
       v-else-if="networkError"
@@ -385,7 +390,9 @@ onMounted(() => {
           <TriangleAlert v-else class="size-4 text-muted-foreground" aria-hidden="true" />
           {{ parsed.status }}
         </span>
-        <span v-if="parsed.question" class="text-xs text-muted-foreground">{{ parsed.question }}</span>
+        <span v-if="parsed.question" class="text-xs text-muted-foreground">{{
+          parsed.question
+        }}</span>
       </div>
 
       <ul v-if="parsed.answers.length > 0" class="flex flex-col gap-2">

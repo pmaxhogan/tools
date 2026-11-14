@@ -310,9 +310,7 @@ describe("protobuf-decoder: JSON rendering", () => {
 describe("protobuf-decoder: errors", () => {
   it("throws empty-input for no bytes at all", () => {
     expect(() => run("", AUTO)).toThrow(ToolError);
-    expect(() => run("   \n ", AUTO)).toThrow(
-      expect.objectContaining({ code: "empty-input" }),
-    );
+    expect(() => run("   \n ", AUTO)).toThrow(expect.objectContaining({ code: "empty-input" }));
     expect(() => run(new Uint8Array(0), AUTO)).toThrow(
       expect.objectContaining({ code: "empty-input" }),
     );

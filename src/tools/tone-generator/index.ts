@@ -189,13 +189,7 @@ function sweepPhase(t: number, duration: number, f0: number, f1: number, kind: S
 /* ------------------------------------------------------------------ */
 
 export type WaveKind =
-  | "sine"
-  | "square"
-  | "triangle"
-  | "sawtooth"
-  | "white-noise"
-  | "pink-noise"
-  | "sweep";
+  "sine" | "square" | "triangle" | "sawtooth" | "white-noise" | "pink-noise" | "sweep";
 
 export interface DescribeSignalOpts {
   kind: WaveKind;
@@ -627,7 +621,8 @@ export function run(input: string, opts: ToneGeneratorOpts): ToneGeneratorResult
 
   return {
     ...description,
-    Playback: "Press Play in the panel to hear this signal through your speakers or headphones. Audio never starts automatically.",
+    Playback:
+      "Press Play in the panel to hear this signal through your speakers or headphones. Audio never starts automatically.",
     WAV: "The panel can render this signal to a 16-bit WAV file and offer it as a download.",
   };
 }

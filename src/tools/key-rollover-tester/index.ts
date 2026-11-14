@@ -267,7 +267,9 @@ export function summarize(state: RolloverState): Record<string, string> {
     "Total presses": String(state.totalPresses),
     "Distinct keys pressed": String(Object.keys(state.pressCounts).length),
     Verdict: classifyRollover(state.maxSimultaneous),
-    "Largest chord press order": state.maxChordKeys.length ? state.maxChordKeys.join(" then ") : "none",
+    "Largest chord press order": state.maxChordKeys.length
+      ? state.maxChordKeys.join(" then ")
+      : "none",
   };
 }
 
@@ -278,7 +280,8 @@ function normalizeEvent(raw: unknown, index: number): RolloverEvent | null {
   const code = typeof e.code === "string" && e.code !== "" ? e.code : null;
   if (!type || !code) return null;
   const eventKey = typeof e.key === "string" && e.key !== "" ? e.key : code;
-  const timestamp = typeof e.timestamp === "number" && Number.isFinite(e.timestamp) ? e.timestamp : index;
+  const timestamp =
+    typeof e.timestamp === "number" && Number.isFinite(e.timestamp) ? e.timestamp : index;
   return { type, code, key: eventKey, timestamp };
 }
 

@@ -78,7 +78,9 @@ describe("describeSupport", () => {
 
   it("summarizes N of M features supported", () => {
     const out = describeSupport(allTrue);
-    expect(out["Summary"]).toBe(`${FEATURE_PROBES.length} of ${FEATURE_PROBES.length} features supported`);
+    expect(out["Summary"]).toBe(
+      `${FEATURE_PROBES.length} of ${FEATURE_PROBES.length} features supported`,
+    );
   });
 
   it("summarizes zero supported", () => {

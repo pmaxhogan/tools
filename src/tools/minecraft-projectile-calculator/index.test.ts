@@ -462,7 +462,9 @@ describe("run", () => {
 
   it("throws when an enchantment cannot be on the chosen weapon", () => {
     expect(() => run("", { projectile: "arrow", launcher: "bow", power: 3 })).not.toThrow();
-    expect(() => run("", { projectile: "arrow", launcher: "crossbow", power: 3 })).toThrow(ToolError);
+    expect(() => run("", { projectile: "arrow", launcher: "crossbow", power: 3 })).toThrow(
+      ToolError,
+    );
   });
 
   it("defaults an empty option bag to a fully drawn bow shot", () => {

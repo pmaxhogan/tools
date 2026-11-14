@@ -266,9 +266,13 @@ export function parseCompound(formula: string): Record<string, number> {
       if (OPEN.includes(ch)) {
         i++;
         const inner: Record<string, number> = {};
-        parseUnits((symbol, n) => {
-          inner[symbol] = (inner[symbol] ?? 0) + n;
-        }, depth + 1, ch);
+        parseUnits(
+          (symbol, n) => {
+            inner[symbol] = (inner[symbol] ?? 0) + n;
+          },
+          depth + 1,
+          ch,
+        );
         const closer = formula[i];
         if (closer === undefined || !CLOSE.includes(closer))
           throw new ToolError(
@@ -529,9 +533,7 @@ export function parseEquation(raw: string): Species[] {
  * per species, scaled to the smallest whole numbers.
  */
 export function balance(species: Species[]): number[] {
-  const elements = Array.from(
-    new Set(species.flatMap((sp) => Object.keys(sp.counts))),
-  ).sort();
+  const elements = Array.from(new Set(species.flatMap((sp) => Object.keys(sp.counts)))).sort();
   const charged = species.some((sp) => sp.charge !== 0);
 
   const rows: Frac[][] = [];
@@ -544,9 +546,7 @@ export function balance(species: Species[]): number[] {
     );
   }
   if (charged) {
-    rows.push(
-      species.map((sp) => frac(BigInt(sp.side === "left" ? sp.charge : -sp.charge))),
-    );
+    rows.push(species.map((sp) => frac(BigInt(sp.side === "left" ? sp.charge : -sp.charge))));
   }
 
   const cols = species.length;
@@ -654,8 +654,8 @@ const MASS_UNITS: Record<string, number> = {
   milligram: 1e-3,
   milligrams: 1e-3,
   ug: 1e-6,
-  "µg": 1e-6,
-  "μg": 1e-6,
+  µg: 1e-6,
+  μg: 1e-6,
   mcg: 1e-6,
 };
 
@@ -670,8 +670,8 @@ const MOLE_UNITS: Record<string, number> = {
   millimole: 1e-3,
   millimoles: 1e-3,
   umol: 1e-6,
-  "µmol": 1e-6,
-  "μmol": 1e-6,
+  µmol: 1e-6,
+  μmol: 1e-6,
   micromole: 1e-6,
   micromoles: 1e-6,
   nmol: 1e-9,
@@ -931,7 +931,15 @@ export function solveStoichiometry(
     }
   }
 
-  return { species, coefficients, supplied, measured, extent, limitingIndex, autoBalanced: autoBalance };
+  return {
+    species,
+    coefficients,
+    supplied,
+    measured,
+    extent,
+    limitingIndex,
+    autoBalanced: autoBalance,
+  };
 }
 
 export function run(input: string, opts?: Partial<StoichiometryOpts>): Record<string, string> {
@@ -940,11 +948,23 @@ export function run(input: string, opts?: Partial<StoichiometryOpts>): Record<st
   const { species, coefficients, supplied, measured, extent, limitingIndex } = result;
 
   const left = species
-    .map((sp, i) => (sp.side === "left" ? (coefficients[i] === 1 ? sp.display : `${coefficients[i]} ${sp.display}`) : null))
+    .map((sp, i) =>
+      sp.side === "left"
+        ? coefficients[i] === 1
+          ? sp.display
+          : `${coefficients[i]} ${sp.display}`
+        : null,
+    )
     .filter((s): s is string => s !== null)
     .join(" + ");
   const right = species
-    .map((sp, i) => (sp.side === "right" ? (coefficients[i] === 1 ? sp.display : `${coefficients[i]} ${sp.display}`) : null))
+    .map((sp, i) =>
+      sp.side === "right"
+        ? coefficients[i] === 1
+          ? sp.display
+          : `${coefficients[i]} ${sp.display}`
+        : null,
+    )
     .filter((s): s is string => s !== null)
     .join(" + ");
 
@@ -958,7 +978,8 @@ export function run(input: string, opts?: Partial<StoichiometryOpts>): Record<st
     .map((sp, i) => (sp.side === "left" && supplied[i] === undefined ? sp.display : null))
     .filter((s): s is string => s !== null);
   if (unsupplied.length)
-    out["Assumed in excess"] = `${unsupplied.join(", ")} (no amount was given, so nothing limits them)`;
+    out["Assumed in excess"] =
+      `${unsupplied.join(", ")} (no amount was given, so nothing limits them)`;
 
   species.forEach((sp, i) => {
     const molarMass = speciesMass(sp);
@@ -969,7 +990,8 @@ export function run(input: string, opts?: Partial<StoichiometryOpts>): Record<st
     const leftOver = given - consumed;
     out[`Given: ${sp.display}`] =
       `${fmtNum(given, d)} mol, ${fmtNum(given * molarMass, d)} g (molar mass ${molarMass.toFixed(3)} g/mol)`;
-    out[`Consumed: ${sp.display}`] = `${fmtNum(consumed, d)} mol, ${fmtNum(consumed * molarMass, d)} g`;
+    out[`Consumed: ${sp.display}`] =
+      `${fmtNum(consumed, d)} mol, ${fmtNum(consumed * molarMass, d)} g`;
     out[`Left over: ${sp.display}`] =
       i === limitingIndex
         ? "none, this is the limiting reagent"
@@ -996,4 +1018,8 @@ export function run(input: string, opts?: Partial<StoichiometryOpts>): Record<st
   return out;
 }
 
-export default { run } satisfies ToolLogic<string, Record<string, string>, Partial<StoichiometryOpts>>;
+export default { run } satisfies ToolLogic<
+  string,
+  Record<string, string>,
+  Partial<StoichiometryOpts>
+>;

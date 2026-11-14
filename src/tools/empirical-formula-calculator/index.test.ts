@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  atomicWeight,
-  empiricalFormula,
-  looksLikeFormula,
-  parseComposition,
-  run,
-} from "./index";
+import { atomicWeight, empiricalFormula, looksLikeFormula, parseComposition, run } from "./index";
 import { ToolError } from "../types";
 
 const M_C = 12.011;
@@ -96,9 +90,7 @@ describe("empiricalFormula", () => {
   });
 
   it("promotes the empirical formula to the molecular formula", () => {
-    const r = empiricalFormula(
-      parseComposition("C: 40.0%, H: 6.7%, O: 53.3%, molarMass: 180.16"),
-    );
+    const r = empiricalFormula(parseComposition("C: 40.0%, H: 6.7%, O: 53.3%, molarMass: 180.16"));
     expect(r.molecularMultiple).toBe(6);
     expect(r.molecularFormula).toBe("C6H12O6");
   });
@@ -113,9 +105,9 @@ describe("empiricalFormula", () => {
   });
 
   it("rejects a ratio that will not clear to whole numbers", () => {
-    expect(() =>
-      empiricalFormula(parseComposition("C: 51.3%, H: 48.7%"), 0.001),
-    ).toThrow(/No multiplier/);
+    expect(() => empiricalFormula(parseComposition("C: 51.3%, H: 48.7%"), 0.001)).toThrow(
+      /No multiplier/,
+    );
   });
 });
 

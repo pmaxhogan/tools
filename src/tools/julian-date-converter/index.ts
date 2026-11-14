@@ -115,9 +115,7 @@ export function calendarToJd(moment: CalendarMoment, calendar: CalendarSystem): 
     const a = Math.floor(y / 100);
     b = 2 - a + Math.floor(a / 4);
   }
-  return (
-    Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + moment.day + b - 1524.5
-  );
+  return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + moment.day + b - 1524.5;
 }
 
 /**
@@ -218,15 +216,11 @@ export function deltaTSeconds(decimalYear: number): number {
   if (y < -500) return -20 + 32 * u * u;
   if (y < 500) {
     const t = y / 100;
-    return poly(t, [
-      10583.6, -1014.41, 33.78311, -5.952053, -0.1798452, 0.022174192, 0.0090316521,
-    ]);
+    return poly(t, [10583.6, -1014.41, 33.78311, -5.952053, -0.1798452, 0.022174192, 0.0090316521]);
   }
   if (y < 1600) {
     const t = (y - 1000) / 100;
-    return poly(t, [
-      1574.2, -556.01, 71.23472, 0.319781, -0.8503463, -0.005050998, 0.0083572073,
-    ]);
+    return poly(t, [1574.2, -556.01, 71.23472, 0.319781, -0.8503463, -0.005050998, 0.0083572073]);
   }
   if (y < 1700) {
     const t = y - 1600;
@@ -238,10 +232,13 @@ export function deltaTSeconds(decimalYear: number): number {
   }
   if (y < 1860) {
     const t = y - 1800;
-    return poly(t, [
-      13.72, -0.332447, 0.0068612, 0.0041116, -0.00037436, 0.0000121272, -0.0000001699,
-      0.000000000875,
-    ]);
+    return poly(
+      t,
+      [
+        13.72, -0.332447, 0.0068612, 0.0041116, -0.00037436, 0.0000121272, -0.0000001699,
+        0.000000000875,
+      ],
+    );
   }
   if (y < 1900) {
     const t = y - 1860;
@@ -496,11 +493,7 @@ function parseCalendarText(text: string, calendarOption: CalendarChoice): Parsed
   const jd = calendarToJd({ year, month, day: dayFraction }, calendar) - offsetMinutes / 1440;
 
   const offsetNote =
-    offsetMinutes === 0
-      ? m[7]
-        ? ", UTC"
-        : ", read as UTC"
-      : `, offset ${m[7]} converted to UTC`;
+    offsetMinutes === 0 ? (m[7] ? ", UTC" : ", read as UTC") : `, offset ${m[7]} converted to UTC`;
   return {
     jd,
     reading: `calendar date in the ${calendar === "gregorian" ? "Gregorian" : "Julian"} calendar${offsetNote}`,
@@ -538,7 +531,11 @@ function parseValue(raw: string, calendarOption: CalendarChoice): ParsedValue {
   const at = AT_RE.exec(text);
   if (at) {
     const unix = requireFinite(at[1], Number(at[1]), "a Unix time");
-    return { jd: JD_UNIX_EPOCH + unix / SECONDS_PER_DAY, reading: "Unix time in seconds", fromCalendar: false };
+    return {
+      jd: JD_UNIX_EPOCH + unix / SECONDS_PER_DAY,
+      reading: "Unix time in seconds",
+      fromCalendar: false,
+    };
   }
 
   const prefixed = PREFIXED_RE.exec(text);
@@ -549,13 +546,21 @@ function parseValue(raw: string, calendarOption: CalendarChoice): ParsedValue {
       return { jd: value + MJD_OFFSET, reading: "Modified Julian Date", fromCalendar: false };
     }
     if (keyword.startsWith("tjd") || keyword.startsWith("truncated")) {
-      return { jd: value + JD_TRUNCATED_ZERO, reading: "Truncated Julian Date", fromCalendar: false };
+      return {
+        jd: value + JD_TRUNCATED_ZERO,
+        reading: "Truncated Julian Date",
+        fromCalendar: false,
+      };
     }
     if (keyword === "rd" || keyword.startsWith("rata")) {
       return { jd: value + JD_RATA_DIE_ZERO, reading: "Rata Die day number", fromCalendar: false };
     }
     if (keyword === "excel") {
-      return { jd: value + JD_EXCEL_ZERO, reading: "Excel 1900 serial number", fromCalendar: false };
+      return {
+        jd: value + JD_EXCEL_ZERO,
+        reading: "Excel 1900 serial number",
+        fromCalendar: false,
+      };
     }
     if (keyword.startsWith("jd") || keyword.startsWith("julian")) {
       return { jd: value, reading: "Julian Date", fromCalendar: false };
@@ -702,7 +707,14 @@ export function run(input: string, opts: JulianDateOpts = {}): JulianDateResult 
   const gregorian = jdToCalendar(jd, "gregorian");
   const julian = jdToCalendar(jd, "julian");
   const inUse = historicalCalendar(jd);
-  const primary = calendarOption === "auto" ? (inUse === "julian" ? julian : gregorian) : calendarOption === "julian" ? julian : gregorian;
+  const primary =
+    calendarOption === "auto"
+      ? inUse === "julian"
+        ? julian
+        : gregorian
+      : calendarOption === "julian"
+        ? julian
+        : gregorian;
   const primaryName = calendarOption === "auto" ? inUse : calendarOption;
 
   const mjd = jd - MJD_OFFSET;
@@ -737,8 +749,7 @@ export function run(input: string, opts: JulianDateOpts = {}): JulianDateResult 
       `${degreesToHms(lst)} at longitude ${signed(longitude, 4)} degrees east`;
   }
 
-  out["Delta T (TT minus UT)"] =
-    `${fixed(dt, 1)} seconds, from the Espenak and Meeus polynomials`;
+  out["Delta T (TT minus UT)"] = `${fixed(dt, 1)} seconds, from the Espenak and Meeus polynomials`;
   out["Julian Ephemeris Day (TT)"] = fixed(jd + dt / SECONDS_PER_DAY, 8);
 
   if (detail === "full") {
@@ -749,9 +760,7 @@ export function run(input: string, opts: JulianDateOpts = {}): JulianDateResult 
       month: gregorian.month,
       day: Math.floor(gregorian.day),
     };
-    const gap = Math.round(
-      calendarToJd(sameYmd, "julian") - calendarToJd(sameYmd, "gregorian"),
-    );
+    const gap = Math.round(calendarToJd(sameYmd, "julian") - calendarToJd(sameYmd, "gregorian"));
     out["Calendar difference"] =
       `${Math.abs(gap)} days: the Julian calendar date runs that far ${gap >= 0 ? "behind" : "ahead of"} the Gregorian one at this Julian Date`;
     out["Truncated Julian Date (TJD)"] = fixed(jd - JD_TRUNCATED_ZERO, 6);

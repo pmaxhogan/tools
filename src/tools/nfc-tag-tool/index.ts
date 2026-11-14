@@ -327,10 +327,11 @@ function decodeWscCredential(payload: Uint8Array): { ssid: string; key: string; 
   const ssid = new TextDecoder("utf-8").decode(ssidTlv.value);
   const key = new TextDecoder("utf-8").decode(keyTlv.value);
   const authCode = authTlv
-    ? new DataView(authTlv.value.buffer, authTlv.value.byteOffset, authTlv.value.byteLength).getUint16(
-        0,
-        false,
-      )
+    ? new DataView(
+        authTlv.value.buffer,
+        authTlv.value.byteOffset,
+        authTlv.value.byteLength,
+      ).getUint16(0, false)
     : 0;
   return { ssid, key, auth: authLabelFor(authCode) };
 }
@@ -378,7 +379,11 @@ function encodeTextPayload(text: string, lang: string): Uint8Array {
   return concatBytes([Uint8Array.of(status), langBytes, utf8Encode(text)]);
 }
 
-function decodeTextPayload(payload: Uint8Array): { lang: string; encoding: "utf-8" | "utf-16"; text: string } {
+function decodeTextPayload(payload: Uint8Array): {
+  lang: string;
+  encoding: "utf-8" | "utf-16";
+  text: string;
+} {
   if (payload.length === 0) {
     throw new ToolError(
       "bad-ndef",
@@ -629,7 +634,8 @@ function decodeSemantic(record: NdefRecordObj): DecodedRecord {
           const m = /^geo:(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(uri);
           if (m) return { kind: "geo", lat: Number(m[1]), lon: Number(m[2]) };
         }
-        if (uri.startsWith("mailto:")) return { kind: "mailto", address: uri.slice("mailto:".length) };
+        if (uri.startsWith("mailto:"))
+          return { kind: "mailto", address: uri.slice("mailto:".length) };
         if (uri.startsWith("tel:")) return { kind: "tel", number: uri.slice("tel:".length) };
         if (uri.startsWith("sms:")) {
           const withoutScheme = uri.slice("sms:".length);
@@ -798,7 +804,9 @@ function fitsOnLabel(messageBytes: number): string {
   const fitting = Object.keys(TAG_CAPACITIES).filter(
     (tagType) => tagCapacityFit(messageBytes, tagType).fits,
   );
-  return fitting.length ? fitting.join(", ") : `none of the common tags (message is ${messageBytes} B)`;
+  return fitting.length
+    ? fitting.join(", ")
+    : `none of the common tags (message is ${messageBytes} B)`;
 }
 
 /* ------------------------------------------------------------------ *

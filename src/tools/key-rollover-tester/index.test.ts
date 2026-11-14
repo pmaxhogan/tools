@@ -12,7 +12,12 @@ import {
 } from "./index";
 import { ToolError } from "../types";
 
-function ev(type: "keydown" | "keyup", code: string, key: string, timestamp: number): RolloverEvent {
+function ev(
+  type: "keydown" | "keyup",
+  code: string,
+  key: string,
+  timestamp: number,
+): RolloverEvent {
   return { type, code, key, timestamp };
 }
 

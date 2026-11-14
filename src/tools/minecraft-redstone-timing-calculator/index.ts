@@ -103,12 +103,7 @@ function requireTps(tps: number): number {
 /* ------------------------------------------------------------------ */
 
 export type TimeUnit =
-  | "gameTicks"
-  | "redstoneTicks"
-  | "milliseconds"
-  | "seconds"
-  | "minutes"
-  | "hours";
+  "gameTicks" | "redstoneTicks" | "milliseconds" | "seconds" | "minutes" | "hours";
 
 export const TIME_UNITS: readonly TimeUnit[] = [
   "gameTicks",
@@ -280,7 +275,9 @@ export interface DelaySolution {
  * game-tick delay cannot be built out of repeaters and comparators at all.
  */
 export function isAchievableDelay(gameTicks: number): boolean {
-  return Number.isInteger(gameTicks) && gameTicks >= 0 && gameTicks % REDSTONE_TICK_GAME_TICKS === 0;
+  return (
+    Number.isInteger(gameTicks) && gameTicks >= 0 && gameTicks % REDSTONE_TICK_GAME_TICKS === 0
+  );
 }
 
 /**
@@ -993,7 +990,10 @@ function run(input: string, opts: RunOpts = {}): Record<string, string> {
     const c = convertTime(parsed.value ?? 0, parsed.unit ?? "gameTicks", tps);
     return {
       "Game ticks": String(c.gameTicks),
-      "Redstone ticks": c.wholeRedstoneTicks === null ? `${c.redstoneTicks} (not a whole redstone tick)` : String(c.wholeRedstoneTicks),
+      "Redstone ticks":
+        c.wholeRedstoneTicks === null
+          ? `${c.redstoneTicks} (not a whole redstone tick)`
+          : String(c.wholeRedstoneTicks),
       "Seconds at 20 TPS": `${round(c.nominalSeconds, 4)} s`,
       [`Real time at ${round(c.tps, 3)} TPS`]: c.formattedReal,
       "Lag factor": `${round(c.lagFactor, 3)}x`,
@@ -1088,7 +1088,7 @@ function run(input: string, opts: RunOpts = {}): Record<string, string> {
   throw new ToolError(
     "unknown-mode",
     `"${String(mode)}" is not a mode this tool knows.`,
-    'Use one of: convert, delay, clock, throughput, signal, components.',
+    "Use one of: convert, delay, clock, throughput, signal, components.",
   );
 }
 

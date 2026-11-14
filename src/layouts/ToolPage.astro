@@ -74,21 +74,21 @@ const jsonLd = {
         aria-label="Breadcrumb"
         class="text-[11px] font-semibold tracking-[0.12em] text-primary uppercase"
       >
-        <a href="/" class="text-primary/80 hover:text-primary">Tools</a>
+        <a href="/" class="text-primary/80 hover:text-primary">
+          Tools
+        </a>
         <span aria-hidden="true"> / </span>
-        {
-          category && CategoryIcon ? (
-            <a
-              href={categoryPath(category)}
-              class="inline-flex items-center gap-1.5 align-middle text-primary/80 hover:text-primary"
-            >
-              <CategoryIcon class="size-3.5" stroke-width={2} aria-hidden="true" />
-              {meta.category}
-            </a>
-          ) : (
-            <span>{meta.category}</span>
-          )
-        }
+        {category && CategoryIcon ? (
+          <a
+            href={categoryPath(category)}
+            class="inline-flex items-center gap-1.5 align-middle text-primary/80 hover:text-primary"
+          >
+            <CategoryIcon class="size-3.5" stroke-width={2} aria-hidden="true" />
+            {meta.category}
+          </a>
+        ) : (
+          <span>{meta.category}</span>
+        )}
       </nav>
       <div class="mt-2 flex items-center gap-3">
         <span
@@ -107,36 +107,34 @@ const jsonLd = {
       <slot />
     </div>
 
-    {
-      related.length > 0 && (
-        <section class="mt-12">
-          <h2 class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
-            Related tools
-          </h2>
-          <ul class="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {related.map((t) => (
-              <li>
-                <a
-                  href={`/${t.slug}`}
-                  class="related-tool-card flex h-full gap-3 rounded-[14px] border bg-card p-5 shadow-[var(--sh-sm)]"
+    {related.length > 0 && (
+      <section class="mt-12">
+        <h2 class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
+          Related tools
+        </h2>
+        <ul class="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {related.map((t) => (
+            <li>
+              <a
+                href={`/${t.slug}`}
+                class="related-tool-card flex h-full gap-3 rounded-[14px] border bg-card p-5 shadow-[var(--sh-sm)]"
+              >
+                <span
+                  class="grid size-9 shrink-0 place-items-center rounded-[10px] bg-[color:var(--accent-soft)] text-[color:var(--primary)]"
+                  aria-hidden="true"
                 >
-                  <span
-                    class="grid size-9 shrink-0 place-items-center rounded-[10px] bg-[color:var(--accent-soft)] text-[color:var(--primary)]"
-                    aria-hidden="true"
-                  >
-                    <t.Icon class="size-[18px]" stroke-width={2} />
-                  </span>
-                  <span class="min-w-0">
-                    <span class="block font-semibold">{t.name}</span>
-                    <span class="mt-1 block text-sm text-muted-foreground">{t.description}</span>
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )
-    }
+                  <t.Icon class="size-[18px]" stroke-width={2} />
+                </span>
+                <span class="min-w-0">
+                  <span class="block font-semibold">{t.name}</span>
+                  <span class="mt-1 block text-sm text-muted-foreground">{t.description}</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
 
     <section class="mt-12 max-w-[72ch] space-y-3 border-t pt-6 text-sm">
       <details>
@@ -154,14 +152,12 @@ const jsonLd = {
       <details>
         <summary class="cursor-pointer font-medium">FAQ</summary>
         <dl class="mt-2 space-y-3">
-          {
-            meta.copy.faq.map((f) => (
-              <div>
-                <dt class="font-medium">{f.q}</dt>
-                <dd class="mt-1 text-muted-foreground">{f.a}</dd>
-              </div>
-            ))
-          }
+          {meta.copy.faq.map((f) => (
+            <div>
+              <dt class="font-medium">{f.q}</dt>
+              <dd class="mt-1 text-muted-foreground">{f.a}</dd>
+            </div>
+          ))}
         </dl>
       </details>
     </section>
@@ -180,9 +176,10 @@ const jsonLd = {
       <p>
         No ads, no accounts, no limits.{" "}
         {meta.privacyNote ?? "Your files and inputs never leave your device."}{" "}
-        <a href="https://github.com/pmaxhogan/tools" class="underline hover:text-foreground"
-          >MIT licensed</a
-        >.
+        <a href="https://github.com/pmaxhogan/tools" class="underline hover:text-foreground">
+          MIT licensed
+        </a>
+        .
       </p>
     </footer>
   </main>

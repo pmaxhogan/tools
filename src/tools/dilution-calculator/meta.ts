@@ -49,7 +49,15 @@ export const meta: ToolMeta = {
         },
       ],
     },
-    { kind: "number", id: "decimals", label: "Decimal places", default: 4, min: 0, max: 8, step: 1 },
+    {
+      kind: "number",
+      id: "decimals",
+      label: "Decimal places",
+      default: 4,
+      min: 0,
+      max: 8,
+      step: 1,
+    },
   ],
   examples: [
     { label: "Dilute a 2 M stock to 0.1 M", input: "C1=2 M, C2=0.1 M, V2=100 mL" },
@@ -58,12 +66,15 @@ export const meta: ToolMeta = {
       input: "C1=1 M, factor=1:10, steps=6, volume=1 mL",
       opts: { mode: "serial" },
     },
-    { label: "Cross from molar to mg/mL", input: "C1=1 M, C2=5.844 mg/mL, V2=100 mL, molarMass=58.44" },
+    {
+      label: "Cross from molar to mg/mL",
+      input: "C1=1 M, C2=5.844 mg/mL, V2=100 mL, molarMass=58.44",
+    },
   ],
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: "Solves C1V1 = C2V2 for whichever one of the four values you are missing, in molar units (M, mM, uM, nM), mass per volume units (g/L, mg/mL, ug/mL, mg/L, ppm, ppb), percent weight in volume, or the X folds of a concentrated buffer. It reports the dilution factor, how much solvent to add, and a plain sentence telling you what to measure. A second mode builds a full serial dilution table: the concentration in every tube, how much to carry forward, and how much diluent each tube starts with.",
-    how: "Type the values you have as name=value pairs, for example \"C1=2 M, C2=0.1 M, V2=100 mL\", and the fourth one is filled in. Give all four and it checks them against each other instead. For a series, switch the mode and give a stock, a factor (10 or 1:10 both work), the number of steps, and the volume in each tube. Add molarMass=58.44 when one concentration is molar and the other is a mass per volume, because that conversion needs the compound's formula weight.",
+    how: 'Type the values you have as name=value pairs, for example "C1=2 M, C2=0.1 M, V2=100 mL", and the fourth one is filled in. Give all four and it checks them against each other instead. For a series, switch the mode and give a stock, a factor (10 or 1:10 both work), the number of steps, and the volume in each tube. Add molarMass=58.44 when one concentration is molar and the other is a mass per volume, because that conversion needs the compound\'s formula weight.',
     why: "Dilution pages elsewhere lock you into one unit family, silently assume percent means volume in volume, or hide the serial dilution table behind a signup. This one keeps molar, mass per volume, percent and fold units apart, refuses to cross between them without the molar mass rather than quietly guessing, and states which convention it used for percent and parts per million. It runs entirely in your browser, so your inputs never leave your device.",
     faq: [
       {

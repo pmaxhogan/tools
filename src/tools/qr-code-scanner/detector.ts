@@ -81,7 +81,10 @@ export function letterboxParams(srcWidth: number, srcHeight: number): LetterboxP
  * uses a canvas for this instead (faster); this path serves Node evaluation
  * and tests, and both produce equivalent tensors.
  */
-export function packLetterboxed(image: RawImage): { pixels: Uint8ClampedArray; params: LetterboxParams } {
+export function packLetterboxed(image: RawImage): {
+  pixels: Uint8ClampedArray;
+  params: LetterboxParams;
+} {
   const params = letterboxParams(image.width, image.height);
   const out = new Uint8ClampedArray(DETECTOR_INPUT * DETECTOR_INPUT * 4);
   for (let i = 0; i < out.length; i += 4) {
@@ -211,9 +214,14 @@ export function unletterboxPoints<T extends Point[]>(points: T, params: Letterbo
 /* ------------------------------------------------------------------ */
 
 export interface Homography {
-  a: number; b: number; c: number;
-  d: number; e: number; f: number;
-  g: number; h: number;
+  a: number;
+  b: number;
+  c: number;
+  d: number;
+  e: number;
+  f: number;
+  g: number;
+  h: number;
 }
 
 /**
@@ -344,7 +352,7 @@ export function unitSagitta(quad: Quad, mids: EdgeMids, swapped: boolean): numbe
   }
   const right = applyInverseHomography(H, mids[1]![0], mids[1]![1]);
   const left = applyInverseHomography(H, mids[3]![0], mids[3]![1]);
-  return ((right[0] - 1) + -left[0]) / 2;
+  return (right[0] - 1 + -left[0]) / 2;
 }
 
 /**
@@ -417,8 +425,7 @@ export function rectifyCylinder(
       const depth = k - Math.cos(p);
       const un = (xOf(p) - x0n) / (x1n - x0n);
       const vn = 0.5 + (flatS - 0.5) * ((k - Math.cos(t2)) / depth);
-      const [sx, sy] =
-        axis === "u" ? applyHomography(H, un, vn) : applyHomography(H, vn, un);
+      const [sx, sy] = axis === "u" ? applyHomography(H, un, vn) : applyHomography(H, vn, un);
       const o = (j * outSize + i) * 4;
       const cx = Math.min(maxX, Math.max(0, sx));
       const cy = Math.min(maxY, Math.max(0, sy));
@@ -541,7 +548,8 @@ export function contrastStretch(image: RawImage, lowPct = 0.02, highPct = 0.98):
   const hist = new Uint32Array(256);
   for (let i = 0; i < n; i++) {
     const g =
-      (image.data[i * 4]! * 299 + image.data[i * 4 + 1]! * 587 + image.data[i * 4 + 2]! * 114) / 1000;
+      (image.data[i * 4]! * 299 + image.data[i * 4 + 1]! * 587 + image.data[i * 4 + 2]! * 114) /
+      1000;
     gray[i] = g;
     hist[gray[i]!]++;
   }
@@ -624,7 +632,10 @@ export function sharpen(image: RawImage, amount = 0.8): RawImage {
         const v =
           data[o + c]! * center -
           amount *
-            (data[o - 4 + c]! + data[o + 4 + c]! + data[o - width * 4 + c]! + data[o + width * 4 + c]!);
+            (data[o - 4 + c]! +
+              data[o + 4 + c]! +
+              data[o - width * 4 + c]! +
+              data[o + width * 4 + c]!);
         out[o + c] = v;
       }
     }
@@ -766,7 +777,13 @@ export function gridResampleCandidates(image: RawImage, useTiming = true): RawIm
 
   // Choose TL, TR, BL: the pair with the longest span is TR-BL (the
   // diagonal); the remaining finder of the best right-angle triple is TL.
-  let best: { tl: FinderHit; tr: FinderHit; bl: FinderHit; err: number; synthetic?: "bl" | "tr" } | null = null;
+  let best: {
+    tl: FinderHit;
+    tr: FinderHit;
+    bl: FinderHit;
+    err: number;
+    synthetic?: "bl" | "tr";
+  } | null = null;
   for (let a = 0; a < finders.length; a++) {
     for (let b = 0; b < finders.length; b++) {
       for (let c = 0; c < finders.length; c++) {
@@ -1180,7 +1197,12 @@ export interface TileRect {
  * empty list when the whole image is close enough to model resolution that
  * tiling adds nothing.
  */
-export function planTiles(width: number, height: number, tileSize = 1024, overlap = 0.18): TileRect[] {
+export function planTiles(
+  width: number,
+  height: number,
+  tileSize = 1024,
+  overlap = 0.18,
+): TileRect[] {
   if (Math.max(width, height) <= tileSize * 1.2) return [];
   const step = tileSize * (1 - overlap);
   const tiles: TileRect[] = [];

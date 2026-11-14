@@ -33,6 +33,7 @@ findings fixed.
 ## Locked decisions (do not re-ask)
 
 ### Process
+
 - Batch 5 finishes FIRST as wave 0.
 - Ordering: parallel design mockup + shell UX, then overhauls, then new tools.
 - Deploy path: push to main per wave. CI gates the auto-deploy.
@@ -60,8 +61,9 @@ findings fixed.
 - Comms: PushNotification at mockup ready, each wave deployed, final report.
 
 ### Shell UX
+
 - Examples: new `ToolMeta.examples?: { label: string; input?: string; opts?:
-  Record<string,string>; file?: string }[]`. Text/JSON/CSV tools PRE-FILL
+Record<string,string>; file?: string }[]`. Text/JSON/CSV tools PRE-FILL
   example 1 when the URL fragment is empty, with a dismissable "Example input"
   chip (one click clears). File/image/audio tools get a "Try a sample" button
   loading a tiny bundled sample from public/samples/. Examples never override
@@ -102,10 +104,10 @@ findings fixed.
   icons; homepage section headings link with icons; palette shows categories
   as results with icons.
 - Quick picker: desktop `max-w-3xl`, ~75vh, TWO-PANE (results left with icon
-  + name + category badge; right pane previews the highlighted tool: icon,
-  description, category, keyboard hint). All matches shown (virtualized if
-  needed). Mobile keeps the single-column sheet. BaseLayout.astro:8-15 must
-  project `icon` into paletteTools.
+  - name + category badge; right pane previews the highlighted tool: icon,
+    description, category, keyboard hint). All matches shown (virtualized if
+    needed). Mobile keeps the single-column sheet. BaseLayout.astro:8-15 must
+    project `icon` into paletteTools.
 - Top bar: search-field-shaped button "Search tools" + Ctrl K kbd at md+,
   magnifier icon below md; opens the palette through a tiny shared store
   (src/lib/palette-store.ts) so the Astro header can reach the island.
@@ -114,10 +116,10 @@ findings fixed.
   as results when a token matches a category, curated synonym expansion map
   (sound->audio, picture/photo->image, zip->archive, ...) plus a searchTerms
   audit across all metas, typo tolerance (Damerau-Levenshtein <= 1 for tokens
-  >= 4 chars, ranked below exact, only when exact hits are few), recently-used
-  boost (localStorage preference of last ~10 slugs; empty query shows Recent
-  first). Tests must include: "em" -> Electromagnetic Spectrum first, "sound"
-  -> audio tools, "colour" still matches.
+  > = 4 chars, ranked below exact, only when exact hits are few), recently-used
+  > boost (localStorage preference of last ~10 slugs; empty query shows Recent
+  > first). Tests must include: "em" -> Electromagnetic Spectrum first, "sound"
+  > -> audio tools, "colour" still matches.
 - Sidebar: resizable at xl+ via a drag handle (6px edge, visible on
   hover/focus), range 14-28rem, keyboard arrows adjust 1rem, double-click
   resets, width persisted in localStorage (preference) and applied pre-paint
@@ -133,7 +135,7 @@ findings fixed.
   analyse in prose, centre, labelled, recognis-, travelled, licence,
   summaris-, organis-, behaviour, serialis-, optimis-, modelled, visualis-,
   aluminium, defence) PLUS `scripts/check-spelling.mjs` wired into `npm run
-  lint` with an allowlist (analyser/AnalyserNode/createAnalyser,
+lint` with an allowlist (analyser/AnalyserNode/createAnalyser,
   echoCancellation, aria-labelledby, CSS Color 4 grey names in color-picker,
   greyhound wordlist, GAM command names like license_skus, programmer).
   British spellings STAY in `synonyms`/`searchTerms` (search index). Rename
@@ -143,19 +145,20 @@ findings fixed.
   US English only.
 
 ### Overhauls
+
 - RAIDZ v2 (bespoke panel + logic): hierarchical diagram pool > vdevs >
   drives; click-to-toggle failed drives; states green (online), red
   (offline/failed), yellow (degraded), red with black stripe (data loss),
   propagating drive -> vdev -> pool; per-vdev "N failures left"; failure set
   in the fragment. Capacity pie: 100% = sum of all drives; slices usable,
   parity, ZFS slop/metadata overhead (toggle), OS/filesystem reserve (toggle
-  + percent). Reuse chart-maker's pie (export slicePath/renderPie). MTBF or
-  AFR + resilver time -> Markov MTTDL per vdev and pool + annual data-loss
-  probability, with a helper table of realistic values (consumer, NAS,
-  enterprise, SSD; cite Backblaze/vendor sheets); UREs ignored with a note.
-  ALSO in scope: hot spares (reduce MTTR), mixed vdevs (different widths and
-  levels per vdev), dRAID (distributed spare math). Keep the shorthand as
-  quick entry.
+  - percent). Reuse chart-maker's pie (export slicePath/renderPie). MTBF or
+    AFR + resilver time -> Markov MTTDL per vdev and pool + annual data-loss
+    probability, with a helper table of realistic values (consumer, NAS,
+    enterprise, SSD; cite Backblaze/vendor sheets); UREs ignored with a note.
+    ALSO in scope: hot spares (reduce MTTR), mixed vdevs (different widths and
+    levels per vdev), dRAID (distributed spare math). Keep the shorthand as
+    quick entry.
 - Metronome (tuner-metronome): a simple TOGGLE "Accent first beat only"
   (tick-tock-tock-tock). Seam: TunerMetronomePanel.vue isAccentBeat (~:562);
   panel-local spec precedent at ~:121-146. Visual beat indicator reflects it.
@@ -174,6 +177,7 @@ findings fixed.
   auto-detect chips + copy-all grid).
 
 ### New tools
+
 - Category "Chemistry" (new; flask icon). Dataset is a BUILD-TIME FETCH like
   the AI models (scripts/prepare-chem-data.mjs, run from `npm run build`,
   cached + reproducible, output gitignored under src/tools/_generated/ or
@@ -231,6 +235,7 @@ findings fixed.
 
 Max approved the mockup ("rest lgtm") with four deltas, all to carry into the
 real components:
+
 1. Segmented controls hug their content (w-fit, start-aligned), never stretch
    to the options-grid column. Applied to src/components/ui/segmented.
 2. Resistor panel drawing = dog-bone axial body (bulged end caps, lead wires
@@ -287,7 +292,7 @@ real components:
 - CI ORDERING (must do in wave 4): the generated .ts are gitignored, so the
   moment a tool imports src/tools/_generated/*, CI typecheck fails on a clean
   checkout. Add `node scripts/prepare-wikidata.mjs && node
-  scripts/prepare-chem-data.mjs` to .github/workflows/ci.yml BEFORE typecheck
+scripts/prepare-chem-data.mjs` to .github/workflows/ci.yml BEFORE typecheck
   (network run, ~6 min cold), and to the Workers Build via npm run build.
 - prettierignore now covers src/tools/_generated/, public/data/, public/wawoff2/.
 - SPARQL lessons: use language "en,mul" for labels; P6687 is the IANA zone

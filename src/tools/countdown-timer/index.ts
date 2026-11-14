@@ -158,7 +158,11 @@ export function parseTarget(raw: string, tz?: string): number {
   if (HAS_OFFSET.test(normalized)) {
     const d = new Date(normalized);
     if (isNaN(d.getTime())) {
-      throw new ToolError("bad-target", `Could not parse "${text}" as a date and time.`, TARGET_FIX);
+      throw new ToolError(
+        "bad-target",
+        `Could not parse "${text}" as a date and time.`,
+        TARGET_FIX,
+      );
     }
     return d.getTime();
   }
@@ -443,7 +447,10 @@ export function renderChimeSamples(sampleRate: number): Float32Array {
   const samples = new Float32Array(total);
 
   const writeTone = (start: number, count: number, hz: number): void => {
-    const fadeCount = Math.max(1, Math.min(Math.round(FADE_SEC * sampleRate), Math.floor(count / 2)));
+    const fadeCount = Math.max(
+      1,
+      Math.min(Math.round(FADE_SEC * sampleRate), Math.floor(count / 2)),
+    );
     for (let i = 0; i < count; i++) {
       const t = i / sampleRate;
       let envelope = 1;
@@ -481,7 +488,10 @@ function formatIsoAndLocal(ms: number): string {
   const d = new Date(ms);
   const iso = d.toISOString();
   try {
-    const local = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "long" }).format(d);
+    const local = new Intl.DateTimeFormat(undefined, {
+      dateStyle: "full",
+      timeStyle: "long",
+    }).format(d);
     return `${iso} (${local})`;
   } catch {
     return iso;
@@ -524,7 +534,8 @@ export function run(input: string, opts: CountdownOpts): CountdownResult {
   const remainingMs = targetMs - now;
 
   return {
-    Kind: state.kind === "until" ? "Until (countdown to a target date)" : "Countdown (from a duration)",
+    Kind:
+      state.kind === "until" ? "Until (countdown to a target date)" : "Countdown (from a duration)",
     "Duration/Target": raw,
     "Ends at": formatIsoAndLocal(targetMs),
     "Remaining now": formatRemaining(remainingMs, { style: opts?.style }),

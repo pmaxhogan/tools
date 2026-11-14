@@ -344,9 +344,7 @@ describe("smartctl-analyzer: errors and closing note", () => {
   });
 
   it("throws on text that is not smartctl output", () => {
-    expect(() => run("the quick brown fox jumps over the lazy dog", VERDICT)).toThrow(
-      ToolError,
-    );
+    expect(() => run("the quick brown fox jumps over the lazy dog", VERDICT)).toThrow(ToolError);
     try {
       run("the quick brown fox jumps over the lazy dog", VERDICT);
     } catch (e) {

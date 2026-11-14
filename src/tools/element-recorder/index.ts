@@ -37,11 +37,9 @@ const LAST_RESORT_MIME = "video/webm";
  * `DEFAULT_MIME_CANDIDATES` when no candidate list is supplied, and to
  * "video/webm" as an absolute last resort when nothing is supported.
  */
-export function pickMimeType(
-  candidates: string[],
-  supported: (mime: string) => boolean,
-): string {
-  const list = Array.isArray(candidates) && candidates.length > 0 ? candidates : DEFAULT_MIME_CANDIDATES;
+export function pickMimeType(candidates: string[], supported: (mime: string) => boolean): string {
+  const list =
+    Array.isArray(candidates) && candidates.length > 0 ? candidates : DEFAULT_MIME_CANDIDATES;
   for (const mime of list) {
     if (typeof mime === "string" && mime && supported(mime)) return mime;
   }
@@ -229,7 +227,8 @@ function formatBitrate(bitsPerSecond: number): string {
 /** Turns a finished-recording report into labeled, copyable rows. */
 export function describeRecording(input: RecordingSummaryInput): Record<string, string> {
   const bytes = isFiniteNumber(input?.bytes) && input.bytes > 0 ? input.bytes : 0;
-  const durationMs = isFiniteNumber(input?.durationMs) && input.durationMs > 0 ? input.durationMs : 0;
+  const durationMs =
+    isFiniteNumber(input?.durationMs) && input.durationMs > 0 ? input.durationMs : 0;
   const width = isFiniteNumber(input?.width) && input.width > 0 ? Math.round(input.width) : 0;
   const height = isFiniteNumber(input?.height) && input.height > 0 ? Math.round(input.height) : 0;
   const fps = isFiniteNumber(input?.fps) && input.fps > 0 ? input.fps : 0;

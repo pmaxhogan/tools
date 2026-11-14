@@ -101,7 +101,12 @@ describe("analyzeSamples", () => {
 
 describe("describeVideoTrack", () => {
   it("labels a standard 1080p30 track", () => {
-    const out = describeVideoTrack({ width: 1920, height: 1080, frameRate: 30, facingMode: "user" });
+    const out = describeVideoTrack({
+      width: 1920,
+      height: 1080,
+      frameRate: 30,
+      facingMode: "user",
+    });
     expect(out["Resolution"]).toBe("1920 x 1080 (1080p, 16:9)");
     expect(out["Frame rate"]).toBe("30 fps");
     expect(out["Facing"]).toMatch(/Front camera/);

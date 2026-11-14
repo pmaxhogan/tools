@@ -13,7 +13,8 @@ export const meta: ToolMeta = {
   matrixSlug: "beautify",
   icon: "Frame",
   name: "Screenshot Beautifier",
-  description: "Frame code and screenshots with padding, a window chrome, and a gradient background.",
+  description:
+    "Frame code and screenshots with padding, a window chrome, and a gradient background.",
   category: "Capture",
   keywords: [
     "screenshot beautifier",
@@ -45,7 +46,11 @@ export const meta: ToolMeta = {
       options: [
         { value: "sunset", label: "Sunset", synonyms: ["warm gradient", "orange pink gradient"] },
         { value: "ocean", label: "Ocean", synonyms: ["blue teal gradient", "cool gradient"] },
-        { value: "aurora", label: "Aurora", synonyms: ["mesh gradient", "colorful blobs", "northern lights"] },
+        {
+          value: "aurora",
+          label: "Aurora",
+          synonyms: ["mesh gradient", "colorful blobs", "northern lights"],
+        },
         { value: "peach", label: "Peach", synonyms: ["soft pastel", "pink cream gradient"] },
         { value: "midnight", label: "Midnight", synonyms: ["dark blue gradient", "night sky"] },
         { value: "slate", label: "Slate", synonyms: ["gray solid", "neutral background"] },
@@ -58,7 +63,11 @@ export const meta: ToolMeta = {
           label: "Transparent",
           synonyms: ["no background", "alpha channel", "png transparency"],
         },
-        { value: "custom", label: "Custom", synonyms: ["pick your own color", "custom gradient", "brand colors"] },
+        {
+          value: "custom",
+          label: "Custom",
+          synonyms: ["pick your own color", "custom gradient", "brand colors"],
+        },
       ],
     },
     {
@@ -67,8 +76,16 @@ export const meta: ToolMeta = {
       label: "Window frame",
       default: "mac",
       options: [
-        { value: "none", label: "No frame", synonyms: ["no frame", "flat", "no chrome", "just the image"] },
-        { value: "mac", label: "macOS window", synonyms: ["macos", "traffic lights", "apple window"] },
+        {
+          value: "none",
+          label: "No frame",
+          synonyms: ["no frame", "flat", "no chrome", "just the image"],
+        },
+        {
+          value: "mac",
+          label: "macOS window",
+          synonyms: ["macos", "traffic lights", "apple window"],
+        },
         {
           value: "windows",
           label: "Windows window",
@@ -110,10 +127,22 @@ export const meta: ToolMeta = {
       label: "Canvas shape",
       default: "auto",
       options: [
-        { value: "auto", label: "Auto (fit the frame)", synonyms: ["fit the image", "no forced ratio"] },
+        {
+          value: "auto",
+          label: "Auto (fit the frame)",
+          synonyms: ["fit the image", "no forced ratio"],
+        },
         { value: "1:1", label: "Square (1:1)", synonyms: ["square", "instagram square"] },
-        { value: "4:3", label: "Classic (4:3)", synonyms: ["classic ratio", "standard photo ratio"] },
-        { value: "16:9", label: "Widescreen (16:9)", synonyms: ["widescreen", "youtube thumbnail ratio"] },
+        {
+          value: "4:3",
+          label: "Classic (4:3)",
+          synonyms: ["classic ratio", "standard photo ratio"],
+        },
+        {
+          value: "16:9",
+          label: "Widescreen (16:9)",
+          synonyms: ["widescreen", "youtube thumbnail ratio"],
+        },
         {
           value: "twitter(16:9)",
           label: "Twitter or X card (16:9)",
@@ -122,7 +151,12 @@ export const meta: ToolMeta = {
         {
           value: "og(1.91:1)",
           label: "Open Graph image (1.91:1)",
-          synonyms: ["open graph", "link preview image", "facebook share image", "linkedin share image"],
+          synonyms: [
+            "open graph",
+            "link preview image",
+            "facebook share image",
+            "linkedin share image",
+          ],
         },
       ],
     },

@@ -142,23 +142,113 @@ export interface IsotopePreset {
 
 export const ISOTOPES: IsotopePreset[] = [
   { id: "c-14", label: "Carbon 14", halfLife: 5700 * 31557600, quoted: "5700 y", massNumber: 14 },
-  { id: "h-3", label: "Tritium (hydrogen 3)", halfLife: 12.32 * 31557600, quoted: "12.32 y", massNumber: 3 },
-  { id: "i-131", label: "Iodine 131", halfLife: 8.0252 * 86400, quoted: "8.0252 d", massNumber: 131 },
+  {
+    id: "h-3",
+    label: "Tritium (hydrogen 3)",
+    halfLife: 12.32 * 31557600,
+    quoted: "12.32 y",
+    massNumber: 3,
+  },
+  {
+    id: "i-131",
+    label: "Iodine 131",
+    halfLife: 8.0252 * 86400,
+    quoted: "8.0252 d",
+    massNumber: 131,
+  },
   { id: "i-125", label: "Iodine 125", halfLife: 59.4 * 86400, quoted: "59.4 d", massNumber: 125 },
-  { id: "tc-99m", label: "Technetium 99m", halfLife: 6.0067 * 3600, quoted: "6.0067 h", massNumber: 99 },
+  {
+    id: "tc-99m",
+    label: "Technetium 99m",
+    halfLife: 6.0067 * 3600,
+    quoted: "6.0067 h",
+    massNumber: 99,
+  },
   { id: "f-18", label: "Fluorine 18", halfLife: 109.77 * 60, quoted: "109.77 min", massNumber: 18 },
-  { id: "p-32", label: "Phosphorus 32", halfLife: 14.268 * 86400, quoted: "14.268 d", massNumber: 32 },
-  { id: "co-60", label: "Cobalt 60", halfLife: 5.2711 * 31557600, quoted: "5.2711 y", massNumber: 60 },
-  { id: "sr-90", label: "Strontium 90", halfLife: 28.79 * 31557600, quoted: "28.79 y", massNumber: 90 },
-  { id: "cs-137", label: "Cesium 137", halfLife: 30.08 * 31557600, quoted: "30.08 y", massNumber: 137 },
-  { id: "po-210", label: "Polonium 210", halfLife: 138.376 * 86400, quoted: "138.376 d", massNumber: 210 },
-  { id: "ra-226", label: "Radium 226", halfLife: 1600 * 31557600, quoted: "1600 y", massNumber: 226 },
-  { id: "am-241", label: "Americium 241", halfLife: 432.6 * 31557600, quoted: "432.6 y", massNumber: 241 },
-  { id: "pu-239", label: "Plutonium 239", halfLife: 24110 * 31557600, quoted: "24110 y", massNumber: 239 },
-  { id: "k-40", label: "Potassium 40", halfLife: 1.248e9 * 31557600, quoted: "1.248e9 y", massNumber: 40 },
-  { id: "u-235", label: "Uranium 235", halfLife: 7.04e8 * 31557600, quoted: "7.04e8 y", massNumber: 235 },
-  { id: "u-238", label: "Uranium 238", halfLife: 4.468e9 * 31557600, quoted: "4.468e9 y", massNumber: 238 },
-  { id: "th-232", label: "Thorium 232", halfLife: 1.405e10 * 31557600, quoted: "1.405e10 y", massNumber: 232 },
+  {
+    id: "p-32",
+    label: "Phosphorus 32",
+    halfLife: 14.268 * 86400,
+    quoted: "14.268 d",
+    massNumber: 32,
+  },
+  {
+    id: "co-60",
+    label: "Cobalt 60",
+    halfLife: 5.2711 * 31557600,
+    quoted: "5.2711 y",
+    massNumber: 60,
+  },
+  {
+    id: "sr-90",
+    label: "Strontium 90",
+    halfLife: 28.79 * 31557600,
+    quoted: "28.79 y",
+    massNumber: 90,
+  },
+  {
+    id: "cs-137",
+    label: "Cesium 137",
+    halfLife: 30.08 * 31557600,
+    quoted: "30.08 y",
+    massNumber: 137,
+  },
+  {
+    id: "po-210",
+    label: "Polonium 210",
+    halfLife: 138.376 * 86400,
+    quoted: "138.376 d",
+    massNumber: 210,
+  },
+  {
+    id: "ra-226",
+    label: "Radium 226",
+    halfLife: 1600 * 31557600,
+    quoted: "1600 y",
+    massNumber: 226,
+  },
+  {
+    id: "am-241",
+    label: "Americium 241",
+    halfLife: 432.6 * 31557600,
+    quoted: "432.6 y",
+    massNumber: 241,
+  },
+  {
+    id: "pu-239",
+    label: "Plutonium 239",
+    halfLife: 24110 * 31557600,
+    quoted: "24110 y",
+    massNumber: 239,
+  },
+  {
+    id: "k-40",
+    label: "Potassium 40",
+    halfLife: 1.248e9 * 31557600,
+    quoted: "1.248e9 y",
+    massNumber: 40,
+  },
+  {
+    id: "u-235",
+    label: "Uranium 235",
+    halfLife: 7.04e8 * 31557600,
+    quoted: "7.04e8 y",
+    massNumber: 235,
+  },
+  {
+    id: "u-238",
+    label: "Uranium 238",
+    halfLife: 4.468e9 * 31557600,
+    quoted: "4.468e9 y",
+    massNumber: 238,
+  },
+  {
+    id: "th-232",
+    label: "Thorium 232",
+    halfLife: 1.405e10 * 31557600,
+    quoted: "1.405e10 y",
+    massNumber: 232,
+  },
 ];
 
 const ISOTOPE_BY_ID: Record<string, IsotopePreset> = {};
@@ -323,7 +413,8 @@ export function parseAmount(raw: string, field: string): AmountValue {
     );
   const key = unit.toLowerCase();
   if (unit === "") return { value, kind: "relative", unit: "" };
-  if (MASS_UNITS[unit] !== undefined) return { value: value * MASS_UNITS[unit]!, kind: "mass", unit };
+  if (MASS_UNITS[unit] !== undefined)
+    return { value: value * MASS_UNITS[unit]!, kind: "mass", unit };
   if (MOLE_UNITS[key] !== undefined) return { value: value * MOLE_UNITS[key]!, kind: "mole", unit };
   if (COUNT_UNITS[key] !== undefined) return { value, kind: "count", unit };
   if (ACTIVITY_UNITS[key] !== undefined)
@@ -398,7 +489,11 @@ function fmt(value: number, decimals: number): string {
   return value.toFixed(decimals);
 }
 
-function fmtTime(seconds: number, unit: { label: string; seconds: number }, decimals: number): string {
+function fmtTime(
+  seconds: number,
+  unit: { label: string; seconds: number },
+  decimals: number,
+): string {
   return `${fmt(seconds / unit.seconds, decimals)} ${unit.label}`;
 }
 
@@ -483,7 +578,8 @@ export function solveDecay(input: string, opts?: Partial<HalfLifeOpts>): DecaySo
         "Solving for time needs the amount that is left.",
         'Add a remaining amount, such as "remaining=25%" or "N=2.5 g" alongside "N0=10 g".',
       );
-    if (remaining.kind === "relative" && remaining.unit === "%") remainingFraction = remaining.value;
+    if (remaining.kind === "relative" && remaining.unit === "%")
+      remainingFraction = remaining.value;
     else if (initial) {
       if (initial.kind !== remaining.kind)
         throw new ToolError(
@@ -536,7 +632,8 @@ export function solveDecay(input: string, opts?: Partial<HalfLifeOpts>): DecaySo
     if (initial.kind === "count") initialNuclei = initial.value;
     else if (initial.kind === "mole") initialNuclei = initial.value * AVOGADRO;
     else if (initial.kind === "activity") initialNuclei = initial.value / decayConstant;
-    else if (initial.kind === "mass" && molarMass) initialNuclei = (initial.value / molarMass) * AVOGADRO;
+    else if (initial.kind === "mass" && molarMass)
+      initialNuclei = (initial.value / molarMass) * AVOGADRO;
   }
 
   const solution: DecaySolution = {
@@ -611,7 +708,9 @@ export function run(input: string, opts?: Partial<HalfLifeOpts>): Record<string,
   if (showTable) {
     for (let n = 1; n <= 10; n++) {
       const fraction = 2 ** -n;
-      const amount = s.initial ? `, ${fmt(s.initial.value * fraction, d)}${amountLabel(s.initial) ? ` ${amountLabel(s.initial)}` : ""}` : "";
+      const amount = s.initial
+        ? `, ${fmt(s.initial.value * fraction, d)}${amountLabel(s.initial) ? ` ${amountLabel(s.initial)}` : ""}`
+        : "";
       out[`After ${n} half-${n === 1 ? "life" : "lives"}`] =
         `${fmtTime(s.halfLife * n, unit, d)}, ${(fraction * 100).toFixed(4)}% left${amount}`;
     }

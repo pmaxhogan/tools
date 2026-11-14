@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { ToolError } from "../types";
-import { analyzeHeaders, parseAcceptLanguage, parseHeaderText, run, summarizeUserAgent } from "./index";
+import {
+  analyzeHeaders,
+  parseAcceptLanguage,
+  parseHeaderText,
+  run,
+  summarizeUserAgent,
+} from "./index";
 
 const CHROME_HEADERS: [string, string][] = [
   ["host", "example.com"],
@@ -8,7 +14,10 @@ const CHROME_HEADERS: [string, string][] = [
     "user-agent",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
   ],
-  ["accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"],
+  [
+    "accept",
+    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  ],
   ["accept-language", "en-US,en;q=0.9"],
   ["accept-encoding", "gzip, deflate, br"],
   ["sec-ch-ua", '"Chromium";v="125", "Not.A/Brand";v="24", "Google Chrome";v="125"'],
@@ -176,7 +185,7 @@ describe("run", () => {
     expect(typeof result).toBe("string");
     const curl = result as string;
 
-    expect(curl).toContain('curl \\');
+    expect(curl).toContain("curl \\");
     expect(curl).toContain('-H "User-Agent: ' + CHROME_HEADERS[1][1] + '" \\');
     expect(curl).toContain('-H "DNT: 1" \\');
     expect(curl).toContain('"https://example.com/"');
@@ -196,9 +205,9 @@ describe("run", () => {
   });
 
   it("throws a bad-input ToolError for text that is neither header lines nor JSON", () => {
-    expect(() => run("just some prose about headers, no colons here", { view: "explained" })).toThrow(
-      ToolError,
-    );
+    expect(() =>
+      run("just some prose about headers, no colons here", { view: "explained" }),
+    ).toThrow(ToolError);
     try {
       run("just some prose about headers, no colons here", { view: "explained" });
       expect.unreachable();

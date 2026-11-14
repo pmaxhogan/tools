@@ -170,7 +170,7 @@ export function parseSpecies(raw: string): Species {
     throw new ToolError(
       "unknown-element",
       `"${s}" is not an element symbol, name or atomic number.`,
-      'Use a symbol such as Fe, a name such as iron, or an atomic number such as 26. American spellings are used, so it is sulfur, aluminum and cesium.',
+      "Use a symbol such as Fe, a name such as iron, or an atomic number such as 26. American spellings are used, so it is sulfur, aluminum and cesium.",
     );
   }
 

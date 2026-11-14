@@ -456,9 +456,7 @@ export function isText(payload: Uint8Array): boolean {
  * ------------------------------------------------------------------ */
 
 function packFlags(bits: BitDepth, channels: ChannelSet, encrypted: boolean): number {
-  return (
-    (bits - 1) | (CHANNEL_ORDER.indexOf(channels) << 2) | (encrypted ? FLAG_ENCRYPTED : 0)
-  );
+  return (bits - 1) | (CHANNEL_ORDER.indexOf(channels) << 2) | (encrypted ? FLAG_ENCRYPTED : 0);
 }
 
 interface ParsedFlags {
@@ -620,8 +618,7 @@ export function extract(rgba: Uint8ClampedArray, opts: ExtractOpts = {}): Extrac
       const flags = parseFlags(head[4]!);
       if (!flags || flags.bits !== bits || flags.channels !== channels) continue;
 
-      const length =
-        ((head[5]! << 24) | (head[6]! << 16) | (head[7]! << 8) | head[8]!) >>> 0;
+      const length = ((head[5]! << 24) | (head[6]! << 16) | (head[7]! << 8) | head[8]!) >>> 0;
       const expectedCrc =
         ((head[9]! << 24) | (head[10]! << 16) | (head[11]! << 8) | head[12]!) >>> 0;
       const headerBytes = headerBytesFor(flags.encrypted);
@@ -734,8 +731,7 @@ export function visualizeLsb(
     const on =
       single >= 0
         ? (rgba[i + single]! >> bit) & 1
-        : (((rgba[i]! >> bit) & 1) ^ ((rgba[i + 1]! >> bit) & 1) ^ ((rgba[i + 2]! >> bit) & 1)) &
-          1;
+        : (((rgba[i]! >> bit) & 1) ^ ((rgba[i + 1]! >> bit) & 1) ^ ((rgba[i + 2]! >> bit) & 1)) & 1;
     const value = on === 1 ? 255 : 0;
     out[i] = value;
     out[i + 1] = value;
@@ -1025,9 +1021,7 @@ export function run(input: Uint8Array | string, opts: StegoOpts = {}): Record<st
   }
 
   const bits = readBitsOption(payload.bits ?? opts.bits);
-  const channels = assertChannels(
-    String(payload.channels ?? opts.channels ?? "rgb").toLowerCase(),
-  );
+  const channels = assertChannels(String(payload.channels ?? opts.channels ?? "rgb").toLowerCase());
 
   let message: Uint8Array;
   if (typeof payload.text === "string" && payload.text !== "") {

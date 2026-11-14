@@ -1,14 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef, watch } from "vue";
-import {
-  ArrowDown,
-  ArrowUp,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Search,
-  X,
-} from "@lucide/vue";
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, Search, X } from "@lucide/vue";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import { formatBytes } from "@/lib/format";
 import { downloadBlob } from "@/lib/download";

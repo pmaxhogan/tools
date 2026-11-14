@@ -74,7 +74,9 @@ const jsonLd = {
         aria-label="Breadcrumb"
         class="text-[11px] font-semibold tracking-[0.12em] text-primary uppercase"
       >
-        <a href="/" class="text-primary/80 hover:text-primary">Tools</a>
+        <a href="/" class="text-primary/80 hover:text-primary">
+          Tools
+        </a>
         <span aria-hidden="true"> / </span>
         <span class="inline-flex items-center gap-1.5 align-middle">
           <Icon class="size-3.5" stroke-width={2} aria-hidden="true" />
@@ -101,23 +103,17 @@ const jsonLd = {
         Related categories
       </h2>
       <ul class="mt-3 flex flex-wrap gap-2">
-        {
-          related.map(({ slug, label, Icon: ChipIcon }) => (
-            <li>
-              <a
-                href={`/category/${slug}`}
-                class="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm shadow-[var(--sh-sm)] transition-colors hover:border-[color:var(--primary)] hover:text-primary"
-              >
-                <ChipIcon
-                  class="size-4 text-muted-foreground"
-                  stroke-width={2}
-                  aria-hidden="true"
-                />
-                {label}
-              </a>
-            </li>
-          ))
-        }
+        {related.map(({ slug, label, Icon: ChipIcon }) => (
+          <li>
+            <a
+              href={`/category/${slug}`}
+              class="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm shadow-[var(--sh-sm)] transition-colors hover:border-[color:var(--primary)] hover:text-primary"
+            >
+              <ChipIcon class="size-4 text-muted-foreground" stroke-width={2} aria-hidden="true" />
+              {label}
+            </a>
+          </li>
+        ))}
       </ul>
     </section>
 
@@ -126,8 +122,11 @@ const jsonLd = {
         No ads, no accounts, no limits. Your files and inputs never leave your device.{" "}
         <a
           href="https://github.com/pmaxhogan/tools"
-          class="text-primary underline-offset-2 hover:underline">MIT licensed</a
-        >.
+          class="text-primary underline-offset-2 hover:underline"
+        >
+          MIT licensed
+        </a>
+        .
       </p>
     </footer>
   </main>

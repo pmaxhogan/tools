@@ -25,12 +25,18 @@ const RAW = "https://raw.githubusercontent.com/misode/mcmeta";
 
 /** Blocks that drop XP when mined without Silk Touch (see DropExperienceBlock). */
 const XP_ORE_BLOCKS = new Set([
-  "minecraft:coal_ore", "minecraft:deepslate_coal_ore",
-  "minecraft:lapis_ore", "minecraft:deepslate_lapis_ore",
-  "minecraft:redstone_ore", "minecraft:deepslate_redstone_ore",
-  "minecraft:diamond_ore", "minecraft:deepslate_diamond_ore",
-  "minecraft:emerald_ore", "minecraft:deepslate_emerald_ore",
-  "minecraft:nether_quartz_ore", "minecraft:nether_gold_ore",
+  "minecraft:coal_ore",
+  "minecraft:deepslate_coal_ore",
+  "minecraft:lapis_ore",
+  "minecraft:deepslate_lapis_ore",
+  "minecraft:redstone_ore",
+  "minecraft:deepslate_redstone_ore",
+  "minecraft:diamond_ore",
+  "minecraft:deepslate_diamond_ore",
+  "minecraft:emerald_ore",
+  "minecraft:deepslate_emerald_ore",
+  "minecraft:nether_quartz_ore",
+  "minecraft:nether_gold_ore",
 ]);
 
 /** Map a block id to the tool's XP source id. */
@@ -95,7 +101,8 @@ function countPerChunk(modifiers) {
     if (type === "count") {
       const c = m.count;
       if (typeof c === "number") count = c;
-      else if (c?.type?.includes("uniform")) count = (c.value.min_inclusive + c.value.max_inclusive) / 2;
+      else if (c?.type?.includes("uniform"))
+        count = (c.value.min_inclusive + c.value.max_inclusive) / 2;
       else if (c?.type?.includes("weighted_list")) {
         let total = 0;
         let weight = 0;
@@ -164,8 +171,13 @@ async function extract(id) {
       const name = placedId.replace("minecraft:", "");
       const placed = await tryFetchJson(`${dataBase}/worldgen/placed_feature/${name}.json`);
       if (!placed) continue;
-      const configuredId = (typeof placed.feature === "string" ? placed.feature : "").replace("minecraft:", "");
-      const configured = await tryFetchJson(`${dataBase}/worldgen/configured_feature/${configuredId}.json`);
+      const configuredId = (typeof placed.feature === "string" ? placed.feature : "").replace(
+        "minecraft:",
+        "",
+      );
+      const configured = await tryFetchJson(
+        `${dataBase}/worldgen/configured_feature/${configuredId}.json`,
+      );
       if (!configured || (configured.type ?? "").replace("minecraft:", "") !== "ore") continue;
       const blocks = (configured.config?.targets ?? [])
         .map((tg) => tg.state?.Name)
@@ -173,7 +185,10 @@ async function extract(id) {
       if (blocks.length === 0) continue;
       ensureDir(join(out, "worldgen", "placed_feature"));
       ensureDir(join(out, "worldgen", "configured_feature"));
-      writeFileSync(join(out, "worldgen", "placed_feature", `${name}.json`), JSON.stringify(placed, null, 2));
+      writeFileSync(
+        join(out, "worldgen", "placed_feature", `${name}.json`),
+        JSON.stringify(placed, null, 2),
+      );
       writeFileSync(
         join(out, "worldgen", "configured_feature", `${configuredId}.json`),
         JSON.stringify(configured, null, 2),

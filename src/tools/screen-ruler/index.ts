@@ -270,7 +270,8 @@ export function describeDisplay(display: DisplayInput): Record<string, string> {
     `${round(display.width * dpr)} x ${round(display.height * dpr)} px (physical pixels the display draws)`;
   out["Device pixel ratio"] = `${dpr}x`;
   if (isFiniteNumber(display.availWidth) && isFiniteNumber(display.availHeight)) {
-    out["Available screen area"] = `${round(display.availWidth)} x ${round(display.availHeight)} px`;
+    out["Available screen area"] =
+      `${round(display.availWidth)} x ${round(display.availHeight)} px`;
   }
   return out;
 }
@@ -294,7 +295,13 @@ interface Rgb {
 function hexToRgb(hex: string): Rgb {
   const h = hex.trim().replace(/^#/, "");
   if (!/^[0-9a-fA-F]{3}$/.test(h) && !/^[0-9a-fA-F]{6}$/.test(h)) throw badHex(hex);
-  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  const full =
+    h.length === 3
+      ? h
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : h;
   return {
     r: parseInt(full.slice(0, 2), 16),
     g: parseInt(full.slice(2, 4), 16),
@@ -420,10 +427,14 @@ function parsePointToken(token: string): RulerPoint {
 
 function emptyExplanation(): ScreenRulerResult {
   return {
-    "What this measures": "Drag the on-page ruler overlay to measure anything rendered inside this browser tab: the page itself, or a screenshot you drop or paste here. Distances read out in pixels by default.",
-    "Calibrate for real units": "Hold a credit card or a ruler up to the screen: a standard card is 85.60 mm wide. Drag the calibration line to match its edges and every measurement afterward converts to real millimeters, centimeters, and inches using that scale.",
-    "Other pages and windows": "A web page cannot see or measure anything outside its own browser tab. To measure something on another site, use the pixel ruler bookmarklet from the Bookmarklet Shelf, or take a screenshot of it and drop that screenshot here instead.",
-    "Manual input": 'Paste two points as "x1,y1 x2,y2" or JSON like {"points":[[0,0],[100,50]]} to compute a distance without the overlay.',
+    "What this measures":
+      "Drag the on-page ruler overlay to measure anything rendered inside this browser tab: the page itself, or a screenshot you drop or paste here. Distances read out in pixels by default.",
+    "Calibrate for real units":
+      "Hold a credit card or a ruler up to the screen: a standard card is 85.60 mm wide. Drag the calibration line to match its edges and every measurement afterward converts to real millimeters, centimeters, and inches using that scale.",
+    "Other pages and windows":
+      "A web page cannot see or measure anything outside its own browser tab. To measure something on another site, use the pixel ruler bookmarklet from the Bookmarklet Shelf, or take a screenshot of it and drop that screenshot here instead.",
+    "Manual input":
+      'Paste two points as "x1,y1 x2,y2" or JSON like {"points":[[0,0],[100,50]]} to compute a distance without the overlay.',
   };
 }
 
@@ -469,7 +480,9 @@ export function run(input: string | undefined, opts: ScreenRulerOpts): ScreenRul
     const obj = parsed as RulerJsonInput;
     const pts = obj.points;
     if (!Array.isArray(pts) || pts.length !== 2 || !pts.every(isNumberPair)) {
-      throw badPoints('The "points" field needs exactly two [x, y] pairs, such as {"points":[[0,0],[100,50]]}.');
+      throw badPoints(
+        'The "points" field needs exactly two [x, y] pairs, such as {"points":[[0,0],[100,50]]}.',
+      );
     }
     const [a, b] = pts as [[number, number], [number, number]];
     pointA = { x: a[0], y: a[1] };
@@ -538,7 +551,9 @@ export function run(input: string | undefined, opts: ScreenRulerOpts): ScreenRul
   out["Width"] = formatMeasurement(widthMeasurement, units);
   out["Height"] = formatMeasurement(heightMeasurement, units);
   out["Aspect ratio"] =
-    rect.width > 0 && rect.height > 0 ? aspectRatio(rect.width, rect.height) : "Not available, zero width or height";
+    rect.width > 0 && rect.height > 0
+      ? aspectRatio(rect.width, rect.height)
+      : "Not available, zero width or height";
   out["Device pixel ratio"] = `${dpr}x`;
   out["Calibration"] = calibrationPxPerMm
     ? `${round(calibrationPxPerMm, 4)} px per mm, calibrated`

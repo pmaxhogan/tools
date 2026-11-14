@@ -122,9 +122,7 @@ describe("orbital diagrams and pairing", () => {
   });
 
   it("draws the boxes", () => {
-    expect(boxDiagram({ label: "3d", n: 3, l: "d", electrons: 6 })).toBe(
-      "[↑↓][↑ ][↑ ][↑ ][↑ ]",
-    );
+    expect(boxDiagram({ label: "3d", n: 3, l: "d", electrons: 6 })).toBe("[↑↓][↑ ][↑ ][↑ ][↑ ]");
     expect(boxDiagram({ label: "2p", n: 2, l: "p", electrons: 2 })).toBe("[↑ ][↑ ][  ]");
   });
 

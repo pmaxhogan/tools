@@ -203,11 +203,18 @@ function readFacts(version) {
     must(beet, /nextInt\((\d+)\) != 0/, "beetroot growth gate", version)[1],
   );
   facts.beetrootBonemealDivisor = Number(
-    must(beet, /getBonemealAgeIncrease\([^)]*\) \/ (\d+)/, "beetroot bone meal divisor", version)[1],
+    must(
+      beet,
+      /getBonemealAgeIncrease\([^)]*\) \/ (\d+)/,
+      "beetroot bone meal divisor",
+      version,
+    )[1],
   );
 
   // StemBlock: shares the crop roll, then a horizontal direction roll.
-  facts.stemMaxAge = Number(must(stem, /< (\d+)\) \{\s*[\w$]+ = [\w$]+\.setValue\(AGE/, "stem max age", version)[1]);
+  facts.stemMaxAge = Number(
+    must(stem, /< (\d+)\) \{\s*[\w$]+ = [\w$]+\.setValue\(AGE/, "stem max age", version)[1],
+  );
   facts.stemDirections = 4; // Direction.Plane.HORIZONTAL
   if (!/Plane\.HORIZONTAL\.getRandomDirection/.test(stem.text)) {
     throw new Error(`${version}: StemBlock no longer picks a random horizontal direction`);
@@ -266,7 +273,9 @@ function readFacts(version) {
   facts.bambooBonemealSpread = Number(bambooBonemeal[2]);
 
   facts.caneMaxAge = Number(must(cane, /== (\d+)\) \{/, "sugar cane age cap", version)[1]);
-  facts.caneMaxHeight = Number(must(cane, /if \([\w$]+ < (\d+)\)/, "sugar cane height cap", version)[1]);
+  facts.caneMaxHeight = Number(
+    must(cane, /if \([\w$]+ < (\d+)\)/, "sugar cane height cap", version)[1],
+  );
   facts.cactusMaxAge = Number(must(cactus, /== (\d+)\)/, "cactus age cap", version)[1]);
   facts.cactusMaxHeight = Number(
     must(cactus, /(?:if \([\w$]+ < (\d+)\)|\+\+[\w$]+ == (\d+) &&)/, "cactus height cap", version)
@@ -285,13 +294,16 @@ function readFacts(version) {
   facts.weepingChance = headProb(weeping, "weeping vines growth probability");
   facts.caveVinesChance = caveVines ? headProb(caveVines, "cave vines growth probability") : null;
   facts.caveVinesBerryChance = caveVines
-    ? Number(
-        must(caveVines, /nextFloat\(\) < ([\d.]+)F/, "cave vines berry chance", version)[1],
-      )
+    ? Number(must(caveVines, /nextFloat\(\) < ([\d.]+)F/, "cave vines berry chance", version)[1])
     : null;
   facts.growingHeadBonemealBlocks = kelp
     ? Number(
-        must(kelp, /getBlocksToGrowWhenBonemealed\([^)]*\) \{\s*return (\d+);/, "kelp bone meal blocks", version)[1],
+        must(
+          kelp,
+          /getBlocksToGrowWhenBonemealed\([^)]*\) \{\s*return (\d+);/,
+          "kelp bone meal blocks",
+          version,
+        )[1],
       )
     : 1;
 
@@ -357,12 +369,7 @@ function readFacts(version) {
 
   // Breeding and baby growth.
   facts.loveTicks = Number(
-    must(
-      animal,
-      /setInLove\([^)]*\) \{\s*this\.inLove = (\d+);/,
-      "in love duration",
-      version,
-    )[1],
+    must(animal, /setInLove\([^)]*\) \{\s*this\.inLove = (\d+);/, "in love duration", version)[1],
   );
   facts.breedCooldownTicks = Number(
     must(animal, /setAge\((\d+)\);/, "post breeding age", version)[1],
@@ -642,7 +649,11 @@ const PLANTS = [
       model: { kind: "fixed", chance: f.kelpChance },
       farmland: false,
       light: null,
-      bonemeal: { kind: "blocks", min: f.growingHeadBonemealBlocks, max: f.growingHeadBonemealBlocks },
+      bonemeal: {
+        kind: "blocks",
+        min: f.growingHeadBonemealBlocks,
+        max: f.growingHeadBonemealBlocks,
+      },
       maxHeight: f.growingHeadMaxAge,
       perBlock: true,
     }),
@@ -659,7 +670,11 @@ const PLANTS = [
       model: { kind: "fixed", chance: f.caveVinesChance },
       farmland: false,
       light: null,
-      bonemeal: { kind: "blocks", min: f.growingHeadBonemealBlocks, max: f.growingHeadBonemealBlocks },
+      bonemeal: {
+        kind: "blocks",
+        min: f.growingHeadBonemealBlocks,
+        max: f.growingHeadBonemealBlocks,
+      },
       maxHeight: f.growingHeadMaxAge,
       perBlock: true,
       berryChance: f.caveVinesBerryChance,
@@ -677,7 +692,11 @@ const PLANTS = [
       model: { kind: "fixed", chance: f.twistingChance },
       farmland: false,
       light: null,
-      bonemeal: { kind: "blocks", min: f.growingHeadBonemealBlocks, max: f.growingHeadBonemealBlocks },
+      bonemeal: {
+        kind: "blocks",
+        min: f.growingHeadBonemealBlocks,
+        max: f.growingHeadBonemealBlocks,
+      },
       maxHeight: f.growingHeadMaxAge,
       perBlock: true,
     }),
@@ -694,7 +713,11 @@ const PLANTS = [
       model: { kind: "fixed", chance: f.weepingChance },
       farmland: false,
       light: null,
-      bonemeal: { kind: "blocks", min: f.growingHeadBonemealBlocks, max: f.growingHeadBonemealBlocks },
+      bonemeal: {
+        kind: "blocks",
+        min: f.growingHeadBonemealBlocks,
+        max: f.growingHeadBonemealBlocks,
+      },
       maxHeight: f.growingHeadMaxAge,
       perBlock: true,
     }),
@@ -741,9 +764,21 @@ const PLANTS = [
  * breeding (love duration, cooldown, baby growth, feeding speed up) is parsed.
  */
 const ANIMALS = [
-  { id: "cow", label: "Cow", entity: "cow", foods: ["Wheat"], synonyms: ["beef", "leather", "milk"] },
+  {
+    id: "cow",
+    label: "Cow",
+    entity: "cow",
+    foods: ["Wheat"],
+    synonyms: ["beef", "leather", "milk"],
+  },
   { id: "sheep", label: "Sheep", entity: "sheep", foods: ["Wheat"], synonyms: ["wool", "mutton"] },
-  { id: "pig", label: "Pig", entity: "pig", foods: ["Carrot", "Potato", "Beetroot"], synonyms: ["pork", "porkchop"] },
+  {
+    id: "pig",
+    label: "Pig",
+    entity: "pig",
+    foods: ["Carrot", "Potato", "Beetroot"],
+    synonyms: ["pork", "porkchop"],
+  },
   {
     id: "chicken",
     label: "Chicken",
@@ -758,9 +793,21 @@ const ANIMALS = [
     foods: ["Carrot", "Golden carrot", "Dandelion"],
     synonyms: ["rabbit hide", "rabbit foot"],
   },
-  { id: "mooshroom", label: "Mooshroom", entity: "mooshroom", foods: ["Wheat"], synonyms: ["mushroom cow", "stew"] },
+  {
+    id: "mooshroom",
+    label: "Mooshroom",
+    entity: "mooshroom",
+    foods: ["Wheat"],
+    synonyms: ["mushroom cow", "stew"],
+  },
   { id: "goat", label: "Goat", entity: "goat", foods: ["Wheat"], synonyms: ["horn", "ram"] },
-  { id: "llama", label: "Llama", entity: "llama", foods: ["Hay bale"], synonyms: ["caravan", "trader llama"] },
+  {
+    id: "llama",
+    label: "Llama",
+    entity: "llama",
+    foods: ["Hay bale"],
+    synonyms: ["caravan", "trader llama"],
+  },
   {
     id: "horse",
     label: "Horse",
@@ -768,19 +815,88 @@ const ANIMALS = [
     foods: ["Golden carrot", "Golden apple", "Enchanted golden apple"],
     synonyms: ["donkey", "mule", "saddle"],
   },
-  { id: "wolf", label: "Wolf", entity: "wolf", foods: ["Any raw or cooked meat"], synonyms: ["dog", "tame"] },
-  { id: "cat", label: "Cat", entity: "cat", foods: ["Raw cod", "Raw salmon"], synonyms: ["ocelot", "kitten"] },
+  {
+    id: "wolf",
+    label: "Wolf",
+    entity: "wolf",
+    foods: ["Any raw or cooked meat"],
+    synonyms: ["dog", "tame"],
+  },
+  {
+    id: "cat",
+    label: "Cat",
+    entity: "cat",
+    foods: ["Raw cod", "Raw salmon"],
+    synonyms: ["ocelot", "kitten"],
+  },
   { id: "panda", label: "Panda", entity: "panda", foods: ["Bamboo"], synonyms: ["bamboo bear"] },
-  { id: "fox", label: "Fox", entity: "fox", foods: ["Sweet berries", "Glow berries"], synonyms: ["kit"] },
+  {
+    id: "fox",
+    label: "Fox",
+    entity: "fox",
+    foods: ["Sweet berries", "Glow berries"],
+    synonyms: ["kit"],
+  },
   { id: "bee", label: "Bee", entity: "bee", foods: ["Any flower"], synonyms: ["honey", "hive"] },
-  { id: "turtle", label: "Turtle", entity: "turtle", foods: ["Seagrass"], synonyms: ["scute", "egg"], special: "eggs" },
-  { id: "axolotl", label: "Axolotl", entity: "axolotl", foods: ["Bucket of tropical fish"], synonyms: ["bucket", "lush caves"] },
-  { id: "camel", label: "Camel", entity: "camel", foods: ["Cactus"], synonyms: ["desert", "mount"] },
-  { id: "armadillo", label: "Armadillo", entity: "armadillo", foods: ["Spider eye"], synonyms: ["scute", "wolf armor"] },
-  { id: "sniffer", label: "Sniffer", entity: "sniffer", foods: ["Torchflower seeds"], synonyms: ["egg", "archaeology"], special: "eggs" },
-  { id: "hoglin", label: "Hoglin", entity: "hoglin", foods: ["Crimson fungus"], synonyms: ["porkchop", "nether"] },
-  { id: "strider", label: "Strider", entity: "strider", foods: ["Warped fungus"], synonyms: ["lava", "nether"] },
-  { id: "frog", label: "Frog", entity: "frog", foods: ["Slimeball"], synonyms: ["tadpole", "froglight"], special: "tadpole" },
+  {
+    id: "turtle",
+    label: "Turtle",
+    entity: "turtle",
+    foods: ["Seagrass"],
+    synonyms: ["scute", "egg"],
+    special: "eggs",
+  },
+  {
+    id: "axolotl",
+    label: "Axolotl",
+    entity: "axolotl",
+    foods: ["Bucket of tropical fish"],
+    synonyms: ["bucket", "lush caves"],
+  },
+  {
+    id: "camel",
+    label: "Camel",
+    entity: "camel",
+    foods: ["Cactus"],
+    synonyms: ["desert", "mount"],
+  },
+  {
+    id: "armadillo",
+    label: "Armadillo",
+    entity: "armadillo",
+    foods: ["Spider eye"],
+    synonyms: ["scute", "wolf armor"],
+  },
+  {
+    id: "sniffer",
+    label: "Sniffer",
+    entity: "sniffer",
+    foods: ["Torchflower seeds"],
+    synonyms: ["egg", "archaeology"],
+    special: "eggs",
+  },
+  {
+    id: "hoglin",
+    label: "Hoglin",
+    entity: "hoglin",
+    foods: ["Crimson fungus"],
+    synonyms: ["porkchop", "nether"],
+  },
+  {
+    id: "strider",
+    label: "Strider",
+    entity: "strider",
+    foods: ["Warped fungus"],
+    synonyms: ["lava", "nether"],
+  },
+  {
+    id: "frog",
+    label: "Frog",
+    entity: "frog",
+    foods: ["Slimeball"],
+    synonyms: ["tadpole", "froglight"],
+    special: "tadpole",
+  },
 ];
 
 // --------------------------------------------------------------- assemble ---
@@ -908,7 +1024,9 @@ const changelog = [];
             .filter((v) => constants[v].randomTickGate === "player-near-for-spawning")
             .map((v) => constants[v].randomTickGateMethod),
         ),
-      ].join(" and later ")}, so a chunk with no player close enough for spawning grew nothing at all. From ${first} the call moved to ${constants[first].randomTickGateMethod}, which follows the block ticking chunks instead. It also means live growth can only be measured on a headless server from ${first} onward, because with nobody online the older loop never fires.`,
+      ].join(
+        " and later ",
+      )}, so a chunk with no player close enough for spawning grew nothing at all. From ${first} the call moved to ${constants[first].randomTickGateMethod}, which follows the block ticking chunks instead. It also means live growth can only be measured on a headless server from ${first} onward, because with nobody online the older loop never fires.`,
     });
   }
   const cactusFlowerFirst = versions.find((v) => FACTS[v].present.cactusFlower);
@@ -1085,7 +1203,9 @@ writeFileSync(join(OUT_DIR, "data.ts"), dataTs);
 
 const bytes = Buffer.byteLength(dataTs);
 console.log(`versions: ${versions.join(", ")}`);
-console.log(`plants: ${plantRows.length} (${plantRows.filter((p) => p.byVersion).length} version dependent)`);
+console.log(
+  `plants: ${plantRows.length} (${plantRows.filter((p) => p.byVersion).length} version dependent)`,
+);
 console.log(`animals: ${animalRows.length}`);
 console.log(`changelog entries: ${changelog.length}`);
 console.log(`data.ts: ${bytes.toLocaleString()} bytes (${(bytes / 1024).toFixed(1)} KiB)`);

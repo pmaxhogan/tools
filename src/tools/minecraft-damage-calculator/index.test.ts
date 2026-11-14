@@ -25,7 +25,13 @@ import {
   smashBonus,
   weaponEnchantBonus,
 } from "./index";
-import { MOBS, mobInVersion, type Difficulty, type MobClassification, type VersionId } from "./data";
+import {
+  MOBS,
+  mobInVersion,
+  type Difficulty,
+  type MobClassification,
+  type VersionId,
+} from "./data";
 
 /* ------------------------------------------------------------------ */
 /* Golden vectors: measured on real dedicated servers over RCON        */
@@ -263,7 +269,13 @@ describe("mace smash", () => {
   });
 
   it("adds density and base damage, then runs target reductions", () => {
-    const r = maceDamage({ version: "1.21.11", fallDistance: 10, density: 5, armor: 0, toughness: 0 });
+    const r = maceDamage({
+      version: "1.21.11",
+      fallDistance: 10,
+      density: 5,
+      armor: 0,
+      toughness: 0,
+    });
     // 6 base + 24 smash + 0.5*5*10 density = 55.
     expect(r.dealt).toBe(55);
     expect(round2(r.taken)).toBe(55);
@@ -314,15 +326,15 @@ describe("buildArmor", () => {
   });
 
   it("rejects copper before 1.21.9", () => {
-    expect(() =>
-      buildArmor("1.20.6", { helmet: { material: "copper", protection: 0 } }),
-    ).toThrow(ToolError);
+    expect(() => buildArmor("1.20.6", { helmet: { material: "copper", protection: 0 } })).toThrow(
+      ToolError,
+    );
   });
 
   it("rejects turtle shell outside the helmet slot", () => {
-    expect(() =>
-      buildArmor("1.21.11", { boots: { material: "turtle", protection: 0 } }),
-    ).toThrow(/no boots item/);
+    expect(() => buildArmor("1.21.11", { boots: { material: "turtle", protection: 0 } })).toThrow(
+      /no boots item/,
+    );
   });
 });
 
@@ -367,9 +379,9 @@ describe("run", () => {
   });
 
   it("rejects NaN and negative inputs with a fix hint", () => {
-    expect(() =>
-      run("", { mode: "melee", version: "1.21.11", amount: Number.NaN }),
-    ).toThrow(ToolError);
+    expect(() => run("", { mode: "melee", version: "1.21.11", amount: Number.NaN })).toThrow(
+      ToolError,
+    );
     try {
       run("", { mode: "fall", version: "1.21.11", height: -5 });
     } catch (e) {

@@ -118,9 +118,7 @@ describe("analyzeProbes - full report", () => {
     expect(rows["Fingerprint surface: probes collected"]).toBe(
       `${PROBES.length} of ${PROBES.length} probes.`,
     );
-    expect(rows["Fingerprint surface: estimated entropy"]).toBe(
-      "69 bits (out of a possible 69).",
-    );
+    expect(rows["Fingerprint surface: estimated entropy"]).toBe("69 bits (out of a possible 69).");
     expect(rows["Fingerprint surface: assessment"]).toContain("High fingerprint surface.");
     expect(rows["Fingerprint surface: assessment"]).toContain("rough estimate");
   });
@@ -143,9 +141,7 @@ describe("analyzeProbes - minimal report", () => {
 
   it("classifies a near-empty report as low", () => {
     expect(rows["Fingerprint surface: probes collected"]).toBe(`1 of ${PROBES.length} probes.`);
-    expect(rows["Fingerprint surface: estimated entropy"]).toBe(
-      "1 bits (out of a possible 69).",
-    );
+    expect(rows["Fingerprint surface: estimated entropy"]).toBe("1 bits (out of a possible 69).");
     expect(rows["Fingerprint surface: assessment"]).toContain("Low fingerprint surface.");
   });
 
@@ -187,9 +183,7 @@ describe("analyzeProbes - isolated flags", () => {
 describe("run", () => {
   it("parses a JSON report string end to end", () => {
     const rows = run(JSON.stringify(fullReport), {});
-    expect(rows["Fingerprint surface: estimated entropy"]).toBe(
-      "69 bits (out of a possible 69).",
-    );
+    expect(rows["Fingerprint surface: estimated entropy"]).toBe("69 bits (out of a possible 69).");
   });
 
   it("throws empty-input for an empty string", () => {

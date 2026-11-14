@@ -77,7 +77,11 @@ export const meta: ToolMeta = {
         { value: "20", label: "20 C (room)", synonyms: ["room temperature", "ambient"] },
         { value: "25", label: "25 C (standard)", synonyms: ["standard", "textbook", "298 k"] },
         { value: "30", label: "30 C", synonyms: ["warm"] },
-        { value: "37", label: "37 C (body)", synonyms: ["body temperature", "physiological", "blood"] },
+        {
+          value: "37",
+          label: "37 C (body)",
+          synonyms: ["body temperature", "physiological", "blood"],
+        },
         { value: "40", label: "40 C", synonyms: ["warm"] },
         { value: "50", label: "50 C", synonyms: ["hot"] },
         { value: "60", label: "60 C", synonyms: ["hot"] },
@@ -94,7 +98,15 @@ export const meta: ToolMeta = {
       max: 6,
       step: 1,
     },
-    { kind: "number", id: "decimals", label: "Decimal places", default: 3, min: 0, max: 6, step: 1 },
+    {
+      kind: "number",
+      id: "decimals",
+      label: "Decimal places",
+      default: 3,
+      min: 0,
+      max: 6,
+      step: 1,
+    },
   ],
   examples: [
     { label: "Convert a measured pH", input: "pH=3.4" },
@@ -108,7 +120,7 @@ export const meta: ToolMeta = {
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: "Gives pH, pOH, hydrogen ion concentration and hydroxide concentration from any one of the four, and also works them out from an acid or base concentration. Strong acids and bases are solved with water autoionization included, so a very dilute strong acid comes out just below neutral instead of the impossible pH above 7 that the simple minus log gives. Weak acids and bases are solved from the full quadratic rather than the square root shortcut, and the result says whether the shortcut would have been within the usual five percent, along with the percent ionization.",
-    how: "Pick a calculation, then type the values you have as name=value pairs. A bare number is read as a pH, so \"3.4\" is enough for a conversion. For a weak acid write something like \"C=0.1, pKa=4.76\"; Ka and pKa are interchangeable, as are Kb and pKb. Set the temperature to see how Kw and the neutral point move, and raise the protons option for a diprotic acid such as sulfuric acid or a dihydroxide such as calcium hydroxide.",
+    how: 'Pick a calculation, then type the values you have as name=value pairs. A bare number is read as a pH, so "3.4" is enough for a conversion. For a weak acid write something like "C=0.1, pKa=4.76"; Ka and pKa are interchangeable, as are Kb and pKb. Set the temperature to see how Kw and the neutral point move, and raise the protons option for a diprotic acid such as sulfuric acid or a dihydroxide such as calcium hydroxide.',
     why: "Most pH calculators assume 25 C without saying so, print pH 8 for a 1e-8 molar strong acid, and use the square root approximation for weak acids with no warning about when it breaks. This one carries a pKw table from 0 to 100 C, prints the neutral pH for the temperature you chose so an acidic or basic verdict means something, and solves both the strong acid and the weak acid cases properly. It runs entirely in your browser, so your inputs never leave your device.",
     faq: [
       {

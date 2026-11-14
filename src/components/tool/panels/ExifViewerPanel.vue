@@ -18,15 +18,7 @@
  * any other third party resource; the URL is text until you choose to click it.
  */
 import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
-import {
-  Download,
-  FileArchive,
-  MapPin,
-  ScanSearch,
-  Sparkles,
-  TriangleAlert,
-  X,
-} from "@lucide/vue";
+import { Download, FileArchive, MapPin, ScanSearch, Sparkles, TriangleAlert, X } from "@lucide/vue";
 import { zipSync } from "fflate";
 import { ToolError, type ToolMeta } from "@/tools/types";
 import {

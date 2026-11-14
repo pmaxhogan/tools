@@ -230,7 +230,10 @@ describe("buildNginx / buildCaddy", () => {
 
 describe("run: the meta.ts examples", () => {
   it("builds nginx for the quick entry line", () => {
-    const out = run("app.example.com -> http://127.0.0.1:3000", { ...DEFAULT_OPTS, server: "nginx" });
+    const out = run("app.example.com -> http://127.0.0.1:3000", {
+      ...DEFAULT_OPTS,
+      server: "nginx",
+    });
     expect(out).toContain("server_name app.example.com;");
     expect(out).toContain("proxy_pass http://127.0.0.1:3000;");
   });

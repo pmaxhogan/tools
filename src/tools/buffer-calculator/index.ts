@@ -361,14 +361,16 @@ export function run(input: string, opts?: Partial<BufferOpts>): Record<string, s
       out["pKa at 25 C"] = r.presetPka.toFixed(3);
     if (r.preset.note) out["Buffer note"] = r.preset.note;
   }
-  out["pKa used"] = `${r.pKa.toFixed(3)} (${r.source === "preset" ? "from the preset" : "as you typed it"})`;
+  out["pKa used"] =
+    `${r.pKa.toFixed(3)} (${r.source === "preset" ? "from the preset" : "as you typed it"})`;
   out["Ka"] = fmt(10 ** -r.pKa, d);
   out["pH"] = r.ph.toFixed(Math.max(2, d));
   out["Conjugate base [A-]"] = fmt(r.base, d);
   out["Weak acid [HA]"] = fmt(r.acid, d);
   out["Base to acid ratio"] = `${fmt(r.ratio, d)} to 1`;
   out["Total buffer"] = fmt(r.total, d);
-  out["Useful range"] = `pH ${(r.pKa - 1).toFixed(2)} to ${(r.pKa + 1).toFixed(2)} (pKa plus or minus one)`;
+  out["Useful range"] =
+    `pH ${(r.pKa - 1).toFixed(2)} to ${(r.pKa + 1).toFixed(2)} (pKa plus or minus one)`;
   out["Range check"] = r.inUsefulRange
     ? "Inside the useful range, so the buffer resists change well here."
     : "Outside the useful range: one component is more than ten times the other, so this mixture buffers weakly at this pH.";

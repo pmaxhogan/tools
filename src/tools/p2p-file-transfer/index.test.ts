@@ -161,9 +161,7 @@ describe("control frames", () => {
     expect(() => decodeControl(new Uint8Array(2))).toThrow(/text/);
     expect(() => decodeControl("x".repeat(MAX_CONTROL_BYTES + 1))).toThrow(/too large/);
     expect(() => decodeControl("{")).toThrow(/JSON/);
-    expect(() => decodeControl('{"type":"manifest","batch":"b","files":[]}')).toThrow(
-      /no files/,
-    );
+    expect(() => decodeControl('{"type":"manifest","batch":"b","files":[]}')).toThrow(/no files/);
     expect(() =>
       decodeControl('{"type":"manifest","files":[{"id":"a","name":"n","size":1}]}'),
     ).toThrow(/batch/);

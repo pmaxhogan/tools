@@ -935,8 +935,7 @@ const TABS: Array<{ id: Tab; label: string }> = [
               </h3>
               <p class="text-sm">
                 Block light reaching it is
-                <span class="font-mono tabular-nums">{{ proof.blockLight }}</span
-                >, and
+                <span class="font-mono tabular-nums">{{ proof.blockLight }}</span>, and
                 <span class="font-mono tabular-nums">{{ pct(proof.chance) }}</span>
                 of spawn attempts would pass the light rule.
               </p>

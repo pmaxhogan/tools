@@ -427,7 +427,9 @@ export function run(input: string, opts: LightMeterOpts = {}): LightMeterResult 
   }
 
   const hasExposureData =
-    report.exposureTimeSec !== undefined && report.iso !== undefined && report.fNumber !== undefined;
+    report.exposureTimeSec !== undefined &&
+    report.iso !== undefined &&
+    report.fNumber !== undefined;
   out["Camera exposure settings used"] = hasExposureData
     ? `f/${report.fNumber} at ${formatShutterSeconds(report.exposureTimeSec as number)}, ISO ${report.iso}`
     : "Not exposed by this browser: most browsers do not report the camera's exposure time, ISO, or aperture through MediaStreamTrack, so this reading falls back to the rough brightness-only estimate.";

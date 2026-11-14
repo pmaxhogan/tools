@@ -316,7 +316,11 @@ function analyzePaste() {
                 {{ row.protocol }}
               </span>
               <span class="font-mono text-xs">
-                {{ row.address && row.port !== undefined ? `${row.address}:${row.port}` : row.candidate }}
+                {{
+                  row.address && row.port !== undefined
+                    ? `${row.address}:${row.port}`
+                    : row.candidate
+                }}
               </span>
               <span class="ml-auto shrink-0 text-[0.65rem] text-muted-foreground">
                 {{ row.sourceLabel }}
@@ -342,9 +346,12 @@ function analyzePaste() {
           <OutputView :output="liveInterpretation" />
         </div>
 
-        <p v-else-if="!gathering && !liveCandidates.length && !liveError" class="text-xs text-muted-foreground">
-          Pick the STUN servers to contact, then press Start gathering. A baseline gathering with
-          no STUN server always runs too, so you can see the plain host candidates on their own.
+        <p
+          v-else-if="!gathering && !liveCandidates.length && !liveError"
+          class="text-xs text-muted-foreground"
+        >
+          Pick the STUN servers to contact, then press Start gathering. A baseline gathering with no
+          STUN server always runs too, so you can see the plain host candidates on their own.
         </p>
       </TabsContent>
 

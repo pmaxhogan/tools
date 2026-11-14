@@ -340,9 +340,7 @@ function describe(id: string, value: unknown): string {
     case "doNotTrack": {
       if (value == null || value === "unspecified") return "Not sent (no preference expressed).";
       const on = value === "1" || value === true || value === "yes";
-      return on
-        ? "Do Not Track is turned on."
-        : "Do Not Track is explicitly turned off.";
+      return on ? "Do Not Track is turned on." : "Do Not Track is explicitly turned off.";
     }
 
     case "globalPrivacyControl": {
@@ -460,7 +458,8 @@ export function analyzeProbes(report: Record<string, unknown>): Record<string, s
   const classLabel = cls === "low" ? "Low" : cls === "moderate" ? "Moderate" : "High";
 
   rows["Fingerprint surface: probes collected"] = `${collectedCount} of ${PROBES.length} probes.`;
-  rows["Fingerprint surface: estimated entropy"] = `${collectedBits} bits (out of a possible ${MAX_ENTROPY_BITS}).`;
+  rows["Fingerprint surface: estimated entropy"] =
+    `${collectedBits} bits (out of a possible ${MAX_ENTROPY_BITS}).`;
   rows["Fingerprint surface: assessment"] =
     `${classLabel} fingerprint surface. This is a rough estimate built from published fingerprinting research, ` +
     "not a measurement of how unique your browser actually is among real visitors; your real uniqueness depends " +
@@ -471,7 +470,8 @@ export function analyzeProbes(report: Record<string, unknown>): Record<string, s
       "The webdriver flag is set, meaning this browser is being driven by automation software such as Selenium or Playwright. Many sites treat this as a bot signal.";
   }
 
-  const dntOn = report.doNotTrack === "1" || report.doNotTrack === true || report.doNotTrack === "yes";
+  const dntOn =
+    report.doNotTrack === "1" || report.doNotTrack === true || report.doNotTrack === "yes";
   const gpcOn = report.globalPrivacyControl === true;
   if (dntOn || gpcOn) {
     rows["Flag: privacy signal irony"] =

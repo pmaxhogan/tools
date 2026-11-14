@@ -1056,14 +1056,7 @@ export function run(_input: string, opts: ProjectileCalcOpts = {}): ProjectileCa
   }
 
   if (mode === "drop") {
-    const rows = dropOverDistance(
-      version,
-      projectile,
-      DROP_DISTANCES,
-      launcher,
-      drawTicks,
-      medium,
-    );
+    const rows = dropOverDistance(version, projectile, DROP_DISTANCES, launcher, drawTicks, medium);
     const out: ProjectileCalcResult = {
       Projectile: `${def.label}, ${launcherLabel(projectile, launcher)}`,
       "Launch speed": `${round(speed, 4)} blocks per tick`,

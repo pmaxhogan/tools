@@ -55,7 +55,9 @@ import { componentById, REDSTONE_VERSIONS, transportById, type VersionId } from 
  * a case that stops being emitted fails just as loudly as one that disagrees.
  */
 
-const VECTORS_DIR = fileURLToPath(new URL("../../../mc-pipeline/vectors/redstone/", import.meta.url));
+const VECTORS_DIR = fileURLToPath(
+  new URL("../../../mc-pipeline/vectors/redstone/", import.meta.url),
+);
 
 interface Sample {
   tick: number;

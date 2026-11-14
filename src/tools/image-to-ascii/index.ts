@@ -350,7 +350,12 @@ function colorKey(mode: AsciiColorMode, r: number, g: number, b: number): string
   return `${Math.round(r)},${Math.round(g)},${Math.round(b)}`;
 }
 
-function ansiEscape(mode: "ansi16" | "ansi256" | "truecolor", r: number, g: number, b: number): string {
+function ansiEscape(
+  mode: "ansi16" | "ansi256" | "truecolor",
+  r: number,
+  g: number,
+  b: number,
+): string {
   if (mode === "ansi16") return `\x1b[${ansi16Code(ansi16Index(r, g, b))}m`;
   if (mode === "ansi256") return `\x1b[38;5;${ansi256Index(r, g, b)}m`;
   return `\x1b[38;2;${Math.round(r)};${Math.round(g)};${Math.round(b)}m`;

@@ -29,7 +29,14 @@
 import { ToolError } from "../types";
 
 /** Versions with verified redstone data, oldest first. */
-export const REDSTONE_VERSIONS = ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11", "26.2"] as const;
+export const REDSTONE_VERSIONS = [
+  "1.16.5",
+  "1.18.2",
+  "1.20.6",
+  "1.21.1",
+  "1.21.11",
+  "26.2",
+] as const;
 
 export type VersionId = (typeof REDSTONE_VERSIONS)[number];
 
@@ -78,7 +85,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 0,
     kind: "instant",
     note: "Dust carries a signal with no delay at all. Strength starts at 15 and drops by 1 for every dust block traveled, so a line reaches 15 blocks and then dies.",
-    source: "RedStoneWireBlock calculateTargetStrength (1.16.5 to 1.21.1), DefaultRedstoneWireEvaluator calculateTargetStrength and RedstoneWireEvaluator getIncomingWireSignal (1.21.11, 26.2)",
+    source:
+      "RedStoneWireBlock calculateTargetStrength (1.16.5 to 1.21.1), DefaultRedstoneWireEvaluator calculateTargetStrength and RedstoneWireEvaluator getIncomingWireSignal (1.21.11, 26.2)",
     synonyms: ["dust", "wire", "signal decay", "15 blocks", "power level"],
   },
   {
@@ -129,7 +137,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 2,
     kind: "delay",
     note: "Inverts its input after 1 redstone tick. Toggling a torch more than 8 times in 60 ticks burns it out for 160 ticks, which is what makes a bare torch loop unreliable.",
-    source: "RedstoneTorchBlock neighborChanged scheduleTick of 2, plus RECENT_TOGGLE_TIMER 60, MAX_RECENT_TOGGLES 8, and the 160 tick burnout reschedule",
+    source:
+      "RedstoneTorchBlock neighborChanged scheduleTick of 2, plus RECENT_TOGGLE_TIMER 60, MAX_RECENT_TOGGLES 8, and the 160 tick burnout reschedule",
     synonyms: ["torch", "inverter", "not gate", "burnout"],
   },
   {
@@ -140,7 +149,8 @@ export const COMPONENTS: ComponentTiming[] = [
     kind: "delay",
     delayRange: [2, 8],
     note: "Four settings, 1 to 4 redstone ticks, which is 2, 4, 6 or 8 game ticks. It always outputs strength 15, and a signal into its side from another diode locks it.",
-    source: "RepeaterBlock getDelay returns the DELAY property (1 to 4) times 2; DiodeBlock getOutputSignal returns 15; RepeaterBlock isLocked",
+    source:
+      "RepeaterBlock getDelay returns the DELAY property (1 to 4) times 2; DiodeBlock getOutputSignal returns 15; RepeaterBlock isLocked",
     synonyms: ["repeater", "delay", "diode", "lock", "1 tick", "4 tick"],
   },
   {
@@ -171,7 +181,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 2,
     kind: "duration",
     note: "A piston does not schedule a block tick at all: it fires a block event on the same tick the update lands, and the head then travels over 2 game ticks. A sticky piston that loses power for less than 2 ticks drops the block it was holding.",
-    source: "PistonBaseBlock checkIfExtend and triggerEvent (block events 0, 1 and 2); PistonMovingBlockEntity TICKS_TO_EXTEND 2 with progress rising 0.5 per tick",
+    source:
+      "PistonBaseBlock checkIfExtend and triggerEvent (block events 0, 1 and 2); PistonMovingBlockEntity TICKS_TO_EXTEND 2 with progress rising 0.5 per tick",
     synonyms: ["piston", "sticky piston", "block event", "slime block", "0 tick"],
   },
   {
@@ -181,7 +192,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 4,
     kind: "delay",
     note: "Fires 4 game ticks after a rising edge, and only on a rising edge: the power has to drop before it will fire again.",
-    source: "DispenserBlock neighborChanged, scheduleTick of 4 at NORMAL priority, guarded by the TRIGGERED property",
+    source:
+      "DispenserBlock neighborChanged, scheduleTick of 4 at NORMAL priority, guarded by the TRIGGERED property",
     synonyms: ["dispenser", "shoot", "4 ticks", "2 redstone ticks"],
   },
   {
@@ -191,7 +203,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 4,
     kind: "delay",
     note: "Identical timing to a dispenser: the dropper class adds no scheduling of its own. It pushes one item into the container it faces, or throws one if there is none.",
-    source: "DropperBlock extends DispenserBlock and has no scheduleTick call of its own in any version",
+    source:
+      "DropperBlock extends DispenserBlock and has no scheduleTick call of its own in any version",
     synonyms: ["dropper", "item elevator", "4 ticks"],
   },
   {
@@ -201,7 +214,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 4,
     kind: "delay",
     note: "Lights on the same tick the power arrives but stays lit for 4 more game ticks after the power goes away. That asymmetry is why a lamp is a poor probe for measuring anything shorter than 4 ticks.",
-    source: "RedstoneLampBlock neighborChanged lights immediately and schedules a 4 tick turn off; identical in all six versions",
+    source:
+      "RedstoneLampBlock neighborChanged lights immediately and schedules a 4 tick turn off; identical in all six versions",
     synonyms: ["lamp", "light", "4 ticks", "turn off delay"],
   },
   {
@@ -212,7 +226,8 @@ export const COMPONENTS: ComponentTiming[] = [
     kind: "delay",
     availableIn: FROM_1_20_6,
     note: "Crafts 4 game ticks after a rising edge, then plays a 6 tick crafting state. The craft itself lands on the 4 tick mark.",
-    source: "CrafterBlock CRAFTING_TICK_DELAY 4 in neighborChanged and onPlace; CrafterBlockEntity MAX_CRAFTING_TICKS 6",
+    source:
+      "CrafterBlock CRAFTING_TICK_DELAY 4 in neighborChanged and onPlace; CrafterBlockEntity MAX_CRAFTING_TICKS 6",
     synonyms: ["crafter", "auto crafting", "1.21"],
   },
   {
@@ -222,7 +237,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 8,
     kind: "duration",
     note: "Stays powered for 8 game ticks when hit by anything except an arrow, and for 20 game ticks when an arrow sticks in it. Strength depends on how close to the middle the hit landed.",
-    source: "TargetBlock updateRedstoneOutput, duration 20 for an AbstractArrow and 8 otherwise; getRedstoneStrength",
+    source:
+      "TargetBlock updateRedstoneOutput, duration 20 for an AbstractArrow and 8 otherwise; getRedstoneStrength",
     synonyms: ["target", "arrow", "snowball", "8 ticks", "20 ticks"],
   },
   {
@@ -243,7 +259,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 8,
     kind: "period",
     note: "Moves an item, then sits on an 8 game tick cooldown before it can move another. Pushing into a container, pulling from one, and picking an item entity up off the ground all pay the same 8 ticks.",
-    source: "HopperBlockEntity MOVE_ITEM_SPEED 8, set by tryMoveItems as setCooldown(8) on any successful transfer",
+    source:
+      "HopperBlockEntity MOVE_ITEM_SPEED 8, set by tryMoveItems as setCooldown(8) on any successful transfer",
     synonyms: ["hopper", "8 ticks", "2.5 items per second", "item speed", "cooldown"],
   },
   {
@@ -274,7 +291,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 20,
     kind: "duration",
     note: "Stays pressed for 20 game ticks, exactly 1 second on a healthy server.",
-    source: "ButtonBlock ticks_to_stay_pressed, registered as 20 for stone and polished blackstone buttons in Blocks (getPressDuration returns 20 for a non sensitive button in 1.16.5)",
+    source:
+      "ButtonBlock ticks_to_stay_pressed, registered as 20 for stone and polished blackstone buttons in Blocks (getPressDuration returns 20 for a non sensitive button in 1.16.5)",
     synonyms: ["stone button", "1 second", "20 ticks", "blackstone button"],
   },
   {
@@ -304,7 +322,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 20,
     kind: "period",
     note: "Recomputes its output once every 20 game ticks, when the game time is a multiple of 20. Inverted mode subtracts the reading from 15.",
-    source: "DaylightDetectorBlock tickEntity, gated on game time modulo 20 (DaylightDetectorBlockEntity tick in 1.16.5)",
+    source:
+      "DaylightDetectorBlock tickEntity, gated on game time modulo 20 (DaylightDetectorBlockEntity tick in 1.16.5)",
     synonyms: ["daylight sensor", "solar", "sunlight", "20 ticks"],
   },
   {
@@ -316,7 +335,8 @@ export const COMPONENTS: ComponentTiming[] = [
     availableIn: FROM_1_18_2,
     perVersion: { "1.18.2": 40 },
     note: "Stays active for 30 game ticks and then sits on a 10 tick cooldown. In 1.18.2 it stayed active for 40 ticks with only a 1 tick cooldown, which is why old sensor circuits retime badly on modern versions.",
-    source: "SculkSensorBlock ACTIVE_TICKS and COOLDOWN_TICKS: 40 and 1 in 1.18.2, 30 and 10 from 1.20.6 on",
+    source:
+      "SculkSensorBlock ACTIVE_TICKS and COOLDOWN_TICKS: 40 and 1 in 1.18.2, 30 and 10 from 1.20.6 on",
     synonyms: ["sculk", "vibration", "deep dark", "warden", "40 ticks", "30 ticks"],
   },
   {
@@ -326,7 +346,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 30,
     kind: "duration",
     note: "Stays pressed for 30 game ticks, half again as long as a stone button, and can also be triggered by an arrow.",
-    source: "ButtonBlock ticks_to_stay_pressed, registered as 30 for every wooden button in Blocks (getPressDuration returns 30 for a sensitive button in 1.16.5)",
+    source:
+      "ButtonBlock ticks_to_stay_pressed, registered as 30 for every wooden button in Blocks (getPressDuration returns 30 for a sensitive button in 1.16.5)",
     synonyms: ["wood button", "1.5 seconds", "30 ticks", "arrow button"],
   },
   {
@@ -336,7 +357,8 @@ export const COMPONENTS: ComponentTiming[] = [
     delayTicks: 80,
     kind: "fuse",
     note: "The default fuse is 80 game ticks, exactly 4 seconds. TNT lit by another explosion instead gets a random fuse of 10 to 29 ticks, which is what spreads a chain reaction out.",
-    source: "PrimedTnt DEFAULT_FUSE_TIME 80; TntBlock chain ignition uses a random fuse of fuse/8 plus a roll under fuse/4",
+    source:
+      "PrimedTnt DEFAULT_FUSE_TIME 80; TntBlock chain ignition uses a random fuse of fuse/8 plus a roll under fuse/4",
     synonyms: ["tnt", "fuse", "4 seconds", "80 ticks", "explosion"],
   },
 ];
@@ -381,7 +403,8 @@ export const CONTAINERS: ContainerSpec[] = [
     slots: 54,
     maxStackSize: 64,
     note: "Two single chests read as one 54 slot container, which is why a double chest needs twice the items of a single chest for the same signal.",
-    source: "ChestBlock getContainer builds a CompoundContainer of two ChestBlockEntity inventories of 27 slots each",
+    source:
+      "ChestBlock getContainer builds a CompoundContainer of two ChestBlockEntity inventories of 27 slots each",
     synonyms: ["large chest", "54 slots", "double chest", "big chest"],
   },
   {
@@ -417,7 +440,8 @@ export const CONTAINERS: ContainerSpec[] = [
     slots: 27,
     maxStackSize: 64,
     note: "27 slots, read by a comparator on a detector rail rather than on the container itself.",
-    source: "MinecartChest getContainerSize returns 27; DetectorRailBlock reads it through getRedstoneSignalFromContainer",
+    source:
+      "MinecartChest getContainerSize returns 27; DetectorRailBlock reads it through getRedstoneSignalFromContainer",
     synonyms: ["chest minecart", "minecart", "detector rail"],
   },
   {
@@ -551,7 +575,8 @@ const TRANSPORT_DEFS: TransportSpec[] = [
     chainable: false,
     clockDriven: false,
     note: "Two items every 8 game ticks, 5 a second, because both hoppers act. The upper hopper pushes one item down on its own cooldown, and the lower hopper separately pulls one item out of the container above it on its cooldown. Measured on a live server, and it is why a hopper into a hopper beats a hopper into a chest.",
-    source: "HopperBlockEntity tryMoveItems runs ejectItems and suckInItems for each hopper independently, each paying its own setCooldown(8)",
+    source:
+      "HopperBlockEntity tryMoveItems runs ejectItems and suckInItems for each hopper independently, each paying its own setCooldown(8)",
     synonyms: ["hopper to hopper", "5 per second", "two items", "hopper pair"],
   },
   {
@@ -563,7 +588,8 @@ const TRANSPORT_DEFS: TransportSpec[] = [
     chainable: true,
     clockDriven: false,
     note: "Links between hoppers carry 2 items every 8 game ticks, but the last hop into a chest or barrel only carries 1, so the sustained rate of the whole chain is 2.5 items a second. What the extra hoppers add is latency, 8 game ticks each, and the game resyncs a freshly filled hopper to 7 ticks so the chain does not drift.",
-    source: "HopperBlockEntity tryMoveItems setCooldown(8), plus addItem setting setCooldown(8 minus 1) on a hopper that has already ticked this game tick",
+    source:
+      "HopperBlockEntity tryMoveItems setCooldown(8), plus addItem setting setCooldown(8 minus 1) on a hopper that has already ticked this game tick",
     synonyms: ["hopper line", "hopper chain", "latency", "sorter", "2.5 per second"],
   },
   {
@@ -576,7 +602,8 @@ const TRANSPORT_DEFS: TransportSpec[] = [
     clockDriven: false,
     perVersionTicks: { "1.16.5": 4, "1.18.2": 4 },
     note: "From 1.20.6 on a hopper minecart pulls one item every single game tick, 20 a second, which is eight times a block hopper. In 1.16.5 and 1.18.2 a stationary hopper minecart still paid a 4 tick cooldown, so it managed 5 a second.",
-    source: "MinecartHopper tick: 1.16.5 and 1.18.2 call setCooldown(4) after a successful suck; 1.20.6 and later dropped the cooldown entirely and 1.21.11 replaced it with a once per tick guard",
+    source:
+      "MinecartHopper tick: 1.16.5 and 1.18.2 call setCooldown(4) after a successful suck; 1.20.6 and later dropped the cooldown entirely and 1.21.11 replaced it with a once per tick guard",
     synonyms: ["hopper minecart", "unloader", "20 per second", "fast unload"],
   },
   {
@@ -588,7 +615,8 @@ const TRANSPORT_DEFS: TransportSpec[] = [
     chainable: false,
     clockDriven: false,
     note: "A hopper picking an item entity off the ground absorbs the whole entity in one transfer, so a merged stack of 64 costs the same 8 ticks as a single item. That is why a water stream feeding a hopper massively outruns a hopper feeding a hopper. The figure here is the best case, with items fully merged before they arrive.",
-    source: "HopperBlockEntity addItem(Container, ItemEntity) moves the entire ItemEntity stack, then tryMoveItems pays one setCooldown(8)",
+    source:
+      "HopperBlockEntity addItem(Container, ItemEntity) moves the entire ItemEntity stack, then tryMoveItems pays one setCooldown(8)",
     synonyms: ["water stream", "item pickup", "collection", "merged stacks", "flush"],
   },
   {
@@ -601,7 +629,8 @@ const TRANSPORT_DEFS: TransportSpec[] = [
     clockDriven: true,
     minClockPeriod: 4,
     note: "A dropper fires one item 4 game ticks after each rising edge, and needs the power to drop before it will fire again. The fastest useful driver is a 2 tick on, 2 tick off clock, giving one item every 4 game ticks.",
-    source: "DispenserBlock neighborChanged schedules 4 ticks and latches the TRIGGERED property; DropperBlock inherits it unchanged",
+    source:
+      "DispenserBlock neighborChanged schedules 4 ticks and latches the TRIGGERED property; DropperBlock inherits it unchanged",
     synonyms: ["dropper", "dropper clock", "5 per second", "item elevator"],
   },
   {
@@ -614,7 +643,8 @@ const TRANSPORT_DEFS: TransportSpec[] = [
     clockDriven: true,
     minClockPeriod: 4,
     note: "Droppers feeding droppers, the standard item elevator. Throughput is set by the clock, not by the number of droppers; each extra dropper adds one clock period of latency.",
-    source: "DropperBlock, which inherits DispenserBlock's 4 tick scheduled tick and TRIGGERED latch",
+    source:
+      "DropperBlock, which inherits DispenserBlock's 4 tick scheduled tick and TRIGGERED latch",
     synonyms: ["item elevator", "dropper tower", "vertical transport"],
   },
   {
@@ -673,31 +703,35 @@ export const VERSION_CHANGES: VersionChange[] = [
     version: "1.16.5",
     summary:
       "Baseline. Repeater 2 to 8 ticks, comparator 2, observer 2 armed plus a 2 tick pulse, hopper 8, dropper and dispenser 4, TNT fuse 80, piston head 2 ticks. A stationary hopper minecart pulls one item every 4 game ticks. There is no sculk sensor, no lightning rod, no crafter and no copper bulb yet. A comparator in compare mode also stores the front signal rather than 0 when a side signal beats it, which can schedule a tick that later versions skip.",
-    source: "RepeaterBlock, ComparatorBlock, ObserverBlock, HopperBlockEntity, DispenserBlock, TntBlock, PistonMovingBlockEntity, MinecartHopper in mc-pipeline/work/1.16.5/src",
+    source:
+      "RepeaterBlock, ComparatorBlock, ObserverBlock, HopperBlockEntity, DispenserBlock, TntBlock, PistonMovingBlockEntity, MinecartHopper in mc-pipeline/work/1.16.5/src",
   },
   {
     version: "1.18.2",
     summary:
       "The sculk sensor arrives, active for 40 game ticks with a 1 tick cooldown. The lightning rod arrives with an 8 tick output. The comparator gains the clamp that stores 0 when a side signal beats the front one. Every other timing constant is unchanged from 1.16.5, including the 4 tick hopper minecart cooldown.",
-    source: "SculkSensorBlock ACTIVE_TICKS 40 and COOLDOWN_TICKS 1, LightningRodBlock ACTIVATION_TICKS 8, ComparatorBlock calculateOutputSignal in mc-pipeline/work/1.18.2/src",
+    source:
+      "SculkSensorBlock ACTIVE_TICKS 40 and COOLDOWN_TICKS 1, LightningRodBlock ACTIVATION_TICKS 8, ComparatorBlock calculateOutputSignal in mc-pipeline/work/1.18.2/src",
   },
   {
     version: "1.20.6",
     summary:
       "The sculk sensor is retimed to 30 active ticks with a 10 tick cooldown, so 1.18 era sensor circuits change behavior. The calibrated sculk sensor arrives at 10 active ticks. The crafter arrives with a 4 tick delay and the copper bulb arrives with none at all. The hopper minecart loses its pull cooldown and jumps from 5 items a second to 20.",
-    source: "SculkSensorBlock ACTIVE_TICKS 30 and COOLDOWN_TICKS 10, CalibratedSculkSensorBlock getActiveTicks 10, CrafterBlock CRAFTING_TICK_DELAY 4, CopperBulbBlock, MinecartHopper tick in mc-pipeline/work/1.20.6/src",
+    source:
+      "SculkSensorBlock ACTIVE_TICKS 30 and COOLDOWN_TICKS 10, CalibratedSculkSensorBlock getActiveTicks 10, CrafterBlock CRAFTING_TICK_DELAY 4, CopperBulbBlock, MinecartHopper tick in mc-pipeline/work/1.20.6/src",
   },
   {
     version: "1.21.1",
-    summary:
-      "No timing changes. Every constant in this tool is identical to 1.20.6.",
-    source: "Full diff of RepeaterBlock, ComparatorBlock, ObserverBlock, HopperBlockEntity, DispenserBlock, PistonBaseBlock, SculkSensorBlock, CrafterBlock between mc-pipeline/work/1.20.6/src and 1.21.1/src",
+    summary: "No timing changes. Every constant in this tool is identical to 1.20.6.",
+    source:
+      "Full diff of RepeaterBlock, ComparatorBlock, ObserverBlock, HopperBlockEntity, DispenserBlock, PistonBaseBlock, SculkSensorBlock, CrafterBlock between mc-pipeline/work/1.20.6/src and 1.21.1/src",
   },
   {
     version: "1.21.11",
     summary:
       "No timing changes to any component. The redstone wire evaluator was split out into its own package and an experimental replacement now exists, but it is gated behind the redstone experiments feature flag and the default evaluator still drops 1 strength per dust block. The hopper minecart's per tick pull is now guarded by an explicit once per tick flag, which keeps the same 20 items a second.",
-    source: "DefaultRedstoneWireEvaluator and ExperimentalRedstoneWireEvaluator under world/level/redstone, RedStoneWireBlock useExperimentalEvaluator, MinecartHopper tryConsumeItems in mc-pipeline/work/1.21.11/src",
+    source:
+      "DefaultRedstoneWireEvaluator and ExperimentalRedstoneWireEvaluator under world/level/redstone, RedStoneWireBlock useExperimentalEvaluator, MinecartHopper tryConsumeItems in mc-pipeline/work/1.21.11/src",
   },
   {
     version: "26.2",

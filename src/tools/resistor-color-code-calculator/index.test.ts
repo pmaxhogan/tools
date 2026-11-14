@@ -17,7 +17,8 @@ import {
 import { ToolError } from "../types";
 
 const decode = (input: string) => run(input, { mode: "decode" });
-const encode = (input: string, opts: Record<string, string> = {}) => run(input, { mode: "encode", ...opts });
+const encode = (input: string, opts: Record<string, string> = {}) =>
+  run(input, { mode: "encode", ...opts });
 
 function expectToolError(fn: () => unknown, code: string): ToolError {
   try {

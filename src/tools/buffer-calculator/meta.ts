@@ -122,7 +122,11 @@ export const meta: ToolMeta = {
             { value: "mes", label: "MES, pKa 6.15", synonyms: ["acidic good buffer"] },
             { value: "mops", label: "MOPS, pKa 7.20", synonyms: ["rna gel", "running buffer"] },
             { value: "pipes", label: "PIPES, pKa 6.76", synonyms: ["fixation", "cytoskeleton"] },
-            { value: "bis-tris", label: "Bis-Tris, pKa 6.46", synonyms: ["gel buffer", "bis tris"] },
+            {
+              value: "bis-tris",
+              label: "Bis-Tris, pKa 6.46",
+              synonyms: ["gel buffer", "bis tris"],
+            },
             { value: "tricine", label: "Tricine, pKa 8.15", synonyms: ["sds page", "peptide gel"] },
             { value: "bicine", label: "Bicine, pKa 8.35", synonyms: ["alkaline good buffer"] },
             { value: "taps", label: "TAPS, pKa 8.40", synonyms: ["alkaline good buffer"] },
@@ -151,7 +155,15 @@ export const meta: ToolMeta = {
       max: 100,
       step: 1,
     },
-    { kind: "number", id: "decimals", label: "Decimal places", default: 4, min: 0, max: 8, step: 1 },
+    {
+      kind: "number",
+      id: "decimals",
+      label: "Decimal places",
+      default: 4,
+      min: 0,
+      max: 8,
+      step: 1,
+    },
   ],
   examples: [
     { label: "Acetate buffer pH from the amounts", input: "pKa=4.76, HA=0.1, A=0.15" },
@@ -169,7 +181,7 @@ export const meta: ToolMeta = {
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: "Works a buffer in both directions. Give the weak acid and its conjugate base and it returns the pH from Henderson-Hasselbalch; give a target pH and a total concentration and it returns the two amounts to mix. Either way it also reports the differential buffer capacity, the useful pKa plus or minus one window, and how much strong acid or strong base the buffer absorbs before the pH shifts a full unit in each direction. Twenty common buffers are built in with their pKa values, including the temperature correction for Tris and the other Good buffers.",
-    how: "Type the values you have as name=value pairs, for example \"pKa=4.76, HA=0.1, A=0.15\". Amounts can be concentrations or moles, because only their ratio sets the pH; add V=1 to get the moles for a given volume. Pick a preset instead of typing a pKa, use the ionization step option to choose which pKa of a polyprotic buffer applies, and set the temperature to see how a Tris or HEPES buffer moves in the cold room. Switch the mode to work the amounts out from a target pH.",
+    how: 'Type the values you have as name=value pairs, for example "pKa=4.76, HA=0.1, A=0.15". Amounts can be concentrations or moles, because only their ratio sets the pH; add V=1 to get the moles for a given volume. Pick a preset instead of typing a pKa, use the ionization step option to choose which pKa of a polyprotic buffer applies, and set the temperature to see how a Tris or HEPES buffer moves in the cold room. Switch the mode to work the amounts out from a target pH.',
     why: "Buffer calculators elsewhere carry a short preset list, quote a single pKa for triprotic buffers, and ignore the temperature shift that makes Tris a different buffer at 4 C than at 25 C. This one carries the whole ionization series for each polyprotic buffer, corrects the temperature sensitive pKa values, and reports buffer capacity and the tolerance to added strong acid or base rather than only the pH. It runs entirely in your browser, so your inputs never leave your device.",
     faq: [
       {

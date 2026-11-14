@@ -334,9 +334,7 @@ describe("outcome distribution", () => {
 
 describe("errors", () => {
   it("rejects an unknown version", () => {
-    expect(() => calculate({ version: "1.99", table: "blocks/diamond_ore" })).toThrow(
-      ToolError,
-    );
+    expect(() => calculate({ version: "1.99", table: "blocks/diamond_ore" })).toThrow(ToolError);
     try {
       calculate({ version: "1.99", table: "blocks/diamond_ore" });
     } catch (e) {

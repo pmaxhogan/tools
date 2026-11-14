@@ -1189,8 +1189,7 @@ function onScan(next: FsScan) {
             </p>
             <ul class="list-disc pl-4 text-xs text-muted-foreground">
               <li v-for="skip in runSkips.slice(0, 10)" :key="skip.path">
-                <span class="font-mono">{{ skip.path }}</span
-                >: {{ skip.reason }}
+                <span class="font-mono">{{ skip.path }}</span>: {{ skip.reason }}
               </li>
             </ul>
             <p v-if="runSkips.length > 10" class="text-xs text-muted-foreground">

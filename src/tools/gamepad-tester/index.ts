@@ -149,7 +149,12 @@ function axisLabel(vendor: VendorId, index: number): string {
  */
 export function detectVendor(id: string | null | undefined): VendorId {
   const s = (id ?? "").toLowerCase();
-  if (s.includes("xbox") || s.includes("xinput") || s.includes("vendor: 045e") || s.includes("045e")) {
+  if (
+    s.includes("xbox") ||
+    s.includes("xinput") ||
+    s.includes("vendor: 045e") ||
+    s.includes("045e")
+  ) {
     return "xbox";
   }
   if (
@@ -182,16 +187,21 @@ export interface GamepadInfo {
 }
 
 /** Labeled, copyable rows identifying the connected controller. */
-export function describeGamepad(gp: GamepadInfo, vendor: VendorId = detectVendor(gp.id)): Record<string, string> {
+export function describeGamepad(
+  gp: GamepadInfo,
+  vendor: VendorId = detectVendor(gp.id),
+): Record<string, string> {
   const isStandardMapping = gp.mapping === "standard";
-  const isStandardCounts = gp.buttons === STANDARD_MAPPING.buttons.length && gp.axes === STANDARD_MAPPING.axes.length;
+  const isStandardCounts =
+    gp.buttons === STANDARD_MAPPING.buttons.length && gp.axes === STANDARD_MAPPING.axes.length;
   return {
     Controller: gp.id || "(no id reported)",
     "Detected type": VENDOR_NAMES[vendor],
     Mapping: gp.mapping ? gp.mapping : "(none reported)",
     "Buttons reported": String(gp.buttons),
     "Axes reported": String(gp.axes),
-    "Standard layout": isStandardMapping && isStandardCounts ? "yes" : "no, labels below are best guesses",
+    "Standard layout":
+      isStandardMapping && isStandardCounts ? "yes" : "no, labels below are best guesses",
   };
 }
 
@@ -204,12 +214,16 @@ export interface ButtonState {
 }
 
 /** Labeled rows for every reported button, using vendor-appropriate names. */
-export function describeButtons(pressed: ButtonState[], vendor: VendorId = "generic"): Record<string, string> {
+export function describeButtons(
+  pressed: ButtonState[],
+  vendor: VendorId = "generic",
+): Record<string, string> {
   const rows: Record<string, string> = {};
   for (const b of pressed) {
     if (typeof b?.index !== "number" || !Number.isFinite(b.index)) continue;
     const label = buttonLabel(vendor, b.index);
-    const value = typeof b.value === "number" && Number.isFinite(b.value) ? b.value : b.pressed ? 1 : 0;
+    const value =
+      typeof b.value === "number" && Number.isFinite(b.value) ? b.value : b.pressed ? 1 : 0;
     if (b.pressed) rows[label] = `pressed (${value.toFixed(2)})`;
     else if (b.touched) rows[label] = "touched, not pressed";
     else rows[label] = "released";
@@ -270,7 +284,10 @@ export interface DriftAnalysis {
  * stick) for drift: a nonzero resting position that keeps a character moving
  * or a cursor creeping even with no input.
  */
-export function analyzeDrift(samples: StickSample[], opts: DriftAnalysisOptions = {}): DriftAnalysis {
+export function analyzeDrift(
+  samples: StickSample[],
+  opts: DriftAnalysisOptions = {},
+): DriftAnalysis {
   const deadzone = opts.deadzone ?? 0.05;
   if (samples.length === 0) {
     return {
@@ -307,7 +324,16 @@ export function analyzeDrift(samples: StickSample[], opts: DriftAnalysisOptions 
   const suggestedDeadzoneRaw = Math.max(deadzone, maxMagnitude + 0.015);
   const suggestedDeadzone = Math.min(0.3, Math.round(suggestedDeadzoneRaw * 100) / 100);
 
-  return { meanX, meanY, magnitude, maxMagnitude, stdDev, percentOutsideDeadzone, verdict, suggestedDeadzone };
+  return {
+    meanX,
+    meanY,
+    magnitude,
+    maxMagnitude,
+    stdDev,
+    percentOutsideDeadzone,
+    verdict,
+    suggestedDeadzone,
+  };
 }
 
 export interface CircularityResult {
@@ -376,7 +402,11 @@ export interface VibrationLike {
 
 /** Describes whether the controller reports rumble or haptic actuator support. */
 export function vibrationSupport(gp: VibrationLike): string {
-  if (gp.vibrationActuator && typeof gp.vibrationActuator.type === "string" && gp.vibrationActuator.type) {
+  if (
+    gp.vibrationActuator &&
+    typeof gp.vibrationActuator.type === "string" &&
+    gp.vibrationActuator.type
+  ) {
     return `Supported (${gp.vibrationActuator.type})`;
   }
   if (Array.isArray(gp.hapticActuators) && gp.hapticActuators.length > 0) {
@@ -406,7 +436,8 @@ function normalizeSessionEvents(raw: unknown[]): SessionEvent[] {
     if (typeof item !== "object" || item === null) return;
     const e = item as Record<string, unknown>;
     const type = e.type;
-    if (type !== "buttondown" && type !== "buttonup" && type !== "connect" && type !== "disconnect") return;
+    if (type !== "buttondown" && type !== "buttonup" && type !== "connect" && type !== "disconnect")
+      return;
     const t = typeof e.t === "number" && Number.isFinite(e.t) ? e.t : i;
     const index = typeof e.index === "number" && Number.isFinite(e.index) ? e.index : undefined;
     out.push({ type, t, index });
@@ -449,7 +480,12 @@ export function run(input: string, opts: GamepadTesterOptions = {}): Record<stri
     );
   }
 
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed) || !("gamepad" in parsed)) {
+  if (
+    typeof parsed !== "object" ||
+    parsed === null ||
+    Array.isArray(parsed) ||
+    !("gamepad" in parsed)
+  ) {
     throw new ToolError(
       "not-a-report",
       "Expected a JSON object with a gamepad field.",
@@ -495,7 +531,8 @@ export function run(input: string, opts: GamepadTesterOptions = {}): Record<stri
 
   if (Array.isArray(g.pressed) && g.pressed.length > 0) {
     const states = (g.pressed as unknown[]).filter(
-      (b): b is ButtonState => typeof b === "object" && b !== null && typeof (b as ButtonState).index === "number",
+      (b): b is ButtonState =>
+        typeof b === "object" && b !== null && typeof (b as ButtonState).index === "number",
     );
     const buttonRows = describeButtons(states, vendor);
     for (const [label, state] of Object.entries(buttonRows)) rows[`Button ${label}`] = state;
@@ -503,7 +540,8 @@ export function run(input: string, opts: GamepadTesterOptions = {}): Record<stri
 
   if (Array.isArray(g.axesValues) && g.axesValues.length > 0) {
     (g.axesValues as unknown[]).forEach((v, i) => {
-      if (typeof v === "number" && Number.isFinite(v)) rows[`Axis ${axisLabel(vendor, i)}`] = v.toFixed(3);
+      if (typeof v === "number" && Number.isFinite(v))
+        rows[`Axis ${axisLabel(vendor, i)}`] = v.toFixed(3);
     });
   }
 
@@ -512,7 +550,11 @@ export function run(input: string, opts: GamepadTesterOptions = {}): Record<stri
     hapticActuators: (g.hapticActuators as unknown[] | null | undefined) ?? null,
   });
 
-  if (g.triggerSamples && typeof g.triggerSamples === "object" && !Array.isArray(g.triggerSamples)) {
+  if (
+    g.triggerSamples &&
+    typeof g.triggerSamples === "object" &&
+    !Array.isArray(g.triggerSamples)
+  ) {
     for (const [idx, values] of Object.entries(g.triggerSamples as Record<string, unknown>)) {
       if (!Array.isArray(values)) continue;
       const nums = values.filter((v): v is number => typeof v === "number" && Number.isFinite(v));
@@ -524,7 +566,8 @@ export function run(input: string, opts: GamepadTesterOptions = {}): Record<stri
     }
   }
 
-  const deadzone = typeof opts.deadzone === "number" && Number.isFinite(opts.deadzone) ? opts.deadzone : 0.05;
+  const deadzone =
+    typeof opts.deadzone === "number" && Number.isFinite(opts.deadzone) ? opts.deadzone : 0.05;
 
   if (Array.isArray(body.driftSamples) && body.driftSamples.length > 0) {
     const samples = normalizeStickSamples(body.driftSamples as unknown[]);

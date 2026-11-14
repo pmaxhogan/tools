@@ -214,7 +214,7 @@ describe("photography-calculator: ND filters", () => {
   });
 
   it("rounds exposures over a second to the nearest half second", () => {
-    expect(nd('2s 1.5stops')["New shutter"]).toBe("5.5 s");
+    expect(nd("2s 1.5stops")["New shutter"]).toBe("5.5 s");
   });
 });
 

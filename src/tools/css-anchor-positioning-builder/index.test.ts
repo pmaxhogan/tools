@@ -15,7 +15,9 @@ describe("css-anchor-positioning-builder: default tooltip", () => {
   });
 
   it("emits flip fallbacks with the block axis first", () => {
-    expect(out).toContain("position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;");
+    expect(out).toContain(
+      "position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;",
+    );
   });
 
   it("expresses the gap as a margin", () => {
@@ -27,7 +29,9 @@ describe("css-anchor-positioning-builder: default tooltip", () => {
   });
 
   it("pairs the popover attribute with popovertarget in the HTML section", () => {
-    expect(out).toContain('<button type="button" class="anchor-trigger" popovertarget="anchor-tooltip">');
+    expect(out).toContain(
+      '<button type="button" class="anchor-trigger" popovertarget="anchor-tooltip">',
+    );
     expect(out).toContain('<div id="anchor-tooltip" class="anchor-tooltip" popover>');
   });
 
@@ -60,7 +64,9 @@ describe("css-anchor-positioning-builder: patterns", () => {
   it("gives the dropdown menu a named @position-try fallback and an order", () => {
     const out = run("", { pattern: "dropdown-menu" });
     expect(out).toContain("@position-try --anchor-menu-flip {");
-    expect(out).toContain("position-try-fallbacks: --anchor-menu-flip, flip-inline, flip-block flip-inline;");
+    expect(out).toContain(
+      "position-try-fallbacks: --anchor-menu-flip, flip-inline, flip-block flip-inline;",
+    );
     expect(out).toContain("position-try-order: most-height;");
     expect(out).toContain("min-width: anchor-size(width);");
   });
@@ -82,7 +88,9 @@ describe("css-anchor-positioning-builder: patterns", () => {
 
   it("orders the flip fallbacks inline first for a side placement", () => {
     const out = run("", { area: "right" });
-    expect(out).toContain("position-try-fallbacks: flip-inline, flip-block, flip-inline flip-block;");
+    expect(out).toContain(
+      "position-try-fallbacks: flip-inline, flip-block, flip-inline flip-block;",
+    );
   });
 });
 

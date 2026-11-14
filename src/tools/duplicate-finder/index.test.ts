@@ -218,9 +218,7 @@ describe("groupByHash", () => {
   });
 
   it("refuses a result with no hash", () => {
-    expect(() => groupByHash([{ entry: file("a.bin", 1), hash: "" }])).toThrow(
-      /No hash was given/,
-    );
+    expect(() => groupByHash([{ entry: file("a.bin", 1), hash: "" }])).toThrow(/No hash was given/);
   });
 
   it("refuses a result with no file", () => {

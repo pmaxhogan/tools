@@ -75,7 +75,9 @@ describe("wire-gauge-calculator: lookup mode", () => {
 
   it("reports a metric-only tool with an ampacity hedge", () => {
     const out = lookup("2.5 mm2");
-    expect(out["Approximate ampacity (IEC-style reference)"]).toContain("A near the 2.5 mm2 standard size");
+    expect(out["Approximate ampacity (IEC-style reference)"]).toContain(
+      "A near the 2.5 mm2 standard size",
+    );
     expect(out["Ampacity note"]).toMatch(/IEC 60364/);
   });
 
@@ -129,7 +131,10 @@ describe("wire-gauge-calculator: voltage-drop mode", () => {
   it("converts feet to meters for length", () => {
     const meters = drop("20A 30m 12awg 120V");
     const feet = drop(`20A ${30 / 0.3048}ft 12awg 120V`);
-    expect(Number(feet["Voltage drop"].replace(" V", ""))).toBeCloseTo(Number(meters["Voltage drop"].replace(" V", "")), 2);
+    expect(Number(feet["Voltage drop"].replace(" V", ""))).toBeCloseTo(
+      Number(meters["Voltage drop"].replace(" V", "")),
+      2,
+    );
   });
 
   it("throws missing-values naming what is missing", () => {
@@ -184,7 +189,9 @@ describe("wire-gauge-calculator: size-for mode", () => {
   it("recommends gauges below 14 AWG for small loads, rated at the power transmission figure", () => {
     const out = sizeFor("0.1A 1V 1ft maxdrop=100");
     expect(out["Recommended gauge"]).toBe("30 AWG");
-    expect(out["Ampacity constraint"]).toContain("0.142 A allowed at 30 AWG (copper, power transmission reference, not code)");
+    expect(out["Ampacity constraint"]).toContain(
+      "0.142 A allowed at 30 AWG (copper, power transmission reference, not code)",
+    );
     expect(out["Small gauge note"]).toContain("0.86 A");
 
     // 2 A is over 20 AWG's 1.5 A and within 18 AWG's 2.3 A.
@@ -200,7 +207,9 @@ describe("wire-gauge-calculator: size-for mode", () => {
     expect(sizeFor("2A 0.5m 12V")["Recommended gauge"]).toBe("18 AWG");
     const open = sizeFor("2A 0.5m 12V install=open");
     expect(open["Recommended gauge"]).toBe("26 AWG");
-    expect(open["Ampacity constraint"]).toContain("2.2 A allowed at 26 AWG (copper, open-air chassis wiring reference, not code)");
+    expect(open["Ampacity constraint"]).toContain(
+      "2.2 A allowed at 26 AWG (copper, open-air chassis wiring reference, not code)",
+    );
     expect(open["Small gauge note"]).toContain("0.361 A");
     expect(sizeFor("2A 0.5m 12V open-air")).toEqual(open);
     expect(sizeFor("2A 0.5m 12V install=enclosed")).toEqual(sizeFor("2A 0.5m 12V"));
@@ -209,7 +218,9 @@ describe("wire-gauge-calculator: size-for mode", () => {
 
   it("caps the open-air figure at 14 AWG's rating so a thinner wire is never rated higher", () => {
     // 16 AWG's chassis figure is 22 A, above 14 AWG's 20 A at 75C.
-    expect(sizeFor("20A 0.2m 120V open")["Ampacity constraint"]).toContain("20 A allowed at 16 AWG");
+    expect(sizeFor("20A 0.2m 120V open")["Ampacity constraint"]).toContain(
+      "20 A allowed at 16 AWG",
+    );
     expect(sizeFor("21A 0.2m 120V open")["Recommended gauge"]).toBe("12 AWG");
   });
 
@@ -245,7 +256,9 @@ describe("wire-gauge-calculator: size-for mode", () => {
 
   it("reads mA and mV as milli units instead of dropping the prefix", () => {
     expect(sizeFor("100mA 1V 1ft maxdrop=100")).toEqual(sizeFor("0.1A 1V 1ft maxdrop=100"));
-    expect(sizeFor("current=100mA voltage=1000mV length=1ft maxdrop=100")).toEqual(sizeFor("0.1A 1V 1ft maxdrop=100"));
+    expect(sizeFor("current=100mA voltage=1000mV length=1ft maxdrop=100")).toEqual(
+      sizeFor("0.1A 1V 1ft maxdrop=100"),
+    );
   });
 
   it("reports a tiny drop in millivolts rather than rounding it to zero", () => {

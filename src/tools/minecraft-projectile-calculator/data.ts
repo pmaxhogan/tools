@@ -502,7 +502,8 @@ export const ENCHANTMENTS: EnchantDef[] = [
     weapon: "crossbow",
     excludes: ["piercing"],
     synonyms: ["three arrows", "spread"],
-    effect: "Fires 3 arrows at 0, -10 and +10 degrees of yaw. Only the middle one follows your crosshair.",
+    effect:
+      "Fires 3 arrows at 0, -10 and +10 degrees of yaw. Only the middle one follows your crosshair.",
   },
   {
     id: "piercing",
@@ -538,7 +539,8 @@ export const ENCHANTMENTS: EnchantDef[] = [
     weapon: "throw",
     excludes: ["loyalty", "channeling"],
     synonyms: ["rocket jump", "launch yourself", "water launch"],
-    effect: "Launches you instead of the trident, at 3 times (1 + level) / 4 blocks per tick, and only in water or rain.",
+    effect:
+      "Launches you instead of the trident, at 3 times (1 + level) / 4 blocks per tick, and only in water or rain.",
   },
   {
     id: "channeling",
@@ -556,7 +558,8 @@ export const ENCHANTMENTS: EnchantDef[] = [
     weapon: "throw",
     excludes: [],
     synonyms: ["aquatic damage", "water mobs"],
-    effect: "Adds 2.5 damage per level against mobs that are sensitive to impaling, which is aquatic mobs only in Java.",
+    effect:
+      "Adds 2.5 damage per level against mobs that are sensitive to impaling, which is aquatic mobs only in Java.",
   },
 ];
 

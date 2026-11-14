@@ -327,7 +327,10 @@ function describeTag(id: number, raw: Uint8Array): Uf2Tag {
  * bytes; a size of 0 terminates the list; each tag is itself padded to a
  * 4-byte boundary.
  */
-function readExtensionTags(data: Uint8Array, payloadSize: number): { tags: Uf2Tag[]; issue?: string } {
+function readExtensionTags(
+  data: Uint8Array,
+  payloadSize: number,
+): { tags: Uf2Tag[]; issue?: string } {
   let offset = Math.ceil(Math.min(payloadSize, data.length) / 4) * 4;
   const tags: Uf2Tag[] = [];
   while (offset < data.length) {
@@ -476,7 +479,8 @@ function familiesRow(blocks: Uf2Block[]): string {
   const parts = [...counts.entries()]
     .sort((a, b) => b[1] - a[1])
     .map(([id, n]) => `${familyLabel(id)}: ${n} block${n === 1 ? "" : "s"}`);
-  if (withoutFlag > 0) parts.push(`${withoutFlag} block${withoutFlag === 1 ? "" : "s"} without a family ID`);
+  if (withoutFlag > 0)
+    parts.push(`${withoutFlag} block${withoutFlag === 1 ? "" : "s"} without a family ID`);
   return parts.join("; ");
 }
 
@@ -494,7 +498,9 @@ function flagsRow(blocks: Uf2Block[]): string {
 
 function rangesRow(runs: Run[]): string {
   if (runs.length === 0) return "none";
-  return runs.map((r) => `${hex32(r.start)}..${hex32(r.end)} (${formatBytes(r.end - r.start)})`).join(", ");
+  return runs
+    .map((r) => `${hex32(r.start)}..${hex32(r.end)} (${formatBytes(r.end - r.start)})`)
+    .join(", ");
 }
 
 function gapsRow(runs: Run[]): string {
@@ -504,9 +510,13 @@ function gapsRow(runs: Run[]): string {
     const prev = runs[i - 1];
     const cur = runs[i];
     if (cur.start > prev.end) {
-      parts.push(`${hex32(prev.end)}..${hex32(cur.start)} (${formatBytes(cur.start - prev.end)} gap)`);
+      parts.push(
+        `${hex32(prev.end)}..${hex32(cur.start)} (${formatBytes(cur.start - prev.end)} gap)`,
+      );
     } else if (cur.start < prev.end) {
-      parts.push(`overlap or reorder: ${hex32(cur.start)} is before the end of the previous run ${hex32(prev.end)}`);
+      parts.push(
+        `overlap or reorder: ${hex32(cur.start)} is before the end of the previous run ${hex32(prev.end)}`,
+      );
     }
   }
   return parts.length === 0 ? "none" : parts.join(", ");
@@ -537,7 +547,8 @@ function extensionTagsRow(blocks: Uf2Block[]): string {
   const anyFlag = blocks.some((b) => (b.flags & FLAG_EXT_TAGS_PRESENT) !== 0);
   if (!anyFlag) return "none";
   const seen = new Map<string, string>();
-  for (const b of blocks) for (const t of b.tags) seen.set(`${t.label} ${t.value}`, `${t.label}: ${t.value}`);
+  for (const b of blocks)
+    for (const t of b.tags) seen.set(`${t.label} ${t.value}`, `${t.label}: ${t.value}`);
   if (seen.size === 0) return "flag set, but no tags could be decoded";
   return [...seen.values()].join("; ");
 }
@@ -548,14 +559,21 @@ function md5Row(blocks: Uf2Block[]): string {
   return `present on ${withFlag}/${blocks.length} block${blocks.length === 1 ? "" : "s"}`;
 }
 
-function collectIssues(blocks: Uf2Block[], check: SequenceCheck, runs: Run[], tagIssues: string[]): string[] {
+function collectIssues(
+  blocks: Uf2Block[],
+  check: SequenceCheck,
+  runs: Run[],
+  tagIssues: string[],
+): string[] {
   const issues: string[] = [...tagIssues];
 
   blocks.forEach((b, i) => {
     if (!b.magicOk) issues.push(`block ${i} has a corrupt start-of-block magic`);
     if (!b.magicEndOk) issues.push(`block ${i} has a corrupt end-of-block magic`);
     if (b.payloadSize > 476) {
-      issues.push(`block ${i} declares a payload size of ${b.payloadSize} bytes, more than the 476 byte data region`);
+      issues.push(
+        `block ${i} declares a payload size of ${b.payloadSize} bytes, more than the 476 byte data region`,
+      );
     }
   });
 
@@ -563,12 +581,19 @@ function collectIssues(blocks: Uf2Block[], check: SequenceCheck, runs: Run[], ta
   if (!(declared.size === 1 && declared.has(blocks.length))) {
     issues.push("numBlocks field does not agree with the actual block count");
   }
-  if (check.missing.length > 0) issues.push(`missing block number${check.missing.length === 1 ? "" : "s"}: ${capList(check.missing)}`);
-  if (check.duplicates.length > 0) issues.push(`duplicate block number${check.duplicates.length === 1 ? "" : "s"}: ${capList(check.duplicates)}`);
+  if (check.missing.length > 0)
+    issues.push(
+      `missing block number${check.missing.length === 1 ? "" : "s"}: ${capList(check.missing)}`,
+    );
+  if (check.duplicates.length > 0)
+    issues.push(
+      `duplicate block number${check.duplicates.length === 1 ? "" : "s"}: ${capList(check.duplicates)}`,
+    );
   if (check.outOfOrder) issues.push("block numbers are out of order relative to file position");
 
   for (let i = 1; i < runs.length; i++) {
-    if (runs[i].start < runs[i - 1].end) issues.push("address ranges overlap or go backward between blocks");
+    if (runs[i].start < runs[i - 1].end)
+      issues.push("address ranges overlap or go backward between blocks");
   }
 
   return issues;
@@ -602,7 +627,8 @@ function blocksView(blocks: Uf2Block[]): Record<string, string> {
   const shown = blocks.slice(0, BLOCKS_VIEW_CAP);
   shown.forEach((b) => {
     const family = b.familyId !== undefined ? `, family ${familyLabel(b.familyId)}` : "";
-    out[`Block ${b.index}`] = `blockNo ${b.blockNo}, addr ${hex32(b.targetAddr)}, size ${formatBytes(b.payloadSize)}${family}`;
+    out[`Block ${b.index}`] =
+      `blockNo ${b.blockNo}, addr ${hex32(b.targetAddr)}, size ${formatBytes(b.payloadSize)}${family}`;
   });
   if (blocks.length > BLOCKS_VIEW_CAP) {
     const remaining = blocks.length - BLOCKS_VIEW_CAP;

@@ -72,7 +72,9 @@ const manifestPath = join(outDir, "manifest.json");
 // absent from that build's dist/, which astro build and generate-sw.mjs both
 // already tolerate.
 if (process.env.SKIP_NETWORK_PREPARE) {
-  console.log("prepare-pyodide: SKIP_NETWORK_PREPARE is set, skipping (would fetch from cdn.jsdelivr.net)");
+  console.log(
+    "prepare-pyodide: SKIP_NETWORK_PREPARE is set, skipping (would fetch from cdn.jsdelivr.net)",
+  );
   process.exit(0);
 }
 

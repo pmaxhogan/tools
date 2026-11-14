@@ -88,8 +88,6 @@ describe("line-sorter", () => {
 
   it("throws a typed error on an unknown operation", () => {
     expect(() => run("a\nb", { ...baseOpts, operation: "bogus" })).toThrow(ToolError);
-    expect(() => run("a\nb", { ...baseOpts, operation: "bogus" })).toThrow(
-      /Unknown operation/,
-    );
+    expect(() => run("a\nb", { ...baseOpts, operation: "bogus" })).toThrow(/Unknown operation/);
   });
 });

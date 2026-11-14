@@ -141,7 +141,11 @@ function crossOriginAdvisory(classified: Classified, action: string): string | n
   );
 }
 
-function render(ruleSetObj: Record<string, unknown>, scriptTag: boolean, advisory: string | null): string {
+function render(
+  ruleSetObj: Record<string, unknown>,
+  scriptTag: boolean,
+  advisory: string | null,
+): string {
   const json = JSON.stringify(ruleSetObj, null, 2);
   if (!scriptTag) return json;
   const prefix = advisory ? `<!-- ${advisory} -->\n` : "";
@@ -159,7 +163,11 @@ function generate(input: string, opts: SpeculationRulesOpts): string {
   }
 
   const classified = classifyLines(raw);
-  if (classified.includes.length === 0 && classified.excludes.length === 0 && classified.plainUrls.length === 0) {
+  if (
+    classified.includes.length === 0 &&
+    classified.excludes.length === 0 &&
+    classified.plainUrls.length === 0
+  ) {
     throw new ToolError(
       "no-urls",
       "No usable URLs or patterns were found in the input.",
@@ -169,7 +177,9 @@ function generate(input: string, opts: SpeculationRulesOpts): string {
 
   const action = opts.action === "prerender" ? "prerender" : "prefetch";
   const eagerness =
-    typeof opts.eagerness === "string" && EAGERNESS_VALUES.includes(opts.eagerness) ? opts.eagerness : "moderate";
+    typeof opts.eagerness === "string" && EAGERNESS_VALUES.includes(opts.eagerness)
+      ? opts.eagerness
+      : "moderate";
   const documentRules = opts.documentRules !== false;
   const scriptTag = opts.scriptTag !== false;
 
@@ -236,7 +246,8 @@ function validateWhere(where: unknown, path: string, findings: Finding[]): void 
     }
     const v = where[k];
     if (k === "href_matches" || k === "selector_matches") {
-      const ok = typeof v === "string" || (Array.isArray(v) && v.every((x) => typeof x === "string"));
+      const ok =
+        typeof v === "string" || (Array.isArray(v) && v.every((x) => typeof x === "string"));
       if (!ok) {
         findings.push({
           severity: "error",
@@ -268,7 +279,11 @@ function validateRule(rule: unknown, path: string, listKey: string, findings: Fi
 
   for (const k of Object.keys(rule)) {
     if (!RULE_KEYS.includes(k)) {
-      findings.push({ severity: "error", path: `${path}.${k}`, message: `Unknown key "${k}" in a speculation rule.` });
+      findings.push({
+        severity: "error",
+        path: `${path}.${k}`,
+        message: `Unknown key "${k}" in a speculation rule.`,
+      });
     }
   }
 
@@ -287,7 +302,11 @@ function validateRule(rule: unknown, path: string, listKey: string, findings: Fi
     } else {
       source = s;
       if (source === "list" && !hasUrls) {
-        findings.push({ severity: "error", path, message: `source is "list" but no "urls" array is present.` });
+        findings.push({
+          severity: "error",
+          path,
+          message: `source is "list" but no "urls" array is present.`,
+        });
       } else if (source === "document" && hasUrls) {
         findings.push({
           severity: "error",
@@ -301,13 +320,21 @@ function validateRule(rule: unknown, path: string, listKey: string, findings: Fi
   } else if (hasWhere) {
     source = "document";
   } else {
-    findings.push({ severity: "error", path, message: `Rule has no "source", "urls", or "where": nothing to match.` });
+    findings.push({
+      severity: "error",
+      path,
+      message: `Rule has no "source", "urls", or "where": nothing to match.`,
+    });
   }
 
   if (source === "list" && hasUrls) {
     const urls = rule.urls;
     if (!Array.isArray(urls) || !urls.every((u) => typeof u === "string")) {
-      findings.push({ severity: "error", path: `${path}.urls`, message: `"urls" must be an array of strings.` });
+      findings.push({
+        severity: "error",
+        path: `${path}.urls`,
+        message: `"urls" must be an array of strings.`,
+      });
     }
   }
 
@@ -354,7 +381,11 @@ function validateRule(rule: unknown, path: string, listKey: string, findings: Fi
   if ("requires" in rule) {
     const req = rule.requires;
     if (!Array.isArray(req)) {
-      findings.push({ severity: "error", path: `${path}.requires`, message: `"requires" must be an array of strings.` });
+      findings.push({
+        severity: "error",
+        path: `${path}.requires`,
+        message: `"requires" must be an array of strings.`,
+      });
     } else {
       for (const reqVal of req) {
         if (typeof reqVal !== "string" || !KNOWN_REQUIREMENTS.includes(reqVal)) {
@@ -384,7 +415,8 @@ function validateRuleSet(root: unknown): Finding[] {
     findings.push({
       severity: "error",
       path: "$",
-      message: "The top level must be a JSON object with prefetch, prerender, or prefetch_with_subresources keys.",
+      message:
+        "The top level must be a JSON object with prefetch, prerender, or prefetch_with_subresources keys.",
     });
     return findings;
   }
@@ -407,7 +439,11 @@ function validateRuleSet(root: unknown): Finding[] {
     }
     const list = root[key];
     if (!Array.isArray(list)) {
-      findings.push({ severity: "error", path: key, message: `"${key}" must be an array of rule objects.` });
+      findings.push({
+        severity: "error",
+        path: key,
+        message: `"${key}" must be an array of rule objects.`,
+      });
       continue;
     }
     list.forEach((rule, i) => validateRule(rule, `${key}[${i}]`, key, findings));
@@ -430,7 +466,12 @@ function describeWhere(where: Record<string, unknown>): string {
     for (const p of where.and) {
       if (isPlainObject(p) && "href_matches" in p) {
         includePart = fmtPatterns(p.href_matches);
-      } else if (isPlainObject(p) && "not" in p && isPlainObject(p.not) && "href_matches" in p.not) {
+      } else if (
+        isPlainObject(p) &&
+        "not" in p &&
+        isPlainObject(p.not) &&
+        "href_matches" in p.not
+      ) {
         excludePart = fmtPatterns(p.not.href_matches);
       }
     }
@@ -441,7 +482,10 @@ function describeWhere(where: Record<string, unknown>): string {
     return `for elements matching selector ${fmtPatterns(where.selector_matches)}`;
   }
   if ("or" in where && Array.isArray(where.or)) {
-    return where.or.filter(isPlainObject).map((w) => describeWhere(w)).join(" or ");
+    return where.or
+      .filter(isPlainObject)
+      .map((w) => describeWhere(w))
+      .join(" or ");
   }
   if ("not" in where && isPlainObject(where.not)) {
     return `not ${describeWhere(where.not)}`;
@@ -451,7 +495,11 @@ function describeWhere(where: Record<string, unknown>): string {
 
 function describeRule(rule: Record<string, unknown>, key: string): string {
   const verb =
-    key === "prerender" ? "Prerenders" : key === "prefetch_with_subresources" ? "Prefetches (with subresources)" : "Prefetches";
+    key === "prerender"
+      ? "Prerenders"
+      : key === "prefetch_with_subresources"
+        ? "Prefetches (with subresources)"
+        : "Prefetches";
 
   let sourceDesc: string;
   if (Array.isArray(rule.urls)) {
@@ -466,7 +514,8 @@ function describeRule(rule: Record<string, unknown>, key: string): string {
     sourceDesc = "every same-origin navigation";
   }
 
-  const eagernessAdverb = typeof rule.eagerness === "string" ? EAGERNESS_ADVERB[rule.eagerness] : undefined;
+  const eagernessAdverb =
+    typeof rule.eagerness === "string" ? EAGERNESS_ADVERB[rule.eagerness] : undefined;
   return eagernessAdverb ? `${verb} ${sourceDesc}, ${eagernessAdverb}.` : `${verb} ${sourceDesc}.`;
 }
 
@@ -483,7 +532,9 @@ function summarize(root: unknown): string {
     }
   }
 
-  return sentences.length === 0 ? "This ruleset defines no active prefetch or prerender rules." : sentences.join(" ");
+  return sentences.length === 0
+    ? "This ruleset defines no active prefetch or prerender rules."
+    : sentences.join(" ");
 }
 
 function validate(input: string, _opts: SpeculationRulesOpts): Record<string, string> {
@@ -508,7 +559,8 @@ function validate(input: string, _opts: SpeculationRulesOpts): Record<string, st
   findings.forEach((f, i) => {
     out[`Finding ${i + 1}`] = `[${f.severity.toUpperCase()}] ${f.path}: ${f.message}`;
   });
-  out["Summary"] = errorCount > 0 ? "Could not summarize: fix the errors above first." : summarize(parsed);
+  out["Summary"] =
+    errorCount > 0 ? "Could not summarize: fix the errors above first." : summarize(parsed);
 
   return out;
 }

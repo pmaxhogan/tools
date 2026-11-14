@@ -216,7 +216,9 @@ async function openModelCache(): Promise<Cache | null> {
     // lingers next to the current one.
     const keys = await caches.keys();
     await Promise.all(
-      keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME).map((k) => caches.delete(k)),
+      keys
+        .filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME)
+        .map((k) => caches.delete(k)),
     );
     return await caches.open(CACHE_NAME);
   } catch {
@@ -537,9 +539,7 @@ export async function deepScan(
 
   for (const det of detections) {
     if (quadSide(det.corners) < 8) continue;
-    const covered = [...known, ...hits].some(
-      (h) => h.corners && sameCode(h.corners, det.corners),
-    );
+    const covered = [...known, ...hits].some((h) => h.corners && sameCode(h.corners, det.corners));
     if (covered) continue;
 
     const cropHits = await decodeDetection(engine, image, det);

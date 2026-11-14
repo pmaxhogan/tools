@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  parseAmountLine,
-  run,
-  solveStoichiometry,
-  speciesMass,
-  splitInput,
-} from "./index";
+import { parseAmountLine, run, solveStoichiometry, speciesMass, splitInput } from "./index";
 import { ToolError } from "../types";
 
 const RUST = ["Fe + O2 -> Fe2O3", "Fe: 10 g", "O2: 5 g"].join("\n");
@@ -110,9 +104,9 @@ describe("solveStoichiometry", () => {
   });
 
   it("rejects unbalanced typed coefficients when auto balance is off", () => {
-    expect(() =>
-      solveStoichiometry("Fe + O2 -> Fe2O3\nFe: 10 g", { autoBalance: false }),
-    ).toThrow(/do not balance/);
+    expect(() => solveStoichiometry("Fe + O2 -> Fe2O3\nFe: 10 g", { autoBalance: false })).toThrow(
+      /do not balance/,
+    );
   });
 
   it("rejects an amount for a species that is not there", () => {

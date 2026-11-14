@@ -75,7 +75,9 @@ const manifestPath = join(publicDir, "models", "manifest.json");
 // and public/tesseract are then simply absent from that build's dist/, which
 // astro build and generate-sw.mjs both already tolerate.
 if (process.env.SKIP_NETWORK_PREPARE) {
-  console.log("prepare-models: SKIP_NETWORK_PREPARE is set, skipping (would fetch from huggingface.co)");
+  console.log(
+    "prepare-models: SKIP_NETWORK_PREPARE is set, skipping (would fetch from huggingface.co)",
+  );
   process.exit(0);
 }
 

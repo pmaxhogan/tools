@@ -1907,7 +1907,8 @@ async function resolveBroadCids(rows, budgetMs) {
           );
           asked += 1;
           // A definite miss is worth remembering; a transient failure is not.
-          json = result.status === 404 ? { __none: true } : JSON.parse(result.body.toString("utf8"));
+          json =
+            result.status === 404 ? { __none: true } : JSON.parse(result.body.toString("utf8"));
           cacheWriteJson(rel, json);
         } catch {
           break;
@@ -2145,7 +2146,10 @@ async function fetchBroadDescriptions(titles) {
 /** The lead's first sentence, or its first DESCRIPTION_LIMIT characters. */
 function truncateSnippet(text) {
   if (!text) return "";
-  const cleaned = text.replace(/\s*\([^()]{0,40}\)\s*/g, " ").replace(/\s+/g, " ").trim();
+  const cleaned = text
+    .replace(/\s*\([^()]{0,40}\)\s*/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   if (cleaned.length <= DESCRIPTION_LIMIT) return cleaned;
   const sentence = /^(.{40,200}?[.!?])\s/.exec(cleaned);
   if (sentence) return sentence[1];
@@ -3010,7 +3014,9 @@ function buildIndexJson(records) {
           `  index.json with up to ${INDEX_SYN_LIMIT} synonyms per row was over its ` +
             `${(INDEX_RAW_BUDGET_BYTES / 1e6).toFixed(1)} MB raw / ` +
             `${(INDEX_GZ_BUDGET_BYTES / 1e6).toFixed(1)} MB gz budget; shipping ` +
-            (cap === 0 ? "no syn column instead" : `at most ${cap} synonym${cap === 1 ? "" : "s"} per row instead`),
+            (cap === 0
+              ? "no syn column instead"
+              : `at most ${cap} synonym${cap === 1 ? "" : "s"} per row instead`),
         );
       }
       return last;
@@ -3035,7 +3041,12 @@ function renderBroadFiles(records, options, indexResult) {
     shard[String(record.id)] = shardRecord(record, options);
   }
   const files = [
-    { name: "index.json", body: indexResult.body, bytes: indexResult.body.length, gz: indexResult.gz },
+    {
+      name: "index.json",
+      body: indexResult.body,
+      bytes: indexResult.body.length,
+      gz: indexResult.gz,
+    },
   ];
   for (let bucket = 0; bucket < CHEM_SHARD_COUNT; bucket += 1) {
     files.push({

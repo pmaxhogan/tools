@@ -860,8 +860,7 @@ onUnmounted(() => {
           ]"
         >
           <span v-if="showTimestamps" class="text-muted-foreground select-none"
-            >{{ row.time }} </span
-          >{{ rowBody(row) }}
+            >{{ row.time }} </span>{{ rowBody(row) }}
         </div>
       </div>
 

@@ -112,7 +112,11 @@ const PATTERN_SPECS: Record<Pattern, PatternSpec> = {
     suffix: "menu",
     area: "bottom",
     triggerText: "Menu",
-    body: ["<button type=\"button\">Profile</button>", "<button type=\"button\">Settings</button>", "<button type=\"button\">Sign out</button>"],
+    body: [
+      '<button type="button">Profile</button>',
+      '<button type="button">Settings</button>',
+      '<button type="button">Sign out</button>',
+    ],
     headline: "dropdown menu",
   },
   popover: {
@@ -349,13 +353,17 @@ function buildPositionedRule(ctx: BuildContext): string {
   if (ctx.flip) {
     lines.push(`position-try-fallbacks: ${fallbackList(ctx).join(", ")};`);
     if (ctx.pattern === "dropdown-menu") {
-      lines.push("/* Take the fallback that leaves the most room instead of the first that fits. */");
+      lines.push(
+        "/* Take the fallback that leaves the most room instead of the first that fits. */",
+      );
       lines.push("position-try-order: most-height;");
     }
   }
 
   if (ctx.hideWhenDetached) {
-    lines.push("/* Hide the element once the anchor scrolls out of view. Newer than the rest, so check support. */");
+    lines.push(
+      "/* Hide the element once the anchor scrolls out of view. Newer than the rest, so check support. */",
+    );
     lines.push("position-visibility: anchors-visible;");
   }
 
@@ -501,7 +509,7 @@ function buildNotes(ctx: BuildContext): string {
 
   if (ctx.pattern === "tooltip" && ctx.popoverApi) {
     lines.push(
-      "   popover=\"auto\" toggles on click. Newer Chromium also has popover=\"hint\",",
+      '   popover="auto" toggles on click. Newer Chromium also has popover="hint",',
       "   which is aimed at tooltips and does not close other open popovers.",
     );
   }
@@ -547,9 +555,10 @@ export function run(input: string, opts: AnchorPositioningOpts = {}): string {
   const blocks: (string | null)[] = [
     buildHtml(ctx),
     "/* ============================== CSS ============================== */",
-    `/* 1. Name the anchor. Any element can carry an anchor name. */\n${rule(`.${ctx.base}-trigger`, [
-      `anchor-name: ${ctx.anchorName};`,
-    ])}`,
+    `/* 1. Name the anchor. Any element can carry an anchor name. */\n${rule(
+      `.${ctx.base}-trigger`,
+      [`anchor-name: ${ctx.anchorName};`],
+    )}`,
     `/* 2. Tether the ${ctx.spec.headline} to that anchor. */\n${buildPositionedRule(ctx)}`,
     buildPositionTryRule(ctx),
     buildRevealRule(ctx),

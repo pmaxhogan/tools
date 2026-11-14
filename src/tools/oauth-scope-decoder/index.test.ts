@@ -109,9 +109,7 @@ describe("oauth-scope-decoder input extraction", () => {
   });
 
   it("throws when a JWT carries no scope claim", () => {
-    expect(() => extractScopes(jwt({ sub: "abc", aud: "api" }))).toThrow(
-      /scope, scp or scopes/,
-    );
+    expect(() => extractScopes(jwt({ sub: "abc", aud: "api" }))).toThrow(/scope, scp or scopes/);
   });
 
   it("throws on an unreadable JWT payload", () => {

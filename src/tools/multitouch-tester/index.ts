@@ -74,7 +74,12 @@ export function distanceBetween(a: GesturePoint, b: GesturePoint): number {
  * Greater than 1 is a spread-apart pinch-out, less than 1 is a pinch-in. Returns
  * 1 (no change) when the two start points coincide, since scale is undefined there.
  */
-export function pinchScale(startA: GesturePoint, startB: GesturePoint, currentA: GesturePoint, currentB: GesturePoint): number {
+export function pinchScale(
+  startA: GesturePoint,
+  startB: GesturePoint,
+  currentA: GesturePoint,
+  currentB: GesturePoint,
+): number {
   const startDistance = distanceBetween(startA, startB);
   if (startDistance === 0) return 1;
   return distanceBetween(currentA, currentB) / startDistance;
@@ -85,7 +90,12 @@ export function pinchScale(startA: GesturePoint, startB: GesturePoint, currentA:
  * normalized to (-180, 180]. Positive is clockwise on a standard screen
  * coordinate system (y grows downward).
  */
-export function rotation(startA: GesturePoint, startB: GesturePoint, currentA: GesturePoint, currentB: GesturePoint): number {
+export function rotation(
+  startA: GesturePoint,
+  startB: GesturePoint,
+  currentA: GesturePoint,
+  currentB: GesturePoint,
+): number {
   const startAngle = Math.atan2(startB.y - startA.y, startB.x - startA.x);
   const currentAngle = Math.atan2(currentB.y - currentA.y, currentB.x - currentA.x);
   let deltaDeg = ((currentAngle - startAngle) * 180) / Math.PI;
@@ -103,9 +113,12 @@ export function rotation(startA: GesturePoint, startB: GesturePoint, currentA: G
 export function summarizeTouches(points: TouchPoint[], maxSeen?: number): Record<string, string> {
   const rows: Record<string, string> = {};
   rows["Active points"] = String(points.length);
-  rows["Max simultaneous"] = typeof maxSeen === "number" && Number.isFinite(maxSeen) ? String(maxSeen) : "(not tracked)";
+  rows["Max simultaneous"] =
+    typeof maxSeen === "number" && Number.isFinite(maxSeen) ? String(maxSeen) : "(not tracked)";
 
-  const types = Array.from(new Set(points.map((p) => p.pointerType).filter((t): t is PointerType => Boolean(t))));
+  const types = Array.from(
+    new Set(points.map((p) => p.pointerType).filter((t): t is PointerType => Boolean(t))),
+  );
   rows["Pointer types seen"] = types.length ? types.map(describePointerType).join(", ") : "(none)";
 
   points.forEach((p) => {
@@ -143,7 +156,9 @@ export function coverageGrid(
 ): CoverageResult {
   const safeCols = Math.max(1, Math.round(cols));
   const safeRows = Math.max(1, Math.round(rows));
-  const grid: boolean[][] = Array.from({ length: safeRows }, () => Array<boolean>(safeCols).fill(false));
+  const grid: boolean[][] = Array.from({ length: safeRows }, () =>
+    Array<boolean>(safeCols).fill(false),
+  );
 
   if (width > 0 && height > 0) {
     for (const snapshot of history) {
@@ -187,11 +202,20 @@ function normalizePoint(raw: unknown): TouchPoint | null {
   const y = typeof p.y === "number" && Number.isFinite(p.y) ? p.y : null;
   if (id === null || x === null || y === null) return null;
 
-  const pointerType = p.pointerType === "touch" || p.pointerType === "pen" || p.pointerType === "mouse" ? p.pointerType : undefined;
-  const pressure = typeof p.pressure === "number" && Number.isFinite(p.pressure) ? p.pressure : undefined;
-  const radiusX = typeof p.radiusX === "number" && Number.isFinite(p.radiusX) ? p.radiusX : undefined;
-  const radiusY = typeof p.radiusY === "number" && Number.isFinite(p.radiusY) ? p.radiusY : undefined;
-  const rotationAngle = typeof p.rotationAngle === "number" && Number.isFinite(p.rotationAngle) ? p.rotationAngle : undefined;
+  const pointerType =
+    p.pointerType === "touch" || p.pointerType === "pen" || p.pointerType === "mouse"
+      ? p.pointerType
+      : undefined;
+  const pressure =
+    typeof p.pressure === "number" && Number.isFinite(p.pressure) ? p.pressure : undefined;
+  const radiusX =
+    typeof p.radiusX === "number" && Number.isFinite(p.radiusX) ? p.radiusX : undefined;
+  const radiusY =
+    typeof p.radiusY === "number" && Number.isFinite(p.radiusY) ? p.radiusY : undefined;
+  const rotationAngle =
+    typeof p.rotationAngle === "number" && Number.isFinite(p.rotationAngle)
+      ? p.rotationAngle
+      : undefined;
 
   return { id, x, y, pointerType, pressure, radiusX, radiusY, rotationAngle };
 }
@@ -221,7 +245,8 @@ export function run(input: string, opts: MultitouchOptions = {}): Record<string,
   if (!raw) {
     return {
       Status: "No touch data yet",
-      Instructions: "Touch the screen with as many fingers as you can at once to see them tracked live.",
+      Instructions:
+        "Touch the screen with as many fingers as you can at once to see them tracked live.",
       "Next steps":
         "Sweep a finger across the whole screen to check for dead zones, then try a stylus or mouse to compare pointer types.",
     };
@@ -231,10 +256,19 @@ export function run(input: string, opts: MultitouchOptions = {}): Record<string,
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throw new ToolError("bad-json", "Could not parse input as JSON.", `Provide a JSON touch report, e.g. ${SAMPLE}`);
+    throw new ToolError(
+      "bad-json",
+      "Could not parse input as JSON.",
+      `Provide a JSON touch report, e.g. ${SAMPLE}`,
+    );
   }
 
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed) || !("points" in parsed)) {
+  if (
+    typeof parsed !== "object" ||
+    parsed === null ||
+    Array.isArray(parsed) ||
+    !("points" in parsed)
+  ) {
     throw new ToolError(
       "not-a-report",
       "Expected a JSON object with a points field.",
@@ -242,7 +276,12 @@ export function run(input: string, opts: MultitouchOptions = {}): Record<string,
     );
   }
 
-  const body = parsed as { points: unknown; history?: unknown; maxSeen?: unknown; viewport?: unknown };
+  const body = parsed as {
+    points: unknown;
+    history?: unknown;
+    maxSeen?: unknown;
+    viewport?: unknown;
+  };
   if (!Array.isArray(body.points)) {
     throw new ToolError(
       "not-a-report",
@@ -253,20 +292,29 @@ export function run(input: string, opts: MultitouchOptions = {}): Record<string,
 
   const points = normalizePoints(body.points);
   const history = normalizeHistory(body.history);
-  const maxSeen = typeof body.maxSeen === "number" && Number.isFinite(body.maxSeen) ? body.maxSeen : undefined;
+  const maxSeen =
+    typeof body.maxSeen === "number" && Number.isFinite(body.maxSeen) ? body.maxSeen : undefined;
 
   const viewportRaw =
     typeof body.viewport === "object" && body.viewport !== null && !Array.isArray(body.viewport)
       ? (body.viewport as Record<string, unknown>)
       : {};
-  const width = typeof viewportRaw.width === "number" && Number.isFinite(viewportRaw.width) ? viewportRaw.width : 0;
-  const height = typeof viewportRaw.height === "number" && Number.isFinite(viewportRaw.height) ? viewportRaw.height : 0;
+  const width =
+    typeof viewportRaw.width === "number" && Number.isFinite(viewportRaw.width)
+      ? viewportRaw.width
+      : 0;
+  const height =
+    typeof viewportRaw.height === "number" && Number.isFinite(viewportRaw.height)
+      ? viewportRaw.height
+      : 0;
 
   const view = opts.view === "coverage" || opts.view === "pressure" ? opts.view : "live";
 
   if (view === "coverage") {
     const gridCols =
-      typeof opts.gridCols === "number" && Number.isFinite(opts.gridCols) ? clamp(Math.round(opts.gridCols), 5, 20) : DEFAULT_GRID_COLS;
+      typeof opts.gridCols === "number" && Number.isFinite(opts.gridCols)
+        ? clamp(Math.round(opts.gridCols), 5, 20)
+        : DEFAULT_GRID_COLS;
     const sampleHistory: TouchHistory = history.length > 0 ? history : [points];
     const coverage = coverageGrid(sampleHistory, width, height, gridCols, DEFAULT_GRID_ROWS);
     const touched = coverage.grid.reduce((sum, row) => sum + row.filter(Boolean).length, 0);
@@ -278,7 +326,8 @@ export function run(input: string, opts: MultitouchOptions = {}): Record<string,
       Coverage: `${coverage.coveragePercent.toFixed(1)}%`,
     };
     if (width <= 0 || height <= 0) {
-      rows.Note = "No viewport size reported yet, so coverage cannot be computed until the panel reports width and height.";
+      rows.Note =
+        "No viewport size reported yet, so coverage cannot be computed until the panel reports width and height.";
     } else {
       rows["Coverage grid"] = renderGrid(coverage.grid);
     }
@@ -287,7 +336,9 @@ export function run(input: string, opts: MultitouchOptions = {}): Record<string,
 
   if (view === "pressure") {
     const allPoints: TouchPoint[] = history.length > 0 ? history.flat() : points;
-    const samples = allPoints.map((p) => p.pressure).filter((v): v is number => typeof v === "number");
+    const samples = allPoints
+      .map((p) => p.pressure)
+      .filter((v): v is number => typeof v === "number");
     const stats = pressureStats(samples);
 
     const rows: Record<string, string> = {
@@ -295,7 +346,9 @@ export function run(input: string, opts: MultitouchOptions = {}): Record<string,
       "Min pressure": stats.min.toFixed(2),
       "Max pressure": stats.max.toFixed(2),
       "Average pressure": stats.avg.toFixed(2),
-      "Supports pressure": stats.supportsPressure ? "yes, pressure varies" : "no, pressure is constant or unreported",
+      "Supports pressure": stats.supportsPressure
+        ? "yes, pressure varies"
+        : "no, pressure is constant or unreported",
     };
 
     const penSamples = allPoints

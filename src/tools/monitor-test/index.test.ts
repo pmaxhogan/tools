@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  TESTS,
-  describeTest,
-  gammaFromMatch,
-  renderPatternSvg,
-  run,
-} from "./index";
+import { TESTS, describeTest, gammaFromMatch, renderPatternSvg, run } from "./index";
 import { ToolError } from "../types";
 
 const DIMS = { width: 800, height: 450 };

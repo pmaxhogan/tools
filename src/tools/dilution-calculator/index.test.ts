@@ -117,9 +117,7 @@ describe("solveDilution", () => {
   });
 
   it("rejects a stock concentration of zero", () => {
-    expect(() => solveDilution(parseFields("C1=0 M, C2=0.1 M, V2=100 mL"))).toThrow(
-      ToolError,
-    );
+    expect(() => solveDilution(parseFields("C1=0 M, C2=0.1 M, V2=100 mL"))).toThrow(ToolError);
   });
 });
 

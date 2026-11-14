@@ -1,14 +1,9 @@
 import { describe, expect, it } from "vitest";
-import {
-  classifyAddress,
-  interpretGathering,
-  parseCandidate,
-  run,
-  STUN_SERVERS,
-} from "./index";
+import { classifyAddress, interpretGathering, parseCandidate, run, STUN_SERVERS } from "./index";
 import { ToolError } from "../types";
 
-const HOST = "candidate:842163049 1 udp 1677729535 192.168.1.5 54321 typ host generation 0 ufrag abcd network-id 1";
+const HOST =
+  "candidate:842163049 1 udp 1677729535 192.168.1.5 54321 typ host generation 0 ufrag abcd network-id 1";
 const MDNS =
   "candidate:1516069770 1 udp 2113937151 4a2f8bd3-9c1e-4f2a-8b3d-1234567890ab.local 51684 typ host generation 0 ufrag xyz1 network-id 1";
 const SRFLX_A =

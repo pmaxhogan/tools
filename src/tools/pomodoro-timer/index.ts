@@ -67,7 +67,10 @@ export function buildSchedule(config: ScheduleConfig = {}): Phase[] {
   const work = requirePositiveInt(config.work ?? 25, "Work");
   const shortBreak = requirePositiveInt(config.shortBreak ?? 5, "Short break");
   const longBreak = requirePositiveInt(config.longBreak ?? 15, "Long break");
-  const cyclesBeforeLong = requirePositiveInt(config.cyclesBeforeLong ?? 4, "Cycles before long break");
+  const cyclesBeforeLong = requirePositiveInt(
+    config.cyclesBeforeLong ?? 4,
+    "Cycles before long break",
+  );
   const sessions = requirePositiveInt(config.sessions ?? 8, "Sessions");
 
   const phases: Phase[] = [];
@@ -219,7 +222,11 @@ export function encodeState(state: TimerState): string {
 function requireFiniteNumber(params: URLSearchParams, key: string): number {
   const raw = params.get(key);
   if (raw === null || raw === "") {
-    throw new ToolError("bad-state", `Timer link is missing "${key}".`, "Copy the pop-out timer link again.");
+    throw new ToolError(
+      "bad-state",
+      `Timer link is missing "${key}".`,
+      "Copy the pop-out timer link again.",
+    );
   }
   const n = Number(raw);
   if (!Number.isFinite(n)) {
@@ -293,7 +300,10 @@ export function nextTransition(state: TimerState, now: number): number | null {
 }
 
 /** Focused-minutes and session-count summary for a set of completed work phases. */
-export function summarizeDay(completedWorkPhases: Phase[]): { focusedMinutes: number; sessions: number } {
+export function summarizeDay(completedWorkPhases: Phase[]): {
+  focusedMinutes: number;
+  sessions: number;
+} {
   const workOnly = completedWorkPhases.filter((p) => p.kind === "work");
   return {
     focusedMinutes: workOnly.reduce((sum, p) => sum + p.minutes, 0),
@@ -407,13 +417,13 @@ export function run(input: string, opts: PomodoroOpts): PomodoroResult {
   const shorthand = raw ? parseShorthand(raw) : undefined;
 
   const work = checkRange(shorthand?.work ?? opts.work ?? 25, "Work", 1, 120);
-  const shortBreak = checkRange(shorthand?.shortBreak ?? opts.shortBreak ?? 5, "Short break", 1, 60);
-  const longBreak = checkRange(
-    shorthand?.longBreak ?? opts.longBreak ?? 15,
-    "Long break",
+  const shortBreak = checkRange(
+    shorthand?.shortBreak ?? opts.shortBreak ?? 5,
+    "Short break",
     1,
     60,
   );
+  const longBreak = checkRange(shorthand?.longBreak ?? opts.longBreak ?? 15, "Long break", 1, 60);
   const cyclesBeforeLong = checkRange(
     shorthand?.cyclesBeforeLong ?? opts.cyclesBeforeLong ?? 4,
     "Cycles before long break",

@@ -156,6 +156,7 @@ describe("sourceLinkFor", () => {
     expect(sourceLinkFor("LoRa Alliance RP002").url).toContain("lora-alliance");
     expect(sourceLinkFor("ITU Radio Regulations Article 5").url).toContain("itu.int");
     expect(sourceLinkFor("some unknown text").title).toContain("FCC Table");
-    for (const a of ALLOCATIONS.slice(0, 50)) expect(sourceLinkFor(a.source).url).toMatch(/^https:/);
+    for (const a of ALLOCATIONS.slice(0, 50))
+      expect(sourceLinkFor(a.source).url).toMatch(/^https:/);
   });
 });

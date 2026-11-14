@@ -344,19 +344,11 @@ export function parseDohResponse(json: unknown): ParsedDoh {
     try {
       value = JSON.parse(value);
     } catch {
-      throw new ToolError(
-        "invalid-json",
-        "That doesn't look like valid JSON.",
-        INVALID_DOH_FIX,
-      );
+      throw new ToolError("invalid-json", "That doesn't look like valid JSON.", INVALID_DOH_FIX);
     }
   }
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    throw new ToolError(
-      "invalid-json",
-      "That JSON is not a DoH response object.",
-      INVALID_DOH_FIX,
-    );
+    throw new ToolError("invalid-json", "That JSON is not a DoH response object.", INVALID_DOH_FIX);
   }
 
   const obj = value as Record<string, unknown>;
@@ -448,7 +440,8 @@ export function run(input: string, opts: DnsLookupOpts = {}): DnsLookupResult {
   if (isIPv4(normalized) || isIPv6(normalized)) {
     name = toPtrName(normalized);
     if (type === "PTR") {
-      out["Reverse lookup"] = `"${normalized}" is an IP address, so this queries PTR (reverse DNS) at ${name}.`;
+      out["Reverse lookup"] =
+        `"${normalized}" is an IP address, so this queries PTR (reverse DNS) at ${name}.`;
     } else {
       out["Reverse lookup"] =
         `"${normalized}" is an IP address, so this queries PTR (reverse DNS) at ${name} instead of the ${type} record you selected.`;

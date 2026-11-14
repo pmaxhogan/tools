@@ -40,7 +40,15 @@ export const meta: ToolMeta = {
       max: 12,
       step: 1,
     },
-    { kind: "number", id: "decimals", label: "Decimal places", default: 4, min: 0, max: 8, step: 1 },
+    {
+      kind: "number",
+      id: "decimals",
+      label: "Decimal places",
+      default: 4,
+      min: 0,
+      max: 8,
+      step: 1,
+    },
   ],
   examples: [
     { label: "Weigh out a 0.5 M salt solution", input: "NaCl, C=0.5 M, V=250 mL" },
@@ -53,7 +61,7 @@ export const meta: ToolMeta = {
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: "Turns a compound, a target concentration and a volume into the number of grams to weigh, or runs the same relationship backwards to give the concentration from a mass or the volume from a target. The molar mass comes from the formula you type, hydrates and nested brackets included, or from a molarMass override for anything the parser cannot read. Alongside the answer it prints the moles, the mass concentration, percent weight in volume, parts per million, normality at the equivalents you choose, and, once you give a density, the molality, percent weight in weight and mole fraction.",
-    how: "Type the compound then the values you have, for example \"NaCl, C=0.5 M, V=250 mL\". Any two of concentration, volume and mass are enough and the third is worked out. Add purity=97% when your reagent is not pure and the weighing step is scaled up for you, and add density=1.04 g/mL when you want molality, which counts kilograms of solvent rather than liters of solution. The result ends with a three step recipe you can follow at the bench.",
+    how: 'Type the compound then the values you have, for example "NaCl, C=0.5 M, V=250 mL". Any two of concentration, volume and mass are enough and the third is worked out. Add purity=97% when your reagent is not pure and the weighing step is scaled up for you, and add density=1.04 g/mL when you want molality, which counts kilograms of solvent rather than liters of solution. The result ends with a three step recipe you can follow at the bench.',
     why: "Molarity pages elsewhere ask you to pick a compound from a short list, cannot read a hydrate, and quietly assume a density of exactly one when they show molality. This one parses the formula you actually have, states where the molar mass came from, corrects for assay purity, and leaves molality out with an explanation rather than approximating it. It runs entirely in your browser, so your inputs never leave your device.",
     faq: [
       {

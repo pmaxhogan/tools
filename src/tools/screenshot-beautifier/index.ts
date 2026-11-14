@@ -74,14 +74,38 @@ export interface Background {
  * background rect at all so the export keeps an alpha channel.
  */
 export const BACKGROUNDS: Background[] = [
-  { id: "sunset", label: "Sunset", kind: "gradient", stops: ["#ff9a56", "#ff6a88", "#ff99ac"], angle: 135 },
+  {
+    id: "sunset",
+    label: "Sunset",
+    kind: "gradient",
+    stops: ["#ff9a56", "#ff6a88", "#ff99ac"],
+    angle: 135,
+  },
   { id: "ocean", label: "Ocean", kind: "gradient", stops: ["#0093e9", "#80d0c7"], angle: 135 },
-  { id: "aurora", label: "Aurora", kind: "mesh", stops: ["#00c9ff", "#92fe9d", "#8e2de2"], angle: 120 },
+  {
+    id: "aurora",
+    label: "Aurora",
+    kind: "mesh",
+    stops: ["#00c9ff", "#92fe9d", "#8e2de2"],
+    angle: 120,
+  },
   { id: "peach", label: "Peach", kind: "gradient", stops: ["#ffecd2", "#fcb69f"], angle: 135 },
-  { id: "midnight", label: "Midnight", kind: "gradient", stops: ["#0f2027", "#203a43", "#2c5364"], angle: 135 },
+  {
+    id: "midnight",
+    label: "Midnight",
+    kind: "gradient",
+    stops: ["#0f2027", "#203a43", "#2c5364"],
+    angle: 135,
+  },
   { id: "slate", label: "Slate", kind: "solid", stops: ["#2b3440"] },
   { id: "lime", label: "Lime", kind: "gradient", stops: ["#a8e063", "#56ab2f"], angle: 135 },
-  { id: "candy", label: "Candy", kind: "mesh", stops: ["#ff6ec4", "#7873f5", "#4adede"], angle: 120 },
+  {
+    id: "candy",
+    label: "Candy",
+    kind: "mesh",
+    stops: ["#ff6ec4", "#7873f5", "#4adede"],
+    angle: 120,
+  },
   { id: "mono-light", label: "Mono light", kind: "solid", stops: ["#f5f5f7"] },
   { id: "mono-dark", label: "Mono dark", kind: "solid", stops: ["#111114"] },
   { id: "transparent", label: "Transparent", kind: "solid", stops: ["transparent"] },
@@ -271,12 +295,22 @@ export interface Layout {
  * nothing distorts; `clamped` and `clampScale` report when that happened.
  */
 export function computeLayout(input: LayoutInput): Layout {
-  const imageWidth = Math.max(1, Math.round(isFiniteNumber(input.imageWidth) ? input.imageWidth : 1));
-  const imageHeight = Math.max(1, Math.round(isFiniteNumber(input.imageHeight) ? input.imageHeight : 1));
+  const imageWidth = Math.max(
+    1,
+    Math.round(isFiniteNumber(input.imageWidth) ? input.imageWidth : 1),
+  );
+  const imageHeight = Math.max(
+    1,
+    Math.round(isFiniteNumber(input.imageHeight) ? input.imageHeight : 1),
+  );
   const padding = Math.max(0, Math.round(isFiniteNumber(input.padding) ? input.padding! : 64));
-  const cornerRadius = Math.max(0, Math.round(isFiniteNumber(input.cornerRadius) ? input.cornerRadius! : 12));
+  const cornerRadius = Math.max(
+    0,
+    Math.round(isFiniteNumber(input.cornerRadius) ? input.cornerRadius! : 12),
+  );
   const shadow = input.shadow !== false;
-  const frameSpec = findFrame(typeof input.frame === "string" ? input.frame : "none") ?? FRAMES.none;
+  const frameSpec =
+    findFrame(typeof input.frame === "string" ? input.frame : "none") ?? FRAMES.none;
   const aspectSpec = findAspect(typeof input.aspect === "string" ? input.aspect : "auto");
   const scale = isFiniteNumber(input.scale) && input.scale! > 0 ? input.scale! : 1;
 
@@ -417,10 +451,11 @@ export function contrastingInk(background: Background): "#fff" | "#111" {
     .map(parseColor)
     .filter((c): c is { r: number; g: number; b: number } => c !== null);
   if (!colors.length) return "#111";
-  const sum = colors.reduce(
-    (acc, c) => ({ r: acc.r + c.r, g: acc.g + c.g, b: acc.b + c.b }),
-    { r: 0, g: 0, b: 0 },
-  );
+  const sum = colors.reduce((acc, c) => ({ r: acc.r + c.r, g: acc.g + c.g, b: acc.b + c.b }), {
+    r: 0,
+    g: 0,
+    b: 0,
+  });
   const count = colors.length;
   const yiq = ((sum.r / count) * 299 + (sum.g / count) * 587 + (sum.b / count) * 114) / 1000;
   return yiq >= 150 ? "#111" : "#fff";
@@ -453,12 +488,19 @@ function stopList(stops: string[]): string {
     return `<stop offset="0%" stop-color="${color}"/><stop offset="100%" stop-color="${color}"/>`;
   }
   return stops
-    .map((color, i) => `<stop offset="${n((i / (stops.length - 1)) * 100)}%" stop-color="${esc(color)}"/>`)
+    .map(
+      (color, i) =>
+        `<stop offset="${n((i / (stops.length - 1)) * 100)}%" stop-color="${esc(color)}"/>`,
+    )
     .join("");
 }
 
 /** Background defs (gradients) and the rects that paint them, in draw order. */
-function renderBackground(width: number, height: number, bg: Background): { defs: string; rects: string } {
+function renderBackground(
+  width: number,
+  height: number,
+  bg: Background,
+): { defs: string; rects: string } {
   if (bg.kind === "solid") {
     const color = bg.stops[0];
     if (!color || color === "transparent") return { defs: "", rects: "" };
@@ -479,7 +521,10 @@ function renderBackground(width: number, height: number, bg: Background): { defs
   // mesh: a two color diagonal wash, plus a soft radial blob per stop layered
   // on top at fixed positions. Deterministic: no randomness, no layout input.
   const { x1, y1, x2, y2 } = angleToCoords(bg.angle ?? 120);
-  const base = bg.stops.length > 1 ? [bg.stops[0]!, bg.stops[bg.stops.length - 1]!] : [bg.stops[0] ?? "#888888"];
+  const base =
+    bg.stops.length > 1
+      ? [bg.stops[0]!, bg.stops[bg.stops.length - 1]!]
+      : [bg.stops[0] ?? "#888888"];
   const defsParts = [
     `<linearGradient id="${GRADIENT_ID}-base" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stopList(base)}</linearGradient>`,
   ];
@@ -538,7 +583,12 @@ function pillFillFor(spec: FrameSpec): string {
   return spec.id === "browser-dark" ? "#3c3c41" : "#ffffff";
 }
 
-function renderTitleBar(frameRect: FrameRect, titleBarHeight: number, spec: FrameSpec, title?: string): string {
+function renderTitleBar(
+  frameRect: FrameRect,
+  titleBarHeight: number,
+  spec: FrameSpec,
+  title?: string,
+): string {
   const parts: string[] = [
     `<rect x="${n(frameRect.x)}" y="${n(frameRect.y)}" width="${n(frameRect.w)}" height="${n(titleBarHeight)}" ` +
       `fill="${esc(spec.titleBarBg)}" data-kind="title-bar"/>`,
@@ -583,7 +633,9 @@ function renderTitleBar(frameRect: FrameRect, titleBarHeight: number, spec: Fram
 
   if (spec.urlBar) {
     const barH = titleBarHeight * 0.52;
-    const leftMargin = spec.trafficLights ? frameRect.x + titleBarHeight * 1.9 : frameRect.x + titleBarHeight * 0.5;
+    const leftMargin = spec.trafficLights
+      ? frameRect.x + titleBarHeight * 1.9
+      : frameRect.x + titleBarHeight * 0.5;
     const rightMargin = frameRect.x + frameRect.w - titleBarHeight * 0.5;
     const barW = Math.max(20, rightMargin - leftMargin);
     const barY = cy - barH / 2;
@@ -631,10 +683,25 @@ export interface RenderOptions {
  * produce byte identical markup.
  */
 export function renderFrameSvg(layout: Layout, options: RenderOptions): string {
-  const bg = typeof options.background === "string" ? findBackground(options.background) : options.background;
-  const frameSpec = findFrame(typeof options.frame === "string" ? options.frame : layout.frame) ?? FRAMES.none;
-  const cornerRadius = isFiniteNumber(options.cornerRadius) ? options.cornerRadius! : layout.cornerRadius;
-  const { canvasWidth, canvasHeight, frameRect, titleBarHeight, imageX, imageY, imageWidth, imageHeight } = layout;
+  const bg =
+    typeof options.background === "string"
+      ? findBackground(options.background)
+      : options.background;
+  const frameSpec =
+    findFrame(typeof options.frame === "string" ? options.frame : layout.frame) ?? FRAMES.none;
+  const cornerRadius = isFiniteNumber(options.cornerRadius)
+    ? options.cornerRadius!
+    : layout.cornerRadius;
+  const {
+    canvasWidth,
+    canvasHeight,
+    frameRect,
+    titleBarHeight,
+    imageX,
+    imageY,
+    imageWidth,
+    imageHeight,
+  } = layout;
 
   const defsParts: string[] = [];
   const { defs: bgDefs, rects: bgRects } = renderBackground(canvasWidth, canvasHeight, bg);
@@ -708,7 +775,10 @@ function badOption(message: string, fix: string): ToolError {
 function resolveBackgroundId(value: unknown): string {
   const id = typeof value === "string" && value.trim() ? value.trim() : "sunset";
   if (!BACKGROUNDS.some((b) => b.id === id)) {
-    throw badOption(`"${id}" is not a background.`, `Use one of: ${BACKGROUNDS.map((b) => b.id).join(", ")}.`);
+    throw badOption(
+      `"${id}" is not a background.`,
+      `Use one of: ${BACKGROUNDS.map((b) => b.id).join(", ")}.`,
+    );
   }
   return id;
 }
@@ -724,7 +794,10 @@ function resolveFrameId(value: unknown): FrameKind {
 function resolveAspectId(value: unknown): AspectId {
   const id = typeof value === "string" && value.trim() ? value.trim() : "auto";
   if (!ASPECTS.some((a) => a.id === id)) {
-    throw badOption(`"${id}" is not an aspect ratio.`, `Use one of: ${ASPECTS.map((a) => a.id).join(", ")}.`);
+    throw badOption(
+      `"${id}" is not an aspect ratio.`,
+      `Use one of: ${ASPECTS.map((a) => a.id).join(", ")}.`,
+    );
   }
   return id as AspectId;
 }

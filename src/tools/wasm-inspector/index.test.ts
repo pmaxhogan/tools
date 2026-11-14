@@ -175,9 +175,7 @@ describe("wasm-inspector", () => {
       expect((e as ToolError).code).toBe("truncated");
     }
     // a module whose header stops after the magic bytes
-    expect(() => run(Uint8Array.from([0x00, 0x61, 0x73, 0x6d, 0x01]), OPTS)).toThrow(
-      ToolError,
-    );
+    expect(() => run(Uint8Array.from([0x00, 0x61, 0x73, 0x6d, 0x01]), OPTS)).toThrow(ToolError);
   });
 
   it("reads unsigned LEB128 numbers", () => {

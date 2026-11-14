@@ -259,10 +259,7 @@ export function relatedTools<T extends RelatedTool>(
   const siblings = scored.filter((entry) => entry.sibling).sort(byRank);
   const outsiders = scored.filter((entry) => !entry.sibling).sort(byRank);
 
-  const picked = [
-    ...siblings,
-    ...outsiders.filter((entry) => entry.overlap >= CROSS_CATEGORY_MIN),
-  ];
+  const picked = [...siblings, ...outsiders.filter((entry) => entry.overlap >= CROSS_CATEGORY_MIN)];
 
   if (picked.length < MIN_RESULTS) {
     const weaker = outsiders.filter(

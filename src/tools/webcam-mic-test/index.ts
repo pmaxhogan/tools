@@ -74,7 +74,15 @@ const CLIP_THRESHOLD = 0.999;
 export function analyzeSamples(samples: Float32Array): SampleAnalysis {
   const n = samples.length;
   if (n === 0) {
-    return { rms: 0, peak: 0, rmsDb: DB_FLOOR, peakDb: DB_FLOOR, level: "silent", dcOffset: 0, clippedCount: 0 };
+    return {
+      rms: 0,
+      peak: 0,
+      rmsDb: DB_FLOOR,
+      peakDb: DB_FLOOR,
+      level: "silent",
+      dcOffset: 0,
+      clippedCount: 0,
+    };
   }
 
   let sum = 0;
@@ -173,7 +181,9 @@ export function describeVideoTrack(settings: VideoTrackSettings): Record<string,
   }
 
   if (isFiniteNumber(frameRate) && frameRate > 0) {
-    out["Frame rate"] = Number.isInteger(frameRate) ? `${frameRate} fps` : `${frameRate.toFixed(1)} fps`;
+    out["Frame rate"] = Number.isInteger(frameRate)
+      ? `${frameRate} fps`
+      : `${frameRate.toFixed(1)} fps`;
   }
 
   if (facingMode) {
@@ -217,8 +227,14 @@ function toggleLabel(value: boolean): string {
 /** Formats an audio MediaStreamTrack's settings() into labeled rows. */
 export function describeAudioTrack(settings: AudioTrackSettings): Record<string, string> {
   const out: Record<string, string> = {};
-  const { sampleRate, channelCount, echoCancellation, noiseSuppression, autoGainControl, deviceId } =
-    settings ?? {};
+  const {
+    sampleRate,
+    channelCount,
+    echoCancellation,
+    noiseSuppression,
+    autoGainControl,
+    deviceId,
+  } = settings ?? {};
 
   if (isFiniteNumber(sampleRate) && sampleRate > 0) {
     out["Sample rate"] = `${Math.round(sampleRate)} Hz`;
@@ -226,8 +242,10 @@ export function describeAudioTrack(settings: AudioTrackSettings): Record<string,
   if (isFiniteNumber(channelCount) && channelCount > 0) {
     out["Channels"] = channelsLabel(Math.round(channelCount));
   }
-  if (typeof echoCancellation === "boolean") out["Echo cancellation"] = toggleLabel(echoCancellation);
-  if (typeof noiseSuppression === "boolean") out["Noise suppression"] = toggleLabel(noiseSuppression);
+  if (typeof echoCancellation === "boolean")
+    out["Echo cancellation"] = toggleLabel(echoCancellation);
+  if (typeof noiseSuppression === "boolean")
+    out["Noise suppression"] = toggleLabel(noiseSuppression);
   if (typeof autoGainControl === "boolean") out["Auto gain control"] = toggleLabel(autoGainControl);
   if (deviceId) out["Device ID"] = deviceId;
 
@@ -256,7 +274,9 @@ const KIND_LABELS: Record<string, string> = {
 
 /** Groups enumerateDevices() output by kind, with counts and names (or a
  * permission notice when labels are empty, which happens before a grant). */
-export function summarizeDevices(devices: DeviceEntry[] | null | undefined): Record<string, string> {
+export function summarizeDevices(
+  devices: DeviceEntry[] | null | undefined,
+): Record<string, string> {
   const out: Record<string, string> = {};
   const list = devices ?? [];
 
@@ -278,7 +298,9 @@ export function summarizeDevices(devices: DeviceEntry[] | null | undefined): Rec
     if (!hasLabels) {
       out[label] = `${entries.length} detected, permission needed to see names`;
     } else {
-      const names = entries.map((e) => (e.label && e.label.trim() ? e.label.trim() : "Unnamed device"));
+      const names = entries.map((e) =>
+        e.label && e.label.trim() ? e.label.trim() : "Unnamed device",
+      );
       out[label] = `${entries.length}: ${names.join(", ")}`;
     }
   }
@@ -393,7 +415,9 @@ export function run(input: string, opts: RunOpts): WebcamMicResult {
   }
 
   if (Object.keys(out).length === 0) {
-    return { Report: "The report did not include any readable devices, video, audio, or level data." };
+    return {
+      Report: "The report did not include any readable devices, video, audio, or level data.",
+    };
   }
 
   if (normalizeDetail(opts?.detail) === "summary") {

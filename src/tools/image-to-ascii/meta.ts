@@ -5,7 +5,8 @@ export const meta: ToolMeta = {
   matrixSlug: "ascii-art",
   icon: "Type",
   name: "Image to ASCII Art",
-  description: "Convert any image into ASCII text art, colored ANSI art, or Unicode braille dot art.",
+  description:
+    "Convert any image into ASCII text art, colored ANSI art, or Unicode braille dot art.",
   category: "Images",
   keywords: [
     "image to ascii art",
@@ -163,7 +164,7 @@ export const meta: ToolMeta = {
     faq: [
       {
         q: "What is the difference between the ASCII style and the braille style?",
-        a: "ASCII maps each character cell to a single brightness level from a ramp like \" .:-=+*#%@\", so one character represents one image cell. Braille packs a 2 by 4 grid of dots into a single Unicode character, so it can show roughly 8 times as much detail in the same number of columns, at the cost of losing the smooth gray levels a character ramp gives you. Use ASCII for a classic look with optional color, and braille for high resolution line art or when you need to fit detail into a narrow terminal or chat window.",
+        a: 'ASCII maps each character cell to a single brightness level from a ramp like " .:-=+*#%@", so one character represents one image cell. Braille packs a 2 by 4 grid of dots into a single Unicode character, so it can show roughly 8 times as much detail in the same number of columns, at the cost of losing the smooth gray levels a character ramp gives you. Use ASCII for a classic look with optional color, and braille for high resolution line art or when you need to fit detail into a narrow terminal or chat window.',
       },
       {
         q: "How do I get colored ANSI art I can paste into a terminal?",

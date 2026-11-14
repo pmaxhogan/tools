@@ -229,15 +229,17 @@ const detailsOutput = computed<Record<string, string> | null>(() => {
     </div>
 
     <!-- guidance -->
-    <div class="flex flex-col gap-2 rounded-[18px] border bg-card p-5 text-sm text-muted-foreground shadow-[var(--sh-sm)] sm:p-6">
+    <div
+      class="flex flex-col gap-2 rounded-[18px] border bg-card p-5 text-sm text-muted-foreground shadow-[var(--sh-sm)] sm:p-6"
+    >
       <p>{{ GHOSTING_GUIDANCE }}</p>
       <p>
-        Your operating system and browser swallow some combinations before this page ever sees
-        them, such as Windows+L, Alt+Tab, and Ctrl+Alt+Delete. Those never register here, even on
-        a full NKRO keyboard. Many keyboards also fall back to the USB boot protocol, the same
-        legacy mode used by PC BIOS and boot loaders, which can only report up to six regular keys
-        held at once: if the count above always stops at 6, that may be the keyboard reporting in
-        that mode rather than a hard hardware limit.
+        Your operating system and browser swallow some combinations before this page ever sees them,
+        such as Windows+L, Alt+Tab, and Ctrl+Alt+Delete. Those never register here, even on a full
+        NKRO keyboard. Many keyboards also fall back to the USB boot protocol, the same legacy mode
+        used by PC BIOS and boot loaders, which can only report up to six regular keys held at once:
+        if the count above always stops at 6, that may be the keyboard reporting in that mode rather
+        than a hard hardware limit.
       </p>
     </div>
 

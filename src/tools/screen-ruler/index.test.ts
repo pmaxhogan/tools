@@ -141,7 +141,13 @@ describe("formatMeasurement", () => {
 
 describe("describeDisplay", () => {
   it("reports CSS vs device pixel resolution", () => {
-    const out = describeDisplay({ width: 1000, height: 500, dpr: 2, availWidth: 1000, availHeight: 480 });
+    const out = describeDisplay({
+      width: 1000,
+      height: 500,
+      dpr: 2,
+      availWidth: 1000,
+      availHeight: 480,
+    });
     expect(out["CSS resolution"]).toContain("1000 x 500 px");
     expect(out["Device pixel resolution"]).toContain("2000 x 1000 px");
     expect(out["Device pixel ratio"]).toBe("2x");

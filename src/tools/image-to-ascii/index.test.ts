@@ -182,9 +182,7 @@ describe("toAscii", () => {
     const out = toAscii(src, 10, 10, { columns: 20, charset: "custom", customChars: "-#" });
     expect(new Set(out.replace(/\n/g, ""))).toEqual(new Set(["#"]));
 
-    expect(() => toAscii(src, 10, 10, { charset: "custom", customChars: "x" })).toThrow(
-      ToolError,
-    );
+    expect(() => toAscii(src, 10, 10, { charset: "custom", customChars: "x" })).toThrow(ToolError);
     try {
       toAscii(src, 10, 10, { charset: "custom", customChars: "x" });
     } catch (err) {

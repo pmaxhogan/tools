@@ -24,9 +24,7 @@ export function enchantedItem(item, ench, lvl, syntax) {
 export async function probeEnchantSyntax(rcon, chest, ore) {
   for (const syntax of ["components", "components-levels", "nbt"]) {
     const item = enchantedItem("diamond_pickaxe", "fortune", 3, syntax);
-    const res = await rcon.cmd(
-      `loot insert ${chest} mine ${ore} ${item}`,
-    );
+    const res = await rcon.cmd(`loot insert ${chest} mine ${ore} ${item}`);
     if (/Dropped|Filled/i.test(res)) {
       await rcon.cmd(`data merge block ${chest} {Items:[]}`);
       return syntax;

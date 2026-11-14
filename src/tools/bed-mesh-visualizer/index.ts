@@ -17,11 +17,7 @@ import { ToolError, type ToolLogic } from "../types";
 /* ------------------------------------------------------------------ types */
 
 export type MeshSource =
-  | "klipper-config"
-  | "klipper-console"
-  | "marlin-grid"
-  | "json"
-  | "plain-grid";
+  "klipper-config" | "klipper-console" | "marlin-grid" | "json" | "plain-grid";
 
 export interface Mesh {
   /** rows[y][x]. Row 0 is the front of the bed, column 0 the left. */

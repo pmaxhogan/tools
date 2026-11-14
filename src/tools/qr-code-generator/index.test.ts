@@ -94,9 +94,7 @@ describe("qr-code-generator: url and text", () => {
 
   it("rejects an invalid URL under the url preset", async () => {
     await expect(run("not a url", { ...OPTS, preset: "url" })).rejects.toThrow(ToolError);
-    await expect(run("not a url", { ...OPTS, preset: "url" })).rejects.toThrow(
-      /not a valid URL/,
-    );
+    await expect(run("not a url", { ...OPTS, preset: "url" })).rejects.toThrow(/not a valid URL/);
   });
 });
 
@@ -243,9 +241,7 @@ describe("qr-code-generator: geo", () => {
   it("rejects out of range or non numeric coordinates", () => {
     expect(() => buildGeo({ latitude: 91, longitude: 0 })).toThrow(/Latitude/);
     expect(() => buildGeo({ latitude: 0, longitude: 181 })).toThrow(/Longitude/);
-    expect(() => buildGeo({ latitude: "north", longitude: 0 })).toThrow(
-      /must both be numbers/,
-    );
+    expect(() => buildGeo({ latitude: "north", longitude: 0 })).toThrow(/must both be numbers/);
   });
 });
 

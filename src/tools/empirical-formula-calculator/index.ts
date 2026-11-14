@@ -414,8 +414,8 @@ const MAX_MULTIPLIER = 12;
 const MASS_UNITS: Record<string, number> = {
   ng: 1e-9,
   ug: 1e-6,
-  "µg": 1e-6,
-  "μg": 1e-6,
+  µg: 1e-6,
+  μg: 1e-6,
   mg: 1e-3,
   g: 1,
   gram: 1,
@@ -711,7 +711,7 @@ export function run(input: string, opts?: Partial<EmpiricalOpts>): Record<string
         `The molar mass you gave is ${(r.molecularError! * 100).toFixed(1)}% away from a whole multiple of the empirical formula mass, which usually means a typo in the composition or in the molar mass.`;
   } else {
     out["Molecular formula"] =
-      "Not shown: the molecular formula needs the compound's molar mass. Add a line such as \"molarMass: 180.16\".";
+      'Not shown: the molecular formula needs the compound\'s molar mass. Add a line such as "molarMass: 180.16".';
   }
 
   out["Scaling multiplier"] =

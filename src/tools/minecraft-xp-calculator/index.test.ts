@@ -129,7 +129,11 @@ describe("minecraft-xp-calculator", () => {
   it("accepts string option values as restored from the URL fragment", () => {
     const out = run(
       undefined,
-      opts({ fromLevel: "27" as unknown as number, toLevel: "30" as unknown as number, source: "blaze" }),
+      opts({
+        fromLevel: "27" as unknown as number,
+        toLevel: "30" as unknown as number,
+        source: "blaze",
+      }),
     );
     expect(out["XP needed (27 to 30)"]).toBe("306 points");
     expect(out["Needed on average"]).toBe("31 kills");
@@ -217,7 +221,9 @@ describe("minecraft-xp-calculator", () => {
   describe("source-derived vectors (mc-pipeline/vectors/xp)", () => {
     expect(vectors.method).toBe("source-derived");
     expect(vectorCases.length).toBeGreaterThanOrEqual(30);
-    expect(vectorCases.filter((c) => c.type === "sustain" || c.type === "hits").length).toBeGreaterThanOrEqual(15);
+    expect(
+      vectorCases.filter((c) => c.type === "sustain" || c.type === "hits").length,
+    ).toBeGreaterThanOrEqual(15);
 
     for (const c of vectorCases) {
       it(`${c.type}: ${c.provenance.slice(0, 60)}`, () => {

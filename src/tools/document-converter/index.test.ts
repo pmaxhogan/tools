@@ -224,7 +224,9 @@ describe("blocksToPdf", () => {
   });
 
   it("breaks long documents across pages", async () => {
-    const long = Array.from({ length: 120 }, (_, i) => `<p>Paragraph number ${i + 1}.</p>`).join("");
+    const long = Array.from({ length: 120 }, (_, i) => `<p>Paragraph number ${i + 1}.</p>`).join(
+      "",
+    );
     const bytes = await blocksToPdf(htmlToBlocks(long));
     const pdf = await PDFDocument.load(bytes);
     expect(pdf.getPageCount()).toBeGreaterThan(1);
@@ -237,18 +239,14 @@ describe("blocksToPdf", () => {
   });
 
   it("wraps a word wider than the column instead of overflowing", async () => {
-    const bytes = await blocksToPdf([
-      { type: "paragraph", runs: [{ text: "x".repeat(600) }] },
-    ]);
+    const bytes = await blocksToPdf([{ type: "paragraph", runs: [{ text: "x".repeat(600) }] }]);
     expect(bytes.length).toBeGreaterThan(0);
   });
 });
 
 describe("sanitizeForPdf", () => {
   it("keeps the punctuation the standard fonts encode", () => {
-    expect(sanitizeForPdf("café — “quoted” • …")).toBe(
-      "café — “quoted” • …",
-    );
+    expect(sanitizeForPdf("café — “quoted” • …")).toBe("café — “quoted” • …");
   });
 
   it("substitutes what they cannot encode instead of throwing", () => {

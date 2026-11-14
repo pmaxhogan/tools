@@ -278,9 +278,13 @@ export function parseCompound(formula: string): Record<string, number> {
       if (OPEN.includes(ch)) {
         i++;
         const inner: Record<string, number> = {};
-        parseUnits((symbol, n) => {
-          inner[symbol] = (inner[symbol] ?? 0) + n;
-        }, depth + 1, ch);
+        parseUnits(
+          (symbol, n) => {
+            inner[symbol] = (inner[symbol] ?? 0) + n;
+          },
+          depth + 1,
+          ch,
+        );
         const closer = formula[i];
         if (closer === undefined || !CLOSE.includes(closer))
           throw new ToolError(
@@ -541,9 +545,7 @@ export function parseEquation(raw: string): Species[] {
  * per species, scaled to the smallest whole numbers.
  */
 export function balance(species: Species[]): number[] {
-  const elements = Array.from(
-    new Set(species.flatMap((sp) => Object.keys(sp.counts))),
-  ).sort();
+  const elements = Array.from(new Set(species.flatMap((sp) => Object.keys(sp.counts)))).sort();
   const charged = species.some((sp) => sp.charge !== 0);
 
   const rows: Frac[][] = [];
@@ -556,9 +558,7 @@ export function balance(species: Species[]): number[] {
     );
   }
   if (charged) {
-    rows.push(
-      species.map((sp) => frac(BigInt(sp.side === "left" ? sp.charge : -sp.charge))),
-    );
+    rows.push(species.map((sp) => frac(BigInt(sp.side === "left" ? sp.charge : -sp.charge))));
   }
 
   const cols = species.length;
@@ -730,20 +730,14 @@ function renderSide(
   species.forEach((sp, idx) => {
     if (sp.side !== side) return;
     const c = coefficients[idx]!;
-    const body = keepStates
-      ? sp.display
-      : `${sp.formula}${chargeLabel(sp.charge)}`;
+    const body = keepStates ? sp.display : `${sp.formula}${chargeLabel(sp.charge)}`;
     parts.push(c === 1 ? body : `${c} ${body}`);
   });
   return parts.join(" + ");
 }
 
 /** The balanced equation as one line of text. */
-export function renderEquation(
-  result: BalancedEquation,
-  arrow = "->",
-  keepStates = true,
-): string {
+export function renderEquation(result: BalancedEquation, arrow = "->", keepStates = true): string {
   const left = renderSide(result.species, result.coefficients, "left", keepStates);
   const right = renderSide(result.species, result.coefficients, "right", keepStates);
   return `${left} ${arrow} ${right}`;

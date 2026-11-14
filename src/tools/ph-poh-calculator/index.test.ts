@@ -158,9 +158,7 @@ describe("temperature", () => {
   });
 
   it("calls a pH 7 solution neutral at 25 degrees", () => {
-    expect(run("pH=6.9985", { temperature: "25" })["Verdict"]).toBe(
-      "Neutral for this temperature",
-    );
+    expect(run("pH=6.9985", { temperature: "25" })["Verdict"]).toBe("Neutral for this temperature");
   });
 });
 

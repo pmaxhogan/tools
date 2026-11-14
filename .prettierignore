@@ -17,3 +17,8 @@ mc-pipeline/vectors/
 src/tools/_generated/
 public/data/
 public/wawoff2/
+
+# Python training pipeline: not part of the site build. Its HTML is a render
+# template and its JSON files are recorded eval results, so neither is
+# hand-formatted. eslint ignores the same directory.
+training/

@@ -367,8 +367,7 @@ function printOutput() {
               :key="`${w.value}-${w.text}`"
               class="text-xs text-muted-foreground"
             >
-              <span class="font-mono">{{ w.value }}</span
-              >: {{ w.text }}
+              <span class="font-mono">{{ w.value }}</span>: {{ w.text }}
             </li>
           </ul>
         </div>

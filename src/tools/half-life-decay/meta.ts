@@ -190,7 +190,15 @@ export const meta: ToolMeta = {
       ],
     },
     { kind: "boolean", id: "showTable", label: "Show the half-life table", default: true },
-    { kind: "number", id: "decimals", label: "Decimal places", default: 4, min: 0, max: 8, step: 1 },
+    {
+      kind: "number",
+      id: "decimals",
+      label: "Decimal places",
+      default: 4,
+      min: 0,
+      max: 8,
+      step: 1,
+    },
   ],
   examples: [
     {
@@ -212,7 +220,7 @@ export const meta: ToolMeta = {
   http: { method: "GET", contentType: "application/json" },
   copy: {
     what: "Works out how much of a radioactive sample is left after a given time, or how long it takes to fall to a given level. Give a half-life, a decay constant or a mean lifetime and it prints all three, plus the number of half-lives elapsed, the remaining and decayed fractions, and the remaining amount in whatever unit you started with. Starting amounts in grams, moles, nuclei, becquerels or curies also give a nuclei count and an activity, and there is a table of what is left after one through ten half-lives.",
-    how: "Type the values you have as name=value pairs, for example \"halfLife=5700 y, t=11400 y, N0=100 g\". A colon works in place of the equals sign, and pairs can be separated by spaces, commas or new lines. Pick an isotope preset if you would rather not look the half-life up, and switch Solve for to the second mode to find the elapsed time from a remaining percentage instead. Times accept s, min, h, d, wk, y, ky, My and Gy.",
+    how: 'Type the values you have as name=value pairs, for example "halfLife=5700 y, t=11400 y, N0=100 g". A colon works in place of the equals sign, and pairs can be separated by spaces, commas or new lines. Pick an isotope preset if you would rather not look the half-life up, and switch Solve for to the second mode to find the elapsed time from a remaining percentage instead. Times accept s, min, h, d, wk, y, ky, My and Gy.',
     why: "Half-life pages online usually solve exactly one of the four cases, hide the decay constant, and cannot take a mass or an activity as the starting amount. This one accepts any of the three time constants, converts between mass, moles, nuclei and activity, solves in either direction, and prints the whole half-life table alongside the answer. It runs entirely in your browser, so your inputs never leave your device.",
     faq: [
       {

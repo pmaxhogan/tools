@@ -44,7 +44,11 @@ export const MATERIALS: Record<string, MaterialInfo> = {
   pla: { label: "PLA", density: 1.24, synonyms: ["polylactic acid"] },
   petg: { label: "PETG", density: 1.27, synonyms: ["polyethylene terephthalate glycol"] },
   abs: { label: "ABS", density: 1.04, synonyms: ["acrylonitrile butadiene styrene"] },
-  tpu: { label: "TPU", density: 1.21, synonyms: ["thermoplastic polyurethane", "flexible filament"] },
+  tpu: {
+    label: "TPU",
+    density: 1.21,
+    synonyms: ["thermoplastic polyurethane", "flexible filament"],
+  },
   asa: { label: "ASA", density: 1.07, synonyms: ["acrylonitrile styrene acrylate"] },
   nylon: { label: "Nylon", density: 1.14, synonyms: ["polyamide", "pa"] },
   pc: { label: "PC", density: 1.2, synonyms: ["polycarbonate"] },
@@ -63,7 +67,8 @@ export const CURRENCY_SYMBOLS: Record<string, string> = {
 /** Density in g/cm3 for a material id, resolving "custom" to the user-supplied density. */
 export function materialDensity(material: string, customDensity: number): number {
   const info = MATERIALS[material];
-  if (!info) throw new ToolError("bad-option", "Unknown material.", "Pick a material from the list.");
+  if (!info)
+    throw new ToolError("bad-option", "Unknown material.", "Pick a material from the list.");
   return material === "custom" ? customDensity : info.density;
 }
 
@@ -142,7 +147,8 @@ export function priceBreakdown(
 
   const postProcessingCost = opts.postProcessingCost;
 
-  const subtotal = materialCost + electricityCost + machineWearCost + laborCost + postProcessingCost;
+  const subtotal =
+    materialCost + electricityCost + machineWearCost + laborCost + postProcessingCost;
 
   const failureMultiplier = 1 / (1 - opts.failureRatePercent / 100);
   const withFailure = subtotal * failureMultiplier;
@@ -208,7 +214,8 @@ export function parseSlicerSummary(text: string): ParsedSlicerSummary {
     const { hours, minutes } = decomposeMinutes(totalMinutes);
     result.hours = hours;
     result.minutes = minutes;
-    remaining = remaining.slice(0, timeMatch.index) + remaining.slice(timeMatch.index + timeMatch[0].length);
+    remaining =
+      remaining.slice(0, timeMatch.index) + remaining.slice(timeMatch.index + timeMatch[0].length);
   } else {
     const secMatch = remaining.match(/TIME\s*:\s*(\d+(?:\.\d+)?)/i);
     if (secMatch && typeof secMatch.index === "number") {
@@ -216,7 +223,8 @@ export function parseSlicerSummary(text: string): ParsedSlicerSummary {
       const { hours, minutes } = decomposeMinutes(totalSeconds / 60);
       result.hours = hours;
       result.minutes = minutes;
-      remaining = remaining.slice(0, secMatch.index) + remaining.slice(secMatch.index + secMatch[0].length);
+      remaining =
+        remaining.slice(0, secMatch.index) + remaining.slice(secMatch.index + secMatch[0].length);
     }
   }
 
@@ -242,12 +250,7 @@ export function parseSlicerSummary(text: string): ParsedSlicerSummary {
   return result;
 }
 
-function assertRange(
-  value: number,
-  min: number,
-  max: number,
-  label: string,
-): void {
+function assertRange(value: number, min: number, max: number, label: string): void {
   if (!Number.isFinite(value) || value < min || value > max) {
     throw new ToolError(
       "bad-option",
@@ -278,11 +281,7 @@ export function run(input: string, opts: PrintCostOpts): PrintCostResult {
 
   const symbol = CURRENCY_SYMBOLS[opts.currency];
   if (!symbol)
-    throw new ToolError(
-      "bad-option",
-      "Unknown currency.",
-      "Pick USD, EUR, GBP, CAD, or AUD.",
-    );
+    throw new ToolError("bad-option", "Unknown currency.", "Pick USD, EUR, GBP, CAD, or AUD.");
 
   const density = materialDensity(opts.material, opts.customDensity);
   const materialLabel = MATERIALS[opts.material]?.label ?? "Custom";

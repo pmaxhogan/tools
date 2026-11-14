@@ -28,8 +28,7 @@ const families = process.argv.slice(3).filter((a) => {
   }
   return true;
 });
-if (!id)
-  throw new Error("usage: node mc-pipeline/07-harness-sim.mjs <id> [--slot=N] [family...]");
+if (!id) throw new Error("usage: node mc-pipeline/07-harness-sim.mjs <id> [--slot=N] [family...]");
 const wanted = (f) => !families.length || families.includes(f);
 const log = (...a) => console.log(`[${id}]`, ...a);
 
@@ -366,12 +365,13 @@ function constantIn(className, patterns, { group = 1, zeroIsNoise = false, note 
   const text = readClass(className);
   const values = [];
   for (const re of [patterns].flat())
-    for (const m of text.matchAll(new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g")))
+    for (const m of text.matchAll(
+      new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g"),
+    ))
       values.push(Number(m[group]));
   const kept = zeroIsNoise ? values.filter((v) => v !== 0) : values;
   const distinct = [...new Set(kept)];
-  if (!distinct.length)
-    throw new Error(`no constant pattern matched ${className} in ${id}`);
+  if (!distinct.length) throw new Error(`no constant pattern matched ${className} in ${id}`);
   if (distinct.length > 1)
     throw new Error(
       `ambiguous constant in ${className} for ${id}: patterns matched ${distinct.join(", ")}; ` +
@@ -502,9 +502,7 @@ async function runProjectile() {
         "inGround",
       ])
         if (nbt[k] !== undefined) initial[k] = nbt[k];
-      const series = [
-        { tick: 0, pos: nbt.Pos, motion: nbt.Motion ?? mo.motion.slice() },
-      ];
+      const series = [{ tick: 0, pos: nbt.Pos, motion: nbt.Motion ?? mo.motion.slice() }];
       let expiredAt = null;
       for (let t = 1; t <= PROJ_TICKS; t++) {
         await advance(1);
@@ -737,8 +735,7 @@ function itemDetail(raw) {
   const comp = raw.components ?? {};
   let se = comp["minecraft:stored_enchantments"];
   if (se && typeof se === "object" && se.levels) se = se.levels;
-  if (se && typeof se === "object")
-    for (const [k, v] of Object.entries(se)) bits.push(`${k}=${v}`);
+  if (se && typeof se === "object") for (const [k, v] of Object.entries(se)) bits.push(`${k}=${v}`);
   const pc = comp["minecraft:potion_contents"];
   if (pc) bits.push(`potion=${typeof pc === "string" ? pc : (pc.potion ?? "custom")}`);
   return bits.sort().join("+") || null;
@@ -965,9 +962,7 @@ async function runVillager() {
   );
   const vd = await getData("entity", "@e[tag=vil0,limit=1]", "VillagerData");
   if (!vd || Number(vd.level) !== 2 || !String(vd.profession).includes("farmer"))
-    throw new Error(
-      `villager probe: VillagerData did not round trip, got ${JSON.stringify(vd)}`,
-    );
+    throw new Error(`villager probe: VillagerData did not round trip, got ${JSON.stringify(vd)}`);
   let probeRecipes = await getData("entity", "@e[tag=vil0,limit=1]", "Offers.Recipes");
   await cmd("kill @e[tag=vil]");
   if (!Array.isArray(probeRecipes) || probeRecipes.length < 1) {
@@ -995,9 +990,13 @@ async function runVillager() {
   // Gossips written through summon NBT: does the round trip survive?
   await cmd(
     `summon minecraft:villager ${VIL_POS.x} ${VIL_POS.y} ${VIL_POS.z} ` +
-      villagerNbt("farmer", 1, ["vil", "gossip"],
+      villagerNbt(
+        "farmer",
+        1,
+        ["vil", "gossip"],
         'Gossips:[{Type:"major_positive",Value:20,Target:[I;1,2,3,4]},' +
-          '{Type:"minor_negative",Value:5,Target:[I;1,2,3,4]}]'),
+          '{Type:"minor_negative",Value:5,Target:[I;1,2,3,4]}]',
+      ),
   );
   const gossips = await getData("entity", "@e[tag=gossip,limit=1]", "Gossips");
   await cmd("kill @e[tag=vil]");
@@ -1020,7 +1019,11 @@ async function runVillager() {
       if (!probe.length)
         throw new Error(`villager probe for ${profession} L${level} returned no samples at all`);
       if (probe.every((r) => r.length === 0)) {
-        levels[level] = { samples: VILLAGER_PROBE, recipesPerVillager: { 0: VILLAGER_PROBE }, trades: [] };
+        levels[level] = {
+          samples: VILLAGER_PROBE,
+          recipesPerVillager: { 0: VILLAGER_PROBE },
+          trades: [],
+        };
         continue;
       }
       any = true;
@@ -1287,9 +1290,7 @@ const GROWTH_CASES = [
         "neighbours, so the whole plane is one homogeneous sample",
     },
     build: async () => {
-      await cmd(
-        `fill ${G.x0} ${G.ySoil} ${G.z0} ${G.x1} ${G.ySoil} ${G.z1} minecraft:soul_sand`,
-      );
+      await cmd(`fill ${G.x0} ${G.ySoil} ${G.z0} ${G.x1} ${G.ySoil} ${G.z1} minecraft:soul_sand`);
       await cmd(
         `fill ${G.x0} ${G.yCrop} ${G.z0} ${G.x1} ${G.yCrop} ${G.z1} minecraft:nether_wart[age=0]`,
       );
@@ -1384,8 +1385,7 @@ async function runGrowthCase(c, sprint) {
   const t1 = await gametime();
 
   const region = c.count ?? { x0: G.x0, x1: G.x1, z0: G.z0, z1: G.z1 };
-  const box = (y0, y1) =>
-    `${region.x0} ${y0} ${region.z0} ${region.x1} ${y1} ${region.z1}`;
+  const box = (y0, y1) => `${region.x0} ${y0} ${region.z0} ${region.x1} ${y1} ${region.z1}`;
   const extra = c.extra ? await c.extra() : {};
 
   let histogram = null;
@@ -1430,7 +1430,9 @@ async function runGrowthCase(c, sprint) {
         "the arena did not build as designed",
     );
   if (c.totalOnly && total < c.expected)
-    throw new Error(`growth case ${c.name}: counted ${total} blocks, expected at least ${c.expected}`);
+    throw new Error(
+      `growth case ${c.name}: counted ${total} blocks, expected at least ${c.expected}`,
+    );
   return result;
 }
 
@@ -1450,9 +1452,7 @@ async function probeRandomTicking(sprint) {
     for (let j = 0; j < N; j++) {
       await cmd(`setblock ${G.x0 + i * 2} ${G.ySoil} ${G.z0 + j * 2} minecraft:sand`);
       await cmd(`setblock ${G.x0 + i * 2 + 1} ${G.ySoil} ${G.z0 + j * 2} minecraft:water`);
-      await cmd(
-        `setblock ${G.x0 + i * 2} ${G.yCrop} ${G.z0 + j * 2} minecraft:sugar_cane[age=0]`,
-      );
+      await cmd(`setblock ${G.x0 + i * 2} ${G.yCrop} ${G.z0 + j * 2} minecraft:sugar_cane[age=0]`);
     }
   // The random tick speed stays at the same value the real cases use: a much
   // higher one makes a single tick exceed the server's watchdog and the
@@ -1465,9 +1465,7 @@ async function probeRandomTicking(sprint) {
   const untouched = fillCount(
     await cmd(`fill ${box} minecraft:air replace minecraft:sugar_cane[age=0]`),
   );
-  const advanced = fillCount(
-    await cmd(`fill ${box} minecraft:air replace minecraft:sugar_cane`),
-  );
+  const advanced = fillCount(await cmd(`fill ${box} minecraft:air replace minecraft:sugar_cane`));
   if (untouched + advanced !== N * N)
     throw new Error(
       `random tick probe: placed ${N * N} sugar canes but counted ${untouched + advanced}`,
@@ -1500,8 +1498,14 @@ function runGrowthFromSource(reason) {
     class: "CropBlock",
     note: "applied when the same crop is adjacent on both axes or on a diagonal",
   };
-  const rollDivisor = constantIn("CropBlock", /nextInt\(\(int\)\((\d+\.\d+)F\s*\/\s*\S+\)\s*\+\s*\d+\)/);
-  const rollOffset = constantIn("CropBlock", /nextInt\(\(int\)\(\d+\.\d+F\s*\/\s*\S+\)\s*\+\s*(\d+)\)/);
+  const rollDivisor = constantIn(
+    "CropBlock",
+    /nextInt\(\(int\)\((\d+\.\d+)F\s*\/\s*\S+\)\s*\+\s*\d+\)/,
+  );
+  const rollOffset = constantIn(
+    "CropBlock",
+    /nextInt\(\(int\)\(\d+\.\d+F\s*\/\s*\S+\)\s*\+\s*(\d+)\)/,
+  );
   save(
     "growth",
     {
@@ -1826,7 +1830,8 @@ async function runRedstone() {
     const off = await sampleTicks(8, probe);
     cases.push({
       case: "redstone-lamp",
-      description: "lamp lit state per tick after a redstone block is placed beside it, then removed",
+      description:
+        "lamp lit state per tick after a redstone block is placed beside it, then removed",
       risingSeries: on,
       risingTransitions: transitions(on, false),
       fallingSeries: off,
@@ -1861,7 +1866,9 @@ async function runRedstone() {
     await cmd(`setblock ${rpos(1)} minecraft:observer[facing=${facing}]`);
     await advance(8);
     if (await blockIs(rpos(1), "minecraft:observer[powered=true]"))
-      throw new Error("observer probe: observer was still powered before the watched block changed");
+      throw new Error(
+        "observer probe: observer was still powered before the watched block changed",
+      );
     await cmd(`setblock ${watchPos} minecraft:stone`);
     const series = await sampleTicks(10, () =>
       blockIs(rpos(1), "minecraft:observer[powered=true]"),
@@ -1935,11 +1942,10 @@ function runRedstoneFromSource() {
       // setCooldown(0) resets the cooldown earlier in the file than the real
       // transfer cadence is ever set, so zeroes are dropped before the
       // remaining matches are required to agree.
-      ticks: constantIn(
-        "HopperBlockEntity",
-        [/setCooldown\((\d+)\);/, /setCooldown\((\d+) - /],
-        { zeroIsNoise: true, note: "ticks between one item moving and the next" },
-      ),
+      ticks: constantIn("HopperBlockEntity", [/setCooldown\((\d+)\);/, /setCooldown\((\d+) - /], {
+        zeroIsNoise: true,
+        note: "ticks between one item moving and the next",
+      }),
     },
     { name: "dispenser-and-dropper-fire-delay", ticks: constantIn("DispenserBlock", scheduleTick) },
     {

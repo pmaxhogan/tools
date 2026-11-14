@@ -163,7 +163,12 @@ function analyzeText(text: string | null, viewValue: string): Analysis {
     return { error: null, raw: null, explainedRows: rows, summaryText: output.Summary ?? null };
   } catch (err) {
     if (err instanceof ToolError) {
-      return { error: { message: err.message, fix: err.fix }, raw: null, explainedRows: [], summaryText: null };
+      return {
+        error: { message: err.message, fix: err.fix },
+        raw: null,
+        explainedRows: [],
+        summaryText: null,
+      };
     }
     return {
       error: { message: err instanceof Error ? err.message : "That could not be analyzed." },
@@ -208,8 +213,8 @@ const PRIVACY_BADGE_CLASS: Record<PrivacyLevel, string> = {
       <TabsContent value="fetch" class="flex flex-col gap-3 pt-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <p class="text-xs text-muted-foreground">
-            Nothing runs until you press the button. This fetches the headers your browser just
-            sent to this site's own worker for this request.
+            Nothing runs until you press the button. This fetches the headers your browser just sent
+            to this site's own worker for this request.
           </p>
           <Button :disabled="fetchLoading" @click="fetchHeaders">
             <Loader2 v-if="fetchLoading" class="size-3.5 animate-spin" aria-hidden="true" />
@@ -265,8 +270,8 @@ const PRIVACY_BADGE_CLASS: Record<PrivacyLevel, string> = {
       v-if="!activeHasResult"
       class="rounded-[10px] bg-secondary p-4 text-sm text-muted-foreground shadow-[var(--sh-inset)]"
     >
-      Nothing has run yet. Click "Show my headers" above, or paste header text and click
-      "Analyze headers", to see results here.
+      Nothing has run yet. Click "Show my headers" above, or paste header text and click "Analyze
+      headers", to see results here.
     </p>
 
     <template v-else>

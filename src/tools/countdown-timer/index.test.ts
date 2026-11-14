@@ -215,7 +215,11 @@ describe("encodeTimerState / decodeTimerState", () => {
   });
 
   it("produces a compact, fragment-safe string (no raw spaces)", () => {
-    const encoded = encodeTimerState({ kind: "until", targetMs: 1_800_000_000_000, label: "Tea time" });
+    const encoded = encodeTimerState({
+      kind: "until",
+      targetMs: 1_800_000_000_000,
+      label: "Tea time",
+    });
     expect(encoded).not.toMatch(/\s/);
   });
 });

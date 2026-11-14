@@ -22,9 +22,7 @@ const TOOLS = join(WORK, "tools");
 async function githubLatestJar(repo, match) {
   // Reuse a previously downloaded jar before touching the GitHub API, and
   // retry the API call: transient socket closes killed a five-version run.
-  const cached = existsSync(TOOLS)
-    ? readdirSync(TOOLS).find((f) => match.test(f))
-    : null;
+  const cached = existsSync(TOOLS) ? readdirSync(TOOLS).find((f) => match.test(f)) : null;
   if (cached) return join(TOOLS, cached);
   let rel;
   for (let attempt = 1; ; attempt++) {
@@ -47,22 +45,16 @@ async function githubLatestJar(repo, match) {
 function innerServerJar(id, java) {
   const dir = join(WORK, id);
   const jar = join(dir, "server.jar");
-  const listing = execFileSync(
-    java.replace(/java\.exe$/, "jar.exe"),
-    ["tf", jar],
-    { maxBuffer: 64 * 1024 * 1024 },
-  ).toString();
+  const listing = execFileSync(java.replace(/java\.exe$/, "jar.exe"), ["tf", jar], {
+    maxBuffer: 64 * 1024 * 1024,
+  }).toString();
   const inner = listing
     .split(/\r?\n/)
     .find((l) => /^META-INF\/versions\/.+\/server-.+\.jar$/.test(l));
   if (!inner) return jar; // pre-bundler era: the jar IS the server
   const out = join(dir, "server-inner.jar");
   if (!existsSync(out)) {
-    execFileSync(
-      java.replace(/java\.exe$/, "jar.exe"),
-      ["xf", jar, inner],
-      { cwd: dir },
-    );
+    execFileSync(java.replace(/java\.exe$/, "jar.exe"), ["xf", jar, inner], { cwd: dir });
     const extracted = join(dir, ...inner.split("/"));
     execFileSync("cmd", ["/c", "copy", "/y", extracted, out], { stdio: "ignore" });
   }
@@ -73,10 +65,7 @@ const ids = process.argv.slice(2);
 if (!ids.length) throw new Error("usage: node mc-pipeline/02-decompile.mjs <id...>");
 ensureDir(TOOLS);
 const m = await manifest();
-const vineflower = await githubLatestJar(
-  "Vineflower/vineflower",
-  /^vineflower-[\d.]+\.jar$/,
-);
+const vineflower = await githubLatestJar("Vineflower/vineflower", /^vineflower-[\d.]+\.jar$/);
 
 for (const id of ids) {
   const v = await versionJson(m, id);
@@ -99,12 +88,17 @@ for (const id of ids) {
       execFileSync(
         java,
         [
-          "-jar", reconstruct,
-          "--jar", jarToDecompile,
-          "--mapping", join(dir, "mappings", "server.txt"),
-          "--output", remapped,
+          "-jar",
+          reconstruct,
+          "--jar",
+          jarToDecompile,
+          "--mapping",
+          join(dir, "mappings", "server.txt"),
+          "--output",
+          remapped,
           "--agree",
-          "--exclude", "com.google.,com.mojang.authlib,io.netty.,it.unimi.,org.apache.,joptsimple.",
+          "--exclude",
+          "com.google.,com.mojang.authlib,io.netty.,it.unimi.,org.apache.,joptsimple.",
         ],
         // cwd matters: Reconstruct writes a logs/ dir into its working dir.
         { stdio: "inherit", cwd: dir },
@@ -116,10 +110,8 @@ for (const id of ids) {
   }
   console.log(`[${id}] decompiling with Vineflower (this takes a while)...`);
   ensureDir(srcOut);
-  execFileSync(
-    java,
-    ["-jar", vineflower, "--silent", jarToDecompile, srcOut],
-    { stdio: "inherit" },
-  );
+  execFileSync(java, ["-jar", vineflower, "--silent", jarToDecompile, srcOut], {
+    stdio: "inherit",
+  });
   console.log(`[${id}] source at ${srcOut}`);
 }

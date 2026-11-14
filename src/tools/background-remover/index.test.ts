@@ -256,9 +256,7 @@ describe("compositeOnColor", () => {
   });
 
   it("rejects a pixel buffer that does not match the image size", () => {
-    expect(() => compositeOnColor(solid(1, 1, 0, 0, 0, 255), 2, 2, "#ffffff")).toThrow(
-      ToolError,
-    );
+    expect(() => compositeOnColor(solid(1, 1, 0, 0, 0, 255), 2, 2, "#ffffff")).toThrow(ToolError);
   });
 });
 

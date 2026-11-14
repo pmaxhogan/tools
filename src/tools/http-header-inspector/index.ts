@@ -591,7 +591,9 @@ function explainedValue(rawValue: string, name: string): string {
  * and a trailing Summary row. Unknown header names still get a row, marked
  * "(no description)".
  */
-export function analyzeHeaders(headers: Record<string, string> | [string, string][]): Record<string, string> {
+export function analyzeHeaders(
+  headers: Record<string, string> | [string, string][],
+): Record<string, string> {
   const pairs = toPairs(headers);
   const rows: Record<string, string> = {};
   const seen = new Map<string, number>();
@@ -662,7 +664,8 @@ function normalizeView(view: unknown): "explained" | "raw" | "curl" {
     .trim()
     .toLowerCase();
   if (["raw", "values", "values only", "plain", "unexplained"].includes(v)) return "raw";
-  if (["curl", "curl command", "as curl", "curl -h", "reproduce with curl"].includes(v)) return "curl";
+  if (["curl", "curl command", "as curl", "curl -h", "reproduce with curl"].includes(v))
+    return "curl";
   return "explained";
 }
 
@@ -693,4 +696,8 @@ export function run(input: string, opts: HttpHeaderInspectorOpts): string | Reco
   return analyzeHeaders(pairs);
 }
 
-export default { run } satisfies ToolLogic<string, string | Record<string, string>, HttpHeaderInspectorOpts>;
+export default { run } satisfies ToolLogic<
+  string,
+  string | Record<string, string>,
+  HttpHeaderInspectorOpts
+>;

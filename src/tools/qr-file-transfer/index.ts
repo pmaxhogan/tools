@@ -147,9 +147,7 @@ export function toBase64Url(bytes: Uint8Array): string {
   } else if (left === 2) {
     const n = (bytes[i] << 16) | (bytes[i + 1] << 8);
     out +=
-      B64_ALPHABET[(n >>> 18) & 63] +
-      B64_ALPHABET[(n >>> 12) & 63] +
-      B64_ALPHABET[(n >>> 6) & 63];
+      B64_ALPHABET[(n >>> 18) & 63] + B64_ALPHABET[(n >>> 12) & 63] + B64_ALPHABET[(n >>> 6) & 63];
   }
   return out;
 }
@@ -438,7 +436,8 @@ function normaliseFps(fps: number | undefined): number {
 }
 
 function normaliseMetaEvery(metaEvery: number | undefined): number {
-  const value = metaEvery === undefined || metaEvery === null ? DEFAULT_META_EVERY : Number(metaEvery);
+  const value =
+    metaEvery === undefined || metaEvery === null ? DEFAULT_META_EVERY : Number(metaEvery);
   if (!Number.isFinite(value) || value < 1 || value > 1000)
     throw new ToolError(
       "bad-option",
@@ -717,7 +716,10 @@ function cleanFileName(name: string | undefined, fallback: string): string {
  * characters of QR capacity unused, which is far cheaper than the bookkeeping a
  * variable chunk size would cost the receiver.
  */
-export function planTransfer(payload: Uint8Array | string, opts: TransferOptions = {}): TransferPlan {
+export function planTransfer(
+  payload: Uint8Array | string,
+  opts: TransferOptions = {},
+): TransferPlan {
   const bytes = toBytes(payload);
   if (bytes.length === 0)
     throw new ToolError(
@@ -738,7 +740,10 @@ export function planTransfer(payload: Uint8Array | string, opts: TransferOptions
   const metaEvery = normaliseMetaEvery(opts.metaEvery);
   const version = SIZE_VERSIONS[size];
   const capacity = capacityFor(version, ecc);
-  const fileName = cleanFileName(opts.fileName, typeof payload === "string" ? "payload.txt" : "file.bin");
+  const fileName = cleanFileName(
+    opts.fileName,
+    typeof payload === "string" ? "payload.txt" : "file.bin",
+  );
 
   const nameBytes = encoder.encode(fileName);
   if (nameBytes.length > MAX_NAME_BYTES)
@@ -1012,7 +1017,8 @@ export class Receiver {
     const plan = this.plan;
     if (!plan || this.known < plan.totalChunks) return;
     const out = new Uint8Array(plan.totalChunks * plan.chunkSize);
-    for (let i = 0; i < plan.totalChunks; i++) out.set(this.chunks[i] as Uint8Array, i * plan.chunkSize);
+    for (let i = 0; i < plan.totalChunks; i++)
+      out.set(this.chunks[i] as Uint8Array, i * plan.chunkSize);
     this.assembled = {
       name: this.name ?? "file.bin",
       bytes: out.subarray(0, plan.totalLength).slice(),
@@ -1141,7 +1147,10 @@ export function frameToQrMatrix(text: string, ecc: string = "M", version?: numbe
       "Generate the frames first.",
     );
   try {
-    const qr = QRCode.create(text, { errorCorrectionLevel: level, ...(version ? { version } : {}) });
+    const qr = QRCode.create(text, {
+      errorCorrectionLevel: level,
+      ...(version ? { version } : {}),
+    });
     return {
       size: qr.modules.size,
       version: qr.version,
@@ -1296,4 +1305,8 @@ export function run(input: Uint8Array | string, opts: QrTransferOpts): Record<st
   };
 }
 
-export default { run } satisfies ToolLogic<Uint8Array | string, Record<string, string>, QrTransferOpts>;
+export default { run } satisfies ToolLogic<
+  Uint8Array | string,
+  Record<string, string>,
+  QrTransferOpts
+>;

@@ -880,11 +880,7 @@ function describeBpm(bpm: number, signature: TimeSignature, a4: number): TunerMe
   };
 }
 
-function describePanel(
-  a4: number,
-  tuning: Tuning,
-  signature: TimeSignature,
-): TunerMetronomeResult {
+function describePanel(a4: number, tuning: Tuning, signature: TimeSignature): TunerMetronomeResult {
   return {
     Tuner:
       "Click Start listening in the panel to tune with your microphone. Pitch detection runs on your device using the McLeod Pitch Method, and the audio never leaves your browser.",
@@ -916,7 +912,10 @@ export function run(input: string, opts: TunerMetronomeOpts): TunerMetronomeResu
 
   const lower = raw.toLowerCase();
   if (/\bbpm\b/.test(lower) || lower.includes("beats per minute")) {
-    const numeric = lower.replace(/beats\s*per\s*minute/g, " ").replace(/\bbpm\b/g, " ").trim();
+    const numeric = lower
+      .replace(/beats\s*per\s*minute/g, " ")
+      .replace(/\bbpm\b/g, " ")
+      .trim();
     const bpm = Number(numeric);
     if (!numeric || !Number.isFinite(bpm)) {
       throw new ToolError(

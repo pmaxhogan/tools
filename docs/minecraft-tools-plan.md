@@ -108,9 +108,9 @@ tools it downloads itself:
      values are hand-derived from reading the decompiled source and written
      into vector JSON with `method: "source-derived"` plus the class/method
      they came from.
-   Vitest asserts the TS logic matches: exact equality for exact vectors,
-   inside tolerance for statistical ones. The loot engine additionally gets
-   exact structural tests parsed from the loot JSON itself.
+     Vitest asserts the TS logic matches: exact equality for exact vectors,
+     inside tolerance for statistical ones. The loot engine additionally gets
+     exact structural tests parsed from the loot JSON itself.
 
 Prove the entire chain on 1.21.11 first (mappings present, /damage exists,
 modern components), then scale to the other versions as configuration.

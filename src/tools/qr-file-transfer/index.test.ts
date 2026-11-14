@@ -306,9 +306,7 @@ describe("qr-file-transfer: sequential round trip", () => {
 
     const status = receiver.status;
     expect(status.done).toBe(false);
-    expect(status.missing).toEqual(
-      frames.map((_, i) => i).filter((i) => i % 2 === 1),
-    );
+    expect(status.missing).toEqual(frames.map((_, i) => i).filter((i) => i % 2 === 1));
     expect(status.progress).toBeGreaterThan(0.4);
     expect(status.progress).toBeLessThan(0.6);
   });
@@ -520,9 +518,9 @@ describe("qr-file-transfer: estimating", () => {
     expect(codeOf(() => estimateTransfer(1000, "medium", 99))).toBe("bad-option");
     expect(codeOf(() => estimateTransfer(1000, "medium", 10, "torrent"))).toBe("bad-option");
     expect(codeOf(() => estimateTransfer(1000, "medium", 10, "fountain", "Q"))).toBe("bad-option");
-    expect(codeOf(() => estimateTransfer(1000, "small", 10, "fountain", "M", "n".repeat(200)))).toBe(
-      "bad-option",
-    );
+    expect(
+      codeOf(() => estimateTransfer(1000, "small", 10, "fountain", "M", "n".repeat(200))),
+    ).toBe("bad-option");
   });
 });
 

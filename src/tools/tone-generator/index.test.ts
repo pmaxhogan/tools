@@ -316,14 +316,26 @@ describe("encodeWav", () => {
 
 describe("run", () => {
   it("defaults to 440 Hz sine when input is empty", () => {
-    const result = run("", { wave: "sine", duration: 3, volume: 50, endFrequency: 20000, sweepKind: "log" });
+    const result = run("", {
+      wave: "sine",
+      duration: 3,
+      volume: 50,
+      endFrequency: 20000,
+      sweepKind: "log",
+    });
     expect(result.Frequency).toBe("440 Hz");
     expect(result.Playback).toBeTruthy();
     expect(result.WAV).toBeTruthy();
   });
 
   it("accepts a note name as input", () => {
-    const result = run("A4", { wave: "sine", duration: 3, volume: 50, endFrequency: 20000, sweepKind: "log" });
+    const result = run("A4", {
+      wave: "sine",
+      duration: 3,
+      volume: 50,
+      endFrequency: 20000,
+      sweepKind: "log",
+    });
     expect(result.Frequency).toBe("440 Hz");
   });
 
@@ -341,19 +353,37 @@ describe("run", () => {
 
   it("throws bad-frequency for an out of range input", () => {
     expect(() =>
-      run("30000", { wave: "sine", duration: 3, volume: 50, endFrequency: 20000, sweepKind: "log" }),
+      run("30000", {
+        wave: "sine",
+        duration: 3,
+        volume: 50,
+        endFrequency: 20000,
+        sweepKind: "log",
+      }),
     ).toThrow(ToolError);
   });
 
   it("throws bad-option for an unknown waveform", () => {
     expect(() =>
-      run("440", { wave: "hexagon", duration: 3, volume: 50, endFrequency: 20000, sweepKind: "log" }),
+      run("440", {
+        wave: "hexagon",
+        duration: 3,
+        volume: 50,
+        endFrequency: 20000,
+        sweepKind: "log",
+      }),
     ).toThrow(ToolError);
   });
 
   it("throws bad-option for a duration out of range", () => {
     expect(() =>
-      run("440", { wave: "sine", duration: 100, volume: 50, endFrequency: 20000, sweepKind: "log" }),
+      run("440", {
+        wave: "sine",
+        duration: 100,
+        volume: 50,
+        endFrequency: 20000,
+        sweepKind: "log",
+      }),
     ).toThrow(ToolError);
   });
 

@@ -87,12 +87,12 @@ const VOLUME_UNITS: Record<string, number> = {
   cl: 0.01,
   ml: 1e-3,
   ul: 1e-6,
-  "µl": 1e-6,
-  "μl": 1e-6,
+  µl: 1e-6,
+  μl: 1e-6,
   nl: 1e-9,
   kl: 1e3,
   cc: 1e-3,
-  "cm3": 1e-3,
+  cm3: 1e-3,
 };
 
 export interface Concentration {
@@ -332,7 +332,8 @@ function ratioOf(a: Concentration, b: Concentration, molarMass?: number): number
       "One concentration is molar and the other is a mass per volume, which only convert through the compound's molar mass.",
       'Add the molar mass, such as "molarMass=58.44", or write both concentrations in the same family of unit.',
     );
-  const toMolar = (c: Concentration) => (c.family === "mass" ? c.canonical / molarMass : c.canonical);
+  const toMolar = (c: Concentration) =>
+    c.family === "mass" ? c.canonical / molarMass : c.canonical;
   return toMolar(a) / toMolar(b);
 }
 
@@ -503,7 +504,8 @@ export function run(input: string, opts?: Partial<DilutionOpts>): Record<string,
     Equation: `C1 V1 = C2 V2, so ${showConcentration(r.c1.canonical, r.c1, d)} x ${showVolume(r.v1.liters, r.v1, d)} = ${showConcentration(r.c2.canonical, r.c2, d)} x ${showVolume(r.v2.liters, r.v2, d)}`,
   };
   if (r.c1.unit === "%" || r.c2.unit === "%")
-    out["Percent reading"] = "Percent is read as weight in volume: 1% is 1 gram in 100 millilitres.";
+    out["Percent reading"] =
+      "Percent is read as weight in volume: 1% is 1 gram in 100 millilitres.";
   if (r.c1.unit.toLowerCase() === "ppm" || r.c2.unit.toLowerCase() === "ppm")
     out["Parts per million reading"] =
       "Parts per million is read as the aqueous convention of 1 milligram per liter.";

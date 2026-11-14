@@ -17,7 +17,8 @@ import {
 /** Pull the flat option values out of a select OptionSpec, in declared order. */
 function selectValues(id: string): string[] {
   const spec = meta.options?.find((o) => o.id === id);
-  if (!spec || spec.kind !== "select" || !spec.options) throw new Error(`no flat select options for "${id}"`);
+  if (!spec || spec.kind !== "select" || !spec.options)
+    throw new Error(`no flat select options for "${id}"`);
   return spec.options.map((o) => o.value);
 }
 
@@ -141,7 +142,13 @@ describe("computeLayout", () => {
   });
 
   it("forces an exact 1:1 ratio for a wide image", () => {
-    const layout = computeLayout({ imageWidth: 1600, imageHeight: 400, padding: 30, frame: "none", aspect: "1:1" });
+    const layout = computeLayout({
+      imageWidth: 1600,
+      imageHeight: 400,
+      padding: 30,
+      frame: "none",
+      aspect: "1:1",
+    });
     expect(layout.canvasWidth).toBe(layout.canvasHeight);
   });
 
@@ -164,13 +171,24 @@ describe("computeLayout", () => {
   });
 
   it("does not clamp a canvas at or under the limit", () => {
-    const layout = computeLayout({ imageWidth: 2000, imageHeight: 1200, padding: 50, frame: "none" });
+    const layout = computeLayout({
+      imageWidth: 2000,
+      imageHeight: 1200,
+      padding: 50,
+      frame: "none",
+    });
     expect(layout.clamped).toBe(false);
     expect(layout.clampScale).toBe(1);
   });
 
   it("applies an export scale before the clamp", () => {
-    const layout = computeLayout({ imageWidth: 400, imageHeight: 300, padding: 20, frame: "none", scale: 2 });
+    const layout = computeLayout({
+      imageWidth: 400,
+      imageHeight: 300,
+      padding: 20,
+      frame: "none",
+      scale: 2,
+    });
     expect(layout.canvasWidth).toBe(880); // (400 + 40) * 2
     expect(layout.canvasHeight).toBe(680); // (300 + 40) * 2
     expect(layout.appliedScale).toBe(2);
@@ -188,7 +206,12 @@ describe("computeLayout", () => {
   });
 
   it("falls back to the none frame and auto aspect for an unknown value", () => {
-    const layout = computeLayout({ imageWidth: 100, imageHeight: 100, frame: "bogus", aspect: "bogus" });
+    const layout = computeLayout({
+      imageWidth: 100,
+      imageHeight: 100,
+      frame: "bogus",
+      aspect: "bogus",
+    });
     expect(layout.frame).toBe("none");
     expect(layout.aspect).toBe("auto");
   });
@@ -199,7 +222,12 @@ describe("computeLayout", () => {
 /* ------------------------------------------------------------------ */
 
 describe("renderFrameSvg", () => {
-  const baseLayout = computeLayout({ imageWidth: 800, imageHeight: 600, padding: 48, frame: "mac" });
+  const baseLayout = computeLayout({
+    imageWidth: 800,
+    imageHeight: 600,
+    padding: 48,
+    frame: "mac",
+  });
 
   it("contains a gradient definition for a gradient background", () => {
     const svg = renderFrameSvg(baseLayout, { background: "sunset", frame: "mac" });
@@ -237,7 +265,11 @@ describe("renderFrameSvg", () => {
   });
 
   it("includes the rounded clip path for the frame slot", () => {
-    const svg = renderFrameSvg(baseLayout, { background: "sunset", frame: "mac", cornerRadius: 16 });
+    const svg = renderFrameSvg(baseLayout, {
+      background: "sunset",
+      frame: "mac",
+      cornerRadius: 16,
+    });
     expect(svg).toContain('<clipPath id="sb-frame-clip">');
     expect(svg).toContain('rx="16"');
     expect(svg).toContain('clip-path="url(#sb-frame-clip)"');
@@ -255,7 +287,12 @@ describe("renderFrameSvg", () => {
   });
 
   it("draws windows controls instead of traffic lights for a windows frame", () => {
-    const layout = computeLayout({ imageWidth: 800, imageHeight: 600, padding: 40, frame: "windows" });
+    const layout = computeLayout({
+      imageWidth: 800,
+      imageHeight: 600,
+      padding: 40,
+      frame: "windows",
+    });
     const svg = renderFrameSvg(layout, { background: "sunset", frame: "windows" });
     expect(svg).not.toContain('data-kind="traffic-light"');
     expect(svg).toContain('data-kind="win-minimize"');
@@ -264,7 +301,12 @@ describe("renderFrameSvg", () => {
   });
 
   it("draws a url pill with traffic lights for a browser frame", () => {
-    const layout = computeLayout({ imageWidth: 800, imageHeight: 600, padding: 40, frame: "browser-light" });
+    const layout = computeLayout({
+      imageWidth: 800,
+      imageHeight: 600,
+      padding: 40,
+      frame: "browser-light",
+    });
     const svg = renderFrameSvg(layout, { background: "sunset", frame: "browser-light" });
     expect(svg).toContain('data-kind="url-pill"');
     expect(svg).toContain('data-kind="url-pill-text"');
@@ -272,8 +314,17 @@ describe("renderFrameSvg", () => {
   });
 
   it("puts the title text inside the url pill for a browser frame", () => {
-    const layout = computeLayout({ imageWidth: 800, imageHeight: 600, padding: 40, frame: "browser-dark" });
-    const svg = renderFrameSvg(layout, { background: "midnight", frame: "browser-dark", title: "example.com/app" });
+    const layout = computeLayout({
+      imageWidth: 800,
+      imageHeight: 600,
+      padding: 40,
+      frame: "browser-dark",
+    });
+    const svg = renderFrameSvg(layout, {
+      background: "midnight",
+      frame: "browser-dark",
+      title: "example.com/app",
+    });
     expect(svg).toContain("example.com/app");
     expect(svg).not.toContain('data-kind="window-title"');
   });
@@ -287,13 +338,21 @@ describe("renderFrameSvg", () => {
 
   it("escapes a title with special characters", () => {
     const layout = computeLayout({ imageWidth: 800, imageHeight: 600, padding: 40, frame: "mac" });
-    const svg = renderFrameSvg(layout, { background: "sunset", frame: "mac", title: '<script> & "x"' });
+    const svg = renderFrameSvg(layout, {
+      background: "sunset",
+      frame: "mac",
+      title: '<script> & "x"',
+    });
     expect(svg).toContain("&lt;script&gt;");
     expect(svg).not.toContain("<script>");
   });
 
   it("includes a watermark when requested and omits it otherwise", () => {
-    const withMark = renderFrameSvg(baseLayout, { background: "sunset", frame: "mac", watermark: "example.com" });
+    const withMark = renderFrameSvg(baseLayout, {
+      background: "sunset",
+      frame: "mac",
+      watermark: "example.com",
+    });
     expect(withMark).toContain('data-kind="watermark"');
     expect(withMark).toContain("example.com");
 
@@ -314,7 +373,12 @@ describe("renderFrameSvg", () => {
   });
 
   it("accepts a raw Background object for a custom color outside the presets", () => {
-    const custom: Background = { id: "user-pick", label: "User pick", kind: "solid", stops: ["#123456"] };
+    const custom: Background = {
+      id: "user-pick",
+      label: "User pick",
+      kind: "solid",
+      stops: ["#123456"],
+    };
     const svg = renderFrameSvg(baseLayout, { background: custom, frame: "none" });
     expect(svg).toContain('fill="#123456"');
     expect(svg).toContain('data-background="user-pick"');

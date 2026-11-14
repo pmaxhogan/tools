@@ -111,8 +111,7 @@ function callPost() {
  * ------------------------------------------------------------------ */
 
 type Formatted =
-  | { kind: "ok"; output: string | Record<string, string> }
-  | { kind: "error"; message: string };
+  { kind: "ok"; output: string | Record<string, string> } | { kind: "error"; message: string };
 
 const formatted = computed<Formatted | null>(() => {
   const raw = lastResponseJson.value;
@@ -229,11 +228,7 @@ const curlLines = computed(() => {
       <span class="text-xs font-semibold tracking-[0.04em] text-muted-foreground uppercase">
         Try it from a terminal
       </span>
-      <div
-        v-for="line in curlLines"
-        :key="line"
-        class="flex items-center justify-between gap-2"
-      >
+      <div v-for="line in curlLines" :key="line" class="flex items-center justify-between gap-2">
         <code class="min-w-0 flex-1 overflow-x-auto font-mono text-xs whitespace-pre">{{
           line
         }}</code>

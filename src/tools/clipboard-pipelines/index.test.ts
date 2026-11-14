@@ -223,9 +223,7 @@ describe("clipboard-pipelines engine", () => {
 
   it("validates the whole chain before running any step", () => {
     // base64-decode would throw on this input, but the unknown id wins first.
-    expect(() => run("!!!", { chain: "nope,base64-decode" })).toThrow(
-      /No transform named "nope"/,
-    );
+    expect(() => run("!!!", { chain: "nope,base64-decode" })).toThrow(/No transform named "nope"/);
   });
 
   it("throws empty-chain for a missing or blank chain", () => {

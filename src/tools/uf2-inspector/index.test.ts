@@ -141,7 +141,9 @@ describe("uf2-inspector: gap between blocks", () => {
     const b0 = buildBlock({ targetAddr: 0x1000, payloadSize: 256, blockNo: 0, numBlocks: 2 });
     const b1 = buildBlock({ targetAddr: 0x2000, payloadSize: 256, blockNo: 1, numBlocks: 2 });
     const out = run(concatBlocks([b0, b1]), { view: "summary" });
-    expect(out["Address ranges"]).toBe("0x00001000..0x00001100 (256 B), 0x00002000..0x00002100 (256 B)");
+    expect(out["Address ranges"]).toBe(
+      "0x00001000..0x00001100 (256 B), 0x00002000..0x00002100 (256 B)",
+    );
     expect(out.Gaps).toBe("0x00001100..0x00002000 (3.8 KB gap)");
     expect(out.Verdict).toBe("Looks valid");
   });

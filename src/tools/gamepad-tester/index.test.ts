@@ -87,7 +87,9 @@ describe("describeButtons", () => {
   });
 
   it("ignores malformed entries without throwing", () => {
-    const rows = describeButtons([{ pressed: true } as unknown as { index: number; value: number; pressed: boolean }]);
+    const rows = describeButtons([
+      { pressed: true } as unknown as { index: number; value: number; pressed: boolean },
+    ]);
     expect(Object.keys(rows)).toHaveLength(0);
   });
 });
@@ -107,7 +109,13 @@ describe("triggerRange", () => {
   });
 
   it("returns zeros for an empty series", () => {
-    expect(triggerRange([])).toEqual({ min: 0, max: 0, range: 0, reachesZero: false, reachesFull: false });
+    expect(triggerRange([])).toEqual({
+      min: 0,
+      max: 0,
+      range: 0,
+      reachesZero: false,
+      reachesFull: false,
+    });
   });
 });
 
@@ -177,7 +185,12 @@ describe("circularityTest", () => {
   });
 
   it("returns zeros for an empty sample set", () => {
-    expect(circularityTest([])).toEqual({ minRadius: 0, maxRadius: 0, meanRadius: 0, errorPercent: 0 });
+    expect(circularityTest([])).toEqual({
+      minRadius: 0,
+      maxRadius: 0,
+      meanRadius: 0,
+      errorPercent: 0,
+    });
   });
 });
 
@@ -206,7 +219,9 @@ describe("summarizeSession", () => {
 
 describe("vibrationSupport", () => {
   it("reports a vibrationActuator type when present", () => {
-    expect(vibrationSupport({ vibrationActuator: { type: "dual-rumble" } })).toBe("Supported (dual-rumble)");
+    expect(vibrationSupport({ vibrationActuator: { type: "dual-rumble" } })).toBe(
+      "Supported (dual-rumble)",
+    );
   });
 
   it("reports haptic actuator count when present", () => {
@@ -261,7 +276,13 @@ describe("run", () => {
 
   it("respects a forced label set instead of auto-detection", () => {
     const input = JSON.stringify({
-      gamepad: { id: XBOX_ID, mapping: "standard", buttons: 17, axes: 4, pressed: [{ index: 0, value: 1, pressed: true }] },
+      gamepad: {
+        id: XBOX_ID,
+        mapping: "standard",
+        buttons: 17,
+        axes: 4,
+        pressed: [{ index: 0, value: 1, pressed: true }],
+      },
     });
     const result = run(input, { labels: "playstation" });
     expect(result["Button Cross"]).toBe("pressed (1.00)");

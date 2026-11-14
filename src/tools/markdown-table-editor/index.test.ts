@@ -461,9 +461,7 @@ describe("markdown-table-editor errors", () => {
   });
 
   it("throws no-table for HTML without rows", () => {
-    expect(() => run("<table></table>", {})).toThrow(
-      expect.objectContaining({ code: "no-table" }),
-    );
+    expect(() => run("<table></table>", {})).toThrow(expect.objectContaining({ code: "no-table" }));
   });
 
   it("throws bad-option for an unknown output format", () => {
@@ -486,12 +484,8 @@ describe("markdown-table-editor errors", () => {
 
   it("throws bad-index when an operation points outside the table", () => {
     expect(() => removeRow(PEOPLE, 9)).toThrow(expect.objectContaining({ code: "bad-index" }));
-    expect(() => removeColumn(PEOPLE, -1)).toThrow(
-      expect.objectContaining({ code: "bad-index" }),
-    );
-    expect(() => moveColumn(PEOPLE, 0, 5)).toThrow(
-      expect.objectContaining({ code: "bad-index" }),
-    );
+    expect(() => removeColumn(PEOPLE, -1)).toThrow(expect.objectContaining({ code: "bad-index" }));
+    expect(() => moveColumn(PEOPLE, 0, 5)).toThrow(expect.objectContaining({ code: "bad-index" }));
     expect(() => setCell(PEOPLE, 0, 7, "x")).toThrow(
       expect.objectContaining({ code: "bad-index" }),
     );

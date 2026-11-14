@@ -14,9 +14,7 @@ function serverProperties(id, rconPort, gamePort) {
   // level-type syntax changed: pre-1.18 wants "flat", 1.18+ "minecraft:flat"
   // (escaped colon in .properties). Old versions ignore unknown keys, so the
   // rest is shared. Colons in .properties values must be escaped.
-  const [maj, min] = id.startsWith("1.")
-    ? id.split(".").map(Number).slice(0, 2)
-    : [99, 0];
+  const [maj, min] = id.startsWith("1.") ? id.split(".").map(Number).slice(0, 2) : [99, 0];
   const modern = maj > 1 || min >= 18;
   return [
     `level-type=${modern ? "minecraft\\:flat" : "flat"}`,
@@ -55,19 +53,13 @@ export async function startServer(id, { timeoutMs = 180000, slot = 0 } = {}) {
   const rconPort = 25575 + slot * 2;
   const gamePort = 25599 + slot * 2;
   const m = JSON.parse(
-    (await import("node:fs")).readFileSync(
-      join(WORK, "version_manifest_v2.json"),
-      "utf8",
-    ),
+    (await import("node:fs")).readFileSync(join(WORK, "version_manifest_v2.json"), "utf8"),
   );
   const v = await versionJson(m, id);
   const java = await ensureJdk(v.javaVersion?.majorVersion ?? 8);
   const dir = ensureDir(join(WORK, id, "server"));
   writeFileSync(join(dir, "eula.txt"), "eula=true\n");
-  writeFileSync(
-    join(dir, "server.properties"),
-    serverProperties(id, rconPort, gamePort) + "\n",
-  );
+  writeFileSync(join(dir, "server.properties"), serverProperties(id, rconPort, gamePort) + "\n");
   const jar = join(WORK, id, "server.jar");
   if (!existsSync(jar)) throw new Error(`${jar} missing; run 01-download.mjs ${id}`);
 
@@ -82,10 +74,8 @@ export async function startServer(id, { timeoutMs = 180000, slot = 0 } = {}) {
   const deadline = Date.now() + timeoutMs;
   let rcon;
   while (!rcon) {
-    if (proc.exitCode !== null)
-      throw new Error(`server ${id} exited early:\n${log.slice(-4000)}`);
-    if (Date.now() > deadline)
-      throw new Error(`server ${id} rcon timeout:\n${log.slice(-4000)}`);
+    if (proc.exitCode !== null) throw new Error(`server ${id} exited early:\n${log.slice(-4000)}`);
+    if (Date.now() > deadline) throw new Error(`server ${id} rcon timeout:\n${log.slice(-4000)}`);
     if (/RCON running/i.test(log) || /Thread RCON Listener started/i.test(log)) {
       try {
         rcon = await Rcon.connect("127.0.0.1", rconPort, RCON_PASS, 5000);

@@ -121,7 +121,13 @@ function parseUnitSuffix(suffix: string): { mult: number; kind: Quantity | null 
   if (!m) return null;
   const prefix = m[1];
   const unitLetter = m[2].toLowerCase();
-  const kind: Quantity = unitLetter.startsWith("ohm") ? "R" : unitLetter === "v" ? "V" : unitLetter === "a" ? "I" : "P";
+  const kind: Quantity = unitLetter.startsWith("ohm")
+    ? "R"
+    : unitLetter === "v"
+      ? "V"
+      : unitLetter === "a"
+        ? "I"
+        : "P";
   let mult = 1;
   if (prefix === "k" || prefix === "K") mult = 1e3;
   else if (prefix === "M") mult = 1e6;
@@ -131,7 +137,10 @@ function parseUnitSuffix(suffix: string): { mult: number; kind: Quantity | null 
 }
 
 /** Parse "12", "4.7k", "100mA", "2M" etc into a number plus, when the unit implies one, a quantity kind. */
-function parseNumberUnit(raw: string, tokenForError: string): { value: number; kind: Quantity | null } {
+function parseNumberUnit(
+  raw: string,
+  tokenForError: string,
+): { value: number; kind: Quantity | null } {
   const m = raw.match(/^([+-]?\d*\.?\d+)\s*([a-zA-Zµ]*)$/);
   if (!m || m[1] === "" || m[1] === "+" || m[1] === "-") {
     throw new ToolError(
@@ -168,7 +177,7 @@ function parseInput(input: string): ParsedInput {
   if (!raw) {
     throw new ToolError(
       "empty-input",
-      "Enter values to calculate, like \"12V 100mA\".",
+      'Enter values to calculate, like "12V 100mA".',
       'Try "12V 100mA", "R=4.7k P=2W", or "vin=12 vf=2.1 if=20mA" depending on the mode.',
     );
   }
@@ -262,7 +271,9 @@ function nearestStandardAtOrAbove(exact: number, series: number[]): number {
 function recommendedWattage(actualPowerW: number): string {
   const needed = actualPowerW * 2;
   const found = WATTAGES.find((w) => w >= needed);
-  return found !== undefined ? `${found} W` : "5 W (exceeds standard ratings, use a power resistor)";
+  return found !== undefined
+    ? `${found} W`
+    : "5 W (exceeds standard ratings, use a power resistor)";
 }
 
 // ---------------------------------------------------------------------------
@@ -365,7 +376,10 @@ function runOhmsLaw(fields: Partial<Record<Field, number>>): OhmsLawResult {
 // Mode: led-resistor
 // ---------------------------------------------------------------------------
 
-function runLedResistor(fields: Partial<Record<Field, number>>, count: number | undefined): OhmsLawResult {
+function runLedResistor(
+  fields: Partial<Record<Field, number>>,
+  count: number | undefined,
+): OhmsLawResult {
   const missing: string[] = [];
   if (fields.vin === undefined) missing.push("vin");
   if (fields.vf === undefined) missing.push("vf");
@@ -392,7 +406,11 @@ function runLedResistor(fields: Partial<Record<Field, number>>, count: number | 
 
   const ledCount = count ?? 1;
   if (!Number.isFinite(ledCount) || ledCount < 1) {
-    throw new ToolError("impossible", `count must be a positive whole number, got ${ledCount}.`, "Use count=1 or more.");
+    throw new ToolError(
+      "impossible",
+      `count must be a positive whole number, got ${ledCount}.`,
+      "Use count=1 or more.",
+    );
   }
 
   const vfTotal = vfPerLed * ledCount;
@@ -428,8 +446,13 @@ function runLedResistor(fields: Partial<Record<Field, number>>, count: number | 
   result["E24 actual current"] = formatEng(e24Info.actualI, "A");
   result["E24 resistor power"] = formatEng(e24Info.p, "W");
   result["E24 recommended wattage"] = e24Info.rating;
-  result["Formula"] = ledCount > 1 ? "R = (Vin - Vf total) / If; Vf total = Vf per LED x count" : "R = (Vin - Vf) / If";
-  if (ifAssumed) result["Assumption"] = "No LED current given, so If was assumed to be 20 mA, a common indicator LED default.";
+  result["Formula"] =
+    ledCount > 1
+      ? "R = (Vin - Vf total) / If; Vf total = Vf per LED x count"
+      : "R = (Vin - Vf) / If";
+  if (ifAssumed)
+    result["Assumption"] =
+      "No LED current given, so If was assumed to be 20 mA, a common indicator LED default.";
   return result;
 }
 
@@ -439,7 +462,8 @@ function runLedResistor(fields: Partial<Record<Field, number>>, count: number | 
 
 function candidatesAroundDecades(exps: number[]): number[] {
   const vals: number[] = [];
-  for (const exp of exps) for (const base of E24) vals.push(Math.round(base * 10 ** exp * 1e6) / 1e6);
+  for (const exp of exps)
+    for (const base of E24) vals.push(Math.round(base * 10 ** exp * 1e6) / 1e6);
   return vals;
 }
 

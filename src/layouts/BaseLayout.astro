@@ -184,16 +184,14 @@ const og = ogImage ? new URL(ogImage, site).href : undefined;
       })();
     </script>
     <CommandPalette client:idle tools={paletteTools} />
-    {
-      /*
-       * One toast renderer for the whole site. Every island imports the same
-       * `@/lib/toast` module chunk, so a CopyButton deep inside a lazily
-       * hydrated panel writes to the very store this island reads (see the
-       * comment in src/lib/toast.ts). `transition:persist` keeps the island and
-       * its timers alive across a ClientRouter navigation, the same way the
-       * header theme state is re-applied rather than rebuilt on every swap.
-       */
-    }
+    {/*
+     * One toast renderer for the whole site. Every island imports the same
+     * `@/lib/toast` module chunk, so a CopyButton deep inside a lazily
+     * hydrated panel writes to the very store this island reads (see the
+     * comment in src/lib/toast.ts). `transition:persist` keeps the island and
+     * its timers alive across a ClientRouter navigation, the same way the
+     * header theme state is re-applied rather than rebuilt on every swap.
+     */}
     <Toaster client:idle transition:persist="toaster" />
     <script>
       if (import.meta.env.PROD && "serviceWorker" in navigator) {

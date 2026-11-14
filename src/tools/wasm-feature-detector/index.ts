@@ -126,7 +126,8 @@ export const FEATURE_PROBES: FeatureProbe[] = [
     id: "exnref",
     label: "Exception handling (new design, try_table/exnref)",
     proposal: "exception-handling (exnref)",
-    since: "The reworked exception handling design finalized in 2023, shipping in Chrome and Firefox since 2024.",
+    since:
+      "The reworked exception handling design finalized in 2023, shipping in Chrome and Firefox since 2024.",
     // try_table (0x1f) with a single catch_all clause branching to label 0.
     bytes: mod(
       typeSection(FUNC_VOID_TYPE),
@@ -218,9 +219,7 @@ export const FEATURE_PROBES: FeatureProbe[] = [
     bytes: mod(
       typeSection(FUNC_VOID_TYPE),
       functionSection(0),
-      codeSection(
-        fnBody([...v128Const(), ...v128Const(), 0xfd, ...leb128u(0x100), 0x1a]),
-      ),
+      codeSection(fnBody([...v128Const(), ...v128Const(), 0xfd, ...leb128u(0x100), 0x1a])),
     ),
   },
   {
@@ -266,17 +265,14 @@ export const FEATURE_PROBES: FeatureProbe[] = [
     since: "Shipped in Chrome and Firefox during 2023; Safari support is still rolling out.",
     // return_call (0x12) to the function's own index: a valid, self
     // referential tail call.
-    bytes: mod(
-      typeSection(FUNC_VOID_TYPE),
-      functionSection(0),
-      codeSection(fnBody([0x12, 0x00])),
-    ),
+    bytes: mod(typeSection(FUNC_VOID_TYPE), functionSection(0), codeSection(fnBody([0x12, 0x00]))),
   },
   {
     id: "threads",
     label: "Threads and atomics (shared memory)",
     proposal: "threads",
-    since: "Shipped in Chrome and Firefox from 2020, Safari from 2023. Needs a cross origin isolated page (COOP/COEP) at runtime even when the engine supports it.",
+    since:
+      "Shipped in Chrome and Firefox from 2020, Safari from 2023. Needs a cross origin isolated page (COOP/COEP) at runtime even when the engine supports it.",
     // Shared memory (limits flag 0x03: has max, shared) plus i32.atomic.load
     // (prefix 0xfe, sub opcode 0x10).
     bytes: mod(
@@ -365,10 +361,7 @@ export interface WasmFeatureDetectorOpts {
  * input (nothing run yet) returns the probe catalog instead, so the generic
  * shell always has something useful to show.
  */
-export function run(
-  input: string,
-  _opts: WasmFeatureDetectorOpts = {},
-): Record<string, string> {
+export function run(input: string, _opts: WasmFeatureDetectorOpts = {}): Record<string, string> {
   if (!input.trim()) return probeCatalog();
 
   let parsed: unknown;
@@ -378,7 +371,7 @@ export function run(
     throw new ToolError(
       "bad-json",
       "The input is not valid JSON.",
-      "This panel builds its input automatically; paste a {\"featureId\": true} style report if entering one by hand.",
+      'This panel builds its input automatically; paste a {"featureId": true} style report if entering one by hand.',
     );
   }
 

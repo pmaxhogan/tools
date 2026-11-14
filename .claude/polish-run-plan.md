@@ -21,6 +21,7 @@ a browser subagent with blockers fixed, PushNotification sent.
 ## Locked decisions (do not re-ask)
 
 ### Process
+
 - Concurrency: 5-8 concurrent agents, tiered. Sonnet (cheap): sweeps, data,
   simple logic, copy, backlog. Opus: panels, tricky logic, migrations, per-diff
   review. Fable forks ONLY for the EM overhaul, shell components, reviews.
@@ -50,6 +51,7 @@ a browser subagent with blockers fixed, PushNotification sent.
 - Stuck policy: pick the reversible option, document here + in the report.
 
 ### Refactors (wave 1 + 2)
+
 - Extract: FileDrop, ErrorBanner, ProgressBar, Toast (+ useToast), migrate the
   12 raw-clipboard sites to CopyButton, Canvas/Image preview, ResultTable,
   EmptyState. Migrate ALL panels (120) plus ToolShell/MediaShell/FsShell.
@@ -59,6 +61,7 @@ a browser subagent with blockers fixed, PushNotification sent.
   marked historical, 3 post-matrix tools added to the CSV).
 
 ### Platform features (wave 3)
+
 - Favorites/pinning (localStorage preference, recent-tools.ts pattern),
   pinned + recent rows on home and sidebar, "new" badges (last 30 days),
   per-category counts, random tool button.
@@ -73,6 +76,7 @@ a browser subagent with blockers fixed, PushNotification sent.
   first-visit tooltip for the command palette.
 
 ### Polish (wave 3+)
+
 - Known gaps: examples for the ~11 generic tools lacking them, reshape
   jwt-vulnerability-check + protobuf-decoder output, webrtc privacy sentence,
   longer meta descriptions for the shortest ~40.
@@ -90,6 +94,7 @@ a browser subagent with blockers fixed, PushNotification sent.
   INSIDE the EM tool (not separate tools).
 
 ### New tools (wave 4+), quality over quantity; unbuilt ideas -> CSV + backlog
+
 - New categories: RF, Astronomy, Physics, Weather & Earth. No Biology.
 - Dev text: regex-tester, jsonpath-query, xpath-css-selector-tester,
   glob-pattern-tester, semver-range-tester, unified-diff-patch-applier.
@@ -138,6 +143,7 @@ a browser subagent with blockers fixed, PushNotification sent.
 ## Wave plan and file ownership
 
 Wave 1 (parallel, disjoint files):
+
 - W1-A Sonnet: vitest happy-dom project (src/**/*.spec.ts), CI build step,
   meta lint test + fix 4 hits, hygiene (matrixSlug, plan doc note).
 - W1-B Opus: FileDrop, ErrorBanner, ProgressBar, EmptyState (+ specs, docs).
@@ -168,6 +174,7 @@ Wave 1 (parallel, disjoint files):
 ## QA findings log
 
 Wave 1 live QA (headless /browse, claude-in-chrome extension was not connected):
+
 - [x] FavoriteButton: no toast on toggle (add "Added to favorites"/"Removed from favorites")
 - [x] ToolShell Ctrl+Shift+C: copy runs but no toast (route through copyText; verify in real Chrome)
 - [x] ToolShell "Try a sample" for binary file tools (wasm-inspector, uf2-inspector): fetched bytes never reach run(), empty-input error shown
@@ -178,11 +185,12 @@ Wave 1 live QA (headless /browse, claude-in-chrome extension was not connected):
 Component gallery artifact (native comments): https://claude.ai/code/artifact/a780ea4a-e57d-4f5e-a51a-8d9e67f3db94 (Max: lgtm, 2026-08-30)
 
 Wave 3 live QA (headless /browse): 28 of 30 new tools clean; chem search, FileDrop shell, sensitive options, facelift regressions all pass.
+
 - [x] (fixed 0f65125) BLOCKER self-signed-certificate-generator (and very likely certificate-decoder): tsyringe reflect-metadata check runs at x509 chunk eval before rolldown's lazy CJS init; fix = lazy import of @peculiar/x509 (agent running)
 - [x] (fixed 0f65125) meme-generator never loads a picture (sample or upload); blank canvas works (agent running)
 - [x] (fixed 0f65125) native <input type=color> given 3-digit hex on color-contrast-checker / image-to-data-url (agent running)
 - (by design) keycode pad captures Tab only while focused; Escape releases
 - (data, follow-up) plain "Aspirin" (CID 2244) is absent from the broad chem index while 7 aspirin combinations are present; check the merge/dedupe step in prepare-chem-data.mjs
-Final report artifact (native comments): https://claude.ai/code/artifact/98bfd84b-a441-4782-9be3-f45252dea2c1
+  Final report artifact (native comments): https://claude.ai/code/artifact/98bfd84b-a441-4782-9be3-f45252dea2c1
 
 Categories reworked after the run (e2ee7d3): CSS, Color, Games, Electronics, 3D Printing added; Crypto -> Security; Science/Physics/Mobile/Generators retired with redirects.

@@ -52,9 +52,16 @@ describe("MEDIA_ACTIONS", () => {
 
   it("does not flag the common playback actions as unsupported", () => {
     const common = MEDIA_ACTIONS.filter((a) =>
-      ["play", "pause", "stop", "seekbackward", "seekforward", "seekto", "previoustrack", "nexttrack"].includes(
-        a.action,
-      ),
+      [
+        "play",
+        "pause",
+        "stop",
+        "seekbackward",
+        "seekforward",
+        "seekto",
+        "previoustrack",
+        "nexttrack",
+      ].includes(a.action),
     );
     for (const a of common) expect(a.mayBeUnsupported).toBeFalsy();
   });
@@ -144,9 +151,7 @@ describe("summarizeLog", () => {
   });
 
   it("verdict: keys reach the page as KeyboardEvents only", () => {
-    const events: MediaKeyEvent[] = [
-      { source: "keyboard", key: "MediaPlayPause", timestamp: 100 },
-    ];
+    const events: MediaKeyEvent[] = [{ source: "keyboard", key: "MediaPlayPause", timestamp: 100 }];
     const rows = summarizeLog(events);
     expect(rows["Media Session events"]).toBe("0");
     expect(rows["Keyboard events"]).toBe("1");
@@ -168,7 +173,11 @@ describe("summarizeLog", () => {
     expect(onlyPlay["Handlers that never fired"]).toContain("nexttrack");
 
     const allFired = summarizeLog(
-      MEDIA_ACTIONS.map((a, i) => ({ source: "mediasession" as const, action: a.action, timestamp: i })),
+      MEDIA_ACTIONS.map((a, i) => ({
+        source: "mediasession" as const,
+        action: a.action,
+        timestamp: i,
+      })),
     );
     expect(allFired["Handlers that never fired"]).toBe(
       "none: every registered handler fired at least once",
@@ -201,7 +210,11 @@ describe("describeSupport", () => {
   });
 
   it("reports no Media Session support", () => {
-    const rows = describeSupport({ mediaSession: false, supportedActions: [], unsupportedActions: [] });
+    const rows = describeSupport({
+      mediaSession: false,
+      supportedActions: [],
+      unsupportedActions: [],
+    });
     expect(rows["Media Session API"]).toContain("Not supported");
     expect(rows["Supported actions"]).toBe("none reported");
     expect(rows["Unsupported actions"]).toBe("none reported");
@@ -223,7 +236,9 @@ describe("run", () => {
 
   it("analyzes a report with only caps", () => {
     const out = run(
-      JSON.stringify({ caps: { mediaSession: true, supportedActions: ["play"], unsupportedActions: [] } }),
+      JSON.stringify({
+        caps: { mediaSession: true, supportedActions: ["play"], unsupportedActions: [] },
+      }),
       {},
     );
     expect(out["Media Session API"]).toBe("Supported by this browser.");
@@ -242,7 +257,11 @@ describe("run", () => {
   it("analyzes a full report with both caps and events", () => {
     const out = run(
       JSON.stringify({
-        caps: { mediaSession: true, supportedActions: ["play", "pause"], unsupportedActions: ["hangup"] },
+        caps: {
+          mediaSession: true,
+          supportedActions: ["play", "pause"],
+          unsupportedActions: ["hangup"],
+        },
         events: [
           { source: "mediasession", action: "play", timestamp: 0 },
           { source: "keyboard", key: "AudioVolumeUp", timestamp: 10 },

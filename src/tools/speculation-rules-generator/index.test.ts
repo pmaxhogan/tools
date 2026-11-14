@@ -35,7 +35,9 @@ describe("speculation-rules-generator: generate", () => {
     }) as string;
 
     expect(JSON.parse(out)).toEqual({
-      prefetch: [{ source: "list", urls: ["/a", "/b", "https://example.com/c"], eagerness: "conservative" }],
+      prefetch: [
+        { source: "list", urls: ["/a", "/b", "https://example.com/c"], eagerness: "conservative" },
+      ],
     });
   });
 
@@ -55,13 +57,22 @@ describe("speculation-rules-generator: generate", () => {
 
   it("passes each eagerness value through unchanged", () => {
     for (const eagerness of ["conservative", "moderate", "eager", "immediate"]) {
-      const out = run("/a", { mode: "generate", action: "prefetch", eagerness, scriptTag: false }) as string;
+      const out = run("/a", {
+        mode: "generate",
+        action: "prefetch",
+        eagerness,
+        scriptTag: false,
+      }) as string;
       expect(JSON.parse(out).prefetch[0].eagerness).toBe(eagerness);
     }
   });
 
   it("wraps output in a script tag by default", () => {
-    const out = run("/a", { mode: "generate", action: "prefetch", eagerness: "moderate" }) as string;
+    const out = run("/a", {
+      mode: "generate",
+      action: "prefetch",
+      eagerness: "moderate",
+    }) as string;
     expect(out).toMatch(/^<script type="speculationrules">/);
     expect(out.trim()).toMatch(/<\/script>$/);
   });

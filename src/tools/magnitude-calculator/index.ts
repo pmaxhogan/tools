@@ -199,7 +199,11 @@ export function parseDistanceParsecs(raw: string): number {
   const key = unit.toLowerCase();
   // Case matters for the parsec prefixes: Mpc is a megaparsec.
   const factor =
-    unit === "Mpc" ? 1e6 : unit === "kpc" ? 1000 : (DISTANCE_UNITS[key] ?? (key === "" ? 1 : undefined));
+    unit === "Mpc"
+      ? 1e6
+      : unit === "kpc"
+        ? 1000
+        : (DISTANCE_UNITS[key] ?? (key === "" ? 1 : undefined));
   if (factor === undefined) {
     badUnit("distance", unit, "pc, kpc, Mpc, ly, AU, km, m, mi");
   }
@@ -351,7 +355,7 @@ export function parseInput(input: string): MagnitudeInput {
     throw new ToolError(
       "empty-input",
       "Enter at least two of apparent magnitude, absolute magnitude and distance.",
-      'For example:\napparent: -1.46\ndistance: 2.64 pc',
+      "For example:\napparent: -1.46\ndistance: 2.64 pc",
     );
   }
 
@@ -537,7 +541,7 @@ export function run(input: string, opts: MagnitudeOpts = {}): MagnitudeResult {
     throw new ToolError(
       "not-enough-input",
       "That is not enough to work with.",
-      'Give any two of apparent magnitude, absolute magnitude and distance, for example:\napparent: -1.46\ndistance: 2.64 pc\nOr use one of the standalone jobs: combine, compare, aperture.',
+      "Give any two of apparent magnitude, absolute magnitude and distance, for example:\napparent: -1.46\ndistance: 2.64 pc\nOr use one of the standalone jobs: combine, compare, aperture.",
     );
   }
 
@@ -553,8 +557,7 @@ export function run(input: string, opts: MagnitudeOpts = {}): MagnitudeResult {
     out["Distance modulus (m - M)"] = mag(apparent - absolute);
   }
   if (extinction !== 0) {
-    out.Extinction =
-      `${mag(extinction)} magnitudes of dimming assumed between here and there, so m - M above is the apparent distance modulus and the true one is ${mag((apparent ?? 0) - (absolute ?? 0) - extinction)}`;
+    out.Extinction = `${mag(extinction)} magnitudes of dimming assumed between here and there, so m - M above is the apparent distance modulus and the true one is ${mag((apparent ?? 0) - (absolute ?? 0) - extinction)}`;
   }
   if (absolute !== undefined) {
     const luminosity = 10 ** (0.4 * (SUN_ABSOLUTE_V - absolute));
@@ -600,7 +603,7 @@ export function run(input: string, opts: MagnitudeOpts = {}): MagnitudeResult {
       throw new ToolError(
         "not-enough-input",
         "Surface brightness needs a total magnitude as well as an angular size.",
-        'Add an apparent magnitude line, for example:\napparent: 3.44\nsize: 190x60 arcmin',
+        "Add an apparent magnitude line, for example:\napparent: 3.44\nsize: 190x60 arcmin",
       );
     }
     // An ellipse of the given axes, which is how catalogs quote galaxy sizes.

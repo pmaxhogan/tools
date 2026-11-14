@@ -123,7 +123,10 @@ function fmt(n: number): string {
 }
 
 function perUnit(src: XpSource): string {
-  const range = src.min === src.max ? `${fmt(src.mean)} XP` : `${src.min} to ${src.max} XP, ${fmt(src.mean)} on average`;
+  const range =
+    src.min === src.max
+      ? `${fmt(src.mean)} XP`
+      : `${src.min} to ${src.max} XP, ${fmt(src.mean)} on average`;
   return `${range} per ${src.unit}`;
 }
 
@@ -187,7 +190,8 @@ function runMending(opts: McXpOpts): McXpResult {
   const xp = mendingXpForDurability(durability);
   const level = levelFromTotalXp(xp);
   const rem = xp - totalXpAtLevel(level);
-  const climb = rem === 0 ? `level 0 to ${fmt(level)}` : `level 0 to ${fmt(level)}, plus ${fmt(rem)} points`;
+  const climb =
+    rem === 0 ? `level 0 to ${fmt(level)}` : `level 0 to ${fmt(level)}, plus ${fmt(rem)} points`;
   const src = getSource(opts);
   return {
     "Durability to repair": fmt(durability),
@@ -315,8 +319,7 @@ export function planMixture(xpNeeded: number, mixture: readonly MixtureEntry[]):
     meanXpPerAction: mean,
     avgActions: xpNeeded <= 0 ? 0 : Math.ceil(xpNeeded / mean),
     worstSource: worst,
-    guaranteedActions:
-      worst.min > 0 ? (xpNeeded <= 0 ? 0 : Math.ceil(xpNeeded / worst.min)) : null,
+    guaranteedActions: worst.min > 0 ? (xpNeeded <= 0 ? 0 : Math.ceil(xpNeeded / worst.min)) : null,
   };
 }
 
@@ -502,7 +505,10 @@ export function sustainability(input: SustainInput): SustainResult {
   });
 
   const unbreakingFactor = 1 / (unbreaking + 1);
-  const avgLoss = perSource.reduce((a, p) => a + p.share * p.rawLossPerAction * unbreakingFactor, 0);
+  const avgLoss = perSource.reduce(
+    (a, p) => a + p.share * p.rawLossPerAction * unbreakingFactor,
+    0,
+  );
   const avgRepair = input.mending
     ? MENDING_DURABILITY_PER_XP * perSource.reduce((a, p) => a + p.share * p.source.mean, 0)
     : 0;

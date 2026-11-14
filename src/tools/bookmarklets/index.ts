@@ -266,7 +266,8 @@ function encode(input: string): string {
 
 function decode(input: string): string {
   const trimmed = (input ?? "").trim();
-  if (!trimmed) throw new ToolError("empty-input", "Paste a javascript: bookmarklet URL to decode.");
+  if (!trimmed)
+    throw new ToolError("empty-input", "Paste a javascript: bookmarklet URL to decode.");
   if (!/^javascript:/i.test(trimmed))
     throw new ToolError(
       "not-bookmarklet",
@@ -592,4 +593,8 @@ export function run(input: string, opts: BookmarkletOpts): string | Record<strin
   throw new ToolError("bad-mode", `Unknown mode "${mode}".`, 'Use "encode", "decode", or "shelf".');
 }
 
-export default { run } satisfies ToolLogic<string, string | Record<string, string>, BookmarkletOpts>;
+export default { run } satisfies ToolLogic<
+  string,
+  string | Record<string, string>,
+  BookmarkletOpts
+>;

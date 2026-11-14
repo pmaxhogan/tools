@@ -12,8 +12,7 @@ export const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 export const WORK = join(ROOT, "work");
 export const VECTORS = join(ROOT, "vectors");
 
-const MANIFEST_URL =
-  "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
+const MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 
 /** Versions pinned for v1, latest release appended dynamically at run time. */
 export const PINNED = ["1.16.5", "1.18.2", "1.20.6", "1.21.1", "1.21.11"];
@@ -72,8 +71,7 @@ export async function download(url, dest, expectedSha1) {
   const res = await fetch(url, { redirect: "follow" });
   if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
-  if (expectedSha1 && sha1(buf) !== expectedSha1)
-    throw new Error(`sha1 mismatch for ${url}`);
+  if (expectedSha1 && sha1(buf) !== expectedSha1) throw new Error(`sha1 mismatch for ${url}`);
   writeFileSync(dest, buf);
   return dest;
 }
@@ -120,9 +118,7 @@ export function checkDisk() {
     ]).toString();
     const free = Number(out.trim());
     if (free && free < 2 * 1024 ** 3) {
-      console.error(
-        `[disk] WARNING: only ${(free / 1024 ** 3).toFixed(1)} GB free on C:`,
-      );
+      console.error(`[disk] WARNING: only ${(free / 1024 ** 3).toFixed(1)} GB free on C:`);
       return false;
     }
   } catch {

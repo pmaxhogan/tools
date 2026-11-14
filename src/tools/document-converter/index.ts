@@ -46,13 +46,7 @@ export interface InlineRun {
 }
 
 export type BlockType =
-  | "heading"
-  | "paragraph"
-  | "list-item"
-  | "quote"
-  | "code"
-  | "rule"
-  | "table-row";
+  "heading" | "paragraph" | "list-item" | "quote" | "code" | "rule" | "table-row";
 
 /** One laid out chunk of the document. The whole block model is this shape. */
 export interface Block {

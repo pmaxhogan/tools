@@ -36,14 +36,45 @@ const SAMPLE = new Uint8Array([...ascii("Hello, hex viewer!\n"), 0x00]);
  * 16 by 8 RGBA image, and an empty IEND. 45 bytes in total.
  */
 const PNG = new Uint8Array([
-  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // signature
-  0x00, 0x00, 0x00, 0x0d, ...ascii("IHDR"),       // chunk length 13, type IHDR
-  0x00, 0x00, 0x00, 0x10,                         // width 16
-  0x00, 0x00, 0x00, 0x08,                         // height 8
-  0x08, 0x06, 0x00, 0x00, 0x00,                   // bit depth, color type, the three zeros
-  0xde, 0xad, 0xbe, 0xef,                         // crc
-  0x00, 0x00, 0x00, 0x00, ...ascii("IEND"),       // chunk length 0, type IEND
-  0xae, 0x42, 0x60, 0x82,                         // crc
+  0x89,
+  0x50,
+  0x4e,
+  0x47,
+  0x0d,
+  0x0a,
+  0x1a,
+  0x0a, // signature
+  0x00,
+  0x00,
+  0x00,
+  0x0d,
+  ...ascii("IHDR"), // chunk length 13, type IHDR
+  0x00,
+  0x00,
+  0x00,
+  0x10, // width 16
+  0x00,
+  0x00,
+  0x00,
+  0x08, // height 8
+  0x08,
+  0x06,
+  0x00,
+  0x00,
+  0x00, // bit depth, color type, the three zeros
+  0xde,
+  0xad,
+  0xbe,
+  0xef, // crc
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  ...ascii("IEND"), // chunk length 0, type IEND
+  0xae,
+  0x42,
+  0x60,
+  0x82, // crc
 ]);
 
 /** 64 bit little endian ELF, type EXEC, machine x86-64, entry 0x401000. */
@@ -259,22 +290,24 @@ u8 colorType
       data,
       parseTemplate("u8 count\nrepeat count {\n  u16le value\n}\n"),
     );
-    expect(result.fields.map((f) => f.name)).toEqual([
-      "count",
-      "value[0]",
-      "value[1]",
-      "value[2]",
-    ]);
+    expect(result.fields.map((f) => f.name)).toEqual(["count", "value[0]", "value[1]", "value[2]"]);
     expect(result.fields.map((f) => f.value)).toEqual([3, 1, 2, 3]);
     expect(result.endOffset).toBe(7);
   });
 
   it("handles skip, align, seek, cstring, octal and a string comparison", () => {
     const data = new Uint8Array([
-      ...ascii("AB"), 0x07, 0x00, // tag, flags, one byte of padding for align 4
-      0x02, 0x00, 0x00, 0x00, // count
-      ...ascii("hi"), 0x00, // cstring
-      0xde, 0xad, // tail
+      ...ascii("AB"),
+      0x07,
+      0x00, // tag, flags, one byte of padding for align 4
+      0x02,
+      0x00,
+      0x00,
+      0x00, // count
+      ...ascii("hi"),
+      0x00, // cstring
+      0xde,
+      0xad, // tail
       0x99, // only read when the if matches
     ]);
     const result = applyTemplate(
@@ -316,7 +349,10 @@ if tag == "AB" {
   });
 
   it("warns instead of throwing when an unbounded repeat runs out mid record", () => {
-    const result = applyTemplate(bytes(1, 0, 2, 0, 9), parseTemplate("repeat * {\n  u16le pair\n}\n"));
+    const result = applyTemplate(
+      bytes(1, 0, 2, 0, 9),
+      parseTemplate("repeat * {\n  u16le pair\n}\n"),
+    );
     expect(result.fields).toHaveLength(2);
     expect(result.endOffset).toBe(4);
     expect(result.warnings).toHaveLength(1);
@@ -345,8 +381,17 @@ if tag == "AB" {
 
   it("walks MP4 atoms, which needs the constant subtracted from a field", () => {
     const mp4 = new Uint8Array([
-      0x00, 0x00, 0x00, 0x10, ...ascii("ftyp"), ...ascii("isom   "),
-      0x00, 0x00, 0x00, 0x08, ...ascii("free"),
+      0x00,
+      0x00,
+      0x00,
+      0x10,
+      ...ascii("ftyp"),
+      ...ascii("isom   "),
+      0x00,
+      0x00,
+      0x00,
+      0x08,
+      ...ascii("free"),
     ]);
     const template = BUILTIN_TEMPLATES.find((t) => t.id === "mp4");
     const result = applyTemplate(mp4, parseTemplate(template?.text ?? ""));
@@ -362,14 +407,36 @@ if tag == "AB" {
 
   it("reads a ZIP file name whose length comes from an earlier field", () => {
     const zip = new Uint8Array([
-      0x50, 0x4b, 0x03, 0x04, // signature
-      0x14, 0x00, 0x00, 0x00, 0x08, 0x00, // versionNeeded, flags, method
-      0x00, 0x00, 0x00, 0x00, // modTime, modDate
-      0x78, 0x56, 0x34, 0x12, // crc32
-      0x64, 0x00, 0x00, 0x00, // compressedSize 100
-      0xc8, 0x00, 0x00, 0x00, // uncompressedSize 200
-      0x05, 0x00, // nameLength 5
-      0x00, 0x00, // extraLength 0
+      0x50,
+      0x4b,
+      0x03,
+      0x04, // signature
+      0x14,
+      0x00,
+      0x00,
+      0x00,
+      0x08,
+      0x00, // versionNeeded, flags, method
+      0x00,
+      0x00,
+      0x00,
+      0x00, // modTime, modDate
+      0x78,
+      0x56,
+      0x34,
+      0x12, // crc32
+      0x64,
+      0x00,
+      0x00,
+      0x00, // compressedSize 100
+      0xc8,
+      0x00,
+      0x00,
+      0x00, // uncompressedSize 200
+      0x05,
+      0x00, // nameLength 5
+      0x00,
+      0x00, // extraLength 0
       ...ascii("a.txt"),
     ]);
     const template = BUILTIN_TEMPLATES.find((t) => t.id === "zip");
@@ -395,9 +462,9 @@ if tag == "AB" {
   });
 
   it("rejects a forward reference to a field that has not been read", () => {
-    expect(() => applyTemplate(bytes(1, 2, 3, 4), parseTemplate("bytes[later] head\nu8 later"))).toThrow(
-      /has not been parsed yet/,
-    );
+    expect(() =>
+      applyTemplate(bytes(1, 2, 3, 4), parseTemplate("bytes[later] head\nu8 later")),
+    ).toThrow(/has not been parsed yet/);
   });
 });
 
@@ -578,7 +645,11 @@ describe("hex-viewer: errors", () => {
 
   it("template-overflow when the template outruns the file", () => {
     try {
-      run(bytes(1, 2, 3), { view: "template", template: "custom", customTemplate: "bytes[64] blob" });
+      run(bytes(1, 2, 3), {
+        view: "template",
+        template: "custom",
+        customTemplate: "bytes[64] blob",
+      });
       expect.unreachable("should have thrown");
     } catch (error) {
       expect((error as ToolError).code).toBe("template-overflow");
@@ -611,9 +682,7 @@ describe("hex-viewer: meta", () => {
       }
     };
     walkGroups(spec && "groups" in spec ? spec.groups : undefined);
-    expect(values.sort()).toEqual(
-      ["auto", "custom", ...BUILTIN_TEMPLATES.map((t) => t.id)].sort(),
-    );
+    expect(values.sort()).toEqual(["auto", "custom", ...BUILTIN_TEMPLATES.map((t) => t.id)].sort());
   });
 
   it("has no em or en dashes in its user facing prose", () => {

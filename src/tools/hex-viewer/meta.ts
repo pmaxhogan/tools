@@ -201,7 +201,7 @@ export const meta: ToolMeta = {
     faq: [
       {
         q: "How do I write a struct template?",
-        a: 'One statement per line. A field is a type and a name: u8, i8, u16le, u16be, i16le, i16be, u32le, u32be, i32le, i32be, u64le, u64be, i64le, i64be, f32le, f32be, f64le, f64be, plus bytes[n], char[n], utf8[n], utf16le[n], utf16be[n], octal[n] and cstring. The control statements are skip n, align n, @offset to seek, repeat n { } to run a block a fixed number of times, repeat * { } to walk until the bytes run out, and if name == 2 { } to branch on a field already read. Anywhere a count or an offset goes you can name an earlier field, with a constant added or subtracted, so utf8[nameLength] fileName and skip size - 8 both work. Lines starting with # are comments. Every built in template is written in the same language, so open one and edit it.',
+        a: "One statement per line. A field is a type and a name: u8, i8, u16le, u16be, i16le, i16be, u32le, u32be, i32le, i32be, u64le, u64be, i64le, i64be, f32le, f32be, f64le, f64be, plus bytes[n], char[n], utf8[n], utf16le[n], utf16be[n], octal[n] and cstring. The control statements are skip n, align n, @offset to seek, repeat n { } to run a block a fixed number of times, repeat * { } to walk until the bytes run out, and if name == 2 { } to branch on a field already read. Anywhere a count or an offset goes you can name an earlier field, with a constant added or subtracted, so utf8[nameLength] fileName and skip size - 8 both work. Lines starting with # are comments. Every built in template is written in the same language, so open one and edit it.",
       },
       {
         q: "Can it open a large file?",

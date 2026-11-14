@@ -152,7 +152,10 @@ function queryLines(query: Record<string, string | string[]>): string[] {
  * applies, in every format, so a curl of the raw JSON is exactly as safe as
  * the pretty table.
  */
-export function formatEcho(req: EchoRequest, opts: { format: string }): string | Record<string, string> {
+export function formatEcho(
+  req: EchoRequest,
+  opts: { format: string },
+): string | Record<string, string> {
   const format = normalizeFormat(opts?.format);
   const headers = redactHeaders(req.headers ?? {});
   const query = req.query ?? {};

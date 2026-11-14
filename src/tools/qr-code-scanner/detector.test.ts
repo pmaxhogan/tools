@@ -371,12 +371,7 @@ describe("rectifyQuad with edge midpoints", () => {
     };
     paintSurface(scene, code, surface);
 
-    const mids: EdgeMids = [
-      surface(0.5, 0),
-      surface(1, 0.5),
-      surface(0.5, 1),
-      surface(0, 0.5),
-    ];
+    const mids: EdgeMids = [surface(0.5, 0), surface(1, 0.5), surface(0.5, 1), surface(0, 0.5)];
 
     const size = chooseRectifySize(quad);
     const flat = rectifyQuad(scene, quad, size, 0.04);

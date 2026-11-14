@@ -236,7 +236,12 @@ function displayName(id) {
   return sheep ? `Sheep (${cased})` : cased;
 }
 
-const CAT_LABELS = { blocks: "Blocks", entities: "Mobs", gameplay: "Fishing and gameplay", chests: "Chests" };
+const CAT_LABELS = {
+  blocks: "Blocks",
+  entities: "Mobs",
+  gameplay: "Fishing and gameplay",
+  chests: "Chests",
+};
 
 const allIds = [...new Set(versions.flatMap((v) => Object.keys(tables[v])))].sort();
 const registry = allIds.map((id) => ({
@@ -399,7 +404,9 @@ writeFileSync(join(OUT_DIR, "tables.ts"), tablesTs);
 const dataBytes = Buffer.byteLength(dataTs);
 const total = versions.reduce((n, v) => n + Object.keys(tables[v]).length, 0);
 console.log(`versions: ${versions.join(", ")}`);
-console.log(`tables: ${total} across versions, ${allIds.length} unique ids, ${pool.length} deduped documents`);
+console.log(
+  `tables: ${total} across versions, ${allIds.length} unique ids, ${pool.length} deduped documents`,
+);
 if (excluded.length) console.log(`excluded (unresolvable refs):\n  ${excluded.join("\n  ")}`);
 console.log(`data.ts: ${dataBytes.toLocaleString()} bytes (${(dataBytes / 1024).toFixed(1)} KiB)`);
 console.log(`tables.ts: ${Buffer.byteLength(tablesTs).toLocaleString()} bytes`);

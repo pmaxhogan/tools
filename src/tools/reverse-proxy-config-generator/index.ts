@@ -23,7 +23,8 @@ const HTTP_UPSTREAM_PATTERN = /^https?:\/\/[a-zA-Z0-9.-]+(:\d{1,5})?$/;
 const UNIX_UPSTREAM_PATTERN = /^unix:\/[^\s]+$/;
 
 const STATIC_ASSET_EXTS_NGINX = "css|js|mjs|png|jpg|jpeg|gif|svg|ico|woff|woff2";
-const STATIC_ASSET_EXTS_CADDY = "*.css *.js *.mjs *.png *.jpg *.jpeg *.gif *.svg *.ico *.woff *.woff2";
+const STATIC_ASSET_EXTS_CADDY =
+  "*.css *.js *.mjs *.png *.jpg *.jpeg *.gif *.svg *.ico *.woff *.woff2";
 
 /** Parses an "host -> upstream" input line, or returns null when the line has no arrow. */
 function parseInputOverride(input: string): { domain: string; upstream: string } | null {
@@ -179,7 +180,7 @@ export function buildNginx(opts: ReverseProxyOpts, domain: string, upstream: str
     serverLines.push(
       "    add_header X-Content-Type-Options nosniff always;",
       "    add_header X-Frame-Options SAMEORIGIN always;",
-      '    add_header Referrer-Policy strict-origin-when-cross-origin always;',
+      "    add_header Referrer-Policy strict-origin-when-cross-origin always;",
       "",
     );
   }
@@ -228,9 +229,7 @@ export function buildCaddy(opts: ReverseProxyOpts, domain: string, upstream: str
   if (opts.securityHeaders) {
     const headerLines: string[] = [];
     if (opts.tls) {
-      headerLines.push(
-        '        Strict-Transport-Security "max-age=31536000; includeSubDomains"',
-      );
+      headerLines.push('        Strict-Transport-Security "max-age=31536000; includeSubDomains"');
     }
     headerLines.push(
       '        X-Content-Type-Options "nosniff"',
@@ -279,11 +278,9 @@ export function buildCaddy(opts: ReverseProxyOpts, domain: string, upstream: str
     const canonicalScheme = opts.tls ? "https" : "http";
     const wwwAddress = opts.tls ? `www.${domain}` : `http://www.${domain}`;
     blocks.push(
-      [
-        `${wwwAddress} {`,
-        `    redir ${canonicalScheme}://${domain}{uri} permanent`,
-        "}",
-      ].join("\n"),
+      [`${wwwAddress} {`, `    redir ${canonicalScheme}://${domain}{uri} permanent`, "}"].join(
+        "\n",
+      ),
     );
   }
 
@@ -306,7 +303,7 @@ export function run(input: string, opts: ReverseProxyOpts): string {
     throw new ToolError(
       "empty-input",
       "Enter a domain and upstream, either in the fields or as a single line.",
-      'For example: app.example.com -> http://127.0.0.1:3000',
+      "For example: app.example.com -> http://127.0.0.1:3000",
     );
   }
 

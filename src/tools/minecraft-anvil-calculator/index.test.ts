@@ -311,15 +311,15 @@ describe("planner", () => {
 
 describe("engine edges", () => {
   it("rejects unknown versions", () => {
-    expect(() =>
-      combineItems(fresh("sword"), book(["sharpness", 1]), { version: "1.8" }),
-    ).toThrow(ToolError);
+    expect(() => combineItems(fresh("sword"), book(["sharpness", 1]), { version: "1.8" })).toThrow(
+      ToolError,
+    );
   });
 
   it("rejects enchantments that do not exist in the chosen version", () => {
-    expect(() =>
-      combineItems(fresh("sword"), book(["density", 5]), { version: "1.16.5" }),
-    ).toThrow(ToolError);
+    expect(() => combineItems(fresh("sword"), book(["density", 5]), { version: "1.16.5" })).toThrow(
+      ToolError,
+    );
   });
 
   it("rejects item families that do not exist in the chosen version", () => {

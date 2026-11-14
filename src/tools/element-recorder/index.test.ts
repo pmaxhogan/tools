@@ -354,9 +354,7 @@ describe("run", () => {
   });
 
   it("throws bad-json on malformed JSON", () => {
-    expect(() => run("{not valid", { quality: "low", fps: 30, format: "webm" })).toThrow(
-      ToolError,
-    );
+    expect(() => run("{not valid", { quality: "low", fps: 30, format: "webm" })).toThrow(ToolError);
     try {
       run("{not valid", { quality: "low", fps: 30, format: "webm" });
     } catch (e) {

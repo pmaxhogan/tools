@@ -71,9 +71,7 @@ describe("dpiFromTravel", () => {
   });
 
   it("throws on zero counts", () => {
-    expect(() => dpiFromTravel({ counts: 0, physicalDistanceInches: 3.937 })).toThrow(
-      ToolError,
-    );
+    expect(() => dpiFromTravel({ counts: 0, physicalDistanceInches: 3.937 })).toThrow(ToolError);
     try {
       dpiFromTravel({ counts: 0, physicalDistanceInches: 3.937 });
     } catch (e) {
@@ -257,7 +255,10 @@ describe("run", () => {
   });
 
   it("summarizes a DPI report using the cm option", () => {
-    const out = run(JSON.stringify({ travel: { counts: 3150 } }), { physicalDistanceCm: 10, units: "cm" });
+    const out = run(JSON.stringify({ travel: { counts: 3150 } }), {
+      physicalDistanceCm: 10,
+      units: "cm",
+    });
     expect(out["Measured DPI"]).toBe("800");
     expect(out["Nearest common DPI"]).toBe("800");
   });
@@ -271,10 +272,10 @@ describe("run", () => {
   });
 
   it("prefers an explicit physicalDistanceInches on the travel object over the options", () => {
-    const out = run(
-      JSON.stringify({ travel: { counts: 3150, physicalDistanceInches: 3.937 } }),
-      { physicalDistanceCm: 50, units: "cm" },
-    );
+    const out = run(JSON.stringify({ travel: { counts: 3150, physicalDistanceInches: 3.937 } }), {
+      physicalDistanceCm: 50,
+      units: "cm",
+    });
     expect(out["Measured DPI"]).toBe("800");
   });
 

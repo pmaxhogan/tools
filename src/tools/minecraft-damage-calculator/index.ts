@@ -597,7 +597,9 @@ export function applyDefenses(dealt: number, d: DefenseOptions): DefendedHit {
   const resistance = requireNumber(d.resistance ?? 0, "Resistance", 0, 5);
   const breach = requireNumber(d.breach ?? 0, "Breach", 0, 4);
   const absorption = requireNumber(d.absorption ?? 0, "Absorption", 0, 1000);
-  const afterArmor = d.bypassArmor ? f32(amount) : damageAfterArmor(amount, armor, toughness, breach);
+  const afterArmor = d.bypassArmor
+    ? f32(amount)
+    : damageAfterArmor(amount, armor, toughness, breach);
   const taken = damageAfterEffects(afterArmor, resistance, epf);
   const absorbed = Math.min(taken, absorption);
   return { taken, absorbed, healthLost: taken - absorbed };
@@ -858,7 +860,8 @@ export function matchup(opts: MatchupOptions): MatchupResult {
     });
     dealt = dealtMin = dealtMax = strike.dealt;
     breakdown.push({ label: "Attack attribute", value: String(round2(strike.attribute)) });
-    if (attacker.critical) breakdown.push({ label: "Critical hit", value: "x1.5 on the attribute" });
+    if (attacker.critical)
+      breakdown.push({ label: "Critical hit", value: "x1.5 on the attribute" });
     if (strike.enchantBonus > 0) {
       breakdown.push({
         label: "Enchant bonus (after crit)",

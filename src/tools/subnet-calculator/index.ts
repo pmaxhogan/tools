@@ -446,8 +446,10 @@ function compareMode(tokenA: string, tokenB: string): SubnetResult {
 
   let relationship: string;
   if (a.network === b.network && a.prefix === b.prefix) relationship = "Equal networks";
-  else if (aContainsB) relationship = `${fmt(a.network)}/${a.prefix} contains ${fmt(b.network)}/${b.prefix}`;
-  else if (bContainsA) relationship = `${fmt(b.network)}/${b.prefix} contains ${fmt(a.network)}/${a.prefix}`;
+  else if (aContainsB)
+    relationship = `${fmt(a.network)}/${a.prefix} contains ${fmt(b.network)}/${b.prefix}`;
+  else if (bContainsA)
+    relationship = `${fmt(b.network)}/${b.prefix} contains ${fmt(a.network)}/${a.prefix}`;
   else if (overlap) relationship = "Overlapping (neither contains the other)";
   else relationship = "Disjoint (no overlap)";
 

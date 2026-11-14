@@ -332,9 +332,7 @@ describe("passkey-tester", () => {
   });
 
   it("throws bad-base64 on characters that are not base64", () => {
-    expect(() => rows("not base64 ***")).toThrow(
-      expect.objectContaining({ code: "bad-base64" }),
-    );
+    expect(() => rows("not base64 ***")).toThrow(expect.objectContaining({ code: "bad-base64" }));
   });
 
   it("throws bad-base64 on a truncated base64 group", () => {
@@ -367,9 +365,7 @@ describe("passkey-tester", () => {
   it("throws not-webauthn when attested credential data is truncated", () => {
     const authData = buildAuthData({ flags: 0x45 });
     const cut = authData.slice(0, 45);
-    expect(() => rows(toBase64Url(cut))).toThrow(
-      expect.objectContaining({ code: "not-webauthn" }),
-    );
+    expect(() => rows(toBase64Url(cut))).toThrow(expect.objectContaining({ code: "not-webauthn" }));
   });
 
   it("defaults to the summary view when no option is passed", () => {

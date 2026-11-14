@@ -229,7 +229,11 @@ function parseSizeSpec(raw: string): SizeSpec {
   if (mm) {
     const v = Number(mm[1]);
     if (!(v > 0)) {
-      throw new ToolError("unknown-gauge", `"${raw.trim()}" is not a valid metric wire size.`, "Use a positive number of mm2, like 2.5mm2.");
+      throw new ToolError(
+        "unknown-gauge",
+        `"${raw.trim()}" is not a valid metric wire size.`,
+        "Use a positive number of mm2, like 2.5mm2.",
+      );
     }
     return { kind: "metric", mm2: v };
   }
@@ -267,7 +271,11 @@ function parseSizeSpec(raw: string): SizeSpec {
     if (dec) {
       const v = Number(dec[1]);
       if (!(v > 0)) {
-        throw new ToolError("unknown-gauge", `"${raw.trim()}" is not a valid wire size.`, "Use a positive number of mm2, like 2.5mm2.");
+        throw new ToolError(
+          "unknown-gauge",
+          `"${raw.trim()}" is not a valid wire size.`,
+          "Use a positive number of mm2, like 2.5mm2.",
+        );
       }
       return { kind: "metric", mm2: v };
     }
@@ -282,7 +290,8 @@ function parseSizeSpec(raw: string): SizeSpec {
 
 function resolveGaugeSpec(raw: string): { areaMm2: number; label: string } {
   const spec = parseSizeSpec(raw);
-  if (spec.kind === "awg") return { areaMm2: awgAreaMm2(spec.n), label: `${gaugeLabel(spec.n)} AWG` };
+  if (spec.kind === "awg")
+    return { areaMm2: awgAreaMm2(spec.n), label: `${gaugeLabel(spec.n)} AWG` };
   return { areaMm2: spec.mm2, label: `${spec.mm2} mm2` };
 }
 
@@ -298,7 +307,16 @@ function looksLikeGaugeToken(t: string): boolean {
 // Free-text token parsing for voltage-drop / size-for
 // ---------------------------------------------------------------------------
 
-type FieldKind = "current" | "length" | "gauge" | "voltage" | "material" | "phase" | "maxdrop" | "temp" | "install";
+type FieldKind =
+  | "current"
+  | "length"
+  | "gauge"
+  | "voltage"
+  | "material"
+  | "phase"
+  | "maxdrop"
+  | "temp"
+  | "install";
 
 type Install = "enclosed" | "open";
 
@@ -367,7 +385,12 @@ interface Fields {
 
 function normalizeInstall(v: string, tokenForError: string): Install {
   const install = INSTALL_WORDS[v.toLowerCase()];
-  if (!install) throw new ToolError("bad-token", `Unrecognized installation "${tokenForError}".`, "Use install=enclosed or install=open.");
+  if (!install)
+    throw new ToolError(
+      "bad-token",
+      `Unrecognized installation "${tokenForError}".`,
+      "Use install=enclosed or install=open.",
+    );
   return install;
 }
 
@@ -375,7 +398,11 @@ function normalizeMaterial(v: string, tokenForError: string): "copper" | "alumin
   const s = v.toLowerCase();
   if (s === "copper" || s === "cu") return "copper";
   if (s === "aluminum" || s === "aluminum" || s === "al") return "aluminum";
-  throw new ToolError("bad-token", `Unrecognized material "${tokenForError}".`, "Use copper or aluminum.");
+  throw new ToolError(
+    "bad-token",
+    `Unrecognized material "${tokenForError}".`,
+    "Use copper or aluminum.",
+  );
 }
 
 function normalizePhase(v: string, tokenForError: string): "dc" | "ac1" | "ac3" {
@@ -383,7 +410,11 @@ function normalizePhase(v: string, tokenForError: string): "dc" | "ac1" | "ac3" 
   if (s === "dc") return "dc";
   if (["ac1", "single", "singlephase", "single-phase", "1p"].includes(s)) return "ac1";
   if (["ac3", "three", "threephase", "three-phase", "3p"].includes(s)) return "ac3";
-  throw new ToolError("bad-token", `Unrecognized phase "${tokenForError}".`, "Use dc, ac1 (single-phase), or ac3 (three-phase).");
+  throw new ToolError(
+    "bad-token",
+    `Unrecognized phase "${tokenForError}".`,
+    "Use dc, ac1 (single-phase), or ac3 (three-phase).",
+  );
 }
 
 /** Length unit -> meters. A bare number is meters. */
@@ -402,7 +433,10 @@ const LENGTH_UNIT_M: Record<string, number> = {
   foot: 0.3048,
 };
 
-const LENGTH_RE = new RegExp(`^([+-]?\\d*\\.?\\d+)(${Object.keys(LENGTH_UNIT_M).join("|")})?$`, "i");
+const LENGTH_RE = new RegExp(
+  `^([+-]?\\d*\\.?\\d+)(${Object.keys(LENGTH_UNIT_M).join("|")})?$`,
+  "i",
+);
 
 /** "30m", "2.5ft", "45cm", "300mm" (or a bare number of meters) -> meters, or null when it is not a length. */
 function matchLength(v: string, requireUnit: boolean): number | null {
@@ -431,10 +465,15 @@ function parseLengthValue(v: string, tokenForError: string): number {
 function parsePlainNumber(v: string, label: string, tokenForError: string, unit?: string): number {
   const m = v.match(/^([+-]?\d*\.?\d+)\s*([a-zA-Z]*)$/);
   if (!m || m[1] === "") {
-    throw new ToolError("bad-token", `Could not parse ${label} "${tokenForError}".`, `Use a plain number for ${label}.`);
+    throw new ToolError(
+      "bad-token",
+      `Could not parse ${label} "${tokenForError}".`,
+      `Use a plain number for ${label}.`,
+    );
   }
   const num = Number(m[1]);
-  if (!Number.isFinite(num)) throw new ToolError("bad-token", `Could not parse ${label} "${tokenForError}".`);
+  if (!Number.isFinite(num))
+    throw new ToolError("bad-token", `Could not parse ${label} "${tokenForError}".`);
   return unit && m[2].toLowerCase() === `m${unit}` ? num / 1000 : num;
 }
 
@@ -442,7 +481,11 @@ function parsePercent(v: string, tokenForError: string): number {
   const s = v.endsWith("%") ? v.slice(0, -1) : v;
   const num = Number(s);
   if (!Number.isFinite(num) || s === "") {
-    throw new ToolError("bad-token", `Could not parse percent "${tokenForError}".`, "Use a plain number like 3 or 3%.");
+    throw new ToolError(
+      "bad-token",
+      `Could not parse percent "${tokenForError}".`,
+      "Use a plain number like 3 or 3%.",
+    );
   }
   return num;
 }
@@ -450,7 +493,11 @@ function parsePercent(v: string, tokenForError: string): number {
 function parseTempColumn(v: string, tokenForError: string): 60 | 75 | 90 {
   const num = Number(v);
   if (num === 60 || num === 75 || num === 90) return num;
-  throw new ToolError("bad-token", `Temperature column "${tokenForError}" must be 60, 75, or 90.`, "Use temp=60, temp=75, or temp=90.");
+  throw new ToolError(
+    "bad-token",
+    `Temperature column "${tokenForError}" must be 60, 75, or 90.`,
+    "Use temp=60, temp=75, or temp=90.",
+  );
 }
 
 /** Tokenize "20A 30m 12awg 120V copper dc" / "i=20 l=30ft gauge=4/0 v=240" style input. */
@@ -514,11 +561,31 @@ function parseWireTokens(raw: string): Fields {
     }
 
     const lower = token.toLowerCase();
-    if (lower === "copper" || lower === "cu" || lower === "aluminum" || lower === "aluminum" || lower === "al") {
+    if (
+      lower === "copper" ||
+      lower === "cu" ||
+      lower === "aluminum" ||
+      lower === "aluminum" ||
+      lower === "al"
+    ) {
       fields.material = normalizeMaterial(lower, token);
       continue;
     }
-    if (["dc", "ac1", "single", "singlephase", "single-phase", "1p", "ac3", "three", "threephase", "three-phase", "3p"].includes(lower)) {
+    if (
+      [
+        "dc",
+        "ac1",
+        "single",
+        "singlephase",
+        "single-phase",
+        "1p",
+        "ac3",
+        "three",
+        "threephase",
+        "three-phase",
+        "3p",
+      ].includes(lower)
+    ) {
       fields.phase = normalizePhase(lower, token);
       continue;
     }
@@ -557,7 +624,11 @@ function parseWireTokens(raw: string): Fields {
 
 function assertPositive(name: string, value: number): void {
   if (!Number.isFinite(value) || value <= 0) {
-    throw new ToolError("impossible", `${name} must be a positive number, got ${value}.`, `Provide a positive value for ${name}.`);
+    throw new ToolError(
+      "impossible",
+      `${name} must be a positive number, got ${value}.`,
+      `Provide a positive value for ${name}.`,
+    );
   }
 }
 
@@ -607,7 +678,8 @@ function runLookup(raw: string): WireGaugeResult {
     const necLabel = AWG_TO_NEC_LABEL[n];
     if (necLabel) {
       const nec = NEC_AMPACITY[necLabel];
-      out["Ampacity, NEC 310.16 copper (60C / 75C / 90C)"] = `${nec.cu60} A / ${nec.cu75} A / ${nec.cu90} A`;
+      out["Ampacity, NEC 310.16 copper (60C / 75C / 90C)"] =
+        `${nec.cu60} A / ${nec.cu75} A / ${nec.cu90} A`;
       if (nec.al75 !== undefined) out["Ampacity, NEC 310.16 aluminum (75C)"] = `${nec.al75} A`;
     } else {
       out["Ampacity, NEC 310.16"] = "Outside the common 14 AWG to 4/0 AWG reference range.";
@@ -622,7 +694,8 @@ function runLookup(raw: string): WireGaugeResult {
     const nearestStdMetric = nearestMetricSize(areaMm2);
     const ampacity = METRIC_AMPACITY[nearestStdMetric];
     if (ampacity !== undefined) {
-      out["Approximate ampacity (IEC-style reference)"] = `${ampacity} A near the ${nearestStdMetric} mm2 standard size`;
+      out["Approximate ampacity (IEC-style reference)"] =
+        `${ampacity} A near the ${nearestStdMetric} mm2 standard size`;
       out["Ampacity note"] =
         "Rough reference only, loosely based on IEC 60364-5-52 style two-cable free-air figures. Real ampacity depends heavily on installation method, grouping, and ambient temperature; check local code.";
     }
@@ -663,7 +736,8 @@ function runVoltageDrop(raw: string): WireGaugeResult {
   const rPerKm = rho1000 / (f.gaugeAreaMm2 as number);
   const rPerM = rPerKm / 1000;
 
-  const vdrop = phase === "ac3" ? Math.sqrt(3) * current * rPerM * lengthM : 2 * current * rPerM * lengthM;
+  const vdrop =
+    phase === "ac3" ? Math.sqrt(3) * current * rPerM * lengthM : 2 * current * rPerM * lengthM;
   const pct = (vdrop / voltage) * 100;
 
   const verdict =
@@ -676,12 +750,16 @@ function runVoltageDrop(raw: string): WireGaugeResult {
   return {
     Wire: f.gaugeLabelText as string,
     Material: material,
-    Circuit: phase === "ac3" ? "three-phase" : phase === "ac1" ? "single-phase AC" : "DC / single-phase",
+    Circuit:
+      phase === "ac3" ? "three-phase" : phase === "ac1" ? "single-phase AC" : "DC / single-phase",
     "Resistance used": `${rPerKm.toFixed(3)} ohm/km`,
     "Voltage drop": formatVolts(vdrop),
     "Percent drop": formatPercent(pct),
     Verdict: verdict,
-    Formula: phase === "ac3" ? "Vdrop = sqrt(3) x I x R x L (one-way length)" : "Vdrop = 2 x I x R x L (round trip over one-way length)",
+    Formula:
+      phase === "ac3"
+        ? "Vdrop = sqrt(3) x I x R x L (one-way length)"
+        : "Vdrop = 2 x I x R x L (round trip over one-way length)",
   };
 }
 
@@ -706,7 +784,8 @@ function sizeForAmpacity(
 ): { amps: number; basis: string } | undefined {
   const nec = NEC_AMPACITY[label];
   if (nec) {
-    if (material === "aluminum") return nec.al75 === undefined ? undefined : { amps: nec.al75, basis: "aluminum, 75C" };
+    if (material === "aluminum")
+      return nec.al75 === undefined ? undefined : { amps: nec.al75, basis: "aluminum, 75C" };
     const amps = tempColumn === 60 ? nec.cu60 : tempColumn === 90 ? nec.cu90 : nec.cu75;
     return { amps, basis: `copper, ${tempColumn}C` };
   }
@@ -715,7 +794,10 @@ function sizeForAmpacity(
   if (install === "open") {
     const cap14 = NEC_AMPACITY["14"];
     const cap = tempColumn === 60 ? cap14.cu60 : tempColumn === 90 ? cap14.cu90 : cap14.cu75;
-    return { amps: Math.min(small.chassisA, cap), basis: "copper, open-air chassis wiring reference, not code" };
+    return {
+      amps: Math.min(small.chassisA, cap),
+      basis: "copper, open-air chassis wiring reference, not code",
+    };
   }
   return { amps: small.powerA, basis: "copper, power transmission reference, not code" };
 }
@@ -755,7 +837,8 @@ function runSizeFor(raw: string): WireGaugeResult {
 
     const areaMm2 = awgAreaMm2(n);
     const rPerM = rho1000 / areaMm2 / 1000;
-    const vdrop = phase === "ac3" ? Math.sqrt(3) * current * rPerM * lengthM : 2 * current * rPerM * lengthM;
+    const vdrop =
+      phase === "ac3" ? Math.sqrt(3) * current * rPerM * lengthM : 2 * current * rPerM * lengthM;
     const pct = (vdrop / voltage) * 100;
 
     if (rated === undefined) {
@@ -770,7 +853,12 @@ function runSizeFor(raw: string): WireGaugeResult {
       const out: WireGaugeResult = {
         "Recommended gauge": `${label} AWG`,
         Material: material,
-        Circuit: phase === "ac3" ? "three-phase" : phase === "ac1" ? "single-phase AC" : "DC / single-phase",
+        Circuit:
+          phase === "ac3"
+            ? "three-phase"
+            : phase === "ac1"
+              ? "single-phase AC"
+              : "DC / single-phase",
         "Ampacity constraint": `${current} A required, ${ampacity} A allowed at ${label} AWG (${rated.basis}) -> pass`,
         "Voltage drop constraint": `${formatPercent(pct)} drop, ${maxDropPct}% limit -> pass`,
         "Voltage drop": formatVolts(vdrop),
@@ -822,4 +910,11 @@ export function run(input: string, opts: WireGaugeOpts): WireGaugeResult {
 export default { run } satisfies ToolLogic<string, WireGaugeResult, WireGaugeOpts>;
 
 // Exported for tests only; not part of the tool's public logic surface.
-export const __test__ = { diameterMm, awgAreaMm2, gaugeLabel, wireProps, nearestAwgForArea, parseSizeSpec };
+export const __test__ = {
+  diameterMm,
+  awgAreaMm2,
+  gaugeLabel,
+  wireProps,
+  nearestAwgForArea,
+  parseSizeSpec,
+};

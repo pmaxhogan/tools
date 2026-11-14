@@ -473,7 +473,12 @@ export function parseTemplate(text: string): TemplateNode[] {
     if (statement.startsWith("skip")) {
       const rest = statement.slice(4).trim();
       if (rest === "") {
-        throw badTemplate(line, statement, "skip needs an amount.", "Write skip 4, or skip length to use a field parsed earlier.");
+        throw badTemplate(
+          line,
+          statement,
+          "skip needs an amount.",
+          "Write skip 4, or skip length to use a field parsed earlier.",
+        );
       }
       body.push({ kind: "skip", line, amount: parseExpr(rest, line, statement) });
       continue;
@@ -697,10 +702,7 @@ function decodeSized(state: EvalState, type: string, at: number, size: number): 
   }
 }
 
-function readField(
-  state: EvalState,
-  node: Extract<TemplateNode, { kind: "field" }>,
-): void {
+function readField(state: EvalState, node: Extract<TemplateNode, { kind: "field" }>): void {
   const name = outputName(state, node.name);
   const type = node.type;
 
@@ -1005,18 +1007,71 @@ function ascii(text: string): number[] {
  * never shadow a longer match.
  */
 const SIGNATURES: Signature[] = [
-  { id: "png", label: "PNG image", templateId: "png", at: 0, magic: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] },
+  {
+    id: "png",
+    label: "PNG image",
+    templateId: "png",
+    at: 0,
+    magic: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+  },
   { id: "gif", label: "GIF image", templateId: "gif", at: 0, magic: ascii("GIF8") },
   { id: "zip", label: "ZIP archive", templateId: "zip", at: 0, magic: [0x50, 0x4b, 0x03, 0x04] },
-  { id: "zip-empty", label: "ZIP archive (empty)", templateId: "zip", at: 0, magic: [0x50, 0x4b, 0x05, 0x06] },
-  { id: "zip-spanned", label: "ZIP archive (spanned)", templateId: "zip", at: 0, magic: [0x50, 0x4b, 0x07, 0x08] },
-  { id: "elf", label: "ELF executable or shared object", templateId: "elf", at: 0, magic: [0x7f, 0x45, 0x4c, 0x46] },
+  {
+    id: "zip-empty",
+    label: "ZIP archive (empty)",
+    templateId: "zip",
+    at: 0,
+    magic: [0x50, 0x4b, 0x05, 0x06],
+  },
+  {
+    id: "zip-spanned",
+    label: "ZIP archive (spanned)",
+    templateId: "zip",
+    at: 0,
+    magic: [0x50, 0x4b, 0x07, 0x08],
+  },
+  {
+    id: "elf",
+    label: "ELF executable or shared object",
+    templateId: "elf",
+    at: 0,
+    magic: [0x7f, 0x45, 0x4c, 0x46],
+  },
   { id: "wasm", label: "WebAssembly module", at: 0, magic: [0x00, 0x61, 0x73, 0x6d] },
-  { id: "macho-64le", label: "Mach-O 64 bit, little endian", templateId: "macho", at: 0, magic: [0xcf, 0xfa, 0xed, 0xfe] },
-  { id: "macho-32le", label: "Mach-O 32 bit, little endian", templateId: "macho", at: 0, magic: [0xce, 0xfa, 0xed, 0xfe] },
-  { id: "macho-64be", label: "Mach-O 64 bit, big endian", templateId: "macho", at: 0, magic: [0xfe, 0xed, 0xfa, 0xcf] },
-  { id: "macho-32be", label: "Mach-O 32 bit, big endian", templateId: "macho", at: 0, magic: [0xfe, 0xed, 0xfa, 0xce] },
-  { id: "fat", label: "Mach-O universal binary or Java class file", at: 0, magic: [0xca, 0xfe, 0xba, 0xbe] },
+  {
+    id: "macho-64le",
+    label: "Mach-O 64 bit, little endian",
+    templateId: "macho",
+    at: 0,
+    magic: [0xcf, 0xfa, 0xed, 0xfe],
+  },
+  {
+    id: "macho-32le",
+    label: "Mach-O 32 bit, little endian",
+    templateId: "macho",
+    at: 0,
+    magic: [0xce, 0xfa, 0xed, 0xfe],
+  },
+  {
+    id: "macho-64be",
+    label: "Mach-O 64 bit, big endian",
+    templateId: "macho",
+    at: 0,
+    magic: [0xfe, 0xed, 0xfa, 0xcf],
+  },
+  {
+    id: "macho-32be",
+    label: "Mach-O 32 bit, big endian",
+    templateId: "macho",
+    at: 0,
+    magic: [0xfe, 0xed, 0xfa, 0xce],
+  },
+  {
+    id: "fat",
+    label: "Mach-O universal binary or Java class file",
+    at: 0,
+    magic: [0xca, 0xfe, 0xba, 0xbe],
+  },
   { id: "pdf", label: "PDF document", at: 0, magic: ascii("%PDF-") },
   { id: "sqlite", label: "SQLite database", at: 0, magic: ascii("SQLite format 3") },
   { id: "7z", label: "7-Zip archive", at: 0, magic: [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c] },
@@ -1028,17 +1083,41 @@ const SIGNATURES: Signature[] = [
   { id: "webp", label: "WebP image", templateId: "wav", at: 8, magic: ascii("WEBP") },
   { id: "wav", label: "WAV audio", templateId: "wav", at: 8, magic: ascii("WAVE") },
   { id: "avi", label: "AVI video", templateId: "wav", at: 8, magic: ascii("AVI ") },
-  { id: "mp4", label: "MP4 or ISO base media container", templateId: "mp4", at: 4, magic: ascii("ftyp") },
+  {
+    id: "mp4",
+    label: "MP4 or ISO base media container",
+    templateId: "mp4",
+    at: 4,
+    magic: ascii("ftyp"),
+  },
   { id: "tar", label: "TAR archive", templateId: "tar", at: 257, magic: ascii("ustar") },
   { id: "jpeg", label: "JPEG image", at: 0, magic: [0xff, 0xd8, 0xff] },
   { id: "gzip", label: "gzip compressed data", at: 0, magic: [0x1f, 0x8b] },
   { id: "bzip2", label: "bzip2 compressed data", at: 0, magic: ascii("BZh") },
-  { id: "utf8-bom", label: "Text with a UTF-8 byte order mark", templateId: "bom", at: 0, magic: [0xef, 0xbb, 0xbf] },
+  {
+    id: "utf8-bom",
+    label: "Text with a UTF-8 byte order mark",
+    templateId: "bom",
+    at: 0,
+    magic: [0xef, 0xbb, 0xbf],
+  },
   { id: "bmp", label: "BMP bitmap", templateId: "bmp", at: 0, magic: ascii("BM") },
   { id: "pe", label: "DOS or Windows PE executable", templateId: "pe", at: 0, magic: ascii("MZ") },
   { id: "riff", label: "RIFF container", templateId: "wav", at: 0, magic: ascii("RIFF") },
-  { id: "utf16le-bom", label: "Text with a UTF-16LE byte order mark", templateId: "bom", at: 0, magic: [0xff, 0xfe] },
-  { id: "utf16be-bom", label: "Text with a UTF-16BE byte order mark", templateId: "bom", at: 0, magic: [0xfe, 0xff] },
+  {
+    id: "utf16le-bom",
+    label: "Text with a UTF-16LE byte order mark",
+    templateId: "bom",
+    at: 0,
+    magic: [0xff, 0xfe],
+  },
+  {
+    id: "utf16be-bom",
+    label: "Text with a UTF-16BE byte order mark",
+    templateId: "bom",
+    at: 0,
+    magic: [0xfe, 0xff],
+  },
 ];
 
 function matches(bytes: Uint8Array, signature: Signature): boolean {
