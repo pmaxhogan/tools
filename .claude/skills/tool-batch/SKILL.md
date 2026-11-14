@@ -44,7 +44,9 @@ merge conflicts.
    lazy loader, alphabetized), then run the full gate:
    - `npm run test:changed` (every test the batch can reach through imports,
      which is where cross-tool surprises come from; CI runs the whole suite on
-     push, so do not run it here)
+     push, so do not run it here). If an agent reported a test that reads a
+     file from outside `public/samples/` and `mc-pipeline/`, add that path to
+     `forceRerunTriggers` in `vitest.config.ts` first.
    - `npm run build` (catches type and import errors in the astro graph)
    - `npx eslint src/tools` (purity rules)
    - spot-review each tool's meta copy against DESIGN.md copy rules
@@ -56,5 +58,5 @@ merge conflicts.
 
 ## Verification gate for the whole batch
 
-Green suite + green build + registry entries for every tool + each new page
+Green `npm run test:changed` + green build + registry entries for every tool + each new page
 renders in the built dist/. Then run `/tool-done all` for the full audit.

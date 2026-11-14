@@ -51,11 +51,13 @@ files.
   That is the whole local requirement for a single tool. If you touched anything
   outside the tool's directory, run `npm run test:changed` instead; it runs every
   test affected by what differs from `origin/main`. The full suite is CI's job.
-- Prefer importing a fixture over reading it from disk. If a test has to read a
-  file with `readFileSync` (a binary sample, a vector file), add that path to
-  `forceRerunTriggers` in `vitest.config.ts` in the same change. `test:changed`
-  follows imports only, so without the entry it skips your test when the file
-  changes.
+- If a test reads a file with `readFileSync` (a binary sample, a vector file),
+  keep that file under `public/samples/` or `mc-pipeline/`. `test:changed`
+  follows imports only, and those two directories are already listed in
+  `forceRerunTriggers` in `vitest.config.ts`, so a change there reruns
+  everything. A file read from anywhere else needs a new entry in that list.
+  Do not edit `vitest.config.ts` yourself: name the path in your final report
+  and the orchestrator adds it.
 
 ## Rules for meta.ts
 
