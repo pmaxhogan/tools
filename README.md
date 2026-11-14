@@ -42,7 +42,7 @@ npm run dev        # dev server
 npm run test:changed  # only the tests affected by what differs from origin/main
 npm test           # the whole vitest suite (CI runs this on every push)
 npm run build      # static build + service worker generation
-npm run lint       # eslint, including purity rules for src/tools
+npm run lint       # eslint (purity rules for src/tools), prettier --check, spelling, prose
 npm run typecheck  # astro check (.astro, .ts) + vue-tsc (.vue)
 ```
 

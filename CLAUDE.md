@@ -65,7 +65,9 @@ the plan for all 168 tools.
 - `npm run build` — runs `scripts/build.mjs`: every `prepare-*.mjs` stager in
   parallel (disjoint public/ subtrees), then astro build, then
   `scripts/generate-sw.mjs` (service worker)
-- `npm run lint` — includes purity rules for `src/tools`
+- `npm run lint` - eslint (including the purity rules for `src/tools`), then
+  `prettier --check .`, the spelling check and the prose check. A formatting
+  failure is fixed with `npm run format`.
 - `npm run typecheck` — `astro check` then `vue-tsc`. Both are needed: astro
   check covers `.astro` and `.ts` and silently skips `.vue`, which is most of
   the UI. Neither runs during `npm run build`, so this is the only thing that
