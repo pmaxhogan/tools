@@ -44,6 +44,7 @@ npm test           # the whole vitest suite (CI runs this on every push)
 npm run build      # static build + service worker generation
 npm run lint       # eslint (purity rules for src/tools), prettier --check, spelling, prose
 npm run typecheck  # astro check (.astro, .ts) + vue-tsc (.vue)
+npm run check      # everything CI runs (lint, typecheck, test, build), all at once
 ```
 
 Adding a tool: see `.claude/tool-authoring.md` for the logic contract and

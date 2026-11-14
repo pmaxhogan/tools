@@ -12,9 +12,16 @@
     "astro": "astro",
     "test": "vitest run",
     "test:changed": "vitest run --changed origin/main",
-    "lint": "eslint . && prettier --check . --experimental-cli && node scripts/check-spelling.mjs && node scripts/check-prose.mjs",
+    "lint": "npm run lint:eslint && npm run lint:format && npm run lint:spelling && npm run lint:prose",
+    "lint:eslint": "eslint . --cache --cache-strategy content --cache-location node_modules/.cache/eslint/",
+    "lint:format": "prettier --check . --experimental-cli",
+    "lint:spelling": "node scripts/check-spelling.mjs",
+    "lint:prose": "node scripts/check-prose.mjs",
     "format": "prettier -w . --experimental-cli",
-    "typecheck": "astro check && vue-tsc --noEmit"
+    "typecheck": "npm run typecheck:astro && npm run typecheck:vue",
+    "typecheck:astro": "astro check",
+    "typecheck:vue": "vue-tsc --noEmit",
+    "check": "node scripts/check.mjs"
   },
   "overrides": {
     "onnxruntime-web": "1.27.0"

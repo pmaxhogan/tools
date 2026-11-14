@@ -65,15 +65,25 @@ the plan for all 168 tools.
 - `npm run build` — runs `scripts/build.mjs`: every `prepare-*.mjs` stager in
   parallel (disjoint public/ subtrees), then astro build, then
   `scripts/generate-sw.mjs` (service worker)
-- `npm run lint` - eslint (including the purity rules for `src/tools`), then
-  `prettier --check .`, the spelling check and the prose check. A formatting
-  failure is fixed with `npm run format`.
-- `npm run typecheck` — `astro check` then `vue-tsc`. Both are needed: astro
-  check covers `.astro` and `.ts` and silently skips `.vue`, which is most of
-  the UI. Neither runs during `npm run build`, so this is the only thing that
-  reads `tsconfig.json`'s strict settings.
-- CI (`.github/workflows/ci.yml`) runs lint, typecheck, and tests on every pull
-  request and on main. It is the only gate before the deploy, so keep it green.
+- `npm run lint` - `lint:eslint` (including the purity rules for `src/tools`),
+  `lint:format` (`prettier --check .`), `lint:spelling` and `lint:prose`, one
+  after another. A formatting failure is fixed with `npm run format`. eslint
+  and Prettier both cache per file under `node_modules/.cache`, so a second
+  run only looks at what changed.
+- `npm run typecheck` - `typecheck:astro` (`astro check`) then `typecheck:vue`
+  (`vue-tsc`). Both are needed: astro check covers `.astro` and `.ts` and
+  silently skips `.vue`, which is most of the UI. Neither runs during
+  `npm run build`, so this is the only thing that reads `tsconfig.json`'s
+  strict settings.
+- `npm run check` - what CI runs: every part of `lint` and `typecheck`, plus
+  `test` and `build`, all at the same time (`scripts/check.mjs`). About 30
+  seconds locally. It reads the steps out of the `lint` and `typecheck`
+  scripts, so a step added to either one is in CI with no second edit. A
+  check that is not reachable from `lint`, `typecheck`, `test` or `build`
+  does not run in CI.
+- CI (`.github/workflows/ci.yml`) runs `npm run check` on every pull request
+  and on main, in one job. It is the only gate before the deploy, so keep it
+  green.
 - Deploy: push to main; the git-connected Cloudflare Worker "tools" builds and
   deploys automatically (`wrangler.jsonc` is the config).
 - **Lockfile rule:** Workers Builds runs npm 10.9.2, which requires `@emnapi/*`

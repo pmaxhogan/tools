@@ -24,24 +24,63 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v5
+      - id: node
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-          cache: npm
 
-      # `npm ci` fails loudly when package.json and the lockfile disagree, which
-      # is the whole point: it is also what Workers Builds runs, so a lockfile
-      # that installs here installs there. See the lockfile rule in CLAUDE.md.
-      - run: npm ci
+      # node_modules is 1.6 GB and `npm ci` spends about a minute unpacking it,
+      # on every run, for a tree that only changes when a dependency does. So
+      # the installed tree is cached whole and `npm ci` runs only on a miss.
+      #
+      # The key covers package.json as well as the lockfile on purpose. `npm ci`
+      # fails loudly when the two disagree, and it is also what Workers Builds
+      # runs, so a lockfile that installs here installs there (see the lockfile
+      # rule in CLAUDE.md). A change to either file changes the key, misses the
+      # cache and runs `npm ci` for real, so that failure still fires. A hit
+      # means this exact pair already went through `npm ci` once.
+      - id: deps
+        uses: actions/cache/restore@v6
+        with:
+          path: node_modules
+          key: deps-${{ runner.os }}-${{ runner.arch }}-node${{ steps.node.outputs.node-version }}-${{ hashFiles('package.json', 'package-lock.json') }}
 
-      - run: npm run lint
+      - if: steps.deps.outputs.cache-hit != 'true'
+        run: npm ci
 
-      - run: npm run typecheck
+      # Saved here, straight after the install and before any check runs, so
+      # the cached tree is exactly what `npm ci` produced and never carries
+      # build output or tool caches from the steps below. Not on pull requests:
+      # a cache written by a PR is visible to that PR alone, so a dependency PR
+      # would upload the whole tree for nobody else to use. Main saves it after
+      # the merge, and every later run and PR restores that one.
+      - if: steps.deps.outputs.cache-hit != 'true' && github.event_name != 'pull_request'
+        uses: actions/cache/save@v6
+        with:
+          path: node_modules
+          key: ${{ steps.deps.outputs.cache-primary-key }}
 
-      - run: npm test
+      # eslint and Prettier each keep a per-file cache keyed on file content and
+      # their own version and config, so an unchanged file is not linted or
+      # formatted again. The key adds the lockfile and both configs, so any
+      # tooling change starts cold. Each run saves a new entry (run_id) and the
+      # next one restores the newest through the prefix.
+      - uses: actions/cache@v6
+        with:
+          path: |
+            node_modules/.cache/eslint
+            node_modules/.cache/prettier
+          key: lint-${{ runner.os }}-${{ hashFiles('package-lock.json', 'eslint.config.js', '.prettierrc', '.prettierignore') }}-${{ github.run_id }}
+          restore-keys: |
+            lint-${{ runner.os }}-${{ hashFiles('package-lock.json', 'eslint.config.js', '.prettierrc', '.prettierignore') }}-
 
-      - run: npm run build
+      # One step, not four: scripts/check.mjs runs lint, both type checkers,
+      # the tests and the build at the same time on this one runner, and fails
+      # if any of them fails. Same checks, fewer billed minutes. The summary on
+      # the run page lists each one with its time, and a failure is annotated
+      # with the name of the check that failed.
+      - run: npm run check
         env:
           SKIP_NETWORK_PREPARE: "1"
