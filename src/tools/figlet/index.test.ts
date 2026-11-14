@@ -38,8 +38,8 @@ describe("figlet", () => {
   });
 
   it("rejects empty and whitespace-only input", () => {
-    expect(() => run("", { font: "Standard", layout: "default" })).toThrowError(ToolError);
-    expect(() => run("   \n\t ", { font: "Standard", layout: "default" })).toThrowError(
+    expect(() => run("", { font: "Standard", layout: "default" })).toThrow(ToolError);
+    expect(() => run("   \n\t ", { font: "Standard", layout: "default" })).toThrow(
       /Enter some text/,
     );
     try {
@@ -51,7 +51,7 @@ describe("figlet", () => {
 
   it("rejects input longer than the character limit", () => {
     const long = "a".repeat(MAX_LENGTH + 1);
-    expect(() => run(long, { font: "Standard", layout: "default" })).toThrowError(/limit is 100/);
+    expect(() => run(long, { font: "Standard", layout: "default" })).toThrow(/limit is 100/);
     // The boundary itself is allowed.
     expect(
       run("a".repeat(MAX_LENGTH), { font: "Standard", layout: "default" }).length,
@@ -64,7 +64,7 @@ describe("figlet", () => {
   });
 
   it("rejects a font that is not registered", () => {
-    expect(() => run("Hi", { font: "Comic Sans", layout: "default" })).toThrowError(ToolError);
+    expect(() => run("Hi", { font: "Comic Sans", layout: "default" })).toThrow(ToolError);
     try {
       run("Hi", { font: "Comic Sans", layout: "default" });
     } catch (e) {
@@ -74,7 +74,7 @@ describe("figlet", () => {
   });
 
   it("rejects an invalid horizontal layout", () => {
-    expect(() => run("Hi", { font: "Standard", layout: "sideways" })).toThrowError(
+    expect(() => run("Hi", { font: "Standard", layout: "sideways" })).toThrow(
       /not a valid horizontal layout/,
     );
     try {
@@ -134,7 +134,7 @@ describe("figlet", () => {
     });
 
     it("rejects a negative maximum width", () => {
-      expect(() => run("Hi", { font: "Standard", layout: "default", maxWidth: -1 })).toThrowError(
+      expect(() => run("Hi", { font: "Standard", layout: "default", maxWidth: -1 })).toThrow(
         ToolError,
       );
       try {

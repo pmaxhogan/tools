@@ -362,7 +362,7 @@ describe("email-header-analyzer parsing behavior", () => {
 
 describe("email-header-analyzer errors", () => {
   it("throws empty-input on an empty string", () => {
-    expect(() => go("")).toThrowError(ToolError);
+    expect(() => go("")).toThrow(ToolError);
     try {
       go("   \n  ");
     } catch (e) {
@@ -372,7 +372,7 @@ describe("email-header-analyzer errors", () => {
   });
 
   it("throws no-headers when the input has no header fields", () => {
-    expect(() => go("just some prose with no fields at all")).toThrowError(ToolError);
+    expect(() => go("just some prose with no fields at all")).toThrow(ToolError);
     try {
       go("just some prose with no fields at all");
     } catch (e) {

@@ -185,7 +185,7 @@ describe("prior work growth", () => {
   });
 
   it("rejects negative prior work", () => {
-    expect(() => tooExpensiveHorizon(-1)).toThrowError(ToolError);
+    expect(() => tooExpensiveHorizon(-1)).toThrow(ToolError);
   });
 });
 
@@ -276,12 +276,12 @@ describe("planner", () => {
 
   it("rejects more than 7 books", () => {
     const books = Array.from({ length: 8 }, () => book(["unbreaking", 3]));
-    expect(() => planCombine(fresh("sword"), books, opts)).toThrowError(ToolError);
+    expect(() => planCombine(fresh("sword"), books, opts)).toThrow(ToolError);
   });
 
   it("rejects non-book or empty-book sacrifices", () => {
-    expect(() => planCombine(fresh("sword"), [fresh("sword")], opts)).toThrowError(ToolError);
-    expect(() => planCombine(fresh("sword"), [book()], opts)).toThrowError(ToolError);
+    expect(() => planCombine(fresh("sword"), [fresh("sword")], opts)).toThrow(ToolError);
+    expect(() => planCombine(fresh("sword"), [book()], opts)).toThrow(ToolError);
   });
 
   it("handles the full 7 book god sword search quickly", () => {
@@ -313,31 +313,31 @@ describe("engine edges", () => {
   it("rejects unknown versions", () => {
     expect(() =>
       combineItems(fresh("sword"), book(["sharpness", 1]), { version: "1.8" }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
   });
 
   it("rejects enchantments that do not exist in the chosen version", () => {
     expect(() =>
       combineItems(fresh("sword"), book(["density", 5]), { version: "1.16.5" }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
   });
 
   it("rejects item families that do not exist in the chosen version", () => {
     expect(() =>
       combineItems(fresh("mace"), book(["unbreaking", 3]), { version: "1.16.5" }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
   });
 
   it("rejects out-of-range damage", () => {
     expect(() =>
       combineItems(fresh("sword", { damage: 9999 }), book(["sharpness", 1]), { version: "1.21.1" }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
   });
 
   it("rejects zero repair materials", () => {
     expect(() =>
       repairWithMaterials(fresh("sword", { damage: 100 }), 0, { version: "1.21.1" }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
   });
 
   it("creative bypasses canEnchant so any book lands on any item", () => {
@@ -406,19 +406,19 @@ describe("run", () => {
   });
 
   it("throws on empty input", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
-    expect(() => run("  ", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
+    expect(() => run("  ", {})).toThrow(ToolError);
   });
 
   it("throws on invalid JSON", () => {
-    expect(() => run("{nope", {})).toThrowError(ToolError);
+    expect(() => run("{nope", {})).toThrow(ToolError);
   });
 
   it("throws when target is missing", () => {
-    expect(() => run("{}", {})).toThrowError(ToolError);
+    expect(() => run("{}", {})).toThrow(ToolError);
   });
 
   it("throws when neither sacrifice, materials, nor rename is given", () => {
-    expect(() => run(JSON.stringify({ target: { kind: "sword" } }), {})).toThrowError(ToolError);
+    expect(() => run(JSON.stringify({ target: { kind: "sword" } }), {})).toThrow(ToolError);
   });
 });

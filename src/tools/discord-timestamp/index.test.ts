@@ -39,7 +39,7 @@ describe("discord-timestamp", () => {
   });
 
   it("rejects garbage with an actionable error", () => {
-    expect(() => run("not a date", {})).toThrowError(ToolError);
+    expect(() => run("not a date", {})).toThrow(ToolError);
     try {
       run("not a date", {});
     } catch (e) {

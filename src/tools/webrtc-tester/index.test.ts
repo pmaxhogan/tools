@@ -74,7 +74,7 @@ describe("parseCandidate", () => {
   });
 
   it("throws bad-candidate naming the token for too few fields", () => {
-    expect(() => parseCandidate("candidate:1 1 udp 100 typ host")).toThrowError(ToolError);
+    expect(() => parseCandidate("candidate:1 1 udp 100 typ host")).toThrow(ToolError);
     try {
       parseCandidate("candidate:1 1 udp 100 typ host");
     } catch (e) {
@@ -103,7 +103,7 @@ describe("parseCandidate", () => {
   });
 
   it("throws bad-candidate for an empty line", () => {
-    expect(() => parseCandidate("   ")).toThrowError(ToolError);
+    expect(() => parseCandidate("   ")).toThrow(ToolError);
   });
 });
 

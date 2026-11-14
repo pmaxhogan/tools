@@ -566,7 +566,7 @@ describe("buildId3", () => {
       description: "",
       bytes: new Uint8Array(17 * 1024 * 1024),
     };
-    expect(() => buildId3(BLANK, audio(), { cover })).toThrowError(ToolError);
+    expect(() => buildId3(BLANK, audio(), { cover })).toThrow(ToolError);
     try {
       buildId3(BLANK, audio(), { cover });
     } catch (e) {
@@ -575,7 +575,7 @@ describe("buildId3", () => {
   });
 
   it("rejects nonsense padding", () => {
-    expect(() => buildId3(BLANK, audio(), { padding: -1 })).toThrowError(/padding must be/);
+    expect(() => buildId3(BLANK, audio(), { padding: -1 })).toThrow(/padding must be/);
     try {
       buildId3(BLANK, audio(), { padding: 5_000_000 });
     } catch (e) {
@@ -733,7 +733,7 @@ describe("run", () => {
   });
 
   it("rejects an empty input", () => {
-    expect(() => run(new Uint8Array(0), { view: "tags" })).toThrowError(ToolError);
+    expect(() => run(new Uint8Array(0), { view: "tags" })).toThrow(ToolError);
     try {
       run("   ", { view: "tags" });
     } catch (e) {

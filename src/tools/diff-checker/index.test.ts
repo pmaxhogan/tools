@@ -149,7 +149,7 @@ describe("diff-checker", () => {
   });
 
   it("json mode: throws naming the invalid side", () => {
-    expect(() => run(doc('{"a":1}', "{invalid"), opts({ mode: "json" }))).toThrowError(ToolError);
+    expect(() => run(doc('{"a":1}', "{invalid"), opts({ mode: "json" }))).toThrow(ToolError);
     try {
       run(doc('{"a":1}', "{invalid"), opts({ mode: "json" }));
     } catch (e) {
@@ -170,7 +170,7 @@ describe("diff-checker", () => {
   });
 
   it("throws a missing-separator error when ===== is absent", () => {
-    expect(() => run("just one text, no separator", opts())).toThrowError(ToolError);
+    expect(() => run("just one text, no separator", opts())).toThrow(ToolError);
     try {
       run("just one text, no separator", opts());
     } catch (e) {
@@ -180,7 +180,7 @@ describe("diff-checker", () => {
   });
 
   it("rejects an unknown mode", () => {
-    expect(() => run(doc("a", "a"), opts({ mode: "bogus" }))).toThrowError(ToolError);
+    expect(() => run(doc("a", "a"), opts({ mode: "bogus" }))).toThrow(ToolError);
   });
 
   it('returns "No differences." for identical inputs', () => {

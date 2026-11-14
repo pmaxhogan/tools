@@ -111,7 +111,7 @@ describe("data-format-converter", () => {
   });
 
   it("rejects a mixed scalar array as not tabular", () => {
-    expect(() => run('[1, "two", 3]', opts({ from: "json", to: "csv" }))).toThrowError(ToolError);
+    expect(() => run('[1, "two", 3]', opts({ from: "json", to: "csv" }))).toThrow(ToolError);
     try {
       run('[1, "two", 3]', opts({ from: "json", to: "csv" }));
     } catch (e) {
@@ -140,7 +140,7 @@ describe("data-format-converter", () => {
   });
 
   it("throws empty-input for blank input", () => {
-    expect(() => run("   \n  ", opts())).toThrowError(ToolError);
+    expect(() => run("   \n  ", opts())).toThrow(ToolError);
     try {
       run("", opts());
     } catch (e) {

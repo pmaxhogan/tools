@@ -26,11 +26,11 @@ describe("json-formatter: format", () => {
   });
 
   it("rejects an unknown indent", () => {
-    expect(() => run('{"a":1}', opts("format", "8"))).toThrowError(/Unknown indent/);
+    expect(() => run('{"a":1}', opts("format", "8"))).toThrow(/Unknown indent/);
   });
 
   it("throws a positioned ToolError on malformed JSON", () => {
-    expect(() => run('{"a": 1,}', opts("format"))).toThrowError(ToolError);
+    expect(() => run('{"a": 1,}', opts("format"))).toThrow(ToolError);
     try {
       run('{\n  "a": 1,\n}', opts("format"));
       throw new Error("should have thrown");
@@ -147,25 +147,25 @@ describe("json-formatter: jwt-decode", () => {
   });
 
   it("names the part that failed: an empty header or payload segment", () => {
-    expect(() => decodeJwt(".abc.sig")).toThrowError(/JWT header is empty/);
-    expect(() => decodeJwt(`${HEADER}..sig`)).toThrowError(/JWT payload is empty/);
+    expect(() => decodeJwt(".abc.sig")).toThrow(/JWT header is empty/);
+    expect(() => decodeJwt(`${HEADER}..sig`)).toThrow(/JWT payload is empty/);
   });
 
   it("names the part that failed: header is not base64url", () => {
-    expect(() => decodeJwt(`not!base64.${PAYLOAD}.sig`)).toThrowError(
+    expect(() => decodeJwt(`not!base64.${PAYLOAD}.sig`)).toThrow(
       /JWT header is not valid base64url/,
     );
   });
 
   it("names the part that failed: payload is not JSON", () => {
     const bad = Buffer.from("hello, not json", "utf8").toString("base64url");
-    expect(() => decodeJwt(`${HEADER}.${bad}.sig`)).toThrowError(
+    expect(() => decodeJwt(`${HEADER}.${bad}.sig`)).toThrow(
       /JWT payload decoded, but it is not valid JSON/,
     );
   });
 
   it("rejects a payload that is JSON but not an object", () => {
-    expect(() => decodeJwt(`${HEADER}.${b64url([1, 2])}.sig`)).toThrowError(
+    expect(() => decodeJwt(`${HEADER}.${b64url([1, 2])}.sig`)).toThrow(
       /payload is valid JSON but not a JSON object/,
     );
   });
@@ -188,7 +188,7 @@ describe("json-formatter: base64", () => {
   });
 
   it("rejects strings that are not valid base64", () => {
-    expect(() => run("not base64!!", opts("base64-decode"))).toThrowError(ToolError);
+    expect(() => run("not base64!!", opts("base64-decode"))).toThrow(ToolError);
     try {
       run("abc", opts("base64-decode"));
       throw new Error("should have thrown");
@@ -243,7 +243,7 @@ describe("json-formatter: input guards", () => {
       "url-encode",
       "url-decode",
     ]) {
-      expect(() => run("   \n ", opts(mode))).toThrowError(ToolError);
+      expect(() => run("   \n ", opts(mode))).toThrow(ToolError);
     }
     try {
       run("", opts("format"));

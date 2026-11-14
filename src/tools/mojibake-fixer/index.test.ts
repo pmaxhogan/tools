@@ -95,8 +95,8 @@ describe("mojibake-fixer", () => {
   });
 
   it("throws ToolError on empty input", () => {
-    expect(() => run("", auto)).toThrowError(ToolError);
-    expect(() => run("   ", auto)).toThrowError(/Enter some text/);
+    expect(() => run("", auto)).toThrow(ToolError);
+    expect(() => run("   ", auto)).toThrow(/Enter some text/);
     try {
       run("", auto);
     } catch (e) {
@@ -105,7 +105,7 @@ describe("mojibake-fixer", () => {
   });
 
   it("throws ToolError on an unknown chain id", () => {
-    expect(() => run("\u00C3\u00A9", { chain: "koi8-r-thrice" })).toThrowError(ToolError);
+    expect(() => run("\u00C3\u00A9", { chain: "koi8-r-thrice" })).toThrow(ToolError);
     try {
       run("\u00C3\u00A9", { chain: "koi8-r-thrice" });
     } catch (e) {

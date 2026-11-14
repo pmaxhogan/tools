@@ -48,7 +48,7 @@ describe("language-code-lookup", () => {
 
     it("throws an ambiguous error when two languages share an English name", () => {
       // Two unrelated ISO 639-3 languages are both named "Bemba".
-      expect(() => run("Bemba", {})).toThrowError(ToolError);
+      expect(() => run("Bemba", {})).toThrow(ToolError);
       try {
         run("Bemba", {});
       } catch (e) {
@@ -68,7 +68,7 @@ describe("language-code-lookup", () => {
     });
 
     it("throws an actionable empty-input error", () => {
-      expect(() => run("", {})).toThrowError(ToolError);
+      expect(() => run("", {})).toThrow(ToolError);
       try {
         run("", {});
       } catch (e) {

@@ -35,7 +35,7 @@ describe("placeholder-image", () => {
   });
 
   it("rejects an invalid background color, naming the bad value", () => {
-    expect(() => run(undefined, { ...DEFAULT_OPTS, background: "not-a-color" })).toThrowError(
+    expect(() => run(undefined, { ...DEFAULT_OPTS, background: "not-a-color" })).toThrow(
       ToolError,
     );
     try {
@@ -47,7 +47,7 @@ describe("placeholder-image", () => {
   });
 
   it("rejects an invalid foreground color, naming the bad value", () => {
-    expect(() => run(undefined, { ...DEFAULT_OPTS, foreground: "#zzzzzz" })).toThrowError(
+    expect(() => run(undefined, { ...DEFAULT_OPTS, foreground: "#zzzzzz" })).toThrow(
       /#zzzzzz/,
     );
   });
@@ -66,12 +66,12 @@ describe("placeholder-image", () => {
   });
 
   it("clamps/errors on sizes outside 1-4000", () => {
-    expect(() => run(undefined, { ...DEFAULT_OPTS, width: 0 })).toThrowError(ToolError);
-    expect(() => run(undefined, { ...DEFAULT_OPTS, width: 4001 })).toThrowError(
+    expect(() => run(undefined, { ...DEFAULT_OPTS, width: 0 })).toThrow(ToolError);
+    expect(() => run(undefined, { ...DEFAULT_OPTS, width: 4001 })).toThrow(
       /between 1 and 4000/,
     );
-    expect(() => run(undefined, { ...DEFAULT_OPTS, height: -5 })).toThrowError(ToolError);
-    expect(() => run(undefined, { ...DEFAULT_OPTS, height: 5000 })).toThrowError(
+    expect(() => run(undefined, { ...DEFAULT_OPTS, height: -5 })).toThrow(ToolError);
+    expect(() => run(undefined, { ...DEFAULT_OPTS, height: 5000 })).toThrow(
       /between 1 and 4000/,
     );
   });

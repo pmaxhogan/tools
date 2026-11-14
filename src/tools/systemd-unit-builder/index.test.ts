@@ -86,8 +86,8 @@ describe("buildUnit", () => {
   });
 
   it("throws empty-input when ExecStart is blank", () => {
-    expect(() => buildUnit({ ...DEFAULT_OPTS, exec: "" })).toThrowError(ToolError);
-    expect(() => buildUnit({ ...DEFAULT_OPTS, exec: "  " })).toThrowError(ToolError);
+    expect(() => buildUnit({ ...DEFAULT_OPTS, exec: "" })).toThrow(ToolError);
+    expect(() => buildUnit({ ...DEFAULT_OPTS, exec: "  " })).toThrow(ToolError);
     try {
       buildUnit({ ...DEFAULT_OPTS, exec: "" });
       throw new Error("expected ToolError");
@@ -125,7 +125,7 @@ describe("run", () => {
   });
 
   it("throws empty-input when both opts.exec and input are empty", () => {
-    expect(() => run("", { ...DEFAULT_OPTS, exec: "" })).toThrowError(ToolError);
+    expect(() => run("", { ...DEFAULT_OPTS, exec: "" })).toThrow(ToolError);
     try {
       run("   ", { ...DEFAULT_OPTS, exec: "" });
       throw new Error("expected ToolError");

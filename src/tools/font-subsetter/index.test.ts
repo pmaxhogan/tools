@@ -91,7 +91,7 @@ describe("detectFormat", () => {
   });
 
   it("rejects a font collection with an explanation", () => {
-    expect(() => detectFormat(new Uint8Array([0x74, 0x74, 0x63, 0x66]))).toThrowError(/collection/);
+    expect(() => detectFormat(new Uint8Array([0x74, 0x74, 0x63, 0x66]))).toThrow(/collection/);
   });
 });
 
@@ -163,7 +163,7 @@ describe("resolveCharacters", () => {
   });
 
   it("rejects a malformed range", () => {
-    expect(() => resolveCharacters({ ranges: "U+ZZZZ" })).toThrowError(/not a unicode range/);
+    expect(() => resolveCharacters({ ranges: "U+ZZZZ" })).toThrow(/not a unicode range/);
     try {
       resolveCharacters({ ranges: "hello" });
       throw new Error("should have thrown");
@@ -376,7 +376,7 @@ describe("toWoff", () => {
   });
 
   it("refuses bytes that carry no table directory", () => {
-    expect(() => toWoff(new Uint8Array(8))).toThrowError(/too short/);
+    expect(() => toWoff(new Uint8Array(8))).toThrow(/too short/);
   });
 });
 

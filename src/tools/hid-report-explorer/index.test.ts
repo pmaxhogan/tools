@@ -432,7 +432,7 @@ describe("parseReportDescriptor: errors and edges", () => {
   });
 
   it("throws when a multi byte item runs off the end", () => {
-    expect(() => parseReportDescriptor(Uint8Array.from([0x16, 0x00]))).toThrowError(
+    expect(() => parseReportDescriptor(Uint8Array.from([0x16, 0x00]))).toThrow(
       /offset 0 declares 2 data bytes but only 1 remain/,
     );
   });
@@ -737,7 +737,7 @@ describe("parseHexBytes", () => {
   });
 
   it("rejects an odd length run of hex digits", () => {
-    expect(() => parseHexBytes("05010")).toThrowError(/odd number of hex digits/);
+    expect(() => parseHexBytes("05010")).toThrow(/odd number of hex digits/);
   });
 
   it("rejects input with no hex bytes at all", () => {

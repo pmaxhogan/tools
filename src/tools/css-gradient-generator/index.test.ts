@@ -343,9 +343,9 @@ describe("run", () => {
   });
 
   it("rejects bad options", () => {
-    expect(() => run("", { colorSyntax: "cmyk" })).toThrowError(ToolError);
-    expect(() => run("", { format: "less" })).toThrowError(ToolError);
-    expect(() => run("", { interpolation: "lab" })).toThrowError(ToolError);
+    expect(() => run("", { colorSyntax: "cmyk" })).toThrow(ToolError);
+    expect(() => run("", { format: "less" })).toThrow(ToolError);
+    expect(() => run("", { interpolation: "lab" })).toThrow(ToolError);
   });
 
   it("keeps trimNumber tidy for whole percentages", () => {

@@ -327,39 +327,39 @@ describe("passkey-tester", () => {
   });
 
   it("throws empty-input on blank input", () => {
-    expect(() => rows("")).toThrowError(expect.objectContaining({ code: "empty-input" }));
-    expect(() => rows("   \n ")).toThrowError(expect.objectContaining({ code: "empty-input" }));
+    expect(() => rows("")).toThrow(expect.objectContaining({ code: "empty-input" }));
+    expect(() => rows("   \n ")).toThrow(expect.objectContaining({ code: "empty-input" }));
   });
 
   it("throws bad-base64 on characters that are not base64", () => {
-    expect(() => rows("not base64 ***")).toThrowError(
+    expect(() => rows("not base64 ***")).toThrow(
       expect.objectContaining({ code: "bad-base64" }),
     );
   });
 
   it("throws bad-base64 on a truncated base64 group", () => {
-    expect(() => rows("QUJDREU")).not.toThrowError(expect.objectContaining({ code: "bad-base64" }));
-    expect(() => rows("Q")).toThrowError(expect.objectContaining({ code: "bad-base64" }));
+    expect(() => rows("QUJDREU")).not.toThrow(expect.objectContaining({ code: "bad-base64" }));
+    expect(() => rows("Q")).toThrow(expect.objectContaining({ code: "bad-base64" }));
   });
 
   it("throws bad-cbor when the bytes are not decodable CBOR", () => {
     // 0x68 opens an 8 byte text string but only two bytes follow.
-    expect(() => rows(toBase64Url(new Uint8Array([0x68, 0x65, 0x6c])))).toThrowError(
+    expect(() => rows(toBase64Url(new Uint8Array([0x68, 0x65, 0x6c])))).toThrow(
       expect.objectContaining({ code: "bad-cbor" }),
     );
   });
 
   it("throws not-webauthn on CBOR that is not a credential", () => {
-    expect(() => rows(toBase64Url(cbor({ hello: "world" })))).toThrowError(
+    expect(() => rows(toBase64Url(cbor({ hello: "world" })))).toThrow(
       expect.objectContaining({ code: "not-webauthn" }),
     );
   });
 
   it("throws not-webauthn on JSON without a credential response", () => {
-    expect(() => rows('{"type":"public-key","response":{}}')).toThrowError(
+    expect(() => rows('{"type":"public-key","response":{}}')).toThrow(
       expect.objectContaining({ code: "not-webauthn" }),
     );
-    expect(() => rows("{not json at all")).toThrowError(
+    expect(() => rows("{not json at all")).toThrow(
       expect.objectContaining({ code: "not-webauthn" }),
     );
   });
@@ -367,7 +367,7 @@ describe("passkey-tester", () => {
   it("throws not-webauthn when attested credential data is truncated", () => {
     const authData = buildAuthData({ flags: 0x45 });
     const cut = authData.slice(0, 45);
-    expect(() => rows(toBase64Url(cut))).toThrowError(
+    expect(() => rows(toBase64Url(cut))).toThrow(
       expect.objectContaining({ code: "not-webauthn" }),
     );
   });

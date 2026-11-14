@@ -267,9 +267,9 @@ describe("run", () => {
   });
 
   it("rejects bad options", () => {
-    expect(() => run("", { duration: 0 })).toThrowError(ToolError);
-    expect(() => run("", { stops: 1 })).toThrowError(ToolError);
-    expect(() => run("", { preset: "wobble" })).toThrowError(ToolError);
+    expect(() => run("", { duration: 0 })).toThrow(ToolError);
+    expect(() => run("", { stops: 1 })).toThrow(ToolError);
+    expect(() => run("", { preset: "wobble" })).toThrow(ToolError);
   });
 
   it("keeps trimNumber tidy", () => {

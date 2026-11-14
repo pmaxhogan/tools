@@ -129,8 +129,8 @@ describe("html-to-markdown", () => {
   });
 
   it("throws a ToolError on empty input", () => {
-    expect(() => run("", opts)).toThrowError(ToolError);
-    expect(() => run("   \n ", opts)).toThrowError(ToolError);
+    expect(() => run("", opts)).toThrow(ToolError);
+    expect(() => run("   \n ", opts)).toThrow(ToolError);
     try {
       run("", opts);
     } catch (e) {

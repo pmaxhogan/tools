@@ -192,7 +192,7 @@ describe("planRenames: find and replace", () => {
         replace: "x",
         regex: true,
       }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
 
     try {
       plan(scanOf([file("a.txt")]), {

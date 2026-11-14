@@ -64,21 +64,21 @@ describe("qr-code-scanner: decoding", () => {
   });
 
   it("throws no-qr-found on a blank image", () => {
-    expect(() => decodeQr(blankImage())).toThrowError(ToolError);
-    expect(() => decodeQr(blankImage())).toThrowError(/No QR code was found/);
+    expect(() => decodeQr(blankImage())).toThrow(ToolError);
+    expect(() => decodeQr(blankImage())).toThrow(/No QR code was found/);
   });
 
   it("throws on a pixel buffer whose length does not match the size", () => {
     const bad: ImageInput = { data: new Uint8ClampedArray(10), width: 100, height: 100 };
-    expect(() => decodeQr(bad)).toThrowError(ToolError);
-    expect(() => decodeQr(bad)).toThrowError(/does not match the image size/);
+    expect(() => decodeQr(bad)).toThrow(ToolError);
+    expect(() => decodeQr(bad)).toThrow(/does not match the image size/);
   });
 
   it("throws on non-integer or empty dimensions", () => {
-    expect(() => decodeQr({ data: new Uint8ClampedArray(4), width: 1.5, height: 1 })).toThrowError(
+    expect(() => decodeQr({ data: new Uint8ClampedArray(4), width: 1.5, height: 1 })).toThrow(
       /could not be read as pixels/,
     );
-    expect(() => decodeQr({ data: new Uint8ClampedArray(0), width: 0, height: 0 })).toThrowError(
+    expect(() => decodeQr({ data: new Uint8ClampedArray(0), width: 0, height: 0 })).toThrow(
       /no width or height/,
     );
   });

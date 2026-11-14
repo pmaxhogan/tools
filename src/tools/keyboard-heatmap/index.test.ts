@@ -311,7 +311,7 @@ describe("run", () => {
   });
 
   it("rejects an unknown layout", () => {
-    expect(() => run("hi", { layout: "maltron", mode: "analyze" })).toThrowError(ToolError);
+    expect(() => run("hi", { layout: "maltron", mode: "analyze" })).toThrow(ToolError);
     try {
       run("hi", { layout: "maltron", mode: "analyze" });
       expect.unreachable();
@@ -343,8 +343,8 @@ describe("run", () => {
   });
 
   it("propagates a bad layout out of analyzeText and renderHeatmapSvg too", () => {
-    expect(() => analyzeText("hi", "maltron")).toThrowError(/no keyboard layout/);
-    expect(() => renderHeatmapSvg("maltron", {})).toThrowError(/no keyboard layout/);
-    expect(() => compareLayouts("hi", ["qwerty", "maltron"])).toThrowError(ToolError);
+    expect(() => analyzeText("hi", "maltron")).toThrow(/no keyboard layout/);
+    expect(() => renderHeatmapSvg("maltron", {})).toThrow(/no keyboard layout/);
+    expect(() => compareLayouts("hi", ["qwerty", "maltron"])).toThrow(ToolError);
   });
 });

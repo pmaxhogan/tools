@@ -37,7 +37,7 @@ describe("sql-formatter", () => {
   });
 
   it('throws ToolError("invalid-sql") on malformed input', () => {
-    expect(() => run("SELECT * FROM (", baseOpts)).toThrowError(ToolError);
+    expect(() => run("SELECT * FROM (", baseOpts)).toThrow(ToolError);
     try {
       run("SELECT * FROM (", baseOpts);
     } catch (e) {
@@ -47,7 +47,7 @@ describe("sql-formatter", () => {
   });
 
   it('throws ToolError("empty-input") on empty input', () => {
-    expect(() => run("", baseOpts)).toThrowError(ToolError);
+    expect(() => run("", baseOpts)).toThrow(ToolError);
     try {
       run("   ", baseOpts);
     } catch (e) {

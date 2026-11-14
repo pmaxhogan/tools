@@ -92,13 +92,13 @@ describe("fake-data-generator", () => {
   });
 
   it("rejects an unknown data type with a typed error", () => {
-    expect(() => run(undefined, { ...base, type: "unicorns" })).toThrowError(ToolError);
-    expect(() => run(undefined, { ...base, type: "unicorns" })).toThrowError(/Unknown data type/);
+    expect(() => run(undefined, { ...base, type: "unicorns" })).toThrow(ToolError);
+    expect(() => run(undefined, { ...base, type: "unicorns" })).toThrow(/Unknown data type/);
   });
 
   it("rejects out-of-range counts with a typed error", () => {
-    expect(() => run(undefined, { ...base, count: 0 })).toThrowError(ToolError);
-    expect(() => run(undefined, { ...base, count: 101 })).toThrowError(/between 1 and 100/);
-    expect(() => run(undefined, { ...base, count: Number.NaN })).toThrowError(ToolError);
+    expect(() => run(undefined, { ...base, count: 0 })).toThrow(ToolError);
+    expect(() => run(undefined, { ...base, count: 101 })).toThrow(/between 1 and 100/);
+    expect(() => run(undefined, { ...base, count: Number.NaN })).toThrow(ToolError);
   });
 });

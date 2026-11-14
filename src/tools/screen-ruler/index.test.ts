@@ -73,12 +73,12 @@ describe("calibrate", () => {
   });
 
   it("throws a ToolError for a non-positive known length", () => {
-    expect(() => calibrate(0, 200)).toThrowError(ToolError);
-    expect(() => calibrate(-5, 200)).toThrowError(ToolError);
+    expect(() => calibrate(0, 200)).toThrow(ToolError);
+    expect(() => calibrate(-5, 200)).toThrow(ToolError);
   });
 
   it("throws a ToolError for a non-positive measured pixel distance", () => {
-    expect(() => calibrate(85.6, 0)).toThrowError(ToolError);
+    expect(() => calibrate(85.6, 0)).toThrow(ToolError);
   });
 });
 
@@ -183,7 +183,7 @@ describe("contrastRatio", () => {
   });
 
   it("throws a ToolError for an invalid hex color", () => {
-    expect(() => contrastRatio("not-a-color", "#fff")).toThrowError(ToolError);
+    expect(() => contrastRatio("not-a-color", "#fff")).toThrow(ToolError);
   });
 });
 

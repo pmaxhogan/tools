@@ -216,7 +216,7 @@ describe("factorio-blueprint-decoder: repair", () => {
       withPlus.slice(60) +
       "  ";
 
-    await expect(run(mangled, { operation: "inspect" })).rejects.toThrowError(ToolError);
+    await expect(run(mangled, { operation: "inspect" })).rejects.toThrow(ToolError);
 
     const out = await run(mangled, { operation: "repair" });
     expect(out).toContain("Removed 3 whitespace characters");
@@ -346,7 +346,7 @@ describe("factorio-blueprint-decoder: errors", () => {
   it("names the version byte it found when it is not 0", async () => {
     const bad = "1" + encodeFixture(SIMPLE_BLUEPRINT).slice(1);
     await expect(run(bad, {})).rejects.toMatchObject({ code: "unsupported-version" });
-    await expect(run(bad, {})).rejects.toThrowError(/version byte "1"/);
+    await expect(run(bad, {})).rejects.toThrow(/version byte "1"/);
   });
 
   it("throws invalid-base64 on characters outside the alphabet", async () => {

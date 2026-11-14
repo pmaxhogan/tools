@@ -290,8 +290,8 @@ describe("chart-maker number formatting", () => {
 
 describe("chart-maker errors", () => {
   it("rejects empty input", () => {
-    expect(() => run("", DEFAULTS)).toThrowError(ToolError);
-    expect(() => run("   \n  ", DEFAULTS)).toThrowError(/Nothing to chart/);
+    expect(() => run("", DEFAULTS)).toThrow(ToolError);
+    expect(() => run("   \n  ", DEFAULTS)).toThrow(/Nothing to chart/);
     try {
       run("", DEFAULTS);
     } catch (err) {

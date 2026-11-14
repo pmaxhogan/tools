@@ -49,7 +49,7 @@ describe("parseHexColor", () => {
 
   it("rejects anything that is not a 3 or 6 digit hex color", () => {
     for (const bad of ["red", "#12345", "#gggggg", "", "rgb(0,0,0)"]) {
-      expect(() => parseHexColor(bad)).toThrowError(ToolError);
+      expect(() => parseHexColor(bad)).toThrow(ToolError);
     }
     try {
       parseHexColor("red");
@@ -102,12 +102,12 @@ describe("applyMatte", () => {
 
   it("rejects a matte that does not match the image size", () => {
     const rgba = solid(2, 2, 0, 0, 0, 255);
-    expect(() => applyMatte(rgba, new Float32Array([1, 1]), 2, 2)).toThrowError(ToolError);
+    expect(() => applyMatte(rgba, new Float32Array([1, 1]), 2, 2)).toThrow(ToolError);
   });
 
   it("rejects a pixel buffer that does not match the image size", () => {
     const rgba = solid(2, 1, 0, 0, 0, 255);
-    expect(() => applyMatte(rgba, new Float32Array([1, 1, 1, 1]), 2, 2)).toThrowError(ToolError);
+    expect(() => applyMatte(rgba, new Float32Array([1, 1, 1, 1]), 2, 2)).toThrow(ToolError);
   });
 
   it("rejects a nonsensical image size", () => {
@@ -147,11 +147,11 @@ describe("resizeMatteNearest", () => {
   });
 
   it("rejects a matte whose length does not match the source size", () => {
-    expect(() => resizeMatteNearest(new Float32Array([1, 2]), 2, 2, 4, 4)).toThrowError(ToolError);
+    expect(() => resizeMatteNearest(new Float32Array([1, 2]), 2, 2, 4, 4)).toThrow(ToolError);
   });
 
   it("rejects a target size of zero", () => {
-    expect(() => resizeMatteNearest(new Float32Array([1]), 1, 1, 0, 4)).toThrowError(ToolError);
+    expect(() => resizeMatteNearest(new Float32Array([1]), 1, 1, 0, 4)).toThrow(ToolError);
   });
 });
 
@@ -209,7 +209,7 @@ describe("boxBlurAlpha", () => {
   });
 
   it("rejects a pixel buffer that does not match the image size", () => {
-    expect(() => boxBlurAlpha(solid(2, 1, 0, 0, 0, 255), 4, 1, 1)).toThrowError(ToolError);
+    expect(() => boxBlurAlpha(solid(2, 1, 0, 0, 0, 255), 4, 1, 1)).toThrow(ToolError);
   });
 });
 
@@ -250,13 +250,13 @@ describe("compositeOnColor", () => {
   });
 
   it("rejects an unusable color", () => {
-    expect(() => compositeOnColor(solid(1, 1, 0, 0, 0, 255), 1, 1, "chartreuse")).toThrowError(
+    expect(() => compositeOnColor(solid(1, 1, 0, 0, 0, 255), 1, 1, "chartreuse")).toThrow(
       ToolError,
     );
   });
 
   it("rejects a pixel buffer that does not match the image size", () => {
-    expect(() => compositeOnColor(solid(1, 1, 0, 0, 0, 255), 2, 2, "#ffffff")).toThrowError(
+    expect(() => compositeOnColor(solid(1, 1, 0, 0, 0, 255), 2, 2, "#ffffff")).toThrow(
       ToolError,
     );
   });

@@ -67,7 +67,7 @@ describe("invisible-character-detector", () => {
   });
 
   it("throws a typed empty-input error with a fix suggestion", () => {
-    expect(() => run("", { mode: "annotate", keepNewlines: true })).toThrowError(ToolError);
+    expect(() => run("", { mode: "annotate", keepNewlines: true })).toThrow(ToolError);
     try {
       run("", { mode: "annotate", keepNewlines: true });
     } catch (e) {

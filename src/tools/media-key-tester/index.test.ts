@@ -257,7 +257,7 @@ describe("run", () => {
   });
 
   it("throws bad-json on malformed JSON", () => {
-    expect(() => run("{not valid json", {})).toThrowError(ToolError);
+    expect(() => run("{not valid json", {})).toThrow(ToolError);
     try {
       run("{not valid json", {});
     } catch (e) {

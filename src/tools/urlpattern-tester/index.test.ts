@@ -108,7 +108,7 @@ describe("urlpattern-tester", () => {
 
   it("throws bad-pattern on invalid syntax", () => {
     expect(() => run("https://example.com/x", { pattern: "((", baseURL: "https://example.com" })) //
-      .toThrowError(ToolError);
+      .toThrow(ToolError);
 
     try {
       run("https://example.com/x", { pattern: "((", baseURL: "https://example.com" });

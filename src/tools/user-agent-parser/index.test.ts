@@ -50,7 +50,7 @@ describe("user-agent-parser", () => {
   });
 
   it("throws a typed, actionable error on empty input", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
     try {
       run("   ", {});
     } catch (e) {

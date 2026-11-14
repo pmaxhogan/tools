@@ -69,7 +69,7 @@ describe("detectPitch", () => {
   });
 
   it("rejects a bad sample rate", () => {
-    expect(() => detectPitch(sine(440, 44100, 2048), 0)).toThrowError(ToolError);
+    expect(() => detectPitch(sine(440, 44100, 2048), 0)).toThrow(ToolError);
   });
 });
 
@@ -115,9 +115,9 @@ describe("notes and cents", () => {
   });
 
   it("rejects nonsense note names and frequencies", () => {
-    expect(() => noteToFrequency("H9")).toThrowError(ToolError);
-    expect(() => frequencyToNote(0)).toThrowError(ToolError);
-    expect(() => centsBetween(440, 0)).toThrowError(ToolError);
+    expect(() => noteToFrequency("H9")).toThrow(ToolError);
+    expect(() => frequencyToNote(0)).toThrow(ToolError);
+    expect(() => centsBetween(440, 0)).toThrow(ToolError);
   });
 });
 
@@ -159,8 +159,8 @@ describe("tunings", () => {
   });
 
   it("rejects an unknown tuning id", () => {
-    expect(() => getTuning("theremin")).toThrowError(ToolError);
-    expect(() => nearestString(440, "theremin")).toThrowError(/not a tuning/);
+    expect(() => getTuning("theremin")).toThrow(ToolError);
+    expect(() => nearestString(440, "theremin")).toThrow(/not a tuning/);
   });
 
   it("gives directional advice", () => {
@@ -197,18 +197,18 @@ describe("metronome scheduling", () => {
   });
 
   it("rejects out of range arguments", () => {
-    expect(() => clickSchedule(5, 4, 1, 0, 4)).toThrowError(ToolError);
-    expect(() => clickSchedule(120, 0, 1, 0, 4)).toThrowError(ToolError);
-    expect(() => clickSchedule(120, 4, 0, 0, 4)).toThrowError(ToolError);
-    expect(() => clickSchedule(120, 4, 1, -1, 4)).toThrowError(ToolError);
-    expect(() => clickSchedule(120, 4, 1, 0, 99999)).toThrowError(ToolError);
+    expect(() => clickSchedule(5, 4, 1, 0, 4)).toThrow(ToolError);
+    expect(() => clickSchedule(120, 0, 1, 0, 4)).toThrow(ToolError);
+    expect(() => clickSchedule(120, 4, 0, 0, 4)).toThrow(ToolError);
+    expect(() => clickSchedule(120, 4, 1, -1, 4)).toThrow(ToolError);
+    expect(() => clickSchedule(120, 4, 1, 0, 99999)).toThrow(ToolError);
   });
 
   it("knows the time signatures the panel offers", () => {
     expect(TIME_SIGNATURES.map((t) => t.id)).toEqual(["4/4", "3/4", "2/4", "6/8", "5/4", "7/8"]);
     expect(getTimeSignature("6/8").beatsPerBar).toBe(6);
     expect(getTimeSignature("6/8").beatUnit).toBe(8);
-    expect(() => getTimeSignature("9/16")).toThrowError(ToolError);
+    expect(() => getTimeSignature("9/16")).toThrow(ToolError);
   });
 });
 
@@ -249,7 +249,7 @@ describe("describeTempo", () => {
   });
 
   it("rejects a tempo of zero", () => {
-    expect(() => describeTempo(0)).toThrowError(ToolError);
+    expect(() => describeTempo(0)).toThrow(ToolError);
   });
 });
 
@@ -272,9 +272,9 @@ describe("renderClickSamples", () => {
   });
 
   it("rejects impossible click settings", () => {
-    expect(() => renderClickSamples(0)).toThrowError(ToolError);
-    expect(() => renderClickSamples(44100, { durationMs: 0 })).toThrowError(ToolError);
-    expect(() => renderClickSamples(44100, { frequency: 1 })).toThrowError(ToolError);
+    expect(() => renderClickSamples(0)).toThrow(ToolError);
+    expect(() => renderClickSamples(44100, { durationMs: 0 })).toThrow(ToolError);
+    expect(() => renderClickSamples(44100, { frequency: 1 })).toThrow(ToolError);
   });
 });
 
@@ -330,7 +330,7 @@ describe("run", () => {
   });
 
   it("rejects input that is neither a frequency nor a tempo", () => {
-    expect(() => run("banana", base)).toThrowError(ToolError);
+    expect(() => run("banana", base)).toThrow(ToolError);
     try {
       run("banana", base);
     } catch (error) {
@@ -340,14 +340,14 @@ describe("run", () => {
   });
 
   it("rejects out of range frequencies and tempos", () => {
-    expect(() => run("99999", base)).toThrowError(/outside/);
-    expect(() => run("900 bpm", base)).toThrowError(/outside/);
+    expect(() => run("99999", base)).toThrow(/outside/);
+    expect(() => run("900 bpm", base)).toThrow(/outside/);
   });
 
   it("rejects bad options", () => {
-    expect(() => run("440", { ...base, a4: 100 })).toThrowError(ToolError);
-    expect(() => run("440", { ...base, tuning: "sitar" })).toThrowError(ToolError);
-    expect(() => run("440", { ...base, timeSignature: "11/16" })).toThrowError(ToolError);
+    expect(() => run("440", { ...base, a4: 100 })).toThrow(ToolError);
+    expect(() => run("440", { ...base, tuning: "sitar" })).toThrow(ToolError);
+    expect(() => run("440", { ...base, timeSignature: "11/16" })).toThrow(ToolError);
     try {
       run("440", { ...base, a4: 500 });
     } catch (error) {

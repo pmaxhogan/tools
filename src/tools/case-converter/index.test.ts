@@ -49,8 +49,8 @@ describe("case-converter", () => {
   });
 
   it("throws a typed error on empty input", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
-    expect(() => run("   \n  ", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
+    expect(() => run("   \n  ", {})).toThrow(ToolError);
     try {
       run("", {});
     } catch (e) {

@@ -82,13 +82,13 @@ describe("line-sorter", () => {
   });
 
   it("throws a typed error on empty input", () => {
-    expect(() => run("", baseOpts)).toThrowError(ToolError);
-    expect(() => run("   ", baseOpts)).toThrowError(/Enter some lines/);
+    expect(() => run("", baseOpts)).toThrow(ToolError);
+    expect(() => run("   ", baseOpts)).toThrow(/Enter some lines/);
   });
 
   it("throws a typed error on an unknown operation", () => {
-    expect(() => run("a\nb", { ...baseOpts, operation: "bogus" })).toThrowError(ToolError);
-    expect(() => run("a\nb", { ...baseOpts, operation: "bogus" })).toThrowError(
+    expect(() => run("a\nb", { ...baseOpts, operation: "bogus" })).toThrow(ToolError);
+    expect(() => run("a\nb", { ...baseOpts, operation: "bogus" })).toThrow(
       /Unknown operation/,
     );
   });

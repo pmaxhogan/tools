@@ -151,7 +151,7 @@ describe("totp-generator", () => {
   });
 
   it("throws empty-input on blank input", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
     try {
       run("   ", {});
     } catch (e) {
@@ -163,7 +163,7 @@ describe("totp-generator", () => {
 
   it("throws bad-secret on characters outside the Base32 alphabet", () => {
     for (const bad of ["1", "0", "JBSWY3DPEHPK3PX!", "hello world 189"]) {
-      expect(() => run(bad, { now: 59 })).toThrowError(/not valid Base32/);
+      expect(() => run(bad, { now: 59 })).toThrow(/not valid Base32/);
     }
     try {
       run("1", { now: 59 });
@@ -174,21 +174,21 @@ describe("totp-generator", () => {
   });
 
   it("throws bad-secret when the input cleans down to nothing", () => {
-    expect(() => run("===", { now: 59 })).toThrowError(/not valid Base32/);
+    expect(() => run("===", { now: 59 })).toThrow(/not valid Base32/);
   });
 
   it("throws on an otpauth URI with no secret", () => {
-    expect(() => run("otpauth://totp/Example:me", {})).toThrowError(/no secret parameter/);
-    expect(() => run("otpauth://weird/Example?secret=" + KEY_SHA1, {})).toThrowError(
+    expect(() => run("otpauth://totp/Example:me", {})).toThrow(/no secret parameter/);
+    expect(() => run("otpauth://weird/Example?secret=" + KEY_SHA1, {})).toThrow(
       /not a supported otpauth type/,
     );
   });
 
   it("rejects unusable options", () => {
-    expect(() => run(KEY_SHA1, { algorithm: "md5", now: 59 })).toThrowError(/not a supported/);
-    expect(() => run(KEY_SHA1, { digits: "12", now: 59 })).toThrowError(/code length/);
-    expect(() => run(KEY_SHA1, { period: 0, now: 59 })).toThrowError(/not a usable period/);
-    expect(() => run(KEY_SHA1, { now: "soon" })).toThrowError(/not a unix timestamp/);
+    expect(() => run(KEY_SHA1, { algorithm: "md5", now: 59 })).toThrow(/not a supported/);
+    expect(() => run(KEY_SHA1, { digits: "12", now: 59 })).toThrow(/code length/);
+    expect(() => run(KEY_SHA1, { period: 0, now: 59 })).toThrow(/not a usable period/);
+    expect(() => run(KEY_SHA1, { now: "soon" })).toThrow(/not a unix timestamp/);
   });
 
   it("accepts algorithm synonyms", () => {

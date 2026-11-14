@@ -322,7 +322,7 @@ describe("image-toolbox: metadata stripping", () => {
 
 describe("image-toolbox: errors", () => {
   it("rejects pasted text that is not an image", async () => {
-    await expect(run("just some notes I pasted", NO_STRIP)).rejects.toThrowError(ToolError);
+    await expect(run("just some notes I pasted", NO_STRIP)).rejects.toThrow(ToolError);
     await expect(run("just some notes I pasted", NO_STRIP)).rejects.toMatchObject({
       code: "not-an-image",
     });
@@ -352,30 +352,30 @@ describe("image-toolbox: errors", () => {
 
   it("throws a clean ToolError (never a RangeError) on truncated files", async () => {
     const truncatedPng = makePng().slice(0, 20);
-    await expect(run(truncatedPng, NO_STRIP)).rejects.toThrowError(ToolError);
+    await expect(run(truncatedPng, NO_STRIP)).rejects.toThrow(ToolError);
 
     const truncatedJpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00]);
-    await expect(run(truncatedJpeg, NO_STRIP)).rejects.toThrowError(ToolError);
+    await expect(run(truncatedJpeg, NO_STRIP)).rejects.toThrow(ToolError);
 
     // JPEG whose SOF0 header is cut off mid-way.
     const cutSof = new Uint8Array([0xff, 0xd8, 0xff, 0xc0, 0x00, 0x11, 0x08, 0x00]);
-    await expect(run(cutSof, NO_STRIP)).rejects.toThrowError(ToolError);
+    await expect(run(cutSof, NO_STRIP)).rejects.toThrow(ToolError);
 
     const truncatedGif = new Uint8Array(asciiBytes("GIF89a").concat([4, 0]));
-    await expect(run(truncatedGif, NO_STRIP)).rejects.toThrowError(ToolError);
+    await expect(run(truncatedGif, NO_STRIP)).rejects.toThrow(ToolError);
 
     const truncatedWebp = new Uint8Array([
       ...asciiBytes("RIFF"),
       ...le32(4),
       ...asciiBytes("WEBP"),
     ]);
-    await expect(run(truncatedWebp, NO_STRIP)).rejects.toThrowError(ToolError);
+    await expect(run(truncatedWebp, NO_STRIP)).rejects.toThrow(ToolError);
   });
 
   it("refuses to strip formats that cannot be rewritten in place", async () => {
     await expect(run(makeGif(), { stripExif: true })).rejects.toMatchObject({
       code: "strip-unsupported",
     });
-    expect(() => stripExif(makeWebpLossless())).toThrowError(ToolError);
+    expect(() => stripExif(makeWebpLossless())).toThrow(ToolError);
   });
 });

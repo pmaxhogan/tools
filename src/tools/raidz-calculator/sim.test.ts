@@ -159,27 +159,27 @@ describe("raidz-calculator/sim capacity", () => {
   });
 
   it("rejects a pool with no vdevs", () => {
-    expect(() => poolCapacity(pool([]), { zfsOverhead: false })).toThrowError(/at least one vdev/);
+    expect(() => poolCapacity(pool([]), { zfsOverhead: false })).toThrow(/at least one vdev/);
   });
 
   it("rejects a vdev too narrow for its level", () => {
     expect(() =>
       poolCapacity(pool([vdev({ level: "raidz3", disks: 3 })]), { zfsOverhead: false }),
-    ).toThrowError(/raidz3 needs at least 4 disks/);
+    ).toThrow(/raidz3 needs at least 4 disks/);
   });
 
   it("counts distributed spares toward the dRAID minimum width", () => {
     expect(() =>
       poolCapacity(pool([vdev({ level: "draid2", disks: 4, spares: 2 })]), { zfsOverhead: false }),
-    ).toThrowError(/draid2 needs at least 5 disks/);
+    ).toThrow(/draid2 needs at least 5 disks/);
   });
 
   it("rejects an OS reserve outside 0 to 100 percent", () => {
     const spec = pool([vdev()]);
-    expect(() => poolCapacity(spec, { zfsOverhead: false, osReservePercent: 100 })).toThrowError(
+    expect(() => poolCapacity(spec, { zfsOverhead: false, osReservePercent: 100 })).toThrow(
       /below 100 percent/,
     );
-    expect(() => poolCapacity(spec, { zfsOverhead: false, osReservePercent: -1 })).toThrowError(
+    expect(() => poolCapacity(spec, { zfsOverhead: false, osReservePercent: -1 })).toThrow(
       /below 100 percent/,
     );
   });

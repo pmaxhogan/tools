@@ -268,8 +268,8 @@ describe("decode-anything: guards and options", () => {
   });
 
   it("throws a ToolError on empty input", async () => {
-    await expect(run("", {})).rejects.toThrowError(ToolError);
-    await expect(run("   \n  ", {})).rejects.toThrowError(/Enter something to decode/);
+    await expect(run("", {})).rejects.toThrow(ToolError);
+    await expect(run("   \n  ", {})).rejects.toThrow(/Enter something to decode/);
     try {
       await run("", {});
     } catch (e) {

@@ -115,7 +115,7 @@ describe("voltage-divider: suggest pairs (case 4)", () => {
 
 describe("voltage-divider: errors", () => {
   it("throws empty-input for blank input", () => {
-    expect(() => divider("")).toThrowError(ToolError);
+    expect(() => divider("")).toThrow(ToolError);
     try {
       divider("  ");
     } catch (e) {

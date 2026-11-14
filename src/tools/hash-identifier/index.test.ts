@@ -42,8 +42,8 @@ describe("hash-identifier", () => {
   });
 
   it("throws an actionable error on empty input", () => {
-    expect(() => run("", { hashcatMode: false })).toThrowError(ToolError);
-    expect(() => run("   ", { hashcatMode: false })).toThrowError(ToolError);
+    expect(() => run("", { hashcatMode: false })).toThrow(ToolError);
+    expect(() => run("   ", { hashcatMode: false })).toThrow(ToolError);
     try {
       run("", { hashcatMode: false });
     } catch (e) {

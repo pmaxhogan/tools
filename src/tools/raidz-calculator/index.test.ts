@@ -24,7 +24,7 @@ describe("raidz-calculator", () => {
   });
 
   it("throws too-few-disks when raidz2 does not have enough disks", () => {
-    expect(() => run("", { ...base, disks: 2 })).toThrowError(/raidz2 needs at least 3 disks/);
+    expect(() => run("", { ...base, disks: 2 })).toThrow(/raidz2 needs at least 3 disks/);
   });
 
   it("computes a mirror as one disk's worth of usable space with 1 disk of tolerance", () => {
@@ -77,23 +77,23 @@ describe("raidz-calculator", () => {
   });
 
   it("throws bad-disks for zero or negative disk counts", () => {
-    expect(() => run("", { ...base, disks: 0 })).toThrowError(/at least 1/);
+    expect(() => run("", { ...base, disks: 0 })).toThrow(/at least 1/);
   });
 
   it("throws bad-disk-size for a non-positive disk size", () => {
-    expect(() => run("", { ...base, diskSize: 0 })).toThrowError(/greater than 0/);
+    expect(() => run("", { ...base, diskSize: 0 })).toThrow(/greater than 0/);
   });
 
   it("throws bad-vdevs for a vdev count below 1", () => {
-    expect(() => run("", { ...base, vdevs: 0 })).toThrowError(/at least 1/);
+    expect(() => run("", { ...base, vdevs: 0 })).toThrow(/at least 1/);
   });
 
   it("throws bad-level for an unrecognized RAIDZ level", () => {
-    expect(() => run("", { ...base, level: "raidz9" })).toThrowError(/Unknown RAIDZ level/);
+    expect(() => run("", { ...base, level: "raidz9" })).toThrow(/Unknown RAIDZ level/);
   });
 
   it("throws bad-unit for an unrecognized disk size unit", () => {
-    expect(() => run("", { ...base, diskSizeUnit: "PB" })).toThrowError(/Unknown disk size unit/);
+    expect(() => run("", { ...base, diskSizeUnit: "PB" })).toThrow(/Unknown disk size unit/);
   });
 
   it("multiplies usable capacity by the number of striped vdevs", () => {
@@ -175,7 +175,7 @@ describe("raidz-calculator v2 rows", () => {
   });
 
   it("rejects a dRAID vdev too narrow once its spares are counted", () => {
-    expect(() => run("", { ...base, level: "draid2", disks: 4, hotSpares: 2 })).toThrowError(
+    expect(() => run("", { ...base, level: "draid2", disks: 4, hotSpares: 2 })).toThrow(
       /draid2 needs at least 5 disks/,
     );
   });

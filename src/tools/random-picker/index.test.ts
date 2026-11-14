@@ -29,7 +29,7 @@ describe("random-picker / dice", () => {
   });
 
   it("rejects invalid notation with a typed error", () => {
-    expect(() => run("3x6", baseOpts)).toThrowError(ToolError);
+    expect(() => run("3x6", baseOpts)).toThrow(ToolError);
     try {
       run("3x6", baseOpts);
     } catch (e) {
@@ -39,7 +39,7 @@ describe("random-picker / dice", () => {
   });
 
   it("rejects empty input with a typed error", () => {
-    expect(() => run("", baseOpts)).toThrowError(ToolError);
+    expect(() => run("", baseOpts)).toThrow(ToolError);
   });
 
   it("labels rolls, modifier, and total as their own rows", () => {
@@ -89,7 +89,7 @@ describe("random-picker / pick", () => {
   });
 
   it("throws when asked for more items than are available", () => {
-    expect(() => run("alice\nbob", { mode: "pick", count: 5, seed: "x" })).toThrowError(ToolError);
+    expect(() => run("alice\nbob", { mode: "pick", count: 5, seed: "x" })).toThrow(ToolError);
     try {
       run("alice\nbob", { mode: "pick", count: 5, seed: "x" });
     } catch (e) {
@@ -98,8 +98,8 @@ describe("random-picker / pick", () => {
   });
 
   it("throws on empty list input", () => {
-    expect(() => run("", { mode: "pick", count: 1, seed: "x" })).toThrowError(ToolError);
-    expect(() => run("   \n  \n", { mode: "pick", count: 1, seed: "x" })).toThrowError(ToolError);
+    expect(() => run("", { mode: "pick", count: 1, seed: "x" })).toThrow(ToolError);
+    expect(() => run("   \n  \n", { mode: "pick", count: 1, seed: "x" })).toThrow(ToolError);
   });
 });
 
@@ -124,7 +124,7 @@ describe("random-picker / teams", () => {
   });
 
   it("throws when there are fewer names than teams", () => {
-    expect(() => run("a\nb", { mode: "teams", count: 5, seed: "x" })).toThrowError(ToolError);
+    expect(() => run("a\nb", { mode: "teams", count: 5, seed: "x" })).toThrow(ToolError);
     try {
       run("a\nb", { mode: "teams", count: 5, seed: "x" });
     } catch (e) {
@@ -133,12 +133,12 @@ describe("random-picker / teams", () => {
   });
 
   it("throws on empty list input", () => {
-    expect(() => run("", { mode: "teams", count: 2, seed: "x" })).toThrowError(ToolError);
+    expect(() => run("", { mode: "teams", count: 2, seed: "x" })).toThrow(ToolError);
   });
 });
 
 describe("random-picker / bad mode", () => {
   it("throws a typed error for an unknown mode", () => {
-    expect(() => run("", { mode: "nonsense", count: 1, seed: "" })).toThrowError(ToolError);
+    expect(() => run("", { mode: "nonsense", count: 1, seed: "" })).toThrow(ToolError);
   });
 });

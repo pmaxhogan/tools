@@ -343,7 +343,7 @@ function readUintElementValue(bytes: Uint8Array, el: EbmlElement): number {
   return value;
 }
 
-function readTimecodeScale(bytes: Uint8Array, info: EbmlElement, infoChildren: EbmlElement[]): number {
+function readTimecodeScale(bytes: Uint8Array, infoChildren: EbmlElement[]): number {
   const tcs = infoChildren.find((e) => e.id === EBML_ID.TIMECODE_SCALE);
   if (!tcs) return DEFAULT_TIMECODE_SCALE;
   const value = readUintElementValue(bytes, tcs);
@@ -431,7 +431,7 @@ export function patchWebmDuration(bytes: Uint8Array, durationMs: number): Uint8A
   if (!info) return bytes.slice();
 
   const infoChildren = parseChildren(bytes, info.dataStart, info.dataEnd);
-  const timecodeScale = readTimecodeScale(bytes, info, infoChildren);
+  const timecodeScale = readTimecodeScale(bytes, infoChildren);
   const durationValue = (ms * 1_000_000) / timecodeScale;
   const durationBytes = encodeFloat64(durationValue);
 

@@ -90,7 +90,7 @@ describe("mcp-inspector builders", () => {
   });
 
   it("rejects a tool call with no name", () => {
-    expect(() => buildToolCall("  ", {})).toThrowError(ToolError);
+    expect(() => buildToolCall("  ", {})).toThrow(ToolError);
   });
 
   it("builds ping", () => {
@@ -140,7 +140,7 @@ describe("parseTransportResponse", () => {
   });
 
   it("throws bad-response on junk", () => {
-    expect(() => parseTransportResponse("not json at all")).toThrowError(ToolError);
+    expect(() => parseTransportResponse("not json at all")).toThrow(ToolError);
     try {
       parseTransportResponse("<html>oops</html>");
     } catch (err) {
@@ -149,14 +149,14 @@ describe("parseTransportResponse", () => {
   });
 
   it("throws bad-response on an SSE body with no data lines", () => {
-    expect(() => parseTransportResponse("event: message\n\nevent: ping\n")).toThrowError(
+    expect(() => parseTransportResponse("event: message\n\nevent: ping\n")).toThrow(
       /no data lines/,
     );
   });
 
   it("throws bad-response on a bad SSE data line and on a bare scalar", () => {
-    expect(() => parseTransportResponse("event: message\ndata: {oops}\n")).toThrowError(ToolError);
-    expect(() => parseTransportResponse("42")).toThrowError(ToolError);
+    expect(() => parseTransportResponse("event: message\ndata: {oops}\n")).toThrow(ToolError);
+    expect(() => parseTransportResponse("42")).toThrow(ToolError);
   });
 });
 
@@ -278,7 +278,7 @@ describe("run parse mode", () => {
   });
 
   it("throws bad-response on junk and empty-input on nothing", () => {
-    expect(() => run("nope", {})).toThrowError(ToolError);
+    expect(() => run("nope", {})).toThrow(ToolError);
     try {
       run("nope", { mode: "parse" });
     } catch (err) {
@@ -321,6 +321,6 @@ describe("run requests mode", () => {
     } catch (err) {
       expect((err as ToolError).code).toBe("bad-url");
     }
-    expect(() => run("", { mode: "requests" })).toThrowError(/server URL/);
+    expect(() => run("", { mode: "requests" })).toThrow(/server URL/);
   });
 });

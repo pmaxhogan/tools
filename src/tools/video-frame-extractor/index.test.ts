@@ -220,7 +220,7 @@ describe("run", () => {
   });
 
   it("throws ToolError for a time it cannot read", () => {
-    expect(() => run("halfway", {})).toThrowError(ToolError);
+    expect(() => run("halfway", {})).toThrow(ToolError);
     try {
       run("halfway", {});
     } catch (e) {

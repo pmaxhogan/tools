@@ -231,7 +231,7 @@ describe("run", () => {
   });
 
   it("rejects malformed JSON with an actionable error", () => {
-    expect(() => run("{not valid json", {})).toThrowError(ToolError);
+    expect(() => run("{not valid json", {})).toThrow(ToolError);
     try {
       run("{not valid json", {});
     } catch (e) {
@@ -241,7 +241,7 @@ describe("run", () => {
   });
 
   it("rejects a JSON value that isn't a touch report", () => {
-    expect(() => run(JSON.stringify({ foo: "bar" }), {})).toThrowError(ToolError);
+    expect(() => run(JSON.stringify({ foo: "bar" }), {})).toThrow(ToolError);
     try {
       run(JSON.stringify([1, 2, 3]), {});
     } catch (e) {

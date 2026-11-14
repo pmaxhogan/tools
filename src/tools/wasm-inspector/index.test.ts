@@ -135,18 +135,18 @@ describe("wasm-inspector", () => {
   });
 
   it("rejects bytes without the wasm magic", () => {
-    expect(() => run(Uint8Array.from([1, 2, 3]), OPTS)).toThrowError(ToolError);
+    expect(() => run(Uint8Array.from([1, 2, 3]), OPTS)).toThrow(ToolError);
     try {
       run(Uint8Array.from([1, 2, 3]), OPTS);
     } catch (e) {
       expect((e as ToolError).code).toBe("not-wasm");
       expect((e as ToolError).fix).toMatch(/\.wasm/);
     }
-    expect(() => run("hello world", OPTS)).toThrowError(/does not look like/);
+    expect(() => run("hello world", OPTS)).toThrow(/does not look like/);
   });
 
   it("rejects empty input", () => {
-    expect(() => run(new Uint8Array(0), OPTS)).toThrowError(ToolError);
+    expect(() => run(new Uint8Array(0), OPTS)).toThrow(ToolError);
     try {
       run("", OPTS);
     } catch (e) {
@@ -175,7 +175,7 @@ describe("wasm-inspector", () => {
       expect((e as ToolError).code).toBe("truncated");
     }
     // a module whose header stops after the magic bytes
-    expect(() => run(Uint8Array.from([0x00, 0x61, 0x73, 0x6d, 0x01]), OPTS)).toThrowError(
+    expect(() => run(Uint8Array.from([0x00, 0x61, 0x73, 0x6d, 0x01]), OPTS)).toThrow(
       ToolError,
     );
   });
@@ -198,7 +198,7 @@ describe("wasm-inspector", () => {
   });
 
   it("throws a ToolError on a LEB128 number that never terminates", () => {
-    expect(() => readUleb128(Uint8Array.from([0x80, 0x80]), 0)).toThrowError(ToolError);
+    expect(() => readUleb128(Uint8Array.from([0x80, 0x80]), 0)).toThrow(ToolError);
   });
 });
 

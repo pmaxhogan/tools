@@ -252,11 +252,11 @@ describe("parseHexBytes", () => {
   });
 
   it("rejects an odd number of nibbles", () => {
-    expect(() => parseHexBytes("013")).toThrowError(/odd number/);
+    expect(() => parseHexBytes("013")).toThrow(/odd number/);
   });
 
   it("rejects non-hex characters", () => {
-    expect(() => parseHexBytes("zz")).toThrowError(/not a hex/);
+    expect(() => parseHexBytes("zz")).toThrow(/not a hex/);
   });
 });
 

@@ -164,7 +164,7 @@ describe("minecraft-xp-calculator", () => {
     });
 
     it("rejects out-of-range values (negative and over the cap)", () => {
-      expect(() => run(undefined, opts({ mode: "xp", totalXp: -1 }))).toThrowError(ToolError);
+      expect(() => run(undefined, opts({ mode: "xp", totalXp: -1 }))).toThrow(ToolError);
       try {
         run(undefined, opts({ toLevel: MAX_LEVEL + 1 }));
         expect.unreachable();
@@ -343,7 +343,7 @@ describe("minecraft-xp-calculator", () => {
     });
 
     it("rejects an empty mixture, mixed kinds, and zero weights", () => {
-      expect(() => normalizeMixture([])).toThrowError(ToolError);
+      expect(() => normalizeMixture([])).toThrow(ToolError);
       try {
         normalizeMixture([]);
       } catch (e) {

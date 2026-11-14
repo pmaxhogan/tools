@@ -178,18 +178,18 @@ repeat * {
   });
 
   it("rejects a sized type with no length and a fixed type with one", () => {
-    expect(() => parseTemplate("bytes hash")).toThrowError(/needs a length in brackets/);
-    expect(() => parseTemplate("u8[4] version")).toThrowError(/takes no length in brackets/);
+    expect(() => parseTemplate("bytes hash")).toThrow(/needs a length in brackets/);
+    expect(() => parseTemplate("u8[4] version")).toThrow(/takes no length in brackets/);
   });
 
   it("rejects an unbalanced block and a stray brace", () => {
-    expect(() => parseTemplate("repeat 2 {\n  u8 a\n")).toThrowError(/never closed/);
-    expect(() => parseTemplate("u8 a\n}\n")).toThrowError(/no open block/);
+    expect(() => parseTemplate("repeat 2 {\n  u8 a\n")).toThrow(/never closed/);
+    expect(() => parseTemplate("u8 a\n}\n")).toThrow(/no open block/);
   });
 
   it("rejects an empty template and a line that is not a statement", () => {
-    expect(() => parseTemplate("   ")).toThrowError(/template is empty/);
-    expect(() => parseTemplate("u8 a\nhello there you\n")).toThrowError(/Line 2/);
+    expect(() => parseTemplate("   ")).toThrow(/template is empty/);
+    expect(() => parseTemplate("u8 a\nhello there you\n")).toThrow(/Line 2/);
   });
 });
 
@@ -395,7 +395,7 @@ if tag == "AB" {
   });
 
   it("rejects a forward reference to a field that has not been read", () => {
-    expect(() => applyTemplate(bytes(1, 2, 3, 4), parseTemplate("bytes[later] head\nu8 later"))).toThrowError(
+    expect(() => applyTemplate(bytes(1, 2, 3, 4), parseTemplate("bytes[later] head\nu8 later"))).toThrow(
       /has not been parsed yet/,
     );
   });

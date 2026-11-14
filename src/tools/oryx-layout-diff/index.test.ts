@@ -327,7 +327,7 @@ describe("MOONLANDER_POSITIONS", () => {
     expect(MOONLANDER_POSITIONS).toHaveLength(72);
     const indices = MOONLANDER_POSITIONS.map((position) => position.index);
     expect(new Set(indices).size).toBe(72);
-    expect(indices).toEqual(Array.from({ length: 72 }, (unused, i) => i));
+    expect(indices).toEqual(Array.from({ length: 72 }, (_unused, i) => i));
   });
 
   it("splits into 64 main keys and 8 thumb keys, evenly per hand", () => {
@@ -469,27 +469,27 @@ describe("run", () => {
 
 describe("run errors", () => {
   it("throws on empty input", () => {
-    expect(() => run("", opts())).toThrowError(/Nothing to compare/);
-    expect(() => run("   \n  ", opts())).toThrowError(/Nothing to compare/);
+    expect(() => run("", opts())).toThrow(/Nothing to compare/);
+    expect(() => run("   \n  ", opts())).toThrow(/Nothing to compare/);
   });
 
   it("throws when the ===== separator is missing", () => {
-    expect(() => run(SIDE_A, opts())).toThrowError(/separator/);
+    expect(() => run(SIDE_A, opts())).toThrow(/separator/);
   });
 
   it("throws when only one side was pasted", () => {
-    expect(() => run(`${SIDE_A}\n${SEPARATOR}\n`, opts())).toThrowError(/Only one keymap.c/);
-    expect(() => run(`\n${SEPARATOR}\n${SIDE_B}`, opts())).toThrowError(/Only one keymap.c/);
+    expect(() => run(`${SIDE_A}\n${SEPARATOR}\n`, opts())).toThrow(/Only one keymap.c/);
+    expect(() => run(`\n${SEPARATOR}\n${SIDE_B}`, opts())).toThrow(/Only one keymap.c/);
   });
 
   it("throws when a side has no layer definitions", () => {
     const notAKeymap = "enum layers { BASE, SYM };\nint main(void) { return 0; }\n";
-    expect(() => run(`${notAKeymap}\n${SEPARATOR}\n${SIDE_B}`, opts())).toThrowError(
+    expect(() => run(`${notAKeymap}\n${SEPARATOR}\n${SIDE_B}`, opts())).toThrow(
       /Layout A has no layer definitions/,
     );
   });
 
   it("throws on an unknown format", () => {
-    expect(() => run(both, opts({ format: "html" }))).toThrowError(/Unknown format/);
+    expect(() => run(both, opts({ format: "html" }))).toThrow(/Unknown format/);
   });
 });

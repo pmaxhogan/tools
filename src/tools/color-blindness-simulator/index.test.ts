@@ -88,7 +88,7 @@ describe("color-blindness-simulator", () => {
   });
 
   it("throws empty-input for blank input", () => {
-    expect(() => run("   \n  ", ALL)).toThrowError(ToolError);
+    expect(() => run("   \n  ", ALL)).toThrow(ToolError);
     try {
       run("", ALL);
     } catch (e) {
@@ -98,7 +98,7 @@ describe("color-blindness-simulator", () => {
   });
 
   it("throws bad-color naming the offending token", () => {
-    expect(() => run("#ff0000\nnotacolour", ALL)).toThrowError(ToolError);
+    expect(() => run("#ff0000\nnotacolour", ALL)).toThrow(ToolError);
     try {
       run("#ff0000\nnotacolour", ALL);
     } catch (e) {
@@ -109,7 +109,7 @@ describe("color-blindness-simulator", () => {
   });
 
   it("throws bad-color for an rgb() call with too few channels", () => {
-    expect(() => parseColor("rgb(1, 2)")).toThrowError(/Could not read/);
+    expect(() => parseColor("rgb(1, 2)")).toThrow(/Could not read/);
   });
 
   it("throws bad-kind for an unknown deficiency", () => {

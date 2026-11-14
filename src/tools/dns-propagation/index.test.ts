@@ -72,7 +72,7 @@ describe("buildQueryUrl", () => {
   });
 
   it("throws ToolError on an invalid domain", () => {
-    expect(() => buildQueryUrl("cloudflare", "not a domain!", "A")).toThrowError(ToolError);
+    expect(() => buildQueryUrl("cloudflare", "not a domain!", "A")).toThrow(ToolError);
     try {
       buildQueryUrl("cloudflare", "not a domain!", "A");
     } catch (err) {
@@ -139,8 +139,8 @@ describe("parseDohResponse", () => {
 
   it("accepts a JSON string and throws ToolError on junk", () => {
     expect(parseDohResponse(JSON.stringify(GOOGLE_A)).answers).toHaveLength(2);
-    expect(() => parseDohResponse("not json")).toThrowError(ToolError);
-    expect(() => parseDohResponse([1, 2, 3])).toThrowError(ToolError);
+    expect(() => parseDohResponse("not json")).toThrow(ToolError);
+    expect(() => parseDohResponse([1, 2, 3])).toThrow(ToolError);
   });
 });
 
@@ -240,7 +240,7 @@ describe("run with a domain name", () => {
   });
 
   it("throws ToolError on an invalid record type option", () => {
-    expect(() => run("example.com", { type: "BOGUS" })).toThrowError(ToolError);
+    expect(() => run("example.com", { type: "BOGUS" })).toThrow(ToolError);
   });
 });
 

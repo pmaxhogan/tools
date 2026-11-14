@@ -22,7 +22,7 @@ describe("cps", () => {
   });
 
   it("rejects a negative click count", () => {
-    expect(() => cps(-1, 10)).toThrowError(ToolError);
+    expect(() => cps(-1, 10)).toThrow(ToolError);
     try {
       cps(-1, 10);
     } catch (e) {

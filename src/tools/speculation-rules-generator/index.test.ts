@@ -92,7 +92,7 @@ describe("speculation-rules-generator: generate", () => {
   });
 
   it("throws empty-input for blank input", () => {
-    expect(() => run("", { mode: "generate" })).toThrowError(ToolError);
+    expect(() => run("", { mode: "generate" })).toThrow(ToolError);
     try {
       run("   \n  ", { mode: "generate" });
     } catch (e) {
@@ -101,7 +101,7 @@ describe("speculation-rules-generator: generate", () => {
   });
 
   it("throws no-urls when input has no usable lines", () => {
-    expect(() => run("not\nnot   ", { mode: "generate" })).toThrowError(ToolError);
+    expect(() => run("not\nnot   ", { mode: "generate" })).toThrow(ToolError);
     try {
       run("not", { mode: "generate" });
     } catch (e) {
@@ -168,7 +168,7 @@ describe("speculation-rules-generator: validate", () => {
   });
 
   it("throws empty-input for blank input", () => {
-    expect(() => run("", { mode: "validate" })).toThrowError(ToolError);
+    expect(() => run("", { mode: "validate" })).toThrow(ToolError);
     try {
       run("  ", { mode: "validate" });
     } catch (e) {

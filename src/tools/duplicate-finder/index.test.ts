@@ -218,7 +218,7 @@ describe("groupByHash", () => {
   });
 
   it("refuses a result with no hash", () => {
-    expect(() => groupByHash([{ entry: file("a.bin", 1), hash: "" }])).toThrowError(
+    expect(() => groupByHash([{ entry: file("a.bin", 1), hash: "" }])).toThrow(
       /No hash was given/,
     );
   });
@@ -226,7 +226,7 @@ describe("groupByHash", () => {
   it("refuses a result with no file", () => {
     expect(() =>
       groupByHash([{ entry: undefined as unknown as FsFileEntry, hash: "abcd" }]),
-    ).toThrowError(/without the file it belongs to/);
+    ).toThrow(/without the file it belongs to/);
   });
 });
 
@@ -275,13 +275,13 @@ describe("chooseKeeper", () => {
   });
 
   it("refuses a group of one", () => {
-    expect(() => chooseKeeper(group("ffff", 10, [file("only.txt", 10)]), "newest")).toThrowError(
+    expect(() => chooseKeeper(group("ffff", 10, [file("only.txt", 10)]), "newest")).toThrow(
       /at least two files/,
     );
   });
 
   it("refuses a strategy it does not have", () => {
-    expect(() => chooseKeeper(g, "largest" as unknown as "newest")).toThrowError(
+    expect(() => chooseKeeper(g, "largest" as unknown as "newest")).toThrow(
       /not a way of choosing/,
     );
   });

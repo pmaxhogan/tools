@@ -42,7 +42,7 @@ describe("url-parser", () => {
   });
 
   it("rejects garbage input with an actionable error", () => {
-    expect(() => run("not a url at all!!! ###", {})).toThrowError(ToolError);
+    expect(() => run("not a url at all!!! ###", {})).toThrow(ToolError);
     try {
       run("not a url at all!!! ###", {});
     } catch (e) {
@@ -52,7 +52,7 @@ describe("url-parser", () => {
   });
 
   it("rejects empty input", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
     try {
       run("", {});
     } catch (e) {

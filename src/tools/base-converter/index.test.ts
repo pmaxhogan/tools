@@ -57,7 +57,7 @@ describe("base-converter", () => {
   });
 
   it("throws an actionable error naming the offending character and position for an invalid digit", () => {
-    expect(() => run("102", { inputBase: "2" })).toThrowError(ToolError);
+    expect(() => run("102", { inputBase: "2" })).toThrow(ToolError);
     try {
       run("102", { inputBase: "2" });
       expect.unreachable();
@@ -70,7 +70,7 @@ describe("base-converter", () => {
   });
 
   it("throws an actionable error for non-integer (decimal point) input", () => {
-    expect(() => run("12.5", auto)).toThrowError(ToolError);
+    expect(() => run("12.5", auto)).toThrow(ToolError);
     try {
       run("12.5", auto);
       expect.unreachable();
@@ -82,7 +82,7 @@ describe("base-converter", () => {
   });
 
   it("throws an actionable error for empty input", () => {
-    expect(() => run("", auto)).toThrowError(ToolError);
+    expect(() => run("", auto)).toThrow(ToolError);
     try {
       run("   ", auto);
       expect.unreachable();

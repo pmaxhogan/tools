@@ -66,7 +66,7 @@ describe("favicon-generator: readPngSize", () => {
 
   it("rejects bytes without the PNG signature", () => {
     const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16, 74, 70, 73, 70, 0]);
-    expect(() => readPngSize(jpeg)).toThrowError(ToolError);
+    expect(() => readPngSize(jpeg)).toThrow(ToolError);
     try {
       readPngSize(jpeg);
     } catch (e) {
@@ -75,7 +75,7 @@ describe("favicon-generator: readPngSize", () => {
   });
 
   it("rejects a truncated PNG", () => {
-    expect(() => readPngSize(PNG_8x8.subarray(0, 20))).toThrowError(/truncated/);
+    expect(() => readPngSize(PNG_8x8.subarray(0, 20))).toThrow(/truncated/);
   });
 
   it("rejects a header whose first chunk is not IHDR", () => {
@@ -84,13 +84,13 @@ describe("favicon-generator: readPngSize", () => {
     broken[13] = 69;
     broken[14] = 78;
     broken[15] = 68; // "IEND"
-    expect(() => readPngSize(broken)).toThrowError(/IHDR/);
+    expect(() => readPngSize(broken)).toThrow(/IHDR/);
   });
 
   it("rejects zero dimensions", () => {
     const zeroed = PNG_8x8.slice();
     zeroed[19] = 0; // width low byte -> width 0
-    expect(() => readPngSize(zeroed)).toThrowError(/zero/);
+    expect(() => readPngSize(zeroed)).toThrow(/zero/);
   });
 });
 
@@ -147,7 +147,7 @@ describe("favicon-generator: buildIco", () => {
   });
 
   it("rejects sizes above 256", () => {
-    expect(() => buildIco([{ size: 512, png: PNG_8x8 }])).toThrowError(ToolError);
+    expect(() => buildIco([{ size: 512, png: PNG_8x8 }])).toThrow(ToolError);
     try {
       buildIco([{ size: 512, png: PNG_8x8 }]);
     } catch (e) {
@@ -268,7 +268,7 @@ describe("favicon-generator: run", () => {
 
   it("rejects non-PNG bytes with png-only", async () => {
     const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 16, 74, 70, 73, 70, 0, 1]);
-    await expect(run(jpeg, OPTS)).rejects.toThrowError(ToolError);
+    await expect(run(jpeg, OPTS)).rejects.toThrow(ToolError);
     await expect(run(jpeg, OPTS)).rejects.toMatchObject({ code: "png-only" });
   });
 

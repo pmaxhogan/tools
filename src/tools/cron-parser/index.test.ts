@@ -49,7 +49,7 @@ describe("cron-parser", () => {
   });
 
   it("rejects a five-field expression when seconds are expected", () => {
-    expect(() => run("*/15 9-17 * * 1-5", { tz: "UTC", seconds: true })).toThrowError(ToolError);
+    expect(() => run("*/15 9-17 * * 1-5", { tz: "UTC", seconds: true })).toThrow(ToolError);
     try {
       run("*/15 9-17 * * 1-5", { tz: "UTC", seconds: true });
     } catch (e) {
@@ -59,7 +59,7 @@ describe("cron-parser", () => {
   });
 
   it("rejects an invalid expression with the parse reason and an example fix", () => {
-    expect(() => run("99 * * * *", { tz: "UTC", seconds: false })).toThrowError(ToolError);
+    expect(() => run("99 * * * *", { tz: "UTC", seconds: false })).toThrow(ToolError);
     try {
       run("99 * * * *", { tz: "UTC", seconds: false });
     } catch (e) {
@@ -69,16 +69,16 @@ describe("cron-parser", () => {
       expect(err.message).not.toMatch(/^Error:/);
       expect(err.fix).toContain("*/15 9-17 * * 1-5");
     }
-    expect(() => run("not a cron", { tz: "UTC", seconds: false })).toThrowError(/Could not parse/);
+    expect(() => run("not a cron", { tz: "UTC", seconds: false })).toThrow(/Could not parse/);
   });
 
   it("rejects empty input with an actionable error", () => {
-    expect(() => run("", { tz: "UTC", seconds: false })).toThrowError(ToolError);
-    expect(() => run("   ", { tz: "UTC", seconds: false })).toThrowError(/Enter a cron expression/);
+    expect(() => run("", { tz: "UTC", seconds: false })).toThrow(ToolError);
+    expect(() => run("   ", { tz: "UTC", seconds: false })).toThrow(/Enter a cron expression/);
   });
 
   it("rejects an unknown time zone", () => {
-    expect(() => run("0 0 * * *", { tz: "Mars/Olympus", seconds: false })).toThrowError(
+    expect(() => run("0 0 * * *", { tz: "Mars/Olympus", seconds: false })).toThrow(
       /Unknown time zone/,
     );
   });

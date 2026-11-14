@@ -388,7 +388,7 @@ describe("run", () => {
   });
 
   it("throws empty-input on an empty string", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
     try {
       run("   ", {});
     } catch (e) {
@@ -397,7 +397,7 @@ describe("run", () => {
   });
 
   it("throws invalid-snapshot on malformed JSON", () => {
-    expect(() => run("{not valid json", {})).toThrowError(ToolError);
+    expect(() => run("{not valid json", {})).toThrow(ToolError);
     try {
       run("{not valid json", {});
     } catch (e) {
@@ -407,7 +407,7 @@ describe("run", () => {
   });
 
   it("throws invalid-snapshot when required screen or window fields are missing", () => {
-    expect(() => run(JSON.stringify({ media: {} }), {})).toThrowError(ToolError);
+    expect(() => run(JSON.stringify({ media: {} }), {})).toThrow(ToolError);
     try {
       run(JSON.stringify({ screen: { width: 100 }, media: {} }), {});
     } catch (e) {

@@ -75,7 +75,7 @@ describe("buildClamp", () => {
   it("rejects a max viewport that is not wider than the min", () => {
     expect(() =>
       buildClamp({ minSize: 16, maxSize: 24, minViewport: 1280, maxViewport: 320 }, "rem", 16),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
     try {
       buildClamp({ minSize: 16, maxSize: 24, minViewport: 800, maxViewport: 800 }, "rem", 16);
       throw new Error("expected a ToolError");
@@ -264,8 +264,8 @@ describe("run", () => {
   });
 
   it("rejects an unknown mode and an unknown unit", () => {
-    expect(() => run("", { mode: "wobble" })).toThrowError(ToolError);
-    expect(() => run("", { unit: "pt" })).toThrowError(ToolError);
+    expect(() => run("", { mode: "wobble" })).toThrow(ToolError);
+    expect(() => run("", { unit: "pt" })).toThrow(ToolError);
   });
 
   it("rejects a ratio outside the sane range", () => {

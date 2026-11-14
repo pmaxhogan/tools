@@ -1044,7 +1044,7 @@ function expandTemplates(text) {
   let out = text;
   for (let pass = 0; pass < 8; pass += 1) {
     let changed = false;
-    out = out.replace(/\{\{([^{}]*)\}\}/g, (whole, body) => {
+    out = out.replace(/\{\{([^{}]*)\}\}/g, (_whole, body) => {
       changed = true;
       const parts = splitTopLevel(`|${body}`).slice(1);
       const name = String(parts.shift() ?? "")

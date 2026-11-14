@@ -54,34 +54,34 @@ describe("qr-code-generator: rendering", () => {
   });
 
   it("rejects a bad error correction level", async () => {
-    await expect(run("hi", { ...OPTS, ecc: "Z" })).rejects.toThrowError(
+    await expect(run("hi", { ...OPTS, ecc: "Z" })).rejects.toThrow(
       /Unknown error correction level/,
     );
   });
 
   it("rejects an out-of-range margin", async () => {
-    await expect(run("hi", { ...OPTS, margin: -1 })).rejects.toThrowError(/Margin must be/);
-    await expect(run("hi", { ...OPTS, margin: 99 })).rejects.toThrowError(ToolError);
+    await expect(run("hi", { ...OPTS, margin: -1 })).rejects.toThrow(/Margin must be/);
+    await expect(run("hi", { ...OPTS, margin: 99 })).rejects.toThrow(ToolError);
   });
 
   it("rejects a color that is not hex", async () => {
-    await expect(run("hi", { ...OPTS, color: "rebeccapurple" })).rejects.toThrowError(
+    await expect(run("hi", { ...OPTS, color: "rebeccapurple" })).rejects.toThrow(
       /is not a hex color/,
     );
   });
 
   it("wraps over-long input in a typed error", async () => {
-    await expect(run("x".repeat(5000), OPTS)).rejects.toThrowError(ToolError);
-    await expect(run("x".repeat(5000), OPTS)).rejects.toThrowError(/Could not encode/);
+    await expect(run("x".repeat(5000), OPTS)).rejects.toThrow(ToolError);
+    await expect(run("x".repeat(5000), OPTS)).rejects.toThrow(/Could not encode/);
   });
 
   it("rejects empty input", async () => {
-    await expect(run("   ", OPTS)).rejects.toThrowError(ToolError);
-    expect(() => buildPayload("", "text")).toThrowError(/Enter the text/);
+    await expect(run("   ", OPTS)).rejects.toThrow(ToolError);
+    expect(() => buildPayload("", "text")).toThrow(/Enter the text/);
   });
 
   it("rejects an unknown preset", () => {
-    expect(() => buildPayload("hi", "barcode")).toThrowError(/Unknown preset/);
+    expect(() => buildPayload("hi", "barcode")).toThrow(/Unknown preset/);
   });
 });
 
@@ -93,8 +93,8 @@ describe("qr-code-generator: url and text", () => {
   });
 
   it("rejects an invalid URL under the url preset", async () => {
-    await expect(run("not a url", { ...OPTS, preset: "url" })).rejects.toThrowError(ToolError);
-    await expect(run("not a url", { ...OPTS, preset: "url" })).rejects.toThrowError(
+    await expect(run("not a url", { ...OPTS, preset: "url" })).rejects.toThrow(ToolError);
+    await expect(run("not a url", { ...OPTS, preset: "url" })).rejects.toThrow(
       /not a valid URL/,
     );
   });
@@ -117,7 +117,7 @@ describe("qr-code-generator: wifi", () => {
 
   it("defaults wifi security to WPA and rejects unknown types", () => {
     expect(buildWifiPayload("home\nhunter2")).toBe("WIFI:T:WPA;S:home;P:hunter2;;");
-    expect(() => buildWifiPayload("home\nhunter2\nWPA9")).toThrowError(/Unknown Wi-Fi security/);
+    expect(() => buildWifiPayload("home\nhunter2\nWPA9")).toThrow(/Unknown Wi-Fi security/);
   });
 
   it("marks hidden networks only when asked", () => {
@@ -129,7 +129,7 @@ describe("qr-code-generator: wifi", () => {
   });
 
   it("requires an SSID for the wifi preset", () => {
-    expect(() => buildWifiPayload("\nhunter2\nWPA")).toThrowError(ToolError);
+    expect(() => buildWifiPayload("\nhunter2\nWPA")).toThrow(ToolError);
   });
 });
 
@@ -193,8 +193,8 @@ describe("qr-code-generator: vcard", () => {
   });
 
   it("requires a name for the vcard preset", () => {
-    expect(() => buildVcardPayload("\n+1 555 0100")).toThrowError(ToolError);
-    expect(() => buildVcard({ name: "  " })).toThrowError(/contact name is required/);
+    expect(() => buildVcardPayload("\n+1 555 0100")).toThrow(ToolError);
+    expect(() => buildVcard({ name: "  " })).toThrow(/contact name is required/);
   });
 });
 
@@ -211,8 +211,8 @@ describe("qr-code-generator: email, sms, phone", () => {
   });
 
   it("rejects an address without a domain", () => {
-    expect(() => buildEmail({ to: "ada" })).toThrowError(/not a valid email address/);
-    expect(() => buildEmail({ to: "" })).toThrowError(ToolError);
+    expect(() => buildEmail({ to: "ada" })).toThrow(/not a valid email address/);
+    expect(() => buildEmail({ to: "" })).toThrow(ToolError);
   });
 
   it("builds SMSTO payloads with the message left as raw text", () => {
@@ -225,8 +225,8 @@ describe("qr-code-generator: email, sms, phone", () => {
 
   it("builds a tel URL and rejects a number with letters", () => {
     expect(buildPhone(" +1 (555) 0100 ")).toBe("tel:+1(555)0100");
-    expect(() => buildPhone("call me")).toThrowError(/not a usable phone number/);
-    expect(() => buildPhone("")).toThrowError(ToolError);
+    expect(() => buildPhone("call me")).toThrow(/not a usable phone number/);
+    expect(() => buildPhone("")).toThrow(ToolError);
   });
 });
 
@@ -241,9 +241,9 @@ describe("qr-code-generator: geo", () => {
   });
 
   it("rejects out of range or non numeric coordinates", () => {
-    expect(() => buildGeo({ latitude: 91, longitude: 0 })).toThrowError(/Latitude/);
-    expect(() => buildGeo({ latitude: 0, longitude: 181 })).toThrowError(/Longitude/);
-    expect(() => buildGeo({ latitude: "north", longitude: 0 })).toThrowError(
+    expect(() => buildGeo({ latitude: 91, longitude: 0 })).toThrow(/Latitude/);
+    expect(() => buildGeo({ latitude: 0, longitude: 181 })).toThrow(/Longitude/);
+    expect(() => buildGeo({ latitude: "north", longitude: 0 })).toThrow(
       /must both be numbers/,
     );
   });
@@ -303,18 +303,18 @@ describe("qr-code-generator: calendar event", () => {
     expect(payload).toContain("DTEND:20260806T120000Z");
     expect(() =>
       buildEvent({ summary: "Ping", start: "2026-08-06T12:00", end: "2026-08-06T11:00" }),
-    ).toThrowError(/ends before it starts/);
+    ).toThrow(/ends before it starts/);
   });
 
   it("rejects a missing title and an unreadable date", () => {
-    expect(() => buildEvent({ summary: "", start: "2026-08-06T12:00" })).toThrowError(
+    expect(() => buildEvent({ summary: "", start: "2026-08-06T12:00" })).toThrow(
       /event title is required/,
     );
-    expect(() => buildEvent({ summary: "Ping", start: "" })).toThrowError(ToolError);
-    expect(() => buildEvent({ summary: "Ping", start: "2026-02-31T12:00" })).toThrowError(
+    expect(() => buildEvent({ summary: "Ping", start: "" })).toThrow(ToolError);
+    expect(() => buildEvent({ summary: "Ping", start: "2026-02-31T12:00" })).toThrow(
       /not a real date/,
     );
-    expect(() => buildEvent({ summary: "Ping", start: "next tuesday" })).toThrowError(
+    expect(() => buildEvent({ summary: "Ping", start: "next tuesday" })).toThrow(
       /not a date and time/,
     );
   });
@@ -359,7 +359,7 @@ describe("qr-code-generator: colors and scannability", () => {
     expect(normaliseColor("#fff", "#000000")).toBe("#ffffff");
     expect(normaliseColor("#1D1B18", "#000000")).toBe("#1d1b18");
     expect(normaliseColor("", "#123456")).toBe("#123456");
-    expect(() => normaliseColor("blue", "#000000")).toThrowError(/not a hex color/);
+    expect(() => normaliseColor("blue", "#000000")).toThrow(/not a hex color/);
   });
 
   it("computes WCAG luminance and contrast", () => {
@@ -414,7 +414,7 @@ describe("qr-code-generator: logo embedding", () => {
   it("refuses a remote logo reference", () => {
     expect(() =>
       embedLogoInSvg('<svg viewBox="0 0 40 40"></svg>', { dataUrl: "https://example.com/l.png" }),
-    ).toThrowError(/must be embedded data/);
+    ).toThrow(/must be embedded data/);
   });
 
   it("escapes the data URL before it lands in an attribute", () => {

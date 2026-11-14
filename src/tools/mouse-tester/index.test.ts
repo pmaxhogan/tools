@@ -71,7 +71,7 @@ describe("dpiFromTravel", () => {
   });
 
   it("throws on zero counts", () => {
-    expect(() => dpiFromTravel({ counts: 0, physicalDistanceInches: 3.937 })).toThrowError(
+    expect(() => dpiFromTravel({ counts: 0, physicalDistanceInches: 3.937 })).toThrow(
       ToolError,
     );
     try {

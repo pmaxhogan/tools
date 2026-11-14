@@ -160,7 +160,7 @@ describe("subtitle-editor shift", () => {
   });
 
   it("rejects an unparseable offset with the accepted forms", () => {
-    expect(() => run(SRT_THREE, { operation: "shift", offset: "soon" })).toThrowError(ToolError);
+    expect(() => run(SRT_THREE, { operation: "shift", offset: "soon" })).toThrow(ToolError);
     try {
       run(SRT_THREE, { operation: "shift", offset: "soon" });
     } catch (e) {
@@ -185,7 +185,7 @@ describe("subtitle-editor resync", () => {
 
   it("needs at least two cues", () => {
     const single = "1\n00:00:01,000 --> 00:00:02,000\nOnly one\n";
-    expect(() => run(single, { operation: "resync", first: "0", last: "5000" })).toThrowError(
+    expect(() => run(single, { operation: "resync", first: "0", last: "5000" })).toThrow(
       /at least two cues/,
     );
     try {
@@ -197,7 +197,7 @@ describe("subtitle-editor resync", () => {
 
   it("rejects anchors that share a start time", () => {
     const same = "1\n00:00:01,000 --> 00:00:02,000\nA\n\n2\n00:00:01,000 --> 00:00:03,000\nB\n";
-    expect(() => run(same, { operation: "resync", first: "0", last: "5000" })).toThrowError(
+    expect(() => run(same, { operation: "resync", first: "0", last: "5000" })).toThrow(
       /different start times/,
     );
   });
@@ -266,7 +266,7 @@ describe("subtitle-editor clean", () => {
 
 describe("subtitle-editor errors", () => {
   it("throws empty-input for blank input", () => {
-    expect(() => run("   \n  ", {})).toThrowError(ToolError);
+    expect(() => run("   \n  ", {})).toThrow(ToolError);
     try {
       run("", {});
     } catch (e) {
@@ -297,22 +297,22 @@ describe("subtitle-editor errors", () => {
   });
 
   it("throws invalid-subtitles when a block has no timestamp line", () => {
-    expect(() => run("1\nJust some text\n", {})).toThrowError(/no timestamp line/);
+    expect(() => run("1\nJust some text\n", {})).toThrow(/no timestamp line/);
   });
 
   it("throws invalid-subtitles when nothing looks like a cue", () => {
-    expect(() => run("WEBVTT\n\nNOTE only a comment here\n", {})).toThrowError(
+    expect(() => run("WEBVTT\n\nNOTE only a comment here\n", {})).toThrow(
       /No subtitle cues were found/,
     );
   });
 
   it("throws invalid-subtitles when the end time precedes the start", () => {
-    expect(() => run("1\n00:00:05,000 --> 00:00:02,000\nBackwards\n", {})).toThrowError(
+    expect(() => run("1\n00:00:05,000 --> 00:00:02,000\nBackwards\n", {})).toThrow(
       /ends before it starts/,
     );
   });
 
   it("rejects an unknown operation", () => {
-    expect(() => run(SRT_THREE, { operation: "nope" as never })).toThrowError(/Unknown operation/);
+    expect(() => run(SRT_THREE, { operation: "nope" as never })).toThrow(/Unknown operation/);
   });
 });

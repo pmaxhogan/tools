@@ -126,7 +126,7 @@ describe("ics-inspector", () => {
 
   it("throws no-events when the calendar has no VEVENT block", () => {
     const src = ics(["BEGIN:VCALENDAR", "VERSION:2.0", "END:VCALENDAR"]);
-    expect(() => run(src, {})).toThrowError(ToolError);
+    expect(() => run(src, {})).toThrow(ToolError);
     try {
       run(src, {});
     } catch (e) {
@@ -135,7 +135,7 @@ describe("ics-inspector", () => {
   });
 
   it("throws empty-input on blank input", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
     try {
       run("", {});
     } catch (e) {

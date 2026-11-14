@@ -61,7 +61,7 @@ describe("week-number", () => {
   });
 
   it("rejects unparseable input with an actionable error", () => {
-    expect(() => run("not a date", {})).toThrowError(ToolError);
+    expect(() => run("not a date", {})).toThrow(ToolError);
     try {
       run("not a date", {});
     } catch (e) {
@@ -71,7 +71,7 @@ describe("week-number", () => {
   });
 
   it("rejects a calendar date that does not exist", () => {
-    expect(() => run("2026-02-30", {})).toThrowError(ToolError);
+    expect(() => run("2026-02-30", {})).toThrow(ToolError);
     try {
       run("2026-02-30", {});
     } catch (e) {

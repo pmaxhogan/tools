@@ -55,10 +55,10 @@ describe("room codes", () => {
 
   it("rejects the empty string, wrong length, and look-alike characters", () => {
     expect(() => parseRoomCode("")).toThrow(ToolError);
-    expect(() => parseRoomCode("ABC")).toThrowError(/6 characters/);
-    expect(() => parseRoomCode("ABCDE0")).toThrowError(/cannot appear/);
+    expect(() => parseRoomCode("ABC")).toThrow(/6 characters/);
+    expect(() => parseRoomCode("ABCDE0")).toThrow(/cannot appear/);
     expect(() => parseRoomCode("ABCDEI")).toThrow(ToolError);
-    expect(() => parseRoomCode("https://example.com/#nope=1")).toThrowError(/does not contain/);
+    expect(() => parseRoomCode("https://example.com/#nope=1")).toThrow(/does not contain/);
   });
 
   it("round-trips through the fragment", () => {
@@ -102,13 +102,13 @@ describe("signaling parser", () => {
   });
 
   it("refuses binary, oversized, non-JSON, unknown and malformed frames", () => {
-    expect(() => parsePeerSignal(new ArrayBuffer(4))).toThrowError(/text/);
-    expect(() => parsePeerSignal("x".repeat(MAX_SIGNAL_BYTES + 1))).toThrowError(/too large/);
-    expect(() => parsePeerSignal("{nope")).toThrowError(/not JSON/);
-    expect(() => parsePeerSignal("[]")).toThrowError(/object/);
-    expect(() => parsePeerSignal('{"type":"chat","text":"hi"}')).toThrowError(/Unknown/);
-    expect(() => parsePeerSignal('{"type":"offer"}')).toThrowError(/sdp/);
-    expect(() => parsePeerSignal('{"type":"ice","candidate":"str"}')).toThrowError(/candidate/);
+    expect(() => parsePeerSignal(new ArrayBuffer(4))).toThrow(/text/);
+    expect(() => parsePeerSignal("x".repeat(MAX_SIGNAL_BYTES + 1))).toThrow(/too large/);
+    expect(() => parsePeerSignal("{nope")).toThrow(/not JSON/);
+    expect(() => parsePeerSignal("[]")).toThrow(/object/);
+    expect(() => parsePeerSignal('{"type":"chat","text":"hi"}')).toThrow(/Unknown/);
+    expect(() => parsePeerSignal('{"type":"offer"}')).toThrow(/sdp/);
+    expect(() => parsePeerSignal('{"type":"ice","candidate":"str"}')).toThrow(/candidate/);
   });
 
   it("recognizes relay messages and falls back to the peer parser", () => {
@@ -158,15 +158,15 @@ describe("control frames", () => {
   });
 
   it("rejects bad frames", () => {
-    expect(() => decodeControl(new Uint8Array(2))).toThrowError(/text/);
-    expect(() => decodeControl("x".repeat(MAX_CONTROL_BYTES + 1))).toThrowError(/too large/);
-    expect(() => decodeControl("{")).toThrowError(/JSON/);
-    expect(() => decodeControl('{"type":"manifest","batch":"b","files":[]}')).toThrowError(
+    expect(() => decodeControl(new Uint8Array(2))).toThrow(/text/);
+    expect(() => decodeControl("x".repeat(MAX_CONTROL_BYTES + 1))).toThrow(/too large/);
+    expect(() => decodeControl("{")).toThrow(/JSON/);
+    expect(() => decodeControl('{"type":"manifest","batch":"b","files":[]}')).toThrow(
       /no files/,
     );
     expect(() =>
       decodeControl('{"type":"manifest","files":[{"id":"a","name":"n","size":1}]}'),
-    ).toThrowError(/batch/);
+    ).toThrow(/batch/);
     expect(() =>
       decodeControl(
         JSON.stringify({
@@ -178,7 +178,7 @@ describe("control frames", () => {
           ],
         }),
       ),
-    ).toThrowError(/repeat/);
+    ).toThrow(/repeat/);
     expect(() =>
       decodeControl(
         JSON.stringify({
@@ -187,7 +187,7 @@ describe("control frames", () => {
           files: [{ id: "a", name: "n", size: 1.5 }],
         }),
       ),
-    ).toThrowError(/whole number/);
+    ).toThrow(/whole number/);
     const many = Array.from({ length: MAX_FILES_PER_BATCH + 1 }, (_, i) => ({
       id: String(i),
       name: "n",
@@ -195,9 +195,9 @@ describe("control frames", () => {
     }));
     expect(() =>
       decodeControl(JSON.stringify({ type: "manifest", batch: "b", files: many })),
-    ).toThrowError(/at most/);
-    expect(() => decodeControl('{"type":"file-start","batch":"b"}')).toThrowError(/file ids/);
-    expect(() => decodeControl('{"type":"whatever"}')).toThrowError(/Unknown/);
+    ).toThrow(/at most/);
+    expect(() => decodeControl('{"type":"file-start","batch":"b"}')).toThrow(/file ids/);
+    expect(() => decodeControl('{"type":"whatever"}')).toThrow(/Unknown/);
   });
 
   it("never returns an empty or path-like file name", () => {

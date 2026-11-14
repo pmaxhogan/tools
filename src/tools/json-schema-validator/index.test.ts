@@ -68,7 +68,7 @@ describe("json-schema-validator", () => {
   });
 
   it("throws invalid-json for malformed JSON", () => {
-    expect(() => run("{not json", opts)).toThrowError(ToolError);
+    expect(() => run("{not json", opts)).toThrow(ToolError);
     try {
       run("{not json", opts);
     } catch (e) {
@@ -77,7 +77,7 @@ describe("json-schema-validator", () => {
   });
 
   it('throws missing-key when "data" is absent', () => {
-    expect(() => run(JSON.stringify({ schema: { type: "string" } }), opts)).toThrowError(ToolError);
+    expect(() => run(JSON.stringify({ schema: { type: "string" } }), opts)).toThrow(ToolError);
     try {
       run(JSON.stringify({ schema: { type: "string" } }), opts);
     } catch (e) {
@@ -99,7 +99,7 @@ describe("json-schema-validator", () => {
   });
 
   it("throws empty-input for a blank input", () => {
-    expect(() => run("", opts)).toThrowError(ToolError);
+    expect(() => run("", opts)).toThrow(ToolError);
     try {
       run("   ", opts);
     } catch (e) {

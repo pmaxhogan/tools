@@ -42,7 +42,7 @@ describe("keycode", () => {
   });
 
   it("rejects malformed JSON with an actionable error", () => {
-    expect(() => run("{not valid json", {})).toThrowError(ToolError);
+    expect(() => run("{not valid json", {})).toThrow(ToolError);
     try {
       run("{not valid json", {});
     } catch (e) {

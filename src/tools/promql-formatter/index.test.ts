@@ -259,7 +259,7 @@ describe("promql-formatter: explain", () => {
 
 describe("promql-formatter: errors", () => {
   it("rejects empty input", () => {
-    expect(() => run("   ", {})).toThrowError(ToolError);
+    expect(() => run("   ", {})).toThrow(ToolError);
     try {
       run("", {});
     } catch (e) {

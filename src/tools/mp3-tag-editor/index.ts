@@ -703,7 +703,7 @@ export function parseId3v1(bytes: Uint8Array): Id3v1Tag | undefined {
 }
 
 /** Bytes of trailing metadata at the end of the file: ID3v1 and its TAG+. */
-function trailerSize(bytes: Uint8Array, v1: Id3v1Tag | undefined): number {
+function trailerSize(v1: Id3v1Tag | undefined): number {
   if (!v1) return 0;
   return 128 + (v1.extended ? 227 : 0);
 }
@@ -1254,7 +1254,7 @@ export function parseId3(bytes: Uint8Array): Id3Info {
   if (isFlac(bytes)) return parseFlac(bytes);
 
   const v1 = parseId3v1(bytes);
-  const trailer = trailerSize(bytes, v1);
+  const trailer = trailerSize(v1);
 
   const info: Id3Info = {
     container: "mp3",

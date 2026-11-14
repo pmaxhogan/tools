@@ -132,7 +132,7 @@ describe("timezone-planner", () => {
   });
 
   it("rejects empty input", () => {
-    expect(() => run("   \n\n", { now: WINTER_NOON })).toThrowError(ToolError);
+    expect(() => run("   \n\n", { now: WINTER_NOON })).toThrow(ToolError);
     try {
       run("", { now: WINTER_NOON });
     } catch (e) {
@@ -200,7 +200,7 @@ describe("timezone-planner", () => {
       expect((e as ToolError).code).toBe("bad-hours");
       expect((e as ToolError).fix).toContain("start hour below the end hour");
     }
-    expect(() => run("berlin, nyc", { now: WINTER_NOON, dayStart: 9, dayEnd: 9 })).toThrowError(
+    expect(() => run("berlin, nyc", { now: WINTER_NOON, dayStart: 9, dayEnd: 9 })).toThrow(
       ToolError,
     );
   });
@@ -212,7 +212,7 @@ describe("timezone-planner", () => {
     } catch (e) {
       expect((e as ToolError).code).toBe("bad-hours");
     }
-    expect(() => run("berlin, nyc", { now: WINTER_NOON, dayEnd: 8.5 })).toThrowError(ToolError);
+    expect(() => run("berlin, nyc", { now: WINTER_NOON, dayEnd: 8.5 })).toThrow(ToolError);
   });
 
   it("rejects a first line that looks like a date but is not one", () => {

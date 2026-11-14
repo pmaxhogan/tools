@@ -453,46 +453,46 @@ describe("markdown-table-editor run", () => {
 describe("markdown-table-editor errors", () => {
   it("throws empty-input on blank input", () => {
     expect(() => run("", {})).toThrow(ToolError);
-    expect(() => run("   \n  ", {})).toThrowError(expect.objectContaining({ code: "empty-input" }));
+    expect(() => run("   \n  ", {})).toThrow(expect.objectContaining({ code: "empty-input" }));
   });
 
   it("throws no-table when there is only one column", () => {
-    expect(() => run("hello", {})).toThrowError(expect.objectContaining({ code: "no-table" }));
+    expect(() => run("hello", {})).toThrow(expect.objectContaining({ code: "no-table" }));
   });
 
   it("throws no-table for HTML without rows", () => {
-    expect(() => run("<table></table>", {})).toThrowError(
+    expect(() => run("<table></table>", {})).toThrow(
       expect.objectContaining({ code: "no-table" }),
     );
   });
 
   it("throws bad-option for an unknown output format", () => {
-    expect(() => run(MD, { output: "pdf" })).toThrowError(
+    expect(() => run(MD, { output: "pdf" })).toThrow(
       expect.objectContaining({ code: "bad-option" }),
     );
   });
 
   it("throws bad-option for an unknown alignment", () => {
-    expect(() => run(MD, { align: "justify" })).toThrowError(
+    expect(() => run(MD, { align: "justify" })).toThrow(
       expect.objectContaining({ code: "bad-option" }),
     );
   });
 
   it("throws bad-option for an unknown sort direction", () => {
-    expect(() => run(MD, { sort: "random" })).toThrowError(
+    expect(() => run(MD, { sort: "random" })).toThrow(
       expect.objectContaining({ code: "bad-option" }),
     );
   });
 
   it("throws bad-index when an operation points outside the table", () => {
-    expect(() => removeRow(PEOPLE, 9)).toThrowError(expect.objectContaining({ code: "bad-index" }));
-    expect(() => removeColumn(PEOPLE, -1)).toThrowError(
+    expect(() => removeRow(PEOPLE, 9)).toThrow(expect.objectContaining({ code: "bad-index" }));
+    expect(() => removeColumn(PEOPLE, -1)).toThrow(
       expect.objectContaining({ code: "bad-index" }),
     );
-    expect(() => moveColumn(PEOPLE, 0, 5)).toThrowError(
+    expect(() => moveColumn(PEOPLE, 0, 5)).toThrow(
       expect.objectContaining({ code: "bad-index" }),
     );
-    expect(() => setCell(PEOPLE, 0, 7, "x")).toThrowError(
+    expect(() => setCell(PEOPLE, 0, 7, "x")).toThrow(
       expect.objectContaining({ code: "bad-index" }),
     );
   });

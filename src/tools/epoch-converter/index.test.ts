@@ -20,7 +20,7 @@ describe("epoch-converter", () => {
   });
 
   it("rejects garbage with an actionable error", () => {
-    expect(() => run("not a date", { tz: "UTC" })).toThrowError(ToolError);
+    expect(() => run("not a date", { tz: "UTC" })).toThrow(ToolError);
     try {
       run("not a date", { tz: "UTC" });
     } catch (e) {
@@ -29,7 +29,7 @@ describe("epoch-converter", () => {
   });
 
   it("rejects unknown time zones with an actionable error", () => {
-    expect(() => run("1754521200", { tz: "Mars/Olympus" })).toThrowError(/Unknown time zone/);
+    expect(() => run("1754521200", { tz: "Mars/Olympus" })).toThrow(/Unknown time zone/);
   });
 
   it("defaults empty input to now", () => {

@@ -57,7 +57,7 @@ describe("airport-code-lookup", () => {
       // Chicago itself resolves cleanly to the CHI metro item (an exact name
       // match beats the city ties), so this uses Houston, which has no metro
       // row of its own and genuinely ties across four airports.
-      expect(() => run("Houston", {})).toThrowError(ToolError);
+      expect(() => run("Houston", {})).toThrow(ToolError);
       try {
         run("Houston", {});
       } catch (e) {
@@ -76,7 +76,7 @@ describe("airport-code-lookup", () => {
     });
 
     it("throws an actionable empty-input error", () => {
-      expect(() => run("", {})).toThrowError(ToolError);
+      expect(() => run("", {})).toThrow(ToolError);
       try {
         run("", {});
       } catch (e) {

@@ -46,13 +46,13 @@ describe("raidz-calculator/reliability AFR conversion", () => {
   });
 
   it("rejects failure rates outside 0 to 100 percent", () => {
-    expect(() => afrToMtbfHours(0)).toThrowError(/above 0 and below 100/);
-    expect(() => afrToMtbfHours(100)).toThrowError(/above 0 and below 100/);
-    expect(() => afrToMtbfHours(-1)).toThrowError(/above 0 and below 100/);
+    expect(() => afrToMtbfHours(0)).toThrow(/above 0 and below 100/);
+    expect(() => afrToMtbfHours(100)).toThrow(/above 0 and below 100/);
+    expect(() => afrToMtbfHours(-1)).toThrow(/above 0 and below 100/);
   });
 
   it("rejects a non-positive MTBF", () => {
-    expect(() => mtbfToAfrPercent(0)).toThrowError(/greater than 0 hours/);
+    expect(() => mtbfToAfrPercent(0)).toThrow(/greater than 0 hours/);
   });
 });
 
@@ -83,7 +83,7 @@ describe("raidz-calculator/reliability MTTDL formulas", () => {
   });
 
   it("refuses a vdev with no more drives than parity", () => {
-    expect(() => vdevMttdlHours(2, 2, 1e6, 10)).toThrowError(/needs more than 2 drives/);
+    expect(() => vdevMttdlHours(2, 2, 1e6, 10)).toThrow(/needs more than 2 drives/);
   });
 
   it("converts an MTTDL to an annual data loss probability", () => {
@@ -183,14 +183,14 @@ describe("raidz-calculator/reliability pool aggregation", () => {
   });
 
   it("rejects bad reliability inputs with actionable errors", () => {
-    expect(() => mttdl(pool([]), opts)).toThrowError(/at least one vdev/);
-    expect(() => mttdl(pool([vdev()]), { mtbfHours: 0, resilverHours: 10 })).toThrowError(
+    expect(() => mttdl(pool([]), opts)).toThrow(/at least one vdev/);
+    expect(() => mttdl(pool([vdev()]), { mtbfHours: 0, resilverHours: 10 })).toThrow(
       /MTBF must be greater than 0/,
     );
-    expect(() => mttdl(pool([vdev()]), { mtbfHours: 1e6, resilverHours: 0 })).toThrowError(
+    expect(() => mttdl(pool([vdev()]), { mtbfHours: 1e6, resilverHours: 0 })).toThrow(
       /Resilver time must be greater than 0/,
     );
-    expect(() => mttdl(pool([vdev()]), { ...opts, afrPercent: 150 })).toThrowError(
+    expect(() => mttdl(pool([vdev()]), { ...opts, afrPercent: 150 })).toThrow(
       /above 0 and below 100/,
     );
   });

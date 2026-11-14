@@ -967,7 +967,7 @@ function killsLine(taken: number): string {
     .join(", ");
 }
 
-export function run(input: string, opts: DamageCalcOpts): DamageCalcResult {
+export function run(_input: string, opts: DamageCalcOpts): DamageCalcResult {
   const mode = String(opts.mode ?? "melee");
   const version = requireVersion(opts.version ?? "1.21.11");
 

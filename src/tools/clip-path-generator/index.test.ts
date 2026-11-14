@@ -255,9 +255,9 @@ describe("run", () => {
   });
 
   it("rejects bad options", () => {
-    expect(() => run("", { format: "canvas" })).toThrowError(ToolError);
-    expect(() => run("", { width: 0 })).toThrowError(ToolError);
-    expect(() => run("", { preset: "nope" })).toThrowError(ToolError);
+    expect(() => run("", { format: "canvas" })).toThrow(ToolError);
+    expect(() => run("", { width: 0 })).toThrow(ToolError);
+    expect(() => run("", { preset: "nope" })).toThrow(ToolError);
   });
 
   it("keeps trimNumber tidy", () => {

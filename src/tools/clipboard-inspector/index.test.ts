@@ -58,7 +58,7 @@ describe("clipboard-inspector", () => {
   });
 
   it("throws invalid-snapshot on malformed JSON", () => {
-    expect(() => run("{not valid json", {})).toThrowError(ToolError);
+    expect(() => run("{not valid json", {})).toThrow(ToolError);
     try {
       run("{not valid json", {});
     } catch (e) {
@@ -68,8 +68,8 @@ describe("clipboard-inspector", () => {
   });
 
   it("throws invalid-snapshot when entries is missing or malformed", () => {
-    expect(() => run(JSON.stringify({}), {})).toThrowError(ToolError);
-    expect(() => run(JSON.stringify({ entries: [{ bytes: 5 }] }), {})).toThrowError(ToolError);
+    expect(() => run(JSON.stringify({}), {})).toThrow(ToolError);
+    expect(() => run(JSON.stringify({ entries: [{ bytes: 5 }] }), {})).toThrow(ToolError);
     try {
       run(JSON.stringify({}), {});
     } catch (e) {
@@ -78,7 +78,7 @@ describe("clipboard-inspector", () => {
   });
 
   it("throws empty-input on an empty string", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
     try {
       run("", {});
     } catch (e) {

@@ -299,10 +299,10 @@ describe("run", () => {
   });
 
   it("rejects bad options", () => {
-    expect(() => run("", { duration: 0 })).toThrowError(ToolError);
-    expect(() => run("", { direction: "sideways" })).toThrowError(ToolError);
-    expect(() => run("", { fill: "maybe" })).toThrowError(ToolError);
-    expect(() => run("", { preset: "nope" })).toThrowError(ToolError);
+    expect(() => run("", { duration: 0 })).toThrow(ToolError);
+    expect(() => run("", { direction: "sideways" })).toThrow(ToolError);
+    expect(() => run("", { fill: "maybe" })).toThrow(ToolError);
+    expect(() => run("", { preset: "nope" })).toThrow(ToolError);
   });
 
   it("keeps trimNumber tidy", () => {

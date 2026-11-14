@@ -8,6 +8,7 @@
     "public/models",
     "public/pyodide",
     "public/tesseract",
+    "public/wawoff2/*_binding.js",
     "training"
   ],
   "compilerOptions": {

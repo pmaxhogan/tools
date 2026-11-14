@@ -115,7 +115,7 @@ describe("temporal-playground", () => {
   });
 
   it("throws a ToolError on empty input", () => {
-    expect(() => run("", { timeZone: "UTC" })).toThrowError(ToolError);
+    expect(() => run("", { timeZone: "UTC" })).toThrow(ToolError);
     try {
       run("   ", { timeZone: "UTC" });
     } catch (e) {
@@ -125,7 +125,7 @@ describe("temporal-playground", () => {
   });
 
   it("throws a ToolError on an unparseable date", () => {
-    expect(() => run("not-a-date", { timeZone: "UTC" })).toThrowError(ToolError);
+    expect(() => run("not-a-date", { timeZone: "UTC" })).toThrow(ToolError);
     try {
       run("not-a-date", { timeZone: "UTC" });
     } catch (e) {

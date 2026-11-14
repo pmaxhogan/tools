@@ -85,7 +85,7 @@ describe("svg-optimizer", () => {
   });
 
   it("throws empty-input on empty string", () => {
-    expect(() => run("", DEFAULTS)).toThrowError(ToolError);
+    expect(() => run("", DEFAULTS)).toThrow(ToolError);
     try {
       run("   ", DEFAULTS);
     } catch (e) {

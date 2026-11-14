@@ -54,7 +54,7 @@ describe("print-cost-calculator: materialDensity", () => {
   });
 
   it("throws for an unknown material id", () => {
-    expect(() => materialDensity("adamantium", 1)).toThrowError(ToolError);
+    expect(() => materialDensity("adamantium", 1)).toThrow(ToolError);
   });
 });
 
@@ -218,12 +218,12 @@ describe("print-cost-calculator: run", () => {
   });
 
   it("throws bad-option for an out-of-range grams value", () => {
-    expect(() => run("", { ...base, grams: -1 })).toThrowError(ToolError);
-    expect(() => run("", { ...base, grams: 6000 })).toThrowError(ToolError);
+    expect(() => run("", { ...base, grams: -1 })).toThrow(ToolError);
+    expect(() => run("", { ...base, grams: 6000 })).toThrow(ToolError);
   });
 
   it("throws bad-option for an invalid failure rate", () => {
-    expect(() => run("", { ...base, failureRatePercent: 51 })).toThrowError(ToolError);
+    expect(() => run("", { ...base, failureRatePercent: 51 })).toThrow(ToolError);
   });
 
   it("computes the meta.ts examples without throwing", () => {
@@ -250,23 +250,23 @@ describe("print-cost-calculator: run", () => {
   });
 
   it("throws bad-option for an invalid markup percent", () => {
-    expect(() => run("", { ...base, markupPercent: 501 })).toThrowError(ToolError);
+    expect(() => run("", { ...base, markupPercent: 501 })).toThrow(ToolError);
   });
 
   it("throws bad-option for a zero or negative spool weight", () => {
-    expect(() => run("", { ...base, spoolGrams: 0 })).toThrowError(ToolError);
+    expect(() => run("", { ...base, spoolGrams: 0 })).toThrow(ToolError);
   });
 
   it("throws bad-option for an unknown currency", () => {
-    expect(() => run("", { ...base, currency: "XYZ" })).toThrowError(ToolError);
+    expect(() => run("", { ...base, currency: "XYZ" })).toThrow(ToolError);
   });
 
   it("throws bad-option for an unknown material", () => {
-    expect(() => run("", { ...base, material: "unobtainium" })).toThrowError(ToolError);
+    expect(() => run("", { ...base, material: "unobtainium" })).toThrow(ToolError);
   });
 
   it("throws nothing-to-price when grams and meters are both zero with no paste", () => {
-    expect(() => run("", { ...base, grams: 0, meters: 0 })).toThrowError(ToolError);
+    expect(() => run("", { ...base, grams: 0, meters: 0 })).toThrow(ToolError);
     try {
       run("", { ...base, grams: 0, meters: 0 });
     } catch (err) {
@@ -275,7 +275,7 @@ describe("print-cost-calculator: run", () => {
   });
 
   it("throws bad-paste for pasted text with no recognizable numbers", () => {
-    expect(() => run("just some random notes", { ...base })).toThrowError(ToolError);
+    expect(() => run("just some random notes", { ...base })).toThrow(ToolError);
     try {
       run("just some random notes", { ...base });
     } catch (err) {

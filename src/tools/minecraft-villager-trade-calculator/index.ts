@@ -653,7 +653,7 @@ export function calculate(opts: VillagerOptions): VillagerResult {
   const selectedRow = index >= 0 && index < pool.length ? pool[index] : null;
   const demand = selectedRow ? restocks * (2 * usesPerRestock - selectedRow[5]) : 0;
 
-  const trades = pool.map((row, i) =>
+  const trades = pool.map((_row, i) =>
     priceTrade(
       version,
       pool,

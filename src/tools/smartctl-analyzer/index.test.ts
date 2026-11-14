@@ -334,7 +334,7 @@ describe("smartctl-analyzer: NVMe", () => {
 
 describe("smartctl-analyzer: errors and closing note", () => {
   it("throws on empty input with a smartctl -a fix", () => {
-    expect(() => run("", VERDICT)).toThrowError(ToolError);
+    expect(() => run("", VERDICT)).toThrow(ToolError);
     try {
       run("   ", VERDICT);
     } catch (e) {
@@ -344,7 +344,7 @@ describe("smartctl-analyzer: errors and closing note", () => {
   });
 
   it("throws on text that is not smartctl output", () => {
-    expect(() => run("the quick brown fox jumps over the lazy dog", VERDICT)).toThrowError(
+    expect(() => run("the quick brown fox jumps over the lazy dog", VERDICT)).toThrow(
       ToolError,
     );
     try {
@@ -372,7 +372,7 @@ Serial Number:    WD-WCC7K1234567
   });
 
   it("rejects an unknown detail level", () => {
-    expect(() => run(HEALTHY_ATA, { detail: "everything" })).toThrowError(/Unknown detail level/);
+    expect(() => run(HEALTHY_ATA, { detail: "everything" })).toThrow(/Unknown detail level/);
   });
 
   it("always closes with the honest limits of SMART", () => {

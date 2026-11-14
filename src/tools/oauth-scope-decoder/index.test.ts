@@ -109,13 +109,13 @@ describe("oauth-scope-decoder input extraction", () => {
   });
 
   it("throws when a JWT carries no scope claim", () => {
-    expect(() => extractScopes(jwt({ sub: "abc", aud: "api" }))).toThrowError(
+    expect(() => extractScopes(jwt({ sub: "abc", aud: "api" }))).toThrow(
       /scope, scp or scopes/,
     );
   });
 
   it("throws on an unreadable JWT payload", () => {
-    expect(() => extractScopes("eyJhbGciOiJIUzI1NiJ9.bm90LWpzb24.sig")).toThrowError(ToolError);
+    expect(() => extractScopes("eyJhbGciOiJIUzI1NiJ9.bm90LWpzb24.sig")).toThrow(ToolError);
   });
 });
 
@@ -196,7 +196,7 @@ describe("oauth-scope-decoder run", () => {
   });
 
   it("throws an actionable error on empty input", () => {
-    expect(() => run("   ", OPTS)).toThrowError(ToolError);
+    expect(() => run("   ", OPTS)).toThrow(ToolError);
     try {
       run("", OPTS);
     } catch (e) {

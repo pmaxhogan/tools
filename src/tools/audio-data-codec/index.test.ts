@@ -147,7 +147,7 @@ describe("audio-data-codec morse", () => {
   });
 
   it("rejects characters with no Morse code", () => {
-    expect(() => textToMorse("café")).toThrowError(ToolError);
+    expect(() => textToMorse("café")).toThrow(ToolError);
     try {
       textToMorse("café");
     } catch (error) {
@@ -157,9 +157,9 @@ describe("audio-data-codec morse", () => {
   });
 
   it("rejects unknown prosigns and unknown patterns", () => {
-    expect(() => textToMorse("<ZZ>")).toThrowError(/not a prosign/);
-    expect(() => morseToText("........-")).toThrowError(/not a pattern/);
-    expect(() => morseToText(".-.x")).toThrowError(/dots and dashes/);
+    expect(() => textToMorse("<ZZ>")).toThrow(/not a prosign/);
+    expect(() => morseToText("........-")).toThrow(/not a pattern/);
+    expect(() => morseToText(".-.x")).toThrow(/dots and dashes/);
   });
 });
 
@@ -201,7 +201,7 @@ describe("audio-data-codec dtmf", () => {
   });
 
   it("rejects keys that are not on the pad", () => {
-    expect(() => normalizeDtmfDigits("55G5")).toThrowError(ToolError);
+    expect(() => normalizeDtmfDigits("55G5")).toThrow(ToolError);
     try {
       normalizeDtmfDigits("55G5");
     } catch (error) {
@@ -277,7 +277,7 @@ describe("audio-data-codec fsk", () => {
         samples[i] = 0.6 * Math.sin((2 * Math.PI * 2200 * (i - start)) / 8000);
       }
     }
-    expect(() => decodeFsk(samples, 8000, { baud: 100 })).toThrowError(ToolError);
+    expect(() => decodeFsk(samples, 8000, { baud: 100 })).toThrow(ToolError);
     try {
       decodeFsk(samples, 8000, { baud: 100 });
     } catch (error) {
@@ -344,7 +344,7 @@ describe("audio-data-codec wav", () => {
   });
 
   it("rejects a nonsense sample rate", () => {
-    expect(() => encodeWav(new Float32Array(4), 0)).toThrowError(/Sample rate/);
+    expect(() => encodeWav(new Float32Array(4), 0)).toThrow(/Sample rate/);
   });
 });
 
@@ -416,8 +416,8 @@ describe("audio-data-codec run", () => {
   });
 
   it("rejects text with no Morse code and keys that are not on the pad", () => {
-    expect(() => run("é", DEFAULT_OPTS)).toThrowError(/no code in the ITU/);
-    expect(() => run("55G5", { ...DEFAULT_OPTS, mode: "dtmf" })).toThrowError(/DTMF keypad/);
-    expect(() => run("---", { ...DEFAULT_OPTS, mode: "dtmf" })).toThrowError(ToolError);
+    expect(() => run("é", DEFAULT_OPTS)).toThrow(/no code in the ITU/);
+    expect(() => run("55G5", { ...DEFAULT_OPTS, mode: "dtmf" })).toThrow(/DTMF keypad/);
+    expect(() => run("---", { ...DEFAULT_OPTS, mode: "dtmf" })).toThrow(ToolError);
   });
 });

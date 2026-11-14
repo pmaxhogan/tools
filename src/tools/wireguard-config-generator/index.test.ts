@@ -68,7 +68,7 @@ describe("generateKeypair", () => {
   });
 
   it("rejects an injected buffer of the wrong length", () => {
-    expect(() => generateKeypair(new Uint8Array(16))).toThrowError(ToolError);
+    expect(() => generateKeypair(new Uint8Array(16))).toThrow(ToolError);
   });
 });
 
@@ -94,7 +94,7 @@ describe("generatePsk", () => {
   });
 
   it("rejects an injected buffer of the wrong length", () => {
-    expect(() => generatePsk(new Uint8Array(31))).toThrowError(ToolError);
+    expect(() => generatePsk(new Uint8Array(31))).toThrow(ToolError);
   });
 });
 
@@ -117,27 +117,27 @@ describe("deriveAddresses", () => {
   });
 
   it("rejects a /30 asked for more addresses than it can hold", () => {
-    expect(() => deriveAddresses("10.0.0.0/30", 3)).toThrowError(ToolError);
-    expect(() => deriveAddresses("10.0.0.0/30", 3)).toThrowError(/room for 2/);
+    expect(() => deriveAddresses("10.0.0.0/30", 3)).toThrow(ToolError);
+    expect(() => deriveAddresses("10.0.0.0/30", 3)).toThrow(/room for 2/);
   });
 
   it("rejects a malformed CIDR string", () => {
-    expect(() => deriveAddresses("not-a-subnet", 2)).toThrowError(ToolError);
-    expect(() => deriveAddresses("10.8.0.0", 2)).toThrowError(ToolError);
+    expect(() => deriveAddresses("not-a-subnet", 2)).toThrow(ToolError);
+    expect(() => deriveAddresses("10.8.0.0", 2)).toThrow(ToolError);
   });
 
   it("rejects an out-of-range octet or prefix", () => {
-    expect(() => deriveAddresses("10.8.0.999/24", 2)).toThrowError(ToolError);
-    expect(() => deriveAddresses("10.8.0.0/33", 2)).toThrowError(ToolError);
+    expect(() => deriveAddresses("10.8.0.999/24", 2)).toThrow(ToolError);
+    expect(() => deriveAddresses("10.8.0.0/33", 2)).toThrow(ToolError);
   });
 
   it("rejects a prefix too small to hold a server plus any peers", () => {
-    expect(() => deriveAddresses("10.8.0.0/31", 2)).toThrowError(ToolError);
-    expect(() => deriveAddresses("10.8.0.0/32", 1)).toThrowError(ToolError);
+    expect(() => deriveAddresses("10.8.0.0/31", 2)).toThrow(ToolError);
+    expect(() => deriveAddresses("10.8.0.0/32", 1)).toThrow(ToolError);
   });
 
   it("rejects a subnet address that is not the network address", () => {
-    expect(() => deriveAddresses("10.8.0.5/24", 2)).toThrowError(ToolError);
+    expect(() => deriveAddresses("10.8.0.5/24", 2)).toThrow(ToolError);
   });
 });
 
@@ -225,13 +225,13 @@ describe("buildServerConfig", () => {
   it("throws typed errors for missing required fields", () => {
     expect(() =>
       buildServerConfig({ privateKey: "", address: "10.8.0.1/24", listenPort: 51820, peers: [] }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
     expect(() =>
       buildServerConfig({ privateKey: "PRIV==", address: "", listenPort: 51820, peers: [] }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
     expect(() =>
       buildServerConfig({ privateKey: "PRIV==", address: "10.8.0.1/24", listenPort: 0, peers: [] }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
     expect(() =>
       buildServerConfig({
         privateKey: "PRIV==",
@@ -239,7 +239,7 @@ describe("buildServerConfig", () => {
         listenPort: 51820,
         peers: [{ publicKey: "", allowedIps: "10.8.0.2/32" }],
       }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
   });
 });
 
@@ -303,7 +303,7 @@ describe("buildPeerConfig", () => {
         serverPublicKey: "SPUB==",
         allowedIps: "10.8.0.0/24",
       }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
     expect(() =>
       buildPeerConfig({
         privateKey: "PRIV==",
@@ -311,7 +311,7 @@ describe("buildPeerConfig", () => {
         serverPublicKey: "SPUB==",
         allowedIps: "10.8.0.0/24",
       }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
     expect(() =>
       buildPeerConfig({
         privateKey: "PRIV==",
@@ -319,7 +319,7 @@ describe("buildPeerConfig", () => {
         serverPublicKey: "",
         allowedIps: "10.8.0.0/24",
       }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
   });
 });
 

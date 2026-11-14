@@ -109,16 +109,16 @@ describe("password-generator", () => {
         undefined,
         passwordOpts({ lowercase: false, uppercase: false, digits: false, symbols: false }),
       ),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
   });
 
   it("rejects out-of-range password lengths with a typed error", () => {
-    expect(() => run(undefined, passwordOpts({ length: 4 }))).toThrowError(ToolError);
-    expect(() => run(undefined, passwordOpts({ length: 200 }))).toThrowError(/8 and 128/);
+    expect(() => run(undefined, passwordOpts({ length: 4 }))).toThrow(ToolError);
+    expect(() => run(undefined, passwordOpts({ length: 200 }))).toThrow(/8 and 128/);
   });
 
   it("rejects out-of-range word counts with a typed error", () => {
-    expect(() => run(undefined, passphraseOpts({ words: 2 }))).toThrowError(ToolError);
-    expect(() => run(undefined, passphraseOpts({ words: 20 }))).toThrowError(/3 and 12/);
+    expect(() => run(undefined, passphraseOpts({ words: 2 }))).toThrow(ToolError);
+    expect(() => run(undefined, passphraseOpts({ words: 20 }))).toThrow(/3 and 12/);
   });
 });

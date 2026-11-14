@@ -244,7 +244,7 @@ describe("distance-bearing-calculator: magnetic model", () => {
 
 describe("distance-bearing-calculator: errors", () => {
   it("empty-input", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
     try {
       run("   ", {});
     } catch (e) {

@@ -368,7 +368,7 @@ describe("coordinate-converter options", () => {
 
 describe("coordinate-converter errors", () => {
   it("rejects empty input", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
     try {
       run("   ", {});
     } catch (e) {
@@ -388,7 +388,7 @@ describe("coordinate-converter errors", () => {
   });
 
   it("rejects a single value", () => {
-    expect(() => run("40.7128", {})).toThrowError(/expected a latitude and a longitude/);
+    expect(() => run("40.7128", {})).toThrow(/expected a latitude and a longitude/);
   });
 
   it("rejects out of range values", () => {
@@ -399,7 +399,7 @@ describe("coordinate-converter errors", () => {
       expect((e as ToolError).code).toBe("out-of-range");
       expect((e as ToolError).message).toMatch(/Latitude 95/);
     }
-    expect(() => run("95N 200E", {})).toThrowError(ToolError);
+    expect(() => run("95N 200E", {})).toThrow(ToolError);
   });
 
   it("rejects positions outside the UTM grid", () => {
@@ -435,11 +435,11 @@ describe("coordinate-converter errors", () => {
   });
 
   it("rejects malformed MGRS and impossible minutes", () => {
-    expect(() => fromMgrs("18TWL839590752")).toThrowError(/even count/);
-    expect(() => run("40 75.0 N, 74 0.36 W", {})).toThrowError(/Minutes value 75/);
+    expect(() => fromMgrs("18TWL839590752")).toThrow(/even count/);
+    expect(() => run("40 75.0 N, 74 0.36 W", {})).toThrow(/Minutes value 75/);
   });
 
   it("rejects more than two coordinates", () => {
-    expect(() => run("1,2; 3,4; 5,6", {})).toThrowError(/converts one, or two/);
+    expect(() => run("1,2; 3,4; 5,6", {})).toThrow(/converts one, or two/);
   });
 });

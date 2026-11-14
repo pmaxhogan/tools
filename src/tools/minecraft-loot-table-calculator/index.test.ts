@@ -334,7 +334,7 @@ describe("outcome distribution", () => {
 
 describe("errors", () => {
   it("rejects an unknown version", () => {
-    expect(() => calculate({ version: "1.99", table: "blocks/diamond_ore" })).toThrowError(
+    expect(() => calculate({ version: "1.99", table: "blocks/diamond_ore" })).toThrow(
       ToolError,
     );
     try {
@@ -369,7 +369,7 @@ describe("errors", () => {
     for (const bad of [{ fortune: 7 }, { fortune: -1 }, { fortune: 1.5 }, { looting: 9 }]) {
       expect(() =>
         calculate({ version: "1.21.11", table: "blocks/diamond_ore", tool: "pickaxe", ...bad }),
-      ).toThrowError(ToolError);
+      ).toThrow(ToolError);
     }
   });
 

@@ -45,7 +45,7 @@ describe("unicode-picker", () => {
   });
 
   it("rejects an unknown category with an actionable ToolError", () => {
-    expect(() => run("arrow", opts("emoji"))).toThrowError(ToolError);
+    expect(() => run("arrow", opts("emoji"))).toThrow(ToolError);
     try {
       run("arrow", opts("emoji"));
     } catch (e) {

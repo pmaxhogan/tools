@@ -310,20 +310,20 @@ describe("protobuf-decoder: JSON rendering", () => {
 describe("protobuf-decoder: errors", () => {
   it("throws empty-input for no bytes at all", () => {
     expect(() => run("", AUTO)).toThrow(ToolError);
-    expect(() => run("   \n ", AUTO)).toThrowError(
+    expect(() => run("   \n ", AUTO)).toThrow(
       expect.objectContaining({ code: "empty-input" }),
     );
-    expect(() => run(new Uint8Array(0), AUTO)).toThrowError(
+    expect(() => run(new Uint8Array(0), AUTO)).toThrow(
       expect.objectContaining({ code: "empty-input" }),
     );
   });
 
   it("throws bad-encoding for text that is neither hex nor base64", () => {
-    expect(() => run("hello world!", AUTO)).toThrowError(
+    expect(() => run("hello world!", AUTO)).toThrow(
       expect.objectContaining({ code: "bad-encoding" }),
     );
-    expect(() => run("0xZZ", AUTO)).toThrowError(expect.objectContaining({ code: "bad-encoding" }));
-    expect(() => run("data:text/plain,notbase64", AUTO)).toThrowError(
+    expect(() => run("0xZZ", AUTO)).toThrow(expect.objectContaining({ code: "bad-encoding" }));
+    expect(() => run("data:text/plain,notbase64", AUTO)).toThrow(
       expect.objectContaining({ code: "bad-encoding" }),
     );
   });
@@ -355,7 +355,7 @@ describe("protobuf-decoder: errors", () => {
 
   it("throws too-large past the 8 MiB cap", () => {
     const huge = new Uint8Array(8 * 1024 * 1024 + 1);
-    expect(() => run(huge, AUTO)).toThrowError(expect.objectContaining({ code: "too-large" }));
+    expect(() => run(huge, AUTO)).toThrow(expect.objectContaining({ code: "too-large" }));
   });
 
   it("falls back to auto for an unknown format option", () => {

@@ -315,8 +315,8 @@ describe("code 128", () => {
   });
 
   it("rejects characters outside ASCII", () => {
-    expect(() => encode("café", "code128")).toThrowError(ToolError);
-    expect(() => encode("café", "code128")).toThrowError(/U\+00E9/);
+    expect(() => encode("café", "code128")).toThrow(ToolError);
+    expect(() => encode("café", "code128")).toThrow(/U\+00E9/);
   });
 });
 
@@ -354,9 +354,9 @@ describe("EAN-13", () => {
   });
 
   it("rejects a wrong check digit, a wrong length and a stray letter", () => {
-    expect(() => encode("4006381333930", "ean13")).toThrowError(/should end in 1/);
-    expect(() => encode("12345", "ean13")).toThrowError(/needs 12 digits/);
-    expect(() => encode("59012341234A", "ean13")).toThrowError(/"A"/);
+    expect(() => encode("4006381333930", "ean13")).toThrow(/should end in 1/);
+    expect(() => encode("12345", "ean13")).toThrow(/needs 12 digits/);
+    expect(() => encode("59012341234A", "ean13")).toThrow(/"A"/);
   });
 });
 
@@ -437,13 +437,13 @@ describe("UPC-E", () => {
     expect(encode("425261", "upce").value).toBe("04252614");
     expect(encode("0425261", "upce").value).toBe("04252614");
     expect(encode("04252614", "upce").value).toBe("04252614");
-    expect(() => encode("04252615", "upce")).toThrowError(/should end in 4/);
+    expect(() => encode("04252615", "upce")).toThrow(/should end in 4/);
   });
 
   it("refuses a UPC-A that has no compressed form", () => {
-    expect(() => encode("012345678905", "upce")).toThrowError(/no UPC-E form/);
-    expect(() => encode("0123", "upce")).toThrowError(/needs 6, 7 or 8 digits/);
-    expect(() => encode("2425261", "upce")).toThrowError(/number system must be 0 or 1/);
+    expect(() => encode("012345678905", "upce")).toThrow(/no UPC-E form/);
+    expect(() => encode("0123", "upce")).toThrow(/needs 6, 7 or 8 digits/);
+    expect(() => encode("2425261", "upce")).toThrow(/number system must be 0 or 1/);
   });
 });
 
@@ -478,9 +478,9 @@ describe("code 39", () => {
   });
 
   it("rejects characters outside the 43 character set", () => {
-    expect(() => encode("HELLO!", "code39")).toThrowError(/"!"/);
-    expect(() => encode("HE*LO", "code39")).toThrowError(/reserves the asterisk/);
-    expect(() => encode("**", "code39")).toThrowError(ToolError);
+    expect(() => encode("HELLO!", "code39")).toThrow(/"!"/);
+    expect(() => encode("HE*LO", "code39")).toThrow(/reserves the asterisk/);
+    expect(() => encode("**", "code39")).toThrow(ToolError);
   });
 });
 
@@ -499,8 +499,8 @@ describe("ITF-14", () => {
 
   it("accepts the full fourteen digits and rejects any other length", () => {
     expect(encode("12345678901231", "itf14").checkDigit).toBe("1");
-    expect(() => encode("12345678901232", "itf14")).toThrowError(/should end in 1/);
-    expect(() => encode("12345", "itf14")).toThrowError(/needs 13 digits/);
+    expect(() => encode("12345678901232", "itf14")).toThrow(/should end in 1/);
+    expect(() => encode("12345", "itf14")).toThrow(/needs 13 digits/);
   });
 });
 
@@ -521,9 +521,9 @@ describe("codabar", () => {
   });
 
   it("rejects stray start letters and unsupported marks", () => {
-    expect(() => encode("1A234", "codabar")).toThrowError(/both ends or at neither/);
-    expect(() => encode("A12#4A", "codabar")).toThrowError(/"#"/);
-    expect(() => encode("AA", "codabar")).toThrowError(ToolError);
+    expect(() => encode("1A234", "codabar")).toThrow(/both ends or at neither/);
+    expect(() => encode("A12#4A", "codabar")).toThrow(/"#"/);
+    expect(() => encode("AA", "codabar")).toThrow(ToolError);
   });
 });
 
@@ -638,8 +638,8 @@ describe("sheet layouts", () => {
   it("refuses more barcodes than the sheet holds and says how many fit", () => {
     const spec = getSheet("avery-5160")!;
     const list = Array.from({ length: 31 }, () => encode("ABC", "code128"));
-    expect(() => renderSheetSvg(list, spec)).toThrowError(ToolError);
-    expect(() => renderSheetSvg(list, spec)).toThrowError(/holds 30/);
+    expect(() => renderSheetSvg(list, spec)).toThrow(ToolError);
+    expect(() => renderSheetSvg(list, spec)).toThrow(/holds 30/);
   });
 });
 
@@ -671,20 +671,20 @@ describe("run", () => {
   });
 
   it("reports the empty input, the stray newline and every bad option", () => {
-    expect(() => run("", {})).toThrowError(/Enter the value/);
-    expect(() => run("   ", {})).toThrowError(ToolError);
-    expect(() => run("one\ntwo", {})).toThrowError(/line break/);
-    expect(() => run("ABC", { type: "code2000" })).toThrowError(/Unknown barcode type/);
-    expect(() => run("ABC", { sheet: "avery-9999" })).toThrowError(/Unknown sheet layout/);
-    expect(() => run("ABC", { sheet: "avery-5160", copies: 0 })).toThrowError(/Copies must be/);
-    expect(() => run("ABC", { moduleWidth: 99 })).toThrowError(/Module width must be/);
-    expect(() => run("ABC", { height: 5 })).toThrowError(/Bar height must be/);
-    expect(() => run("ABC", { quietZone: 99 })).toThrowError(/Quiet zone must be/);
+    expect(() => run("", {})).toThrow(/Enter the value/);
+    expect(() => run("   ", {})).toThrow(ToolError);
+    expect(() => run("one\ntwo", {})).toThrow(/line break/);
+    expect(() => run("ABC", { type: "code2000" })).toThrow(/Unknown barcode type/);
+    expect(() => run("ABC", { sheet: "avery-9999" })).toThrow(/Unknown sheet layout/);
+    expect(() => run("ABC", { sheet: "avery-5160", copies: 0 })).toThrow(/Copies must be/);
+    expect(() => run("ABC", { moduleWidth: 99 })).toThrow(/Module width must be/);
+    expect(() => run("ABC", { height: 5 })).toThrow(/Bar height must be/);
+    expect(() => run("ABC", { quietZone: 99 })).toThrow(/Quiet zone must be/);
   });
 
   it("overflows the sheet with a count the user can act on", () => {
     const lines = Array.from({ length: 20 }, (_, i) => String(1000 + i)).join("\n");
-    expect(() => run(lines, { sheet: "a4-2x7" })).toThrowError(/holds 14/);
+    expect(() => run(lines, { sheet: "a4-2x7" })).toThrow(/holds 14/);
   });
 
   it("passes the Code 39 check character option through", () => {

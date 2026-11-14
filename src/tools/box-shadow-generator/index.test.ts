@@ -50,9 +50,9 @@ describe("parseShadowColor", () => {
   });
 
   it("refuses a hex of the wrong length and a broken rgb()", () => {
-    expect(() => parseShadowColor("#12345")).toThrowError(ToolError);
-    expect(() => parseShadowColor("rgb(0, 0)")).toThrowError(ToolError);
-    expect(() => parseShadowColor("rgb(a, b, c)")).toThrowError(ToolError);
+    expect(() => parseShadowColor("#12345")).toThrow(ToolError);
+    expect(() => parseShadowColor("rgb(0, 0)")).toThrow(ToolError);
+    expect(() => parseShadowColor("rgb(a, b, c)")).toThrow(ToolError);
   });
 });
 
@@ -251,8 +251,8 @@ describe("run", () => {
   });
 
   it("rejects bad options", () => {
-    expect(() => run("", { colorSyntax: "hsl" })).toThrowError(ToolError);
-    expect(() => run("", { format: "sass" })).toThrowError(ToolError);
-    expect(() => run("", { scale: 0 })).toThrowError(ToolError);
+    expect(() => run("", { colorSyntax: "hsl" })).toThrow(ToolError);
+    expect(() => run("", { format: "sass" })).toThrow(ToolError);
+    expect(() => run("", { scale: 0 })).toThrow(ToolError);
   });
 });

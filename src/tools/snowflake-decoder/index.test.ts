@@ -49,7 +49,7 @@ describe("snowflake-decoder", () => {
   });
 
   it("rejects input with no snowflake in it, suggesting the accepted formats", () => {
-    expect(() => run("not-a-snowflake", { platform: "discord" })).toThrowError(ToolError);
+    expect(() => run("not-a-snowflake", { platform: "discord" })).toThrow(ToolError);
     try {
       run("abc123", { platform: "discord" });
     } catch (e) {
@@ -60,7 +60,7 @@ describe("snowflake-decoder", () => {
   });
 
   it("rejects empty input", () => {
-    expect(() => run("", { platform: "discord" })).toThrowError(ToolError);
+    expect(() => run("", { platform: "discord" })).toThrow(ToolError);
     try {
       run("   ", { platform: "discord" });
     } catch (e) {

@@ -25,11 +25,11 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on an invalid escape sequence", () => {
-      expect(() => run("\\q", { format: "json", direction: "unescape" })).toThrowError(ToolError);
+      expect(() => run("\\q", { format: "json", direction: "unescape" })).toThrow(ToolError);
     });
 
     it("throws ToolError on an unterminated / unbalanced quote", () => {
-      expect(() => run('say "hi', { format: "json", direction: "unescape" })).toThrowError(
+      expect(() => run('say "hi', { format: "json", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -79,7 +79,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on a named entity outside the predefined five", () => {
-      expect(() => run("&eacute;", { format: "xml", direction: "unescape" })).toThrowError(
+      expect(() => run("&eacute;", { format: "xml", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -95,11 +95,11 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on a truncated percent sequence", () => {
-      expect(() => run("100%", { format: "url", direction: "unescape" })).toThrowError(ToolError);
+      expect(() => run("100%", { format: "url", direction: "unescape" })).toThrow(ToolError);
     });
 
     it("throws ToolError on invalid hex digits after %", () => {
-      expect(() => run("%zz", { format: "url", direction: "unescape" })).toThrowError(ToolError);
+      expect(() => run("%zz", { format: "url", direction: "unescape" })).toThrow(ToolError);
     });
   });
 
@@ -114,7 +114,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on a malformed percent sequence", () => {
-      expect(() => run("%zz", { format: "url-full", direction: "unescape" })).toThrowError(
+      expect(() => run("%zz", { format: "url-full", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -144,7 +144,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on a string that is not pure %XX groups", () => {
-      expect(() => run("%41x", { format: "url-bytes", direction: "unescape" })).toThrowError(
+      expect(() => run("%41x", { format: "url-bytes", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -178,7 +178,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on an unrecognized escape sequence", () => {
-      expect(() => run("\\q", { format: "c", direction: "unescape" })).toThrowError(ToolError);
+      expect(() => run("\\q", { format: "c", direction: "unescape" })).toThrow(ToolError);
     });
   });
 
@@ -198,7 +198,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on a truncated \\u escape", () => {
-      expect(() => run("\\u12", { format: "python", direction: "unescape" })).toThrowError(
+      expect(() => run("\\u12", { format: "python", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -218,7 +218,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on a truncated \\u escape", () => {
-      expect(() => run("\\u12", { format: "java", direction: "unescape" })).toThrowError(ToolError);
+      expect(() => run("\\u12", { format: "java", direction: "unescape" })).toThrow(ToolError);
     });
   });
 
@@ -238,7 +238,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on an unclosed \\u{ escape", () => {
-      expect(() => run("\\u{41", { format: "unicode-brace", direction: "unescape" })).toThrowError(
+      expect(() => run("\\u{41", { format: "unicode-brace", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -254,7 +254,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on an unrecognized escape", () => {
-      expect(() => run("\\q", { format: "whitespace", direction: "unescape" })).toThrowError(
+      expect(() => run("\\q", { format: "whitespace", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -270,7 +270,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on malformed input", () => {
-      expect(() => run("\\x4", { format: "hex-bytes", direction: "unescape" })).toThrowError(
+      expect(() => run("\\x4", { format: "hex-bytes", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -286,7 +286,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on malformed input", () => {
-      expect(() => run("\\9", { format: "octal-bytes", direction: "unescape" })).toThrowError(
+      expect(() => run("\\9", { format: "octal-bytes", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -368,7 +368,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on a backslash not followed by two hex digits", () => {
-      expect(() => run("\\2", { format: "ldap", direction: "unescape" })).toThrowError(ToolError);
+      expect(() => run("\\2", { format: "ldap", direction: "unescape" })).toThrow(ToolError);
     });
   });
 
@@ -387,7 +387,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on an invalid character", () => {
-      expect(() => run("abc!", { format: "base64", direction: "unescape" })).toThrowError(
+      expect(() => run("abc!", { format: "base64", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -415,7 +415,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on an invalid character", () => {
-      expect(() => run("1", { format: "base32", direction: "unescape" })).toThrowError(ToolError);
+      expect(() => run("1", { format: "base32", direction: "unescape" })).toThrow(ToolError);
     });
   });
 
@@ -435,7 +435,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on an excluded character like 0", () => {
-      expect(() => run("0", { format: "base58", direction: "unescape" })).toThrowError(ToolError);
+      expect(() => run("0", { format: "base58", direction: "unescape" })).toThrow(ToolError);
     });
   });
 
@@ -466,7 +466,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on a truncated line", () => {
-      expect(() => run("#QQ", { format: "uuencode", direction: "unescape" })).toThrowError(
+      expect(() => run("#QQ", { format: "uuencode", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -484,7 +484,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on a malformed escape", () => {
-      expect(() => run("=zz", { format: "quoted-printable", direction: "unescape" })).toThrowError(
+      expect(() => run("=zz", { format: "quoted-printable", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -526,11 +526,11 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on a character with no Morse representation", () => {
-      expect(() => run("🎉", { format: "morse", direction: "escape" })).toThrowError(ToolError);
+      expect(() => run("🎉", { format: "morse", direction: "escape" })).toThrow(ToolError);
     });
 
     it("throws ToolError on an unrecognized code", () => {
-      expect(() => run(".......", { format: "morse", direction: "unescape" })).toThrowError(
+      expect(() => run(".......", { format: "morse", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -546,7 +546,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on an unrecognized word", () => {
-      expect(() => run("Sierra Nope", { format: "nato", direction: "unescape" })).toThrowError(
+      expect(() => run("Sierra Nope", { format: "nato", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -571,7 +571,7 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError on an invalid punycode digit", () => {
-      expect(() => run("xn--a!", { format: "punycode", direction: "unescape" })).toThrowError(
+      expect(() => run("xn--a!", { format: "punycode", direction: "unescape" })).toThrow(
         ToolError,
       );
     });
@@ -587,11 +587,11 @@ describe("escape-unescape", () => {
     });
 
     it("throws ToolError for an unknown format", () => {
-      expect(() => run("x", { format: "yaml", direction: "escape" })).toThrowError(ToolError);
+      expect(() => run("x", { format: "yaml", direction: "escape" })).toThrow(ToolError);
     });
 
     it("throws ToolError for an unknown direction", () => {
-      expect(() => run("x", { format: "json", direction: "sideways" })).toThrowError(ToolError);
+      expect(() => run("x", { format: "json", direction: "sideways" })).toThrow(ToolError);
     });
   });
 });

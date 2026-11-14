@@ -124,7 +124,7 @@ describe("json-to-typescript", () => {
   });
 
   it("throws on invalid JSON with position information", () => {
-    expect(() => run('{"a": 1,}', { target: "typescript" })).toThrowError(ToolError);
+    expect(() => run('{"a": 1,}', { target: "typescript" })).toThrow(ToolError);
     try {
       run('{"a": 1,}', { target: "typescript" });
       throw new Error("should have thrown");
@@ -136,7 +136,7 @@ describe("json-to-typescript", () => {
   });
 
   it("throws on empty input and on an unknown target", () => {
-    expect(() => run("   ", { target: "typescript" })).toThrowError(/Paste a sample JSON/);
-    expect(() => run("{}", { target: "rust" })).toThrowError(/Unknown target/);
+    expect(() => run("   ", { target: "typescript" })).toThrow(/Paste a sample JSON/);
+    expect(() => run("{}", { target: "rust" })).toThrow(/Unknown target/);
   });
 });

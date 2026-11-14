@@ -31,10 +31,10 @@ describe("uuid", () => {
   });
 
   it("rejects out-of-range counts with a typed error", () => {
-    expect(() => run(undefined, { version: "v4", count: 0, uppercase: false })).toThrowError(
+    expect(() => run(undefined, { version: "v4", count: 0, uppercase: false })).toThrow(
       ToolError,
     );
-    expect(() => run(undefined, { version: "v4", count: 5000, uppercase: false })).toThrowError(
+    expect(() => run(undefined, { version: "v4", count: 5000, uppercase: false })).toThrow(
       /between 1 and 1000/,
     );
   });

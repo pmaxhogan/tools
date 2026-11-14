@@ -15,7 +15,9 @@ var readyResolve;
 var ready = new Promise(function (resolve) {
   readyResolve = resolve;
 });
-self.Module = {
+// A top-level var in a classic worker script is a property of the global
+// scope, which is where the emscripten glue looks for `Module`.
+var Module = {
   onRuntimeInitialized: function () {
     readyResolve();
   },
@@ -27,7 +29,7 @@ self.onmessage = function (event) {
   var bytes = event.data.bytes;
   ready
     .then(function () {
-      var result = self.Module[codec](bytes);
+      var result = Module[codec](bytes);
       if (result === false) throw new Error("The WOFF2 " + codec + " call failed");
       // The emscripten call returns a view over the wasm heap, whose
       // ArrayBuffer is not detachable; copy into a fresh buffer so the

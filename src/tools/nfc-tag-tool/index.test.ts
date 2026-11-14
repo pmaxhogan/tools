@@ -239,15 +239,15 @@ describe("toWebNfcMessage", () => {
 
 describe("ToolError: empty-input", () => {
   it("rejects an empty value for a build kind", () => {
-    expect(() => run("", { kind: "text" })).toThrowError(/enter a value/i);
+    expect(() => run("", { kind: "text" })).toThrow(/enter a value/i);
   });
 
   it("rejects a whitespace-only value", () => {
-    expect(() => run("   ", { kind: "url" })).toThrowError(/enter a value/i);
+    expect(() => run("   ", { kind: "url" })).toThrow(/enter a value/i);
   });
 
   it("rejects empty input for raw-hex-decode", () => {
-    expect(() => run("", { kind: "raw-hex-decode" })).toThrowError(/paste the hex bytes/i);
+    expect(() => run("", { kind: "raw-hex-decode" })).toThrow(/paste the hex bytes/i);
   });
 
   it("builds the empty record even with a blank value", () => {
@@ -257,7 +257,7 @@ describe("ToolError: empty-input", () => {
 
 describe("ToolError: bad-url", () => {
   it("rejects an unparseable URL", () => {
-    expect(() => run("not a url", { kind: "url" })).toThrowError(/not a valid URL/i);
+    expect(() => run("not a url", { kind: "url" })).toThrow(/not a valid URL/i);
   });
 
   it("accepts a bare domain by assuming https", () => {
@@ -266,29 +266,29 @@ describe("ToolError: bad-url", () => {
   });
 
   it("rejects a malformed geo pair", () => {
-    expect(() => run("nowhere", { kind: "geo" })).toThrowError(/lat,lon/i);
+    expect(() => run("nowhere", { kind: "geo" })).toThrow(/lat,lon/i);
   });
 
   it("rejects a phone number with no digits", () => {
-    expect(() => run("call-me-maybe", { kind: "tel" })).toThrowError(/phone number/i);
+    expect(() => run("call-me-maybe", { kind: "tel" })).toThrow(/phone number/i);
   });
 
   it("rejects a malformed email address", () => {
-    expect(() => run("not-an-email", { kind: "mailto" })).toThrowError(/valid email/i);
+    expect(() => run("not-an-email", { kind: "mailto" })).toThrow(/valid email/i);
   });
 
   it("rejects an sms value with no digits", () => {
-    expect(() => run("no-numbers-here", { kind: "sms" })).toThrowError(/phone number/i);
+    expect(() => run("no-numbers-here", { kind: "sms" })).toThrow(/phone number/i);
   });
 });
 
 describe("ToolError: bad-wifi", () => {
   it("rejects a Wi-Fi value missing the password", () => {
-    expect(() => run("MyNetwork", { kind: "wifi" })).toThrowError(/network name and a password/i);
+    expect(() => run("MyNetwork", { kind: "wifi" })).toThrow(/network name and a password/i);
   });
 
   it("rejects an unrecognized auth type", () => {
-    expect(() => run("MyNetwork;secret123;BOGUS", { kind: "wifi" })).toThrowError(
+    expect(() => run("MyNetwork;secret123;BOGUS", { kind: "wifi" })).toThrow(
       /not a recognized Wi-Fi security type/i,
     );
   });
@@ -296,24 +296,24 @@ describe("ToolError: bad-wifi", () => {
 
 describe("ToolError: bad-hex", () => {
   it("rejects non-hex characters", () => {
-    expect(() => run("zz", { kind: "raw-hex-decode" })).toThrowError(/not a hex/i);
+    expect(() => run("zz", { kind: "raw-hex-decode" })).toThrow(/not a hex/i);
   });
 
   it("rejects an odd number of nibbles", () => {
-    expect(() => run("d10", { kind: "raw-hex-decode" })).toThrowError(/odd number/i);
+    expect(() => run("d10", { kind: "raw-hex-decode" })).toThrow(/odd number/i);
   });
 });
 
 describe("ToolError: bad-ndef", () => {
   it("rejects a header missing the message begin flag", () => {
-    expect(() => run("00", { kind: "raw-hex-decode" })).toThrowError(/message begin/i);
+    expect(() => run("00", { kind: "raw-hex-decode" })).toThrow(/message begin/i);
   });
 
   it("rejects a message truncated before its payload ends", () => {
     // A valid text record's header/lengths/type say 8 payload bytes follow, but
     // only 4 are actually present.
     const truncated = "D1 01 08 54 02 65 6E 68";
-    expect(() => run(truncated, { kind: "raw-hex-decode" })).toThrowError(/payload/i);
+    expect(() => run(truncated, { kind: "raw-hex-decode" })).toThrow(/payload/i);
   });
 
   it("rejects a Wi-Fi record with no Credential attribute", () => {
@@ -322,18 +322,18 @@ describe("ToolError: bad-ndef", () => {
     const record = { tnf: 0x02, type: "application/vnd.wfa.wsc", payload: Uint8Array.of(0, 0, 0, 0) };
     const bytes = encodeMessage([record]);
     expect(bogusWsc).toBeTruthy();
-    expect(() => decodeMessage(bytes)).toThrowError(/Credential/i);
+    expect(() => decodeMessage(bytes)).toThrow(/Credential/i);
   });
 });
 
 describe("ToolError: too-large", () => {
   it("rejects a built message over 8 KB", () => {
     const huge = "a".repeat(9000);
-    expect(() => run(huge, { kind: "text" })).toThrowError(/8 KB/i);
+    expect(() => run(huge, { kind: "text" })).toThrow(/8 KB/i);
   });
 
   it("rejects raw-hex-decode input over 8 KB", () => {
     const hugeHex = "00".repeat(8200);
-    expect(() => run(hugeHex, { kind: "raw-hex-decode" })).toThrowError(/8 KB/i);
+    expect(() => run(hugeHex, { kind: "raw-hex-decode" })).toThrow(/8 KB/i);
   });
 });

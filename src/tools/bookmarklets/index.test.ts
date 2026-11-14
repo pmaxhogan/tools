@@ -30,7 +30,7 @@ describe("bookmarklets", () => {
 
     it("throws too-long for a source past the URL length cap", () => {
       const huge = "var a=1;".repeat(9000);
-      expect(() => run(huge, { mode: "encode" })).toThrowError(ToolError);
+      expect(() => run(huge, { mode: "encode" })).toThrow(ToolError);
       try {
         run(huge, { mode: "encode" });
       } catch (e) {
@@ -39,7 +39,7 @@ describe("bookmarklets", () => {
     });
 
     it("throws empty-input for blank source", () => {
-      expect(() => run("", { mode: "encode" })).toThrowError(ToolError);
+      expect(() => run("", { mode: "encode" })).toThrow(ToolError);
       try {
         run("   ", { mode: "encode" });
       } catch (e) {
@@ -57,7 +57,7 @@ describe("bookmarklets", () => {
     });
 
     it("throws not-bookmarklet for input that is not a javascript: URL", () => {
-      expect(() => run("https://example.com", { mode: "decode" })).toThrowError(ToolError);
+      expect(() => run("https://example.com", { mode: "decode" })).toThrow(ToolError);
       try {
         run("https://example.com", { mode: "decode" });
       } catch (e) {
@@ -107,7 +107,7 @@ describe("bookmarklets", () => {
   });
 
   it("throws bad-mode for an unrecognized mode", () => {
-    expect(() => run("x", { mode: "bogus" })).toThrowError(ToolError);
+    expect(() => run("x", { mode: "bogus" })).toThrow(ToolError);
     try {
       run("x", { mode: "bogus" });
     } catch (e) {

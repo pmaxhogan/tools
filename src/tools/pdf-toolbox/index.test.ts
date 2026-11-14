@@ -104,7 +104,7 @@ describe("parsePageRanges", () => {
   });
 
   it("rejects an empty spec", () => {
-    expect(() => parsePageRanges("   ", 5)).toThrowError(ToolError);
+    expect(() => parsePageRanges("   ", 5)).toThrow(ToolError);
     try {
       parsePageRanges("", 5);
     } catch (e) {

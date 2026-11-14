@@ -45,7 +45,7 @@ describe("duration-calculator", () => {
   });
 
   it("rejects an unparseable token, naming the exact token and a fix example", () => {
-    expect(() => run("1h + xyz", {})).toThrowError(ToolError);
+    expect(() => run("1h + xyz", {})).toThrow(ToolError);
     try {
       run("1h + xyz", {});
     } catch (e) {
@@ -58,7 +58,7 @@ describe("duration-calculator", () => {
   });
 
   it("rejects empty input with a clear ToolError", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
     try {
       run("", {});
     } catch (e) {

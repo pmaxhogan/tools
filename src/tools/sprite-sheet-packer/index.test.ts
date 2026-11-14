@@ -259,8 +259,8 @@ describe("packRects", () => {
   });
 
   it("rejects bad input", () => {
-    expect(() => packRects([])).toThrowError(ToolError);
-    expect(() => packRects([])).toThrowError(/no sprites/i);
+    expect(() => packRects([])).toThrow(ToolError);
+    expect(() => packRects([])).toThrow(/no sprites/i);
     expect(codeOf(() => packRects([]))).toBe("no-items");
     expect(codeOf(() => packRects("nope" as unknown as PackItem[]))).toBe("no-items");
     expect(codeOf(() => packRects([42 as unknown as PackItem]))).toBe("invalid-item");
@@ -316,7 +316,7 @@ describe("trimTransparent", () => {
   });
 
   it("rejects a buffer that does not match the size", () => {
-    expect(() => trimTransparent(blank(4, 4), 5, 5)).toThrowError(ToolError);
+    expect(() => trimTransparent(blank(4, 4), 5, 5)).toThrow(ToolError);
     expect(codeOf(() => trimTransparent(blank(4, 4), 5, 5))).toBe("size-mismatch");
     expect(codeOf(() => trimTransparent(blank(4, 4), 0, 4))).toBe("invalid-size");
     expect(codeOf(() => trimTransparent(blank(4, 4), 4, 4, 900))).toBe("invalid-threshold");
@@ -551,7 +551,7 @@ describe("parseSizeLines", () => {
   });
 
   it("stops on a line it cannot read inside a good list", () => {
-    expect(() => parseSizeLines("hero 32x32\nthis is not a size")).toThrowError(ToolError);
+    expect(() => parseSizeLines("hero 32x32\nthis is not a size")).toThrow(ToolError);
     expect(codeOf(() => parseSizeLines("hero 32x32\nthis is not a size"))).toBe("bad-line");
   });
 
@@ -626,7 +626,7 @@ describe("run", () => {
   });
 
   it("throws for an empty input", () => {
-    expect(() => run("")).toThrowError(ToolError);
+    expect(() => run("")).toThrow(ToolError);
     expect(codeOf(() => run(""))).toBe("empty-input");
     expect(codeOf(() => run("   \n  "))).toBe("empty-input");
     expect(codeOf(() => run(new Uint8Array(0)))).toBe("empty-input");

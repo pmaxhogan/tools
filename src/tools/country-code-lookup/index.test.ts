@@ -52,7 +52,7 @@ describe("country-code-lookup", () => {
   });
 
   it("throws an ambiguous error with top-3 suggestions when a calling code is shared", () => {
-    expect(() => run("+1", {})).toThrowError(ToolError);
+    expect(() => run("+1", {})).toThrow(ToolError);
     try {
       run("+1", {});
     } catch (e) {
@@ -64,7 +64,7 @@ describe("country-code-lookup", () => {
   });
 
   it("throws a no-match error with suggestions for a near miss", () => {
-    expect(() => run("Germanyzz", {})).toThrowError(ToolError);
+    expect(() => run("Germanyzz", {})).toThrow(ToolError);
     try {
       run("Germanyzz", {});
     } catch (e) {
@@ -83,7 +83,7 @@ describe("country-code-lookup", () => {
   });
 
   it("throws an actionable empty-input error", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
     try {
       run("", {});
     } catch (e) {

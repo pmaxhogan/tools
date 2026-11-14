@@ -154,7 +154,7 @@ describe("csv-viewer", () => {
   });
 
   it("throws empty-input on blank input", () => {
-    expect(() => run("   \n", o())).toThrowError(ToolError);
+    expect(() => run("   \n", o())).toThrow(ToolError);
     try {
       run("", o());
       expect.unreachable();

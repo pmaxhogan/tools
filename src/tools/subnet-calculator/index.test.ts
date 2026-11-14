@@ -93,7 +93,7 @@ describe("subnet-calculator", () => {
   });
 
   it("throws empty-input on blank input", () => {
-    expect(() => run("", { split: 0 })).toThrowError(ToolError);
+    expect(() => run("", { split: 0 })).toThrow(ToolError);
     try {
       run("  ", { split: 0 });
     } catch (e) {

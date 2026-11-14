@@ -288,7 +288,7 @@ describe("mace smash", () => {
   });
 
   it("refuses versions before the mace existed", () => {
-    expect(() => maceDamage({ version: "1.20.6", fallDistance: 5 })).toThrowError(ToolError);
+    expect(() => maceDamage({ version: "1.20.6", fallDistance: 5 })).toThrow(ToolError);
     try {
       maceDamage({ version: "1.16.5", fallDistance: 5 });
     } catch (e) {
@@ -316,13 +316,13 @@ describe("buildArmor", () => {
   it("rejects copper before 1.21.9", () => {
     expect(() =>
       buildArmor("1.20.6", { helmet: { material: "copper", protection: 0 } }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
   });
 
   it("rejects turtle shell outside the helmet slot", () => {
     expect(() =>
       buildArmor("1.21.11", { boots: { material: "turtle", protection: 0 } }),
-    ).toThrowError(/no boots item/);
+    ).toThrow(/no boots item/);
   });
 });
 
@@ -362,21 +362,21 @@ describe("run", () => {
   });
 
   it("rejects unknown modes and versions with actionable errors", () => {
-    expect(() => run("", { mode: "laser" })).toThrowError(ToolError);
-    expect(() => run("", { mode: "melee", version: "1.8.9" })).toThrowError(/not a supported/);
+    expect(() => run("", { mode: "laser" })).toThrow(ToolError);
+    expect(() => run("", { mode: "melee", version: "1.8.9" })).toThrow(/not a supported/);
   });
 
   it("rejects NaN and negative inputs with a fix hint", () => {
     expect(() =>
       run("", { mode: "melee", version: "1.21.11", amount: Number.NaN }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
     try {
       run("", { mode: "fall", version: "1.21.11", height: -5 });
     } catch (e) {
       expect(e).toBeInstanceOf(ToolError);
       expect((e as ToolError).fix).toMatch(/between/);
     }
-    expect(() => meleeDamage({ version: "1.21.11", amount: 10, armor: -1, toughness: 0 })).toThrowError(
+    expect(() => meleeDamage({ version: "1.21.11", amount: 10, armor: -1, toughness: 0 })).toThrow(
       /between 0 and/,
     );
   });
@@ -573,7 +573,7 @@ describe("weapon enchant gating", () => {
         enchant: "sharpness",
         enchantLevel: 5,
       }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
   });
 });
 
@@ -718,7 +718,7 @@ describe("matchup", () => {
         attacker: { kind: "mob", mobId: "warden" },
         defender: { kind: "player", kit: { build: {} } },
       }),
-    ).toThrowError(/does not exist in 1.16.5/);
+    ).toThrow(/does not exist in 1.16.5/);
     expect(() =>
       matchup({
         version: "1.21.11",
@@ -726,7 +726,7 @@ describe("matchup", () => {
         attacker: { kind: "mob", mobId: "herobrine" },
         defender: { kind: "player", kit: { build: {} } },
       }),
-    ).toThrowError(ToolError);
+    ).toThrow(ToolError);
   });
 
   it("mobInVersion gates the warden list entry", () => {

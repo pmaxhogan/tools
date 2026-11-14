@@ -74,7 +74,7 @@ describe("led-resistor-calculator: fixed-Vf presets", () => {
 
 describe("led-resistor-calculator: error branches", () => {
   it("throws empty-input for blank input", () => {
-    expect(() => run("", { color: "red" })).toThrowError(ToolError);
+    expect(() => run("", { color: "red" })).toThrow(ToolError);
     try {
       run("   ", { color: "red" });
       throw new Error("expected throw");

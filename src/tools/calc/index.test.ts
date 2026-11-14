@@ -53,8 +53,8 @@ describe("calc", () => {
   });
 
   it("rejects empty input", () => {
-    expect(() => run("", {})).toThrowError(ToolError);
-    expect(() => run("   ", {})).toThrowError(ToolError);
+    expect(() => run("", {})).toThrow(ToolError);
+    expect(() => run("   ", {})).toThrow(ToolError);
     try {
       run("", {});
     } catch (e) {
@@ -64,7 +64,7 @@ describe("calc", () => {
   });
 
   it("rejects an undefined unit", () => {
-    expect(() => run("3 flurbs", {})).toThrowError(ToolError);
+    expect(() => run("3 flurbs", {})).toThrow(ToolError);
     try {
       run("3 flurbs", {});
     } catch (e) {

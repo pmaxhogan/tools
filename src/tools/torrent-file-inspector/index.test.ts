@@ -170,9 +170,9 @@ describe("decodeBencode", () => {
     const negative = decodeBencode(bytes("i-7e"));
     expect(negative.kind === "int" && negative.value).toBe(-7);
 
-    expect(() => decodeBencode(bytes("i03e"))).toThrowError(ToolError);
-    expect(() => decodeBencode(bytes("i-0e"))).toThrowError(ToolError);
-    expect(() => decodeBencode(bytes("ie"))).toThrowError(ToolError);
+    expect(() => decodeBencode(bytes("i03e"))).toThrow(ToolError);
+    expect(() => decodeBencode(bytes("i-0e"))).toThrow(ToolError);
+    expect(() => decodeBencode(bytes("ie"))).toThrow(ToolError);
   });
 
   it("handles an empty byte string and deeply nested lists", () => {
@@ -197,20 +197,20 @@ describe("decodeBencode", () => {
   });
 
   it("throws on a truncated value", () => {
-    expect(() => decodeBencode(bytes("d3:cow3:mo"))).toThrowError(/ends in the middle/);
-    expect(() => decodeBencode(bytes("5:abc"))).toThrowError(/ends in the middle/);
+    expect(() => decodeBencode(bytes("d3:cow3:mo"))).toThrow(/ends in the middle/);
+    expect(() => decodeBencode(bytes("5:abc"))).toThrow(/ends in the middle/);
   });
 
   it("throws on a byte that starts no bencoded value", () => {
-    expect(() => decodeBencode(bytes("xyz"))).toThrowError(/not the start of a bencoded value/);
+    expect(() => decodeBencode(bytes("xyz"))).toThrow(/not the start of a bencoded value/);
   });
 
   it("throws on a dictionary key that is not a byte string", () => {
-    expect(() => decodeBencode(bytes("di1ei2ee"))).toThrowError(ToolError);
+    expect(() => decodeBencode(bytes("di1ei2ee"))).toThrow(ToolError);
   });
 
   it("throws on empty input", () => {
-    expect(() => decodeBencode(new Uint8Array(0))).toThrowError(/No torrent data/);
+    expect(() => decodeBencode(new Uint8Array(0))).toThrow(/No torrent data/);
   });
 });
 
@@ -392,15 +392,15 @@ describe("readTorrent", () => {
   });
 
   it("throws when the top level value is not a dictionary", () => {
-    expect(() => readTorrent(bytes("li1ee"))).toThrowError(/not a dictionary/);
+    expect(() => readTorrent(bytes("li1ee"))).toThrow(/not a dictionary/);
   });
 
   it("throws when there is no info dictionary", () => {
-    expect(() => readTorrent(bytes("d8:announce3:abce"))).toThrowError(/no info dictionary/);
+    expect(() => readTorrent(bytes("d8:announce3:abce"))).toThrow(/no info dictionary/);
   });
 
   it("throws when info is not a dictionary", () => {
-    expect(() => readTorrent(bytes("d4:infoi5ee"))).toThrowError(/not a dictionary/);
+    expect(() => readTorrent(bytes("d4:infoi5ee"))).toThrow(/not a dictionary/);
   });
 });
 
@@ -512,8 +512,8 @@ describe("run", () => {
   });
 
   it("throws on empty input", () => {
-    expect(() => run(new Uint8Array(0), defaults)).toThrowError(/No torrent data/);
-    expect(() => run("   ", defaults)).toThrowError(/No torrent data/);
+    expect(() => run(new Uint8Array(0), defaults)).toThrow(/No torrent data/);
+    expect(() => run("   ", defaults)).toThrow(/No torrent data/);
   });
 
   it("throws on text that is not a torrent, with a fix that names the file", () => {
@@ -530,6 +530,6 @@ describe("run", () => {
   it("rejects a file past the size limit", () => {
     const huge = new Uint8Array(64 * 1024 * 1024 + 1);
     huge[0] = 0x64;
-    expect(() => run(huge, defaults)).toThrowError(/past the/);
+    expect(() => run(huge, defaults)).toThrow(/past the/);
   });
 });

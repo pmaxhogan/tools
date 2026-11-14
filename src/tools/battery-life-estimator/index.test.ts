@@ -67,26 +67,26 @@ describe("battery-life-estimator", () => {
   });
 
   it("rejects non-positive capacity with a typed error", () => {
-    expect(() => run("", { ...base, capacity: 0 })).toThrowError(ToolError);
-    expect(() => run("", { ...base, capacity: 0 })).toThrowError(/positive/);
+    expect(() => run("", { ...base, capacity: 0 })).toThrow(ToolError);
+    expect(() => run("", { ...base, capacity: 0 })).toThrow(/positive/);
   });
 
   it("rejects non-positive voltage with a typed error", () => {
-    expect(() => run("", { ...base, voltage: 0 })).toThrowError(ToolError);
+    expect(() => run("", { ...base, voltage: 0 })).toThrow(ToolError);
   });
 
   it("rejects active hours outside 0-24", () => {
-    expect(() => run("", { ...base, activeHoursPerDay: 25 })).toThrowError(ToolError);
-    expect(() => run("", { ...base, activeHoursPerDay: -1 })).toThrowError(ToolError);
+    expect(() => run("", { ...base, activeHoursPerDay: 25 })).toThrow(ToolError);
+    expect(() => run("", { ...base, activeHoursPerDay: -1 })).toThrow(ToolError);
   });
 
   it("rejects efficiency outside 1-100", () => {
-    expect(() => run("", { ...base, efficiency: 0 })).toThrowError(ToolError);
-    expect(() => run("", { ...base, efficiency: 150 })).toThrowError(ToolError);
+    expect(() => run("", { ...base, efficiency: 0 })).toThrow(ToolError);
+    expect(() => run("", { ...base, efficiency: 150 })).toThrow(ToolError);
   });
 
   it("rejects negative draw values", () => {
-    expect(() => run("", { ...base, activeDraw: -1 })).toThrowError(ToolError);
-    expect(() => run("", { ...base, sleepDraw: -1 })).toThrowError(ToolError);
+    expect(() => run("", { ...base, activeDraw: -1 })).toThrow(ToolError);
+    expect(() => run("", { ...base, sleepDraw: -1 })).toThrow(ToolError);
   });
 });

@@ -33,7 +33,7 @@ describe("ohms-law-calculator: ohms-law mode", () => {
   });
 
   it("rejects more than two values that disagree by more than 1%", () => {
-    expect(() => ohms("V=12 I=0.1 R=200")).toThrowError(ToolError);
+    expect(() => ohms("V=12 I=0.1 R=200")).toThrow(ToolError);
     try {
       ohms("V=12 I=0.1 R=200");
     } catch (e) {
@@ -43,7 +43,7 @@ describe("ohms-law-calculator: ohms-law mode", () => {
   });
 
   it("throws need-two when fewer than two values are given", () => {
-    expect(() => ohms("12V")).toThrowError(ToolError);
+    expect(() => ohms("12V")).toThrow(ToolError);
     try {
       ohms("12V");
     } catch (e) {
@@ -70,7 +70,7 @@ describe("ohms-law-calculator: ohms-law mode", () => {
   });
 
   it("throws empty-input for blank input", () => {
-    expect(() => ohms("")).toThrowError(ToolError);
+    expect(() => ohms("")).toThrow(ToolError);
     try {
       ohms("  ");
     } catch (e) {

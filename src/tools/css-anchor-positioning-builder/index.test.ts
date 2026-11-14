@@ -186,7 +186,7 @@ describe("css-anchor-positioning-builder: errors", () => {
   });
 
   it("throws bad-anchor-name for a name with spaces", () => {
-    expect(() => run("tip anchor", {})).toThrowError(/spaces/);
+    expect(() => run("tip anchor", {})).toThrow(/spaces/);
   });
 
   it("throws bad-anchor-name for a name that starts with a digit", () => {
