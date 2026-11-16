@@ -46,7 +46,7 @@
     "@tesseract.js-data/jpn": "^1.0.0",
     "@tesseract.js-data/spa": "^1.0.0",
     "@vueuse/core": "^15.0.0",
-    "astro": "^7.4.10",
+    "astro": "^7.4.11",
     "cbor-x": "^1.6.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -95,7 +95,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "@astrojs/sitemap": "^3.7.5",
-    "@astrojs/vue": "^7.1.4",
+    "@astrojs/vue": "^7.1.5",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.5",
     "@types/figlet": "^1.12.0",
